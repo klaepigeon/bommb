@@ -14,6 +14,7 @@
     assault: { name: 'Assault', bounty: 15, lvl: 1 },
     theft: { name: 'Theft', bounty: 10, lvl: 1 },
     pickpocket: { name: 'Pickpocketing', bounty: 10, lvl: 1, minor: true },
+    possession: { name: 'Drug Possession', bounty: 10, lvl: 1, minor: true },
     mugging: { name: 'Armed Robbery', bounty: 25, lvl: 1 },
     carjack: { name: 'Carjacking', bounty: 25, lvl: 1 },
     cartheft: { name: 'Auto Theft', bounty: 15, lvl: 1 },

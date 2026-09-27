@@ -222,6 +222,7 @@
         ['party', hour > 21 || hour < 3 ? 1.6 : 0],
         ['wedding', g.pop.news.some((n) => n.city === city.id && n.day === g.pop.day && /Wedding/.test(n.text)) && hour > 10 && hour < 18 ? 3 : 0],
         ['footchase', 0.8 * rough],
+        ['dealer', hour > 20 || hour < 4 ? 1.4 : 0.2],
         ['crash', 0.7 * calm],
         ['nothing', 2],
       ];
@@ -234,6 +235,13 @@
   };
   const spotNear = (g, rmin, rmax, pred) => g.world.findNear(g.player.x / TS, g.player.y / TS, rmin, rmax, pred || ((x, y) => { const t = g.world.t(x, y); return (t === T.WALK || t === T.PLAZA) && !g.world.solidPed(x, y); }));
 
+  EV.dealer = function (g) {
+    const s = spotNear(g, 6, 12);
+    if (!s || g.actors.list.some((a) => a.dealer && !a.dead)) return;
+    const h = R.goods.spawnDealer(s.x * TS + 8, s.y * TS + 8);
+    h.keep = true; h.stay = true; h.state = 'idle'; h.timer = 240;
+    g.actors.say(h, R.rng.pick(['Psst. You holding? I\'m selling.', 'Candy, man? Got whatever you need.', 'Hey, sharp suit. Wanna feel sharper?']));
+  };
   EV.brawl = function (g) {
     const s = spotNear(g, 8, 14);
     if (!s) return;

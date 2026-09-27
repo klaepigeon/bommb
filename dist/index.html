@@ -130,6 +130,16 @@ canvas.mg { display: block; width: 100%; max-width: 560px; margin: 0 auto; image
 .dbgrow { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
 .dbg { border: 2px solid var(--ink); border-radius: 6px; background: var(--paper); color: var(--ink); font-size: 10px; padding: 6px 8px; text-transform: capitalize; }
 .dbg.on { background: #bfe0a0; }
+.invtop { display: flex; flex-wrap: wrap; gap: 6px; font-family: var(--pix); font-size: 10px; color: var(--brown); }
+.invtop span { background: var(--paper2); border: 2px solid var(--ink); border-radius: 6px; padding: 3px 6px; }
+.invtop .high { background: #d8c0f0; }
+.invgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); gap: 6px; }
+.inv { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; border: 3px solid var(--ink); border-radius: 8px; background: #3a2a1c; color: var(--paper); padding: 6px 3px 4px; font-size: 9px; }
+.inv canvas { width: 32px; height: 32px; image-rendering: pixelated; }
+.inv b { position: absolute; top: 2px; right: 4px; font-family: var(--pix); font-size: 10px; color: var(--gold); }
+.inv span { font-family: var(--read); font-size: 11px; line-height: 1.1; text-align: center; }
+.invdetail { margin-top: 10px; border: 3px solid var(--ink); border-radius: 8px; background: var(--paper2); padding: 8px; font-size: 13px; color: var(--ink); }
+.invdetail p { margin: 4px 0 8px; font-family: var(--read); }
 #mHorn { left: 0; top: 4px; } #mRadio { left: 0; top: 38px; }
 .carOnly { display: none !important; } #app.incar .carOnly { display: flex !important; } #app.incar .footOnly { display: none !important; }
 #padL { flex-direction: column; justify-content: space-evenly; gap: 16px; }
@@ -5801,6 +5811,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     assault: { name: 'Assault', bounty: 15, lvl: 1 },
     theft: { name: 'Theft', bounty: 10, lvl: 1 },
     pickpocket: { name: 'Pickpocketing', bounty: 10, lvl: 1, minor: true },
+    possession: { name: 'Drug Possession', bounty: 10, lvl: 1, minor: true },
     mugging: { name: 'Armed Robbery', bounty: 25, lvl: 1 },
     carjack: { name: 'Carjacking', bounty: 25, lvl: 1 },
     cartheft: { name: 'Auto Theft', bounty: 15, lvl: 1 },
@@ -7082,6 +7093,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
         ['party', hour > 21 || hour < 3 ? 1.6 : 0],
         ['wedding', g.pop.news.some((n) => n.city === city.id && n.day === g.pop.day && /Wedding/.test(n.text)) && hour > 10 && hour < 18 ? 3 : 0],
         ['footchase', 0.8 * rough],
+        ['dealer', hour > 20 || hour < 4 ? 1.4 : 0.2],
         ['crash', 0.7 * calm],
         ['nothing', 2],
       ];
@@ -7094,6 +7106,13 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
   };
   const spotNear = (g, rmin, rmax, pred) => g.world.findNear(g.player.x / TS, g.player.y / TS, rmin, rmax, pred || ((x, y) => { const t = g.world.t(x, y); return (t === T.WALK || t === T.PLAZA) && !g.world.solidPed(x, y); }));
 
+  EV.dealer = function (g) {
+    const s = spotNear(g, 6, 12);
+    if (!s || g.actors.list.some((a) => a.dealer && !a.dead)) return;
+    const h = R.goods.spawnDealer(s.x * TS + 8, s.y * TS + 8);
+    h.keep = true; h.stay = true; h.state = 'idle'; h.timer = 240;
+    g.actors.say(h, R.rng.pick(['Psst. You holding? I\'m selling.', 'Candy, man? Got whatever you need.', 'Hey, sharp suit. Wanna feel sharper?']));
+  };
   EV.brawl = function (g) {
     const s = spotNear(g, 8, 14);
     if (!s) return;
@@ -7389,6 +7408,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     if (pl.masked) m -= 40;
     if (pl.weaponOut) m -= 45;
     if (pl.bloody > 0.3) m -= 25;
+    if (R.goods.has(pl, 'mellow')) m += 15;
     if (h.anger) m -= h.anger;
     m += pl.outfitScore();
     return m;
@@ -7513,6 +7533,40 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
 
   // ---------------------------------------------------------------- talk tree
   // Returns { title, sub, lines:[], options:[{label, fn, close}] }
+  // RDR2-style Stop Witness: scare them quiet or pay them off
+  D2.bribePrice = (h) => 15 + Math.round((h.witness && h.witness.crime.bounty) || 10);
+  D2.stopWitness = function (h, how, sayFn) {
+    const g = G(), pl = g.player, p = h.person;
+    const say = sayFn || ((t) => g.actors.say(h, t));
+    if (!h.witness || h.witness.done || h.witness.silenced) return;
+    const silence = (state) => {
+      h.witness.silenced = true; h.alert = null; h.state = state; h.timer = 6; h.goal = null;
+      g.ui.toast('Witness silenced.', 'good');
+      g.audio.sfx(how === 'bribe' ? 'cash' : 'punch');
+    };
+    if (how === 'bribe') {
+      const price = D2.bribePrice(h);
+      if (pl.cash < price) { say("That ain't enough to make me forget."); return false; }
+      const ok = R.rng() < 0.65 + h.tr.greed * 0.4 - h.tr.lawful * 0.35;
+      if (!ok) { say(pick(["Keep your blood money. I'm calling the cops.", 'You think I can be bought?!'])); h.hurry = true; g.actors.startReport(h); return; }
+      pl.cash -= price;
+      say(pick(['...What crime? I was looking at pigeons.', 'Pleasure doing business. Never saw you.', 'My eyes aren\'t what they used to be.']));
+      if (p) { p.opinion = Math.min(100, p.opinion + 4); g.pop.remember(p, 'bribed', 'A man in a sharp suit paid me to forget something.', g.pop.day); }
+      silence('idle');
+      return;
+    }
+    const w = D.weapons[pl.weapon];
+    const odds = 0.3 + D2.fear(h) / 100 + (pl.weaponOut && w && w.gun ? 0.3 : pl.weaponOut ? 0.15 : 0) + pl.rep.infamy / 300 - h.tr.brave * 0.3 + (h.state === 'cower' || h.state === 'surrender' ? 0.3 : 0) + (pl.masked ? 0.05 : 0);
+    if (R.rng() < odds) {
+      say(pick(['O-okay! I saw nothing! Nothing!', 'I didn\'t see a thing, I swear on my mother!', 'Please! I got kids! I won\'t say a word!']));
+      if (p) { p.fear = Math.min(100, (p.fear || 0) + 50); p.opinion = Math.max(-100, p.opinion - 20); g.pop.remember(p, 'threatened', 'A goon threatened me into keeping quiet.', g.pop.day); }
+      silence('cower');
+    } else if (h.tr.brave > 0.7 && !h.cop) {
+      say(pick(["You don't scare me!", 'Try it, tough guy!'])); h.hostile = true; g.actors.setFight(h, pl);
+    } else {
+      say(pick(['Help! HELP! Somebody call the cops!', 'Get away from me!'])); h.hurry = true; g.actors.startReport(h);
+    }
+  };
   D2.tree = function (h) {
     if (h.fearman) return R.ring.fearTree(h);
     if (h.legend && R.legends) return R.legends.tree(h);
@@ -7526,19 +7580,8 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     const role = h.role;
     // witnesses can be paid off
     if (h.witness && !h.witness.done && !h.witness.silenced) {
-      const price = 15 + (h.witness.crime.bounty || 10);
-      opts.push({ label: `"Here's ${R.fmtMoney(price)}. You didn't see nothin'."`, fn: () => {
-        if (pl.cash < price) return say("That ain't enough to make me forget.");
-        pl.cash -= price;
-        const ok = R.rng() < 0.65 + h.tr.greed * 0.4 - h.tr.lawful * 0.35;
-        if (ok) { h.witness.silenced = true; h.alert = null; h.state = 'idle'; say('...What crime? I was looking at pigeons.'); }
-        else { say("Keep your blood money. I'm calling the cops."); h.state = 'report'; }
-      } });
-      opts.push({ label: '"Talk and you\'re next."', fn: () => {
-        const ok = R.rng() < 0.35 + D2.fear(h) / 100;
-        if (ok) { h.witness.silenced = true; h.alert = null; h.state = 'cower'; h.timer = 6; say('O-okay! I saw nothing! Nothing!'); if (p) p.fear = 90; }
-        else { say('You don\'t scare me!'); close(); g.actors.startReport(h); }
-      } });
+      opts.push({ label: `"Here's ${R.fmtMoney(D2.bribePrice(h))}. You didn't see nothin'."`, fn: () => { if (D2.stopWitness(h, 'bribe', say) !== false) close(); } });
+      opts.push({ label: '"Talk and you\'re next."', fn: () => { D2.stopWitness(h, 'intimidate', say); close(); } });
     }
     const job = g.jobs.active;
     if (p && job && job.person === p.id && (job.kind === 'collect' || job.kind === 'scare')) {
@@ -7561,6 +7604,9 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
         say(q.alive ? `${q.first}? ${rel === 'kid' ? `${q.age} years old${q.age >= 18 ? ', works as a ' + (D.roleNames[q.role] || 'something').toLowerCase() : ''}.` : ''} ${pick(['Keeps me young.', 'Drives me crazy.', 'Best thing that ever happened to me.'])}` : `${q.first} passed. Don't want to talk about it.`);
       } });
     } else lines.push(h.cop ? 'Police officer' : h.look.kid ? 'A neighborhood kid' : 'A stranger');
+    // dealers, and people who'll work for you
+    if (h.dealer) opts.unshift({ label: '"What are you selling?"', cls: 'go', fn: () => { close(); R.goods.openDealer(h); } });
+    if (R.goods.canHire(h)) opts.push({ label: '"Got some work, if you want it."', small: 'Hire them for an errand', fn: () => { close(); R.goods.openHire(h); } });
     // role services
     if (h.arch === 'hustler' && !h.staff) opts.push({ label: 'Shoot dice ($10)', fn: () => { close(); R.mini.dice({ stake: 10 }); } });
     if (role === 'bartender') {
@@ -8054,6 +8100,352 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
   };
 })();
 
+// ---- 13_goods.js
+// RHAPSODY — what's in your pockets. A proper inventory with pixel icons, 70s street
+// drugs that say exactly what they are and what they'll do to you, the dealers who sell
+// them, and hired help: people who like you will run errands for a fee or a cut.
+(function () {
+  const D = R.data, TS = R.TILE, INK = '#1b1410';
+
+  // ---------------------------------------------------------------- drugs
+  // dur is in seconds; each effect is applied while it lasts.
+  D.drugs = {
+    reefer: { name: 'Reefer', street: '"Acapulco Gold"', price: 10, dur: 120, desc: 'Mellow. +30 Cool now, people warm to you, a little snack-heal. Aim drifts.', fx: { cool: 30, heal: 8, mellow: 1 } },
+    coke: { name: 'Cocaine', street: '"Nose candy"', price: 60, dur: 60, desc: 'Run 30% faster and hit 25% harder for a minute. Then the crash: sluggish and -15 health.', fx: { speed: 1.3, power: 1.25 }, crash: { speed: 0.8, hurt: 15, dur: 40 } },
+    ludes: { name: 'Quaaludes', street: '"Lemmon 714s"', price: 25, dur: 90, desc: 'Numb. Take 40% less damage for 90 seconds, but you stagger like you\'re drunk.', fx: { armor: 0.6, drunk: 0.45 } },
+    dust: { name: 'Angel Dust', street: '"Wack" (PCP)', price: 40, dur: 40, desc: 'Berserk. Punches hit 60% harder and nothing knocks you out. The comedown costs 25 health.', fx: { power: 1.6, tough: 1, red: 1 }, crash: { hurt: 25, dur: 5 } },
+    acid: { name: 'LSD', street: '"Purple Owsley" blotter', price: 15, dur: 150, desc: 'The colours breathe. Cool keeps refilling and the Ring\'s Will comes back double. The city gets weird.', fx: { trip: 1, coolRegen: 6, willRegen: 2 } },
+    uppers: { name: 'Black Beauties', street: 'Amphetamine pills', price: 20, dur: 150, desc: 'Wired. 15% faster, reload twice as fast, Cool drains slower. Mild comedown.', fx: { speed: 1.15, reload: 0.5, coolSave: 0.5 }, crash: { speed: 0.9, dur: 30 } },
+    smack: { name: 'Heroin', street: '"Horse"', price: 50, dur: 90, desc: 'Heals 60 at once, then you\'re sluggish and dim for 90 seconds. Take it twice and you might not wake up.', fx: { heal: 60, speed: 0.65, dim: 1 }, od: 1 },
+  };
+
+  const G = () => R.game;
+  const Goods = (R.goods = {});
+
+  Goods.effects = function (pl) { return (pl.drugFx = pl.drugFx || {}); };
+  Goods.mod = function (pl, key, base) {
+    let v = base;
+    const fx = this.effects(pl);
+    for (const k in fx) {
+      const e = fx[k];
+      const src = e.crash ? D.drugs[k].crash : D.drugs[k].fx;
+      if (src && src[key] !== undefined) v = typeof base === 'number' && key !== 'tough' ? v * src[key] : src[key];
+    }
+    return v;
+  };
+  Goods.has = function (pl, key) {
+    const fx = this.effects(pl);
+    for (const k in fx) { const src = fx[k].crash ? D.drugs[k].crash : D.drugs[k].fx; if (src && src[key]) return true; }
+    return false;
+  };
+  Goods.take = function (id) {
+    const g = G(), pl = g.player, d = D.drugs[id];
+    if (!pl.inv.drugs || !pl.inv.drugs[id]) return;
+    pl.inv.drugs[id]--;
+    const fx = this.effects(pl);
+    if (d.od && fx[id] && !fx[id].crash) {
+      delete fx[id];
+      g.ui.story('Overdose', 'The room tilts. The floor comes up to meet you.\n\nYou wake up in a hospital bed a day later with a $150 bill and a nurse who won\'t look at you.');
+      pl.cash = Math.max(0, pl.cash - 150);
+      g.clock.skip(1440);
+      pl.hp = Math.round(pl.maxHp * 0.5);
+      return;
+    }
+    fx[id] = { t: d.dur, crash: false };
+    if (d.fx.cool) pl.cool = Math.min(100, pl.cool + d.fx.cool);
+    if (d.fx.heal) pl.hp = Math.min(pl.maxHp, pl.hp + d.fx.heal);
+    g.audio.sfx('drink');
+    g.ui.toast(`${d.name}: ${d.desc.split('.')[0]}.`, 'good');
+    // doing it in front of a cop is a (minor) crime
+    g.law.crime('possession', pl.x, pl.y, { minor: true });
+  };
+  Goods.update = function (dt) {
+    const g = G(), pl = g.player, fx = this.effects(pl);
+    for (const k in fx) {
+      const e = fx[k], d = D.drugs[k];
+      e.t -= dt;
+      if (!e.crash) {
+        if (d.fx.coolRegen) pl.cool = Math.min(100, pl.cool + d.fx.coolRegen * dt);
+        if (d.fx.willRegen && pl.will != null) pl.will = Math.min(100, pl.will + 5 * dt);
+        if (d.fx.drunk) pl.drunk = Math.max(pl.drunk, d.fx.drunk);
+        if (d.fx.tough && pl.hp < 1) pl.hp = 1;
+      }
+      if (e.t <= 0) {
+        if (!e.crash && d.crash) {
+          e.crash = true; e.t = d.crash.dur;
+          if (d.crash.hurt) { pl.hp = Math.max(1, pl.hp - d.crash.hurt); g.ui.hurtFlash(d.crash.hurt); }
+          g.ui.toast(`The ${d.name.toLowerCase()} wears off. Here comes the comedown.`, 'warn');
+        } else { delete fx[k]; if (!d.crash || e.crash) g.ui.toast(`${d.name} has worn off.`); }
+      }
+    }
+    // errands come due
+    this.errandT = (this.errandT || 0) - dt;
+    if (this.errandT <= 0) { this.errandT = 2; this.tickErrands(); }
+  };
+  // screen tints for whatever you're on
+  Goods.overlay = function (g, w, h, t) {
+    const pl = G().player;
+    if (this.has(pl, 'trip')) {
+      const hue = (t * 40) % 360;
+      g.fillStyle = `hsla(${hue},80%,55%,0.13)`; g.fillRect(0, 0, w, h);
+      g.fillStyle = `hsla(${(hue + 180) % 360},80%,55%,0.07)`; g.fillRect(0, h * 0.5 + Math.sin(t * 2) * h * 0.3, w, h * 0.2);
+    }
+    if (this.has(pl, 'red')) { g.fillStyle = `rgba(160,20,10,${0.12 + Math.sin(t * 6) * 0.04})`; g.fillRect(0, 0, w, h); }
+    if (this.has(pl, 'dim')) { g.fillStyle = 'rgba(10,10,30,0.28)'; g.fillRect(0, 0, w, h); }
+    if (this.has(pl, 'mellow')) { g.fillStyle = 'rgba(90,140,60,0.08)'; g.fillRect(0, 0, w, h); }
+  };
+
+  // ---------------------------------------------------------------- dealers
+  Goods.dealerStock = function (h) {
+    if (!h.stock) {
+      const keys = Object.keys(D.drugs);
+      const n = 3 + Math.floor(R.rng() * 3);
+      h.stock = keys.sort(() => R.rng() - 0.5).slice(0, n);
+      h.markup = 0.85 + R.rng() * 0.4;
+    }
+    return h.stock;
+  };
+  Goods.openDealer = function (h) {
+    const g = G(), ui = g.ui, pl = g.player;
+    pl.inv.drugs = pl.inv.drugs || {};
+    const render = (line) => {
+      const stock = this.dealerStock(h);
+      const opts = stock.map((k) => {
+        const d = D.drugs[k], p = Math.round(d.price * h.markup);
+        return { label: `${d.name} · ${d.street}`, small: d.desc, price: R.fmtMoney(p), fn: () => {
+          if (!pl.pay(p)) return render('"Cash up front, friend."');
+          pl.inv.drugs[k] = (pl.inv.drugs[k] || 0) + 1;
+          g.audio.sfx('cash');
+          render(`"${R.rng.pick(['Pleasure doing business.', 'Good stuff, trust me.', 'Don\'t take it all at once, hear?', 'You didn\'t get it from me.'])}"`);
+        } };
+      });
+      for (const k in pl.inv.drugs) if (pl.inv.drugs[k] > 0) {
+        const d = D.drugs[k], p = Math.round(d.price * 0.55);
+        opts.push({ label: `Sell ${d.name} (have ${pl.inv.drugs[k]})`, small: 'He\'ll take it off your hands, cheap.', price: '+' + R.fmtMoney(p), cls: 'go', fn: () => { pl.inv.drugs[k]--; pl.addCash(p); render('"I can move that."'); } });
+      }
+      opts.push({ label: 'Walk away', fn: () => ui.closeSheet() });
+      const s = ui.openSheet('dealer', ui.header(h.strangerName || 'Dealer', 'Leather coat, gold teeth, eyes on the street. Everything he sells is labelled, more or less.') + `<div class="body"><div class="line">${line || '"What\'ll it be? I got the good stuff."'}</div>${ui.optsHtml(opts)}</div>`);
+      ui.bindOpts(s, opts);
+    };
+    render();
+  };
+  Goods.spawnDealer = function (x, y, room) {
+    const g = G();
+    const h = g.actors.makeHuman(x, y, { arch: 'hustler', tag: 'dealer', role: 'dealer', cash: 80 + Math.floor(R.rng() * 120) });
+    h.dealer = true;
+    h.strangerName = R.rng.pick(['Slick', 'Candyman', 'Doc', 'Sugar', 'Jive', 'Lucky', 'Skinny Pete', 'The Pharmacist']);
+    h.look.hatKind = R.rng.pick(['fedora', 'porkpie', 'beanie', null]);
+    h.look.hatCol = D.style.hatCols[R.rng.pick(['red', 'cream', 'black', 'tan'])];
+    if (room) h.room = room;
+    return h;
+  };
+
+  // ---------------------------------------------------------------- hired help
+  const ERRANDS = {
+    job: { name: 'Handle my family job', desc: 'They do the job you\'re on; you keep the respect, they take 35% of the pay.' },
+    car: { name: 'Boost me a car', fee: 80, desc: 'They steal something nice and leave it parked near you.' },
+    store: { name: 'Knock over a store', desc: 'They rob a shop in another town. You split the haul 50/50.' },
+    numbers: { name: 'Run numbers for a week', fee: 50, desc: 'A little each day from the local numbers game. Soldier rank or higher.' },
+    scout: { name: 'Scout for me', fee: 20, desc: 'They ask around and mark something worth knowing on your map.' },
+  };
+  Goods.canHire = function (h) {
+    const p = h.person;
+    if (!p || h.cop || h.look.kid || p.role === 'don' || h.crew || h.dealer) return false;
+    return p.opinion >= 25 || ((h.arch === 'hustler' || h.arch === 'tough') && p.opinion >= 0);
+  };
+  Goods.odds = function (h, kind) {
+    const p = h.person, t = h.tr;
+    const base = { job: 0.45 + t.brave * 0.35, car: 0.6 + t.greed * 0.2, store: 0.35 + t.brave * 0.4, numbers: 0.9, scout: 0.95 }[kind];
+    return R.clamp(base + (p.fam || 0) * 0.02 + (p.opinion - 25) / 400, 0.1, 0.95);
+  };
+  Goods.openHire = function (h) {
+    const g = G(), ui = g.ui, pl = g.player, p = h.person;
+    pl.errands = pl.errands || [];
+    const busy = pl.errands.find((e) => e.pid === p.id);
+    if (busy) { ui.toast(`${p.first} is still busy with your last errand.`, 'warn'); return; }
+    const opts = [];
+    const j = g.jobs.active;
+    for (const k in ERRANDS) {
+      const e = ERRANDS[k];
+      if (k === 'job' && !(j && ['collect', 'scare', 'rob', 'steal', 'torch'].includes(j.kind) && !pl.errands.some((q) => q.kind === 'job'))) continue;
+      if (k === 'numbers' && g.jobs.rank() < 1) continue;
+      const odds = Math.round(this.odds(h, k) * 100);
+      opts.push({ label: k === 'job' ? `${e.name}: ${j.title}` : e.name, small: `${e.desc} Chance: ${odds}%.`, price: e.fee ? R.fmtMoney(e.fee) : 'Cut', fn: () => {
+        if (e.fee && !pl.pay(e.fee)) return ui.toast('You can\'t cover the fee.', 'warn');
+        const hours = k === 'numbers' ? 24 : k === 'scout' ? 1 : 2 + Math.floor(R.rng() * 4);
+        pl.errands.push({ pid: p.id, kind: k, due: g.clock.t + hours * 60, left: k === 'numbers' ? 7 : 1, job: k === 'job' ? j.id : null, city: h.person.city });
+        g.actors.say(h, R.rng.pick(['Consider it done, boss.', 'I\'ll take care of it.', 'Give me a few hours.', 'You won\'t regret this.']));
+        ui.closeSheet();
+        ui.toast(`${p.first} is on it. ${k === 'numbers' ? 'Money comes in each day.' : `Expect a call in about ${hours} hours.`}`, 'good');
+        if (k === 'job') g.jobs.active.delegated = p.id;
+      } });
+    }
+    opts.push({ label: 'Never mind', fn: () => ui.closeSheet() });
+    const s = ui.openSheet('hire', ui.header(`Hire ${p.first} ${p.last}`, `${g.pop.title(p)}, ${p.age}. Likes you ${p.opinion > 60 ? 'a lot' : p.opinion > 25 ? 'well enough' : 'for the money'}. Brave ${Math.round(h.tr.brave * 10)}/10.`) + `<div class="body">${ui.optsHtml(opts)}</div>`);
+    ui.bindOpts(s, opts);
+  };
+  Goods.tickErrands = function () {
+    const g = G(), pl = g.player;
+    if (!pl.errands || !pl.errands.length) return;
+    for (const e of pl.errands.slice()) {
+      if (g.clock.t < e.due) continue;
+      const p = g.pop.people[e.pid];
+      const done = () => { pl.errands.splice(pl.errands.indexOf(e), 1); };
+      if (!p || !p.alive) { done(); continue; }
+      const h = { person: p, tr: p.tr || { brave: 0.5, greed: 0.5 } };
+      const ok = R.rng() < this.odds(h, e.kind);
+      const who = `${p.first} ${p.last}`;
+      const call = (txt, good) => g.ui.story(good ? 'The phone rings' : 'Bad news', `${who}: "${txt}"`);
+      if (e.kind === 'job') {
+        const j = g.jobs.active;
+        done();
+        if (!j || j.id !== e.job) { call('Job\'s already off? Fine, I walked away.', false); continue; }
+        if (ok) { const cut = Math.round(j.reward * 0.35); g.jobs.complete(j, -cut); g.ui.toast(`${p.first} took a ${R.fmtMoney(cut)} cut.`); }
+        else { call(R.rng.pick(['It went sideways. Cops showed up. I got out, the job didn\'t.', 'They didn\'t scare. I\'m sorry, boss.']), false); j.delegated = null; }
+      } else if (e.kind === 'car') {
+        done();
+        if (ok) {
+          const w = g.world, s = w.findNear(pl.x / TS, pl.y / TS, 3, 10, (x, y) => D.roadTile[w.t(x, y)] || w.t(x, y) === D.T.PARKING);
+          const model = R.rng.pick(['muscle', 'coupe', 'sedan', 'pickup', 'van']);
+          if (s && !pl.room) { const v = g.traffic.make(model, s.x * TS + 8, s.y * TS + 8, 0, { parked: true, keep: true, locked: false }); v.owner = 'player'; v.hotwired = true; pl.ownedCars.push(v); }
+          call(`Left a ${D.vehicles[model].name} for you just down the street. Keys in the visor. Hot as a pistol, so repaint it.`, true);
+        } else call('Owner came out with a shotgun. I ran. No car, sorry.', false);
+      } else if (e.kind === 'store') {
+        done();
+        if (ok) { const haul = 60 + Math.floor(R.rng() * 160); pl.addCash(Math.round(haul / 2)); call(`Hit a ${R.rng.pick(['liquor store', 'gas station', 'diner'])} over in ${g.world.cities.find((c) => c.id !== e.city).name}. ${R.fmtMoney(haul)} total. Your half's on the way.`, true); }
+        else { p.opinion -= 10; g.pop.addNews(e.city, `${p.first} ${p.last} (${p.age}) arrested after a botched robbery.`); call('They got me. Don\'t worry, I didn\'t say your name. Probably.', false); if (R.rng() < 0.25) { const jur = g.law.jurAt(pl.x, pl.y); g.law.bounty[jur] = (g.law.bounty[jur] || 0) + 30; g.ui.toast('...They said your name. +$30 bounty.', 'bad'); } }
+      } else if (e.kind === 'numbers') {
+        const take = 15 + Math.floor(R.rng() * 30);
+        pl.addCash(take);
+        g.ui.toast(`${p.first} drops off ${R.fmtMoney(take)} from the numbers.`, 'good');
+        e.left--; e.due += 1440;
+        if (e.left <= 0) { done(); g.ui.toast(`${p.first} is done running your numbers. Hire them again any time.`); }
+      } else if (e.kind === 'scout') {
+        done();
+        const b = R.rng.pick(g.world.buildings.filter((q) => q && !q.destroyed && ['bank', 'casino', 'pawn', 'jewelry', 'gunshop', 'liquor'].includes(q.type)));
+        if (b) { R.poi && R.poi.add(b.out.x, b.out.y, 'tip', `${p.first}'s tip: ${b.name}`, 'Worth a look'); call(`${b.name} in ${b.city.name}. Night guard sleeps on the job. I marked it on your map.`, true); }
+      }
+    }
+  };
+
+  // ---------------------------------------------------------------- inventory
+  // item icons painted on the original's pixel canvas
+  const X = () => R.old.x;
+  const ICON = {
+    knuckles(o) { const m = X().metal; for (let i = 0; i < 4; i++) o.shadedEllipse(4 + i * 3, 7, 1.8, 2.2, m); o.shadedRect(3, 9, 11, 3, m); },
+    bat(o) { o.line(2, 14, 13, 3, X().wood[2]); o.line(3, 14, 14, 3, X().wood[1]); o.rect(11, 2, 3, 3, X().wood[2]); },
+    knife(o) { o.line(3, 13, 7, 9, X().wood[1]); o.line(7, 9, 14, 2, X().metal[3]); o.line(8, 9, 14, 3, X().metal[2]); },
+    revolver(o) { const m = X().metal; o.shadedRect(3, 5, 10, 3, m); o.shadedRect(4, 8, 4, 2, m); o.shadedRect(3, 9, 3, 5, X().wood); },
+    magnum(o) { const m = X().black; o.shadedRect(2, 5, 12, 3, m); o.shadedRect(4, 8, 4, 2, m); o.shadedRect(3, 9, 3, 5, X().wood); },
+    shotgun(o) { o.shadedRect(1, 6, 14, 2, X().metal); o.shadedRect(1, 8, 6, 3, X().wood); o.shadedRect(9, 8, 4, 1, X().wood); },
+    chopper(o) { const m = X().black; o.shadedRect(2, 5, 12, 3, m); o.shadedEllipse(7, 10, 3, 3, m); o.shadedRect(2, 8, 3, 4, X().wood); },
+    rifle(o) { o.shadedRect(0, 6, 16, 2, X().metal); o.shadedRect(0, 8, 7, 3, X().wood); o.rect(7, 4, 5, 2, X().black[2]); },
+    molotov(o) { o.shadedRect(6, 6, 5, 8, X().glass); o.rect(7, 3, 3, 3, X().glass[2]); o.rect(8, 1, 2, 3, X().cloth ? X().cloth[2] : '#e0d0a0'); o.set(9, 0, '#ffb030'); },
+    dynamite(o) { o.shadedRect(4, 4, 8, 10, X().red); o.hline(4, 11, 8, X().red[0]); o.line(8, 4, 10, 0, '#8a8a8a'); o.set(10, 0, '#ffd040'); },
+    ammo(o) { for (let i = 0; i < 3; i++) { o.shadedRect(3 + i * 4, 6, 3, 8, X().yellow); o.rect(3 + i * 4, 4, 3, 2, X().metal[2]); } },
+    bandage(o) { o.shadedRect(3, 5, 10, 7, X().white); o.rect(7, 6, 2, 5, X().red[2]); o.rect(5, 8, 6, 1, X().red[2]); },
+    whiskey(o) { o.shadedRect(5, 6, 6, 8, ['#4a2a0a', '#7a4a14', '#a86a20', '#d8a048']); o.rect(7, 2, 2, 4, '#5a3a1a'); o.rect(6, 9, 4, 2, '#f0e0b0'); },
+    smokes(o) { o.shadedRect(4, 4, 8, 10, X().red); o.rect(4, 4, 8, 3, X().white[2]); for (let i = 0; i < 3; i++) o.rect(5 + i * 2, 2, 1, 2, '#f0e8d0'); },
+    coffee(o) { o.shadedRect(4, 5, 7, 8, X().white); o.rect(11, 7, 2, 3, X().white[1]); o.rect(5, 5, 5, 1, '#3a2010'); },
+    sandwich(o) { o.shadedRect(2, 7, 12, 2, X().wood); o.rect(2, 9, 12, 1, '#6a9a3a'); o.rect(2, 10, 12, 1, '#c84a3a'); o.shadedRect(2, 11, 12, 2, X().wood); },
+    tonic(o) { o.shadedRect(5, 5, 6, 9, ['#2a3a1a', '#3a5a2a', '#5a8a3a', '#8ac060']); o.rect(6, 2, 4, 3, X().wood[2]); o.rect(6, 8, 4, 3, '#f0e0b0'); },
+    reefer(o) { o.line(2, 12, 13, 6, '#f0ead4'); o.line(2, 13, 13, 7, '#d8d0b8'); o.set(14, 6, '#ff7030'); o.set(15, 5, '#a0a0a0'); o.set(15, 3, '#c0c0c0'); },
+    coke(o) { o.shadedRect(4, 5, 8, 8, ['#8a8a90', '#c0c0c8', '#e8e8f0', '#ffffff']); o.rect(6, 3, 4, 2, '#c0c0c8'); o.rect(4, 5, 8, 1, '#e04040'); },
+    ludes(o) { for (const [x, y] of [[5, 7], [10, 6], [7, 11]]) o.shadedEllipse(x, y, 2.5, 2.5, X().white); },
+    dust(o) { o.shadedRect(6, 4, 4, 10, X().glass); o.rect(6, 2, 4, 2, X().red[2]); o.rect(7, 10, 2, 3, '#e8e0f0'); },
+    acid(o) { o.shadedRect(3, 3, 10, 10, ['#4a2a6a', '#6a3a9a', '#9a5ac8', '#c890f0']); o.ellipse(8, 8, 2.5, 2.5, '#ffd040'); o.set(8, 8, '#e04040'); },
+    uppers(o) { for (const [x, y] of [[5, 6], [10, 8], [6, 11]]) { o.shadedEllipse(x, y, 2.5, 1.8, X().black); } },
+    smack(o) { o.shadedRect(4, 6, 8, 6, ['#6a5a3a', '#9a8a60', '#c8b888', '#e8dcb0']); o.line(4, 6, 8, 3, '#9a8a60'); o.line(8, 3, 12, 6, '#9a8a60'); },
+    lockpick(o) { o.line(2, 13, 12, 3, X().metal[3]); o.line(3, 13, 13, 3, X().metal[1]); o.rect(12, 2, 2, 1, X().metal[3]); o.line(4, 14, 13, 8, X().metal[2]); },
+    gascan(o) { o.shadedRect(3, 5, 10, 9, X().red); o.rect(10, 3, 3, 2, X().metal[2]); o.rect(5, 3, 3, 2, X().black[2]); },
+    rod(o) { o.line(1, 14, 14, 1, X().wood[2]); o.line(14, 1, 14, 10, '#d0d0d0'); o.set(14, 11, X().metal[2]); },
+    mask(o) { o.shadedEllipse(8, 8, 5.5, 6.5, X().black); o.rect(5, 6, 2, 2, '#e0ac7e'); o.rect(9, 6, 2, 2, '#e0ac7e'); o.rect(6, 11, 4, 1, '#e0ac7e'); },
+    bait(o) { o.shadedRect(4, 6, 8, 7, X().wood); o.line(6, 5, 10, 3, '#c86a6a'); },
+    rope(o) { o.ellipse(8, 8, 6, 6, X().wood[2]); o.ellipse(8, 8, 3.5, 3.5, null); o.ellipse(8, 8, 4, 4, X().wood[1]); o.ellipse(8, 8, 3, 3, null); },
+    ring(o) { o.ellipse(8, 9, 5, 4, '#f0c020'); o.ellipse(8, 9, 3, 2, null); o.shadedRect(6, 2, 4, 3, ['#6a4600', '#b88400', '#f0c020', '#fff27a']); },
+    watch(o) { o.rect(6, 1, 4, 14, X().wood[1]); o.shadedEllipse(8, 8, 4, 4, X().yellow); o.ellipse(8, 8, 2.8, 2.8, '#fff8e0'); o.line(8, 8, 8, 6, INK); },
+    chain(o) { for (let i = 0; i < 6; i++) o.ellipse(3 + i * 2, 5 + Math.abs(3 - i) * -1 + 6, 1.5, 1.2, X().yellow[2]); },
+    jewels(o) { o.shadedRect(2, 6, 12, 8, ['#3a1a2a', '#5a2a44', '#7a3a60', '#9a5a80']); o.set(5, 5, '#80f0f0'); o.set(9, 4, '#f06080'); o.set(11, 5, '#f0f080'); },
+    bonds(o) { o.shadedRect(2, 3, 12, 10, ['#6a7a5a', '#9aaa80', '#c8d4a8', '#e8f0d0']); o.hline(4, 11, 6, '#3a5a2a'); o.hline(4, 9, 9, '#3a5a2a'); },
+    painting(o) { o.shadedRect(1, 2, 14, 12, X().yellow); o.rect(3, 4, 10, 8, '#3a6a8a'); o.rect(3, 9, 10, 3, '#4a7a3a'); o.set(10, 6, '#f0e060'); },
+    pelt(o) { o.ellipse(8, 9, 6.5, 5, X().wood[2]); o.rect(2, 4, 2, 3, X().wood[1]); o.rect(12, 4, 2, 3, X().wood[1]); o.rect(2, 12, 2, 3, X().wood[1]); o.rect(12, 12, 2, 3, X().wood[1]); },
+    doubloon(o) { o.shadedEllipse(8, 8, 6, 6, X().yellow); o.ellipse(8, 8, 3.5, 3.5, X().yellow[1]); o.set(8, 8, X().yellow[3]); },
+    loot(o) { o.shadedRect(3, 5, 10, 9, X().wood); o.rect(3, 8, 10, 1, X().wood[0]); o.rect(7, 8, 2, 2, X().yellow[2]); },
+  };
+  const ALIAS = { pelt_rabbit: 'pelt', pelt_deer: 'pelt', pelt_wolf: 'pelt', pelt_bear: 'pelt', pelt_gator: 'pelt', pelt_coyote: 'pelt', pelt_boar: 'pelt', pelt_squatch: 'pelt', pelt_scratch: 'pelt', ring: 'ring', fur: 'pelt', tv: 'prop:tv', fish: 'prop:fish', bigfish: 'prop:fish', meat: 'pelt', eight: 'loot', cam: 'loot', radio: 'loot', silver: 'loot', pistol: 'ammo', shells: 'ammo', smg: 'ammo' };
+  const iconCache = {};
+  Goods.icon = function (key, jewelRing) {
+    const k = jewelRing ? 'watch' : key;
+    if (iconCache[k]) return iconCache[k];
+    let a = ALIAS[k] || k, cv;
+    if (a.startsWith('prop:')) cv = R.old.paintProp(a.slice(5));
+    else {
+      const f = ICON[a] || ICON.loot;
+      const o = new R.old.O(16, 16);
+      try { f(o); } catch (e) { ICON.loot(o); }
+      cv = o.outlineBy(R.old.Ue).toCanvas();
+    }
+    return (iconCache[k] = cv);
+  };
+
+  // every item the player holds, grouped
+  Goods.items = function () {
+    const pl = G().player, inv = pl.inv, out = [];
+    const push = (sec, key, name, n, desc, actions, iconKey) => out.push({ sec, key, name, n, desc, actions: actions || [], icon: iconKey || key });
+    for (const w of pl.weaponList()) {
+      if (w === 'fists' || w === 'gascan') continue;
+      const d = D.weapons[w];
+      const n = d.gun ? `${pl.clip[w] || 0}+${inv.ammo[d.ammo] || 0}` : d.thrown ? inv.ammo[w] : '';
+      push('Weapons', w, d.name, n, d.gun ? `Damage ${d.dmg}${d.pellets ? '×' + d.pellets : ''}, range ${d.range}, ${d.clip}-round clip.` : d.thrown ? 'Thrown. Lights things up.' : `Melee. Damage ${d.dmg}.`, [['equip', 'Equip']]);
+    }
+    if (pl.held) push('Weapons', 'held', D.props[pl.held.k].name, pl.held.dur >= 99 ? '' : pl.held.dur, 'Improvised. HIT swings it, SWAP throws it.', [['drop', 'Drop']], 'prop:' + pl.held.k);
+    for (const k in inv.cons) if (inv.cons[k]) { const c = D.consumables[k]; push('Food & first aid', k, c.name, inv.cons[k], [c.heal ? `+${c.heal} health` : '', c.cool ? `+${c.cool} Cool` : '', c.drunk ? 'gets you tipsy' : '', c.sober ? 'sobers you up' : ''].filter(Boolean).join(', ') + '.', [['use', 'Use']]); }
+    for (const k in inv.drugs || {}) if (inv.drugs[k]) { const d = D.drugs[k]; push('Drugs', k, `${d.name} ${d.street}`, inv.drugs[k], d.desc, [['take', 'Take']]); }
+    for (const k in inv.tools) if (inv.tools[k]) { if (k === 'ring') { push('Tools', 'ring', 'The Yellow Ring', '', 'Hard light from will. Tap RING to conjure, hold to beam, LIB to choose.', [['lib', 'Library']]); continue; } const t = D.tools[k]; if (t) push('Tools', k, t.name, inv.tools[k] > 1 ? inv.tools[k] : '', { lockpick: 'Opens doors and car locks quietly.', gascan: 'Pour a trail, then light it.', rod: 'Stand by water and press USE.', mask: 'MASK button. Witnesses can\'t name you.', bait: 'Fish bite faster.', rope: 'For tying things up.' }[k] || ''); }
+    for (const k in inv.loot) if (inv.loot[k]) { const l = D.loot[k]; if (l) push(l.pelt ? 'Pelts & catch' : 'Valuables', k, l.name, inv.loot[k], `Worth about ${R.fmtMoney(l.v)} to a ${l.pelt ? 'butcher' : 'fence'}.`, [], k); }
+    for (const k in inv.ammo) if (inv.ammo[k] && !D.weapons[k]) push('Ammo', k, D.ammoNames[k] || k, inv.ammo[k], 'Loose rounds.', [], 'ammo');
+    return out;
+  };
+  Goods.act = function (it, a) {
+    const g = G(), pl = g.player;
+    if (a === 'equip') { pl.weapon = it.key; pl.weaponOut = it.key !== 'fists'; g.audio.sfx('equip'); }
+    if (a === 'use') { const c = D.consumables[it.key]; pl.inv.cons[it.key]--; if (c.heal) pl.hp = Math.min(pl.maxHp, pl.hp + c.heal); if (c.cool) pl.cool = Math.min(100, pl.cool + c.cool); if (c.drunk) pl.drunk = Math.min(1, pl.drunk + c.drunk); if (c.sober) pl.drunk = 0; g.audio.sfx('drink'); }
+    if (a === 'take') this.take(it.key);
+    if (a === 'drop') R.props.dropHeld(pl);
+    if (a === 'lib') { g.ui.closeSheet(); R.ring.openLibrary(); return true; }
+  };
+  Goods.renderInventory = function (body, onChange) {
+    const g = G(), pl = g.player;
+    const items = this.items();
+    const secs = [...new Set(items.map((i) => i.sec))];
+    body.innerHTML = `<div class="invtop"><span>${R.fmtMoney(pl.cash)}</span><span>${Math.round(pl.hp)}/${pl.maxHp} health</span><span>Cool ${Math.round(pl.cool)}</span>${Object.keys(this.effects(pl)).length ? `<span class="high">On: ${Object.keys(this.effects(pl)).map((k) => D.drugs[k].name + (this.effects(pl)[k].crash ? ' (comedown)' : '')).join(', ')}</span>` : ''}</div>` +
+      (items.length ? secs.map((sec) => `<div class="sect">${sec}</div><div class="invgrid">${items.map((it, i) => (it.sec === sec ? `<button class="inv" data-i="${i}"><canvas width="32" height="32"></canvas><b>${it.n !== '' && it.n !== undefined ? it.n : ''}</b><span>${it.name}</span></button>` : '')).join('')}</div>`).join('') : '<p>Your pockets are empty.</p>') +
+      `<div class="invdetail" id="invd">Tap something to look at it.</div>`;
+    body.querySelectorAll('.inv').forEach((b) => {
+      const it = items[+b.dataset.i];
+      const cv = b.querySelector('canvas'), cg = cv.getContext('2d');
+      cg.imageSmoothingEnabled = false;
+      const ic = it.icon.startsWith && it.icon.startsWith('prop:') ? R.old.paintProp(it.icon.slice(5)) : this.icon(it.icon);
+      cg.drawImage(ic, 0, 0, 32, 32);
+      b.addEventListener('click', () => {
+        const d = body.querySelector('#invd');
+        d.innerHTML = `<b>${it.name}</b><p>${it.desc}</p><div class="opts">${it.actions.map(([k, l]) => `<button class="opt go" data-a="${k}">${l}</button>`).join('')}</div>`;
+        d.querySelectorAll('[data-a]').forEach((x) => x.addEventListener('click', () => { if (!this.act(it, x.dataset.a)) onChange(); }));
+      });
+    });
+  };
+})();
+
+// on acid, the city starts talking nonsense
+(function () {
+  const AP = R.Actors.prototype, baseSay = AP.say;
+  const WEIRD = ['The walls are breathing, man.', 'Your aura is SO orange.', 'I can taste purple.', 'Are you... are you made of jazz?', 'The pigeons know.', 'Everything is connected, brother.', 'Why is your face melting? Cool.', 'I am the walrus.'];
+  AP.say = function (h, text, dur, color) {
+    if (h && h.kind === 'h' && R.goods.has(this.game.player, 'trip') && R.rng() < 0.45) text = WEIRD[Math.floor(R.rng() * WEIRD.length)];
+    return baseSay.call(this, h, text, dur, color);
+  };
+})();
+
 // ---- 13_player.js
 // RHAPSODY — the player: Nicky "The Mook" Marchetti. Movement, weapons, cars,
 // robbing, looting, skinning, crew, the "Cool" slow-mo, gasoline and fishing.
@@ -8144,12 +8536,12 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     if (this.outfitChangedSince > 0) this.outfitChangedSince -= dt;
     // cool meter
     if (this.coolOn) {
-      this.cool -= dt * 28 / (g.timeScale || 1);
+      this.cool -= dt * 28 * R.goods.mod(this, 'coolSave', 1) / (g.timeScale || 1);
       if (this.cool <= 0 || inp.pressed('cool')) this.setCool(false);
     } else if (inp.pressed('cool')) this.setCool(true);
     if (inp.pressed('mask')) this.toggleMask();
     if (inp.pressed('sneak') && !this.inCar) { this.sneak = !this.sneak; g.ui.toast(this.sneak ? 'Sneaking: quieter, animals spook less.' : 'Walking normally.'); }
-    if (inp.pressed('heal')) this.useConsumable();
+    if (inp.pressed('heal')) g.ui.openMenu('items');
     if (this.inside) return;
     if (this.inCar) return this.updateCar(dt);
     // knockback
@@ -8170,7 +8562,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     }
     const running = (inp.held('run') || inp.held('runStick')) && !this.sneak;
     const heavy = this.held && D.props[this.held.k].heavy ? 0.7 : 1;
-    const speed = (this.sneak ? 26 : running ? 86 : 48) * heavy * (g.timeScale < 1 ? 1.8 : 1) * (g.cheats.fastRun ? 2.2 : 1);
+    const speed = (this.sneak ? 26 : running ? 86 : 48) * heavy * (g.timeScale < 1 ? 1.8 : 1) * (g.cheats.fastRun ? 2.2 : 1) * R.goods.mod(this, 'speed', 1);
     if (mag > 0.12) {
       const nx = mx / Math.max(mag, 0.001), ny = my / Math.max(mag, 0.001);
       g.actors.moveActor(this, nx * speed * mag, ny * speed * mag, dt);
@@ -8318,7 +8710,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
       if (!this.inv.ammo[this.weapon]) this.cycleWeapon();
     } else {
       this.atkT = w.rate;
-      this.power = 1 + (this.drunk > 0.3 ? 0.2 : 0);
+      this.power = (1 + (this.drunk > 0.3 ? 0.2 : 0)) * R.goods.mod(this, 'power', 1);
       this.punchT = 0.18;
       this.punchN = (this.punchN || 0) + 1;
       R.combat.melee(this, w, ang);
@@ -8334,7 +8726,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     const n = Math.min(need, have);
     this.inv.ammo[w.ammo] -= n;
     this.clip[this.weapon] = (this.clip[this.weapon] || 0) + n;
-    this.atkT = 0.9;
+    this.atkT = 0.9 * R.goods.mod(this, 'reload', 1);
     g.audio.sfx('reload');
   };
 
@@ -8611,6 +9003,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     if (this.dead || (g.cheats && g.cheats.god)) return;
     if (this.inside) return;
     if (this.inCar && kind !== 'blast' && kind !== 'fire' && kind !== 'bullet' && kind !== 'fall') return;
+    amt *= R.goods.mod(this, 'armor', 1);
     if (this.shieldT > 0) { g.fx.text(this.x, this.y - 26, 'BLOCKED', '#fff27a'); g.fx.sparks(this.x, this.y - 12, 3); return; }
     this.hp -= amt;
     this.bloody = Math.min(1, this.bloody + amt / 60);
@@ -11121,6 +11514,9 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     const g = this.game, pl = g.player;
     if (pl.inCar || pl.inside) return null;
     const keep = this.focus && !this.focus.dead && !this.focus.removed && !this.focus.inCar && R.dist(this.focus.x, this.focus.y, pl.x, pl.y) < 46 ? this.focus : null;
+    // a fleeing witness in shouting distance takes priority: Stop Witness
+    const wit = g.actors.near(pl.x, pl.y, 72).filter((a) => a.kind === 'h' && !a.dead && a.witness && !a.witness.done && !a.witness.silenced && g.world.los(pl.x, pl.y - 8, a.x, a.y - 8)).sort((a, b) => R.dist(a.x, a.y, pl.x, pl.y) - R.dist(b.x, b.y, pl.x, pl.y))[0];
+    if (wit) { this.focus = wit; return wit; }
     let best = null, bs = 1e9;
     for (const a of g.actors.near(pl.x, pl.y, 40)) {
       if (a.kind !== 'h' || a.dead || a.inCar || a.crew && false) continue;
@@ -11145,13 +11541,17 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
       return;
     }
     const chips = [];
-    chips.push(['greet', 'Greet', 'c-greet']);
+    const wit = h.witness && !h.witness.done && !h.witness.silenced;
+    if (wit) {
+      chips.push(['wint', 'Intimidate', 'c-antag']);
+      chips.push(['wbribe', `Bribe $${R.dialog.bribePrice(h)}`, 'c-greet']);
+    } else chips.push(['greet', 'Greet', 'c-greet']);
     if (h.hostile && h.state === 'fight' && h.brawl) chips.push(['defuse', 'Defuse', 'c-defuse']);
-    else chips.push(['antag', 'Antagonize', 'c-antag']);
+    else if (!wit) chips.push(['antag', 'Antagonize', 'c-antag']);
     chips.push(['talk', 'Talk', 'c-talk']);
     if (!h.cop && (h.intimidated || h.state === 'cower' || h.state === 'surrender' || (pl.weaponOut && R.dialog.fear(h) > 20))) chips.push(['rob', 'Rob', 'c-rob']);
     const name = g.actors.displayName(h);
-    const sub = h.person ? (h.person.met ? `${g.pop.title(h.person)} · ${h.person.age}` : 'Greet twice to learn their name') : h.cop ? 'Keep it civil' : h.tag === 'hitch' ? `Needs a ride to ${h.hitchDest.name}` : h.witness && !h.witness.done ? 'Witness! Pay them off or scare them' : h.look.kid ? 'Just a kid' : '';
+    const sub = h.person ? (h.person.met ? `${g.pop.title(h.person)} · ${h.person.age}` : 'Greet twice to learn their name') : h.cop ? 'Keep it civil' : h.tag === 'hitch' ? `Needs a ride to ${h.hitchDest.name}` : h.witness && !h.witness.done && !h.witness.silenced ? 'STOP WITNESS before they reach a phone or a cop' : h.look.kid ? 'Just a kid' : '';
     const moodTxt = h.state === 'fight' ? ' · hostile' : h.state === 'cower' || h.state === 'surrender' ? ' · scared' : '';
     const key = h.id + chips.map((c) => c[0]).join() + name + sub + moodTxt;
     if (key === this.lastCtxKey) return;
@@ -11175,6 +11575,8 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
         if (k === 'talk') pl.talk(t);
         if (k === 'defuse') R.dialog.defuse(t);
         if (k === 'rob') pl.rob(t);
+        if (k === 'wint') R.dialog.stopWitness(t, 'intimidate');
+        if (k === 'wbribe') R.dialog.stopWitness(t, 'bribe');
         this.lastCtxKey = '';
       });
       wrap.appendChild(b);
@@ -12036,7 +12438,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
   };
   U.openMenu = function (tab) {
     if (this.sheetOpen && this.sheetOpen !== 'menu') return;
-    const tabs = [['map', 'Map'], ['jobs', 'Jobs'], ['people', 'People'], ['status', 'Status'], ['items', 'Items'], ['news', 'Paper'], ['settings', 'Settings'], ['help', 'Help'], ['debug', 'Debug']];
+    const tabs = [['map', 'Map'], ['jobs', 'Jobs'], ['people', 'People'], ['status', 'Status'], ['items', 'Pockets'], ['news', 'Paper'], ['settings', 'Settings'], ['help', 'Help'], ['debug', 'Debug']];
     const s = this.openSheet('menu', `<div class="tabs">${tabs.map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'sel' : ''}">${l}</button>`).join('')}<button data-tab="close" aria-label="Close">✕</button></div><div class="body" id="mbody"></div>`, true);
     s.style.maxHeight = '92%';
     s.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => (b.dataset.tab === 'close' ? this.closeSheet() : this.openMenuTab(b.dataset.tab, s))));
@@ -12074,13 +12476,9 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
       <div class="sect">Families</div><div class="kv">${fam}</div><div class="sect">Bounties</div><div class="kv">${bnt}</div>
       <div class="sect">Record</div><div class="kv"><span>Jobs done</span><span>${st.jobs}</span><span>Crimes</span><span>${st.crimes}</span><span>Escapes</span><span>${st.escapes}</span><span>Arrests</span><span>${st.arrests}</span><span>Bodies</span><span>${st.kills}</span><span>Animals hunted</span><span>${st.hunted}</span><span>Fish caught</span><span>${st.fish}</span><span>People greeted</span><span>${st.greeted}</span><span>Properties</span><span>${pl.properties.length}</span></div>`;
     } else if (tab === 'items') {
-      const rows = [];
-      for (const k in pl.inv.cons) if (pl.inv.cons[k]) rows.push({ label: `${D.consumables[k].name} ×${pl.inv.cons[k]}`, small: 'Tap to use', fn: () => { const c = D.consumables[k]; pl.inv.cons[k]--; if (c.heal) pl.hp = Math.min(pl.maxHp, pl.hp + c.heal); if (c.cool) pl.cool = Math.min(100, pl.cool + c.cool); if (c.drunk) pl.drunk += c.drunk; if (c.sober) pl.drunk = 0; this.openMenuTab('items', s); } });
-      const weapons = pl.weaponList().map((w) => (w === 'gascan' ? `Gas Can ×${pl.inv.tools.gascan}` : D.weapons[w].name + (D.weapons[w].gun ? ` (${pl.clip[w] || 0}+${pl.inv.ammo[D.weapons[w].ammo] || 0})` : D.weapons[w].thrown ? ` ×${pl.inv.ammo[w]}` : ''))).join(', ');
-      const loot = Object.keys(pl.inv.loot).filter((k) => pl.inv.loot[k]).map((k) => `${D.loot[k].name} ×${pl.inv.loot[k]}`).join(', ');
-      const tools = Object.keys(pl.inv.tools).filter((k) => pl.inv.tools[k]).map((k) => `${D.tools[k].name}${pl.inv.tools[k] > 1 ? ' ×' + pl.inv.tools[k] : ''}`).join(', ');
-      body.innerHTML = `<div class="sect">Weapons</div><p>${esc(weapons)}</p><div class="sect">Pockets</div>${this.optsHtml(rows)}<div class="sect">Tools</div><p>${esc(tools || 'Nothing')}</p><div class="sect">Goods to fence</div><p>${esc(loot || 'Nothing')}</p><div class="sect">Wearing</div><p>${esc([D.style.jackets[pl.style.jacket].name, D.style.shirts[pl.style.shirt].name + ' shirt', D.style.pants[pl.style.pants].name, pl.style.hat !== 'none' ? D.style.hatCols[pl.style.hatCol].name + ' ' + D.style.hats[pl.style.hat].name : null, D.style.hair[pl.style.hair] + ' hair', pl.style.facial !== 'clean' ? D.style.facial[pl.style.facial] : null].filter(Boolean).join(', '))}</p>`;
-      this.bindOpts(body, rows);
+      R.goods.renderInventory(body, () => this.openMenuTab('items', s));
+      const wear = [D.style.jackets[pl.style.jacket].name, D.style.shirts[pl.style.shirt].name + ' shirt', D.style.pants[pl.style.pants].name, pl.style.hat !== 'none' ? D.style.hatCols[pl.style.hatCol].name + ' ' + D.style.hats[pl.style.hat].name : null, D.style.hair[pl.style.hair] + ' hair', pl.style.facial !== 'clean' ? D.style.facial[pl.style.facial] : null].filter(Boolean).join(', ');
+      body.insertAdjacentHTML('beforeend', `<div class="sect">Wearing</div><p>${esc(wear)}</p>`);
     } else if (tab === 'news') {
       const day = g.pop.day;
       const items = g.pop.news.slice(0, 16);
@@ -12320,6 +12718,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     R.legends.draw(g);
     if (R.ring.fearMan && R.ring.fearMan.x) { const fm = R.ring.fearMan; g.fillStyle = 'rgba(255,226,60,' + (0.25 + Math.sin(t * 3) * 0.1) + ')'; g.fillRect(Math.round(fm.x + 4), Math.round(fm.y - 12), 2, 2); }
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    R.goods.overlay(g, cam.vw, cam.vh, t);
     if (!pl.room) this.drawWeather(g);
     this.drawBubbles(g, left, top, z);
     if (game.env.lightning > 0.6) { g.fillStyle = `rgba(230,235,255,${(game.env.lightning - 0.6) * 1.2})`; g.fillRect(0, 0, cam.vw, cam.vh); }
@@ -12914,6 +13313,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
       R.props.update(sdt);
       R.ring.update(sdt);
       R.legends.update(sdt);
+      R.goods.update(sdt);
       this.fx.update(sdt);
       this.hintCheck();
       this.occT = (this.occT || 0) - dt;
@@ -12999,7 +13399,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
       v: 2, seed: this.seed, t: this.clock.t, log: this.worldLog, weather: this.env.weather.kind,
       player: {
         x: pl.room ? this.interiors.outside(pl.x, pl.y).x : pl.x, y: pl.room ? this.interiors.outside(pl.x, pl.y).y : pl.y, hp: pl.hp, cool: pl.cool, cash: pl.cash, inv: pl.inv, clip: pl.clip, outfit: pl.outfit, outfits: pl.outfits || {}, style: pl.style, wardrobe: pl.wardrobe,
-        will: pl.will, rep: pl.rep, standing: pl.standing, stats: pl.stats, sweetheart: pl.sweetheart, properties: pl.properties, masked: pl.masked,
+        will: pl.will, errands: pl.errands || [], rep: pl.rep, standing: pl.standing, stats: pl.stats, sweetheart: pl.sweetheart, properties: pl.properties, masked: pl.masked,
         cars: pl.ownedCars.filter((c) => !c.removed && !c.wrecked).map((c) => [c.modelId, c.x, c.y, c.angle, c.color]),
       },
       pop: this.pop.serialize(), law: this.law.serialize(), jobs: this.jobs.serialize(), hints: this.hints,
@@ -13026,6 +13426,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
       if (p.will != null) pl.will = p.will;
       if (p.style) pl.style = Object.assign(R.styleDefault(), p.style);
       pl.wardrobe = p.wardrobe || {};
+      pl.errands = p.errands || [];
       pl.place(p.x, p.y);
       pl.buildLook();
       for (const [id, fam, due, owned] of s.rackets || []) { const b = this.world.buildings[id]; if (b) { b.racket = 1; b.racketFamily = fam; b.racketDue = due; if (owned) b.playerOwned = true; } }
@@ -13480,6 +13881,8 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
         const h = this.spawnAt(room, null, pick(room.extra.concat(room.seats), used), { arch: R.rng.pick(['flirt', 'friendly', 'gossip', 'tough', 'eccentric']), city: b.cityId });
         if (h && b.type === 'club' && R.rng() < 0.7) { h.state = 'perform'; h.role = 'dancer'; h.timer = 20 + R.rng() * 30; }
       }
+      // somebody in the back is always selling something after dark
+      if (g.clock.isNight() && R.rng() < (b.type === 'club' ? 0.8 : 0.4)) { const s = pick(room.extra.length ? room.extra : [room.center], used); const d = R.goods.spawnDealer(s.x * TS + 8, s.y * TS + 8, room); d.keep = true; d.stay = true; d.state = 'idle'; d.timer = 1e9; d.destKey = 'b:' + b.id; d.spot = { x: s.x, y: s.y, city: b.city, kind: 'room' }; }
     }
     // the police station has cops, the hospital has a nurse
     if (b.type === 'police' && room.mode !== 'breakin') for (let k = 0; k < 2; k++) { const h = this.spawnAt(room, null, pick(room.staff, used), { cop: true, role: 'cop', city: b.cityId, stay: true }); if (h) h.look = g.pop.makeLook(R.mulberry(R.rng.int(0, 1e9)), { fem: R.rng.chance(0.3), age: 35, role: 'cop', city: b.cityId }); }

@@ -87,12 +87,12 @@
     if (this.outfitChangedSince > 0) this.outfitChangedSince -= dt;
     // cool meter
     if (this.coolOn) {
-      this.cool -= dt * 28 / (g.timeScale || 1);
+      this.cool -= dt * 28 * R.goods.mod(this, 'coolSave', 1) / (g.timeScale || 1);
       if (this.cool <= 0 || inp.pressed('cool')) this.setCool(false);
     } else if (inp.pressed('cool')) this.setCool(true);
     if (inp.pressed('mask')) this.toggleMask();
     if (inp.pressed('sneak') && !this.inCar) { this.sneak = !this.sneak; g.ui.toast(this.sneak ? 'Sneaking: quieter, animals spook less.' : 'Walking normally.'); }
-    if (inp.pressed('heal')) this.useConsumable();
+    if (inp.pressed('heal')) g.ui.openMenu('items');
     if (this.inside) return;
     if (this.inCar) return this.updateCar(dt);
     // knockback
@@ -113,7 +113,7 @@
     }
     const running = (inp.held('run') || inp.held('runStick')) && !this.sneak;
     const heavy = this.held && D.props[this.held.k].heavy ? 0.7 : 1;
-    const speed = (this.sneak ? 26 : running ? 86 : 48) * heavy * (g.timeScale < 1 ? 1.8 : 1) * (g.cheats.fastRun ? 2.2 : 1);
+    const speed = (this.sneak ? 26 : running ? 86 : 48) * heavy * (g.timeScale < 1 ? 1.8 : 1) * (g.cheats.fastRun ? 2.2 : 1) * R.goods.mod(this, 'speed', 1);
     if (mag > 0.12) {
       const nx = mx / Math.max(mag, 0.001), ny = my / Math.max(mag, 0.001);
       g.actors.moveActor(this, nx * speed * mag, ny * speed * mag, dt);
@@ -261,7 +261,7 @@
       if (!this.inv.ammo[this.weapon]) this.cycleWeapon();
     } else {
       this.atkT = w.rate;
-      this.power = 1 + (this.drunk > 0.3 ? 0.2 : 0);
+      this.power = (1 + (this.drunk > 0.3 ? 0.2 : 0)) * R.goods.mod(this, 'power', 1);
       this.punchT = 0.18;
       this.punchN = (this.punchN || 0) + 1;
       R.combat.melee(this, w, ang);
@@ -277,7 +277,7 @@
     const n = Math.min(need, have);
     this.inv.ammo[w.ammo] -= n;
     this.clip[this.weapon] = (this.clip[this.weapon] || 0) + n;
-    this.atkT = 0.9;
+    this.atkT = 0.9 * R.goods.mod(this, 'reload', 1);
     g.audio.sfx('reload');
   };
 
@@ -554,6 +554,7 @@
     if (this.dead || (g.cheats && g.cheats.god)) return;
     if (this.inside) return;
     if (this.inCar && kind !== 'blast' && kind !== 'fire' && kind !== 'bullet' && kind !== 'fall') return;
+    amt *= R.goods.mod(this, 'armor', 1);
     if (this.shieldT > 0) { g.fx.text(this.x, this.y - 26, 'BLOCKED', '#fff27a'); g.fx.sparks(this.x, this.y - 12, 3); return; }
     this.hp -= amt;
     this.bloody = Math.min(1, this.bloody + amt / 60);

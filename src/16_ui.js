@@ -69,6 +69,9 @@
     const g = this.game, pl = g.player;
     if (pl.inCar || pl.inside) return null;
     const keep = this.focus && !this.focus.dead && !this.focus.removed && !this.focus.inCar && R.dist(this.focus.x, this.focus.y, pl.x, pl.y) < 46 ? this.focus : null;
+    // a fleeing witness in shouting distance takes priority: Stop Witness
+    const wit = g.actors.near(pl.x, pl.y, 72).filter((a) => a.kind === 'h' && !a.dead && a.witness && !a.witness.done && !a.witness.silenced && g.world.los(pl.x, pl.y - 8, a.x, a.y - 8)).sort((a, b) => R.dist(a.x, a.y, pl.x, pl.y) - R.dist(b.x, b.y, pl.x, pl.y))[0];
+    if (wit) { this.focus = wit; return wit; }
     let best = null, bs = 1e9;
     for (const a of g.actors.near(pl.x, pl.y, 40)) {
       if (a.kind !== 'h' || a.dead || a.inCar || a.crew && false) continue;
@@ -93,13 +96,17 @@
       return;
     }
     const chips = [];
-    chips.push(['greet', 'Greet', 'c-greet']);
+    const wit = h.witness && !h.witness.done && !h.witness.silenced;
+    if (wit) {
+      chips.push(['wint', 'Intimidate', 'c-antag']);
+      chips.push(['wbribe', `Bribe $${R.dialog.bribePrice(h)}`, 'c-greet']);
+    } else chips.push(['greet', 'Greet', 'c-greet']);
     if (h.hostile && h.state === 'fight' && h.brawl) chips.push(['defuse', 'Defuse', 'c-defuse']);
-    else chips.push(['antag', 'Antagonize', 'c-antag']);
+    else if (!wit) chips.push(['antag', 'Antagonize', 'c-antag']);
     chips.push(['talk', 'Talk', 'c-talk']);
     if (!h.cop && (h.intimidated || h.state === 'cower' || h.state === 'surrender' || (pl.weaponOut && R.dialog.fear(h) > 20))) chips.push(['rob', 'Rob', 'c-rob']);
     const name = g.actors.displayName(h);
-    const sub = h.person ? (h.person.met ? `${g.pop.title(h.person)} · ${h.person.age}` : 'Greet twice to learn their name') : h.cop ? 'Keep it civil' : h.tag === 'hitch' ? `Needs a ride to ${h.hitchDest.name}` : h.witness && !h.witness.done ? 'Witness! Pay them off or scare them' : h.look.kid ? 'Just a kid' : '';
+    const sub = h.person ? (h.person.met ? `${g.pop.title(h.person)} · ${h.person.age}` : 'Greet twice to learn their name') : h.cop ? 'Keep it civil' : h.tag === 'hitch' ? `Needs a ride to ${h.hitchDest.name}` : h.witness && !h.witness.done && !h.witness.silenced ? 'STOP WITNESS before they reach a phone or a cop' : h.look.kid ? 'Just a kid' : '';
     const moodTxt = h.state === 'fight' ? ' · hostile' : h.state === 'cower' || h.state === 'surrender' ? ' · scared' : '';
     const key = h.id + chips.map((c) => c[0]).join() + name + sub + moodTxt;
     if (key === this.lastCtxKey) return;
@@ -123,6 +130,8 @@
         if (k === 'talk') pl.talk(t);
         if (k === 'defuse') R.dialog.defuse(t);
         if (k === 'rob') pl.rob(t);
+        if (k === 'wint') R.dialog.stopWitness(t, 'intimidate');
+        if (k === 'wbribe') R.dialog.stopWitness(t, 'bribe');
         this.lastCtxKey = '';
       });
       wrap.appendChild(b);
@@ -984,7 +993,7 @@
   };
   U.openMenu = function (tab) {
     if (this.sheetOpen && this.sheetOpen !== 'menu') return;
-    const tabs = [['map', 'Map'], ['jobs', 'Jobs'], ['people', 'People'], ['status', 'Status'], ['items', 'Items'], ['news', 'Paper'], ['settings', 'Settings'], ['help', 'Help'], ['debug', 'Debug']];
+    const tabs = [['map', 'Map'], ['jobs', 'Jobs'], ['people', 'People'], ['status', 'Status'], ['items', 'Pockets'], ['news', 'Paper'], ['settings', 'Settings'], ['help', 'Help'], ['debug', 'Debug']];
     const s = this.openSheet('menu', `<div class="tabs">${tabs.map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'sel' : ''}">${l}</button>`).join('')}<button data-tab="close" aria-label="Close">✕</button></div><div class="body" id="mbody"></div>`, true);
     s.style.maxHeight = '92%';
     s.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => (b.dataset.tab === 'close' ? this.closeSheet() : this.openMenuTab(b.dataset.tab, s))));
@@ -1022,13 +1031,9 @@
       <div class="sect">Families</div><div class="kv">${fam}</div><div class="sect">Bounties</div><div class="kv">${bnt}</div>
       <div class="sect">Record</div><div class="kv"><span>Jobs done</span><span>${st.jobs}</span><span>Crimes</span><span>${st.crimes}</span><span>Escapes</span><span>${st.escapes}</span><span>Arrests</span><span>${st.arrests}</span><span>Bodies</span><span>${st.kills}</span><span>Animals hunted</span><span>${st.hunted}</span><span>Fish caught</span><span>${st.fish}</span><span>People greeted</span><span>${st.greeted}</span><span>Properties</span><span>${pl.properties.length}</span></div>`;
     } else if (tab === 'items') {
-      const rows = [];
-      for (const k in pl.inv.cons) if (pl.inv.cons[k]) rows.push({ label: `${D.consumables[k].name} ×${pl.inv.cons[k]}`, small: 'Tap to use', fn: () => { const c = D.consumables[k]; pl.inv.cons[k]--; if (c.heal) pl.hp = Math.min(pl.maxHp, pl.hp + c.heal); if (c.cool) pl.cool = Math.min(100, pl.cool + c.cool); if (c.drunk) pl.drunk += c.drunk; if (c.sober) pl.drunk = 0; this.openMenuTab('items', s); } });
-      const weapons = pl.weaponList().map((w) => (w === 'gascan' ? `Gas Can ×${pl.inv.tools.gascan}` : D.weapons[w].name + (D.weapons[w].gun ? ` (${pl.clip[w] || 0}+${pl.inv.ammo[D.weapons[w].ammo] || 0})` : D.weapons[w].thrown ? ` ×${pl.inv.ammo[w]}` : ''))).join(', ');
-      const loot = Object.keys(pl.inv.loot).filter((k) => pl.inv.loot[k]).map((k) => `${D.loot[k].name} ×${pl.inv.loot[k]}`).join(', ');
-      const tools = Object.keys(pl.inv.tools).filter((k) => pl.inv.tools[k]).map((k) => `${D.tools[k].name}${pl.inv.tools[k] > 1 ? ' ×' + pl.inv.tools[k] : ''}`).join(', ');
-      body.innerHTML = `<div class="sect">Weapons</div><p>${esc(weapons)}</p><div class="sect">Pockets</div>${this.optsHtml(rows)}<div class="sect">Tools</div><p>${esc(tools || 'Nothing')}</p><div class="sect">Goods to fence</div><p>${esc(loot || 'Nothing')}</p><div class="sect">Wearing</div><p>${esc([D.style.jackets[pl.style.jacket].name, D.style.shirts[pl.style.shirt].name + ' shirt', D.style.pants[pl.style.pants].name, pl.style.hat !== 'none' ? D.style.hatCols[pl.style.hatCol].name + ' ' + D.style.hats[pl.style.hat].name : null, D.style.hair[pl.style.hair] + ' hair', pl.style.facial !== 'clean' ? D.style.facial[pl.style.facial] : null].filter(Boolean).join(', '))}</p>`;
-      this.bindOpts(body, rows);
+      R.goods.renderInventory(body, () => this.openMenuTab('items', s));
+      const wear = [D.style.jackets[pl.style.jacket].name, D.style.shirts[pl.style.shirt].name + ' shirt', D.style.pants[pl.style.pants].name, pl.style.hat !== 'none' ? D.style.hatCols[pl.style.hatCol].name + ' ' + D.style.hats[pl.style.hat].name : null, D.style.hair[pl.style.hair] + ' hair', pl.style.facial !== 'clean' ? D.style.facial[pl.style.facial] : null].filter(Boolean).join(', ');
+      body.insertAdjacentHTML('beforeend', `<div class="sect">Wearing</div><p>${esc(wear)}</p>`);
     } else if (tab === 'news') {
       const day = g.pop.day;
       const items = g.pop.news.slice(0, 16);

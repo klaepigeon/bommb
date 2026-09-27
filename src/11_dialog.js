@@ -134,6 +134,7 @@
     if (pl.masked) m -= 40;
     if (pl.weaponOut) m -= 45;
     if (pl.bloody > 0.3) m -= 25;
+    if (R.goods.has(pl, 'mellow')) m += 15;
     if (h.anger) m -= h.anger;
     m += pl.outfitScore();
     return m;
@@ -258,6 +259,40 @@
 
   // ---------------------------------------------------------------- talk tree
   // Returns { title, sub, lines:[], options:[{label, fn, close}] }
+  // RDR2-style Stop Witness: scare them quiet or pay them off
+  D2.bribePrice = (h) => 15 + Math.round((h.witness && h.witness.crime.bounty) || 10);
+  D2.stopWitness = function (h, how, sayFn) {
+    const g = G(), pl = g.player, p = h.person;
+    const say = sayFn || ((t) => g.actors.say(h, t));
+    if (!h.witness || h.witness.done || h.witness.silenced) return;
+    const silence = (state) => {
+      h.witness.silenced = true; h.alert = null; h.state = state; h.timer = 6; h.goal = null;
+      g.ui.toast('Witness silenced.', 'good');
+      g.audio.sfx(how === 'bribe' ? 'cash' : 'punch');
+    };
+    if (how === 'bribe') {
+      const price = D2.bribePrice(h);
+      if (pl.cash < price) { say("That ain't enough to make me forget."); return false; }
+      const ok = R.rng() < 0.65 + h.tr.greed * 0.4 - h.tr.lawful * 0.35;
+      if (!ok) { say(pick(["Keep your blood money. I'm calling the cops.", 'You think I can be bought?!'])); h.hurry = true; g.actors.startReport(h); return; }
+      pl.cash -= price;
+      say(pick(['...What crime? I was looking at pigeons.', 'Pleasure doing business. Never saw you.', 'My eyes aren\'t what they used to be.']));
+      if (p) { p.opinion = Math.min(100, p.opinion + 4); g.pop.remember(p, 'bribed', 'A man in a sharp suit paid me to forget something.', g.pop.day); }
+      silence('idle');
+      return;
+    }
+    const w = D.weapons[pl.weapon];
+    const odds = 0.3 + D2.fear(h) / 100 + (pl.weaponOut && w && w.gun ? 0.3 : pl.weaponOut ? 0.15 : 0) + pl.rep.infamy / 300 - h.tr.brave * 0.3 + (h.state === 'cower' || h.state === 'surrender' ? 0.3 : 0) + (pl.masked ? 0.05 : 0);
+    if (R.rng() < odds) {
+      say(pick(['O-okay! I saw nothing! Nothing!', 'I didn\'t see a thing, I swear on my mother!', 'Please! I got kids! I won\'t say a word!']));
+      if (p) { p.fear = Math.min(100, (p.fear || 0) + 50); p.opinion = Math.max(-100, p.opinion - 20); g.pop.remember(p, 'threatened', 'A goon threatened me into keeping quiet.', g.pop.day); }
+      silence('cower');
+    } else if (h.tr.brave > 0.7 && !h.cop) {
+      say(pick(["You don't scare me!", 'Try it, tough guy!'])); h.hostile = true; g.actors.setFight(h, pl);
+    } else {
+      say(pick(['Help! HELP! Somebody call the cops!', 'Get away from me!'])); h.hurry = true; g.actors.startReport(h);
+    }
+  };
   D2.tree = function (h) {
     if (h.fearman) return R.ring.fearTree(h);
     if (h.legend && R.legends) return R.legends.tree(h);
@@ -271,19 +306,8 @@
     const role = h.role;
     // witnesses can be paid off
     if (h.witness && !h.witness.done && !h.witness.silenced) {
-      const price = 15 + (h.witness.crime.bounty || 10);
-      opts.push({ label: `"Here's ${R.fmtMoney(price)}. You didn't see nothin'."`, fn: () => {
-        if (pl.cash < price) return say("That ain't enough to make me forget.");
-        pl.cash -= price;
-        const ok = R.rng() < 0.65 + h.tr.greed * 0.4 - h.tr.lawful * 0.35;
-        if (ok) { h.witness.silenced = true; h.alert = null; h.state = 'idle'; say('...What crime? I was looking at pigeons.'); }
-        else { say("Keep your blood money. I'm calling the cops."); h.state = 'report'; }
-      } });
-      opts.push({ label: '"Talk and you\'re next."', fn: () => {
-        const ok = R.rng() < 0.35 + D2.fear(h) / 100;
-        if (ok) { h.witness.silenced = true; h.alert = null; h.state = 'cower'; h.timer = 6; say('O-okay! I saw nothing! Nothing!'); if (p) p.fear = 90; }
-        else { say('You don\'t scare me!'); close(); g.actors.startReport(h); }
-      } });
+      opts.push({ label: `"Here's ${R.fmtMoney(D2.bribePrice(h))}. You didn't see nothin'."`, fn: () => { if (D2.stopWitness(h, 'bribe', say) !== false) close(); } });
+      opts.push({ label: '"Talk and you\'re next."', fn: () => { D2.stopWitness(h, 'intimidate', say); close(); } });
     }
     const job = g.jobs.active;
     if (p && job && job.person === p.id && (job.kind === 'collect' || job.kind === 'scare')) {
@@ -306,6 +330,9 @@
         say(q.alive ? `${q.first}? ${rel === 'kid' ? `${q.age} years old${q.age >= 18 ? ', works as a ' + (D.roleNames[q.role] || 'something').toLowerCase() : ''}.` : ''} ${pick(['Keeps me young.', 'Drives me crazy.', 'Best thing that ever happened to me.'])}` : `${q.first} passed. Don't want to talk about it.`);
       } });
     } else lines.push(h.cop ? 'Police officer' : h.look.kid ? 'A neighborhood kid' : 'A stranger');
+    // dealers, and people who'll work for you
+    if (h.dealer) opts.unshift({ label: '"What are you selling?"', cls: 'go', fn: () => { close(); R.goods.openDealer(h); } });
+    if (R.goods.canHire(h)) opts.push({ label: '"Got some work, if you want it."', small: 'Hire them for an errand', fn: () => { close(); R.goods.openHire(h); } });
     // role services
     if (h.arch === 'hustler' && !h.staff) opts.push({ label: 'Shoot dice ($10)', fn: () => { close(); R.mini.dice({ stake: 10 }); } });
     if (role === 'bartender') {

@@ -427,6 +427,8 @@
         const h = this.spawnAt(room, null, pick(room.extra.concat(room.seats), used), { arch: R.rng.pick(['flirt', 'friendly', 'gossip', 'tough', 'eccentric']), city: b.cityId });
         if (h && b.type === 'club' && R.rng() < 0.7) { h.state = 'perform'; h.role = 'dancer'; h.timer = 20 + R.rng() * 30; }
       }
+      // somebody in the back is always selling something after dark
+      if (g.clock.isNight() && R.rng() < (b.type === 'club' ? 0.8 : 0.4)) { const s = pick(room.extra.length ? room.extra : [room.center], used); const d = R.goods.spawnDealer(s.x * TS + 8, s.y * TS + 8, room); d.keep = true; d.stay = true; d.state = 'idle'; d.timer = 1e9; d.destKey = 'b:' + b.id; d.spot = { x: s.x, y: s.y, city: b.city, kind: 'room' }; }
     }
     // the police station has cops, the hospital has a nurse
     if (b.type === 'police' && room.mode !== 'breakin') for (let k = 0; k < 2; k++) { const h = this.spawnAt(room, null, pick(room.staff, used), { cop: true, role: 'cop', city: b.cityId, stay: true }); if (h) h.look = g.pop.makeLook(R.mulberry(R.rng.int(0, 1e9)), { fem: R.rng.chance(0.3), age: 35, role: 'cop', city: b.cityId }); }

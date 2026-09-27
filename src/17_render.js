@@ -147,6 +147,7 @@
     R.legends.draw(g);
     if (R.ring.fearMan && R.ring.fearMan.x) { const fm = R.ring.fearMan; g.fillStyle = 'rgba(255,226,60,' + (0.25 + Math.sin(t * 3) * 0.1) + ')'; g.fillRect(Math.round(fm.x + 4), Math.round(fm.y - 12), 2, 2); }
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    R.goods.overlay(g, cam.vw, cam.vh, t);
     if (!pl.room) this.drawWeather(g);
     this.drawBubbles(g, left, top, z);
     if (game.env.lightning > 0.6) { g.fillStyle = `rgba(230,235,255,${(game.env.lightning - 0.6) * 1.2})`; g.fillRect(0, 0, cam.vw, cam.vh); }
