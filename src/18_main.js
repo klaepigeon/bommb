@@ -77,6 +77,7 @@
     R.props.init(this);
     R.ring.init(this);
     R.legends.init(this);
+    R.poi.init(this);
     R.art.chunkCache.clear();
     const port = this.world.cities[0];
     const club = port.buildings.find((b) => b.type === 'social');
@@ -219,6 +220,7 @@
       R.ring.update(sdt);
       R.legends.update(sdt);
       R.goods.update(sdt);
+      R.poi.update(sdt);
       this.fx.update(sdt);
       this.hintCheck();
       this.occT = (this.occT || 0) - dt;
@@ -304,7 +306,7 @@
       v: 2, seed: this.seed, t: this.clock.t, log: this.worldLog, weather: this.env.weather.kind,
       player: {
         x: pl.room ? this.interiors.outside(pl.x, pl.y).x : pl.x, y: pl.room ? this.interiors.outside(pl.x, pl.y).y : pl.y, hp: pl.hp, cool: pl.cool, cash: pl.cash, inv: pl.inv, clip: pl.clip, outfit: pl.outfit, outfits: pl.outfits || {}, style: pl.style, wardrobe: pl.wardrobe,
-        will: pl.will, errands: pl.errands || [], rep: pl.rep, standing: pl.standing, stats: pl.stats, sweetheart: pl.sweetheart, properties: pl.properties, masked: pl.masked,
+        will: pl.will, errands: pl.errands || [], poi: R.poi.serialize(), rep: pl.rep, standing: pl.standing, stats: pl.stats, sweetheart: pl.sweetheart, properties: pl.properties, masked: pl.masked,
         cars: pl.ownedCars.filter((c) => !c.removed && !c.wrecked).map((c) => [c.modelId, c.x, c.y, c.angle, c.color]),
       },
       pop: this.pop.serialize(), law: this.law.serialize(), jobs: this.jobs.serialize(), hints: this.hints,
@@ -332,6 +334,7 @@
       if (p.style) pl.style = Object.assign(R.styleDefault(), p.style);
       pl.wardrobe = p.wardrobe || {};
       pl.errands = p.errands || [];
+      R.poi.restore(p.poi);
       pl.place(p.x, p.y);
       pl.buildLook();
       for (const [id, fam, due, owned] of s.rackets || []) { const b = this.world.buildings[id]; if (b) { b.racket = 1; b.racketFamily = fam; b.racketDue = due; if (owned) b.playerOwned = true; } }

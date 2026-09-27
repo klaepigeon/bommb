@@ -199,6 +199,7 @@
       c.lineWidth = 2;
       c.beginPath(); c.arc(cx, cy, g.law.searchRadius() / TS * scale, 0, 7); c.fill(); c.stroke();
     }
+    R.poi.drawMini(c, toM, S);
     // blips
     for (const a of g.actors.list) {
       if (a.dead || a.removed) continue;
@@ -1005,7 +1006,9 @@
     const body = $('#mbody');
     body.scrollTop = 0;
     if (tab === 'map') {
-      body.innerHTML = `<canvas id="fullmap" width="640" height="640"></canvas><p style="font-size:13px;color:var(--brown);margin:6px 0 0">Tap the map to set a waypoint. Gold: job · green: leads · red cross: hospitals · blue: police · orange: you.</p>`;
+      const pins = R.poi.pins;
+      body.innerHTML = `<canvas id="fullmap" width="${g.world.W}" height="${g.world.H}"></canvas><p style="font-size:13px;color:var(--brown);margin:6px 0 0">Tap the map to set a waypoint. Gold: job · green: leads · orange: you. Shops appear as you pass them; ask people "Know any good spots?" to learn more.</p>${pins.length ? `<div class="sect">Pins</div><div class="opts">${pins.map((p, i) => `<button class="opt" data-pin="${i}">${esc(p.label)}<small>${esc(p.sub)} · tap to set waypoint</small></button>`).join('')}</div>` : ''}`;
+      body.querySelectorAll('[data-pin]').forEach((b) => b.addEventListener('click', () => { const p = pins[+b.dataset.pin]; g.waypoint = { x: p.x * TS, y: p.y * TS }; this.drawFullMap(); this.toast(`Waypoint set: ${p.label}`); }));
       this.drawFullMap();
       $('#fullmap').addEventListener('click', (e) => {
         const r = e.target.getBoundingClientRect();
@@ -1111,6 +1114,7 @@
       if (b.type === 'social') { c.fillStyle = '#e4a92a'; c.fillRect(b.x, b.y, 6, 6); }
       if (b.playerOwned) { c.fillStyle = '#8ab04a'; c.fillRect(b.x, b.y, 6, 6); }
     }
+    R.poi.drawFull(c, 1);
     for (const l of g.jobs.leads) { c.fillStyle = '#7a8a2e'; c.beginPath(); c.arc(l.x, l.y, 6, 0, 7); c.fill(); }
     const m = g.jobs.marker();
     if (m) { c.fillStyle = '#e4a92a'; c.strokeStyle = '#1b1410'; c.lineWidth = 2; c.beginPath(); c.arc(m.x / TS, m.y / TS, 7, 0, 7); c.fill(); c.stroke(); }

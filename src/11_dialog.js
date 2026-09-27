@@ -330,6 +330,7 @@
         say(q.alive ? `${q.first}? ${rel === 'kid' ? `${q.age} years old${q.age >= 18 ? ', works as a ' + (D.roleNames[q.role] || 'something').toLowerCase() : ''}.` : ''} ${pick(['Keeps me young.', 'Drives me crazy.', 'Best thing that ever happened to me.'])}` : `${q.first} passed. Don't want to talk about it.`);
       } });
     } else lines.push(h.cop ? 'Police officer' : h.look.kid ? 'A neighborhood kid' : 'A stranger');
+    if (!h.cop && !h.look.kid && D2.mood(h) > -10) opts.push({ label: '"Know any good spots around here?"', fn: () => say(R.poi.askAround(h)) });
     // dealers, and people who'll work for you
     if (h.dealer) opts.unshift({ label: '"What are you selling?"', cls: 'go', fn: () => { close(); R.goods.openDealer(h); } });
     if (R.goods.canHire(h)) opts.push({ label: '"Got some work, if you want it."', small: 'Hire them for an errand', fn: () => { close(); R.goods.openHire(h); } });
@@ -337,7 +338,7 @@
     if (h.arch === 'hustler' && !h.staff) opts.push({ label: 'Shoot dice ($10)', fn: () => { close(); R.mini.dice({ stake: 10 }); } });
     if (role === 'bartender') {
       opts.push({ label: 'Order a whiskey ($3)', fn: () => { if (pl.pay(3)) { pl.drink(); say(pick(['Here ya go.', 'On the rocks.', 'Easy does it, champ.'])); } else say('Cash first.'); } });
-      opts.push({ label: '"Heard any strange stories?"', fn: () => say(R.legends.rumor()) });
+      opts.push({ label: '"Heard any strange stories?"', fn: () => { const t = R.legends.rumor(); say(t); R.poi.pinRumor(t); } });
       opts.push({ label: 'Throw darts with the regulars ($10)', fn: () => { close(); R.mini.darts({ stake: 10 }); } });
       opts.push({ label: 'Buy the room a round ($25)', fn: () => { if (pl.pay(25)) { g.jobs.roundForHouse(h); say('Drinks are on the fella in the fedora!'); } else say('With what money?'); } });
     }
