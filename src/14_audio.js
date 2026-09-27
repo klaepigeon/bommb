@@ -146,6 +146,17 @@
     const st = R.data.stations[station];
     this.game.ui.toast('📻 ' + st.name + (st.dj.length ? ` — "${R.rng.pick(st.dj)}"` : ''));
   };
+  // music inside bars and clubs (jukebox), stops when you walk out
+  P.indoorMusic = function (station) {
+    if (station === null || station === undefined) {
+      if (this.indoor) { this.indoor = false; if (!this.game.player.inCar) this.mode = this.game.law.active() ? 'tense' : null; }
+      return;
+    }
+    this.indoor = true;
+    this.station = station;
+    this.mode = 'radio';
+    this.startMusic();
+  };
   P.nextStation = function (v) {
     const n = R.data.stations.length;
     v.radio = (v.radio + 1) % n;

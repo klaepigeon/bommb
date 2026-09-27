@@ -4,6 +4,13 @@ A mobile-first, top-down crime sandbox. It's 2026 on the Brass Coast, but the se
 
 This is a ground-up rebuild of the original single-file *Rhapsody* (Port Hollow) artifact.
 
+## Look & feel (matches the original)
+
+- **GBA screen:** the world renders into a fixed 480×320 buffer, a 240×160 view at 2x like the original, scaled with nearest-neighbour inside a wooden handheld bezel. In portrait the screen sits on top with the joystick and buttons below; in landscape the controls sit either side.
+- **The original's characters:** people are painted by the original build's own character routine (`src/03_oldsprites.js`, ported verbatim: 16×32 pixel grids, 4-shade ramps, hair styles, flares, moustaches, poses). The protagonist is a young mafioso: slicked hair, charcoal suit, maroon shirt.
+- **Pixel text:** all in-screen text, from the HUD hearts and money to signs, tags, bubbles and the STORY bar, is rasterised from the Silkscreen pixel font at its native size, hard-thresholded and scaled by whole pixels. Silkscreen and Pixelify Sans (SIL Open Font License) are embedded in the build.
+- **Walk-in interiors:** every building has a furnished room, stamped on demand into a hidden strip below the map. Bars have counters, stools, jukeboxes and pool tables, homes have beds and dressers, and there are vaults, cells, pews, slot machines and more. The people the population sim says are inside are really there, including the family asleep in bed when you break in at night. Searching furniture, robbing registers and fighting inside all go through the same witness and law rules.
+
 ## Play
 
 - **Local:** open `dist/index.html` in a browser (phone or desktop). No server or install needed.
@@ -48,7 +55,9 @@ Plain ES2020, no dependencies and no bundler. Every module hangs off a global `R
 | `00_core.js` | RNG, value noise, math, event bus, spatial hash, safe storage |
 | `01_data.js` | Cities, building types, jobs, archetypes, weapons, items, outfits, vehicles, animals, names, radio |
 | `02_world.js` | World generation: coast, biomes, river, city grids, docks, parks, highways (grid-aligned routing), lane-flow data, intersections and lights, countryside, street furniture. Also the world mutations (build on lot, destroy) |
-| `03_art.js` | Procedural pixel art: chunk-cached terrain and buildings, people, cars, animals, minimap |
+| `03_art.js` | Procedural pixel art: chunk-cached terrain and buildings, cars, animals, minimap |
+| `03_oldsprites.js` | The original build's character painter and palette, ported verbatim |
+| `03_sprites.js` | Adapter from people to the original's looks, pixel text, interior floors, walls and furniture, storefronts |
 | `04_population.js` | The named population: households, jobs, schedules, memories, life facts, the daily life tick (aging, marriage, births, deaths, jobs) and city growth |
 | `05_actors.js` | On-screen people and animals: A* pathfinding, steering, sidewalk walking, perception, reactions, witnesses reporting, spawning |
 | `06_traffic.js` | Lane driving, lights, yielding, arcade physics with drift, chase steering, collisions, road rage, spawning |
@@ -63,6 +72,7 @@ Plain ES2020, no dependencies and no bundler. Every module hangs off a global `R
 | `15_input.js` | Touch joystick, buttons, keyboard |
 | `16_ui.js` | HUD, context chips, sheets, interiors, shops, phone, fishing, burglary, heist, menu, map |
 | `17_render.js` | Rendering, lighting, weather, speech bubbles |
+| `19_interiors.js` | Walk-in rooms: layouts per building type, occupants, furniture actions, searching, register robberies |
 | `18_main.js` | Game object, loop, daily tick, save/load (seed + world-mutation log + population snapshot) |
 
 Saves go to `localStorage`. The world regenerates from its seed, and construction or destruction events are replayed on top of it.

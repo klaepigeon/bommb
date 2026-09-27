@@ -9,18 +9,27 @@
   const UI = (R.UI = function (game) {
     this.game = game;
     this.el = {
-      cash: $('#cash'), hp: $('#hpbar i'), cool: $('#coolbar i'), rank: $('#rank'), job: $('#job'), clock: $('#clock'), place: $('#place'),
-      wanted: $('#wanted'), toasts: $('#toasts'), subs: $('#subs'), ctx: $('#ctx'), sheet: $('#sheet'), dim: $('#dim'),
-      story: $('#story'), death: $('#death'), arrest: $('#arrest'), hurt: $('#hurt'), use: $('#useLabel'), mini: $('#minimap'),
-      pad: $('#pad'), wpn: $('#wpnName'), hud: $('#hud'),
+      ctx: $('#ctx'), sheet: $('#sheet'), dim: $('#dim'), story: $('#story'), death: $('#death'), arrest: $('#arrest'),
+      mini: $('#minimap'), app: $('#app'), aLabel: $('#aLabel'),
     };
+    this.toastQ = [];
+    this.bannerS = null;
+    this.hurtT = 0;
+    this.hud = {};
     this.miniG = this.el.mini.getContext('2d');
     this.hudT = 0;
     this.focus = null;
     this.subsList = [];
     this.sheetOpen = null;
     this.insideB = null;
-    $('#stats').addEventListener('click', () => this.toggleMenu());
+    this.lastPlace = '';
+    // tapping the hearts box on the screen opens the menu
+    $('#view').addEventListener('click', (e) => {
+      const r = e.target.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width * 480, y = (e.clientY - r.top) / r.height * 320;
+      if (game.started && x < 190 && y < 50) this.toggleMenu();
+    });
+    $('#menubtn').addEventListener('click', () => this.toggleMenu());
     $('#mapwrap').addEventListener('click', () => this.openMenu('map'));
     this.el.dim.addEventListener('click', () => { if (this.sheetOpen && this.sheetOpen !== 'fish' && this.sheetOpen !== 'burgle' && this.sheetOpen !== 'heist') this.closeSheet(); });
     $('#surrender').addEventListener('click', () => { this.closeArrest(); game.law.surrender(); });
@@ -28,25 +37,11 @@
     this.el.death.querySelector('button').addEventListener('click', () => { this.el.death.style.display = 'none'; game.player.respawn(); });
     this.el.story.querySelector('button').addEventListener('click', () => this.closeStory());
     this.lastCtxKey = '';
-    this.grain();
+    this.heartsKey = '';
   });
   const U = UI.prototype;
 
-  U.grain = function () {
-    const c = document.createElement('canvas');
-    c.width = c.height = 90;
-    const g = c.getContext('2d');
-    const img = g.createImageData(90, 90);
-    for (let i = 0; i < img.data.length; i += 4) {
-      const v = Math.random() * 255;
-      img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
-      img.data[i + 3] = 255;
-    }
-    g.putImageData(img, 0, 0);
-    $('#grain').style.backgroundImage = `url(${c.toDataURL()})`;
-    this.setGrain(this.game.settings.grain);
-  };
-  U.setGrain = function (on) { $('#grain').style.display = on ? 'block' : 'none'; };
+  U.setGrain = function () {};
 
   U.modalOpen = function () {
     return !!this.sheetOpen || this.el.story.style.display === 'flex' || this.el.death.style.display === 'flex' || $('#title').style.display === 'flex';
@@ -57,22 +52,17 @@
 
   // ---------------------------------------------------------------- toasts & subtitles
   U.toast = function (msg, kind) {
-    const d = document.createElement('div');
-    d.className = 'toast ' + (kind || '');
-    d.textContent = msg;
-    this.el.toasts.appendChild(d);
-    const ts = this.el.toasts.querySelectorAll('.toast');
-    if (ts.length > (window.innerHeight < 520 ? 2 : 3)) ts[0].remove();
-    setTimeout(() => d.remove(), 3800 + msg.length * 30);
+    if (this.toastQ.length && this.toastQ[this.toastQ.length - 1].text === msg) return;
+    this.toastQ.push({ text: msg, kind: kind || '', t: 2.4 + msg.length * 0.03 });
+    if (this.toastQ.length > 4) this.toastQ.shift();
   };
+  // the original's STORY bar doubles as the subtitle line
   U.subtitle = function (name, text, color) {
     this.subsList.push({ name, text, t: 2.6 + text.length * 0.045 });
-    if (this.subsList.length > 2) this.subsList.shift();
+    if (this.subsList.length > 1) this.subsList.shift();
     this.renderSubs();
   };
-  U.renderSubs = function () {
-    this.el.subs.innerHTML = this.subsList.map((s) => `<div><b>${esc(s.name)}:</b>${esc(s.text)}</div>`).join('<br>');
-  };
+  U.renderSubs = function () {};
 
   // ---------------------------------------------------------------- focus & context chips
   U.focusTarget = function () {
@@ -97,9 +87,9 @@
   U.updateCtx = function () {
     const g = this.game, pl = g.player, h = pl.focus;
     const ctx = this.el.ctx;
-    const show = h && !h.dead && !pl.inCar && !pl.inside && !this.sheetOpen && h.down <= 0;
+    const show = h && !h.dead && !pl.inCar && !this.sheetOpen && h.down <= 0 && h.state !== 'sleep';
     if (!show) {
-      if (this.lastCtxKey !== '') { ctx.style.display = 'none'; this.lastCtxKey = ''; }
+      if (this.lastCtxKey !== '') { ctx.classList.add('off'); this.lastCtxKey = ''; }
       return;
     }
     const chips = [];
@@ -114,7 +104,7 @@
     const key = h.id + chips.map((c) => c[0]).join() + name + sub + moodTxt;
     if (key === this.lastCtxKey) return;
     this.lastCtxKey = key;
-    ctx.style.display = 'flex';
+    ctx.classList.remove('off');
     ctx.querySelector('.who').innerHTML = `${esc(name)}${moodTxt}<em>${esc(sub)}</em>`;
     const wrap = ctx.querySelector('.chips');
     wrap.innerHTML = '';
@@ -145,65 +135,30 @@
     for (const s of this.subsList) s.t -= dt;
     if (this.subsList.length && this.subsList[0].t <= 0) { this.subsList = this.subsList.filter((s) => s.t > 0); this.renderSubs(); }
     this.updateCtx();
-    this.el.hud.classList.toggle('incar', !!pl.inCar);
-    if (!this.movedOnce && (g.input.stick.x || g.input.stick.y)) { this.movedOnce = true; const hs = $('#hint-stick'); if (hs) hs.remove(); }
-    const act = pl.dead || pl.inside ? null : pl.contextAction();
-    const al = act ? act.label : '';
-    if (this.el.use.textContent !== al) this.el.use.textContent = al;
+    if (this.toastQ.length) { this.toastQ[0].t -= dt; if (this.toastQ[0].t <= 0) this.toastQ.shift(); }
+    if (this.bannerS) { this.bannerS.t -= dt; if (this.bannerS.t <= 0) this.bannerS = null; }
+    if (this.hurtT > 0) this.hurtT -= dt;
+    this.el.app.classList.toggle('incar', !!pl.inCar);
     this.hudT -= dt;
     if (this.hudT > 0) return;
     this.hudT = 0.12;
-    this.el.cash.textContent = R.fmtMoney(pl.cash);
-    this.el.hp.style.width = Math.max(0, (pl.hp / pl.maxHp) * 100) + '%';
-    this.el.cool.style.width = pl.cool + '%';
-    this.el.rank.textContent = `${g.jobs.rankName()} · ${pl.family} family`;
-    const j = g.jobs.active;
-    let jt = '';
-    if (j) {
-      const m = g.jobs.marker();
-      jt = '▶ ' + j.title;
-      if (m) {
-        const d = R.dist(pl.x, pl.y, m.x, m.y) / TS;
-        const a = Math.atan2(m.y - pl.y, m.x - pl.x);
-        const arrows = ['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'];
-        jt += ` · ${arrows[((Math.round(a / (Math.PI / 4)) % 8) + 8) % 8]} ${Math.round(d * 3)}m`;
-      }
-      if (j.left !== undefined && j.stage === 2) jt += ` · ${Math.max(0, Math.ceil(j.left))} min`;
+    const act = pl.dead ? null : pl.contextAction();
+    const al = act ? (act.label.split(' ')[0] || 'USE').toUpperCase().slice(0, 6) : pl.inCar ? 'EXIT' : 'USE';
+    if (this.el.aLabel.textContent !== al) this.el.aLabel.textContent = al;
+    // location banner when the area changes
+    let place;
+    if (pl.room) place = pl.room.b.name;
+    else {
+      const city = g.world.cityAt((pl.x / TS) | 0, (pl.y / TS) | 0);
+      place = city ? city.name : this.nearHamlet() || 'The County';
     }
-    if (this.el.job.textContent !== jt) this.el.job.textContent = jt;
-    const w = g.env.weather;
-    this.el.clock.textContent = `${g.clock.weekday()} ${g.clock.label()}`;
-    const city = g.world.cityAt((pl.x / TS) | 0, (pl.y / TS) | 0);
-    let place = city ? city.name : this.nearHamlet() || 'The County';
-    if (pl.inCar && g.audio.mode === 'radio') place += ' · 📻';
-    this.el.place.textContent = `${place} · ${g.env.WEATHER_NAMES[w.kind]}`;
-    const ww = D.weapons[pl.weapon];
-    this.el.wpn.textContent = pl.weapon === 'gascan' ? 'Gas' : ww ? (ww.gun ? `${pl.clip[pl.weapon] || 0}/${pl.inv.ammo[ww.ammo] || 0}` : ww.thrown ? 'x' + (pl.inv.ammo[pl.weapon] || 0) : ww.name.split(' ').pop()) : '';
+    if (place !== this.lastPlace) {
+      this.lastPlace = place;
+      if (!pl.room && g.started) this.banner(place, `${g.env.WEATHER_NAMES[g.env.weather.kind]} ${g.clock.label()}`);
+    }
     $('#mCool').classList.toggle('lit', pl.coolOn);
     $('#mMask').classList.toggle('lit', pl.masked);
     $('#mSneak').classList.toggle('lit', pl.sneak);
-    // wanted banner
-    const inc = g.law.incident;
-    const wb = this.el.wanted;
-    if (inc) {
-      wb.style.display = 'block';
-      const lvl = ['', 'WANTED', 'DANGEROUS', 'SHOOT ON SIGHT'][inc.level];
-      const b = g.law.bounty[inc.jur] || 0;
-      wb.querySelector('b').textContent = `${lvl} · ${g.law.jurName(inc.jur)}`;
-      let s = inc.state === 'pursuit' ? 'Police in pursuit' : inc.state === 'responding' ? 'Police responding' : `Searching · ${Math.max(0, Math.ceil(inc.searchLeft))}s`;
-      if (!inc.identified) s += ' · unidentified';
-      else if (b) s += ' · ' + R.fmtMoney(b);
-      wb.querySelector('span').textContent = s;
-      wb.className = inc.state === 'pursuit' ? 'pulse' : inc.state === 'search' ? 'search' : '';
-    } else {
-      const wit = g.actors.list.some((a) => a.witness && !a.witness.done && !a.witness.silenced && !a.dead);
-      if (wit) {
-        wb.style.display = 'block';
-        wb.className = 'search';
-        wb.querySelector('b').textContent = 'Witness';
-        wb.querySelector('span').textContent = 'Someone is running to report you';
-      } else wb.style.display = 'none';
-    }
     this.drawMini();
   };
   U.nearHamlet = function () {
@@ -215,7 +170,8 @@
   U.drawMini = function () {
     const g = this.game, pl = g.player, c = this.miniG, S = 216;
     const scale = pl.inCar ? 1.4 : 2.2; // px per tile
-    const ptx = pl.x / TS, pty = pl.y / TS;
+    const here = pl.room ? g.interiors.outside(pl.x, pl.y) : pl;
+    const ptx = here.x / TS, pty = here.y / TS;
     c.save();
     c.clearRect(0, 0, S, S);
     c.beginPath(); c.arc(S / 2, S / 2, S / 2, 0, 7); c.clip();
@@ -270,9 +226,130 @@
   };
 
   U.hurtFlash = function (amt) {
-    this.el.hurt.style.boxShadow = `inset 0 0 90px 30px rgba(200,20,10,${Math.min(0.7, amt / 30)})`;
-    clearTimeout(this.hurtT);
-    this.hurtT = setTimeout(() => (this.el.hurt.style.boxShadow = 'inset 0 0 90px 30px rgba(200,20,10,0)'), 180);
+    this.hurtT = 0.25;
+    this.hurtA = Math.min(0.8, amt / 25);
+  };
+
+  // ---------------------------------------------------------------- the in-screen HUD (canvas, pixel text)
+  const HEART = ['.XX.XX.', 'XXXXXXX', 'XXXXXXX', '.XXXXX.', '..XXX..', '...X...'];
+  const SHORTW = { fists: 'FISTS', knuckles: 'KNUCKLES', bat: 'BAT', knife: 'KNIFE', revolver: '.38', magnum: '.357', shotgun: 'SHOTGUN', chopper: 'CHOPPER', rifle: 'RIFLE', molotov: 'MOLOTOV', dynamite: 'DYNAMITE', gascan: 'GAS CAN' };
+  const A = () => R.art;
+  function hbox(g, x, y, w, h, striped) {
+    g.fillStyle = 'rgba(20,12,10,0.5)'; g.fillRect(x + 2, y + 3, w, h);
+    g.fillStyle = '#2a1a12'; g.fillRect(x - 2, y - 2, w + 4, h + 4);
+    g.fillStyle = '#f6ecd0'; g.fillRect(x, y, w, h);
+    if (striped) { g.fillStyle = '#d9621e'; g.fillRect(x, y, w, 2); g.fillStyle = '#f0b838'; g.fillRect(x, y + 2, w, 2); }
+  }
+  function heart(g, x, y, fill, sc) {
+    HEART.forEach((row, yy) => [...row].forEach((c, xx) => {
+      if (c !== 'X') return;
+      const on = fill === 2 || (fill === 1 && xx < 4);
+      g.fillStyle = on ? (yy === 1 && xx === 1 ? '#f6a090' : '#c83a2a') : '#a89878';
+      g.fillRect(x + xx * sc, y + yy * sc, sc, sc);
+    }));
+    g.fillStyle = '#2a1a12';
+  }
+  U.drawHud = function (g) {
+    const game = this.game, pl = game.player, W = 480, H = 320;
+    const pt = A().ptext;
+    if (!game.started) return;
+    // hurt flash: dithered red border
+    if (this.hurtT > 0) {
+      g.fillStyle = `rgba(200,30,20,${this.hurtA * (this.hurtT / 0.25)})`;
+      for (let y = 0; y < H; y += 2) for (let x = (y / 2) % 2 ? 1 : 0; x < W; x += 2) if (x < 24 || x > W - 24 || y < 16 || y > H - 16) g.fillRect(x, y, 1, 1);
+    }
+    // hearts + money + clock
+    hbox(g, 6, 6, 178, 42, true);
+    const hp = Math.max(0, pl.hp) / pl.maxHp * 10, hk = Math.ceil(hp);
+    for (let i = 0; i < 5; i++) heart(g, 12 + i * 17, 12, hk >= (i + 1) * 2 ? 2 : hk === i * 2 + 1 ? 1 : 0, 2);
+    pt(g, R.fmtMoney(pl.cash), 12, 28, { scale: 2, color: '#3a7a20' });
+    pt(g, game.clock.label().replace(' ', ''), 180, 30, { align: 'right', color: '#3a2418' });
+    pt(g, `DAY ${game.clock.day() + 1}`, 180, 16, { align: 'right', color: '#7a5e44' });
+    // weapon + ammo
+    const ww = R.data.weapons[pl.weapon];
+    const wn = SHORTW[pl.weapon] || 'FISTS';
+    const ammo = pl.weapon === 'gascan' ? `x${pl.inv.tools.gascan || 0}` : ww && ww.gun ? `${pl.clip[pl.weapon] || 0}/${pl.inv.ammo[ww.ammo] || 0}` : ww && ww.thrown ? `x${pl.inv.ammo[pl.weapon] || 0}` : 'SWAP';
+    const bw = Math.max(A().ptWidth(wn, 2), A().ptWidth(ammo)) + 14;
+    hbox(g, W - 6 - bw, 6, bw, 34, true);
+    pt(g, wn, W - 13, 10, { align: 'right', scale: 2, color: '#3a2418' });
+    pt(g, ammo, W - 13, 28, { align: 'right', color: '#7a5e44' });
+    // cool meter
+    hbox(g, W - 90, 46, 84, 12, false);
+    pt(g, 'COOL', W - 86, 48, { color: '#3a2418' });
+    g.fillStyle = '#2a1a12'; g.fillRect(W - 58, 48, 48, 8);
+    g.fillStyle = '#d8c8a0'; g.fillRect(W - 57, 49, 46, 6);
+    g.fillStyle = pl.coolOn ? '#f0b838' : '#2a7d7a'; g.fillRect(W - 57, 49, Math.round(46 * pl.cool / 100), 6);
+    g.fillStyle = '#6ac0e0'; g.fillRect(W - 57, 49, Math.round(46 * pl.cool / 100), 1);
+    // objective
+    const j = game.jobs.active;
+    if (j) {
+      const m = game.jobs.marker();
+      const here = pl.room ? game.interiors.outside(pl.x, pl.y) : pl;
+      let dist = '';
+      if (m) {
+        const d = R.dist(here.x, here.y, m.x, m.y) / R.TILE;
+        const a = Math.atan2(m.y - here.y, m.x - here.x);
+        dist = ' ' + ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'][((Math.round(a / (Math.PI / 4)) % 8) + 8) % 8] + ' ' + Math.round(d * 3) + 'M';
+      }
+      if (j.left !== undefined && j.stage === 2) dist += ` ${Math.max(0, Math.ceil(j.left))}MIN`;
+      let title = j.title.toUpperCase();
+      while (title.length > 8 && A().ptWidth('> ' + title + dist) > 250) title = title.slice(0, -1);
+      const text = '> ' + title + dist;
+      const tw = A().ptWidth(text) + 10;
+      hbox(g, 6, 56, tw, 12, false);
+      pt(g, text, 11, 58, { color: '#3a2418' });
+      pt(g, dist, 6 + tw - 5, 58, { align: 'right', color: '#c83a2a' });
+    }
+    // banner (wanted wins over location)
+    const inc = game.law.incident;
+    const wit = !inc && game.actors.list.some((a) => a.witness && !a.witness.done && !a.witness.silenced && !a.dead);
+    let bTitle = null, bSub = '', bCol = '#f6ecd0', bText = '#3a2418', blink = false;
+    if (inc) {
+      bTitle = ['', 'WANTED', 'DANGEROUS', 'SHOOT ON SIGHT'][inc.level];
+      const b = game.law.bounty[inc.jur] || 0;
+      bSub = (inc.state === 'pursuit' ? 'POLICE IN PURSUIT' : inc.state === 'responding' ? 'POLICE RESPONDING' : `SEARCHING ${Math.max(0, Math.ceil(inc.searchLeft))}S`) + (inc.identified ? (b ? ' - ' + R.fmtMoney(b) : '') : ' - UNIDENTIFIED');
+      bCol = inc.state === 'search' ? '#f0b838' : '#c83a2a';
+      bText = inc.state === 'search' ? '#2a1a12' : '#f6ecd0';
+      blink = inc.state === 'pursuit';
+    } else if (wit) { bTitle = 'WITNESS'; bSub = 'SOMEONE WILL REPORT YOU'; bCol = '#f0b838'; bText = '#2a1a12'; }
+    else if (this.bannerS) { bTitle = this.bannerS.title.toUpperCase(); bSub = this.bannerS.sub.toUpperCase(); }
+    if (bTitle) {
+      const w2 = Math.max(A().ptWidth(bTitle, 2), A().ptWidth(bSub)) + 16;
+      const x = Math.round(W / 2 - w2 / 2);
+      if (blink && Math.floor(performance.now() / 400) % 2) bCol = '#7a1a10';
+      hbox(g, x, 70, w2, bSub ? 32 : 22, !inc && !wit);
+      if (inc || wit) { g.fillStyle = bCol; g.fillRect(x, 70, w2, bSub ? 32 : 22); }
+      pt(g, bTitle, W / 2, 74 + (inc || wit ? 0 : 2), { align: 'center', scale: 2, color: bText });
+      if (bSub) pt(g, bSub, W / 2, 92, { align: 'center', color: inc || wit ? bText : '#7a5e44' });
+    }
+    // STORY bar: the latest line someone said
+    const sub = this.subsList[this.subsList.length - 1];
+    let storyTop = H;
+    if (sub) {
+      const tag = sub.name.toUpperCase().slice(0, 16);
+      const tagW = A().ptWidth(tag) + 8;
+      const lines = game.renderer.wrap(sub.text.toUpperCase(), 440 - tagW);
+      const h = Math.min(2, lines.length) * 11 + 10;
+      storyTop = H - 8 - h;
+      hbox(g, 20, storyTop, 440, h, true);
+      g.fillStyle = '#2a1a12'; g.fillRect(25, storyTop + 6, tagW + 2, 12);
+      g.fillStyle = '#c83a2a'; g.fillRect(26, storyTop + 7, tagW, 10);
+      pt(g, tag, 30, storyTop + 8, { color: '#f6ecd0' });
+      lines.slice(0, 2).forEach((l, i) => pt(g, l, 32 + tagW, storyTop + 8 + i * 11, { color: '#3a2418' }));
+    }
+    // toast (one at a time, above the story bar)
+    const t = this.toastQ[0];
+    if (t) {
+      const lines = game.renderer.wrap(t.text.toUpperCase(), 400);
+      const h = lines.length * 11 + 8;
+      const w2 = Math.max(...lines.map((l) => A().ptWidth(l))) + 18;
+      const x = Math.round(W / 2 - w2 / 2), y = storyTop - 12 - h;
+      g.fillStyle = '#2a1a12'; g.fillRect(x - 2, y - 2, w2 + 4, h + 4);
+      g.fillStyle = 'rgba(20,12,10,0.92)'; g.fillRect(x, y, w2, h);
+      g.fillStyle = t.kind === 'bad' ? '#c83a2a' : t.kind === 'good' ? '#6a9a30' : t.kind === 'warn' ? '#d9621e' : '#f0b838';
+      g.fillRect(x, y, 4, h);
+      lines.forEach((l, i) => pt(g, l, x + 10, y + 5 + i * 11, { color: '#f6ecd0' }));
+    }
   };
   U.death = function () {
     this.closeSheet();
@@ -314,7 +391,10 @@
     this.el.dim.style.display = 'none';
     this.sheetOpen = null;
     if (was === 'talk' && this.talkH) { this.talkH.state = 'idle'; this.talkH.timer = 1; this.talkH = null; }
-    if (this.insideB && was !== 'talk' && was !== 'shop' && was !== 'board') this.leaveBuilding();
+    if (this.insideB && was !== 'talk' && was !== 'shop' && was !== 'board') {
+      if (this.game.player.room) this.insideB = null;
+      else this.leaveBuilding();
+    }
     if (this.onClose) { const f = this.onClose; this.onClose = null; f(); }
   };
   U.header = function (title, sub, portrait) {
@@ -375,6 +455,17 @@
     return h >= o && h < c;
   };
   U.enterBuilding = function (b) {
+    return this.game.interiors.doorPrompt(b);
+  };
+  // the service counter inside a building: the shop menu
+  U.openCounter = function (b) {
+    this.insideB = b;
+    this.renderInterior();
+  };
+  U.banner = function (title, sub) {
+    this.bannerS = { title, sub: sub || '', t: 2.8 };
+  };
+  U.enterBuildingOld = function (b) {
     const g = this.game, pl = g.player;
     const bt = D.btypes[b.type];
     const open = this.isOpen(b) || b.playerOwned;
@@ -404,7 +495,7 @@
     const g = this.game, pl = g.player, b = this.insideB;
     if (!b) return;
     const bt = D.btypes[b.type];
-    const occ = g.life.occupants(b).slice(0, 12);
+    const occ = pl.room ? [] : g.life.occupants(b).slice(0, 12);
     const opts = this.interiorOptions(b);
     const people = occ.map((p) => `<div class="person"><canvas class="portrait" width="28" height="36" style="width:28px;height:36px" data-p="${p.id}"></canvas><div class="n">${esc(p.met ? g.pop.name(p) : g.pop.title(p))}<small>${esc(p.met ? g.pop.title(p) + ' · ' + p.age : 'Stranger')}</small></div><div class="meter" title="Opinion of you"><i style="width:${50 + p.opinion / 2}%;background:${p.opinion > 20 ? 'var(--good)' : p.opinion < -20 ? 'var(--red)' : 'var(--mustard)'}"></i></div><button data-g="${p.id}">Greet</button><button data-t="${p.id}">Talk</button></div>`).join('');
     const hours = bt.hours ? (bt.hours[0] === 0 && bt.hours[1] === 24 ? 'Open 24 hours' : `Open ${bt.hours[0]}:00–${bt.hours[1] % 24}:00`) : 'Private residence';
@@ -482,7 +573,7 @@
       case 'guns': opts.push({ label: 'Browse the counter', fn: () => this.openShop('guns') }); break;
       case 'tailor': opts.push({ label: 'Try on suits', fn: () => this.openShop('tailor') }); buy('Ski Mask', 10, () => { pl.inv.tools.mask = 1; say('Wear it with MASK. Witnesses can\'t name you.'); }); break;
       case 'bank':
-        opts.push({ label: 'Rob the vault', small: 'Big money. The whole city will come for you.', cls: 'bad', fn: () => this.heist(b) });
+        if (!pl.room) opts.push({ label: 'Rob the vault', small: 'Big money. The whole city will come for you.', cls: 'bad', fn: () => this.heist(b) });
         break;
       case 'police': {
         const j = b.cityId;
@@ -519,7 +610,7 @@
       default: break;
     }
     // registers & rackets
-    if (bt.rob && b.workers.length && b.type !== 'bank') {
+    if (bt.rob && b.workers.length && b.type !== 'bank' && !pl.room) {
       const ready = g.pop.day - b.robbedDay >= 3;
       opts.push({ label: 'Rob the register', small: ready ? 'Needs a weapon. The clerk might fight back.' : 'Cleaned out recently. Not much in the till.', cls: 'bad', fn: () => this.robRegister(b) });
     }
@@ -528,7 +619,7 @@
       opts.push({ label: `Collect protection`, price: R.fmtMoney(due), fn: () => { if (!due) return say('Nothing due yet. They pay by the week.'); pl.addCash(due); b.racketDue = 0; say('An envelope slides across the counter. Nobody looks at you.'); g.audio.sfx('cash'); } });
     }
     // houses
-    if (bt.house && !bt.hours) {
+    if (bt.house && !bt.hours && !pl.room) {
       const occ = g.life.occupants(b);
       if (b.playerOwned) {
         opts.push({ label: 'Sleep & save', cls: 'go', fn: () => this.sleep(true) });
@@ -553,7 +644,7 @@
         g.pop.addNews(b.cityId, `${b.name} changes hands. New owner wears a fedora.`);
       } });
     }
-    opts.push({ label: 'Leave', fn: () => this.closeSheet() });
+    opts.push({ label: pl.room ? 'Done' : 'Leave', fn: () => this.closeSheet() });
     return opts;
   };
 
@@ -938,8 +1029,7 @@
       <div class="set"><label for="sTraffic">Traffic</label>${sel('sTraffic', [[0.5, 'Light'], [1, 'Normal'], [1.5, 'Rush hour']], st.traffic)}</div>
       <div class="set"><label for="sDens">Pedestrians</label>${sel('sDens', [[0.6, 'Sparse'], [1, 'Normal'], [1.4, 'Crowded']], st.density)}</div>
       <div class="set"><label for="sEv">Street events</label>${sel('sEv', [[0.5, 'Calm'], [1, 'Normal'], [1.8, 'Wild']], st.events)}</div>
-      <div class="set"><label for="sZoom">Zoom</label>${sel('sZoom', [[0.8, 'Far'], [1, 'Normal'], [1.25, 'Close']], st.zoom)}</div>
-      <div class="set"><label for="sGrain">Film grain</label><input id="sGrain" type="checkbox" ${st.grain ? 'checked' : ''}></div>
+      <div class="set"><label for="sZoom">Zoom</label>${sel('sZoom', [[0.75, 'Far (driving)'], [1, 'GBA (240×160)']], st.zoom)}</div>
       <div class="opts"><button class="opt go" id="sSave">Save game</button><button class="opt bad" id="sNew">Start a new game</button></div>`;
       const bindS = (id, key, parse, after) => $('#' + id).addEventListener('change', (e) => { st[key] = parse(e.target); g.saveSettings(); if (after) after(st[key]); });
       bindS('sVol', 'vol', (e) => +e.value, (v) => g.audio.setVolume(v));
@@ -949,7 +1039,6 @@
       bindS('sDens', 'density', (e) => +e.value);
       bindS('sEv', 'events', (e) => +e.value);
       bindS('sZoom', 'zoom', (e) => +e.value, () => g.resize());
-      bindS('sGrain', 'grain', (e) => e.checked, (v) => this.setGrain(v));
       $('#sSave').addEventListener('click', () => { g.save(); this.toast('Game saved.', 'good'); });
       $('#sNew').addEventListener('click', (e) => {
         if (e.target.dataset.confirm) { g.newGame(); return; }

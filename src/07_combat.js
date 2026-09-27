@@ -250,7 +250,7 @@
       const x = sx + dx * d, y = sy + dy * d;
       const tx = (x / TS) | 0, ty = ((y + 8) / TS) | 0;
       const t = world.t(tx, ty);
-      if (t === T.BLDG || t === T.ROCK) {
+      if (t === T.BLDG || t === T.ROCK || t === T.WALL || t === T.VOID) {
         ex = x; ey = y;
         g.fx.sparks(x, y, 2);
         const b = world.buildingAt(tx, ty);

@@ -5,10 +5,18 @@
   const D = R.data, T = D.T, O = D.O, TS = R.TILE;
   const A = R.art;
 
+  // The game renders into a fixed 480x320 buffer (a 240x160 GBA view at 2x, like the
+  // original) which is then scaled onto the on-screen canvas with nearest-neighbour.
+  const BW = 480, BH = 320;
+  const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
   const Renderer = (R.Renderer = function (game, canvas) {
     this.game = game;
-    this.cv = canvas;
-    this.g = canvas.getContext('2d', { alpha: false });
+    this.display = canvas;
+    this.dg = canvas.getContext('2d', { alpha: false });
+    this.cv = document.createElement('canvas');
+    this.cv.width = BW;
+    this.cv.height = BH;
+    this.g = this.cv.getContext('2d', { alpha: false });
     this.light = document.createElement('canvas');
     this.lg = this.light.getContext('2d');
     this.dpr = 1;
@@ -19,17 +27,26 @@
 
   P.resize = function () {
     const g = this.game;
-    const w = window.innerWidth, h = window.innerHeight;
-    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
-    this.cv.width = Math.round(w * this.dpr);
-    this.cv.height = Math.round(h * this.dpr);
-    this.light.width = Math.ceil(w / 2);
-    this.light.height = Math.ceil(h / 2);
-    g.cam.vw = w;
-    g.cam.vh = h;
-    const tiles = R.clamp(Math.min(w, h) / 36, 19, 32);
-    this.baseZoom = (Math.min(w, h) / (tiles * TS)) * g.settings.zoom;
+    const r = this.display.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    // an integer multiple of the buffer when it fits, otherwise the nearest size
+    let w = Math.max(BW, Math.round(r.width * dpr)), h = Math.round(w * BH / BW);
+    const k = Math.floor(w / BW);
+    if (k >= 1 && Math.abs(k * BW - w) < BW * 0.2) { w = k * BW; h = k * BH; }
+    this.display.width = w;
+    this.display.height = h;
+    this.dpr = 1;
+    this.light.width = BW / 2;
+    this.light.height = BH / 2;
+    g.cam.vw = BW;
+    g.cam.vh = BH;
+    this.baseZoom = 2 * g.settings.zoom;
     g.cam.zoom = this.baseZoom;
+  };
+  P.present = function () {
+    const dg = this.dg;
+    dg.imageSmoothingEnabled = false;
+    dg.drawImage(this.cv, 0, 0, this.display.width, this.display.height);
   };
 
   P.render = function () {
@@ -37,21 +54,21 @@
     const dpr = this.dpr;
     // zoom out with speed
     const sp = pl.inCar ? Math.abs(pl.inCar.speed) : 0;
-    const targetZoom = this.baseZoom * (pl.inCar ? R.clamp(1 - sp / 600, 0.62, 0.9) : 1);
+    const targetZoom = this.baseZoom * (pl.inCar ? R.clamp(1 - sp / 500, 0.72, 0.9) : 1);
     cam.zoom += (targetZoom - cam.zoom) * 0.05;
     const z = cam.zoom;
     const left = cam.left() + cam.ox, top = cam.top() + cam.oy;
     const vw = cam.vw / z, vh = cam.vh / z;
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.imageSmoothingEnabled = false;
-    g.fillStyle = '#1f5566';
+    g.fillStyle = pl.room ? '#140c0a' : '#1f5566';
     g.fillRect(0, 0, this.cv.width, this.cv.height);
     const sc = dpr * z;
     g.setTransform(sc, 0, 0, sc, Math.round(-left * sc), Math.round(-top * sc));
     // chunks
     const CPX = A.CH * TS;
     const cx0 = Math.max(0, Math.floor(left / CPX)), cy0 = Math.max(0, Math.floor(top / CPX));
-    const cx1 = Math.min(Math.floor(w.W / A.CH) - 1, Math.floor((left + vw) / CPX)), cy1 = Math.min(Math.floor(w.H / A.CH) - 1, Math.floor((top + vh) / CPX));
+    const cx1 = Math.min(Math.floor(w.W / A.CH) - 1, Math.floor((left + vw) / CPX)), cy1 = Math.min(Math.floor(w.TH / A.CH) - 1, Math.floor((top + vh) / CPX));
     for (let cy = cy0; cy <= cy1; cy++)
       for (let cx = cx0; cx <= cx1; cx++) g.drawImage(A.getChunk(w, cx, cy), cx * CPX, cy * CPX);
     // animated water glints, gas stains, decals
@@ -122,7 +139,7 @@
     // weather + lighting in screen space
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     this.drawLighting(g, left, top, z);
-    this.drawWeather(g);
+    if (!pl.room) this.drawWeather(g);
     this.drawBubbles(g, left, top, z);
     if (game.env.lightning > 0.6) { g.fillStyle = `rgba(230,235,255,${(game.env.lightning - 0.6) * 1.2})`; g.fillRect(0, 0, cam.vw, cam.vh); }
     if (pl.coolOn) {
@@ -139,29 +156,30 @@
     vg.addColorStop(1, 'rgba(20,8,0,0.45)');
     g.fillStyle = vg;
     g.fillRect(0, 0, cam.vw, cam.vh);
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    game.ui.drawHud(g);
+    this.present();
   };
 
   P.drawHuman = function (g, h) {
-    const st = { weapon: h.drawn || h.state === 'fight' ? h.weapon : null, down: h.down > 0 };
+    const st = { weapon: h.drawn || h.state === 'fight' ? h.weapon : null, down: h.down > 0 || h.state === 'sleep' };
+    if (h.state === 'sleep') {
+      A.drawPerson(g, h.x + 4, h.y + 4, 2, 0, h.look, st);
+      if (Math.floor(this.game.clock.real * 1.5) % 2 === 0) A.ptext(g, 'z', h.x + 6, h.y - 18, { color: '#f6ecd0', shadow: '#2a1a12' });
+      return;
+    }
+    if (h.state === 'fight' || h.state === 'travel' || h.state === 'flee' || h.state === 'report') st.ang = h.ang;
+    if (h.state === 'cower' || h.state === 'surrender') st.pose = 'h';
+    else if (h.atkT > 0 && h.state === 'fight' && R.data.weapons[h.weapon] && R.data.weapons[h.weapon].melee && h.atkT > R.data.weapons[h.weapon].rate * 2) st.pose = 'p1';
     let walk = h.walk;
     if (h.state === 'perform') walk = Math.sin(h.walk * 3) * 2 + h.walk;
-    if (h.state === 'cower' || h.state === 'surrender') {
-      // crouch with hands up
-      A.drawPerson(g, h.x, h.y + 2, h.dir, 0, h.look, st);
-      g.fillStyle = h.look.skin;
-      g.fillRect(h.x - 5, h.y - 22, 2, 4);
-      g.fillRect(h.x + 3, h.y - 22, 2, 4);
-    } else A.drawPerson(g, h.x, h.y, h.dir, walk, h.look, st);
-    if (h.state === 'work' && h.tag === 'worker') { g.fillStyle = '#e4a92a'; g.fillRect(h.x - 3, h.y - 22, 6, 2); }
+    A.drawPerson(g, h.x, h.y, h.dir, walk, h.look, st);
   };
   P.drawPlayer = function (g, pl) {
     const w = pl.weaponOut || pl.punchT > 0 ? pl.weapon : null;
-    A.drawPerson(g, pl.x, pl.y, pl.dir, pl.walk, pl.look, { weapon: w === 'gascan' ? 'bat' : w });
-    if (pl.punchT > 0) {
-      pl.punchT -= 1 / 60;
-      g.fillStyle = pl.look.skin;
-      g.fillRect(pl.x + Math.cos(pl.ang) * 9 - 1.5, pl.y - 12 + Math.sin(pl.ang) * 5, 3, 3);
-    }
+    const st = { weapon: w === 'gascan' ? null : w, ang: pl.ang };
+    if (pl.punchT > 0) { pl.punchT -= 1 / 60; st.pose = pl.weapon === 'bat' ? 'b1' : (pl.punchN || 0) % 2 ? 'p2' : 'p1'; st.weapon = null; }
+    A.drawPerson(g, pl.x, pl.y, pl.dir, pl.walk, pl.look, st);
   };
 
   P.drawFire = function (g, fr, t) {
@@ -184,9 +202,10 @@
   // ------------------------------------------------ lighting
   P.drawLighting = function (g, left, top, z) {
     const game = this.game, cam = game.cam, w = game.world, pl = game.player;
-    const dark = game.clock.darkness();
-    const gold = game.clock.golden();
-    const we = game.env.weather;
+    const room = pl.room;
+    const dark = room ? 0.28 + game.clock.darkness() * 0.25 : game.clock.darkness();
+    const gold = room ? 0 : game.clock.golden();
+    const we = room ? { cloud: 0, rain: 0, heat: 0 } : game.env.weather;
     // daytime grade: warm film look, overcast desaturation, heat shimmer
     if (gold > 0.02) {
       g.fillStyle = `rgba(230,110,30,${gold * 0.16})`;
@@ -221,7 +240,18 @@
     const t = game.clock.real;
     for (let ty = ty0; ty <= ty1; ty++)
       for (let tx = tx0; tx <= tx1; tx++) {
-        if (w.o(tx, ty) !== O.LAMP) continue;
+        const ob = w.o(tx, ty);
+        if (room) {
+          if (ob === O.FLOORLAMP || ob === O.JUKEBOX || ob === O.SLOT || ob === O.ARCADE || ob === O.TV) {
+            hole(tx * TS + 8, ty * TS + 6, ob === O.FLOORLAMP ? 60 : 30, 0.85);
+            glows.push([tx * TS + 8, ty * TS + 4, 18, ob === O.FLOORLAMP ? 'rgba(255,200,110,0.22)' : ob === O.JUKEBOX ? 'rgba(255,80,160,0.25)' : 'rgba(110,200,255,0.2)']);
+          } else if (w.t(tx, ty) === T.DANCE && (tx + ty + Math.floor(t * 4)) % 3 === 0) {
+            hole(tx * TS + 8, ty * TS + 8, 18, 0.7);
+            glows.push([tx * TS + 8, ty * TS + 8, 12, ['rgba(255,70,190,0.3)', 'rgba(240,184,56,0.3)', 'rgba(90,200,255,0.3)'][(tx + ty) % 3]]);
+          }
+          continue;
+        }
+        if (ob !== O.LAMP) continue;
         const flick = R.hash2(tx, ty, 2) < 0.06 ? (Math.sin(t * 20 + tx) > 0.3 ? 1 : 0.3) : 1;
         hole(tx * TS + 8, ty * TS + 6, 58, 0.9 * flick);
         glows.push([tx * TS + 8, ty * TS + 3, 22, 'rgba(255,200,110,0.22)']);
@@ -262,9 +292,14 @@
       glows.push([fr.x * TS + 8, fr.y * TS + 6, 26 * fr.i, 'rgba(255,140,40,0.2)']);
     }
     for (const f of game.fx.flashes) hole(f.x, f.y, f.big ? f.big * 3 : 40, 1);
-    hole(pl.x, pl.y - 8, 34, 0.55);
+    if (room) {
+      // the room is lit from above; a soft pool of light in the middle
+      hole((room.x0 + room.w / 2) * TS, (room.y0 + room.h / 2) * TS, Math.max(room.w, room.h) * TS * 0.6, 0.75);
+      hole(pl.x, pl.y - 8, 50, 0.6);
+    } else hole(pl.x, pl.y - 8, 34, 0.55);
     lg.globalCompositeOperation = 'source-over';
-    g.imageSmoothingEnabled = true;
+    this.dither(lg, LW, LH, dark);
+    g.imageSmoothingEnabled = false;
     g.drawImage(this.light, 0, 0, cam.vw, cam.vh);
     // additive glows
     g.globalCompositeOperation = 'lighter';
@@ -279,6 +314,82 @@
       g.beginPath(); g.arc(sx, sy, sr, 0, 7); g.fill();
     }
     g.globalCompositeOperation = 'source-over';
+  };
+
+  // title screen: the harbor at night, like the original's
+  P.renderTitle = function (t) {
+    const g = this.g;
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.imageSmoothingEnabled = false;
+    const bands = ['#120a26', '#1a1034', '#241640', '#2e1c4a', '#3a2254', '#4a2a5a'];
+    for (let i = 0; i < bands.length; i++) { g.fillStyle = bands[i]; g.fillRect(0, i * 34, BW, 34); }
+    // dithered band edges
+    for (let i = 1; i < bands.length; i++) { g.fillStyle = bands[i]; for (let x = (i % 2) * 2; x < BW; x += 4) g.fillRect(x, i * 34 - 2, 2, 2); }
+    const rnd = R.mulberry(7);
+    for (let k = 0; k < 90; k++) {
+      const x = rnd() * BW, y = rnd() * 170;
+      g.fillStyle = Math.sin(t * 2 + k) > 0.6 ? '#fff6c0' : '#b8a8d8';
+      g.fillRect(x | 0, y | 0, 1, 1);
+    }
+    // moon
+    g.fillStyle = 'rgba(246,236,208,0.08)'; g.beginPath(); g.arc(70, 150, 30, 0, 7); g.fill();
+    g.fillStyle = '#f6ecd0'; g.beginPath(); g.arc(70, 150, 17, 0, 7); g.fill();
+    g.fillStyle = '#d8ccb0'; g.fillRect(63, 143, 5, 4); g.fillRect(74, 156, 4, 3); g.fillRect(77, 141, 3, 3);
+    // lighthouse beam
+    const la = Math.sin(t * 0.8) * 0.6 - 1.2;
+    g.fillStyle = 'rgba(246,236,208,0.12)';
+    g.beginPath(); g.moveTo(420, 128); g.lineTo(420 + Math.cos(la - 0.08) * 400, 128 + Math.sin(la - 0.08) * 400); g.lineTo(420 + Math.cos(la + 0.08) * 400, 128 + Math.sin(la + 0.08) * 400); g.closePath(); g.fill();
+    // skyline
+    const sk = R.mulberry(11);
+    let x = 0;
+    while (x < BW) {
+      const w = 24 + (sk() * 34) | 0, h = 40 + (sk() * 80) | 0;
+      if (x > 400 && x < 440) { x += 44; continue; }
+      g.fillStyle = '#0e0818';
+      g.fillRect(x, 215 - h, w - 2, h);
+      for (let wy = 215 - h + 6; wy < 210; wy += 7) for (let wx = x + 3; wx < x + w - 5; wx += 5) {
+        if (sk() < 0.35) { g.fillStyle = sk() < 0.8 ? '#f0c848' : '#8ab8e8'; g.fillRect(wx, wy, 2, 3); }
+      }
+      x += w;
+    }
+    // lighthouse
+    for (let y = 128; y < 215; y += 10) { g.fillStyle = (y / 10) % 2 ? '#c83a2a' : '#f6ecd0'; g.fillRect(412, y, 16, 10); }
+    g.fillStyle = '#f6ecd0'; g.fillRect(410, 118, 20, 10); g.fillStyle = '#fff6a0'; g.fillRect(414, 120, 12, 6);
+    // water
+    g.fillStyle = '#12183a'; g.fillRect(0, 215, BW, BH - 215);
+    for (let k = 0; k < 60; k++) {
+      const wx = (rnd() * BW + t * 6 * (k % 3 + 1)) % BW, wy = 220 + rnd() * 100;
+      g.fillStyle = k % 3 ? '#243a6a' : '#3a5a9a'; g.fillRect(wx | 0, wy | 0, 6 + (k % 4) * 3, 1);
+    }
+    for (let y = 222; y < BH; y += 5) { g.fillStyle = 'rgba(246,236,208,0.5)'; const w2 = 8 + Math.sin(t * 3 + y) * 3; g.fillRect(420 - w2 / 2, y, w2, 1); }
+    // pier
+    g.fillStyle = '#0a0610'; g.fillRect(0, 262, 190, 5);
+    for (let px = 6; px < 190; px += 24) g.fillRect(px, 262, 4, 60);
+    g.fillRect(122, 240, 3, 22); g.fillStyle = '#f0c848'; g.fillRect(120, 238, 7, 3);
+    // title
+    A.ptext(g, 'RHAPSODY', BW / 2 + 4, 44 + 4, { align: 'center', scale: 5, color: '#2a1a12' });
+    A.ptext(g, 'RHAPSODY', BW / 2 + 2, 44 + 2, { align: 'center', scale: 5, color: '#c83a2a' });
+    A.ptext(g, 'RHAPSODY', BW / 2, 44, { align: 'center', scale: 5, color: '#f0b838' });
+    A.ptext(g, 'THE BRASS COAST - 2026', BW / 2, 104, { align: 'center', scale: 2, color: '#f6ecd0', shadow: '#2a1a12' });
+    A.ptext(g, 'THE SEVENTIES NEVER ENDED', BW / 2, 126, { align: 'center', scale: 1, color: '#b8a8d8' });
+    this.present();
+  };
+
+  // ordered (Bayer) dithering of the darkness, like the original
+  P.dither = function (lg, W, H, dmax) {
+    const img = lg.getImageData(0, 0, W, H);
+    const d = img.data;
+    const top = Math.max(0.05, dmax) * 255;
+    for (let y = 0; y < H; y++)
+      for (let x = 0; x < W; x++) {
+        const i = (y * W + x) * 4 + 3;
+        const a = d[i] / top;
+        const lv = a * 4;
+        const base = Math.floor(lv);
+        const frac = lv - base;
+        d[i] = (Math.min(4, base + (frac > BAYER[(y & 3) * 4 + (x & 3)] / 16 ? 1 : 0)) / 4) * top;
+      }
+    lg.putImageData(img, 0, 0);
   };
 
   P.drawWeather = function (g) {
@@ -317,52 +428,71 @@
     }
   };
 
+  // speech bubbles, alerts and the original's "[A] action" tags, in pixel fonts
+  P.tag = function (g, sx, sy, label, key) {
+    const tw = A.ptWidth(label);
+    const w = tw + (key ? 17 : 8), h = 13;
+    const x = Math.round(R.clamp(sx - w / 2, 2, this.cv.width - w - 2)), y = Math.round(sy - h);
+    g.fillStyle = '#2a1a12'; g.fillRect(x - 1, y - 1, w + 2, h + 2);
+    g.fillStyle = '#f6ecd0'; g.fillRect(x, y, w, h);
+    g.fillStyle = 'rgba(20,12,10,0.35)'; g.fillRect(x, y + h + 1, w + 1, 1);
+    let tx = x + 4;
+    if (key) {
+      g.fillStyle = '#c83a2a'; g.fillRect(x + 2, y + 2, 10, 9);
+      A.ptext(g, key, x + 7, y + 2, { align: 'center', color: '#f6ecd0' });
+      tx = x + 14;
+    }
+    A.ptext(g, label, tx, y + 2, { color: '#3a2418' });
+    g.fillStyle = '#2a1a12'; g.fillRect(Math.round(sx) - 2, y + h + 1, 5, 1); g.fillRect(Math.round(sx) - 1, y + h + 2, 3, 1);
+  };
+  const wrap = (text, maxW) => {
+    const words = String(text).split(' ');
+    const lines = [];
+    let cur = '';
+    for (const wd of words) {
+      const test = cur ? cur + ' ' + wd : wd;
+      if (A.ptWidth(test) > maxW && cur) { lines.push(cur); cur = wd; }
+      else cur = test;
+    }
+    if (cur) lines.push(cur);
+    return lines;
+  };
+  P.wrap = wrap;
   P.drawBubbles = function (g, left, top, z) {
     const game = this.game, cam = game.cam;
-    g.textAlign = 'center';
-    g.textBaseline = 'alphabetic';
     const list = game.actors.list.filter((a) => (a.bubble || a.alert) && !a.dead && !a.inCar && cam.onScreen(a.x, a.y, 10));
     const pl = game.player;
     if (pl.bubble && !pl.inCar) list.push(pl);
+    const toS = (x, y) => [(x - left) * z, (y - top) * z];
+    if (!pl.inCar && !pl.dead && !game.ui.sheetOpen) {
+      const act = pl.contextAction();
+      const f = pl.focus;
+      if (f && !f.dead && !pl.bubble) { const [fx, fy] = toS(f.x, f.y - 27); this.tag(g, fx, fy, game.actors.displayName(f).slice(0, 22), 'T'); }
+      if (act && !(f && !f.dead)) { const [px, py] = toS(pl.x, pl.y - 29); this.tag(g, px, py, act.label.slice(0, 24), 'A'); }
+    }
     for (const a of list) {
-      const sx = (a.x - left) * z, sy = (a.y - top) * z - 22 * z - 6;
+      const [sx, sy0] = toS(a.x, a.y);
+      const sy = sy0 - 27 * z;
       if (a.alert) {
-        g.font = 'bold 18px "Barlow Condensed", sans-serif';
-        g.fillStyle = '#1b1410';
         const icon = a.alert === 'thief' ? '$' : '!';
-        g.beginPath(); g.arc(sx, sy - 6, 9, 0, 7); g.fill();
-        g.fillStyle = a.alert === 'thief' ? '#9ad070' : '#e4a92a';
-        g.fillText(icon, sx, sy);
+        g.fillStyle = '#2a1a12'; g.fillRect(Math.round(sx) - 6, Math.round(sy) - 16, 13, 15);
+        g.fillStyle = a.alert === 'thief' ? '#6a9a30' : '#f0b838'; g.fillRect(Math.round(sx) - 5, Math.round(sy) - 15, 11, 13);
+        A.ptext(g, icon, sx + 0.5, sy - 13, { align: 'center', color: '#2a1a12' });
       }
       if (!a.bubble) continue;
-      const text = a.bubble.text;
-      g.font = '600 14px "Barlow Condensed", "Arial Narrow", sans-serif';
-      const maxW = Math.min(200, cam.vw * 0.55);
-      const words = text.split(' ');
-      const lines = [];
-      let cur = '';
-      for (const wd of words) {
-        const test = cur ? cur + ' ' + wd : wd;
-        if (g.measureText(test).width > maxW && cur) { lines.push(cur); cur = wd; }
-        else cur = test;
-      }
-      if (cur) lines.push(cur);
-      const lh = 16;
-      const bw = Math.max(...lines.map((l) => g.measureText(l).width)) + 14;
-      const bh = lines.length * lh + 8;
-      let bx = R.clamp(sx - bw / 2, 6, cam.vw - bw - 6);
-      const by = sy - bh - (a.alert ? 16 : 4);
-      const alpha = Math.min(1, a.bubble.t * 2);
-      g.globalAlpha = alpha;
-      g.fillStyle = a === pl ? '#e4a92a' : '#f2e2c0';
-      g.strokeStyle = '#1b1410';
-      g.lineWidth = 2;
-      this.roundRect(g, bx, by, bw, bh, 7);
-      g.fill(); g.stroke();
-      g.beginPath(); g.moveTo(R.clamp(sx, bx + 8, bx + bw - 8) - 4, by + bh); g.lineTo(R.clamp(sx, bx + 8, bx + bw - 8), by + bh + 6); g.lineTo(R.clamp(sx, bx + 8, bx + bw - 8) + 4, by + bh); g.fill();
-      g.fillStyle = '#1b1410';
-      lines.forEach((l, i) => g.fillText(l, bx + bw / 2, by + 4 + (i + 1) * lh - 3));
-      g.globalAlpha = 1;
+      const lines = wrap(a.bubble.text.toUpperCase(), 150);
+      const lh = 10;
+      const bw = Math.max(...lines.map((l) => A.ptWidth(l))) + 10;
+      const bh = lines.length * lh + 5;
+      const bx = Math.round(R.clamp(sx - bw / 2, 3, cam.vw - bw - 3));
+      const by = Math.round(sy - bh - (a.alert ? 20 : 6));
+      const fill = a === pl ? '#f0b838' : '#f6ecd0';
+      g.fillStyle = '#2a1a12'; g.fillRect(bx - 2, by - 2, bw + 4, bh + 4);
+      g.fillStyle = fill; g.fillRect(bx, by, bw, bh);
+      const tx = Math.round(R.clamp(sx, bx + 6, bx + bw - 6));
+      g.fillStyle = '#2a1a12'; g.fillRect(tx - 3, by + bh + 2, 6, 2); g.fillRect(tx - 1, by + bh + 4, 3, 2);
+      g.fillStyle = fill; g.fillRect(tx - 2, by + bh, 4, 2);
+      lines.forEach((l, i) => A.ptext(g, l, bx + bw / 2, by + 3 + i * lh, { align: 'center', color: '#3a2418' }));
     }
   };
   P.roundRect = function (g, x, y, w, h, r) {

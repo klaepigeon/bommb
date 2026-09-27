@@ -70,7 +70,8 @@
     if (!def) return;
     if (g.cheats && g.cheats.noLaw) return;
     const jur = this.jurAt(x, y);
-    const crime = { type, def, x, y, jur, identified: !pl.masked, t: g.clock.t, lvl: def.lvl, bounty: def.bounty, victim: opts.victim || null };
+    const loc = g.interiors ? g.interiors.outside(x, y) : { x, y };
+    const crime = { type, def, x: loc.x, y: loc.y, jur, identified: !pl.masked, t: g.clock.t, lvl: def.lvl, bounty: def.bounty, victim: opts.victim || null };
     pl.stats.crimes++;
     // city consequences
     const city = g.world.cities.find((c) => c.id === jur);
@@ -269,7 +270,7 @@
     }
     // brandishing warning expires into a crime
     if (cop.brandishT > 0) {
-      if (!pl.weaponOut || !D.weapons[pl.weapon].gun) { cop.brandishT = 0; g.actors.say(cop, R.dialog.line('copOk', cop)); cop.drawn = false; return; }
+      if (!pl.weaponOut || !D.weapons[pl.weapon] || !D.weapons[pl.weapon].gun) { cop.brandishT = 0; g.actors.say(cop, R.dialog.line('copOk', cop)); cop.drawn = false; return; }
       cop.brandishT -= 0.3;
       if (cop.brandishT <= 0) this.startIncident({ type: 'brandish', def: CRIMES.brandish, x: pl.x, y: pl.y, jur: this.jurAt(pl.x, pl.y), identified: !pl.masked, lvl: 1, bounty: 5 }, cop);
       return;
@@ -306,8 +307,9 @@
   };
   L.seen = function (cop) {
     const g = this.game, pl = g.player, inc = this.incident;
-    inc.lastX = pl.x;
-    inc.lastY = pl.y;
+    const at = g.interiors.outside(pl.x, pl.y);
+    inc.lastX = at.x;
+    inc.lastY = at.y;
     inc.seenT = g.clock.real;
     if (inc.state !== 'pursuit') {
       inc.state = 'pursuit';
@@ -415,7 +417,9 @@
 
   // ------------------------------------------------ per-frame
   L.update = function (dt) {
-    const g = this.game, pl = g.player, inc = this.incident;
+    const g = this.game, inc = this.incident;
+    // indoors, the law treats you as being at the building's front door
+    const pl = g.player.room ? Object.assign({}, g.player, g.interiors.outside(g.player.x, g.player.y), { inside: g.player.room }) : g.player;
     this.hunterT -= dt;
     if (this.hunterT <= 0) { this.hunterT = 90; this.bountyHunters(); }
     if (!inc) return;
@@ -424,11 +428,13 @@
     let seenNow = false;
     for (const u of inc.units) {
       if (u.dead || u.removed) continue;
-      const d = R.dist(u.x, u.y, pl.x, pl.y);
-      if (d < TS * 13 && !pl.inside && g.world.los(u.x, u.y - 8, pl.x, pl.y - 8)) { seenNow = true; break; }
+      const P0 = u.room ? g.player : pl;
+      const d = R.dist(u.x, u.y, P0.x, P0.y);
+      if (d < TS * 13 && (u.room || !pl.inside) && g.world.los(u.x, u.y - 8, P0.x, P0.y - 8)) { seenNow = true; break; }
     }
-    for (const a of g.actors.near(pl.x, pl.y, TS * 12)) {
-      if (a.cop && !a.dead && !inc.units.includes(a) && !pl.inside && g.world.los(a.x, a.y - 8, pl.x, pl.y - 8)) { inc.units.push(a); seenNow = true; }
+    const P1 = g.player;
+    for (const a of g.actors.near(P1.x, P1.y, TS * 12)) {
+      if (a.cop && !a.dead && !inc.units.includes(a) && g.world.los(a.x, a.y - 8, P1.x, P1.y - 8)) { inc.units.push(a); seenNow = true; }
     }
     if (seenNow) this.seen(null);
     const sinceSeen = now - inc.seenT;

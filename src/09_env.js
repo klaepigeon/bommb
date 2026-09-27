@@ -520,13 +520,10 @@
       g.stroke();
     }
     g.textAlign = 'center';
-    g.font = 'bold 8px monospace';
     for (const t of this.texts) {
       g.globalAlpha = Math.min(1, t.t / t.max * 2);
-      g.fillStyle = '#1b1410';
-      g.fillText(t.s, t.x + 1, t.y + 1);
-      g.fillStyle = t.c;
-      g.fillText(t.s, t.x, t.y);
+      if (t.s === '♪' || t.s === '♫') { g.fillStyle = t.c; g.fillRect(Math.round(t.x), Math.round(t.y) - 4, 1, 5); g.fillRect(Math.round(t.x) - 2, Math.round(t.y), 3, 2); g.fillRect(Math.round(t.x), Math.round(t.y) - 4, 3, 1); continue; }
+      R.art.ptext(g, String(t.s).toUpperCase(), t.x, t.y - 8, { align: 'center', color: t.c, shadow: '#1b1410' });
     }
     g.globalAlpha = 1;
   };

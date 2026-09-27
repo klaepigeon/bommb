@@ -7,7 +7,7 @@
   // ------------------------------------------------ A* pathfinder (tile grid)
   const PF = (R.path = {});
   PF.init = function (world) {
-    const n = world.W * world.H;
+    const n = world.W * world.TH;
     PF.w = world;
     PF.g = new Float32Array(n);
     PF.stamp = new Int32Array(n);
@@ -492,6 +492,10 @@
         if (h.timer <= 0) this.hangAround(h);
         break;
       }
+      case 'sleep': {
+        h.walk = 0;
+        break;
+      }
       case 'surrender': {
         h.walk = 0;
         h.timer -= dt;
@@ -511,8 +515,9 @@
       h.timer = 8 + R.rng() * 8;
       return;
     }
+    const rad = h.stay ? 1 : 3;
     for (let k = 0; k < 6; k++) {
-      const tx = s.x + R.rng.int(-3, 3), ty = s.y + R.rng.int(-3, 3);
+      const tx = s.x + R.rng.int(-rad, rad), ty = s.y + R.rng.int(-rad, rad);
       if (!this.game.world.solidPed(tx, ty) && !D.roadTile[this.game.world.t(tx, ty)]) {
         this.goTo(h, tx, ty, { near: 4 });
         break;
@@ -609,11 +614,11 @@
   // ------------------------------------------------ perception
   AP.perceive = function (h) {
     const game = this.game, pl = game.player;
-    if (h.state === 'fight' || h.state === 'report' || h.state === 'surrender') return;
+    if (h.state === 'fight' || h.state === 'report' || h.state === 'surrender' || h.state === 'sleep') return;
     const d = R.dist(h.x, h.y, pl.x, pl.y);
     const seesPlayer = d < TS * 10 && !pl.inside && (d < TS * 3 || game.world.los(h.x, h.y - 8, pl.x, pl.y - 8));
     // player with a gun drawn close by
-    if (seesPlayer && pl.weaponOut && D.weapons[pl.weapon].gun && d < TS * 7 && h.state !== 'flee' && h.state !== 'cower') {
+    if (seesPlayer && pl.weaponOut && D.weapons[pl.weapon] && D.weapons[pl.weapon].gun && d < TS * 7 && h.state !== 'flee' && h.state !== 'cower') {
       if (h.cop) {
         if (!game.law.warned(h)) {
           this.say(h, R.dialog.line('copWarnGun', h));
@@ -736,6 +741,21 @@
     const near = this.near(x, y, radius);
     for (const a of near) {
       if (a.dead || a === source) continue;
+      if (a.state === 'sleep') {
+        const d = R.dist(a.x, a.y, x, y);
+        if (R.rng() < (kind === 'rustle' ? 0.35 : 1) * (1 - d / (radius + 1)) + (kind === 'rustle' ? 0 : 0.5)) {
+          a.state = 'idle';
+          a.timer = 1;
+          a.x += 8;
+          this.say(a, R.dialog.line('woken', a));
+          const pl = this.game.player;
+          if (pl.room && a.room === pl.room && !pl.room.b.playerOwned) {
+            setTimeout(() => this.game.law.crime('burglary', pl.x, pl.y, { victim: a }), 400);
+          }
+        }
+        continue;
+      }
+      if (kind === 'rustle') continue;
       if (a.kind === 'a') {
         if (a.def.bird) { a.flying = true; a.state = 'flee'; a.timer = 6; }
         else if (a.def.prey || !a.def.predator || R.rng() < 0.5) { a.state = 'flee'; a.target = source || game.player; a.timer = 6; }
@@ -881,6 +901,7 @@
       if (a.kind === 'h' && !a.dead && (a.tag === 'ambient' || a.tag === 'kid')) humans++;
       if (a.kind === 'a' && !a.dead) animals++;
     }
+    if (pl.room) return; // nothing spawns while you're indoors
     const city = w.cityAt(ptx | 0, pty | 0);
     const hour = game.clock.hour();
     const tod = hour < 5 ? 0.25 : hour < 7 ? 0.5 : hour < 20 ? 1 : hour < 23 ? 0.7 : 0.4;

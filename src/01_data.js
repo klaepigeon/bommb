@@ -14,11 +14,14 @@
     DEEP: 0, WATER: 1, SAND: 2, GRASS: 3, FOREST: 4, DIRT: 5, DESERT: 6, MARSH: 7, ROCK: 8,
     ROAD: 9, WALK: 10, BLDG: 11, LOT: 12, PARK: 13, DIRTROAD: 14, BRIDGE: 15, PLAZA: 16,
     FIELD: 17, SNOW: 18, BURNT: 19, SITE: 20, DOCK: 21, PARKING: 22, HWY: 23,
+    VOID: 24, WALL: 25, WOOD: 26, TILEF: 27, CARPET: 28, CONCRETE: 29, DANCE: 30, EXITMAT: 31,
   };
   const T = D.T;
   D.solidTile = new Uint8Array(32);
   D.solidTile[T.ROCK] = 1;
   D.solidTile[T.BLDG] = 1;
+  D.solidTile[T.WALL] = 1;
+  D.solidTile[T.VOID] = 1;
   D.waterTile = new Uint8Array(32);
   D.waterTile[T.DEEP] = 1;
   D.waterTile[T.WATER] = 1;
@@ -40,13 +43,52 @@
     NONE: 0, TREE: 1, PINE: 2, CACTUS: 3, BUSH: 4, BOULDER: 5, LAMP: 6, HYDRANT: 7, PHONE: 8,
     BENCH: 9, FENCE: 10, PUMP: 11, TRASH: 12, STUMP: 13, BARREL: 14, CONE: 15, REED: 16,
     PALM: 17, MAILBOX: 18, FLOWERS: 19, DEADTREE: 20, CRATE: 21, SIGNPOST: 22,
+    // interior furniture
+    COUNTER: 23, STOOL: 24, TABLE: 25, BED: 26, DRESSER: 27, SHELF: 28, FRIDGE: 29, REGISTER: 30, DESK: 31,
+    LOCKER: 32, CABINET: 33, SAFE: 34, POOL: 35, JUKEBOX: 36, PEW: 37, ALTAR: 38, HOSPBED: 39, BARS: 40,
+    RACK: 41, GUNRACK: 42, SLOT: 43, CARDTABLE: 44, ARCADE: 45, WASHER: 46, BCHAIR: 47, PLANT: 48, TV: 49,
+    SOFA: 50, STOVE: 51, BOOKCASE: 52, PIANO: 53, VAULT: 54, LIFT: 55, CHAIR: 56, MIC: 57, FLOORLAMP: 58, RUG: 59,
   };
   const O = D.O;
-  D.solidObj = new Uint8Array(32);
+  D.solidObj = new Uint8Array(64);
   [O.TREE, O.PINE, O.CACTUS, O.BOULDER, O.PUMP, O.PHONE, O.FENCE, O.PALM, O.DEADTREE, O.CRATE, O.BARREL].forEach((o) => (D.solidObj[o] = 1));
-  D.smallObj = new Uint8Array(32); // solid for cars only (lamps, hydrants), peds walk around
+  D.smallObj = new Uint8Array(64); // solid for cars only (lamps, hydrants), peds walk around
   [O.LAMP, O.HYDRANT, O.MAILBOX, O.SIGNPOST, O.BENCH, O.TRASH].forEach((o) => (D.smallObj[o] = 1));
-  D.flammableObj = new Uint8Array(32);
+  [O.COUNTER, O.TABLE, O.BED, O.DRESSER, O.SHELF, O.FRIDGE, O.REGISTER, O.DESK, O.LOCKER, O.CABINET, O.SAFE, O.POOL, O.JUKEBOX, O.PEW, O.ALTAR,
+    O.HOSPBED, O.BARS, O.RACK, O.GUNRACK, O.SLOT, O.CARDTABLE, O.ARCADE, O.WASHER, O.PLANT, O.TV, O.SOFA, O.STOVE, O.BOOKCASE, O.PIANO, O.VAULT, O.FLOORLAMP].forEach((o) => (D.solidObj[o] = 1));
+  // what the USE button does with a piece of furniture (verbs + loot from the original build)
+  D.furniture = {
+    [O.DRESSER]: { verb: 'Search the dresser', cash: [5, 40], items: ['watch', 'ring', 'chain', 'bandage'] },
+    [O.SHELF]: { verb: 'Search the shelf', cash: [0, 15], items: ['sandwich', 'ammo', 'bandage', 'eight'] },
+    [O.FRIDGE]: { verb: 'Raid the fridge', cash: [0, 0], items: ['sandwich', 'sandwich', 'whiskey'] },
+    [O.LOCKER]: { verb: 'Force the locker', cash: [5, 30], items: ['ammo', 'bandage', 'radio'] },
+    [O.DESK]: { verb: 'Rifle through the desk', cash: [5, 50], items: ['watch', 'cam', 'bonds'] },
+    [O.CABINET]: { verb: 'Pry open the cabinet', cash: [10, 45], items: ['bandage', 'tonic', 'silver'] },
+    [O.BOOKCASE]: { verb: 'Check behind the books', cash: [0, 25], items: ['bonds', 'painting', 'eight'] },
+    [O.SAFE]: { verb: 'Crack the safe', cash: [80, 300], items: ['jewels', 'bonds'], slow: 1 },
+    [O.REGISTER]: { verb: 'Rob the register', register: 1 },
+    [O.COUNTER]: { verb: 'Counter', service: 1 },
+    [O.RACK]: { verb: 'Browse the suits', shop: 'tailor' },
+    [O.GUNRACK]: { verb: 'Browse the guns', shop: 'guns' },
+    [O.LIFT]: { verb: 'Garage services', shop: 'garage' },
+    [O.BED]: { verb: 'Sleep', bed: 1 },
+    [O.HOSPBED]: { verb: 'Lie down (heal $30)', heal: 1 },
+    [O.JUKEBOX]: { verb: 'Play the jukebox', jukebox: 1 },
+    [O.POOL]: { verb: 'Shoot pool ($10)', game: [0.48, 10] },
+    [O.SLOT]: { verb: 'Pull the slot ($5)', game: [0.3, 5, 3] },
+    [O.CARDTABLE]: { verb: 'Sit in on cards ($25)', game: [0.47, 25] },
+    [O.ARCADE]: { verb: 'Play pinball ($1)', arcade: 1 },
+    [O.WASHER]: { verb: 'Wash your suit ($2)', wash: 1 },
+    [O.BCHAIR]: { verb: 'Haircut & shave ($8)', barber: 1 },
+    [O.PEW]: { verb: 'Sit and pray', pray: 1 },
+    [O.ALTAR]: { verb: 'Confess ($40)', confess: 1 },
+    [O.PIANO]: { verb: 'Play the piano', piano: 1 },
+    [O.TV]: { verb: 'Watch the news', tv: 1 },
+    [O.VAULT]: { verb: 'Rob the vault', vault: 1 },
+    [O.PHONE]: { verb: 'Use the phone', phone: 1 },
+    [O.STOVE]: { verb: 'Cook something', cook: 1 },
+  };
+  D.flammableObj = new Uint8Array(64);
   [O.TREE, O.PINE, O.BUSH, O.FENCE, O.PALM, O.REED, O.DEADTREE, O.CRATE, O.BENCH, O.FLOWERS].forEach((o) => (D.flammableObj[o] = 1));
 
   // ---------------- Cities ----------------

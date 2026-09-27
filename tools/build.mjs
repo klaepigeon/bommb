@@ -7,7 +7,12 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const src = join(root, 'src');
-const shell = readFileSync(join(src, 'shell.html'), 'utf8');
+// the pixel fonts (SIL Open Font License) are embedded so text stays crisp offline
+const font = (file, family) => `@font-face { font-family: '${family}'; font-style: normal; font-weight: 400; font-display: block; src: url(data:font/ttf;base64,${readFileSync(join(root, 'assets', 'fonts', file)).toString('base64')}) format('truetype'); }`;
+const fontCss = `<style>\n${font('Silkscreen-Regular.ttf', 'Silkscreen')}\n${font('PixelifySans-Regular.ttf', 'Pixelify Sans')}\n</style>`;
+const shell = readFileSync(join(src, 'shell.html'), 'utf8')
+  .replace(/<link rel="preconnect"[^>]*>\n?/g, '')
+  .replace(/<link rel="stylesheet" href="https:\/\/fonts.googleapis.com[^>]*>/, fontCss);
 const files = readdirSync(src).filter((f) => /^\d\d_.*\.js$/.test(f)).sort();
 const js = files.map((f) => `// ---- ${f}\n` + readFileSync(join(src, f), 'utf8')).join('\n');
 const body = `${shell}\n<script>\n${js.replace(/<\/script/gi, '<\\/script')}\n</script>\n`;

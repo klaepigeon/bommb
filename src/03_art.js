@@ -327,21 +327,6 @@
     } else {
       g.fillRect(px - 2, py + dy + 1, 4, 14);
     }
-    // signage text on roof for businesses
-    if (b.type !== 'house' && b.type !== 'cabin' && b.type !== 'apartment') {
-      const txt = (b.name || bt.name).toUpperCase();
-      const size = b.w >= 7 ? 7 : 6;
-      g.font = `bold ${size}px monospace`;
-      g.textAlign = 'center';
-      g.textBaseline = 'middle';
-      const ty = b.face === 'S' ? fy - 6 : py + 8;
-      const maxW = bw - 4;
-      const tw = Math.min(maxW, g.measureText(txt).width + 4);
-      g.fillStyle = bt.neon ? '#1a0a20' : 'rgba(20,14,10,0.75)';
-      g.fillRect(px + bw / 2 - tw / 2, ty - 4, tw, 8);
-      g.fillStyle = bt.neon ? '#ff70c8' : b.type === 'police' ? '#a8c8ff' : b.type === 'social' ? '#e4a92a' : '#f2e2c0';
-      g.fillText(txt, px + bw / 2, ty + 0.5, maxW - 2);
-    }
     if (b.type === 'police') {
       g.fillStyle = '#2a4a8a';
       g.fillRect(px + 4, py + 4, 8, 8);

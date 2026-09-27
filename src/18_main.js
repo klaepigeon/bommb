@@ -31,9 +31,12 @@
     this.renderer = new R.Renderer(this, this.canvas);
     const title = document.getElementById('title');
     title.style.display = 'flex';
+    this.resize();
     const save = R.store.get(SAVE);
-    // let the loading text paint before the heavy generation
-    setTimeout(() => {
+    this.loop();
+    // wait (briefly) for the pixel fonts, then build the world
+    const fonts = document.fonts ? Promise.all([document.fonts.load('8px "Silkscreen"'), document.fonts.load('11px "Pixelify Sans"')]).catch(() => {}) : Promise.resolve();
+    Promise.race([fonts, new Promise((r) => setTimeout(r, 2500))]).then(() => setTimeout(() => {
       this.setup(save ? save.seed : (Math.random() * 1e9) | 0, save);
       document.getElementById('loading').hidden = true;
       title.querySelector('.menu').hidden = false;
@@ -49,8 +52,7 @@
       document.getElementById('btnHelp').addEventListener('click', () => {
         this.ui.openSheet('help', this.ui.header('How to Play', 'The short version') + `<div class="body">${this.ui.helpHtml()}</div>`, true);
       });
-      this.loop();
-    }, 60);
+    }, 30));
     window.addEventListener('resize', () => this.resize());
     document.addEventListener('visibilitychange', () => { if (document.hidden && this.started) this.save(); });
   };
@@ -71,6 +73,8 @@
     this.jobs = new R.Jobs(this);
     this.player = new R.Player(this);
     this.life = new R.Life(this);
+    this.interiors = new R.Interiors(this);
+    R.art.chunkCache.clear();
     const port = this.world.cities[0];
     const club = port.buildings.find((b) => b.type === 'social');
     this.player.place(club.out.x * TS + 8, club.out.y * TS + 12);
@@ -112,7 +116,13 @@
 
   G.resize = function () {
     if (!this.renderer) return;
+    const app = document.getElementById('app');
+    const portrait = window.innerHeight > window.innerWidth * 1.05;
+    app.classList.toggle('portrait', portrait);
+    app.classList.toggle('landscape', !portrait);
+    app.classList.toggle('touch', 'ontouchstart' in window || navigator.maxTouchPoints > 0);
     this.renderer.resize();
+    requestAnimationFrame(() => this.renderer.resize());
   };
 
   G.start = function (fresh) {
@@ -142,14 +152,15 @@
   G.intro = function () {
     const pl = this.player;
     const club = this.world.buildings[this.homeClub];
-    this.ui.story('Port Hollow, 2026', `The calendar says 2026. The Brass Coast never got the memo: wide collars, eight-tracks, disco on every radio.\n\nYou're Nicky "The Mook" Marchetti, fresh off the bus with a pinstripe suit and a cousin's recommendation. Don Gus Vane runs Port Hollow out of ${club.name}.\n\nHe's got work for you. Everyone else is just living their lives.`, () => {
+    this.interiors.enter(club, 'guest');
+    this.ui.story('Port Hollow, 2026', `The calendar says 2026. The Brass Coast never got the memo: wide collars, eight-tracks, disco on every radio.\n\nYou're Nicky "The Mook" Marchetti, fresh off the bus with a pinstripe suit and a cousin's recommendation. Don Gus Vane runs Port Hollow out of ${club.name}, and you're standing in his back room.\n\nHe's got work for you. Everyone else is just living their lives.`, () => {
       const offers = this.jobs.offersFor(pl.family);
       const first = offers.find((o) => o.kind === 'collect') || offers[0];
       if (first) {
         this.jobs.accept(first);
         this.jobs.offers[pl.family] = offers.filter((o) => o !== first);
       }
-      this.ui.toast('Your first job is on the map (gold marker). Walk up to people and GREET them. Some of them will surprise you.', 'good');
+      this.ui.toast('Talk to Don Vane for more work. Your first job is marked in gold. Walk out the doormat to leave.', 'good');
       setTimeout(() => this.ui.toast('Crimes only count if someone sees them. Watch for gold "!" witnesses.'), 7000);
       this.save();
     });
@@ -162,8 +173,8 @@
       requestAnimationFrame(frame);
       let dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      if (!this.world) return;
       try {
+        if (!this.started) { this.renderer.renderTitle(now / 1000); return; }
         this.tick(dt);
         this.renderer.render();
       } catch (e) {
@@ -189,6 +200,7 @@
       this.law.update(sdt);
       this.jobs.update(sdt);
       this.life.update(sdt);
+      this.interiors.update(sdt);
       this.fx.update(sdt);
       this.hintCheck();
       this.occT = (this.occT || 0) - dt;
@@ -200,6 +212,13 @@
     const tgt = pl.inCar || pl;
     const lead = pl.inCar ? { x: pl.inCar.vx * 0.35, y: pl.inCar.vy * 0.35 } : null;
     this.cam.update(dt, tgt.x, tgt.y - 6, lead);
+    if (pl.room) {
+      // keep the camera inside the room, centred when the room is smaller than the screen
+      const r = pl.room, hw = this.cam.vw / 2 / this.cam.zoom, hh = this.cam.vh / 2 / this.cam.zoom;
+      const x0 = r.x0 * TS, x1 = (r.x0 + r.w) * TS, y0 = r.y0 * TS, y1 = (r.y0 + r.h) * TS;
+      this.cam.x = x1 - x0 < hw * 2 ? (x0 + x1) / 2 : R.clamp(this.cam.x, x0 + hw, x1 - hw);
+      this.cam.y = y1 - y0 < hh * 2 ? (y0 + y1) / 2 : R.clamp(this.cam.y, y0 + hh, y1 - hh);
+    }
     if (pl.bubble) { pl.bubble.t -= dt; if (pl.bubble.t <= 0) pl.bubble = null; }
     this.ui.update(dt);
     this.input.endFrame();
@@ -217,7 +236,7 @@
 
   G.hintCheck = function () {
     const pl = this.player;
-    const hint = (k, msg) => { if (!this.hints[k]) { this.hints[k] = 1; this.ui.toast(msg); } };
+    const hint = (k, msg) => { if (!this.hints[k] && this.clock.real - (this.lastHint || -99) > 12) { this.hints[k] = 1; this.lastHint = this.clock.real; this.ui.toast(msg); } };
     if (pl.focus && !pl.inCar) hint('greet', 'GREET builds trust. ANTAGONIZE picks fights (fistfights you didn\'t start aren\'t crimes). TALK opens real conversations.');
     if (pl.inCar) hint('car', 'Point the stick where you want to drive. BRAKE at speed drifts. RADIO flips stations.');
     if (this.law.active()) hint('law', 'Break line of sight and get out of the search circle. Hiding indoors speeds up the search clock.');
@@ -266,7 +285,7 @@
     const data = {
       v: 2, seed: this.seed, t: this.clock.t, log: this.worldLog, weather: this.env.weather.kind,
       player: {
-        x: pl.x, y: pl.y, hp: pl.hp, cool: pl.cool, cash: pl.cash, inv: pl.inv, clip: pl.clip, outfit: pl.outfit, outfits: pl.outfits || {},
+        x: pl.room ? this.interiors.outside(pl.x, pl.y).x : pl.x, y: pl.room ? this.interiors.outside(pl.x, pl.y).y : pl.y, hp: pl.hp, cool: pl.cool, cash: pl.cash, inv: pl.inv, clip: pl.clip, outfit: pl.outfit, outfits: pl.outfits || {},
         rep: pl.rep, standing: pl.standing, stats: pl.stats, sweetheart: pl.sweetheart, properties: pl.properties, masked: pl.masked,
         cars: pl.ownedCars.filter((c) => !c.removed && !c.wrecked).map((c) => [c.modelId, c.x, c.y, c.angle, c.color]),
       },
@@ -302,7 +321,7 @@
         pl.ownedCars.push(v);
       }
       // don't spawn inside a wall
-      if (this.world.solidPed((pl.x / TS) | 0, (pl.y / TS) | 0)) {
+      if (this.world.solidPed((pl.x / TS) | 0, (pl.y / TS) | 0) || pl.y >= this.world.H * TS) {
         const club = this.world.buildings[this.homeClub];
         pl.place(club.out.x * TS + 8, club.out.y * TS + 12);
       }

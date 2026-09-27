@@ -236,6 +236,7 @@
     if (!p.alive) return null;
     if (p.jailed && p.jailed > day) return { b: 0, gone: true };
     if (p.forceSpot && h >= 7 && h < 23) return { spot: p.forceSpot };
+    if (p.isDon && p.work) return { b: p.work }; // the Don holds court at his club
     if (p.role === 'kid' || p.role === 'student') {
       if (p.age >= 6 && h >= 8 && h < 15) {
         const school = this.cityBuilding(p.city, 'school');

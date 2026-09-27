@@ -5,7 +5,7 @@
   const KEYS = {
     KeyE: 'use', Enter: 'use', Space: 'attack', KeyF: 'attack', KeyQ: 'weapon', ShiftLeft: 'run', ShiftRight: 'run',
     KeyC: 'sneak', KeyM: 'mask', KeyR: 'radio', KeyG: 'greet', KeyT: 'talk', KeyX: 'defuse', KeyV: 'antag', KeyH: 'horn',
-    KeyZ: 'cool', KeyB: 'brake', KeyI: 'heal', Escape: 'menu', Tab: 'map', KeyN: 'map',
+    KeyZ: 'cool', KeyB: 'brake', KeyI: 'heal', KeyP: 'phone', Escape: 'menu', Tab: 'map', KeyN: 'map',
   };
   const MOVE = { KeyW: [0, -1], ArrowUp: [0, -1], KeyS: [0, 1], ArrowDown: [0, 1], KeyA: [-1, 0], ArrowLeft: [-1, 0], KeyD: [1, 0], ArrowRight: [1, 0] };
 
@@ -50,7 +50,7 @@
     });
     window.addEventListener('blur', () => { this.keysDown.clear(); this.heldA = {}; this.stick.x = this.stick.y = 0; this.touchStick = null; this.drawStick(); });
 
-    // touch joystick zone: the left side of the play area (not on buttons)
+    // fixed joystick (like the original): touch anywhere in the left pad
     const zone = this.root.querySelector('#stickzone');
     const base = this.root.querySelector('#stickbase');
     const knob = this.root.querySelector('#stickknob');
@@ -61,17 +61,14 @@
       if (this.touchStick) return;
       this.game.audio.unlock();
       zone.setPointerCapture(e.pointerId);
-      this.touchStick = { id: e.pointerId, ox: e.clientX, oy: e.clientY, x: e.clientX, y: e.clientY };
+      const r = base.getBoundingClientRect();
+      this.touchStick = { id: e.pointerId, ox: r.left + r.width / 2, oy: r.top + r.height / 2, r: r.width * 0.36, x: e.clientX, y: e.clientY };
       this.drawStick();
     });
     zone.addEventListener('pointermove', (e) => {
       const t = this.touchStick;
       if (!t || t.id !== e.pointerId) return;
       t.x = e.clientX; t.y = e.clientY;
-      // let the base follow when dragged far (floating stick)
-      const max = 52;
-      const dx = t.x - t.ox, dy = t.y - t.oy, d = Math.hypot(dx, dy);
-      if (d > max * 1.5) { t.ox = t.x - (dx / d) * max * 1.5; t.oy = t.y - (dy / d) * max * 1.5; }
       this.drawStick();
     });
     const end = (e) => {
@@ -115,6 +112,7 @@
     this.heldA[a] = true;
     if (a === 'menu') this.game.ui.toggleMenu();
     if (a === 'map') this.game.ui.openMenu('map');
+    if (a === 'phone') this.game.ui.openPhone();
   };
   P.up = function (a) {
     const held = performance.now() - (this.downAt[a] || 0);
@@ -130,19 +128,11 @@
   };
   P.drawStick = function () {
     const t = this.touchStick;
-    if (!t) {
-      this.base.style.opacity = 0;
-      this.knob.style.opacity = 0;
-      return;
-    }
-    const max = 52;
+    if (!t) { this.knob.style.transform = ''; return; }
     let dx = t.x - t.ox, dy = t.y - t.oy;
     const d = Math.hypot(dx, dy);
-    if (d > max) { dx = (dx / d) * max; dy = (dy / d) * max; }
-    this.base.style.opacity = 1;
-    this.knob.style.opacity = 1;
-    this.base.style.transform = `translate(${t.ox - 60}px, ${t.oy - 60}px)`;
-    this.knob.style.transform = `translate(${t.ox + dx - 26}px, ${t.oy + dy - 26}px)`;
+    if (d > t.r) { dx = (dx / d) * t.r; dy = (dy / d) * t.r; }
+    this.knob.style.transform = `translate(${dx}px, ${dy}px)`;
   };
   P.update = function () {
     let x = 0, y = 0;
@@ -151,7 +141,7 @@
     if (d > 0) { x /= d; y /= d; }
     const t = this.touchStick;
     if (t) {
-      const max = 52;
+      const max = t.r;
       let dx = (t.x - t.ox) / max, dy = (t.y - t.oy) / max;
       const m = Math.hypot(dx, dy);
       if (m > 1) { dx /= m; dy /= m; }

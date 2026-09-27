@@ -8,8 +8,10 @@
   function World(seed) {
     this.seed = seed;
     this.W = 640;
-    this.H = 640;
-    const N = this.W * this.H;
+    this.H = 640; // outdoor map height
+    this.IH = 64; // hidden strip below the map where interiors are stamped
+    this.TH = this.H + this.IH;
+    const N = this.W * this.TH;
     this.tile = new Uint8Array(N);
     this.obj = new Uint8Array(N);
     this.flow = new Uint8Array(N);
@@ -28,7 +30,7 @@
   }
   const W = World.prototype;
   W.idx = function (x, y) { return y * this.W + x; };
-  W.inb = function (x, y) { return x >= 0 && y >= 0 && x < this.W && y < this.H; };
+  W.inb = function (x, y) { return x >= 0 && y >= 0 && x < this.W && y < this.TH; };
   W.t = function (x, y) { return this.inb(x, y) ? this.tile[y * this.W + x] : T.DEEP; };
   W.o = function (x, y) { return this.inb(x, y) ? this.obj[y * this.W + x] : 0; };
   W.setT = function (x, y, t) {
@@ -85,6 +87,7 @@
   // ------------------------------------------------------------------
   W.gen = function () {
     const rnd = (this.rnd = R.mulberry(this.seed));
+    this.tile.fill(T.VOID, this.W * this.H);
     this.planCities(rnd);
     this.genTerrain(rnd);
     this.genRiver(rnd);
@@ -792,7 +795,7 @@
       const t = s / steps;
       const x = ((ax + (bx - ax) * t) / T_) | 0, y = ((ay + (by - ay) * t) / T_) | 0;
       const tt = this.t(x, y);
-      if (tt === T.BLDG || tt === T.ROCK) return false;
+      if (tt === T.BLDG || tt === T.ROCK || tt === T.WALL || tt === T.VOID) return false;
     }
     return true;
   };

@@ -76,6 +76,7 @@
         if (p.actor) {
           const h = p.actor;
           if (h.dead || h.removed) { p.actor = null; continue; }
+          if (h.room) continue; // the interior manages people inside
           const calm = h.state === 'idle' || h.state === 'hang' || h.state === 'wander' || h.state === 'perform' || (h.state === 'travel' && h.destKey !== want);
           if (calm && h.destKey !== want) this.route(h, want);
           continue;

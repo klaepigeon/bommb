@@ -7,6 +7,7 @@
   const pick = (a) => a[Math.floor(R.rng() * a.length)];
 
   const L = {
+    woken: ["Who's there?!", 'Honey, wake up! Someone\'s in the house!', 'I got a bat and I know how to use it!', 'Burglar! BURGLAR!'],
     getup: ['Ugh... my head.', 'What hit me?', 'Where am I?', "I'm calling my lawyer."],
     fleeing: ["He's crazy!", 'Run!', 'Somebody call the cops!', 'Not today, not today!', 'Mama!'],
     cower: ["Don't shoot! Please!", 'I got kids!', "I didn't see nothing!", 'Take whatever you want!', 'Please, mister...'],
