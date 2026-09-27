@@ -82,6 +82,7 @@
     const g = this.game, inp = g.input;
     if (this.dead) return;
     this.drunk = Math.max(0, this.drunk - dt * 0.004);
+    if (this.punchT > 0) this.punchT -= dt;
     this.bloody = Math.max(0, this.bloody - dt * 0.003);
     if (this.outfitChangedSince > 0) this.outfitChangedSince -= dt;
     // cool meter
@@ -112,7 +113,7 @@
     }
     const running = (inp.held('run') || inp.held('runStick')) && !this.sneak;
     const heavy = this.held && D.props[this.held.k].heavy ? 0.7 : 1;
-    const speed = (this.sneak ? 26 : running ? 86 : 48) * heavy * (g.timeScale < 1 ? 1.8 : 1);
+    const speed = (this.sneak ? 26 : running ? 86 : 48) * heavy * (g.timeScale < 1 ? 1.8 : 1) * (g.cheats.fastRun ? 2.2 : 1);
     if (mag > 0.12) {
       const nx = mx / Math.max(mag, 0.001), ny = my / Math.max(mag, 0.001);
       g.actors.moveActor(this, nx * speed * mag, ny * speed * mag, dt);
@@ -248,7 +249,7 @@
     if (w.gun) {
       const c = this.clip[this.weapon] || 0;
       if (c <= 0) return this.reload();
-      this.clip[this.weapon] = c - 1;
+      if (!g.cheats.infAmmo) this.clip[this.weapon] = c - 1;
       this.atkT = w.rate;
       R.combat.shoot(this, w, ang, tg);
       if (this.clip[this.weapon] <= 0) setTimeout(() => this.reload(), 250);

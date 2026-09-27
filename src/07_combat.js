@@ -42,6 +42,8 @@
     const h = target;
     if (h.inCar) return;
     g.fx.blood(h.x, h.y - 8, kind === 'melee' ? 3 : 6);
+    if (kind === 'bullet' && source && source.x !== undefined) g.fx.spray(h.x, h.y - 10, Math.atan2(h.y - source.y, h.x - source.x), 5 + Math.round(amt / 10));
+    h.lastHitKind = kind;
     if (byPlayer) C.onPlayerHits(h, amt, kind);
     const nonLethal = kind === 'melee' && (!source || !source.weapon || source.weapon === 'fists' || source.weapon === 'knuckles' || source.weapon === 'bat');
     if (h.hp <= 0) {
@@ -115,6 +117,7 @@
       return;
     }
     g.fx.pool(h.x, h.y);
+    if (kind === 'blast' || h.lastHitKind === 'blast') { g.fx.gib(h.x, h.y, h.look); h.gibbed = true; }
     if (h.person) {
       g.pop.kill(h.person, byPlayer ? 'player' : kind || 'violence');
       g.pop.addNews(h.person.city, `${g.pop.name(h.person)} (${h.person.age}) found dead. ${byPlayer ? 'Police are asking questions.' : ''}`);
@@ -313,6 +316,8 @@
 
   C.update = function (dt) {
     const g = game();
+    // the wounded leave a trail
+    for (const a of g.actors.list) if (a.kind === 'h' && !a.dead && a.hp < 45 && R.rng() < dt * (a.moving || a.state === 'flee' ? 3 : 0.6)) g.fx.blood(a.x + (R.rng() - 0.5) * 3, a.y - 4, 1);
     for (const p of C.projectiles) {
       p.t += dt;
       const k = Math.min(1, p.t / p.dur);
@@ -414,6 +419,7 @@
     h.dir = R.dir4(Math.cos(ang), Math.sin(ang));
     h.drawn = true;
     h.atkT = (h.atkT || 0) - dt;
+    if (h.swingT > 0) h.swingT -= dt;
     const runSpeed = 68 * (h.cop ? 1.05 : 1);
     // give up if the fight is going badly (non-cops)
     if (!h.cop && h.hp < 30 && h.tr.brave < 0.8 && !h.hostileLocked) {
@@ -428,6 +434,7 @@
         h.walk += dt * 20;
       } else if (h.atkT <= 0) {
         h.atkT = w.rate * 2.2 + R.rng() * 0.5;
+        h.swingT = 0.22; h.swingN = (h.swingN || 0) + 1;
         C.melee(h, w.gun ? D.weapons.fists : w, ang);
       }
       return;

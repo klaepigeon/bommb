@@ -426,12 +426,40 @@
     if (this.p.length > 900) this.p.shift();
     this.p.push(o);
   };
-  FP.blood = function (x, y, n) {
-    for (let k = 0; k < n; k++) this.add({ x, y, vx: (R.rng() - 0.5) * 60, vy: (R.rng() - 0.8) * 50, g: 160, life: 0.5, max: 0.5, c: '#8a1a14', s: 2, floor: y + 8 });
-    if (this.decals.length > 160) this.decals.shift();
-    this.decals.push({ x: x + (R.rng() - 0.5) * 6, y: y + 8, r: 1.5 + R.rng() * 2, c: 'rgba(110,20,16,0.6)', t: 400 });
+  // ---- gore: blood flies, lands and stains; bodies bleed out into growing pools
+  const gore = (fx) => fx.game.settings.gore !== false;
+  const BLOODS = ['#8a1a14', '#a8201a', '#6a1410', '#b8302a'];
+  FP.decal = function (d) {
+    if (this.decals.length > 420) this.decals.shift();
+    this.decals.push(d);
   };
-  FP.pool = function (x, y) { this.decals.push({ x, y: y - 2, r: 7, c: 'rgba(100,15,12,0.55)', t: 600 }); };
+  FP.blood = function (x, y, n) {
+    if (!gore(this)) { for (let k = 0; k < Math.min(3, n); k++) this.add({ x, y, vx: (R.rng() - 0.5) * 50, vy: (R.rng() - 0.8) * 40, g: 160, life: 0.35, max: 0.35, c: '#c8b898', s: 1.5 }); return; }
+    for (let k = 0; k < n; k++) this.add({ x, y, vx: (R.rng() - 0.5) * 70, vy: (R.rng() - 0.8) * 60, g: 180, life: 0.9, max: 0.9, c: R.rng.pick(BLOODS), s: R.rng() < 0.3 ? 2 : 1, floor: y + 8 + R.rng() * 4, stain: 1 });
+    this.decal({ x: x + (R.rng() - 0.5) * 6, y: y + 8, r: 1.5 + R.rng() * 2, c: 'rgba(110,20,16,0.6)', t: 500 });
+  };
+  // arterial spray away from the shooter
+  FP.spray = function (x, y, ang, n) {
+    if (!gore(this)) return;
+    for (let k = 0; k < n; k++) {
+      const a = ang + (R.rng() - 0.5) * 0.7, sp = 60 + R.rng() * 110;
+      this.add({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 30, g: 200, life: 1, max: 1, c: R.rng.pick(BLOODS), s: R.rng() < 0.4 ? 2 : 1, floor: y + 10 + Math.sin(a) * 10 + R.rng() * 6, stain: 1 });
+    }
+  };
+  FP.pool = function (x, y) {
+    if (!gore(this)) return;
+    this.decal({ x, y: y - 2, r: 2, grow: 9 + R.rng() * 4, rate: 1.6, c: 'rgba(96,14,12,0.62)', t: 900 });
+  };
+  FP.gib = function (x, y, look) {
+    if (!gore(this)) return this.boom && this.smoke(x, y, true);
+    const cols = ['#7a1410', '#a8201a', '#5a0c0c', (look && look.top) || '#3a3a4a', (look && look.skin) || '#d8a070'];
+    for (let k = 0; k < 16; k++) {
+      const a = R.rng() * 6.28, sp = 40 + R.rng() * 140;
+      this.add({ x, y: y - 8, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60, g: 260, life: 1.4, max: 1.4, c: cols[k % cols.length], s: 2 + (k % 3), floor: y + (R.rng() - 0.5) * 20, stain: 1 });
+    }
+    this.spray(x, y - 8, -Math.PI / 2, 14);
+    this.decal({ x, y, r: 4, grow: 12, rate: 3, c: 'rgba(90,12,10,0.6)', t: 900 });
+  };
   FP.hit = function (x, y) { for (let k = 0; k < 4; k++) this.add({ x, y, vx: (R.rng() - 0.5) * 80, vy: (R.rng() - 0.5) * 80, life: 0.15, max: 0.15, c: '#f2e2c0', s: 2 }); };
   FP.sparks = function (x, y, n) { for (let k = 0; k < n; k++) this.add({ x, y, vx: (R.rng() - 0.5) * 140, vy: (R.rng() - 0.7) * 120, g: 200, life: 0.35, max: 0.35, c: R.rng() < 0.5 ? '#ffe070' : '#fff6c0', s: 1.5, glow: 1 }); };
   FP.spark1 = function (x, y) { this.add({ x, y, vx: (R.rng() - 0.5) * 40, vy: -30 - R.rng() * 30, g: 100, life: 0.3, max: 0.3, c: '#ffd040', s: 1.5, glow: 1 }); };
@@ -469,7 +497,10 @@
       p.vy += (p.g || 0) * dt;
       p.x += p.vx * dt;
       p.y += p.vy * dt;
-      if (p.floor && p.y > p.floor) { p.y = p.floor; p.vx *= 0.5; p.vy = 0; }
+      if (p.floor && p.y > p.floor) {
+        p.y = p.floor; p.vx *= 0.5; p.vy = 0;
+        if (p.stain) { this.decal({ x: p.x, y: p.y, sq: Math.max(1, p.s), c: p.c, t: 600 }); p.life = 0; }
+      }
       if (p.grow) p.s += p.grow * dt;
     }
     this.p = this.p.filter((p) => p.life > 0);
@@ -481,12 +512,13 @@
     this.flashes = this.flashes.filter((f) => f.t > 0);
     for (const b of this.bolts) b.t -= dt;
     this.bolts = this.bolts.filter((b) => b.t > 0);
-    for (const d of this.decals) d.t -= dt;
+    for (const d of this.decals) { d.t -= dt; if (d.grow && d.r < d.grow) d.r = Math.min(d.grow, d.r + d.rate * dt); }
     this.decals = this.decals.filter((d) => d.t > 0);
   };
   FP.drawDecals = function (g) {
     for (const d of this.decals) {
       g.fillStyle = d.c;
+      if (d.sq) { g.globalAlpha = Math.min(1, d.t / 60); g.fillRect(Math.round(d.x), Math.round(d.y), d.sq, d.sq); g.globalAlpha = 1; continue; }
       g.beginPath();
       g.ellipse(d.x, d.y, d.r, d.r * 0.6, 0, 0, 7);
       g.fill();

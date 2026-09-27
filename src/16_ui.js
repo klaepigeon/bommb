@@ -984,7 +984,7 @@
   };
   U.openMenu = function (tab) {
     if (this.sheetOpen && this.sheetOpen !== 'menu') return;
-    const tabs = [['map', 'Map'], ['jobs', 'Jobs'], ['people', 'People'], ['status', 'Status'], ['items', 'Items'], ['news', 'Paper'], ['settings', 'Settings'], ['help', 'Help']];
+    const tabs = [['map', 'Map'], ['jobs', 'Jobs'], ['people', 'People'], ['status', 'Status'], ['items', 'Items'], ['news', 'Paper'], ['settings', 'Settings'], ['help', 'Help'], ['debug', 'Debug']];
     const s = this.openSheet('menu', `<div class="tabs">${tabs.map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'sel' : ''}">${l}</button>`).join('')}<button data-tab="close" aria-label="Close">✕</button></div><div class="body" id="mbody"></div>`, true);
     s.style.maxHeight = '92%';
     s.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => (b.dataset.tab === 'close' ? this.closeSheet() : this.openMenuTab(b.dataset.tab, s))));
@@ -1049,6 +1049,7 @@
       <div class="set"><label for="sDens">Pedestrians</label>${sel('sDens', [[0.6, 'Sparse'], [1, 'Normal'], [1.4, 'Crowded']], st.density)}</div>
       <div class="set"><label for="sEv">Street events</label>${sel('sEv', [[0.5, 'Calm'], [1, 'Normal'], [1.8, 'Wild']], st.events)}</div>
       <div class="set"><label for="sZoom">Zoom</label>${sel('sZoom', [[0.75, 'Far (driving)'], [1, 'GBA (240×160)']], st.zoom)}</div>
+      <div class="set"><label for="sGore">Blood & gore</label>${sel('sGore', [['true', 'On'], ['false', 'Off']], st.gore !== false)}</div>
       <div class="opts"><button class="opt go" id="sSave">Save game</button><button class="opt bad" id="sNew">Start a new game</button></div>`;
       const bindS = (id, key, parse, after) => $('#' + id).addEventListener('change', (e) => { st[key] = parse(e.target); g.saveSettings(); if (after) after(st[key]); });
       bindS('sVol', 'vol', (e) => +e.value, (v) => g.audio.setVolume(v));
@@ -1058,12 +1059,15 @@
       bindS('sDens', 'density', (e) => +e.value);
       bindS('sEv', 'events', (e) => +e.value);
       bindS('sZoom', 'zoom', (e) => +e.value, () => g.resize());
+      bindS('sGore', 'gore', (e) => e.value === 'true');
       $('#sSave').addEventListener('click', () => { g.save(); this.toast('Game saved.', 'good'); });
       $('#sNew').addEventListener('click', (e) => {
         if (e.target.dataset.confirm) { g.newGame(); return; }
         e.target.dataset.confirm = '1';
         e.target.textContent = 'Tap again to erase your save and start over';
       });
+    } else if (tab === 'debug') {
+      R.debugTab(body, g);
     } else if (tab === 'help') {
       body.innerHTML = this.helpHtml();
     }

@@ -329,7 +329,7 @@
   A.drawPerson = function (g, x, y, dir, walk, look, st) {
     st = st || {};
     const moving = walk && Math.abs(walk) > 0.01;
-    const phase = moving ? Math.floor(walk * 0.9) % 4 : 0;
+    const phase = moving ? Math.floor(walk * 0.5) % 4 : 0; // ~8 frames a second at a walk
     const frame = phase === 1 ? 1 : phase === 3 ? 2 : 0;
     const d8 = A.dir8(dir, st.ang);
     let X = Math.round(x), Y = Math.round(y);

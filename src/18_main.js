@@ -7,7 +7,7 @@
 
   const Game = (R.Game = function () {
     R.game = this;
-    this.settings = Object.assign({ vol: 0.7, music: 0.5, lifeSpeed: 1, traffic: 1, density: 1, events: 1, zoom: 1, grain: true }, R.store.get(SETTINGS) || {});
+    this.settings = Object.assign({ vol: 0.7, music: 0.5, lifeSpeed: 1, traffic: 1, density: 1, events: 1, zoom: 1, grain: true, gore: true }, R.store.get(SETTINGS) || {});
     this.timeScale = 1;
     this.started = false;
     this.cheats = {};
@@ -185,6 +185,7 @@
     const frame = (now) => {
       requestAnimationFrame(frame);
       let dt = Math.min(0.05, (now - last) / 1000);
+      this.fps = this.fps ? this.fps * 0.95 + (1 / Math.max(0.001, (now - last) / 1000)) * 0.05 : 60;
       last = now;
       try {
         if (!this.started) { this.renderer.renderTitle(now / 1000); return; }

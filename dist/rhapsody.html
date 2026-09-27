@@ -119,6 +119,10 @@ canvas.mg { display: block; width: 100%; max-width: 560px; margin: 0 auto; image
 .wi span { flex: 1; } .wi em { font-style: normal; font-family: var(--pix); font-size: 10px; color: var(--brown); }
 .wi .sw { width: 14px; height: 14px; border: 2px solid var(--ink); border-radius: 3px; flex: none; }
 .wfoot { display: flex; gap: 8px; } .wfoot .opt { flex: 1; }
+.dbgstat { font-family: var(--pix); font-size: 10px; color: var(--brown); background: var(--paper2); border: 2px solid var(--ink); border-radius: 6px; padding: 6px; line-height: 1.5; }
+.dbgrow { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+.dbg { border: 2px solid var(--ink); border-radius: 6px; background: var(--paper); color: var(--ink); font-size: 10px; padding: 6px 8px; text-transform: capitalize; }
+.dbg.on { background: #bfe0a0; }
 #mHorn { left: 0; top: 4px; } #mRadio { left: 0; top: 38px; }
 .carOnly { display: none !important; } #app.incar .carOnly { display: flex !important; } #app.incar .footOnly { display: none !important; }
 #padL { flex-direction: column; justify-content: space-evenly; gap: 16px; }
@@ -2791,7 +2795,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
   A.drawPerson = function (g, x, y, dir, walk, look, st) {
     st = st || {};
     const moving = walk && Math.abs(walk) > 0.01;
-    const phase = moving ? Math.floor(walk * 0.9) % 4 : 0;
+    const phase = moving ? Math.floor(walk * 0.5) % 4 : 0; // ~8 frames a second at a walk
     const frame = phase === 1 ? 1 : phase === 3 ? 2 : 0;
     const d8 = A.dir8(dir, st.ang);
     let X = Math.round(x), Y = Math.round(y);
@@ -5357,6 +5361,8 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     const h = target;
     if (h.inCar) return;
     g.fx.blood(h.x, h.y - 8, kind === 'melee' ? 3 : 6);
+    if (kind === 'bullet' && source && source.x !== undefined) g.fx.spray(h.x, h.y - 10, Math.atan2(h.y - source.y, h.x - source.x), 5 + Math.round(amt / 10));
+    h.lastHitKind = kind;
     if (byPlayer) C.onPlayerHits(h, amt, kind);
     const nonLethal = kind === 'melee' && (!source || !source.weapon || source.weapon === 'fists' || source.weapon === 'knuckles' || source.weapon === 'bat');
     if (h.hp <= 0) {
@@ -5430,6 +5436,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
       return;
     }
     g.fx.pool(h.x, h.y);
+    if (kind === 'blast' || h.lastHitKind === 'blast') { g.fx.gib(h.x, h.y, h.look); h.gibbed = true; }
     if (h.person) {
       g.pop.kill(h.person, byPlayer ? 'player' : kind || 'violence');
       g.pop.addNews(h.person.city, `${g.pop.name(h.person)} (${h.person.age}) found dead. ${byPlayer ? 'Police are asking questions.' : ''}`);
@@ -5628,6 +5635,8 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
 
   C.update = function (dt) {
     const g = game();
+    // the wounded leave a trail
+    for (const a of g.actors.list) if (a.kind === 'h' && !a.dead && a.hp < 45 && R.rng() < dt * (a.moving || a.state === 'flee' ? 3 : 0.6)) g.fx.blood(a.x + (R.rng() - 0.5) * 3, a.y - 4, 1);
     for (const p of C.projectiles) {
       p.t += dt;
       const k = Math.min(1, p.t / p.dur);
@@ -5729,6 +5738,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     h.dir = R.dir4(Math.cos(ang), Math.sin(ang));
     h.drawn = true;
     h.atkT = (h.atkT || 0) - dt;
+    if (h.swingT > 0) h.swingT -= dt;
     const runSpeed = 68 * (h.cop ? 1.05 : 1);
     // give up if the fight is going badly (non-cops)
     if (!h.cop && h.hp < 30 && h.tr.brave < 0.8 && !h.hostileLocked) {
@@ -5743,6 +5753,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
         h.walk += dt * 20;
       } else if (h.atkT <= 0) {
         h.atkT = w.rate * 2.2 + R.rng() * 0.5;
+        h.swingT = 0.22; h.swingN = (h.swingN || 0) + 1;
         C.melee(h, w.gun ? D.weapons.fists : w, ang);
       }
       return;
@@ -6704,12 +6715,40 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     if (this.p.length > 900) this.p.shift();
     this.p.push(o);
   };
-  FP.blood = function (x, y, n) {
-    for (let k = 0; k < n; k++) this.add({ x, y, vx: (R.rng() - 0.5) * 60, vy: (R.rng() - 0.8) * 50, g: 160, life: 0.5, max: 0.5, c: '#8a1a14', s: 2, floor: y + 8 });
-    if (this.decals.length > 160) this.decals.shift();
-    this.decals.push({ x: x + (R.rng() - 0.5) * 6, y: y + 8, r: 1.5 + R.rng() * 2, c: 'rgba(110,20,16,0.6)', t: 400 });
+  // ---- gore: blood flies, lands and stains; bodies bleed out into growing pools
+  const gore = (fx) => fx.game.settings.gore !== false;
+  const BLOODS = ['#8a1a14', '#a8201a', '#6a1410', '#b8302a'];
+  FP.decal = function (d) {
+    if (this.decals.length > 420) this.decals.shift();
+    this.decals.push(d);
   };
-  FP.pool = function (x, y) { this.decals.push({ x, y: y - 2, r: 7, c: 'rgba(100,15,12,0.55)', t: 600 }); };
+  FP.blood = function (x, y, n) {
+    if (!gore(this)) { for (let k = 0; k < Math.min(3, n); k++) this.add({ x, y, vx: (R.rng() - 0.5) * 50, vy: (R.rng() - 0.8) * 40, g: 160, life: 0.35, max: 0.35, c: '#c8b898', s: 1.5 }); return; }
+    for (let k = 0; k < n; k++) this.add({ x, y, vx: (R.rng() - 0.5) * 70, vy: (R.rng() - 0.8) * 60, g: 180, life: 0.9, max: 0.9, c: R.rng.pick(BLOODS), s: R.rng() < 0.3 ? 2 : 1, floor: y + 8 + R.rng() * 4, stain: 1 });
+    this.decal({ x: x + (R.rng() - 0.5) * 6, y: y + 8, r: 1.5 + R.rng() * 2, c: 'rgba(110,20,16,0.6)', t: 500 });
+  };
+  // arterial spray away from the shooter
+  FP.spray = function (x, y, ang, n) {
+    if (!gore(this)) return;
+    for (let k = 0; k < n; k++) {
+      const a = ang + (R.rng() - 0.5) * 0.7, sp = 60 + R.rng() * 110;
+      this.add({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 30, g: 200, life: 1, max: 1, c: R.rng.pick(BLOODS), s: R.rng() < 0.4 ? 2 : 1, floor: y + 10 + Math.sin(a) * 10 + R.rng() * 6, stain: 1 });
+    }
+  };
+  FP.pool = function (x, y) {
+    if (!gore(this)) return;
+    this.decal({ x, y: y - 2, r: 2, grow: 9 + R.rng() * 4, rate: 1.6, c: 'rgba(96,14,12,0.62)', t: 900 });
+  };
+  FP.gib = function (x, y, look) {
+    if (!gore(this)) return this.boom && this.smoke(x, y, true);
+    const cols = ['#7a1410', '#a8201a', '#5a0c0c', (look && look.top) || '#3a3a4a', (look && look.skin) || '#d8a070'];
+    for (let k = 0; k < 16; k++) {
+      const a = R.rng() * 6.28, sp = 40 + R.rng() * 140;
+      this.add({ x, y: y - 8, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60, g: 260, life: 1.4, max: 1.4, c: cols[k % cols.length], s: 2 + (k % 3), floor: y + (R.rng() - 0.5) * 20, stain: 1 });
+    }
+    this.spray(x, y - 8, -Math.PI / 2, 14);
+    this.decal({ x, y, r: 4, grow: 12, rate: 3, c: 'rgba(90,12,10,0.6)', t: 900 });
+  };
   FP.hit = function (x, y) { for (let k = 0; k < 4; k++) this.add({ x, y, vx: (R.rng() - 0.5) * 80, vy: (R.rng() - 0.5) * 80, life: 0.15, max: 0.15, c: '#f2e2c0', s: 2 }); };
   FP.sparks = function (x, y, n) { for (let k = 0; k < n; k++) this.add({ x, y, vx: (R.rng() - 0.5) * 140, vy: (R.rng() - 0.7) * 120, g: 200, life: 0.35, max: 0.35, c: R.rng() < 0.5 ? '#ffe070' : '#fff6c0', s: 1.5, glow: 1 }); };
   FP.spark1 = function (x, y) { this.add({ x, y, vx: (R.rng() - 0.5) * 40, vy: -30 - R.rng() * 30, g: 100, life: 0.3, max: 0.3, c: '#ffd040', s: 1.5, glow: 1 }); };
@@ -6747,7 +6786,10 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
       p.vy += (p.g || 0) * dt;
       p.x += p.vx * dt;
       p.y += p.vy * dt;
-      if (p.floor && p.y > p.floor) { p.y = p.floor; p.vx *= 0.5; p.vy = 0; }
+      if (p.floor && p.y > p.floor) {
+        p.y = p.floor; p.vx *= 0.5; p.vy = 0;
+        if (p.stain) { this.decal({ x: p.x, y: p.y, sq: Math.max(1, p.s), c: p.c, t: 600 }); p.life = 0; }
+      }
       if (p.grow) p.s += p.grow * dt;
     }
     this.p = this.p.filter((p) => p.life > 0);
@@ -6759,12 +6801,13 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     this.flashes = this.flashes.filter((f) => f.t > 0);
     for (const b of this.bolts) b.t -= dt;
     this.bolts = this.bolts.filter((b) => b.t > 0);
-    for (const d of this.decals) d.t -= dt;
+    for (const d of this.decals) { d.t -= dt; if (d.grow && d.r < d.grow) d.r = Math.min(d.grow, d.r + d.rate * dt); }
     this.decals = this.decals.filter((d) => d.t > 0);
   };
   FP.drawDecals = function (g) {
     for (const d of this.decals) {
       g.fillStyle = d.c;
+      if (d.sq) { g.globalAlpha = Math.min(1, d.t / 60); g.fillRect(Math.round(d.x), Math.round(d.y), d.sq, d.sq); g.globalAlpha = 1; continue; }
       g.beginPath();
       g.ellipse(d.x, d.y, d.r, d.r * 0.6, 0, 0, 7);
       g.fill();
@@ -8089,6 +8132,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     const g = this.game, inp = g.input;
     if (this.dead) return;
     this.drunk = Math.max(0, this.drunk - dt * 0.004);
+    if (this.punchT > 0) this.punchT -= dt;
     this.bloody = Math.max(0, this.bloody - dt * 0.003);
     if (this.outfitChangedSince > 0) this.outfitChangedSince -= dt;
     // cool meter
@@ -8119,7 +8163,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     }
     const running = (inp.held('run') || inp.held('runStick')) && !this.sneak;
     const heavy = this.held && D.props[this.held.k].heavy ? 0.7 : 1;
-    const speed = (this.sneak ? 26 : running ? 86 : 48) * heavy * (g.timeScale < 1 ? 1.8 : 1);
+    const speed = (this.sneak ? 26 : running ? 86 : 48) * heavy * (g.timeScale < 1 ? 1.8 : 1) * (g.cheats.fastRun ? 2.2 : 1);
     if (mag > 0.12) {
       const nx = mx / Math.max(mag, 0.001), ny = my / Math.max(mag, 0.001);
       g.actors.moveActor(this, nx * speed * mag, ny * speed * mag, dt);
@@ -8255,7 +8299,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     if (w.gun) {
       const c = this.clip[this.weapon] || 0;
       if (c <= 0) return this.reload();
-      this.clip[this.weapon] = c - 1;
+      if (!g.cheats.infAmmo) this.clip[this.weapon] = c - 1;
       this.atkT = w.rate;
       R.combat.shoot(this, w, ang, tg);
       if (this.clip[this.weapon] <= 0) setTimeout(() => this.reload(), 250);
@@ -10367,6 +10411,84 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
   };
 })();
 
+// ---- 16_debug.js
+// RHAPSODY — the debug menu (Menu > Debug). Cheats, time and weather, teleports,
+// spawners and a live readout of the simulation, for testing and for fun.
+(function () {
+  const TS = R.TILE;
+  R.debugTab = function (body, g) {
+    const pl = g.player, w = g.world, ch = g.cheats;
+    const ui = g.ui;
+    const btn = (id, label, cls) => `<button class="dbg ${cls || ''}" data-d="${id}">${label}</button>`;
+    const tog = (id, label) => btn('t:' + id, `${ch[id] ? '☑' : '☐'} ${label}`, ch[id] ? 'on' : '');
+    const alive = g.pop.people.filter((p) => p.alive).length;
+    const stats = `Day ${g.clock.day() + 1} ${g.clock.label()} · ${g.env.weather.kind} · ${alive} people alive · ${g.actors.list.length} actors · ${g.traffic.list.length} cars · ${Math.round(g.fps || 0)} fps · calm ${g.calm().toFixed(2)} · tile ${(pl.x / TS) | 0},${(pl.y / TS) | 0}`;
+    body.innerHTML = `<p class="dbgstat">${stats}</p>
+      <div class="sect">Cheats</div><div class="dbgrow">${tog('god', 'God mode')}${tog('noLaw', 'No law')}${tog('oneHit', 'One-hit kills')}${tog('infAmmo', 'Infinite ammo')}${tog('fastRun', 'Fast legs')}</div>
+      <div class="sect">Player</div><div class="dbgrow">${btn('cash', '+$1,000')}${btn('heal', 'Full heal')}${btn('arsenal', 'All weapons + ammo')}${btn('ring', 'Give Yellow Ring')}${btn('picks', '+5 lockpicks')}${btn('clean', 'Clear bounties')}${btn('infamy', '+20 infamy')}${btn('sober', 'Sober up')}</div>
+      <div class="sect">Time & weather</div><div class="dbgrow">${btn('time:6', '6 AM')}${btn('time:12', 'Noon')}${btn('time:19', '7 PM')}${btn('time:0', 'Midnight')}${btn('time:2', '2 AM')}${btn('day', 'Skip a day')}${['clear', 'cloudy', 'rain', 'storm', 'fog', 'heat'].map((k) => btn('wx:' + k, k)).join('')}</div>
+      <div class="sect">Teleport</div><div class="dbgrow">${w.cities.map((c) => btn('tp:' + c.id, c.name)).join('')}${btn('tp:fear', 'Fear Man\'s tree')}${btn('tp:pier', 'The piers')}${btn('tp:forest', 'Deep woods')}${btn('tp:marsh', 'The marsh')}${btn('tp:cross', 'A crossroads')}</div>
+      <div class="sect">Spawn</div><div class="dbgrow">${btn('sp:mugger', 'Mugger')}${btn('sp:thug', 'Armed thug')}${btn('sp:cop', 'Cop')}${btn('sp:wolf', 'Wolf')}${btn('sp:bear', 'Bear')}${btn('sp:car', 'Muscle car')}${btn('sp:ghost', 'Ghost')}${btn('sp:squatch', 'Sasquatch')}${btn('sp:ufo', 'UFO')}${btn('sp:cross', 'Crossroads man')}${btn('sp:scratch', 'Old Scratch')}${btn('sp:fear', 'Fear Man (here)')}${btn('sp:props', 'Pile of junk')}</div>
+      <div class="sect">World</div><div class="dbgrow">${btn('ev', 'Street event now')}${btn('calm', 'Kill all hostiles')}${btn('law', 'Call the cops on me')}${btn('fire', 'Start a fire here')}${btn('save', 'Save now')}</div>`;
+    const near = (pred, r) => w.findNear(pl.x / TS, pl.y / TS, 3, r || 8, pred || ((x, y) => !w.solidPed(x, y) && !w.isWater(x, y)));
+    const tp = (x, y) => { if (pl.room) g.interiors.exit(); if (pl.inCar) pl.exitCar(); pl.place(x * TS + 8, y * TS + 8); g.cam.x = pl.x; g.cam.y = pl.y; ui.closeSheet(); };
+    const scan = (pred) => { for (let r = 0; r < 300; r += 2) for (let a = 0; a < 6.28; a += 0.15) { const x = Math.round(pl.x / TS + Math.cos(a) * r), y = Math.round(pl.y / TS + Math.sin(a) * r); if (w.inb(x, y) && pred(x, y)) return { x, y }; } return null; };
+    body.querySelectorAll('[data-d]').forEach((b) => b.addEventListener('click', () => {
+      const [k, v] = b.dataset.d.split(':');
+      const s = near();
+      switch (k) {
+        case 't': ch[v] = !ch[v]; ui.toast(`${v}: ${ch[v] ? 'on' : 'off'}`); break;
+        case 'cash': pl.addCash(1000); break;
+        case 'heal': pl.hp = pl.maxHp; pl.bloody = 0; break;
+        case 'arsenal': for (const id of ['knuckles', 'bat', 'knife', 'revolver', 'magnum', 'shotgun', 'chopper', 'rifle']) pl.giveWeapon(id); Object.assign(pl.inv.ammo, { pistol: 200, shells: 80, smg: 300, rifle: 60, molotov: 10, dynamite: 10 }); pl.inv.tools.gascan = 3; break;
+        case 'ring': pl.inv.tools.ring = 1; pl.will = 100; ui.setRingButtons(); break;
+        case 'picks': pl.inv.tools.lockpick = (pl.inv.tools.lockpick || 0) + 5; break;
+        case 'clean': for (const j in g.law.bounty) g.law.bounty[j] = 0; g.law.incident = null; break;
+        case 'infamy': pl.rep.infamy += 20; break;
+        case 'sober': pl.drunk = 0; break;
+        case 'time': g.clock.t = Math.floor(g.clock.t / 1440) * 1440 + (+v < g.clock.hour() ? 1440 : 0) + +v * 60; break;
+        case 'day': g.clock.skip(1440); break;
+        case 'wx': g.env.setWeather(v); break;
+        case 'tp': {
+          if (v === 'fear') { const f = R.ring.fearSpot; tp(f.x, f.y + 3); break; }
+          if (v === 'pier') { const p = w.spots.find((q) => q.kind === 'pier'); tp(p.x, p.y); break; }
+          if (v === 'forest') { const p = scan((x, y) => w.t(x, y) === R.data.T.FOREST && !w.cityAt(x, y) && Math.hypot(x - pl.x / TS, y - pl.y / TS) > 20); if (p) tp(p.x, p.y); break; }
+          if (v === 'marsh') { const p = scan((x, y) => w.t(x, y) === R.data.T.MARSH && !w.cityAt(x, y)); if (p) tp(p.x, p.y); break; }
+          if (v === 'cross') { const it = w.inters.filter((i) => !w.inCityRect(Math.round(i.cx), Math.round(i.cy), 4)).sort((a, b) => Math.hypot(a.cx - pl.x / TS, a.cy - pl.y / TS) - Math.hypot(b.cx - pl.x / TS, b.cy - pl.y / TS))[0]; if (it) tp(Math.round(it.cx) + 3, Math.round(it.cy) + 5); break; }
+          const c = w.cities.find((q) => q.id === v);
+          const p = w.findNear(c.colX + 1, c.rowY + 3, 0, 10, (x, y) => w.t(x, y) === R.data.T.WALK) || { x: c.colX, y: c.rowY };
+          tp(p.x, p.y);
+          break;
+        }
+        case 'sp': {
+          if (!s) break;
+          const X = s.x * TS + 8, Y = s.y * TS + 8;
+          if (v === 'mugger' || v === 'thug') { const h = g.actors.makeHuman(X, Y, { tag: 'mugger', weapon: v === 'thug' ? 'revolver' : 'knife' }); h.hostile = true; g.actors.setFight(h, pl); }
+          if (v === 'cop') g.actors.makeHuman(X, Y, { cop: true, role: 'cop' });
+          if (v === 'wolf' || v === 'bear') { const a = g.actors.makeAnimal(X, Y, v); a.state = 'attack'; a.target = pl; a.timer = 30; }
+          if (v === 'car') { const car = g.traffic.make('muscle', pl.x + 30, pl.y, 0, { parked: true, keep: true, locked: false }); car.owner = 'player'; }
+          if (v === 'ghost') R.legends.spawnGhost({ x: s.x, y: s.y });
+          if (v === 'squatch') { R.legends.active.squatch = null; const h = g.actors.makeHuman(X, Y, {}); g.actors.remove(h); R.legends.spawnSquatch(); if (!R.legends.active.squatch) ui.toast('Needs forest or snow nearby.', 'warn'); }
+          if (v === 'ufo') { R.legends.spawnUfo(); R.legends.ufo.x = pl.x + 50; R.legends.ufo.y = pl.y; }
+          if (v === 'cross') R.legends.spawnCrossroads({ cx: s.x - 3, cy: s.y - 3 });
+          if (v === 'scratch') { R.legends.spawnScratch(); if (!R.legends.active.scratch) ui.toast('Needs marsh nearby.', 'warn'); }
+          if (v === 'fear') { const f = R.ring.fearSpot; const keep = { x: f.x, y: f.y }; R.ring.fearSpot = { x: s.x, y: s.y }; const t = g.clock.t; g.clock.t = Math.floor(t / 1440) * 1440 + 120; R.ring.updateFearMan(); g.clock.t = t; if (R.ring.fearMan) R.ring.fearMan.stay = true; R.ring.fearSpot = keep; }
+          if (v === 'props') for (const k of ['pipe', 'bottle', 'chair', 'plank', 'pan', 'cake', 'bowling', 'tv']) R.props.drop(k, pl.x + (R.rng() - 0.5) * 50, pl.y + 10 + R.rng() * 30);
+          ui.closeSheet();
+          break;
+        }
+        case 'ev': ui.closeSheet(); R.events.random(g); break;
+        case 'calm': for (const a of g.actors.list) if ((a.hostile && a.kind === 'h') || (a.kind === 'a' && a.state === 'attack')) R.combat.kill(a, null, 'debug'); break;
+        case 'law': g.law.startIncident({ type: 'debug', def: { name: 'Debugging' }, x: pl.x, y: pl.y, jur: g.law.jurAt(pl.x, pl.y), identified: true, lvl: 2, bounty: 50 }, null); ui.closeSheet(); break;
+        case 'fire': g.env.ignite(pl.x + 30, pl.y, 1, null); ui.closeSheet(); break;
+        case 'save': g.save(); ui.toast('Saved.', 'good'); break;
+      }
+      g.audio.sfx('click');
+      if (ui.sheetOpen === 'menu') ui.openMenuTab('debug', ui.el.sheet);
+    }));
+  };
+})();
+
 // ---- 16_minigames.js
 // RHAPSODY — hands-on minigames drawn in the same pixel style as the world: picking
 // locks, hotwiring, cracking safes, blackjack, slots, pool, darts and craps. Each one
@@ -11907,7 +12029,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
   };
   U.openMenu = function (tab) {
     if (this.sheetOpen && this.sheetOpen !== 'menu') return;
-    const tabs = [['map', 'Map'], ['jobs', 'Jobs'], ['people', 'People'], ['status', 'Status'], ['items', 'Items'], ['news', 'Paper'], ['settings', 'Settings'], ['help', 'Help']];
+    const tabs = [['map', 'Map'], ['jobs', 'Jobs'], ['people', 'People'], ['status', 'Status'], ['items', 'Items'], ['news', 'Paper'], ['settings', 'Settings'], ['help', 'Help'], ['debug', 'Debug']];
     const s = this.openSheet('menu', `<div class="tabs">${tabs.map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'sel' : ''}">${l}</button>`).join('')}<button data-tab="close" aria-label="Close">✕</button></div><div class="body" id="mbody"></div>`, true);
     s.style.maxHeight = '92%';
     s.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => (b.dataset.tab === 'close' ? this.closeSheet() : this.openMenuTab(b.dataset.tab, s))));
@@ -11972,6 +12094,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
       <div class="set"><label for="sDens">Pedestrians</label>${sel('sDens', [[0.6, 'Sparse'], [1, 'Normal'], [1.4, 'Crowded']], st.density)}</div>
       <div class="set"><label for="sEv">Street events</label>${sel('sEv', [[0.5, 'Calm'], [1, 'Normal'], [1.8, 'Wild']], st.events)}</div>
       <div class="set"><label for="sZoom">Zoom</label>${sel('sZoom', [[0.75, 'Far (driving)'], [1, 'GBA (240×160)']], st.zoom)}</div>
+      <div class="set"><label for="sGore">Blood & gore</label>${sel('sGore', [['true', 'On'], ['false', 'Off']], st.gore !== false)}</div>
       <div class="opts"><button class="opt go" id="sSave">Save game</button><button class="opt bad" id="sNew">Start a new game</button></div>`;
       const bindS = (id, key, parse, after) => $('#' + id).addEventListener('change', (e) => { st[key] = parse(e.target); g.saveSettings(); if (after) after(st[key]); });
       bindS('sVol', 'vol', (e) => +e.value, (v) => g.audio.setVolume(v));
@@ -11981,12 +12104,15 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
       bindS('sDens', 'density', (e) => +e.value);
       bindS('sEv', 'events', (e) => +e.value);
       bindS('sZoom', 'zoom', (e) => +e.value, () => g.resize());
+      bindS('sGore', 'gore', (e) => e.value === 'true');
       $('#sSave').addEventListener('click', () => { g.save(); this.toast('Game saved.', 'good'); });
       $('#sNew').addEventListener('click', (e) => {
         if (e.target.dataset.confirm) { g.newGame(); return; }
         e.target.dataset.confirm = '1';
         e.target.textContent = 'Tap again to erase your save and start over';
       });
+    } else if (tab === 'debug') {
+      R.debugTab(body, g);
     } else if (tab === 'help') {
       body.innerHTML = this.helpHtml();
     }
@@ -12142,7 +12268,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     if (!pl.inCar && !pl.inside && !pl.deadHidden) ents.push(pl);
     ents.sort((a, b) => (a.kind === 'v' ? a.y - 4 : a.y) - (b.kind === 'v' ? b.y - 4 : b.y));
     // dead bodies first (they lie on the ground)
-    for (const e of ents) if (e.dead && e.kind === 'h') A.drawPerson(g, e.x, e.y, e.dir, 0, e.look, { down: true });
+    for (const e of ents) if (e.dead && e.kind === 'h' && !e.gibbed) A.drawPerson(g, e.x, e.y, e.dir, 0, e.look, { down: true });
     for (const e of ents) if (e.dead && e.kind === 'a') A.drawAnimal(g, e);
     // focus ring
     const f = pl.focus;
@@ -12220,7 +12346,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     }
     if (h.state === 'fight' || h.state === 'travel' || h.state === 'flee' || h.state === 'report') st.ang = h.ang;
     if (h.state === 'cower' || h.state === 'surrender') st.pose = 'h';
-    else if (h.atkT > 0 && h.state === 'fight' && R.data.weapons[h.weapon] && R.data.weapons[h.weapon].melee && h.atkT > R.data.weapons[h.weapon].rate * 2) st.pose = 'p1';
+    else if (h.swingT > 0 && h.state === 'fight') { st.pose = h.weapon === 'bat' ? 'b1' : h.swingN % 2 ? 'p2' : 'p1'; st.weapon = null; }
     let walk = h.walk;
     if (h.state === 'perform') walk = Math.sin(h.walk * 3) * 2 + h.walk;
     A.drawPerson(g, h.x, h.y, h.dir, walk, h.look, st);
@@ -12228,7 +12354,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
   P.drawPlayer = function (g, pl) {
     const w = pl.weaponOut || pl.punchT > 0 ? pl.weapon : null;
     const st = { weapon: w === 'gascan' ? null : w, ang: pl.ang };
-    if (pl.punchT > 0) { pl.punchT -= 1 / 60; st.pose = pl.weapon === 'bat' ? 'b1' : (pl.punchN || 0) % 2 ? 'p2' : 'p1'; st.weapon = null; }
+    if (pl.punchT > 0) { st.pose = pl.weapon === 'bat' ? 'b1' : (pl.punchN || 0) % 2 ? 'p2' : 'p1'; st.weapon = null; }
     if (pl.held) st.weapon = null;
     if (pl.sneak && !pl.inCar) st.crouch = true;
     A.drawPerson(g, pl.x, pl.y, pl.dir, pl.walk, pl.look, st);
@@ -12570,7 +12696,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
 
   const Game = (R.Game = function () {
     R.game = this;
-    this.settings = Object.assign({ vol: 0.7, music: 0.5, lifeSpeed: 1, traffic: 1, density: 1, events: 1, zoom: 1, grain: true }, R.store.get(SETTINGS) || {});
+    this.settings = Object.assign({ vol: 0.7, music: 0.5, lifeSpeed: 1, traffic: 1, density: 1, events: 1, zoom: 1, grain: true, gore: true }, R.store.get(SETTINGS) || {});
     this.timeScale = 1;
     this.started = false;
     this.cheats = {};
@@ -12748,6 +12874,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     const frame = (now) => {
       requestAnimationFrame(frame);
       let dt = Math.min(0.05, (now - last) / 1000);
+      this.fps = this.fps ? this.fps * 0.95 + (1 / Math.max(0.001, (now - last) / 1000)) * 0.05 : 60;
       last = now;
       try {
         if (!this.started) { this.renderer.renderTitle(now / 1000); return; }

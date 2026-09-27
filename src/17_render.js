@@ -102,7 +102,7 @@
     if (!pl.inCar && !pl.inside && !pl.deadHidden) ents.push(pl);
     ents.sort((a, b) => (a.kind === 'v' ? a.y - 4 : a.y) - (b.kind === 'v' ? b.y - 4 : b.y));
     // dead bodies first (they lie on the ground)
-    for (const e of ents) if (e.dead && e.kind === 'h') A.drawPerson(g, e.x, e.y, e.dir, 0, e.look, { down: true });
+    for (const e of ents) if (e.dead && e.kind === 'h' && !e.gibbed) A.drawPerson(g, e.x, e.y, e.dir, 0, e.look, { down: true });
     for (const e of ents) if (e.dead && e.kind === 'a') A.drawAnimal(g, e);
     // focus ring
     const f = pl.focus;
@@ -180,7 +180,7 @@
     }
     if (h.state === 'fight' || h.state === 'travel' || h.state === 'flee' || h.state === 'report') st.ang = h.ang;
     if (h.state === 'cower' || h.state === 'surrender') st.pose = 'h';
-    else if (h.atkT > 0 && h.state === 'fight' && R.data.weapons[h.weapon] && R.data.weapons[h.weapon].melee && h.atkT > R.data.weapons[h.weapon].rate * 2) st.pose = 'p1';
+    else if (h.swingT > 0 && h.state === 'fight') { st.pose = h.weapon === 'bat' ? 'b1' : h.swingN % 2 ? 'p2' : 'p1'; st.weapon = null; }
     let walk = h.walk;
     if (h.state === 'perform') walk = Math.sin(h.walk * 3) * 2 + h.walk;
     A.drawPerson(g, h.x, h.y, h.dir, walk, h.look, st);
@@ -188,7 +188,7 @@
   P.drawPlayer = function (g, pl) {
     const w = pl.weaponOut || pl.punchT > 0 ? pl.weapon : null;
     const st = { weapon: w === 'gascan' ? null : w, ang: pl.ang };
-    if (pl.punchT > 0) { pl.punchT -= 1 / 60; st.pose = pl.weapon === 'bat' ? 'b1' : (pl.punchN || 0) % 2 ? 'p2' : 'p1'; st.weapon = null; }
+    if (pl.punchT > 0) { st.pose = pl.weapon === 'bat' ? 'b1' : (pl.punchN || 0) % 2 ? 'p2' : 'p1'; st.weapon = null; }
     if (pl.held) st.weapon = null;
     if (pl.sneak && !pl.inCar) st.crouch = true;
     A.drawPerson(g, pl.x, pl.y, pl.dir, pl.walk, pl.look, st);
