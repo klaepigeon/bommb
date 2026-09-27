@@ -382,6 +382,10 @@
     this.el.dim.style.display = 'block';
     this.sheetOpen = kind;
     this.openedAt = performance.now();
+    // swallow the tail of the tap that opened us so it can't press a button underneath
+    s.style.pointerEvents = 'none';
+    clearTimeout(this.sheetGuard);
+    this.sheetGuard = setTimeout(() => { s.style.pointerEvents = ''; }, 380);
     const x = s.querySelector('header .x');
     if (x) x.addEventListener('click', () => this.closeSheet());
     return s;

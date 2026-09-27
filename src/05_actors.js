@@ -788,6 +788,10 @@
     if (a.dead) return;
     a.timer -= dt;
     a.moving = false;
+    // staggered by a blow
+    if (a.stunT > 0) { a.stunT -= dt; return; }
+    const hurt = a.hp < a.maxHp * 0.5;
+    if (hurt && R.rng() < dt * 2) game.fx.blood(a.x, a.y - 2, 1);
     const dp = R.dist(a.x, a.y, pl.x, pl.y);
     const night = game.clock.isNight();
     const plTarget = pl.inCar || pl;
@@ -858,7 +862,8 @@
         const ang = Math.atan2(a.y - src.y, a.x - src.x) + Math.sin(a.t * 2) * 0.4;
         a.angle = ang;
         a.moving = true;
-        if (!this.moveActor(a, Math.cos(ang) * def.speed, Math.sin(ang) * def.speed, dt)) a.target = { x: a.x + (R.rng() - 0.5) * 50, y: a.y + (R.rng() - 0.5) * 50 };
+        const limp = hurt ? 0.45 : 1; // wounded animals can be run down
+        if (!this.moveActor(a, Math.cos(ang) * def.speed * limp, Math.sin(ang) * def.speed * limp, dt)) a.target = { x: a.x + (R.rng() - 0.5) * 50, y: a.y + (R.rng() - 0.5) * 50 };
         if (a.timer <= 0) { a.state = 'wander'; a.target = null; }
         break;
       }
@@ -882,7 +887,7 @@
           }
         }
         // cowardly predators give up when hurt
-        if (a.hp < a.maxHp * 0.35 && def !== D.animals.bear) { a.state = 'flee'; a.target = pl; a.timer = 8; }
+        if (a.hp < a.maxHp * 0.2 && def !== D.animals.bear && !a.fledOnce) { a.fledOnce = true; a.state = 'flee'; a.target = pl; a.timer = 4; }
         break;
       }
     }

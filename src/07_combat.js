@@ -29,6 +29,8 @@
     target.hp -= amt;
     target.lastHitBy = source;
     if (target.kind === 'a') {
+      if (kind === 'melee') { target.hp -= amt * 0.4; target.stunT = target.def.size >= 12 ? 0.08 : 0.2; } // animals have no guard against a swing
+      g.fx.blood(target.x, target.y - 4, kind === 'bullet' ? 4 : 2);
       if (target.hp <= 0) C.kill(target, source);
       else {
         if (target.def.predator || target.def.angry || target.def.dog) { target.state = 'attack'; target.target = source && source.kind ? (source.inCar ? null : source) : g.player; target.timer = 10; target.anger = 1; }
