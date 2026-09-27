@@ -3161,7 +3161,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     if (b.type !== 'house' && b.type !== 'cabin' && b.type !== 'apartment' && b.type !== 'barn') {
       const lines = A.fitSign((b.name || bt.name).toUpperCase(), bw - 6);
       const lh = 10, boxH = lines.length * lh + 2;
-      const ty = b.face === 'S' ? facadeY - boxH - 3 : py + 4;
+      const ty = b.face === 'S' ? facadeY - boxH - 3 : py + 24; // far-side door: sign sits below the door's icon board
       const tw = Math.max(...lines.map((l) => A.ptWidth(l))) + 6;
       const col = bt.neon ? '#ff70c8' : b.type === 'police' ? '#a8c8ff' : b.type === 'social' ? '#f0b838' : art.neon || '#f6ecd0';
       g.fillStyle = INK;
@@ -9359,14 +9359,14 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       const open = game.ui.isOpen(b);
       const dx = b.door.x * TS, dy = b.door.y * TS;
       // bracket sign beside the door: a big pixel icon you can read from across the street
-      const sx = dx + 17, sy = b.face === 'S' ? dy + TS - 29 : dy - 6;
+      const sx = dx + 17, sy = b.face === 'S' ? dy + TS - 29 : dy + 1;
       g.fillStyle = INK; g.fillRect(sx - 3, sy - 4, 22, 2); g.fillRect(sx + 2, sy - 4, 2, 4); g.fillRect(sx + 14, sy - 4, 2, 4);
       g.fillRect(sx - 1, sy - 1, 20, 20);
       g.fillStyle = '#2a1c14'; g.fillRect(sx, sy, 18, 18);
       g.fillStyle = info[1]; g.globalAlpha = 0.25; g.fillRect(sx + 1, sy + 1, 16, 16); g.globalAlpha = 1;
       this.glyph(g, info[0], sx + 2, sy + 2, 2, info[1]);
       // OPEN / CLOSED lamp above the door
-      const lx = dx + 5, ly = b.face === 'S' ? dy + TS - 24 : dy - 10;
+      const lx = dx + 5, ly = b.face === 'S' ? dy + TS - 24 : dy + 3;
       g.fillStyle = INK; g.fillRect(lx - 1, ly - 1, 8, 6);
       const blink = open ? 1 : 0.6 + Math.sin(t * 2) * 0.15;
       g.fillStyle = open ? '#50f070' : '#c02a20'; g.globalAlpha = blink; g.fillRect(lx, ly, 6, 4); g.globalAlpha = 1;

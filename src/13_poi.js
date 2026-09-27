@@ -121,14 +121,14 @@
       const open = game.ui.isOpen(b);
       const dx = b.door.x * TS, dy = b.door.y * TS;
       // bracket sign beside the door: a big pixel icon you can read from across the street
-      const sx = dx + 17, sy = b.face === 'S' ? dy + TS - 29 : dy - 6;
+      const sx = dx + 17, sy = b.face === 'S' ? dy + TS - 29 : dy + 1;
       g.fillStyle = INK; g.fillRect(sx - 3, sy - 4, 22, 2); g.fillRect(sx + 2, sy - 4, 2, 4); g.fillRect(sx + 14, sy - 4, 2, 4);
       g.fillRect(sx - 1, sy - 1, 20, 20);
       g.fillStyle = '#2a1c14'; g.fillRect(sx, sy, 18, 18);
       g.fillStyle = info[1]; g.globalAlpha = 0.25; g.fillRect(sx + 1, sy + 1, 16, 16); g.globalAlpha = 1;
       this.glyph(g, info[0], sx + 2, sy + 2, 2, info[1]);
       // OPEN / CLOSED lamp above the door
-      const lx = dx + 5, ly = b.face === 'S' ? dy + TS - 24 : dy - 10;
+      const lx = dx + 5, ly = b.face === 'S' ? dy + TS - 24 : dy + 3;
       g.fillStyle = INK; g.fillRect(lx - 1, ly - 1, 8, 6);
       const blink = open ? 1 : 0.6 + Math.sin(t * 2) * 0.15;
       g.fillStyle = open ? '#50f070' : '#c02a20'; g.globalAlpha = blink; g.fillRect(lx, ly, 6, 4); g.globalAlpha = 1;

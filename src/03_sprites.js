@@ -645,7 +645,7 @@
     if (b.type !== 'house' && b.type !== 'cabin' && b.type !== 'apartment' && b.type !== 'barn') {
       const lines = A.fitSign((b.name || bt.name).toUpperCase(), bw - 6);
       const lh = 10, boxH = lines.length * lh + 2;
-      const ty = b.face === 'S' ? facadeY - boxH - 3 : py + 4;
+      const ty = b.face === 'S' ? facadeY - boxH - 3 : py + 24; // far-side door: sign sits below the door's icon board
       const tw = Math.max(...lines.map((l) => A.ptWidth(l))) + 6;
       const col = bt.neon ? '#ff70c8' : b.type === 'police' ? '#a8c8ff' : b.type === 'social' ? '#f0b838' : art.neon || '#f6ecd0';
       g.fillStyle = INK;
