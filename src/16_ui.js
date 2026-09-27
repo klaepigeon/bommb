@@ -281,6 +281,14 @@
     g.fillStyle = '#d8c8a0'; g.fillRect(W - 57, 49, 46, 6);
     g.fillStyle = pl.coolOn ? '#f0b838' : '#2a7d7a'; g.fillRect(W - 57, 49, Math.round(46 * pl.cool / 100), 6);
     g.fillStyle = '#6ac0e0'; g.fillRect(W - 57, 49, Math.round(46 * pl.cool / 100), 1);
+    if (R.ring.owned()) {
+      hbox(g, W - 90, 62, 84, 12, false);
+      pt(g, 'WILL', W - 86, 64, { color: '#3a2418' });
+      g.fillStyle = '#2a1a12'; g.fillRect(W - 58, 64, 48, 8);
+      g.fillStyle = '#3a2a10'; g.fillRect(W - 57, 65, 46, 6);
+      g.fillStyle = '#f0c020'; g.fillRect(W - 57, 65, Math.round(46 * pl.will / 100), 6);
+      g.fillStyle = '#fff27a'; g.fillRect(W - 57, 65, Math.round(46 * pl.will / 100), 1);
+    }
     // objective
     const j = game.jobs.active;
     if (j) {
@@ -434,6 +442,10 @@
   };
 
   // ---------------------------------------------------------------- talk
+  U.setRingButtons = function () {
+    const app = document.getElementById('app');
+    if (app) app.classList.toggle('hasRing', !!R.ring.owned());
+  };
   U.openTalk = function (h) {
     const g = this.game;
     this.talkH = h;

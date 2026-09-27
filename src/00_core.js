@@ -88,6 +88,10 @@ R.angDiff = function (a, b) {
   return d;
 };
 R.approach = (v, target, step) => (v < target ? Math.min(target, v + step) : Math.max(target, v - step));
+R.compass = function (dx, dy) {
+  const a = Math.atan2(dy, dx);
+  return ['east', 'southeast', 'south', 'southwest', 'west', 'northwest', 'north', 'northeast'][((Math.round(a / (Math.PI / 4)) % 8) + 8) % 8];
+};
 R.dir4 = function (dx, dy) {
   if (Math.abs(dx) > Math.abs(dy)) return dx > 0 ? 1 : 3;
   return dy > 0 ? 2 : 0;

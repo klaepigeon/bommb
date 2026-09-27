@@ -257,6 +257,8 @@
   // ---------------------------------------------------------------- talk tree
   // Returns { title, sub, lines:[], options:[{label, fn, close}] }
   D2.tree = function (h) {
+    if (h.fearman) return R.ring.fearTree(h);
+    if (h.legend && R.legends) return R.legends.tree(h);
     const g = G(), pl = g.player, p = h.person;
     const name = g.actors.displayName(h);
     const opts = [];
@@ -305,6 +307,7 @@
     // role services
     if (role === 'bartender') {
       opts.push({ label: 'Order a whiskey ($3)', fn: () => { if (pl.pay(3)) { pl.drink(); say(pick(['Here ya go.', 'On the rocks.', 'Easy does it, champ.'])); } else say('Cash first.'); } });
+      opts.push({ label: '"Heard any strange stories?"', fn: () => say(R.legends.rumor()) });
       opts.push({ label: 'Buy the room a round ($25)', fn: () => { if (pl.pay(25)) { g.jobs.roundForHouse(h); say('Drinks are on the fella in the fedora!'); } else say('With what money?'); } });
     }
     if (role === 'fence') opts.push({ label: 'Move some merchandise', fn: () => { close(); g.ui.openShop('pawn', h); } });

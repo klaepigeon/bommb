@@ -246,6 +246,7 @@
     const g = this.game;
     const w = D.weapons[this.weapon];
     if (!w || this.atkT > 0) return;
+    if (R.ring.canSwing(this)) return R.ring.swing(this);
     const tg = this.aimTarget();
     let ang = this.ang;
     if (tg) {
@@ -552,6 +553,7 @@
     if (this.dead || (g.cheats && g.cheats.god)) return;
     if (this.inside) return;
     if (this.inCar && kind !== 'blast' && kind !== 'fire' && kind !== 'bullet' && kind !== 'fall') return;
+    if (this.shieldT > 0) { g.fx.text(this.x, this.y - 26, 'BLOCKED', '#fff27a'); g.fx.sparks(this.x, this.y - 12, 3); return; }
     this.hp -= amt;
     this.bloody = Math.min(1, this.bloody + amt / 60);
     g.ui.hurtFlash(amt);

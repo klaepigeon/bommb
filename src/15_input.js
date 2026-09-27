@@ -5,7 +5,7 @@
   const KEYS = {
     KeyE: 'use', Enter: 'use', Space: 'attack', KeyF: 'attack', KeyQ: 'weapon', ShiftLeft: 'run', ShiftRight: 'run',
     KeyC: 'sneak', KeyM: 'mask', KeyR: 'radio', KeyG: 'greet', KeyT: 'talk', KeyX: 'defuse', KeyV: 'antag', KeyH: 'horn',
-    KeyZ: 'cool', KeyB: 'brake', KeyI: 'heal', KeyP: 'phone', Escape: 'menu', Tab: 'map', KeyN: 'map',
+    KeyZ: 'cool', KeyB: 'brake', KeyI: 'heal', KeyP: 'phone', KeyY: 'ring', KeyL: 'lib', Escape: 'menu', Tab: 'map', KeyN: 'map',
   };
   const MOVE = { KeyW: [0, -1], ArrowUp: [0, -1], KeyS: [0, 1], ArrowDown: [0, 1], KeyA: [-1, 0], ArrowLeft: [-1, 0], KeyD: [1, 0], ArrowRight: [1, 0] };
 

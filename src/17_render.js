@@ -141,6 +141,12 @@
     // weather + lighting in screen space
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     this.drawLighting(g, left, top, z);
+    // hard light and alien light glow through the dark
+    g.setTransform(sc, 0, 0, sc, Math.round(-left * sc), Math.round(-top * sc));
+    R.ring.draw(g);
+    R.legends.draw(g);
+    if (R.ring.fearMan && R.ring.fearMan.x) { const fm = R.ring.fearMan; g.fillStyle = 'rgba(255,226,60,' + (0.25 + Math.sin(t * 3) * 0.1) + ')'; g.fillRect(Math.round(fm.x + 4), Math.round(fm.y - 12), 2, 2); }
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
     if (!pl.room) this.drawWeather(g);
     this.drawBubbles(g, left, top, z);
     if (game.env.lightning > 0.6) { g.fillStyle = `rgba(230,235,255,${(game.env.lightning - 0.6) * 1.2})`; g.fillRect(0, 0, cam.vw, cam.vh); }
@@ -164,7 +170,7 @@
   };
 
   P.drawHuman = function (g, h) {
-    const st = { weapon: h.drawn || h.state === 'fight' ? h.weapon : null, down: h.down > 0 || h.state === 'sleep' };
+    const st = { weapon: h.drawn || h.state === 'fight' ? h.weapon : null, down: h.down > 0 || h.state === 'sleep', scale: h.scale, alpha: h.ghost ? 0.4 + Math.sin(this.game.clock.real * 3) * 0.15 : null };
     if (h.state === 'sleep') {
       A.drawPerson(g, h.x + 4, h.y + 4, 2, 0, h.look, st);
       if (Math.floor(this.game.clock.real * 1.5) % 2 === 0) A.ptext(g, 'z', h.x + 6, h.y - 18, { color: '#f6ecd0', shadow: '#2a1a12' });
@@ -184,6 +190,7 @@
     if (pl.held) st.weapon = null;
     A.drawPerson(g, pl.x, pl.y, pl.dir, pl.walk, pl.look, st);
     R.props.drawHeld(g, pl);
+    R.ring.drawSwing(g, pl);
   };
 
   P.drawFire = function (g, fr, t) {

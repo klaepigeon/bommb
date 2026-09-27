@@ -328,7 +328,15 @@
     const phase = moving ? Math.floor(walk * 0.9) % 4 : 0;
     const frame = phase === 1 ? 1 : phase === 3 ? 2 : 0;
     const d8 = A.dir8(dir, st.ang);
-    const X = Math.round(x), Y = Math.round(y);
+    let X = Math.round(x), Y = Math.round(y);
+    const fx = st.scale || st.alpha != null;
+    if (fx) {
+      g.save();
+      g.translate(X, Y);
+      if (st.scale) g.scale(st.scale, st.scale);
+      if (st.alpha != null) g.globalAlpha = st.alpha;
+      X = 0; Y = 0;
+    }
     // the original's soft shadow
     g.fillStyle = 'rgba(16,12,36,0.45)';
     g.fillRect(X - 4, Y - 1, 8, 2);
@@ -342,10 +350,12 @@
       g.rotate(Math.PI / 2);
       g.drawImage(spr, -spr.width / 2, -22);
       g.restore();
+      if (fx) g.restore();
       return;
     }
     g.drawImage(spr, X - spr.width / 2, Y - 25);
     if (st.weapon && st.weapon !== 'fists' && pose !== 'g' || pose === 'g') drawWeapon8(g, X, Y, d8, st.weapon);
+    if (fx) g.restore();
   };
   function drawWeapon8(g, X, Y, d8, w) {
     if (!w || w === 'fists') return;

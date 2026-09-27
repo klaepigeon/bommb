@@ -75,6 +75,8 @@
     this.life = new R.Life(this);
     this.interiors = new R.Interiors(this);
     R.props.init(this);
+    R.ring.init(this);
+    R.legends.init(this);
     R.art.chunkCache.clear();
     const port = this.world.cities[0];
     const club = port.buildings.find((b) => b.type === 'social');
@@ -132,6 +134,7 @@
     this.audio.setVolume(this.settings.vol);
     this.audio.setMusicVolume(this.settings.music);
     this.started = true;
+    this.ui.setRingButtons();
     if (fresh) this.intro();
     else this.ui.toast(`Welcome back, ${this.player.nick}. ${this.clock.weekday()}, ${this.clock.label()}.`, 'good');
   };
@@ -212,6 +215,8 @@
       this.life.update(sdt);
       this.interiors.update(sdt);
       R.props.update(sdt);
+      R.ring.update(sdt);
+      R.legends.update(sdt);
       this.fx.update(sdt);
       this.hintCheck();
       this.occT = (this.occT || 0) - dt;
@@ -297,7 +302,7 @@
       v: 2, seed: this.seed, t: this.clock.t, log: this.worldLog, weather: this.env.weather.kind,
       player: {
         x: pl.room ? this.interiors.outside(pl.x, pl.y).x : pl.x, y: pl.room ? this.interiors.outside(pl.x, pl.y).y : pl.y, hp: pl.hp, cool: pl.cool, cash: pl.cash, inv: pl.inv, clip: pl.clip, outfit: pl.outfit, outfits: pl.outfits || {},
-        rep: pl.rep, standing: pl.standing, stats: pl.stats, sweetheart: pl.sweetheart, properties: pl.properties, masked: pl.masked,
+        will: pl.will, rep: pl.rep, standing: pl.standing, stats: pl.stats, sweetheart: pl.sweetheart, properties: pl.properties, masked: pl.masked,
         cars: pl.ownedCars.filter((c) => !c.removed && !c.wrecked).map((c) => [c.modelId, c.x, c.y, c.angle, c.color]),
       },
       pop: this.pop.serialize(), law: this.law.serialize(), jobs: this.jobs.serialize(), hints: this.hints,
@@ -321,6 +326,7 @@
       this.hints = s.hints || {};
       const pl = this.player, p = s.player;
       Object.assign(pl, { hp: p.hp, cool: p.cool, cash: p.cash, inv: p.inv, clip: p.clip, outfit: p.outfit, outfits: p.outfits, rep: p.rep, standing: p.standing, stats: Object.assign(pl.stats, p.stats), sweetheart: p.sweetheart, properties: p.properties || [], masked: !!p.masked });
+      if (p.will != null) pl.will = p.will;
       pl.place(p.x, p.y);
       pl.buildLook();
       for (const [id, fam, due, owned] of s.rackets || []) { const b = this.world.buildings[id]; if (b) { b.racket = 1; b.racketFamily = fam; b.racketDue = due; if (owned) b.playerOwned = true; } }

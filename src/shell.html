@@ -92,6 +92,15 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .mini.lit { background: var(--gold); }
 #mCool { left: 0; top: 4px; } #mMask { left: 0; top: 38px; } #mSneak { left: 0; top: 72px; } #mItem { left: 0; top: 106px; }
 #mPhone { left: 0; top: 150px; width: 62px; height: 34px; border-radius: 10px; background: var(--orange); color: var(--paper); font-size: 11px; }
+#bRing { right: 0; top: 148px; width: 50px; height: 50px; background: #e0b020; color: var(--ink); box-shadow: 0 5px 0 var(--ink), 0 0 14px rgba(255,226,60,0.6); }
+#mLib { right: 56px; top: 186px; width: 40px; height: 22px; background: #fff27a; }
+.ringOnly { display: none !important; } #app.hasRing .ringOnly { display: flex !important; } #app.hasRing.incar .ringOnly { display: none !important; }
+.libgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; margin-top: 8px; }
+.libi { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; border: 3px solid var(--ink); border-radius: 8px; background: #2a1e10; color: #fff27a; font-size: 10px; }
+.libi.sel { background: #5a4200; box-shadow: 0 0 0 2px #fff27a inset; }
+.libi canvas { width: 36px; height: 36px; image-rendering: pixelated; }
+.libi small { color: #c8a860; font-size: 8px; }
+.tabs.lib { flex-wrap: wrap; }
 #mHorn { left: 0; top: 4px; } #mRadio { left: 0; top: 38px; }
 .carOnly { display: none !important; } #app.incar .carOnly { display: flex !important; } #app.incar .footOnly { display: none !important; }
 #padL { flex-direction: column; justify-content: space-evenly; gap: 16px; }
@@ -205,6 +214,8 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
       <button class="pbtn footOnly" id="bRun" data-k="run" aria-label="Run"><small>RUN</small></button>
       <button class="pbtn carOnly" id="bBrake" data-k="brake" aria-label="Brake"><small>BRAKE</small></button>
       <button class="pbtn" id="bWpn" data-k="weapon" aria-label="Switch weapon"><small>SWAP</small></button>
+      <button class="pbtn ringOnly footOnly" id="bRing" data-k="ring" aria-label="Ring"><small>RING</small></button>
+      <button class="mini ringOnly footOnly" id="mLib" data-k="lib">LIB</button>
       <button class="mini footOnly" id="mCool" data-k="cool">COOL</button>
       <button class="mini footOnly" id="mMask" data-k="mask">MASK</button>
       <button class="mini footOnly" id="mSneak" data-k="sneak">SNEAK</button>
