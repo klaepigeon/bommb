@@ -310,23 +310,37 @@
           if (best.opinion >= 15 || best.fam >= 3 || best.fear > 60) { ui.toast(`${best.met ? best.first : 'Someone'}: "Come on in."`, 'good'); this.enter(b, 'guest'); }
           else ui.toast(`${best.met ? best.first : 'A voice'}: "${R.rng.pick(['Who is it? Go away.', 'We don\'t want any!', 'I\'m calling the cops if you don\'t leave.'])}"`, 'warn');
         } });
-        opts.push({ label: 'Break in', small: occ.length ? (night ? `${occ.length} asleep inside. Move quietly.` : `${occ.length} inside and awake!`) : 'Nobody home right now.', fn: () => this.breakIn(b) });
+        const who = occ.length ? (night ? `${occ.length} asleep inside.` : `${occ.length} inside and awake!`) : 'Nobody home right now.';
+        if (pl.inv.tools.lockpick) opts.push({ label: 'Pick the lock', small: `Quiet. ${who}`, fn: () => this.breakIn(b, 'pick') });
+        opts.push({ label: 'Force the door', small: `Loud. ${who}`, fn: () => this.breakIn(b, 'force') });
       }
       opts.push({ label: 'Leave', fn: () => {} });
       return ui.choice(b.name, opts);
     }
     if (!open) {
       const opts = [];
-      if (b.type !== 'police' && b.type !== 'hospital') opts.push({ label: 'Break in', small: pl.inv.tools.lockpick ? 'Uses a lockpick. Quiet, but someone may see.' : 'No lockpick: you\'ll have to force it. Noisy.', fn: () => this.breakIn(b) });
+      if (b.type !== 'police' && b.type !== 'hospital') {
+        if (pl.inv.tools.lockpick) opts.push({ label: 'Pick the lock', small: `Quiet, but someone may see. ${pl.inv.tools.lockpick} picks.`, fn: () => this.breakIn(b, 'pick') });
+        opts.push({ label: 'Force the door', small: 'Noisy. The street will hear it.', fn: () => this.breakIn(b, 'force') });
+      }
       opts.push({ label: 'Walk away', fn: () => {} });
       return ui.choice(`${b.name}: closed (opens ${bt.hours[0]}:00)`, opts);
     }
     this.enter(b, 'normal');
   };
-  P.breakIn = function (b) {
+  P.breakIn = function (b, how) {
     const g = this.game, pl = g.player;
-    if (pl.inv.tools.lockpick) { if (R.rng() < 0.5) pl.inv.tools.lockpick--; g.audio.sfx('reload'); }
-    else { g.actors.noise(pl.x, pl.y, TS * 6, 'scream', pl); g.audio.sfx('glass'); }
+    if (how === 'pick') {
+      const pins = b.type === 'bank' || b.type === 'casino' ? 6 : b.type === 'house' || b.type === 'cabin' || b.type === 'apartment' ? 3 : 4;
+      return R.mini.lockpick({ pins, hard: pins > 5 ? 1 : 0, title: `Pick the lock: ${b.name}` }, (ok) => {
+        if (!ok) return g.ui.toast('The lock holds.', 'warn');
+        g.law.crime('burglary', pl.x, pl.y, { minor: false });
+        this.enter(b, 'breakin');
+      });
+    }
+    g.actors.noise(pl.x, pl.y, TS * 8, 'scream', pl);
+    g.audio.sfx('glass');
+    g.cam.shake(3);
     g.law.crime('burglary', pl.x, pl.y, { minor: false });
     this.enter(b, 'breakin');
   };
@@ -501,10 +515,15 @@
     }
     if (f.service) return staff || owned ? { label: 'Counter', fn: () => g.ui.openCounter(room.b) } : { label: 'Nobody at the counter', fn: () => g.ui.toast('Nobody is behind the counter.') };
     if (f.shop) return staff || owned ? { label: f.verb, fn: () => g.ui.openShop(f.shop) } : null;
+    if (f.safe) return { label: f.verb, fn: () => { if (room.searched.get(fa.x * 1000 + fa.y) === g.pop.day) return g.ui.toast('Already cleaned out.'); R.mini.safe({}, (ok) => { if (ok) this.search(fa, f); }); } };
     if (f.cash) return { label: f.verb, fn: () => this.search(fa, f) };
     if (f.bed) return { label: 'Sleep', fn: () => this.sleep(room) };
     if (f.heal) return { label: f.verb, fn: () => { if (pl.hp >= pl.maxHp) return g.ui.toast('You feel fine.'); if (!pl.pay(30)) return g.ui.toast('Thirty bucks, sweetie.', 'warn'); pl.hp = pl.maxHp; pl.bloody = 0; g.ui.toast('Stitched up and good as new.', 'good'); } };
     if (f.jukebox) return { label: f.verb, fn: () => { g.audio.indoorMusic(R.rng.int(0, 2)); pl.cool = Math.min(100, pl.cool + 5); for (const a of g.actors.list) if (a.room === room && !a.staff && !a.dead && R.rng() < 0.4) { a.state = 'perform'; a.timer = 15; } } };
+    if (f.mini === 'pool') return { label: f.verb, fn: () => R.mini.pool({ stake: 10 }) };
+    if (f.mini === 'slots') return { label: f.verb, fn: () => R.mini.slots({ stake: 5 }) };
+    if (f.mini === 'blackjack') return { label: f.verb, fn: () => R.mini.blackjack({ title: room.b.type === 'casino' ? 'Blackjack' : 'Back-Room Blackjack' }) };
+    if (f.mini === 'darts') return { label: f.verb, fn: () => R.mini.darts({ stake: 10 }) };
     if (f.game) return { label: f.verb, fn: () => this.gamble(f.game[0], f.game[1], f.game[2]) };
     if (f.arcade) return { label: f.verb, fn: () => { if (!pl.pay(1)) return; const s = R.rng.int(1000, 99000); pl.cool = Math.min(100, pl.cool + 8); g.ui.toast(`TILT! ${s.toLocaleString()} points.${s > 70000 ? ' High score!' : ''}`); } };
     if (f.wash) return { label: f.verb, fn: () => { if (!pl.pay(2)) return; pl.bloody = 0; g.ui.toast('The blood comes out. Mostly.'); } };

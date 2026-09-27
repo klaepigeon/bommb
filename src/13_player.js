@@ -330,7 +330,7 @@
     const v = g.traffic.nearestCar(this.x, this.y, 22);
     if (v) {
       if (v.driver && v.driver !== this && !v.driver.dead) return { label: v.driver.cop ? 'Carjack (police!)' : 'Carjack', fn: () => this.carjack(v) };
-      if (v.locked && v.owner !== 'player') return { label: 'Break into car', fn: () => this.breakIn(v) };
+      if (v.locked && v.owner !== 'player') return this.inv.tools.lockpick ? { label: 'Pick the car lock', fn: () => R.mini.lockpick({ pins: 3, title: 'Pick the car door' }, (ok) => { if (ok) { v.locked = false; g.law.crime('cartheft', v.x, v.y, { minor: true }); this.enterCar(v); } }) } : { label: 'Smash the window', fn: () => this.breakIn(v) };
       return { label: 'Get in', fn: () => this.enterCar(v) };
     }
     // street furniture you can rip up
@@ -442,9 +442,18 @@
   };
 
   // ---------------------------------------------------------------- vehicles
-  P.enterCar = function (v) {
+  P.enterCar = function (v, wired) {
     const g = this.game;
     if (v.wrecked) return;
+    // a parked car that isn't yours has to be hotwired
+    if (!wired && v.parked && v.owner !== 'player' && !v.hotwired && !v.jobCar) {
+      return R.mini.hotwire({ wires: v.model.top > 200 ? 5 : 4, time: 14 }, (ok) => {
+        if (ok) { v.hotwired = true; this.enterCar(v, true); return; }
+        g.audio.sfx('alarm', v.x, v.y);
+        g.actors.noise(v.x, v.y, TS * 8, 'scream', this);
+        g.ui.toast('Car alarm! Try again or get out of here.', 'warn');
+      });
+    }
     this.inCar = v;
     v.driver = this;
     v.parked = false;

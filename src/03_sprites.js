@@ -329,11 +329,12 @@
     const frame = phase === 1 ? 1 : phase === 3 ? 2 : 0;
     const d8 = A.dir8(dir, st.ang);
     let X = Math.round(x), Y = Math.round(y);
-    const fx = st.scale || st.alpha != null;
+    const fx = st.scale || st.alpha != null || st.crouch;
     if (fx) {
       g.save();
       g.translate(X, Y);
       if (st.scale) g.scale(st.scale, st.scale);
+      if (st.crouch) g.scale(1.08, 0.8); // hunched low, knees bent
       if (st.alpha != null) g.globalAlpha = st.alpha;
       X = 0; Y = 0;
     }

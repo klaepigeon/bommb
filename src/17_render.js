@@ -188,6 +188,7 @@
     const st = { weapon: w === 'gascan' ? null : w, ang: pl.ang };
     if (pl.punchT > 0) { pl.punchT -= 1 / 60; st.pose = pl.weapon === 'bat' ? 'b1' : (pl.punchN || 0) % 2 ? 'p2' : 'p1'; st.weapon = null; }
     if (pl.held) st.weapon = null;
+    if (pl.sneak && !pl.inCar) st.crouch = true;
     A.drawPerson(g, pl.x, pl.y, pl.dir, pl.walk, pl.look, st);
     R.props.drawHeld(g, pl);
     R.ring.drawSwing(g, pl);
