@@ -7,7 +7,9 @@ This is a ground-up rebuild of the original single-file *Rhapsody* (Port Hollow)
 ## Look & feel (matches the original)
 
 - **GBA screen:** the world renders into a fixed 480×320 buffer, a 240×160 view at 2x like the original, scaled with nearest-neighbour inside a wooden handheld bezel. In portrait the screen sits on top with the joystick and buttons below; in landscape the controls sit either side.
-- **The original's characters:** people are painted by the original build's own character routine (`src/03_oldsprites.js`, ported verbatim: 16×32 pixel grids, 4-shade ramps, hair styles, flares, moustaches, poses). The protagonist is a young mafioso: slicked hair, charcoal suit, maroon shirt.
+- **The original's characters:** people are painted by the original build's own character routine (`src/03_oldsprites.js`, ported verbatim: 16×32 pixel grids, 4-shade ramps, hair styles, flares, moustaches, poses). The protagonist is a young mafioso: slicked hair, charcoal suit, maroon shirt. Hats are drawn over the top.
+- **The original's buildings and ground:** `src/03_oldtown.js` ports the original's building painter (siding, brick, stucco, concrete and board walls, awnings, shop glass with goods, doors, rooftop vents, lit windows after dark) and its grass, sidewalk, plaza, sand, dirt, boardwalk and parking textures, curbs included.
+- **Scale:** one tile is a person's width. Buildings are 7–16 tiles wide with character-height facades, roads are four lanes, and the map is 880×880 tiles.
 - **Pixel text:** all in-screen text, from the HUD hearts and money to signs, tags, bubbles and the STORY bar, is rasterised from the Silkscreen pixel font at its native size, hard-thresholded and scaled by whole pixels. Silkscreen and Pixelify Sans (SIL Open Font License) are embedded in the build.
 - **Walk-in interiors:** every building has a furnished room, stamped on demand into a hidden strip below the map. Bars have counters, stools, jukeboxes and pool tables, homes have beds and dressers, and there are vaults, cells, pews, slot machines and more. The people the population sim says are inside are really there, including the family asleep in bed when you break in at night. Searching furniture, robbing registers and fighting inside all go through the same witness and law rules.
 
@@ -16,6 +18,7 @@ This is a ground-up rebuild of the original single-file *Rhapsody* (Port Hollow)
 - **Local:** open `dist/index.html` in a browser (phone or desktop). No server or install needed.
 - **Build from source:** `node tools/build.mjs` bundles `src/` into `dist/index.html` (standalone page) and `dist/rhapsody.html` (body-only, for publishing as a claude.ai artifact).
 - **Smoke test:** `node tools/smoke.mjs` boots the build headless at phone size and fails on any page error. It needs Playwright.
+- **Long playtest:** `node tools/playtest.mjs 100 out/` plays 100 in-game days through the real controls and writes `out/report.json` plus screenshots.
 
 ### Controls
 
@@ -26,7 +29,9 @@ This is a ground-up rebuild of the original single-file *Rhapsody* (Port Hollow)
 | Hit / shoot | **B** | Space / F |
 | Switch weapon / holster | **WPN** (hold to holster) | Q |
 | Greet / Antagonize / Talk / Rob | Chips that appear near a person | G / V / T, X defuses |
-| Cool (slow-mo), Mask, Sneak, Item | Small buttons | Z, M, C, I |
+| Cool (slow-mo), Mask, Sneak (crouch), Pockets | Small buttons | Z, M, C, I |
+| Yellow Ring: conjure / beam / library | **RING** (tap / hold), **LIB** | Y, L |
+| Improvised weapon: swing / throw / drop | **B** / tap **SWAP** / hold **SWAP** | Space / Q |
 | Driving | Point the stick where you want to go. **Brake** drifts at speed | Space brakes, H horn, R radio |
 | Menu / map | Tap the HUD / minimap | Esc / Tab |
 
@@ -35,7 +40,7 @@ This is a ground-up rebuild of the original single-file *Rhapsody* (Port Hollow)
 | Your note | What the rebuild does |
 |---|---|
 | Mobile-first interface | Floating joystick, thumb-sized A/B buttons, contextual action label, bottom-sheet menus, safe-area aware, portrait and landscape layouts |
-| Much bigger map, multiple cities | 640×640-tile procedural region: **Port Hollow** (harbor), **New Avalon** (metropolis), **Dustwater** (desert), **Pinecrest** (snowy forest), **Bayou Clair** (marsh), four hamlets, farms and cabins, a river, a lake, and highways between them. About 780 buildings |
+| Much bigger map, multiple cities | 880×880-tile procedural region: **Port Hollow** (harbor), **New Avalon** (metropolis), **Dustwater** (desert), **Pinecrest** (snowy forest), **Bayou Clair** (marsh), four hamlets, farms and cabins, a river, a lake, and four-lane highways between them. About 600 buildings |
 | ~1,000 named NPCs + procgen citizens + animals | About 1,010 named people with homes, jobs, spouses, kids, schedules, memories and opinions of you. Anonymous pedestrians and drivers fill the streets. Wildlife is biome-specific: deer, wolves, bears, boar, coyotes, gators, rattlesnakes, birds, cattle |
 | Replace Claude dialogue with RDR2-style greet/antagonize + scripted choices | No text input anywhere. **Greet** builds familiarity (twice and you learn their name), **Antagonize** gets personality-driven reactions (cower, retort, laugh, square up, call a cop), **Defuse** calms a fight, **Talk** opens scripted trees per role (bartender, fence, cop, doctor, priest, mechanic, Don, shopkeepers, kids, sweethearts) |
 | Text input and systems broken | The Claude/text-input path is gone. Every system was rewritten and is exercised by a headless test run |
@@ -45,6 +50,26 @@ This is a ground-up rebuild of the original single-file *Rhapsody* (Port Hollow)
 | More dynamic traffic | Lane-following cars with traffic lights, yielding at intersections, following distance, honking, buses and trucks, parked cars, patrol cars, ambient police chases, reckless drivers, and drivers who get out and fight you after a crash |
 | NPCs build their cities and have children | One in-game day = one year of aging (adjustable). People marry, have babies, grow up, move out, take jobs, grow old and die. Prosperous cities break ground on new houses and shops (construction crews included) and rebuild what burns down. It's all reported in the in-game newspaper |
 | More fun and more environmental systems | Weather (rain, storms, fog, heatwaves, snow up north). Wind-driven wildfire that rain puts out. Lightning. Gasoline trails you can light. Molotovs and dynamite. Hydrant geysers. Shootable street lamps (darker streets mean fewer witnesses). Hunting, skinning and fishing. Three procedural radio stations (funk, disco, outlaw country). Bar fights, block parties, weddings, hitchhikers, roadside ambushes, pickpockets, muggers. Bank heists, store robberies, burglary, protection rackets, buying businesses and safehouses, a crew, a sweetheart, and a Cool slow-mo meter |
+
+## This round
+
+| Your note | What changed |
+|---|---|
+| Buildings bigger, not NPCs smaller; scale everything to the player | Characters keep their size. Blocks, buildings, facades, doors, roads (four lanes) and the map (880×880) grew around them, and cars are scaled to fit the lanes |
+| Copy the old artifact's look | Buildings and ground are painted by the original's own routines |
+| Start chilled; stop blaming me for things I didn't do | Street trouble ramps up with days played, infamy and jobs. Anyone who attacks you is fair game, and shooting back isn't a crime |
+| Shops better indicated; NPCs mark points of interest | Icon boards and OPEN / CLOSED lamps by every shop door. Shops you pass go on the map. Ask anyone "Know any good spots?" and they pin a place. Rumours drop fuzzy pins |
+| Gore; broken animations; menu closing instantly; debug menu | Blood that stains, sprays, pools and gibs (toggle in Settings). Natural walk cadence and working NPC punch poses. Sheets ignore the tap that opened them. Menu > Debug has cheats, time, weather, teleports and spawners |
+| Stop Witness | Fleeing witnesses in shouting range get Intimidate / Bribe chips |
+| Real minigames | Lockpicking, hotwiring, safecracking, blackjack, slots, pool, darts and craps |
+| Inventory; know what drugs we're buying | A Pockets tab with pixel icons and actions. Seven named 70s street drugs, each with a street name, effect, duration and comedown, sold by dealers |
+| Hire NPCs to do jobs | People who like you will do your family job for a cut, boost a car, rob a store, run numbers or scout a mark |
+| Hostile animals must be killable | Blows stagger animals and wounded animals limp |
+| Supernatural references, and Sinestro as "Fear Man" | The Fear Man waits under a dead tree deep in the Dustwater flats from 1 to 4 AM and gives you the **Yellow Ring**: a 46-construct library, a beam, and giant construct swings with bare fists, all powered by Will, which fear refills. There's also a drowned captain, a sasquatch, a UFO, the gentleman at the crossroads, and Old Scratch |
+| Improvised weapons | The original's 32 props are back, with its sprites, durability, throwing and per-material effects |
+| Lockpicking / hotwiring; sneaking sprite | Doors and cars can be picked, parked cars must be hotwired, and sneaking crouches |
+| Clothes, hats, hair, facial hair | Tailor (12 jackets, 10 shirts, 8 trousers, 4 collars, 7 hats in 7 colours, shades) and barber (8 cuts, 6 colours, moustache or beard) |
+| Playtest 100 days with notes | See [docs/PLAYTEST.md](docs/PLAYTEST.md). `tools/playtest.mjs` plays N in-game days through the real controls and writes a report |
 
 ## Architecture
 
@@ -57,7 +82,8 @@ Plain ES2020, no dependencies and no bundler. Every module hangs off a global `R
 | `02_world.js` | World generation: coast, biomes, river, city grids, docks, parks, highways (grid-aligned routing), lane-flow data, intersections and lights, countryside, street furniture. Also the world mutations (build on lot, destroy) |
 | `03_art.js` | Procedural pixel art: chunk-cached terrain and buildings, cars, animals, minimap |
 | `03_oldsprites.js` | The original build's character painter and palette, ported verbatim |
-| `03_sprites.js` | Adapter from people to the original's looks, pixel text, interior floors, walls and furniture, storefronts |
+| `03_oldtown.js` | The original build's building painter and ground textures, ported verbatim |
+| `03_sprites.js` | Adapter from people to the original's looks, pixel text, hats, interior floors, walls and furniture, buildings and signs |
 | `04_population.js` | The named population: households, jobs, schedules, memories, life facts, the daily life tick (aging, marriage, births, deaths, jobs) and city growth |
 | `05_actors.js` | On-screen people and animals: A* pathfinding, steering, sidewalk walking, perception, reactions, witnesses reporting, spawning |
 | `06_traffic.js` | Lane driving, lights, yielding, arcade physics with drift, chase steering, collisions, road rage, spawning |
@@ -68,8 +94,16 @@ Plain ES2020, no dependencies and no bundler. Every module hangs off a global `R
 | `11_dialog.js` | Greet / antagonize / defuse, chatter, talk trees |
 | `12_jobs.js` | Families, ranks, contracts, rackets, leads |
 | `13_player.js` | The player |
+| `13_goods.js` | Inventory icons and actions, street drugs, dealers, hired help |
+| `13_poi.js` | Shop signs, discovered shops and pins on the map |
+| `13_props.js` | Improvised weapons (the original's 32 props) |
+| `13_ring.js` | The Fear Man and the Yellow Ring: construct library, beam, swings |
+| `13_spooky.js` | Legends: the ghost, sasquatch, UFO, crossroads dealer, Old Scratch |
+| `13_style.js` | Wardrobe and grooming: clothes, hats, hair, facial hair |
 | `14_audio.js` | Synthesized SFX and procedural radio |
 | `15_input.js` | Touch joystick, buttons, keyboard |
+| `16_debug.js` | The debug menu |
+| `16_minigames.js` | Lockpicking, hotwiring, safecracking, blackjack, slots, pool, darts, craps |
 | `16_ui.js` | HUD, context chips, sheets, interiors, shops, phone, fishing, burglary, heist, menu, map |
 | `17_render.js` | Rendering, lighting, weather, speech bubbles |
 | `19_interiors.js` | Walk-in rooms: layouts per building type, occupants, furniture actions, searching, register robberies |

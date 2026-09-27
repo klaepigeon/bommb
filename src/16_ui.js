@@ -362,7 +362,9 @@
       const lines = game.renderer.wrap(t.text.toUpperCase(), 400);
       const h = lines.length * 11 + 8;
       const w2 = Math.max(...lines.map((l) => A().ptWidth(l))) + 18;
-      const x = Math.round(W / 2 - w2 / 2), y = storyTop - 12 - h;
+      // in landscape the Greet/Antagonize chips sit over the bottom of the screen: lift the toast clear
+      const chipsUp = this.el.app.classList.contains('landscape') && !this.el.ctx.classList.contains('off');
+      const x = Math.round(W / 2 - w2 / 2), y = chipsUp ? 70 : storyTop - 12 - h;
       g.fillStyle = '#2a1a12'; g.fillRect(x - 2, y - 2, w2 + 4, h + 4);
       g.fillStyle = 'rgba(20,12,10,0.92)'; g.fillRect(x, y, w2, h);
       g.fillStyle = t.kind === 'bad' ? '#c83a2a' : t.kind === 'good' ? '#6a9a30' : t.kind === 'warn' ? '#d9621e' : '#f0b838';

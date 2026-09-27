@@ -3622,7 +3622,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
           const nk = p.kids.length;
           if (!rnd.chance((nk < 3 ? 0.14 : 0.03) * aging)) continue;
           const home = this.world.buildings[p.home];
-          if (home && home.residents.length >= D.btypes[home.type].house + 2) continue;
+          if (home && home.residents.length >= D.btypes[home.type].house + 4) continue;
           const kid = this.newPerson(rnd, cityId, { age: 0, last: dad.last, home: p.home, parents: [p.id, dad.id] });
           kid.look = this.makeLook(R.mulberry(kid.seed), kid);
           kid.look.skin = rnd.chance(0.5) ? p.look.skin : dad.look.skin;
@@ -3642,11 +3642,68 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       const names = ks.slice(0, 2).map((k) => `${k.first} ${k.last}`);
       this.addNews(c, ks.length === 1 ? `It's a ${ks[0].fem ? 'girl' : 'boy'}! Welcome ${names[0]}.` : `${ks.length} babies born, including ${names.join(' and ')}.`);
     }
+    if (aging) this.migrate(rnd);
     this.fillJobs(rnd);
     this.growCities(game, rnd);
     return { births, deaths };
   };
 
+  // Towns hold their size over the decades: families move in when a town thins out
+  // and young folks leave for the big city when it gets crowded.
+  P.migrate = function (rnd) {
+    const w = this.world;
+    const targets = {};
+    for (const d of D.cities) targets[d.id] = d.pop;
+    targets.county = 60;
+    for (const cityId in targets) {
+      const c = this.cityObj(cityId);
+      if (!c) continue;
+      const alive = (this.byCity[cityId] || []).filter((p) => p.alive);
+      const n = alive.length, target = targets[cityId];
+      if (n < target * 0.94) {
+        const want = Math.min(4, Math.ceil((target * 0.94 - n) / 6));
+        const free = c.buildings.filter((b) => b && !b.destroyed && D.btypes[b.type].house && b.type !== 'hotel' && b.residents.length + 2 <= D.btypes[b.type].house);
+        rnd.shuffle(free);
+        for (let k = 0; k < want && k < free.length; k++) {
+          const home = free[k];
+          const last = rnd.pick(D.lastAll[cityId] || D.lastAll.avalon);
+          const a1 = this.newPerson(rnd, cityId, { age: rnd.int(22, 38), last, home: home.id });
+          a1.look = this.makeLook(R.mulberry(a1.seed), a1);
+          home.residents.push(a1.id);
+          if (rnd.chance(0.75)) {
+            const a2 = this.newPerson(rnd, cityId, { age: R.clamp(a1.age + rnd.int(-4, 4), 20, 45), last, home: home.id, fem: !a1.fem });
+            a2.look = this.makeLook(R.mulberry(a2.seed), a2);
+            a1.spouse = a2.id; a2.spouse = a1.id;
+            home.residents.push(a2.id);
+            const nk = rnd.weighted([[0, 3], [1, 3], [2, 2]]);
+            for (let j = 0; j < nk && home.residents.length < D.btypes[home.type].house; j++) {
+              const kid = this.newPerson(rnd, cityId, { age: rnd.int(0, 12), last, home: home.id, parents: [a1.id, a2.id] });
+              kid.look = this.makeLook(R.mulberry(kid.seed), kid);
+              a1.kids.push(kid.id); a2.kids.push(kid.id);
+              home.residents.push(kid.id);
+            }
+          }
+          if (k === 0) this.addNews(cityId, `New in town: the ${last} family moved into ${home.name === 'House' ? 'a house' : home.name} in ${c.name}.`);
+        }
+      } else if (n > target * 1.18) {
+        const leavers = alive.filter((p) => p.age >= 18 && p.age <= 32 && p.spouse < 0 && !p.isDon && !p.faction && !p.actor && p.role !== 'cop');
+        rnd.shuffle(leavers);
+        const go = leavers.slice(0, Math.min(3, Math.ceil((n - target * 1.18) / 8)));
+        for (const p of go) this.leave(p);
+        if (go.length) this.addNews(cityId, `${this.name(go[0])} packed a suitcase and left ${c.name} for the big city.`);
+      }
+    }
+  };
+  P.leave = function (p) {
+    p.alive = false;
+    p.gone = true;
+    p.diedDay = this.day;
+    const h = this.world.buildings[p.home];
+    if (h) h.residents = h.residents.filter((id) => id !== p.id);
+    const wb = this.world.buildings[p.work];
+    if (wb && wb.workers) wb.workers = wb.workers.filter((id) => id !== p.id);
+    p.role = 'gone';
+  };
   P.comeOfAge = function (p, rnd) {
     p.role = 'none';
     p.look = this.makeLook(R.mulberry(p.seed + 1), p);
@@ -3654,7 +3711,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     const c = this.cityObj(p.city);
     if (!c) return;
     const free = c.buildings.find((b) => D.btypes[b.type].house && !b.destroyed && b.residents.length < D.btypes[b.type].house && b.type !== 'hotel');
-    if (free && rnd.chance(0.6)) this.moveIn(p, free.id);
+    if (free && rnd.chance(0.8)) this.moveIn(p, free.id);
     this.remember(p, 'life', `I'm ${p.age} now. Out of school, looking for work.`, this.day);
   };
   P.moveIn = function (p, bid) {
@@ -4956,7 +5013,8 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       const rx = o.x - v.x, ry = o.y - v.y;
       const along = rx * fx + ry * fy;
       const lat = Math.abs(-rx * fy + ry * fx);
-      const lw = o.kind === 'v' ? o.model.h * 0.5 + 2 : 7;
+      // people get a wide berth: brake for anyone who'd be clipped by the bumper
+      const lw = o.kind === 'v' ? o.model.h * 0.5 + 2 : v.model.h * 0.5 + 5;
       if (along > 0 && along < reach + (o.kind === 'v' ? o.model.w * 0.5 : 0) && lat < lw) {
         const d = along - (o.kind === 'v' ? o.model.w * 0.5 : 0);
         if (!best || d < best.d) best = { d, o, player: isPlayer };
@@ -5234,7 +5292,13 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   TP.damage = function (v, amt, by) {
     if (v.wrecked) return;
     v.hp -= amt;
-    if (v.hp < 20 && v.burning <= 0 && v.hp > 0 && R.rng() < 0.4) v.burning = 0.01;
+    const mine = v.driver === this.game.player;
+    // your own car always gives you a few seconds of flames to bail out
+    if (mine && v.hp <= 0 && !(v.burning > 0)) v.hp = 1;
+    if (v.hp < 20 && !(v.burning > 0) && v.hp > 0 && (mine || R.rng() < 0.4)) {
+      v.burning = 0.01;
+      if (mine) { this.game.ui.toast('Your car is on fire. Get out (A)!', 'bad'); this.game.audio.sfx('alarm'); }
+    }
     if (v.hp <= 0) this.explode(v, by);
   };
   TP.burn = function (v, dt) {
@@ -5363,7 +5427,8 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     cop.siren = true;
     cop.ai = { target: runner.driver, stopNear: 0 };
     runner.chasedBy = cop;
-    game.ui.toast('Police pursuit in progress nearby.');
+    // the sirens tell you; only mention it now and then
+    if ((!this.chaseToastT || game.clock.t - this.chaseToastT > 1440) && R.dist(runner.x, runner.y, game.player.x, game.player.y) < TS * 25) { this.chaseToastT = game.clock.t; game.ui.toast('Sirens: somebody else is running from the cops.'); }
   };
 })();
 
@@ -5510,7 +5575,14 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   C.runOver = function (v, a, speed) {
     const g = game();
     if (a === g.player) {
-      if (speed > 40) { g.player.hurt(speed * 0.25, v, 'car'); g.player.knock(v.angle, speed * 1.5); }
+      // one hit per bump, thrown clear of the car rather than along its path
+      const now = g.clock.real;
+      if (a.hitByCarT && now - a.hitByCarT < 1.2) return;
+      a.hitByCarT = now;
+      const away = Math.atan2(a.y - v.y, a.x - v.x);
+      if (speed > 40) { g.player.hurt(Math.min(40, speed * 0.2), v, 'car'); g.player.knock(away, 60 + speed * 0.8); g.cam.shake(4); }
+      else g.player.knock(away, 60);
+      if (v.driver && v.driver !== g.player) { v.speed *= 0.2; v.vx *= 0.2; v.vy *= 0.2; if (v.honkT <= 0 && g.traffic.honk) g.traffic.honk(v); }
       return;
     }
     if (a.hitByCar && performance.now() - a.hitByCar < 700) return;
@@ -5570,7 +5642,9 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       g.fx.hit(t.x, t.y - 10);
       g.audio.sfx(w === D.weapons.knife ? 'stab' : 'punch', t.x, t.y);
       hit = true;
-      if (att === g.player) g.cam.shake(1.5);
+      // hitstop: a few frames of freeze sells the impact
+      if (att === g.player) { g.cam.shake(1.5 + w.dmg / 12); g.hitStop = Math.max(g.hitStop || 0, 0.035 + Math.min(0.05, w.dmg / 600)); }
+      else if (t === g.player) g.hitStop = Math.max(g.hitStop || 0, 0.03);
       break;
     }
     if (!hit && att === g.player) {
@@ -5727,7 +5801,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     }
   };
 
-  C.explosion = function (x, y, radius, dmg, owner, isCar) {
+  C.explosion = function (x, y, radius, dmg, owner, isCar, spareOwner) {
     const g = game();
     g.fx.boom(x, y, radius);
     g.audio.sfx('boom', x, y);
@@ -5747,10 +5821,11 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     }
     const pl = g.player;
     const pd = R.dist(x, y, pl.x, pl.y);
-    if (pd < radius + 10 && !isCar) pl.hurt(dmg * (1 - pd / (radius + 10)), owner, 'blast');
+    if (spareOwner && owner === pl) {} // the ring's hard light never turns on its wearer
+    else if (pd < radius + 10 && !isCar) pl.hurt(dmg * (1 - pd / (radius + 10)), owner, 'blast');
     else if (pd < radius && isCar) pl.hurt(30 * (1 - pd / radius), owner, 'blast');
     // world: fire, trees, buildings
-    g.env.ignite(x, y, radius / TS, owner);
+    if (!spareOwner) g.env.ignite(x, y, radius / TS, owner);
     const tr = Math.ceil(radius / TS);
     const tx0 = (x / TS) | 0, ty0 = (y / TS) | 0;
     const hitB = new Set();
@@ -5764,7 +5839,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
         if (b) hitB.add(b);
       }
     for (const b of hitB) g.env.damageBuilding(b, dmg * 0.5, owner);
-    if (owner === pl && !isCar) g.law.crime('explosion', x, y, {});
+    if (owner === pl && !isCar && !spareOwner) g.law.crime('explosion', x, y, {});
   };
 
   // ---------------------------------------------------------------- NPC fighting AI
@@ -6441,7 +6516,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       let nk = R.rng.weighted(WEATHER[w.kind].next);
       if (desert && (nk === 'rain' || nk === 'fog') && R.rng() < 0.7) nk = 'heat';
       this.setWeather(nk);
-      if (g.started) g.ui.toast(`Weather: ${this.WEATHER_NAMES[nk]}${w.snow && (nk === 'rain' || nk === 'storm') ? ' (snow up north)' : ''}.`);
+      if (g.started && nk !== 'clear' && nk !== 'cloudy') g.ui.toast(`Weather: ${this.WEATHER_NAMES[nk]}${w.snow && (nk === 'rain' || nk === 'storm') ? ' (snow up north)' : ''}.`);
     }
     const tg = w.target;
     const k = Math.min(1, dt * 0.15);
@@ -6855,6 +6930,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     this.bolts = this.bolts.filter((b) => b.t > 0);
     for (const d of this.decals) { d.t -= dt; if (d.grow && d.r < d.grow) d.r = Math.min(d.grow, d.r + d.rate * dt); }
     this.decals = this.decals.filter((d) => d.t > 0);
+    if (this.decals.length > 480) this.decals.splice(0, this.decals.length - 480);
   };
   FP.drawDecals = function (g) {
     for (const d of this.decals) {
@@ -9222,13 +9298,15 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   P.discover = function (b, quiet) {
     if (!SHOP[b.type] || this.found.has(b.id)) return;
     this.found.add(b.id);
-    if (!quiet && this.game.started) this.game.ui.toast(`New on your map: ${b.name} (${SHOP[b.type][2]})`);
+    if (!quiet && this.game.started) (this.newly = this.newly || []).push(`${b.name} (${SHOP[b.type][2].toLowerCase()})`);
   };
   P.update = function (dt) {
     const g = this.game, pl = g.player;
     this.t -= dt;
     if (this.t > 0 || pl.room) return;
     this.t = 1;
+    // announce discoveries in one line
+    if (this.newly && this.newly.length) { const n = this.newly; this.newly = []; g.ui.toast(n.length === 1 ? `New on your map: ${n[0]}` : `New on your map: ${n.slice(0, 3).join(', ')}${n.length > 3 ? ` and ${n.length - 3} more` : ''}`); }
     const tx = pl.x / TS, ty = pl.y / TS;
     for (const b of g.world.buildings) if (b && !b.destroyed && SHOP[b.type] && !this.found.has(b.id) && Math.abs(b.out.x - tx) < 12 && Math.abs(b.out.y - ty) < 9) this.discover(b);
     // reached a pin
@@ -9495,6 +9573,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       }
       // forget junk far away
       this.loose = this.loose.filter((p) => p.pinned || p.y >= w.H * TS || Math.abs(p.x - pl.x) < TS * 60 && Math.abs(p.y - pl.y) < TS * 60);
+      if (this.loose.length > 200) this.loose.splice(0, this.loose.length - 200);
     }
   };
   const FROM_OBJ_VALUES = new Set(Object.values(FROM_OBJ));
@@ -9984,7 +10063,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       if (end) {
         this.shots.splice(i, 1);
         this.burst(s.x, s.y);
-        if (c.kind === 'rocket') R.combat.explosion(s.x, s.y + 6, c.r, c.dmg, pl);
+        if (c.kind === 'rocket') R.combat.explosion(s.x, s.y + 6, c.r, c.dmg, pl, false, true);
         if (c.kind === 'douse') { g.env.douse(s.x, s.y + 6, TS * 3, 6); for (let k = 0; k < 8; k++) g.fx.add({ x: s.x, y: s.y, vx: (R.rng() - 0.5) * 100, vy: -40 - R.rng() * 50, g: 200, life: 0.6, max: 0.6, c: '#9ad0f0', s: 2 }); }
       }
     }
@@ -10883,6 +10962,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   const Input = (R.Input = function (game, root) {
     this.game = game;
     this.stick = { x: 0, y: 0 };
+    this.lastTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     this.keysDown = new Set();
     this.heldA = {};
     this.pressedA = {};
@@ -10897,6 +10977,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   P.bind = function () {
     const self = this;
     window.addEventListener('keydown', (e) => {
+      this.lastTouch = false;
       if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) return;
       if (this.game.ui && this.game.ui.modalOpen() && e.code !== 'Escape') {
         if (e.code === 'Escape' || e.code === 'Tab') e.preventDefault();
@@ -10928,6 +11009,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     this.base = base;
     this.knob = knob;
     zone.addEventListener('pointerdown', (e) => {
+      this.lastTouch = e.pointerType !== 'mouse';
       e.preventDefault();
       if (this.touchStick) return;
       this.game.audio.unlock();
@@ -10955,6 +11037,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     this.root.querySelectorAll('[data-k]').forEach((btn) => {
       const a = btn.dataset.k;
       btn.addEventListener('pointerdown', (e) => {
+        this.lastTouch = e.pointerType !== 'mouse';
         e.preventDefault();
         e.stopPropagation();
         this.game.audio.unlock();
@@ -12022,7 +12105,9 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       const lines = game.renderer.wrap(t.text.toUpperCase(), 400);
       const h = lines.length * 11 + 8;
       const w2 = Math.max(...lines.map((l) => A().ptWidth(l))) + 18;
-      const x = Math.round(W / 2 - w2 / 2), y = storyTop - 12 - h;
+      // in landscape the Greet/Antagonize chips sit over the bottom of the screen: lift the toast clear
+      const chipsUp = this.el.app.classList.contains('landscape') && !this.el.ctx.classList.contains('off');
+      const x = Math.round(W / 2 - w2 / 2), y = chipsUp ? 70 : storyTop - 12 - h;
       g.fillStyle = '#2a1a12'; g.fillRect(x - 2, y - 2, w2 + 4, h + 4);
       g.fillStyle = 'rgba(20,12,10,0.92)'; g.fillRect(x, y, w2, h);
       g.fillStyle = t.kind === 'bad' ? '#c83a2a' : t.kind === 'good' ? '#6a9a30' : t.kind === 'warn' ? '#d9621e' : '#f0b838';
@@ -13273,7 +13358,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     if (!pl.inCar && !pl.dead && !game.ui.sheetOpen) {
       const act = pl.contextAction();
       const f = pl.focus;
-      if (f && !f.dead && !pl.bubble) { const [fx, fy] = toS(f.x, f.y - 27); this.tag(g, fx, fy, game.actors.displayName(f).slice(0, 22), 'T'); }
+      if (f && !f.dead && !pl.bubble) { const [fx, fy] = toS(f.x, f.y - 27); this.tag(g, fx, fy, game.actors.displayName(f).slice(0, 22), game.input.lastTouch ? null : 'T'); }
       if (act && !(f && !f.dead)) { const [px, py] = toS(pl.x, pl.y - 29); this.tag(g, px, py, act.label.slice(0, 24), 'A'); }
     }
     for (const a of list) {
@@ -13519,6 +13604,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     const pl = this.player;
     this.input.update();
     const paused = !this.started || this.ui.paused() || pl.dead;
+    if (this.hitStop > 0) { this.hitStop -= dt; dt *= 0.08; }
     if (!paused) {
       const sdt = dt * this.timeScale;
       this.clock.update(sdt);
@@ -13548,7 +13634,9 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       if (this.miniDirty) { this.miniDirty = false; this.miniMap = R.art.buildMiniMap(this.world); }
     } else if (this.started) this.fx.update(0);
     const tgt = pl.inCar || pl;
-    const lead = pl.inCar ? { x: pl.inCar.vx * 0.35, y: pl.inCar.vy * 0.35 } : null;
+    // the camera looks a little ahead of where you're going
+    const st = this.input.stick;
+    const lead = pl.inCar ? { x: pl.inCar.vx * 0.35, y: pl.inCar.vy * 0.35 } : pl.room ? null : { x: st.x * 22, y: st.y * 14 };
     this.cam.update(dt, tgt.x, tgt.y - 6, lead);
     if (pl.room) {
       // keep the camera inside the room, centred when the room is smaller than the screen

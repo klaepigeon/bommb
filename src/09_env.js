@@ -100,7 +100,7 @@
       let nk = R.rng.weighted(WEATHER[w.kind].next);
       if (desert && (nk === 'rain' || nk === 'fog') && R.rng() < 0.7) nk = 'heat';
       this.setWeather(nk);
-      if (g.started) g.ui.toast(`Weather: ${this.WEATHER_NAMES[nk]}${w.snow && (nk === 'rain' || nk === 'storm') ? ' (snow up north)' : ''}.`);
+      if (g.started && nk !== 'clear' && nk !== 'cloudy') g.ui.toast(`Weather: ${this.WEATHER_NAMES[nk]}${w.snow && (nk === 'rain' || nk === 'storm') ? ' (snow up north)' : ''}.`);
     }
     const tg = w.target;
     const k = Math.min(1, dt * 0.15);
@@ -514,6 +514,7 @@
     this.bolts = this.bolts.filter((b) => b.t > 0);
     for (const d of this.decals) { d.t -= dt; if (d.grow && d.r < d.grow) d.r = Math.min(d.grow, d.r + d.rate * dt); }
     this.decals = this.decals.filter((d) => d.t > 0);
+    if (this.decals.length > 480) this.decals.splice(0, this.decals.length - 480);
   };
   FP.drawDecals = function (g) {
     for (const d of this.decals) {

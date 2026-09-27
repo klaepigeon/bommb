@@ -483,7 +483,7 @@
     if (!pl.inCar && !pl.dead && !game.ui.sheetOpen) {
       const act = pl.contextAction();
       const f = pl.focus;
-      if (f && !f.dead && !pl.bubble) { const [fx, fy] = toS(f.x, f.y - 27); this.tag(g, fx, fy, game.actors.displayName(f).slice(0, 22), 'T'); }
+      if (f && !f.dead && !pl.bubble) { const [fx, fy] = toS(f.x, f.y - 27); this.tag(g, fx, fy, game.actors.displayName(f).slice(0, 22), game.input.lastTouch ? null : 'T'); }
       if (act && !(f && !f.dead)) { const [px, py] = toS(pl.x, pl.y - 29); this.tag(g, px, py, act.label.slice(0, 24), 'A'); }
     }
     for (const a of list) {

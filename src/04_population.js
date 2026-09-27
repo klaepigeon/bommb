@@ -401,7 +401,7 @@
           const nk = p.kids.length;
           if (!rnd.chance((nk < 3 ? 0.14 : 0.03) * aging)) continue;
           const home = this.world.buildings[p.home];
-          if (home && home.residents.length >= D.btypes[home.type].house + 2) continue;
+          if (home && home.residents.length >= D.btypes[home.type].house + 4) continue;
           const kid = this.newPerson(rnd, cityId, { age: 0, last: dad.last, home: p.home, parents: [p.id, dad.id] });
           kid.look = this.makeLook(R.mulberry(kid.seed), kid);
           kid.look.skin = rnd.chance(0.5) ? p.look.skin : dad.look.skin;
@@ -421,11 +421,68 @@
       const names = ks.slice(0, 2).map((k) => `${k.first} ${k.last}`);
       this.addNews(c, ks.length === 1 ? `It's a ${ks[0].fem ? 'girl' : 'boy'}! Welcome ${names[0]}.` : `${ks.length} babies born, including ${names.join(' and ')}.`);
     }
+    if (aging) this.migrate(rnd);
     this.fillJobs(rnd);
     this.growCities(game, rnd);
     return { births, deaths };
   };
 
+  // Towns hold their size over the decades: families move in when a town thins out
+  // and young folks leave for the big city when it gets crowded.
+  P.migrate = function (rnd) {
+    const w = this.world;
+    const targets = {};
+    for (const d of D.cities) targets[d.id] = d.pop;
+    targets.county = 60;
+    for (const cityId in targets) {
+      const c = this.cityObj(cityId);
+      if (!c) continue;
+      const alive = (this.byCity[cityId] || []).filter((p) => p.alive);
+      const n = alive.length, target = targets[cityId];
+      if (n < target * 0.94) {
+        const want = Math.min(4, Math.ceil((target * 0.94 - n) / 6));
+        const free = c.buildings.filter((b) => b && !b.destroyed && D.btypes[b.type].house && b.type !== 'hotel' && b.residents.length + 2 <= D.btypes[b.type].house);
+        rnd.shuffle(free);
+        for (let k = 0; k < want && k < free.length; k++) {
+          const home = free[k];
+          const last = rnd.pick(D.lastAll[cityId] || D.lastAll.avalon);
+          const a1 = this.newPerson(rnd, cityId, { age: rnd.int(22, 38), last, home: home.id });
+          a1.look = this.makeLook(R.mulberry(a1.seed), a1);
+          home.residents.push(a1.id);
+          if (rnd.chance(0.75)) {
+            const a2 = this.newPerson(rnd, cityId, { age: R.clamp(a1.age + rnd.int(-4, 4), 20, 45), last, home: home.id, fem: !a1.fem });
+            a2.look = this.makeLook(R.mulberry(a2.seed), a2);
+            a1.spouse = a2.id; a2.spouse = a1.id;
+            home.residents.push(a2.id);
+            const nk = rnd.weighted([[0, 3], [1, 3], [2, 2]]);
+            for (let j = 0; j < nk && home.residents.length < D.btypes[home.type].house; j++) {
+              const kid = this.newPerson(rnd, cityId, { age: rnd.int(0, 12), last, home: home.id, parents: [a1.id, a2.id] });
+              kid.look = this.makeLook(R.mulberry(kid.seed), kid);
+              a1.kids.push(kid.id); a2.kids.push(kid.id);
+              home.residents.push(kid.id);
+            }
+          }
+          if (k === 0) this.addNews(cityId, `New in town: the ${last} family moved into ${home.name === 'House' ? 'a house' : home.name} in ${c.name}.`);
+        }
+      } else if (n > target * 1.18) {
+        const leavers = alive.filter((p) => p.age >= 18 && p.age <= 32 && p.spouse < 0 && !p.isDon && !p.faction && !p.actor && p.role !== 'cop');
+        rnd.shuffle(leavers);
+        const go = leavers.slice(0, Math.min(3, Math.ceil((n - target * 1.18) / 8)));
+        for (const p of go) this.leave(p);
+        if (go.length) this.addNews(cityId, `${this.name(go[0])} packed a suitcase and left ${c.name} for the big city.`);
+      }
+    }
+  };
+  P.leave = function (p) {
+    p.alive = false;
+    p.gone = true;
+    p.diedDay = this.day;
+    const h = this.world.buildings[p.home];
+    if (h) h.residents = h.residents.filter((id) => id !== p.id);
+    const wb = this.world.buildings[p.work];
+    if (wb && wb.workers) wb.workers = wb.workers.filter((id) => id !== p.id);
+    p.role = 'gone';
+  };
   P.comeOfAge = function (p, rnd) {
     p.role = 'none';
     p.look = this.makeLook(R.mulberry(p.seed + 1), p);
@@ -433,7 +490,7 @@
     const c = this.cityObj(p.city);
     if (!c) return;
     const free = c.buildings.find((b) => D.btypes[b.type].house && !b.destroyed && b.residents.length < D.btypes[b.type].house && b.type !== 'hotel');
-    if (free && rnd.chance(0.6)) this.moveIn(p, free.id);
+    if (free && rnd.chance(0.8)) this.moveIn(p, free.id);
     this.remember(p, 'life', `I'm ${p.age} now. Out of school, looking for work.`, this.day);
   };
   P.moveIn = function (p, bid) {

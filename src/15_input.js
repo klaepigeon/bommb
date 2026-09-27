@@ -12,6 +12,7 @@
   const Input = (R.Input = function (game, root) {
     this.game = game;
     this.stick = { x: 0, y: 0 };
+    this.lastTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     this.keysDown = new Set();
     this.heldA = {};
     this.pressedA = {};
@@ -26,6 +27,7 @@
   P.bind = function () {
     const self = this;
     window.addEventListener('keydown', (e) => {
+      this.lastTouch = false;
       if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) return;
       if (this.game.ui && this.game.ui.modalOpen() && e.code !== 'Escape') {
         if (e.code === 'Escape' || e.code === 'Tab') e.preventDefault();
@@ -57,6 +59,7 @@
     this.base = base;
     this.knob = knob;
     zone.addEventListener('pointerdown', (e) => {
+      this.lastTouch = e.pointerType !== 'mouse';
       e.preventDefault();
       if (this.touchStick) return;
       this.game.audio.unlock();
@@ -84,6 +87,7 @@
     this.root.querySelectorAll('[data-k]').forEach((btn) => {
       const a = btn.dataset.k;
       btn.addEventListener('pointerdown', (e) => {
+        this.lastTouch = e.pointerType !== 'mouse';
         e.preventDefault();
         e.stopPropagation();
         this.game.audio.unlock();

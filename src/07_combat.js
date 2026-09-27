@@ -140,7 +140,14 @@
   C.runOver = function (v, a, speed) {
     const g = game();
     if (a === g.player) {
-      if (speed > 40) { g.player.hurt(speed * 0.25, v, 'car'); g.player.knock(v.angle, speed * 1.5); }
+      // one hit per bump, thrown clear of the car rather than along its path
+      const now = g.clock.real;
+      if (a.hitByCarT && now - a.hitByCarT < 1.2) return;
+      a.hitByCarT = now;
+      const away = Math.atan2(a.y - v.y, a.x - v.x);
+      if (speed > 40) { g.player.hurt(Math.min(40, speed * 0.2), v, 'car'); g.player.knock(away, 60 + speed * 0.8); g.cam.shake(4); }
+      else g.player.knock(away, 60);
+      if (v.driver && v.driver !== g.player) { v.speed *= 0.2; v.vx *= 0.2; v.vy *= 0.2; if (v.honkT <= 0 && g.traffic.honk) g.traffic.honk(v); }
       return;
     }
     if (a.hitByCar && performance.now() - a.hitByCar < 700) return;
@@ -200,7 +207,9 @@
       g.fx.hit(t.x, t.y - 10);
       g.audio.sfx(w === D.weapons.knife ? 'stab' : 'punch', t.x, t.y);
       hit = true;
-      if (att === g.player) g.cam.shake(1.5);
+      // hitstop: a few frames of freeze sells the impact
+      if (att === g.player) { g.cam.shake(1.5 + w.dmg / 12); g.hitStop = Math.max(g.hitStop || 0, 0.035 + Math.min(0.05, w.dmg / 600)); }
+      else if (t === g.player) g.hitStop = Math.max(g.hitStop || 0, 0.03);
       break;
     }
     if (!hit && att === g.player) {
@@ -357,7 +366,7 @@
     }
   };
 
-  C.explosion = function (x, y, radius, dmg, owner, isCar) {
+  C.explosion = function (x, y, radius, dmg, owner, isCar, spareOwner) {
     const g = game();
     g.fx.boom(x, y, radius);
     g.audio.sfx('boom', x, y);
@@ -377,10 +386,11 @@
     }
     const pl = g.player;
     const pd = R.dist(x, y, pl.x, pl.y);
-    if (pd < radius + 10 && !isCar) pl.hurt(dmg * (1 - pd / (radius + 10)), owner, 'blast');
+    if (spareOwner && owner === pl) {} // the ring's hard light never turns on its wearer
+    else if (pd < radius + 10 && !isCar) pl.hurt(dmg * (1 - pd / (radius + 10)), owner, 'blast');
     else if (pd < radius && isCar) pl.hurt(30 * (1 - pd / radius), owner, 'blast');
     // world: fire, trees, buildings
-    g.env.ignite(x, y, radius / TS, owner);
+    if (!spareOwner) g.env.ignite(x, y, radius / TS, owner);
     const tr = Math.ceil(radius / TS);
     const tx0 = (x / TS) | 0, ty0 = (y / TS) | 0;
     const hitB = new Set();
@@ -394,7 +404,7 @@
         if (b) hitB.add(b);
       }
     for (const b of hitB) g.env.damageBuilding(b, dmg * 0.5, owner);
-    if (owner === pl && !isCar) g.law.crime('explosion', x, y, {});
+    if (owner === pl && !isCar && !spareOwner) g.law.crime('explosion', x, y, {});
   };
 
   // ---------------------------------------------------------------- NPC fighting AI

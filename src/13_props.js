@@ -153,6 +153,7 @@
       }
       // forget junk far away
       this.loose = this.loose.filter((p) => p.pinned || p.y >= w.H * TS || Math.abs(p.x - pl.x) < TS * 60 && Math.abs(p.y - pl.y) < TS * 60);
+      if (this.loose.length > 200) this.loose.splice(0, this.loose.length - 200);
     }
   };
   const FROM_OBJ_VALUES = new Set(Object.values(FROM_OBJ));

@@ -186,7 +186,8 @@
       const rx = o.x - v.x, ry = o.y - v.y;
       const along = rx * fx + ry * fy;
       const lat = Math.abs(-rx * fy + ry * fx);
-      const lw = o.kind === 'v' ? o.model.h * 0.5 + 2 : 7;
+      // people get a wide berth: brake for anyone who'd be clipped by the bumper
+      const lw = o.kind === 'v' ? o.model.h * 0.5 + 2 : v.model.h * 0.5 + 5;
       if (along > 0 && along < reach + (o.kind === 'v' ? o.model.w * 0.5 : 0) && lat < lw) {
         const d = along - (o.kind === 'v' ? o.model.w * 0.5 : 0);
         if (!best || d < best.d) best = { d, o, player: isPlayer };
@@ -464,7 +465,13 @@
   TP.damage = function (v, amt, by) {
     if (v.wrecked) return;
     v.hp -= amt;
-    if (v.hp < 20 && v.burning <= 0 && v.hp > 0 && R.rng() < 0.4) v.burning = 0.01;
+    const mine = v.driver === this.game.player;
+    // your own car always gives you a few seconds of flames to bail out
+    if (mine && v.hp <= 0 && !(v.burning > 0)) v.hp = 1;
+    if (v.hp < 20 && !(v.burning > 0) && v.hp > 0 && (mine || R.rng() < 0.4)) {
+      v.burning = 0.01;
+      if (mine) { this.game.ui.toast('Your car is on fire. Get out (A)!', 'bad'); this.game.audio.sfx('alarm'); }
+    }
     if (v.hp <= 0) this.explode(v, by);
   };
   TP.burn = function (v, dt) {
@@ -593,6 +600,7 @@
     cop.siren = true;
     cop.ai = { target: runner.driver, stopNear: 0 };
     runner.chasedBy = cop;
-    game.ui.toast('Police pursuit in progress nearby.');
+    // the sirens tell you; only mention it now and then
+    if ((!this.chaseToastT || game.clock.t - this.chaseToastT > 1440) && R.dist(runner.x, runner.y, game.player.x, game.player.y) < TS * 25) { this.chaseToastT = game.clock.t; game.ui.toast('Sirens: somebody else is running from the cops.'); }
   };
 })();

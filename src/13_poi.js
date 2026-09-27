@@ -60,13 +60,15 @@
   P.discover = function (b, quiet) {
     if (!SHOP[b.type] || this.found.has(b.id)) return;
     this.found.add(b.id);
-    if (!quiet && this.game.started) this.game.ui.toast(`New on your map: ${b.name} (${SHOP[b.type][2]})`);
+    if (!quiet && this.game.started) (this.newly = this.newly || []).push(`${b.name} (${SHOP[b.type][2].toLowerCase()})`);
   };
   P.update = function (dt) {
     const g = this.game, pl = g.player;
     this.t -= dt;
     if (this.t > 0 || pl.room) return;
     this.t = 1;
+    // announce discoveries in one line
+    if (this.newly && this.newly.length) { const n = this.newly; this.newly = []; g.ui.toast(n.length === 1 ? `New on your map: ${n[0]}` : `New on your map: ${n.slice(0, 3).join(', ')}${n.length > 3 ? ` and ${n.length - 3} more` : ''}`); }
     const tx = pl.x / TS, ty = pl.y / TS;
     for (const b of g.world.buildings) if (b && !b.destroyed && SHOP[b.type] && !this.found.has(b.id) && Math.abs(b.out.x - tx) < 12 && Math.abs(b.out.y - ty) < 9) this.discover(b);
     // reached a pin

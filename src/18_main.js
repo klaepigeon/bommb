@@ -204,6 +204,7 @@
     const pl = this.player;
     this.input.update();
     const paused = !this.started || this.ui.paused() || pl.dead;
+    if (this.hitStop > 0) { this.hitStop -= dt; dt *= 0.08; }
     if (!paused) {
       const sdt = dt * this.timeScale;
       this.clock.update(sdt);
@@ -233,7 +234,9 @@
       if (this.miniDirty) { this.miniDirty = false; this.miniMap = R.art.buildMiniMap(this.world); }
     } else if (this.started) this.fx.update(0);
     const tgt = pl.inCar || pl;
-    const lead = pl.inCar ? { x: pl.inCar.vx * 0.35, y: pl.inCar.vy * 0.35 } : null;
+    // the camera looks a little ahead of where you're going
+    const st = this.input.stick;
+    const lead = pl.inCar ? { x: pl.inCar.vx * 0.35, y: pl.inCar.vy * 0.35 } : pl.room ? null : { x: st.x * 22, y: st.y * 14 };
     this.cam.update(dt, tgt.x, tgt.y - 6, lead);
     if (pl.room) {
       // keep the camera inside the room, centred when the room is smaller than the screen

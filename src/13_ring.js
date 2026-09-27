@@ -321,7 +321,7 @@
       if (end) {
         this.shots.splice(i, 1);
         this.burst(s.x, s.y);
-        if (c.kind === 'rocket') R.combat.explosion(s.x, s.y + 6, c.r, c.dmg, pl);
+        if (c.kind === 'rocket') R.combat.explosion(s.x, s.y + 6, c.r, c.dmg, pl, false, true);
         if (c.kind === 'douse') { g.env.douse(s.x, s.y + 6, TS * 3, 6); for (let k = 0; k < 8; k++) g.fx.add({ x: s.x, y: s.y, vx: (R.rng() - 0.5) * 100, vy: -40 - R.rng() * 50, g: 200, life: 0.6, max: 0.6, c: '#9ad0f0', s: 2 }); }
       }
     }
