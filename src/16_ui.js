@@ -267,8 +267,9 @@
     pt(g, `DAY ${game.clock.day() + 1}`, 180, 16, { align: 'right', color: '#7a5e44' });
     // weapon + ammo
     const ww = R.data.weapons[pl.weapon];
-    const wn = SHORTW[pl.weapon] || 'FISTS';
-    const ammo = pl.weapon === 'gascan' ? `x${pl.inv.tools.gascan || 0}` : ww && ww.gun ? `${pl.clip[pl.weapon] || 0}/${pl.inv.ammo[ww.ammo] || 0}` : ww && ww.thrown ? `x${pl.inv.ammo[pl.weapon] || 0}` : 'SWAP';
+    const held = pl.held && R.data.props[pl.held.k];
+    const wn = held ? held.name.split(' ').pop().toUpperCase() : SHORTW[pl.weapon] || 'FISTS';
+    const ammo = held ? (held.dur >= 99 ? 'UNBREAKABLE' : 'USES ' + pl.held.dur) : pl.weapon === 'gascan' ? `x${pl.inv.tools.gascan || 0}` : ww && ww.gun ? `${pl.clip[pl.weapon] || 0}/${pl.inv.ammo[ww.ammo] || 0}` : ww && ww.thrown ? `x${pl.inv.ammo[pl.weapon] || 0}` : 'SWAP';
     const bw = Math.max(A().ptWidth(wn, 2), A().ptWidth(ammo)) + 14;
     hbox(g, W - 6 - bw, 6, bw, 34, true);
     pt(g, wn, W - 13, 10, { align: 'right', scale: 2, color: '#3a2418' });

@@ -120,7 +120,8 @@
       [mx, my] = [mx * c - my * s, mx * s + my * c];
     }
     const running = (inp.held('run') || inp.held('runStick')) && !this.sneak;
-    const speed = (this.sneak ? 26 : running ? 86 : 48) * (g.timeScale < 1 ? 1.8 : 1);
+    const heavy = this.held && D.props[this.held.k].heavy ? 0.7 : 1;
+    const speed = (this.sneak ? 26 : running ? 86 : 48) * heavy * (g.timeScale < 1 ? 1.8 : 1);
     if (mag > 0.12) {
       const nx = mx / Math.max(mag, 0.001), ny = my / Math.max(mag, 0.001);
       g.actors.moveActor(this, nx * speed * mag, ny * speed * mag, dt);
@@ -135,10 +136,20 @@
     // water: slow + can't draw
     // focus target
     this.focus = g.ui.focusTarget();
+    this.atkT -= dt;
+    // an improvised weapon in hand takes over HIT and SWAP
+    if (this.held) {
+      if (inp.longPressed('weapon')) { R.props.dropHeld(this); g.ui.toast('Dropped it.'); }
+      else if (inp.pressed('weapon')) this.throwPending = true;
+      if (this.throwPending && !inp.held('weapon')) { this.throwPending = false; if (this.held) R.props.throwHeld(this); }
+      if (this.held && inp.pressed('attack')) R.props.swing(this);
+      if (inp.pressed('use')) this.use();
+      this.crewUpdate(dt);
+      return;
+    }
     // weapons
     if (inp.pressed('weapon')) this.cycleWeapon();
     if (inp.longPressed('weapon')) this.holster();
-    this.atkT -= dt;
     const w = D.weapons[this.weapon];
     if (this.weapon === 'gascan') {
       if (inp.held('attack')) this.pour(dt);
@@ -295,6 +306,8 @@
       for (const a of g.actors.near(this.x, this.y, 18)) {
         if (a.kind === 'h' && (a.dead || a.down > 0) && !a.looted) return { label: a.dead ? 'Search body' : 'Go through pockets', fn: () => this.loot(a) };
       }
+      const grI = R.props.grabbable(this);
+      if (grI) return { label: R.props.label(grI), fn: () => R.props.pickUp(this, grI) };
       const fa = g.interiors.furnitureAhead();
       if (fa) { const act = g.interiors.furnitureAction(fa); if (act) return act; }
       return null;
@@ -306,6 +319,9 @@
       if (a.kind === 'a' && a.dead && !a.skinned && a.def.pelt) return { label: 'Skin ' + a.def.name, fn: () => this.skin(a) };
       if (a.kind === 'h' && (a.dead || a.down > 0) && !a.looted) return { label: a.dead ? 'Search body' : 'Go through pockets', fn: () => this.loot(a) };
     }
+    // loose junk lying right at your feet beats the door you happen to be near
+    const gr = R.props.grabbable(this);
+    if (gr && gr.p) return { label: R.props.label(gr), fn: () => R.props.pickUp(this, gr) };
     // doors
     const door = this.nearDoor();
     if (door) return { label: door.label, fn: door.fn };
@@ -316,6 +332,8 @@
       if (v.locked && v.owner !== 'player') return { label: 'Break into car', fn: () => this.breakIn(v) };
       return { label: 'Get in', fn: () => this.enterCar(v) };
     }
+    // street furniture you can rip up
+    if (gr) return { label: R.props.label(gr), fn: () => R.props.pickUp(this, gr) };
     // phone booths
     const tx = (this.x / TS) | 0, ty = (this.y / TS) | 0;
     for (let yy = ty - 1; yy <= ty + 1; yy++) for (let xx = tx - 1; xx <= tx + 1; xx++) if (w.o(xx, yy) === O.PHONE) return { label: 'Use payphone', fn: () => g.ui.openPhone() };

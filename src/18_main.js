@@ -74,6 +74,7 @@
     this.player = new R.Player(this);
     this.life = new R.Life(this);
     this.interiors = new R.Interiors(this);
+    R.props.init(this);
     R.art.chunkCache.clear();
     const port = this.world.cities[0];
     const club = port.buildings.find((b) => b.type === 'social');
@@ -210,6 +211,7 @@
       this.jobs.update(sdt);
       this.life.update(sdt);
       this.interiors.update(sdt);
+      R.props.update(sdt);
       this.fx.update(sdt);
       this.hintCheck();
       this.occT = (this.occT || 0) - dt;

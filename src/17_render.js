@@ -92,6 +92,7 @@
       g.beginPath(); g.ellipse(x * TS + 8, y * TS + 8, 7, 4, 0, 0, 7); g.fill();
     }
     game.fx.drawDecals(g);
+    R.props.drawGround(g, (x, y) => x > left - 40 && x < left + vw + 40 && y > top - 40 && y < top + vh + 40);
     // entities
     const ents = [];
     const margin = 40;
@@ -123,6 +124,7 @@
       g.fillRect(p.x - 1.5, p.y - 2, 3, 4);
       if (p.id === 'molotov' || p.landed) { g.fillStyle = '#ffd040'; g.fillRect(p.x - 1, p.y - 4, 2, 2); }
     }
+    R.props.drawFlying(g);
     // fire
     for (const fr of game.env.fires.values()) {
       if (fr.x < tx0 - 1 || fr.x > tx1 + 1 || fr.y < ty0 - 1 || fr.y > ty1 + 1) continue;
@@ -179,7 +181,9 @@
     const w = pl.weaponOut || pl.punchT > 0 ? pl.weapon : null;
     const st = { weapon: w === 'gascan' ? null : w, ang: pl.ang };
     if (pl.punchT > 0) { pl.punchT -= 1 / 60; st.pose = pl.weapon === 'bat' ? 'b1' : (pl.punchN || 0) % 2 ? 'p2' : 'p1'; st.weapon = null; }
+    if (pl.held) st.weapon = null;
     A.drawPerson(g, pl.x, pl.y, pl.dir, pl.walk, pl.look, st);
+    R.props.drawHeld(g, pl);
   };
 
   P.drawFire = function (g, fr, t) {

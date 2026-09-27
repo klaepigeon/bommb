@@ -346,6 +346,7 @@
     for (const a of g.actors.list) if (!a.room && !a.crew) g.actors.remove(a);
     for (const c of pl.crew) if (!c.dead) { c.x = pl.x + 10; c.y = pl.y; c.room = room; }
     this.populate(room);
+    R.props.furnishRoom(room);
     g.audio.sfx('door');
     g.ui.banner(b.name, room.mode === 'breakin' ? 'Breaking in' : D.btypes[b.type].name);
     if (b.type === 'bar' || b.type === 'club' || b.type === 'casino' || b.type === 'diner') g.audio.indoorMusic(b.type === 'club' ? 1 : b.type === 'bar' ? 2 : 0);
