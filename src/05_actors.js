@@ -153,7 +153,7 @@
     }
     const cop = opts.cop || (person && (person.role === 'cop' || person.role === 'detective'));
     const h = {
-      kind: 'h', x, y, r: 3, dir: 2, ang: Math.PI / 2, vx: 0, vy: 0, walk: 0, hp: 100, maxHp: 100,
+      kind: 'h', x, y, r: 4, dir: 2, ang: Math.PI / 2, vx: 0, vy: 0, walk: 0, hp: 100, maxHp: 100,
       look, person, arch, tr, role: person ? person.role : opts.role || 'none',
       state: 'idle', timer: rnd() * 2, goal: null, path: null, pathI: 0, weapon: 'fists', armed: false, ammo: 0,
       cop: !!cop, hostile: false, target: null, down: 0, dead: false, bubble: null, alert: null,
@@ -200,7 +200,7 @@
   AP.makeAnimal = function (x, y, type) {
     const def = D.animals[type];
     const a = {
-      kind: 'a', type, def, x, y, r: def.size * 0.3, angle: R.rng() * 6.28, hp: def.hp, maxHp: def.hp, state: 'wander', timer: R.rng() * 3, t: R.rng() * 10,
+      kind: 'a', type, def, x, y, r: def.size * 0.5, angle: R.rng() * 6.28, hp: def.hp, maxHp: def.hp, state: 'wander', timer: R.rng() * 3, t: R.rng() * 10,
       target: null, dead: false, moving: false, flying: false, skinned: false, buck: type === 'deer' && R.rng.chance(0.4), vx: 0, vy: 0, anger: 0,
     };
     return this.add(a);
@@ -310,8 +310,8 @@
       for (const b of near) {
         if (b === a || b.dead || b.kind !== 'h' || b.inCar) continue;
         const d = R.dist(a.x, a.y, b.x, b.y);
-        if (d > 0.01 && d < 5) {
-          const push = (5 - d) * 0.5;
+        if (d > 0.01 && d < 7) {
+          const push = (7 - d) * 0.5;
           this.moveActor(a, ((a.x - b.x) / d) * push * 10, ((a.y - b.y) / d) * push * 10, dt);
         }
       }

@@ -322,36 +322,30 @@
     if (ang !== undefined && ang !== null && !isNaN(ang)) return ((Math.round(ang / (Math.PI / 4)) % 8) + 8) % 8;
     return [6, 0, 2, 4][dir];
   };
-  // Characters are drawn at half world scale so one sprite pixel is one screen pixel,
-  // matching the original's proportions against its 8px tiles.
-  A.PSCALE = 0.5;
   A.drawPerson = function (g, x, y, dir, walk, look, st) {
     st = st || {};
-    const moving = st.moving !== undefined ? st.moving : walk && Math.abs(walk) > 0.01;
+    const moving = walk && Math.abs(walk) > 0.01;
     const phase = moving ? Math.floor(walk * 0.9) % 4 : 0;
     const frame = phase === 1 ? 1 : phase === 3 ? 2 : 0;
     const d8 = A.dir8(dir, st.ang);
-    g.save();
-    g.translate(Math.round(x * 2) / 2, Math.round(y * 2) / 2);
-    g.scale(A.PSCALE, A.PSCALE);
+    const X = Math.round(x), Y = Math.round(y);
     // the original's soft shadow
     g.fillStyle = 'rgba(16,12,36,0.45)';
-    g.fillRect(-4, -1, 8, 2);
-    g.fillRect(-3, -2, 6, 4);
+    g.fillRect(X - 4, Y - 1, 8, 2);
+    g.fillRect(X - 3, Y - 2, 6, 4);
     let pose = st.pose || null;
     if (!pose && st.weapon && st.weapon !== 'fists') pose = D.weapons[st.weapon] && D.weapons[st.weapon].gun ? 'g' : null;
     const spr = A.oldSprite(look, d8, pose ? 0 : frame, pose);
     if (st.down) {
-      g.translate(0, -3);
+      g.save();
+      g.translate(X, Y - 3);
       g.rotate(Math.PI / 2);
       g.drawImage(spr, -spr.width / 2, -22);
       g.restore();
       return;
     }
-    const bob = st.bob || 0;
-    g.drawImage(spr, -spr.width / 2, -25 + bob);
-    if (st.weapon && st.weapon !== 'fists') drawWeapon8(g, 0, bob, d8, st.weapon);
-    g.restore();
+    g.drawImage(spr, X - spr.width / 2, Y - 25);
+    if (st.weapon && st.weapon !== 'fists' && pose !== 'g' || pose === 'g') drawWeapon8(g, X, Y, d8, st.weapon);
   };
   function drawWeapon8(g, X, Y, d8, w) {
     if (!w || w === 'fists') return;
