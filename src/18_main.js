@@ -207,6 +207,9 @@
     if (!paused) {
       const sdt = dt * this.timeScale;
       this.clock.update(sdt);
+      // windows light up at dusk: repaint the cached city
+      const nightNow = this.clock.isNight();
+      if (nightNow !== this.wasNight) { this.wasNight = nightNow; R.art.chunkCache.clear(); }
       this.env.update(sdt);
       pl.update(dt * (this.timeScale < 1 ? 0.8 : 1));
       this.actors.update(sdt);

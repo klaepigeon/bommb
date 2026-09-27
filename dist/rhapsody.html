@@ -2473,6 +2473,39 @@ function paintProp(k){const o=new O(16,16);Dr[k](o);return o.outlineBy(Ue).toCan
 R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, paintProp };
 })();
 
+// ---- 03_oldtown.js
+// RHAPSODY — the original build's building painter, ported verbatim (walls, awnings, glass,
+// doors, rooftops). Generated from the original artifact; do not hand-edit.
+(function () {
+const { O, x, Re, Ue } = R.old;
+var le="#282828";
+var _t={houseWallA:["#7e6448","#a28460","#c0a47c","#d8c098","#ead6b4"],houseWallB:["#46502a","#606c36","#7c8a48","#9aa662","#bcc488"],houseWallC:["#76581e","#9c7828","#c09a3c","#dab85c","#ecd088"],houseWallD:["#5e3a26","#7c5034","#9a6a46","#b8865c","#d0a47a"],houseWallE:["#3a5a58","#4c7472","#62908c","#80aaa4","#a8c8c0"],storeWall:["#56261a","#763424","#964832","#b06046","#c88064"],policeWall:["#44464c","#5e6068","#7c7e84","#9a9ca0","#bcbcbc"],barWall:["#2a1810","#422618","#5a3622","#764a2e","#94623e"]};
+var Ur={home:"siding",apartment:"brick",shop:"brick",diner:"stucco",bar:"brick",club:"concrete",police:"concrete",clinic:"stucco",chapel:"stucco",gym:"brick",garage:"board",warehouse:"board",bank:"concrete",hotel:"brick",office:"concrete",market:"board",arcade:"concrete",laundromat:"stucco",pharmacy:"stucco",taco:"stucco",surf:"board",pawn:"brick"};
+var fo={shop:["#60f0ff",["#c85a18","#f0e2c0"]],diner:["#70f8e0",["#2c8a8a","#f4ecd8"]],bar:["#ff5aa0",null],club:["#ff58f0",null],police:["#80b8ff",null],clinic:["#80ffa0",["#3a8a5a","#f0f4ec"]],chapel:["#fff0b0",null],gym:["#ff6040",null],garage:["#ffb040",null],warehouse:["#ffd070",null],bank:["#fff0a0",null],hotel:["#ffc060",["#6a2a1c","#e8c890"]],office:["#a0e0ff",null],market:["#80f0c0",["#1e5a6a","#e8e4d0"]],arcade:["#ff60ff",null],laundromat:["#70d8ff",["#e8a030","#f4ecd8"]],pharmacy:["#70ff90",["#2c7a4a","#f4f0e4"]],taco:["#ffa030",["#c8401c","#f8d048"]],surf:["#60f0e0",["#e07020","#f8e8c0"]],pawn:["#ffd040",["#5a2a18","#d8a848"]]};
+var qs={roof:["#34201a","#4e3022","#68422c","#845838","#a07048"],roofBlue:["#2a2c34","#3a3e48","#4e5460","#666e7a","#848c98"],roofTerra:["#561e14","#7c2e1e","#9e422a","#bc5a3a","#d87c56"],roofFlat:["#282628","#363436","#464244","#585454","#6c6866"]};
+function pe(a){let e=a>>>0||1;return()=>(e^=e<<13,e>>>=0,e^=e>>17,e^=e<<5,e>>>=0,e/4294967296)}
+function Kr(a,e,t,s,i,o,r,n){let h=pe(n);for(let l=t;l<=i;l++)for(let d=e;d<=s;d++){let f=2,u=l-t,p=d-e;if(r==="siding")f=u%3===2?1:u%3===0?3:2;else if(r==="brick"){let m=Math.floor(u/3),y=m%2?3:0;f=u%3===2||(p+y)%7===0?1:(p*7+m*3)%11===0?3:2}else r==="stucco"?f=h()<.08?1:h()<.06?3:2:r==="concrete"?f=p%16===15?1:p%16===0?3:2:r==="board"&&(f=p%4===3?1:p%4===0?3:2);a.set(d,l,o[f])}}
+function uo(a,e){let t=a.w*16,s=a.h*16,i=2,o=6,r=new O(t+4,s+6),n=a.kind==="home",h=!n&&a.kind!=="chapel",l=_t[a.wall]||_t.houseWallA,d=Ur[a.kind]||"siding",f=d==="brick"?a.kind==="apartment"||a.kind==="hotel"?x.brick:_t.storeWall:d==="concrete"?_t.policeWall:d==="board"?_t.barWall:l,u=o+s-30,p=o+s-1,[m,y]=fo[a.kind]||["#ffd070",null],g=e?x.lit:["#1e2c3c","#2c4458","#46687c","#86aab4","#d8ecec"];Kr(r,i,u,i+t-1,p,f,d,Re(a.id)),r.hline(i,i+t-1,p,f[0]),r.hline(i,i+t-1,p-1,f[1]),r.vline(i+t-1,u,p,f[1]);let k=i+a.doorOffset*16+2,b=o+s-18,S=!n&&!["police","bank","chapel","warehouse","garage","apartment","hotel","office"].includes(a.kind),E=(F,B,q,W)=>{r.rect(F-1,B-1,q+2,W+2,n?"#f0e6d0":f[0]);for(let _=0;_<W;_++)for(let $=0;$<q;$++)r.set(F+$,B+_,e?_<W/2?g[4]:g[3]:$+_<5?g[3]:_>W-3?g[0]:g[1]);if(!e)for(let _=0;_<Math.min(q,W)-2;_+=1)r.set(F+2+_,B+W-2-_,_%3?g[2]:g[3])};if(S){for(let[F,B]of[[i+3,k-3],[k+14,i+t-4]])if(B-F>6){E(F,u+8,B-F,13);for(let q=F+8;q<B-2;q+=10)r.vline(q,u+8,u+20,f[0]);if(!e)for(let q=F+2;q<B-3;q+=5)r.rect(q,u+17,3,3,["#c85a18","#e8c048","#5a7a3a","#a84860"][(q>>2)%4])}}else{let F=n?32:24;for(let B=i+10;B<i+t-14;B+=F)Math.abs(B+6-(k+6))<16||(E(B,u+8,n?14:12,n?11:10),n&&(r.rect(B-3,u+7,2,13,"#6a3a20"),r.rect(B+15,u+7,2,13,"#6a3a20")),a.kind==="apartment"&&r.hline(B-2,B+13,u+19,x.metal[3]))}if(r.rect(k-1,b-1,14,19,f[0]),S?(r.rect(k,b,12,17,g[1]),r.rect(k+1,b+1,4,15,g[e?4:2]),r.hline(k+1,k+10,b+9,x.metal[4])):(r.shadedRect(k,b,12,17,a.kind==="police"||a.kind==="bank"?x.metal:x.wood),r.rect(k+3,b+3,6,4,e?x.lit[3]:g[1]),r.set(k+9,b+9,x.yellow[4])),a.kind==="garage"){let F=i+t-40;for(let B=u+5;B<=p-2;B++)r.hline(F,F+30,B,(B-u)%3?x.metal[2]:x.metal[1])}if(y){for(let F=i+2;F<i+t-2;F++){let B=Math.floor((F-i)/5)%2?y[1]:y[0];for(let q=u-1;q<u+4;q++)r.set(F,q,B);(F-i)%5===2&&r.set(F,u+4,B)}r.hline(i+2,i+t-3,u-1,le)}n&&r.rect(k-3,b+3,2,3,e?"#fff0b0":"#c8b890");let M=o-6,I=u-(y?1:0);if(h){let F=qs.roofFlat,B=pe(Re(a.id)+7);for(let _=M;_<I;_++)for(let $=0;$<t+4;$++)r.set($,_,B()<.12?F[B()<.5?1:3]:F[2]);for(let _=0;_<t+4;_++)r.set(_,M,f[4]),r.set(_,M+1,f[3]),r.set(_,I-1,f[1]),r.set(_,I-2,f[3]);for(let _=M;_<I;_++)r.set(0,_,f[3]),r.set(1,_,f[2]),r.set(t+3,_,f[1]),r.set(t+2,_,f[2]);let q=(_,$)=>{r.shadedRect(_,$,12,9,x.metal),r.ellipse(_+6,$+4.5,3.2,3.2,(Ve,Kt,gt,L)=>(Ve+Kt)%2?x.metal[1]:x.metal[0])},W=Math.max(1,Math.floor(a.w/5));for(let _=0;_<W;_++)q(8+Math.floor((_+.5)*(t-20)/W),M+6+_%2*6);for(let _=0;_<3;_++){let $=14+(Re(a.id)>>_*4)%Math.max(1,t-28);r.ellipse($,M+(I-M)*.6,1.8,1.8,()=>x.metal[3]),r.set($,M+(I-M)*.6,x.metal[0])}if(a.kind==="hotel"||a.kind==="apartment"){let _=t-22,$=M+5;r.ellipse(_+7,$+7,7,7,(Ve,Kt,gt,L)=>gt*gt+L*L>.7?x.wood[1]:Ve%3?x.wood[3]:x.wood[2]),r.ellipse(_+7,$+7,2,2,()=>x.wood[4])}a.kind==="police"&&(r.rect(t/2-6,M+8,5,3,x.red[3]),r.rect(t/2+2,M+8,5,3,x.blue[3]))}else{let F=qs[a.roof]||qs.roof,B=M+Math.round((I-M)*.45);for(let W=M;W<I;W++)for(let _=0;_<t+4;_++){if((_===0||_===t+3)&&(W===M||W===I-1))continue;let $=W<B?3:2,Ve=(W-M)%3;(Ve===2||Ve===0&&(_+Math.floor((W-M)/3)*4)%7===0)&&($-=1),(W===B||W===B-1)&&($=4),W>=I-2&&($=0),(_===0||_===t+3)&&($=Math.max(0,$-1)),r.set(_,W,F[$])}let q=i+Math.round(t*.74);if(r.shadedRect(q,M-1,7,9,x.brick),r.hline(q,q+6,M+1,x.brick[1]),r.rect(q+1,M-1,5,1,x.black[1]),a.kind==="chapel"){let W=i+t/2-1;r.rect(W,M-5,3,12,"#f0e6c8"),r.rect(W-3,M-2,9,3,"#f0e6c8")}}return r.outlineBy(Ue),{P:r,facadeTop:u,neon:m,flat:h}}
+// the original's ground textures
+var zn=[[2,3],[10,2],[6,8],[13,9],[2,12],[9,13]];
+function ws(a,e=x.grass,t=!0){let s=new O(16,16).rect(0,0,16,16,e[2]),i=pe(1e3+a*7919);if(zn.forEach(([o,r],n)=>{(a*7+n*3)%5>1||(s.set(o,r,e[1]),s.set(o+2,r,e[1]),s.set(o+1,r+1,e[1]),s.set(o+3,r+1,e[1]),s.set(o,r-1,e[3]),s.set(o+2,r-1,e[3]))}),a%3===0){let o=1+Math.floor(i()*13),r=1+Math.floor(i()*13);s.set(o,r,e[3]),s.set(o+1,r,e[3])}if(t&&a%5===4){let o=3+Math.floor(i()*9),r=3+Math.floor(i()*9),n=["#f8f8f0","#f8d040","#f890b0","#b8a0f8"][a%4];for(let[h,l]of[[0,-1],[0,1],[-1,0],[1,0]])s.set(o+h,r+l,n);s.set(o,r,"#f8b830"),s.set(o,r+2,e[1])}return s}
+function Qn(a){let e=x.walk,t=new O(16,16).rect(0,0,16,16,e[3]),s=pe(500+a*17);t.hline(0,15,15,e[1]),t.vline(15,0,15,e[1]),t.hline(0,14,0,e[4]),t.vline(0,0,14,e[4]),t.hline(0,15,7,e[2]),t.vline(7,0,15,e[2]),t.hline(0,15,8,e[4]),t.vline(8,0,15,e[4]);for(let i=0;i<2;i++)t.set(1+Math.floor(s()*14),1+Math.floor(s()*14),e[2]);return t}
+var ah=a=>{let e=["#8a8490","#a8a2ae","#c4bfc8","#dedae0"],t=new O(16,16).rect(0,0,16,16,e[2]);return t.hline(0,15,15,e[1]),t.vline(15,0,15,e[1]),t.hline(0,14,0,e[3]),t.vline(0,0,14,e[3]),a===2&&(t.set(6,7,e[1]),t.set(7,7,e[1])),t};
+var er=()=>{let a=x.wood,e=new O(16,16);for(let t=0;t<16;t++)for(let s=0;s<16;s++)e.set(s,t,t%4===3?a[2]:a[3]);for(let t=0;t<4;t++)e.set((t*7+2)%16,t*4+1,a[1]);return e};
+var oh=()=>{let a=x.wood,e=er();return e.vline(0,0,15,a[1]),e.vline(15,0,15,a[1]),e};
+var ih=a=>{let e=x.sand,t=new O(16,16).rect(0,0,16,16,e[3]),s=pe(700+a);for(let i=0;i<7;i++){let o=Math.floor(s()*16),r=Math.floor(s()*16);t.set(o,r,e[2])}return a===3&&(t.set(5,6,"#f0e8f8"),t.set(6,6,"#f8c0d0")),t};
+var rh=a=>{let e=x.dirt,t=new O(16,16).rect(0,0,16,16,e[3]),s=pe(820+a);for(let i=0;i<5;i++)t.set(Math.floor(s()*16),Math.floor(s()*16),e[2]);return t};
+var nh=()=>{let a=new O(16,16).rect(0,0,16,16,"#c86840");return a.set(3,3,"#d8805a"),a};
+var Zn=a=>{let e=x.dirt,t=new O(16,16).rect(0,0,16,16,e[2]),s=pe(900+a);for(let i=0;i<16;i++)t.set(Math.floor(s()*16),Math.floor(s()*16),e[s()<.5?1:3]);return t};
+function eh(a){let e=x.hedge,t=ws(a,x.grass,!1),s=pe(40+a);t.ellipse(8,9,8,7.5,(i,o,r,n)=>{let h=-r*.5-n*.9+(s()-.5)*.4;return e[h>.55?4:h>0?3:h>-.5?2:1]});for(let i=0;i<5;i++){let o=3+Math.floor(s()*10),r=3+Math.floor(s()*10);t.set(o,r,e[1]),t.set(o-1,r-1,e[4])}return t}
+function Jn(a){let e=x.road,t=new O(16,16).rect(0,0,16,16,e[2]),s=pe(300+a*131);for(let i=0;i<5;i++){let o=Math.floor(s()*15),r=Math.floor(s()*16);t.set(o,r,e[1]),t.set(o+1,r,e[3])}return a===3&&t.line(3,5,7,9,e[0]).line(7,9,11,8,e[0]),t}
+var hh=()=>{let a=x.road,e=new O(16,16).rect(0,0,16,16,a[3]);return e.hline(0,15,0,"#f0f0e8"),e};
+var Xn=a=>{let e=ws(a,x.scorch,!1),t=pe(77+a);for(let s=0;s<6;s++)e.set(Math.floor(t()*16),Math.floor(t()*16),"#8a7a6a");return e};
+R.old.paintBuilding = uo;
+R.old.tiles = { grass: ws, walk: Qn, plaza: ah, board: er, pier: oh, sand: ih, path: rh, court: nh, dirt: Zn, hedge: eh, road: Jn, parking: hh, scorch: Xn };
+R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
+})();
+
 // ---- 03_sprites.js
 // RHAPSODY — GBA-style pixel art, matching the original Port Hollow build:
 // chibi characters with 1px ink outlines (cached per look), interior floors and
@@ -3041,10 +3074,29 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
 
   // hook the new tiles/objects into the chunk renderer
   const baseTile = A.drawTile;
+  // the original's own ground textures, 16 texels a tile like the characters
+  const tcache = {};
+  const otex = (k, v) => tcache[k + v] || (tcache[k + v] = OLD.tiles[k](v).toCanvas());
+  const OLDGROUND = {
+    [T.GRASS]: ['grass', 10], [T.PARK]: ['grass', 10], [T.WALK]: ['walk', 6], [T.PLAZA]: ['plaza', 4], [T.DOCK]: ['board', 1],
+    [T.SAND]: ['sand', 6], [T.DIRT]: ['dirt', 3], [T.DIRTROAD]: ['path', 4], [T.LOT]: ['path', 4], [T.PARKING]: ['parking', 1], [T.BURNT]: ['scorch', 4],
+  };
   A.drawTile = function (g, w, x, y, px, py) {
     const t = w.t(x, y);
     if (t >= T.VOID) return A.drawInteriorTile(g, w, x, y, px, py, t);
-    return baseTile(g, w, x, y, px, py);
+    const og = OLDGROUND[t];
+    if (!og) return baseTile(g, w, x, y, px, py);
+    const v = Math.floor(R.hash2(x, y, 20) * 1e6) % og[1];
+    g.drawImage(otex(og[0], v), px, py);
+    // the original's curb: a bright lip and a dark edge where sidewalk meets road
+    if (t === T.WALK || t === T.PARKING) {
+      const rd = (xx, yy) => D.roadTile[w.t(xx, yy)];
+      const lip = OLD.x.walk[4], edge = OLD.x.walk[0];
+      if (rd(x, y + 1)) { g.fillStyle = lip; g.fillRect(px, py + 14, TS, 1); g.fillStyle = edge; g.fillRect(px, py + 15, TS, 1); }
+      if (rd(x, y - 1)) { g.fillStyle = lip; g.fillRect(px, py + 1, TS, 1); g.fillStyle = edge; g.fillRect(px, py, TS, 1); }
+      if (rd(x + 1, y)) { g.fillStyle = lip; g.fillRect(px + 14, py, 1, TS); g.fillStyle = edge; g.fillRect(px + 15, py, 1, TS); }
+      if (rd(x - 1, y)) { g.fillStyle = lip; g.fillRect(px + 1, py, 1, TS); g.fillStyle = edge; g.fillRect(px, py, 1, TS); }
+    }
   };
   const baseObj = A.drawObj;
   A.drawObj = function (g, o, px, py, x, y, w) {
@@ -3057,78 +3109,60 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     return baseObj(g, o, px, py, x, y, w);
   };
 
-  // GBA-style storefronts: taller facade with glass, door, neon, dark outline
-  const baseBuilding = A.drawBuilding;
+  // Buildings are painted by the original build's own building routine (03_oldbuild.js):
+  // roof, wall material, awning, shop glass, door, rooftop vents, lit windows at night.
+  const KIND = {
+    house: 'home', cabin: 'home', barn: 'home', apartment: 'apartment', hotel: 'hotel', motel: 'hotel',
+    general: 'shop', liquor: 'shop', pawn: 'pawn', tailor: 'shop', barber: 'shop', butcher: 'shop', gunshop: 'shop',
+    diner: 'diner', bar: 'bar', social: 'bar', club: 'club', casino: 'club', arcade: 'arcade', pharmacy: 'pharmacy',
+    hospital: 'clinic', church: 'chapel', police: 'police', bank: 'bank', garage: 'garage', gas: 'garage',
+    warehouse: 'warehouse', factory: 'warehouse', office: 'office', school: 'office', laundry: 'laundromat',
+  };
+  const WALLS = ['houseWallA', 'houseWallB', 'houseWallC', 'houseWallD', 'houseWallE'];
+  const ROOFS = ['roof', 'roofBlue', 'roofTerra'];
+  const bcache = new Map();
+  A.buildingArt = function (b) {
+    const lit = !!(R.game && R.game.clock && R.game.clock.isNight());
+    const key = b.id + '|' + b.w + 'x' + b.h + b.face + (lit ? 'L' : '') + b.type;
+    let c = bcache.get(key);
+    if (!c) {
+      const a = { id: b.id + 1, w: b.w, h: b.h, kind: KIND[b.type] || 'shop', wall: WALLS[b.seedArt % 5], doorOffset: b.face === 'S' ? b.door.x - b.x : -99, roof: ROOFS[b.seedArt % 3] };
+      const r = OLD.paintBuilding(a, lit);
+      c = { cv: r.P.toCanvas(), facadeTop: r.facadeTop, neon: r.neon };
+      if (bcache.size > 700) bcache.clear();
+      bcache.set(key, c);
+    }
+    return c;
+  };
   A.drawBuilding = function (g, b, px, py) {
-    baseBuilding(g, b, px, py);
-    const bw = b.w * TS, bh = b.h * TS;
+    const bw = b.w * TS;
     const bt = D.btypes[b.type];
-    // facade tall enough for a person to stand in the doorway
-    const fh = Math.max(16, Math.min(40, Math.round(bh * 0.42)));
-    const fy = py + bh - fh;
-    const shopfront = bt.hours && b.type !== 'police' && b.type !== 'hospital' && b.type !== 'school' && b.type !== 'factory' && b.type !== 'warehouse';
-    const lit = shade(b.wall, 12), dark = shade(b.wall, -45);
-    // facade with brick/siding rhythm
-    g.fillStyle = b.wall;
-    g.fillRect(px, fy, bw, fh);
-    g.fillStyle = shade(b.wall, -12);
-    for (let yy = fy + 5; yy < fy + fh - 2; yy += 5) g.fillRect(px, yy, bw, 1);
-    g.fillStyle = dark;
-    g.fillRect(px, fy, bw, 3);
-    g.fillStyle = lit;
-    g.fillRect(px, fy + 3, bw, 1);
-    g.fillStyle = shade(b.wall, -25);
-    g.fillRect(px, py + bh - 2, bw, 2);
-    const doorX = (b.door.x - b.x) * TS;
-    const doorW = 16, doorH = Math.min(fh - 6, 28);
-    const winTop = fy + 6, winH = Math.max(6, fh - 14);
-    const nearDoor = (x, w) => b.face === 'S' && x + w > doorX - 3 && x < doorX + doorW + 3;
-    if (shopfront) {
-      // awning stripe over big glass windows
-      const aw = bt.neon ? '#6a3a8a' : R.hash2(b.id, 3, 9) < 0.5 ? '#b83a2a' : '#2a6a5a';
-      for (let x = 0; x < bw; x += 4) { g.fillStyle = (x >> 2) & 1 ? '#f0e4c8' : aw; g.fillRect(px + x, fy + 3, 4, 3); }
-      g.fillStyle = INK; g.fillRect(px, fy + 6, bw, 1);
-      for (let x = 4; x + 18 <= bw - 3; x += 22) {
-        if (nearDoor(x, 18)) continue;
-        g.fillStyle = INK; g.fillRect(px + x - 1, winTop + 1, 20, winH);
-        g.fillStyle = '#3a5a78'; g.fillRect(px + x, winTop + 2, 18, winH - 2);
-        g.fillStyle = '#5a7a98'; g.fillRect(px + x, winTop + 2, 18, 2);
-        g.fillStyle = '#9ac8e8'; g.fillRect(px + x + 2, winTop + 4, 3, 1); g.fillRect(px + x + 2, winTop + 5, 1, 2);
-        // goods on the sill
-        g.fillStyle = shade(b.wall, -30); g.fillRect(px + x, winTop + winH - 2, 18, 1);
-      }
-    } else {
-      for (let x = 5; x + 8 <= bw - 4; x += 12) {
-        if (nearDoor(x, 8)) continue;
-        g.fillStyle = INK; g.fillRect(px + x - 1, winTop, 10, Math.min(12, winH));
-        g.fillStyle = '#4a6a88'; g.fillRect(px + x, winTop + 1, 8, Math.min(12, winH) - 2);
-        g.fillStyle = '#8ab0d0'; g.fillRect(px + x + 1, winTop + 2, 2, 1);
-        g.fillStyle = INK; g.fillRect(px + x + 3, winTop + 1, 1, Math.min(12, winH) - 2);
-      }
+    const art = A.buildingArt(b);
+    // soft drop shadow, then the painted building (2px wall margin, 6px roof overhang)
+    g.fillStyle = 'rgba(20,12,8,0.32)';
+    g.fillRect(px + 4, py + 2, bw, b.h * TS);
+    g.drawImage(art.cv, px - 2, py - 6);
+    const facadeY = py - 6 + art.facadeTop;
+    // a door on the far side: an awning and a mat on the sidewalk so you know it's there
+    if (b.face === 'N') {
+      const dx = (b.door.x - b.x) * TS + px;
+      g.fillStyle = INK; g.fillRect(dx, py - 5, 16, 5);
+      g.fillStyle = bt && bt.neon ? '#6a3a8a' : '#8a3a24'; g.fillRect(dx + 1, py - 4, 14, 3);
+      g.fillStyle = '#f0e2c0'; for (let k = 2; k < 14; k += 4) g.fillRect(dx + k, py - 4, 2, 3);
     }
-    if (b.face === 'S') {
-      const dy = py + bh - doorH;
-      g.fillStyle = INK; g.fillRect(px + doorX - 1, dy - 1, doorW + 2, doorH + 1);
-      g.fillStyle = bt.neon ? '#6a3a8a' : '#6a3a1e'; g.fillRect(px + doorX, dy, doorW, doorH);
-      g.fillStyle = bt.neon ? '#8a5aaa' : '#8a5230'; g.fillRect(px + doorX + 1, dy + 1, doorW - 2, 1);
-      if (shopfront) { g.fillStyle = '#3a5a78'; g.fillRect(px + doorX + 2, dy + 3, doorW - 4, Math.min(8, doorH - 8)); }
-      g.fillStyle = '#e4a92a'; g.fillRect(px + doorX + doorW - 3, dy + (doorH >> 1), 1, 2);
-    }
-    // ink outline around the whole footprint
-    g.strokeStyle = INK;
-    g.lineWidth = 1;
-    g.strokeRect(px + 0.5, py + 0.5, bw - 1, bh - 1);
-    // neon / sign in pixel font
-    if (b.type !== 'house' && b.type !== 'cabin' && b.type !== 'apartment') {
+    // name sign in pixel font, where the original hung it: just above the facade
+    if (b.type !== 'house' && b.type !== 'cabin' && b.type !== 'apartment' && b.type !== 'barn') {
       const lines = A.fitSign((b.name || bt.name).toUpperCase(), bw - 6);
       const lh = 10, boxH = lines.length * lh + 2;
-      const ty = fy - boxH - 2;
+      const ty = b.face === 'S' ? facadeY - boxH - 3 : py + 4;
       const tw = Math.max(...lines.map((l) => A.ptWidth(l))) + 6;
-      const col = bt.neon ? '#ff70c8' : b.type === 'police' ? '#a8c8ff' : b.type === 'social' ? '#f0b838' : '#f6ecd0';
+      const col = bt.neon ? '#ff70c8' : b.type === 'police' ? '#a8c8ff' : b.type === 'social' ? '#f0b838' : art.neon || '#f6ecd0';
       g.fillStyle = INK;
       g.fillRect(Math.round(px + bw / 2 - tw / 2) - 1, ty - 1, tw + 2, boxH + 2);
-      g.fillStyle = '#140c0a';
+      g.fillStyle = '#1c1418';
       g.fillRect(Math.round(px + bw / 2 - tw / 2), ty, tw, boxH);
+      g.fillStyle = '#3a2c30';
+      g.fillRect(Math.round(px + bw / 2 - tw / 2), ty, tw, 1);
       lines.forEach((l, i) => A.ptext(g, l, px + bw / 2, ty + 1 + i * lh, { align: 'center', color: col }));
     }
   };
@@ -9240,14 +9274,14 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
       const open = game.ui.isOpen(b);
       const dx = b.door.x * TS, dy = b.door.y * TS;
       // bracket sign beside the door: a big pixel icon you can read from across the street
-      const sx = dx + 18, sy = b.face === 'S' ? dy + TS - 36 : dy - 6;
+      const sx = dx + 17, sy = b.face === 'S' ? dy + TS - 29 : dy - 6;
       g.fillStyle = INK; g.fillRect(sx - 3, sy - 4, 22, 2); g.fillRect(sx + 2, sy - 4, 2, 4); g.fillRect(sx + 14, sy - 4, 2, 4);
       g.fillRect(sx - 1, sy - 1, 20, 20);
       g.fillStyle = '#2a1c14'; g.fillRect(sx, sy, 18, 18);
       g.fillStyle = info[1]; g.globalAlpha = 0.25; g.fillRect(sx + 1, sy + 1, 16, 16); g.globalAlpha = 1;
       this.glyph(g, info[0], sx + 2, sy + 2, 2, info[1]);
       // OPEN / CLOSED lamp above the door
-      const lx = dx + 5, ly = b.face === 'S' ? dy + TS - 40 : dy - 10;
+      const lx = dx + 5, ly = b.face === 'S' ? dy + TS - 24 : dy - 10;
       g.fillStyle = INK; g.fillRect(lx - 1, ly - 1, 8, 6);
       const blink = open ? 1 : 0.6 + Math.sin(t * 2) * 0.15;
       g.fillStyle = open ? '#50f070' : '#c02a20'; g.globalAlpha = blink; g.fillRect(lx, ly, 6, 4); g.globalAlpha = 1;
@@ -13481,6 +13515,9 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     if (!paused) {
       const sdt = dt * this.timeScale;
       this.clock.update(sdt);
+      // windows light up at dusk: repaint the cached city
+      const nightNow = this.clock.isNight();
+      if (nightNow !== this.wasNight) { this.wasNight = nightNow; R.art.chunkCache.clear(); }
       this.env.update(sdt);
       pl.update(dt * (this.timeScale < 1 ? 0.8 : 1));
       this.actors.update(sdt);

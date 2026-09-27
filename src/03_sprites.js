@@ -565,10 +565,29 @@
 
   // hook the new tiles/objects into the chunk renderer
   const baseTile = A.drawTile;
+  // the original's own ground textures, 16 texels a tile like the characters
+  const tcache = {};
+  const otex = (k, v) => tcache[k + v] || (tcache[k + v] = OLD.tiles[k](v).toCanvas());
+  const OLDGROUND = {
+    [T.GRASS]: ['grass', 10], [T.PARK]: ['grass', 10], [T.WALK]: ['walk', 6], [T.PLAZA]: ['plaza', 4], [T.DOCK]: ['board', 1],
+    [T.SAND]: ['sand', 6], [T.DIRT]: ['dirt', 3], [T.DIRTROAD]: ['path', 4], [T.LOT]: ['path', 4], [T.PARKING]: ['parking', 1], [T.BURNT]: ['scorch', 4],
+  };
   A.drawTile = function (g, w, x, y, px, py) {
     const t = w.t(x, y);
     if (t >= T.VOID) return A.drawInteriorTile(g, w, x, y, px, py, t);
-    return baseTile(g, w, x, y, px, py);
+    const og = OLDGROUND[t];
+    if (!og) return baseTile(g, w, x, y, px, py);
+    const v = Math.floor(R.hash2(x, y, 20) * 1e6) % og[1];
+    g.drawImage(otex(og[0], v), px, py);
+    // the original's curb: a bright lip and a dark edge where sidewalk meets road
+    if (t === T.WALK || t === T.PARKING) {
+      const rd = (xx, yy) => D.roadTile[w.t(xx, yy)];
+      const lip = OLD.x.walk[4], edge = OLD.x.walk[0];
+      if (rd(x, y + 1)) { g.fillStyle = lip; g.fillRect(px, py + 14, TS, 1); g.fillStyle = edge; g.fillRect(px, py + 15, TS, 1); }
+      if (rd(x, y - 1)) { g.fillStyle = lip; g.fillRect(px, py + 1, TS, 1); g.fillStyle = edge; g.fillRect(px, py, TS, 1); }
+      if (rd(x + 1, y)) { g.fillStyle = lip; g.fillRect(px + 14, py, 1, TS); g.fillStyle = edge; g.fillRect(px + 15, py, 1, TS); }
+      if (rd(x - 1, y)) { g.fillStyle = lip; g.fillRect(px + 1, py, 1, TS); g.fillStyle = edge; g.fillRect(px, py, 1, TS); }
+    }
   };
   const baseObj = A.drawObj;
   A.drawObj = function (g, o, px, py, x, y, w) {
@@ -581,78 +600,60 @@
     return baseObj(g, o, px, py, x, y, w);
   };
 
-  // GBA-style storefronts: taller facade with glass, door, neon, dark outline
-  const baseBuilding = A.drawBuilding;
+  // Buildings are painted by the original build's own building routine (03_oldbuild.js):
+  // roof, wall material, awning, shop glass, door, rooftop vents, lit windows at night.
+  const KIND = {
+    house: 'home', cabin: 'home', barn: 'home', apartment: 'apartment', hotel: 'hotel', motel: 'hotel',
+    general: 'shop', liquor: 'shop', pawn: 'pawn', tailor: 'shop', barber: 'shop', butcher: 'shop', gunshop: 'shop',
+    diner: 'diner', bar: 'bar', social: 'bar', club: 'club', casino: 'club', arcade: 'arcade', pharmacy: 'pharmacy',
+    hospital: 'clinic', church: 'chapel', police: 'police', bank: 'bank', garage: 'garage', gas: 'garage',
+    warehouse: 'warehouse', factory: 'warehouse', office: 'office', school: 'office', laundry: 'laundromat',
+  };
+  const WALLS = ['houseWallA', 'houseWallB', 'houseWallC', 'houseWallD', 'houseWallE'];
+  const ROOFS = ['roof', 'roofBlue', 'roofTerra'];
+  const bcache = new Map();
+  A.buildingArt = function (b) {
+    const lit = !!(R.game && R.game.clock && R.game.clock.isNight());
+    const key = b.id + '|' + b.w + 'x' + b.h + b.face + (lit ? 'L' : '') + b.type;
+    let c = bcache.get(key);
+    if (!c) {
+      const a = { id: b.id + 1, w: b.w, h: b.h, kind: KIND[b.type] || 'shop', wall: WALLS[b.seedArt % 5], doorOffset: b.face === 'S' ? b.door.x - b.x : -99, roof: ROOFS[b.seedArt % 3] };
+      const r = OLD.paintBuilding(a, lit);
+      c = { cv: r.P.toCanvas(), facadeTop: r.facadeTop, neon: r.neon };
+      if (bcache.size > 700) bcache.clear();
+      bcache.set(key, c);
+    }
+    return c;
+  };
   A.drawBuilding = function (g, b, px, py) {
-    baseBuilding(g, b, px, py);
-    const bw = b.w * TS, bh = b.h * TS;
+    const bw = b.w * TS;
     const bt = D.btypes[b.type];
-    // facade tall enough for a person to stand in the doorway
-    const fh = Math.max(16, Math.min(40, Math.round(bh * 0.42)));
-    const fy = py + bh - fh;
-    const shopfront = bt.hours && b.type !== 'police' && b.type !== 'hospital' && b.type !== 'school' && b.type !== 'factory' && b.type !== 'warehouse';
-    const lit = shade(b.wall, 12), dark = shade(b.wall, -45);
-    // facade with brick/siding rhythm
-    g.fillStyle = b.wall;
-    g.fillRect(px, fy, bw, fh);
-    g.fillStyle = shade(b.wall, -12);
-    for (let yy = fy + 5; yy < fy + fh - 2; yy += 5) g.fillRect(px, yy, bw, 1);
-    g.fillStyle = dark;
-    g.fillRect(px, fy, bw, 3);
-    g.fillStyle = lit;
-    g.fillRect(px, fy + 3, bw, 1);
-    g.fillStyle = shade(b.wall, -25);
-    g.fillRect(px, py + bh - 2, bw, 2);
-    const doorX = (b.door.x - b.x) * TS;
-    const doorW = 16, doorH = Math.min(fh - 6, 28);
-    const winTop = fy + 6, winH = Math.max(6, fh - 14);
-    const nearDoor = (x, w) => b.face === 'S' && x + w > doorX - 3 && x < doorX + doorW + 3;
-    if (shopfront) {
-      // awning stripe over big glass windows
-      const aw = bt.neon ? '#6a3a8a' : R.hash2(b.id, 3, 9) < 0.5 ? '#b83a2a' : '#2a6a5a';
-      for (let x = 0; x < bw; x += 4) { g.fillStyle = (x >> 2) & 1 ? '#f0e4c8' : aw; g.fillRect(px + x, fy + 3, 4, 3); }
-      g.fillStyle = INK; g.fillRect(px, fy + 6, bw, 1);
-      for (let x = 4; x + 18 <= bw - 3; x += 22) {
-        if (nearDoor(x, 18)) continue;
-        g.fillStyle = INK; g.fillRect(px + x - 1, winTop + 1, 20, winH);
-        g.fillStyle = '#3a5a78'; g.fillRect(px + x, winTop + 2, 18, winH - 2);
-        g.fillStyle = '#5a7a98'; g.fillRect(px + x, winTop + 2, 18, 2);
-        g.fillStyle = '#9ac8e8'; g.fillRect(px + x + 2, winTop + 4, 3, 1); g.fillRect(px + x + 2, winTop + 5, 1, 2);
-        // goods on the sill
-        g.fillStyle = shade(b.wall, -30); g.fillRect(px + x, winTop + winH - 2, 18, 1);
-      }
-    } else {
-      for (let x = 5; x + 8 <= bw - 4; x += 12) {
-        if (nearDoor(x, 8)) continue;
-        g.fillStyle = INK; g.fillRect(px + x - 1, winTop, 10, Math.min(12, winH));
-        g.fillStyle = '#4a6a88'; g.fillRect(px + x, winTop + 1, 8, Math.min(12, winH) - 2);
-        g.fillStyle = '#8ab0d0'; g.fillRect(px + x + 1, winTop + 2, 2, 1);
-        g.fillStyle = INK; g.fillRect(px + x + 3, winTop + 1, 1, Math.min(12, winH) - 2);
-      }
+    const art = A.buildingArt(b);
+    // soft drop shadow, then the painted building (2px wall margin, 6px roof overhang)
+    g.fillStyle = 'rgba(20,12,8,0.32)';
+    g.fillRect(px + 4, py + 2, bw, b.h * TS);
+    g.drawImage(art.cv, px - 2, py - 6);
+    const facadeY = py - 6 + art.facadeTop;
+    // a door on the far side: an awning and a mat on the sidewalk so you know it's there
+    if (b.face === 'N') {
+      const dx = (b.door.x - b.x) * TS + px;
+      g.fillStyle = INK; g.fillRect(dx, py - 5, 16, 5);
+      g.fillStyle = bt && bt.neon ? '#6a3a8a' : '#8a3a24'; g.fillRect(dx + 1, py - 4, 14, 3);
+      g.fillStyle = '#f0e2c0'; for (let k = 2; k < 14; k += 4) g.fillRect(dx + k, py - 4, 2, 3);
     }
-    if (b.face === 'S') {
-      const dy = py + bh - doorH;
-      g.fillStyle = INK; g.fillRect(px + doorX - 1, dy - 1, doorW + 2, doorH + 1);
-      g.fillStyle = bt.neon ? '#6a3a8a' : '#6a3a1e'; g.fillRect(px + doorX, dy, doorW, doorH);
-      g.fillStyle = bt.neon ? '#8a5aaa' : '#8a5230'; g.fillRect(px + doorX + 1, dy + 1, doorW - 2, 1);
-      if (shopfront) { g.fillStyle = '#3a5a78'; g.fillRect(px + doorX + 2, dy + 3, doorW - 4, Math.min(8, doorH - 8)); }
-      g.fillStyle = '#e4a92a'; g.fillRect(px + doorX + doorW - 3, dy + (doorH >> 1), 1, 2);
-    }
-    // ink outline around the whole footprint
-    g.strokeStyle = INK;
-    g.lineWidth = 1;
-    g.strokeRect(px + 0.5, py + 0.5, bw - 1, bh - 1);
-    // neon / sign in pixel font
-    if (b.type !== 'house' && b.type !== 'cabin' && b.type !== 'apartment') {
+    // name sign in pixel font, where the original hung it: just above the facade
+    if (b.type !== 'house' && b.type !== 'cabin' && b.type !== 'apartment' && b.type !== 'barn') {
       const lines = A.fitSign((b.name || bt.name).toUpperCase(), bw - 6);
       const lh = 10, boxH = lines.length * lh + 2;
-      const ty = fy - boxH - 2;
+      const ty = b.face === 'S' ? facadeY - boxH - 3 : py + 4;
       const tw = Math.max(...lines.map((l) => A.ptWidth(l))) + 6;
-      const col = bt.neon ? '#ff70c8' : b.type === 'police' ? '#a8c8ff' : b.type === 'social' ? '#f0b838' : '#f6ecd0';
+      const col = bt.neon ? '#ff70c8' : b.type === 'police' ? '#a8c8ff' : b.type === 'social' ? '#f0b838' : art.neon || '#f6ecd0';
       g.fillStyle = INK;
       g.fillRect(Math.round(px + bw / 2 - tw / 2) - 1, ty - 1, tw + 2, boxH + 2);
-      g.fillStyle = '#140c0a';
+      g.fillStyle = '#1c1418';
       g.fillRect(Math.round(px + bw / 2 - tw / 2), ty, tw, boxH);
+      g.fillStyle = '#3a2c30';
+      g.fillRect(Math.round(px + bw / 2 - tw / 2), ty, tw, 1);
       lines.forEach((l, i) => A.ptext(g, l, px + bw / 2, ty + 1 + i * lh, { align: 'center', color: col }));
     }
   };
