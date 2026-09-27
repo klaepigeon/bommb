@@ -144,9 +144,12 @@
       // dead end: u-turn into the opposite lane
       nd = (ai.dir + 2) % 4;
       const side = R.DIRS[(ai.dir + 3) % 4]; // left of travel
-      const lx = ai.tx + side[0], ly = ai.ty + side[1];
-      if (w.flow[w.idx(lx, ly)] & R.DIRBIT[nd]) { ai.tx = lx; ai.ty = ly; }
-      else { v.mode = 'chase'; ai.wanderT = 2; return; }
+      let ok = false;
+      for (let k = 1; k <= R.ROAD_W && !ok; k++) {
+        const lx = ai.tx + side[0] * k, ly = ai.ty + side[1] * k;
+        if (w.flow[w.idx(lx, ly)] & R.DIRBIT[nd]) { ai.tx = lx; ai.ty = ly; ok = true; }
+      }
+      if (!ok) { v.mode = 'chase'; ai.wanderT = 2; return; }
     } else if (inX && ai.turned) nd = valid.includes(ai.dir) ? ai.dir : valid[0];
     else {
       const opts = valid.map((d) => [d, d === ai.dir ? 3 : 1]);
@@ -168,8 +171,8 @@
       if (ew ? it.phase !== 0 : it.phase !== 2) return false;
     }
     // occupied by a crossing vehicle?
-    const cx = it.cx * TS + 16, cy = it.cy * TS + 16;
-    for (const o of this.hash.query(cx, cy, 30)) {
+    const cx = it.cx * TS + 8, cy = it.cy * TS + 8;
+    for (const o of this.hash.query(cx, cy, R.ROAD_W * 10)) {
       if (o === v || o.removed) continue;
       if (o.speed > 8 && o.ai && ((o.ai.dir & 1) !== (v.ai.dir & 1))) return false;
     }
@@ -183,7 +186,7 @@
       const rx = o.x - v.x, ry = o.y - v.y;
       const along = rx * fx + ry * fy;
       const lat = Math.abs(-rx * fy + ry * fx);
-      const lw = o.kind === 'v' ? o.model.h * 0.5 + 5 : 7;
+      const lw = o.kind === 'v' ? o.model.h * 0.5 + 2 : 7;
       if (along > 0 && along < reach + (o.kind === 'v' ? o.model.w * 0.5 : 0) && lat < lw) {
         const d = along - (o.kind === 'v' ? o.model.w * 0.5 : 0);
         if (!best || d < best.d) best = { d, o, player: isPlayer };

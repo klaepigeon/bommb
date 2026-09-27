@@ -31,7 +31,7 @@
     });
     $('#menubtn').addEventListener('click', () => this.toggleMenu());
     $('#mapwrap').addEventListener('click', () => this.openMenu('map'));
-    this.el.dim.addEventListener('click', () => { if (this.sheetOpen && this.sheetOpen !== 'fish' && this.sheetOpen !== 'burgle' && this.sheetOpen !== 'heist') this.closeSheet(); });
+    this.el.dim.addEventListener('click', () => { if (performance.now() - (this.openedAt || 0) < 450) return; if (this.sheetOpen && this.sheetOpen !== 'fish' && this.sheetOpen !== 'burgle' && this.sheetOpen !== 'heist') this.closeSheet(); });
     $('#surrender').addEventListener('click', () => { this.closeArrest(); game.law.surrender(); });
     $('#resist').addEventListener('click', () => { this.closeArrest(); game.law.resist('You resisted'); });
     this.el.death.querySelector('button').addEventListener('click', () => { this.el.death.style.display = 'none'; game.player.respawn(); });
@@ -381,6 +381,7 @@
     s.style.display = 'flex';
     this.el.dim.style.display = 'block';
     this.sheetOpen = kind;
+    this.openedAt = performance.now();
     const x = s.querySelector('header .x');
     if (x) x.addEventListener('click', () => this.closeSheet());
     return s;

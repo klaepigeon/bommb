@@ -3,12 +3,16 @@
 'use strict';
 (function () {
   const D = R.data, T = D.T, O = D.O, F = R.FLOW;
-  const P = 16; // city block pitch: 14 tiles of block + 2 tiles of road
+  // City block pitch: BS tiles of block + 2 tiles of road. Blocks are deep enough for
+  // two facing rows of buildings RD tiles deep, RL tiles long, with a sidewalk ring.
+  const RW = 4; // road width in tiles: two lanes each way
+  const P = 22 + RW;
+  const BS = P - RW, RD = (BS - 2) >> 1, RL = BS - 2;
 
   function World(seed) {
     this.seed = seed;
-    this.W = 640;
-    this.H = 640; // outdoor map height
+    this.W = 880;
+    this.H = 880; // outdoor map height
     this.IH = 64; // hidden strip below the map where interiors are stamped
     this.TH = this.H + this.IH;
     const N = this.W * this.TH;
@@ -100,14 +104,14 @@
   };
 
   W.planCities = function (rnd) {
-    const sizes = { port: [8, 8], avalon: [10, 9], dust: [6, 6], pine: [6, 5], bayou: [6, 6] };
+    const sizes = { port: [7, 7], avalon: [9, 8], dust: [5, 5], pine: [5, 4], bayou: [5, 5] };
     D.cities.forEach((def, i) => {
       const [nbx, nby] = sizes[def.id];
       const cx = Math.round(def.fx * this.W), cy = Math.round(def.fy * this.H);
       const x0 = cx - Math.floor((nbx * P) / 2), y0 = cy - Math.floor((nby * P) / 2);
       this.cities.push({
         idx: i, id: def.id, name: def.name, def, x0, y0, nbx, nby,
-        x1: x0 + nbx * P + 1, y1: y0 + nby * P + 1,
+        x1: x0 + nbx * P + RW - 1, y1: y0 + nby * P + RW - 1,
         rowY: y0 + Math.floor(nby / 2) * P, colX: x0 + Math.floor(nbx / 2) * P,
         cx, cy, buildings: [], lots: [], hamlet: false,
         prosperity: 55, fear: 0, heat: 0, growth: 0, // live stats
@@ -119,7 +123,7 @@
       const x0 = cx - P, y0 = cy - P;
       this.hamlets.push({
         idx: -1, id: 'ham' + i, name: h.name, def: { family: null, color: '#a08060', biome: 'hamlet' }, x0, y0, nbx: nb, nby: nb,
-        x1: x0 + nb * P + 1, y1: y0 + nb * P + 1, rowY: y0 + P, colX: x0 + P, cx, cy, buildings: [], lots: [], hamlet: true,
+        x1: x0 + nb * P + RW - 1, y1: y0 + nb * P + RW - 1, rowY: y0 + P, colX: x0 + P, cx, cy, buildings: [], lots: [], hamlet: true,
         prosperity: 40, fear: 0, heat: 0, growth: 0,
       });
     });
@@ -147,7 +151,7 @@
         m += (0.5 - fx) * 0.3;
         // coast: ocean on the west, bending south
         let coast = coastX;
-        if (y > port.y0 - 10 && y < port.y1 + 10) coast = Math.min(coast, port.x0 + P + 2 - 6); // harbor inlet
+        if (y > port.y0 - 10 && y < port.y1 + 10) coast = Math.min(coast, port.x0 + P + RW - 6); // harbor inlet
         const sea = x - coast;
         const southSea = fy > 0.955 + 0.02 * nC(x / 40, 9) && fx < 0.5;
         let t;
@@ -184,7 +188,7 @@
         for (let x = c.x0 - 3; x <= c.x1 + 3; x++) {
           if (!this.inb(x, y)) continue;
           const i = y * w + x;
-          if (c.id === 'port' && x < c.x0 + P + 2) continue; // docks handled in genCity
+          if (c.id === 'port' && x < c.x0 + P + RW) continue; // docks handled in genCity
           const t = this.tile[i];
           this.tile[i] = c.def.biome === 'desert' ? T.DESERT : t === T.SNOW ? T.SNOW : T.GRASS;
           if (c.def.biome === 'marsh' && t === T.MARSH) this.tile[i] = T.GRASS;
@@ -243,17 +247,13 @@
   // Vertical: col x = southbound, x+1 = northbound. (drive on the right)
   W.layH = function (xa, xb, y, type) {
     const x0 = Math.min(xa, xb), x1 = Math.max(xa, xb);
-    for (let x = x0; x <= x1; x++) {
-      this.paveRoad(x, y, F.W, type);
-      this.paveRoad(x, y + 1, F.E, type);
-    }
+    for (let x = x0; x <= x1; x++)
+      for (let k = 0; k < RW; k++) this.paveRoad(x, y + k, k < RW / 2 ? F.W : F.E, type);
   };
   W.layV = function (x, ya, yb, type) {
     const y0 = Math.min(ya, yb), y1 = Math.max(ya, yb);
-    for (let y = y0; y <= y1; y++) {
-      this.paveRoad(x, y, F.S, type);
-      this.paveRoad(x + 1, y, F.N, type);
-    }
+    for (let y = y0; y <= y1; y++)
+      for (let k = 0; k < RW; k++) this.paveRoad(x + k, y, k < RW / 2 ? F.S : F.N, type);
   };
   W.paveRoad = function (x, y, flow, type) {
     if (!this.inb(x, y)) return;
@@ -271,14 +271,14 @@
     const def = c.def;
     const roadT = T.ROAD;
     // grid roads
-    for (let i = 0; i <= c.nbx; i++) this.layV(c.x0 + i * P, c.y0, c.y0 + c.nby * P + 1, roadT);
-    for (let j = 0; j <= c.nby; j++) this.layH(c.x0, c.x0 + c.nbx * P + 1, c.y0 + j * P, roadT);
+    for (let i = 0; i <= c.nbx; i++) this.layV(c.x0 + i * P, c.y0, c.y0 + c.nby * P + RW - 1, roadT);
+    for (let j = 0; j <= c.nby; j++) this.layH(c.x0, c.x0 + c.nbx * P + RW - 1, c.y0 + j * P, roadT);
     // blocks
     const rows = [];
     const cxB = (c.nbx - 1) / 2, cyB = (c.nby - 1) / 2;
     for (let i = 0; i < c.nbx; i++)
       for (let j = 0; j < c.nby; j++) {
-        const bx = c.x0 + i * P + 2, by = c.y0 + j * P + 2;
+        const bx = c.x0 + i * P + RW, by = c.y0 + j * P + RW;
         const d = Math.hypot((i - cxB) / Math.max(1, cxB + 0.5), (j - cyB) / Math.max(1, cyB + 0.5));
         const zone = c.hamlet ? 'hamlet' : d < 0.38 ? 'core' : d < 0.78 ? 'mid' : 'edge';
         // port: westmost column is the harbor
@@ -287,9 +287,9 @@
           continue;
         }
         // sidewalk ring
-        for (let y = by; y < by + 14; y++)
-          for (let x = bx; x < bx + 14; x++) {
-            const edge = x === bx || y === by || x === bx + 13 || y === by + 13;
+        for (let y = by; y < by + BS; y++)
+          for (let x = bx; x < bx + BS; x++) {
+            const edge = x === bx || y === by || x === bx + BS - 1 || y === by + BS - 1;
             this.tile[y * this.W + x] = edge ? T.WALK : T.LOT;
             this.obj[y * this.W + x] = 0;
           }
@@ -300,7 +300,7 @@
           continue;
         }
         rows.push({ c, x: bx + 1, y: by + 1, face: 'N', cur: 0, zone, d });
-        rows.push({ c, x: bx + 1, y: by + 7, face: 'S', cur: 0, zone, d });
+        rows.push({ c, x: bx + 1, y: by + 1 + RD, face: 'S', cur: 0, zone, d });
       }
     // required buildings first, closest rows to the centre
     const req = c.hamlet ? ['gas', 'diner', 'bar', 'general', 'motel'] : D.cityRequired.slice();
@@ -313,14 +313,14 @@
     for (const type of req) {
       const bt = D.btypes[type];
       const w = rnd.int(bt.w[0], bt.w[1]);
-      const row = sorted.find((r) => 12 - r.cur >= w && (type !== 'house' || r.zone !== 'core'));
+      const row = sorted.find((r) => RL - r.cur >= w && (type !== 'house' || r.zone !== 'core'));
       if (row) this.placeBuilding(row, type, w, rnd);
     }
     // fill
     for (const row of rows) {
       let guard = 0;
-      while (row.cur < 12 && guard++ < 10) {
-        const left = 12 - row.cur;
+      while (row.cur < RL && guard++ < 10) {
+        const left = RL - row.cur;
         const mix = c.hamlet ? [['house', 4], ['barn', 1], ['general', 0.3], ['bar', 0.3]] : D.cityMix[row.zone];
         let type = rnd.weighted(mix);
         if (c.id === 'dust' && type === 'apartment' && rnd() < 0.5) type = 'house';
@@ -328,8 +328,8 @@
         const bt = D.btypes[type];
         const vacant = row.zone === 'edge' ? 0.3 : row.zone === 'mid' ? 0.08 : 0.03;
         if (left < bt.w[0] || rnd() < vacant) {
-          const w = left < 3 ? left : Math.min(left, rnd.int(4, 6));
-          if (w >= 3 && rnd() < 0.25 && row.zone !== 'edge') this.placeParking(row, w);
+          const w = left < 4 ? left : Math.min(left, rnd.int(6, 9));
+          if (w >= 4 && rnd() < 0.25 && row.zone !== 'edge') this.placeParking(row, w);
           else this.addLot(row, w);
           continue;
         }
@@ -340,9 +340,9 @@
     // hangout spots: plaza corners near core
     for (let k = 0; k < c.nbx * c.nby * 0.6; k++) {
       const i = rnd.int(0, c.nbx - 1), j = rnd.int(0, c.nby - 1);
-      const bx = c.x0 + i * P + 2, by = c.y0 + j * P + 2;
+      const bx = c.x0 + i * P + RW, by = c.y0 + j * P + RW;
       const corner = rnd.int(0, 3);
-      const x = corner & 1 ? bx + 13 : bx, y = corner & 2 ? by + 13 : by;
+      const x = corner & 1 ? bx + BS - 1 : bx, y = corner & 2 ? by + BS - 1 : by;
       if (this.t(x, y) === T.WALK) this.spots.push({ x, y, city: c, kind: 'corner' });
     }
   };
@@ -351,10 +351,10 @@
     const x = row.x + row.cur;
     row.cur += w;
     if (w < 3) return;
-    const lot = { x, y: row.y, w, h: 6, face: row.face, city: row.c, zone: row.zone, used: false };
+    const lot = { x, y: row.y, w, h: RD, face: row.face, city: row.c, zone: row.zone, used: false };
     this.lots.push(lot);
     row.c.lots.push(lot);
-    for (let yy = row.y; yy < row.y + 6; yy++)
+    for (let yy = row.y; yy < row.y + RD; yy++)
       for (let xx = x; xx < x + w; xx++) {
         this.tile[yy * this.W + xx] = T.LOT;
         if (R.hash2(xx, yy, 77) < 0.08) this.obj[yy * this.W + xx] = O.BUSH;
@@ -363,18 +363,18 @@
   W.placeParking = function (row, w) {
     const x = row.x + row.cur;
     row.cur += w;
-    for (let yy = row.y; yy < row.y + 6; yy++)
+    for (let yy = row.y; yy < row.y + RD; yy++)
       for (let xx = x; xx < x + w; xx++) this.tile[yy * this.W + xx] = T.PARKING;
   };
 
   W.placeBuilding = function (row, type, w, rnd, lot) {
     const bt = D.btypes[type];
-    const h = Math.min(6, rnd.int(bt.h[0], bt.h[1]));
+    const h = Math.min(RD, rnd.int(bt.h[0], bt.h[1]));
     const x = lot ? lot.x : row.x + row.cur;
     const face = lot ? lot.face : row.face;
     const rowY = lot ? lot.y : row.y;
-    const y = face === 'N' ? rowY : rowY + 6 - h;
-    if (row) row.cur += w + (type === 'house' || type === 'cabin' ? (row.cur + w < 11 ? 1 : 0) : 0);
+    const y = face === 'N' ? rowY : rowY + RD - h;
+    if (row) row.cur += w + (type === 'house' || type === 'cabin' ? (row.cur + w < RL - 1 ? 1 : 0) : 0);
     const c = lot ? lot.city : row.c;
     return this.addBuilding(c, type, x, y, w, h, face, rnd);
   };
@@ -429,29 +429,30 @@
   };
 
   W.genPark = function (c, bx, by, rnd) {
-    for (let y = by; y < by + 14; y++)
-      for (let x = bx; x < bx + 14; x++) {
-        const edge = x === bx || y === by || x === bx + 13 || y === by + 13;
+    const m = BS >> 1;
+    for (let y = by; y < by + BS; y++)
+      for (let x = bx; x < bx + BS; x++) {
+        const edge = x === bx || y === by || x === bx + BS - 1 || y === by + BS - 1;
         const i = y * this.W + x;
-        const cross = x === bx + 6 || x === bx + 7 || y === by + 6 || y === by + 7;
+        const cross = x === bx + m - 1 || x === bx + m || y === by + m - 1 || y === by + m;
         this.tile[i] = edge ? T.WALK : cross ? T.PLAZA : T.PARK;
         const r = R.hash2(x, y, 41);
         this.obj[i] = !edge && !cross ? (r < 0.22 ? (c.def.biome === 'desert' ? O.PALM : O.TREE) : r < 0.3 ? O.FLOWERS : r < 0.35 ? O.BUSH : 0) : 0;
-        if (cross && !edge && (x === bx + 5 || x === bx + 8 || y === by + 5 || y === by + 8) && r < 0.3) this.obj[i] = O.BENCH;
+        if (cross && !edge && (x === bx + m - 2 || x === bx + m + 1 || y === by + m - 2 || y === by + m + 1) && r < 0.3) this.obj[i] = O.BENCH;
       }
-    this.spots.push({ x: bx + 6, y: by + 6, city: c, kind: 'park' });
-    this.spots.push({ x: bx + 7, y: by + 3, city: c, kind: 'park' });
-    this.spots.push({ x: bx + 3, y: by + 7, city: c, kind: 'park' });
+    this.spots.push({ x: bx + m - 1, y: by + m - 1, city: c, kind: 'park' });
+    this.spots.push({ x: bx + m, y: by + 4, city: c, kind: 'park' });
+    this.spots.push({ x: bx + 4, y: by + m, city: c, kind: 'park' });
   };
 
   W.genDocks = function (c, bx, by, rnd) {
     // Planks over water with a warehouse or two, west side of Port Hollow.
-    for (let y = by - 2; y < by + 14; y++)
-      for (let x = bx - 30; x < bx + 14; x++) {
+    for (let y = by - 2; y < by + BS; y++)
+      for (let x = bx - 30; x < bx + BS; x++) {
         if (!this.inb(x, y)) continue;
         const i = y * this.W + x;
         if (x >= bx) {
-          this.tile[i] = x === bx + 13 || y === by + 13 ? T.WALK : T.DOCK;
+          this.tile[i] = x === bx + BS - 1 || y === by + BS - 1 ? T.WALK : T.DOCK;
           this.obj[i] = 0;
           this.zone[i] = c.idx + 1;
         } else if (!D.waterTile[this.tile[i]] && x < bx - 1) {
@@ -463,7 +464,7 @@
         }
       }
     // piers
-    for (let p = 0; p < 3; p++) {
+    for (let p = 0; p < 4; p++) {
       const py = by + 1 + p * 5;
       for (let x = bx - 12; x < bx; x++) {
         this.tile[py * this.W + x] = T.DOCK;
@@ -473,10 +474,10 @@
       this.spots.push({ x: bx - 8, y: py + 1, city: c, kind: 'pier' });
     }
     const wy = by + 3;
-    const b = this.addBuilding(c, 'warehouse', bx + 5, wy, 8, 6, 'E', rnd);
-    b.out = { x: bx + 13, y: b.door.y };
+    const b = this.addBuilding(c, 'warehouse', bx + 6, wy, 13, 10, 'E', rnd);
+    b.out = { x: bx + BS - 1, y: b.door.y };
     for (let k = 0; k < 6; k++) {
-      const x = bx + rnd.int(1, 4), y = by + rnd.int(1, 12);
+      const x = bx + rnd.int(1, 5), y = by + rnd.int(1, BS - 2);
       if (this.t(x, y) === T.DOCK) this.obj[y * this.W + x] = rnd() < 0.6 ? O.CRATE : O.BARREL;
     }
   };
@@ -500,7 +501,7 @@
     const legOk = (horiz, fixed, a0, a1) => {
       const lo = Math.min(a0, a1), hi = Math.max(a0, a1);
       for (let v = lo; v <= hi; v++)
-        for (let o = 0; o < 2; o++) {
+        for (let o = 0; o < RW; o++) {
           const x = horiz ? v : fixed + o, y = horiz ? fixed + o : v;
           const c = inRect(x, y);
           if (c && !(horiz ? onRow(c, fixed) : onCol(c, fixed))) return false;
@@ -519,9 +520,9 @@
       for (const row of rA) {
         for (const col of cB) {
           const sx = A.colX;
-          if (legOk(true, row, sx, col + 1) && legOk(false, col, row, B.rowY + 1)) {
-            this.layH(sx, col + 1, row, T.HWY);
-            this.layV(col, row, B.rowY + 1, T.HWY);
+          if (legOk(true, row, sx, col + RW - 1) && legOk(false, col, row, B.rowY + RW - 1)) {
+            this.layH(sx, col + RW - 1, row, T.HWY);
+            this.layV(col, row, B.rowY + RW - 1, T.HWY);
             this.highways.push({ a: A, b: B });
             done = true;
             break;
@@ -533,9 +534,9 @@
       // Option 2: vertical out of A, horizontal into B
       for (const col of cA) {
         for (const row of rB) {
-          if (legOk(false, col, A.rowY, row + 1) && legOk(true, row, col, B.colX + 1)) {
-            this.layV(col, A.rowY, row + 1, T.HWY);
-            this.layH(col, B.colX + 1, row, T.HWY);
+          if (legOk(false, col, A.rowY, row + RW - 1) && legOk(true, row, col, B.colX + RW - 1)) {
+            this.layV(col, A.rowY, row + RW - 1, T.HWY);
+            this.layH(col, B.colX + RW - 1, row, T.HWY);
             this.highways.push({ a: A, b: B });
             done = true;
             break;
@@ -569,13 +570,15 @@
       let bx, by, face;
       if (horiz) {
         // road rows are y..y+1 for this highway segment; find its top row
-        const top = this.flow[(y - 1) * this.W + x] & (F.E | F.W) ? y - 1 : y;
+        let top = y;
+        while (this.flow[(top - 1) * this.W + x] & (F.E | F.W) && y - top < RW) top--;
         bx = x - Math.floor(w / 2);
-        if (side < 0) { by = top - 2 - h; face = 'S'; } else { by = top + 4; face = 'N'; }
+        if (side < 0) { by = top - 2 - h; face = 'S'; } else { by = top + RW + 2; face = 'N'; }
       } else {
-        const left = this.flow[y * this.W + x - 1] & (F.N | F.S) ? x - 1 : x;
+        let left = x;
+        while (this.flow[y * this.W + left - 1] & (F.N | F.S) && x - left < RW) left--;
         by = y - Math.floor(h / 2);
-        if (side < 0) { bx = left - 2 - w; face = 'E'; } else { bx = left + 4; face = 'W'; }
+        if (side < 0) { bx = left - 2 - w; face = 'E'; } else { bx = left + RW + 2; face = 'W'; }
       }
       if (!this.areaFree(bx - 3, by - 3, w + 6, h + 6)) continue;
       const b = this.addBuilding(this.countyCity(), type, bx, by, w, h, face, rnd);
@@ -665,7 +668,7 @@
       }
       const cx = mx / tiles.length, cy = my / tiles.length;
       const town = this.inCityRect(Math.round(cx), Math.round(cy), 0);
-      const inTown = !!town && (Math.abs(cy - town.rowY - 0.5) < 2 || Math.abs(cx - town.colX - 0.5) < 2 || R.hash2(Math.round(cx), Math.round(cy), 4) < 0.45);
+      const inTown = !!town && (Math.abs(cy - town.rowY - (RW - 1) / 2) < RW || Math.abs(cx - town.colX - (RW - 1) / 2) < RW || R.hash2(Math.round(cx), Math.round(cy), 4) < 0.45);
       const inter = {
         id: this.inters.length, tiles, cx, cy, arms: arms / 2, light: inTown && arms / 2 >= 3,
         phase: 0, timer: R.hash2(cx, cy, 1) * 8, // phase 0: E-W green, 1: yellow, 2: N-S green, 3: yellow
@@ -766,7 +769,7 @@
         this.setO(xx, yy, R.hash2(xx, yy, 9) < 0.25 ? O.CRATE : 0);
       }
     const face = b.face === 'N' || b.face === 'S' ? b.face : 'N';
-    const lot = { x: b.x, y: face === 'N' ? b.y : b.y + b.h - 6, w: b.w, h: 6, face, city: b.city, zone: 'mid', used: false, ruin: true };
+    const lot = { x: b.x, y: face === 'N' ? b.y : b.y + b.h - RD, w: b.w, h: RD, face, city: b.city, zone: 'mid', used: false, ruin: true };
     if (b.fromLot) Object.assign(lot, { x: b.fromLot.x, y: b.fromLot.y, w: b.fromLot.w, h: b.fromLot.h });
     if (!b.city.rural) {
       this.lots.push(lot);
@@ -802,4 +805,5 @@
 
   R.World = World;
   R.BLOCK_PITCH = P;
+  R.ROAD_W = RW;
 })();

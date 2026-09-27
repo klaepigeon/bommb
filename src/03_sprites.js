@@ -571,32 +571,56 @@
     baseBuilding(g, b, px, py);
     const bw = b.w * TS, bh = b.h * TS;
     const bt = D.btypes[b.type];
-    const fh = 11;
+    // facade tall enough for a person to stand in the doorway
+    const fh = Math.max(16, Math.min(40, Math.round(bh * 0.42)));
     const fy = py + bh - fh;
     const shopfront = bt.hours && b.type !== 'police' && b.type !== 'hospital' && b.type !== 'school' && b.type !== 'factory' && b.type !== 'warehouse';
-    // facade
+    const lit = shade(b.wall, 12), dark = shade(b.wall, -45);
+    // facade with brick/siding rhythm
     g.fillStyle = b.wall;
     g.fillRect(px, fy, bw, fh);
-    g.fillStyle = shade(b.wall, -45);
-    g.fillRect(px, fy, bw, 2);
+    g.fillStyle = shade(b.wall, -12);
+    for (let yy = fy + 5; yy < fy + fh - 2; yy += 5) g.fillRect(px, yy, bw, 1);
+    g.fillStyle = dark;
+    g.fillRect(px, fy, bw, 3);
+    g.fillStyle = lit;
+    g.fillRect(px, fy + 3, bw, 1);
     g.fillStyle = shade(b.wall, -25);
-    g.fillRect(px, py + bh - 1, bw, 1);
-    const doorX = (b.door.x - b.x) * TS + 5;
+    g.fillRect(px, py + bh - 2, bw, 2);
+    const doorX = (b.door.x - b.x) * TS;
+    const doorW = 16, doorH = Math.min(fh - 6, 28);
+    const winTop = fy + 6, winH = Math.max(6, fh - 14);
+    const nearDoor = (x, w) => b.face === 'S' && x + w > doorX - 3 && x < doorX + doorW + 3;
     if (shopfront) {
-      // big glass windows
-      for (let x = 3; x < bw - 3; x += 12) {
-        if (b.face === 'S' && Math.abs(px + x - (px + doorX)) < 8) continue;
-        g.fillStyle = INK; g.fillRect(px + x - 1, fy + 3, 11, 7);
-        g.fillStyle = '#3a5a78'; g.fillRect(px + x, fy + 4, 9, 5);
-        g.fillStyle = '#8ab8d8'; g.fillRect(px + x + 1, fy + 4, 2, 1); g.fillRect(px + x, fy + 5, 1, 1);
+      // awning stripe over big glass windows
+      const aw = bt.neon ? '#6a3a8a' : R.hash2(b.id, 3, 9) < 0.5 ? '#b83a2a' : '#2a6a5a';
+      for (let x = 0; x < bw; x += 4) { g.fillStyle = (x >> 2) & 1 ? '#f0e4c8' : aw; g.fillRect(px + x, fy + 3, 4, 3); }
+      g.fillStyle = INK; g.fillRect(px, fy + 6, bw, 1);
+      for (let x = 4; x + 18 <= bw - 3; x += 22) {
+        if (nearDoor(x, 18)) continue;
+        g.fillStyle = INK; g.fillRect(px + x - 1, winTop + 1, 20, winH);
+        g.fillStyle = '#3a5a78'; g.fillRect(px + x, winTop + 2, 18, winH - 2);
+        g.fillStyle = '#5a7a98'; g.fillRect(px + x, winTop + 2, 18, 2);
+        g.fillStyle = '#9ac8e8'; g.fillRect(px + x + 2, winTop + 4, 3, 1); g.fillRect(px + x + 2, winTop + 5, 1, 2);
+        // goods on the sill
+        g.fillStyle = shade(b.wall, -30); g.fillRect(px + x, winTop + winH - 2, 18, 1);
       }
     } else {
-      for (let x = 4; x < bw - 4; x += 7) { g.fillStyle = INK; g.fillRect(px + x - 1, fy + 3, 5, 6); g.fillStyle = '#4a6a88'; g.fillRect(px + x, fy + 4, 3, 4); }
+      for (let x = 5; x + 8 <= bw - 4; x += 12) {
+        if (nearDoor(x, 8)) continue;
+        g.fillStyle = INK; g.fillRect(px + x - 1, winTop, 10, Math.min(12, winH));
+        g.fillStyle = '#4a6a88'; g.fillRect(px + x, winTop + 1, 8, Math.min(12, winH) - 2);
+        g.fillStyle = '#8ab0d0'; g.fillRect(px + x + 1, winTop + 2, 2, 1);
+        g.fillStyle = INK; g.fillRect(px + x + 3, winTop + 1, 1, Math.min(12, winH) - 2);
+      }
     }
     if (b.face === 'S') {
-      g.fillStyle = INK; g.fillRect(px + doorX - 1, fy + 2, 8, fh - 2);
-      g.fillStyle = bt.neon ? '#6a3a8a' : '#6a3a1e'; g.fillRect(px + doorX, fy + 3, 6, fh - 3);
-      g.fillStyle = '#e4a92a'; g.fillRect(px + doorX + 4, fy + 6, 1, 1);
+      const dy = py + bh - doorH;
+      g.fillStyle = INK; g.fillRect(px + doorX - 1, dy - 1, doorW + 2, doorH + 1);
+      g.fillStyle = bt.neon ? '#6a3a8a' : '#6a3a1e'; g.fillRect(px + doorX, dy, doorW, doorH);
+      g.fillStyle = bt.neon ? '#8a5aaa' : '#8a5230'; g.fillRect(px + doorX + 1, dy + 1, doorW - 2, 1);
+      if (shopfront) { g.fillStyle = '#3a5a78'; g.fillRect(px + doorX + 2, dy + 3, doorW - 4, Math.min(8, doorH - 8)); }
+      g.fillStyle = '#e4a92a'; g.fillRect(px + doorX + doorW - 3, dy + (doorH >> 1), 1, 2);
     }
     // ink outline around the whole footprint
     g.strokeStyle = INK;
@@ -604,15 +628,47 @@
     g.strokeRect(px + 0.5, py + 0.5, bw - 1, bh - 1);
     // neon / sign in pixel font
     if (b.type !== 'house' && b.type !== 'cabin' && b.type !== 'apartment') {
-      const txt = (b.name || bt.name).toUpperCase();
-      let label = txt;
-      while (label.length > 3 && A.ptWidth(label) > bw - 8) label = label.slice(0, -1);
-      const tw = A.ptWidth(label) + 6;
-      const ty = fy - 13;
+      const lines = A.fitSign((b.name || bt.name).toUpperCase(), bw - 6);
+      const lh = 10, boxH = lines.length * lh + 2;
+      const ty = fy - boxH - 2;
+      const tw = Math.max(...lines.map((l) => A.ptWidth(l))) + 6;
+      const col = bt.neon ? '#ff70c8' : b.type === 'police' ? '#a8c8ff' : b.type === 'social' ? '#f0b838' : '#f6ecd0';
+      g.fillStyle = INK;
+      g.fillRect(Math.round(px + bw / 2 - tw / 2) - 1, ty - 1, tw + 2, boxH + 2);
       g.fillStyle = '#140c0a';
-      g.fillRect(Math.round(px + bw / 2 - tw / 2), ty, tw, 11);
-      A.ptext(g, label, px + bw / 2, ty + 1, { align: 'center', color: bt.neon ? '#ff70c8' : b.type === 'police' ? '#a8c8ff' : b.type === 'social' ? '#f0b838' : '#f6ecd0' });
+      g.fillRect(Math.round(px + bw / 2 - tw / 2), ty, tw, boxH);
+      lines.forEach((l, i) => A.ptext(g, l, px + bw / 2, ty + 1 + i * lh, { align: 'center', color: col }));
     }
+  };
+
+  // Break a sign into at most two lines that fit, dropping filler words before
+  // abbreviating, so names are never chopped mid-word.
+  A.fitSign = function (txt, maxW) {
+    const fits = (t) => A.ptWidth(t) <= maxW;
+    if (fits(txt)) return [txt];
+    let words = txt.split(/\s+/);
+    for (let i = 1; i < words.length; i++) {
+      const a = words.slice(0, i).join(' '), b = words.slice(i).join(' ');
+      if (fits(a) && fits(b)) return [a, b];
+    }
+    const trimmed = words.filter((w) => !/^(THE|&|AND|OF|CO\.?)$/.test(w));
+    if (trimmed.length && trimmed.length < words.length) return A.fitSign(trimmed.join(' '), maxW);
+    // last resort: shorten the longest word with a period
+    words = words.slice();
+    let guard = 40;
+    while (guard-- > 0) {
+      let li = 0;
+      words.forEach((w, i) => { if (w.length > words[li].length) li = i; });
+      if (words[li].length <= 3) break;
+      words[li] = words[li].replace(/\.$/, '').slice(0, -1) + '.';
+      const t = words.join(' ');
+      if (fits(t)) return [t];
+      for (let i = 1; i < words.length; i++) {
+        const a = words.slice(0, i).join(' '), b = words.slice(i).join(' ');
+        if (fits(a) && fits(b)) return [a, b];
+      }
+    }
+    return [words.join(' ')];
   };
 
   // cars get an ink outline too
