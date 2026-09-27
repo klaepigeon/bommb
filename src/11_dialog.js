@@ -90,6 +90,8 @@
       if (op < -30) return pick(['Oh. You.', 'Keep walking.', "Don't talk to me."]);
     }
     if (pl.rep.infamy > 60) return pick(["That's him. Don't make eye contact.", 'Sir.', 'Good evening, sir. Sir.']);
+    if (pl.style && pl.style.hat === 'fedora') return pick(['Nice lid.', 'Who do you think you are, Sinatra?', 'Sharp hat, mister.']);
+    if (pl.style && pl.style.facial === 'stache') return pick(['Nice lip caterpillar.', 'That moustache is working for you.']);
     if (pl.outfit === 'tux') return pick(['Wedding or funeral?', 'Nice tux, Travolta.']);
     if (pl.outfit === 'leisure') return pick(['Groovy threads.', 'Is that polyester?']);
     return pick(['Nice suit.', 'Hey.', 'Watch it.', 'Scuse me.', 'Evening.', 'Nice hat.', 'You lost?', 'Afternoon.']);

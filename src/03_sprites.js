@@ -299,6 +299,10 @@
     const shirtHex = Array.isArray(shirt[0]) ? shirt[0] : shirt;
     look.old = O2.Qr(seed, shirtHex.map ? shirtHex.map((c) => (typeof c === 'number' ? c : parseInt(String(c).slice(1), 16))) : shirtHex, hairKey(look.hair), ov);
     look.old.mask = !!look.mask;
+    // overrides the original's look roller doesn't take directly
+    if (ov.hair) look.old.hair = ov.hair;
+    if ('beard' in ov) look.old.beard = ov.beard;
+    if ('stache' in ov) look.old.stache = ov.stache;
     return look.old;
   };
   A.invalidateLook = function (look) { look.old = null; };
@@ -306,7 +310,7 @@
   const FLIP8 = [false, false, false, true, true, true, false, false];
   A.oldSprite = function (look, d8, frame, pose) {
     const L = A.oldLook(look);
-    const key = (look.seedStr || '') + '|' + JSON.stringify(L).length + '|' + L.shirt[2] + L.hair[1] + L.style + (L.mask ? 1 : 0) + (L.jacket ? L.jacket[1] : '') + '|' + d8 + frame + (pose || '');
+    const key = (look.seedStr || '') + '|' + (L._key || (L._key = JSON.stringify(L))) + '|' + d8 + frame + (pose || '');
     let c = oldCache.get(key);
     if (!c) {
       if (oldCache.size > 2500) oldCache.clear();
@@ -355,6 +359,7 @@
       return;
     }
     g.drawImage(spr, X - spr.width / 2, Y - 25);
+    if (look.hatKind && A.drawHat) A.drawHat(g, X, Y - 25 + (look.kid ? 2 : 0), look.hatKind, d8, look.hatCol);
     if (st.weapon && st.weapon !== 'fists' && pose !== 'g' || pose === 'g') drawWeapon8(g, X, Y, d8, st.weapon);
     if (fx) g.restore();
   };

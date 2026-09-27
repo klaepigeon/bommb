@@ -108,6 +108,17 @@ canvas.mg { display: block; width: 100%; max-width: 560px; margin: 0 auto; image
 .mgb { border: 3px solid var(--ink); border-radius: 8px; background: var(--paper2); color: var(--ink); font-size: 11px; padding: 8px 10px; box-shadow: 0 3px 0 var(--ink); touch-action: none; min-width: 64px; }
 .mgb.big { background: var(--gold); font-size: 13px; min-width: 90px; }
 .mgb:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+#sheet .wardrobe .wtop { display: flex; gap: 10px; align-items: flex-start; }
+.wport { width: 96px; height: 120px; image-rendering: pixelated; border: 3px solid var(--ink); border-radius: 6px; flex: none; }
+.wcats { display: flex; flex-wrap: wrap; gap: 5px; }
+.wcats button { border: 3px solid var(--ink); border-radius: 8px; background: var(--paper2); color: var(--ink); font-size: 10px; padding: 6px 8px; }
+.wcats button.sel { background: var(--gold); }
+.wlist { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 5px; margin: 10px 0; }
+.wi { display: flex; align-items: center; gap: 6px; border: 3px solid var(--ink); border-radius: 8px; background: var(--paper); color: var(--ink); font-family: var(--read); font-size: 13px; padding: 6px 8px; text-align: left; }
+.wi.sel { background: #f6dc9a; box-shadow: 0 0 0 2px var(--gold) inset; }
+.wi span { flex: 1; } .wi em { font-style: normal; font-family: var(--pix); font-size: 10px; color: var(--brown); }
+.wi .sw { width: 14px; height: 14px; border: 2px solid var(--ink); border-radius: 3px; flex: none; }
+.wfoot { display: flex; gap: 8px; } .wfoot .opt { flex: 1; }
 #mHorn { left: 0; top: 4px; } #mRadio { left: 0; top: 38px; }
 .carOnly { display: none !important; } #app.incar .carOnly { display: flex !important; } #app.incar .footOnly { display: none !important; }
 #padL { flex-direction: column; justify-content: space-evenly; gap: 16px; }
@@ -492,7 +503,7 @@ R.store = {
     [O.CARDTABLE]: { verb: 'Play blackjack', mini: 'blackjack' },
     [O.ARCADE]: { verb: 'Play pinball ($1)', arcade: 1 },
     [O.WASHER]: { verb: 'Wash your suit ($2)', wash: 1 },
-    [O.BCHAIR]: { verb: 'Haircut & shave ($8)', barber: 1 },
+    [O.BCHAIR]: { verb: 'Sit in the barber chair', barber: 1 },
     [O.PEW]: { verb: 'Sit and pray', pray: 1 },
     [O.ALTAR]: { verb: 'Confess ($40)', confess: 1 },
     [O.PIANO]: { verb: 'Play the piano', piano: 1 },
@@ -2750,6 +2761,10 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     const shirtHex = Array.isArray(shirt[0]) ? shirt[0] : shirt;
     look.old = O2.Qr(seed, shirtHex.map ? shirtHex.map((c) => (typeof c === 'number' ? c : parseInt(String(c).slice(1), 16))) : shirtHex, hairKey(look.hair), ov);
     look.old.mask = !!look.mask;
+    // overrides the original's look roller doesn't take directly
+    if (ov.hair) look.old.hair = ov.hair;
+    if ('beard' in ov) look.old.beard = ov.beard;
+    if ('stache' in ov) look.old.stache = ov.stache;
     return look.old;
   };
   A.invalidateLook = function (look) { look.old = null; };
@@ -2757,7 +2772,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
   const FLIP8 = [false, false, false, true, true, true, false, false];
   A.oldSprite = function (look, d8, frame, pose) {
     const L = A.oldLook(look);
-    const key = (look.seedStr || '') + '|' + JSON.stringify(L).length + '|' + L.shirt[2] + L.hair[1] + L.style + (L.mask ? 1 : 0) + (L.jacket ? L.jacket[1] : '') + '|' + d8 + frame + (pose || '');
+    const key = (look.seedStr || '') + '|' + (L._key || (L._key = JSON.stringify(L))) + '|' + d8 + frame + (pose || '');
     let c = oldCache.get(key);
     if (!c) {
       if (oldCache.size > 2500) oldCache.clear();
@@ -2806,6 +2821,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
       return;
     }
     g.drawImage(spr, X - spr.width / 2, Y - 25);
+    if (look.hatKind && A.drawHat) A.drawHat(g, X, Y - 25 + (look.kid ? 2 : 0), look.hatKind, d8, look.hatCol);
     if (st.weapon && st.weapon !== 'fists' && pose !== 'g' || pose === 'g') drawWeapon8(g, X, Y, d8, st.weapon);
     if (fx) g.restore();
   };
@@ -7279,6 +7295,8 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
       if (op < -30) return pick(['Oh. You.', 'Keep walking.', "Don't talk to me."]);
     }
     if (pl.rep.infamy > 60) return pick(["That's him. Don't make eye contact.", 'Sir.', 'Good evening, sir. Sir.']);
+    if (pl.style && pl.style.hat === 'fedora') return pick(['Nice lid.', 'Who do you think you are, Sinatra?', 'Sharp hat, mister.']);
+    if (pl.style && pl.style.facial === 'stache') return pick(['Nice lip caterpillar.', 'That moustache is working for you.']);
     if (pl.outfit === 'tux') return pick(['Wedding or funeral?', 'Nice tux, Travolta.']);
     if (pl.outfit === 'leisure') return pick(['Groovy threads.', 'Is that polyester?']);
     return pick(['Nice suit.', 'Hey.', 'Watch it.', 'Scuse me.', 'Evening.', 'Nice hat.', 'You lost?', 'Afternoon.']);
@@ -8013,6 +8031,8 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     this.inCar = null;
     this.inside = null;
     this.outfit = 'mook';
+    this.style = R.styleDefault();
+    this.wardrobe = {};
     this.outfitChangedSince = 0;
     this.rep = { infamy: 0, honor: 0 };
     this.standing = {};
@@ -8031,31 +8051,20 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
   });
   const P = Player.prototype;
 
-  // A young mafioso, painted by the original game's own character routine.
-  const SUITS = {
-    mook: { jacket: ['#14141c', '#24243a', '#383852', '#54547a'], shirt: ['#4a1018', '#6c1c26', '#92303a', '#b8505a'], pants: ['#14141c', '#24243a', '#383852', '#54547a'] },
-    velvet: { jacket: ['#2a1024', '#4a1c40', '#6c2c5e', '#945084'], shirt: ['#6a5a20', '#9a8430', '#c8ac48', '#ecd070'], pants: ['#1c1a24', '#2e2c3a', '#46445a', '#62607a'] },
-    leisure: { jacket: ['#1c3c5c', '#2c5c88', '#4880b0', '#78a8d8'], shirt: ['#8a8068', '#b8ae90', '#dcd4b8', '#f0ead4'], pants: ['#1c3c5c', '#2c5c88', '#4880b0', '#78a8d8'] },
-    tracksuit: { jacket: null, shirt: ['#5a2408', '#8c3c10', '#c85c1c', '#f08c40'], pants: ['#5a2408', '#8c3c10', '#c85c1c', '#f08c40'], top: 'stripe' },
-    leather: { jacket: ['#2a1a12', '#44281a', '#624028', '#86583a'], shirt: ['#6a1c1c', '#a02c2c', '#d04848', '#f07878'], pants: ['#1c2c48', '#2c4470', '#40609a', '#6488c0'] },
-    workman: { jacket: null, shirt: ['#2c3418', '#44502a', '#5e6c3a', '#7c8c50'], pants: ['#2c3418', '#44502a', '#5e6c3a', '#7c8c50'] },
-    tux: { jacket: ['#3a5a78', '#5a80a8', '#80a8cc', '#a8cce8'], shirt: ['#b8b8b0', '#d8d8d0', '#f0f0e8', '#ffffff'], pants: ['#3a5a78', '#5a80a8', '#80a8cc', '#a8cce8'] },
-    camelcoat: { jacket: ['#4a3418', '#7a5a2c', '#a88048', '#ceaa70'], shirt: ['#141418', '#24242e', '#383846', '#50505e'], pants: ['#1c1a24', '#2e2c3a', '#46445a', '#62607a'] },
-  };
+  // A young mafioso, painted by the original game's own character routine (see 13_style.js).
   P.buildLook = function () {
-    const o = D.outfits[this.outfit];
-    const suit = SUITS[this.outfit] || SUITS.mook;
-    this.look = {
-      skin: '#e0ac7e', hair: '#141010', hairStyle: 0, top: o.suit, bottom: o.suit, build: 1, fem: false, mask: this.masked,
-      seedStr: 'player-' + this.outfit + (this.masked ? '-m' : ''),
-      oldOverride: { shirt: suit.shirt, jacket: suit.jacket, pants: suit.pants, style: 'short', top: suit.top || 'collar', flare: true, stache: false, beard: false, glasses: false, dress: false, shoes: ['#141418', '#24242c', '#3a3a46'], kid: false, mask: this.masked },
-    };
+    if (!this.style) this.style = R.styleDefault();
+    this.outfit = this.style.jacket in D.outfits ? this.style.jacket : 'mook';
+    this.look = R.lookFromStyle(this.style, this.masked);
   };
   P.outfitScore = function () {
     const city = this.game.world.cityAt((this.x / TS) | 0, (this.y / TS) | 0);
-    const fancy = ['mook', 'velvet', 'tux', 'camelcoat'].includes(this.outfit);
-    if (!city) return this.outfit === 'workman' || this.outfit === 'leather' ? 10 : fancy ? -5 : 0;
-    return fancy ? 8 : this.outfit === 'tracksuit' ? -5 : 2;
+    const j = this.style ? this.style.jacket : this.outfit;
+    const jd = D.style.jackets[j] || {};
+    const fancy = !!jd.fancy, rugged = j === 'leather' || j === 'denim' || j === 'none' || j === 'corduroy';
+    const hatBonus = this.style && this.style.hat !== 'none' ? (this.style.hat === 'cowboy' ? (city ? -2 : 4) : 2) : 0;
+    if (!city) return (rugged ? 10 : fancy ? -5 : 0) + hatBonus;
+    return (fancy ? 8 : rugged ? 2 : 3) + hatBonus;
   };
   P.place = function (x, y) {
     this.x = x; this.y = y;
@@ -9750,6 +9759,198 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
   };
 })();
 
+// ---- 13_style.js
+// RHAPSODY — wardrobe and grooming. Mix and match jackets, shirts, trousers and hats at
+// the tailor; change your hair, its colour and your facial hair at the barber. Every
+// piece is painted by the original's character routine, hats are drawn over the top.
+(function () {
+  const D = R.data, A = R.art;
+  const INK = '#1b1410';
+  const ramp = (a, b, c, d) => [a, b, c, d];
+
+  const ST = (D.style = {
+    jackets: {
+      none: { name: 'No jacket', price: 0, c: null },
+      mook: { name: 'Charcoal Two-Piece', price: 0, c: ramp('#14141c', '#24243a', '#383852', '#54547a'), fancy: 1 },
+      velvet: { name: 'Crushed Velvet', price: 120, c: ramp('#2a1024', '#4a1c40', '#6c2c5e', '#945084'), fancy: 1 },
+      leisure: { name: 'Leisure Suit', price: 80, c: ramp('#1c3c5c', '#2c5c88', '#4880b0', '#78a8d8') },
+      leather: { name: 'Leather Jacket', price: 150, c: ramp('#2a1a12', '#44281a', '#624028', '#86583a') },
+      tux: { name: 'Powder Blue Tux', price: 250, c: ramp('#3a5a78', '#5a80a8', '#80a8cc', '#a8cce8'), fancy: 1 },
+      camelcoat: { name: 'Camel Overcoat', price: 300, c: ramp('#4a3418', '#7a5a2c', '#a88048', '#ceaa70'), fancy: 1 },
+      disco: { name: 'White Disco Suit', price: 220, c: ramp('#8a8680', '#c0bcb4', '#e4e0d8', '#fffcf4'), fancy: 1 },
+      corduroy: { name: 'Corduroy Blazer', price: 90, c: ramp('#3a2410', '#5a3a1c', '#7c522c', '#a0703e') },
+      denim: { name: 'Denim Jacket', price: 60, c: ramp('#1c2c48', '#2c4470', '#40609a', '#6488c0') },
+      plaid: { name: 'Green Plaid Sport Coat', price: 110, c: ramp('#1c3420', '#2c4c30', '#44683e', '#6a8c56') },
+      maroon: { name: 'Maroon Dinner Jacket', price: 180, c: ramp('#3a0c14', '#5c1420', '#842434', '#aa3c4c'), fancy: 1 },
+    },
+    shirts: {
+      maroon: { name: 'Maroon', price: 0, c: ramp('#4a1018', '#6c1c26', '#92303a', '#b8505a') },
+      cream: { name: 'Cream', price: 20, c: ramp('#8a8068', '#b8ae90', '#dcd4b8', '#f0ead4') },
+      black: { name: 'Black', price: 20, c: ramp('#141418', '#24242e', '#383846', '#50505e') },
+      white: { name: 'White', price: 20, c: ramp('#b8b8b0', '#d8d8d0', '#f0f0e8', '#ffffff') },
+      sky: { name: 'Sky Blue', price: 25, c: ramp('#3a6a8a', '#5a8aaa', '#80b0d0', '#b0d8f0') },
+      mustard: { name: 'Mustard', price: 25, c: ramp('#6a5a20', '#9a8430', '#c8ac48', '#ecd070') },
+      orange: { name: 'Burnt Orange', price: 25, c: ramp('#5a2408', '#8c3c10', '#c85c1c', '#f08c40') },
+      olive: { name: 'Olive', price: 20, c: ramp('#2c3418', '#44502a', '#5e6c3a', '#7c8c50') },
+      pink: { name: 'Salmon Pink', price: 30, c: ramp('#7a3a3a', '#a85a58', '#d88078', '#f8b0a0') },
+      purple: { name: 'Paisley Purple', price: 35, c: ramp('#2a1a4a', '#44306e', '#664c98', '#9078c0') },
+    },
+    pants: {
+      mook: { name: 'Charcoal Slacks', price: 0, c: ramp('#14141c', '#24243a', '#383852', '#54547a') },
+      black: { name: 'Black Slacks', price: 30, c: ramp('#0c0c10', '#1a1a20', '#2a2a34', '#40404c') },
+      navy: { name: 'Navy Bell-Bottoms', price: 35, c: ramp('#141c34', '#1c2c50', '#2c4274', '#44609a') },
+      brown: { name: 'Brown Flares', price: 35, c: ramp('#2a1a0c', '#442c16', '#644224', '#865a34') },
+      denim: { name: 'Denim Flares', price: 30, c: ramp('#1c2c48', '#2c4470', '#40609a', '#6488c0') },
+      cream: { name: 'Cream Trousers', price: 40, c: ramp('#8a8068', '#b8ae90', '#dcd4b8', '#f0ead4') },
+      white: { name: 'White Trousers', price: 45, c: ramp('#9a9890', '#c8c6be', '#e8e6de', '#fffdf6') },
+      plaid: { name: 'Check Trousers', price: 40, c: ramp('#3a2418', '#5a3a24', '#7c5634', '#a07448') },
+    },
+    tops: { collar: { name: 'Wide Collar', price: 0 }, turtle: { name: 'Turtleneck', price: 25 }, stripe: { name: 'Striped Tee', price: 15 }, tee: { name: 'Plain Tee', price: 10 } },
+    hats: {
+      none: { name: 'No hat', price: 0 },
+      fedora: { name: 'Fedora', price: 60 },
+      trilby: { name: 'Trilby', price: 50 },
+      porkpie: { name: 'Pork Pie', price: 45 },
+      bowler: { name: 'Bowler', price: 55 },
+      flatcap: { name: 'Flat Cap', price: 25 },
+      cowboy: { name: 'Stetson', price: 70 },
+      beanie: { name: 'Watch Cap', price: 15 },
+    },
+    hatCols: {
+      black: { name: 'Black', c: ['#0c0c10', '#1e1e26', '#34343e'], band: '#6a1c26' },
+      brown: { name: 'Brown', c: ['#2a1a0c', '#4a3018', '#6c4a28'], band: '#1a0e06' },
+      grey: { name: 'Grey', c: ['#34343c', '#585862', '#80808c'], band: '#141418' },
+      cream: { name: 'Cream', c: ['#8a8068', '#c8bea0', '#ece4c8'], band: '#3a2418' },
+      navy: { name: 'Navy', c: ['#10162a', '#1c2a4a', '#2c4270'], band: '#c8ac48' },
+      tan: { name: 'Tan', c: ['#5a4020', '#8c6a38', '#b89058'], band: '#3a2010' },
+      red: { name: 'Red', c: ['#4a0c0c', '#8a1c1c', '#c03030'], band: '#141414' },
+    },
+    hair: { short: 'Slicked Back', shag: 'Shag', long: 'Long', afro: 'Afro', spiky: 'Spiked', bald: 'Shaved', ponytail: 'Ponytail', bun: 'Top Knot' },
+    hairCols: {
+      black: { name: 'Jet Black', c: ramp('#0e0c16', '#1c1a28', '#2e2c40', '#484660') },
+      brown: { name: 'Brown', c: ramp('#2a1810', '#4a2c1c', '#70462a', '#94643c') },
+      auburn: { name: 'Auburn', c: ramp('#4a1410', '#8a2c18', '#c04a24', '#e8783c') },
+      blond: { name: 'Blond', c: ramp('#6a4a1a', '#a07a2a', '#d0a848', '#f0d888') },
+      grey: { name: 'Silver Fox', c: ramp('#4a4a58', '#7a7a88', '#a8a8b4', '#d4d4dc') },
+      bleach: { name: 'Bleached', c: ramp('#8a8070', '#c0b8a0', '#e8e0c8', '#fffaf0') },
+    },
+    facial: { clean: 'Clean-shaven', stache: 'Moustache', beard: 'Full Beard' },
+  });
+
+  const DEFAULT = { jacket: 'mook', shirt: 'maroon', pants: 'mook', top: 'collar', hat: 'none', hatCol: 'black', hair: 'short', hairCol: 'black', facial: 'clean', glasses: false };
+  R.styleDefault = () => Object.assign({}, DEFAULT);
+
+  // the look the painter needs, from a style
+  R.lookFromStyle = function (s, masked) {
+    const j = ST.jackets[s.jacket] || ST.jackets.mook, sh = ST.shirts[s.shirt] || ST.shirts.maroon, pa = ST.pants[s.pants] || ST.pants.mook;
+    const hc = ST.hatCols[s.hatCol] || ST.hatCols.black;
+    const seed = 'player-' + [s.jacket, s.shirt, s.pants, s.top, s.hair, s.hairCol, s.facial, s.glasses ? 1 : 0, masked ? 'm' : ''].join('-');
+    return {
+      skin: '#e0ac7e', hair: '#141010', hairStyle: 0, top: sh.c[2], bottom: pa.c[2], build: 1, fem: false, mask: masked, seedStr: seed,
+      hatKind: s.hat && s.hat !== 'none' && !masked ? s.hat : null, hatCol: hc,
+      oldOverride: {
+        shirt: sh.c, jacket: j.c, pants: pa.c, style: s.hair || 'short', hair: (ST.hairCols[s.hairCol] || ST.hairCols.black).c,
+        top: s.top || 'collar', flare: true, stache: s.facial === 'stache', beard: s.facial === 'beard', glasses: !!s.glasses, dress: false,
+        shoes: ['#141418', '#24242c', '#3a3a46'], kid: false, mask: masked,
+      },
+    };
+  };
+
+  // ---------------------------------------------------------------- hats
+  // Drawn over the sprite. (x, top) is the top-centre of the 16x32 character cell.
+  const HATS = {
+    fedora: [[-8, 5, 16, 2, 1], [-5, 0, 10, 5, 1], [-4, 0, 8, 1, 2], [-5, 3, 10, 1, 'band'], [-1, 0, 2, 1, 0], [-8, 6, 16, 1, 0]],
+    trilby: [[-7, 5, 14, 1, 1], [-4, 1, 8, 4, 1], [-3, 1, 6, 1, 2], [-4, 3, 8, 1, 'band'], [5, 4, 2, 1, 1]],
+    porkpie: [[-7, 5, 14, 1, 1], [-5, 2, 10, 3, 1], [-5, 2, 10, 1, 2], [-5, 4, 10, 1, 'band']],
+    bowler: [[-7, 5, 14, 1, 1], [-5, 1, 10, 4, 1], [-4, 0, 8, 1, 1], [-3, 0, 5, 2, 2], [-5, 4, 10, 1, 'band']],
+    flatcap: [[-6, 2, 12, 4, 1], [-5, 1, 10, 1, 1], [-4, 2, 6, 1, 2], [-6, 5, 12, 1, 0]],
+    cowboy: [[-9, 5, 18, 2, 1], [-9, 4, 2, 1, 1], [7, 4, 2, 1, 1], [-4, 0, 8, 5, 1], [-3, 0, 6, 1, 2], [-1, 0, 2, 1, 0], [-4, 3, 8, 1, 'band']],
+    beanie: [[-6, 1, 12, 5, 1], [-5, 0, 10, 1, 1], [-4, 1, 5, 1, 2], [-6, 5, 12, 2, 2], [-1, -2, 2, 2, 2]],
+  };
+  A.drawHat = function (g, x, top, kind, d8, col) {
+    const rects = HATS[kind];
+    if (!rects) return;
+    const c = (col && col.c) || ST.hatCols.black.c, band = (col && col.band) || '#6a1c26';
+    const facing = d8 === 0 || d8 === 1 || d8 === 7 ? 1 : d8 === 3 || d8 === 4 || d8 === 5 ? -1 : 0;
+    const X = Math.round(x), Y = Math.round(top);
+    const fill = (r) => (r[4] === 'band' ? band : c[r[4]]);
+    g.fillStyle = INK;
+    for (const r of rects) g.fillRect(X + r[0] - 1, Y + r[1] - 1, r[2] + 2, r[3] + 2);
+    for (const r of rects) { g.fillStyle = fill(r); g.fillRect(X + r[0], Y + r[1], r[2], r[3]); }
+    // a flat cap's bill points where you look
+    if (kind === 'flatcap' && facing) { g.fillStyle = INK; g.fillRect(X + (facing > 0 ? 5 : -10), Y + 3, 6, 3); g.fillStyle = c[0]; g.fillRect(X + (facing > 0 ? 6 : -9), Y + 4, 4, 1); }
+    else if (kind === 'flatcap' && d8 === 2) { g.fillStyle = c[0]; g.fillRect(X - 5, Y + 6, 10, 1); }
+  };
+
+  // ---------------------------------------------------------------- shops
+  const CATS = {
+    tailor: [['jackets', 'Jackets', 'jacket'], ['shirts', 'Shirts', 'shirt'], ['tops', 'Collar', 'top'], ['pants', 'Trousers', 'pants'], ['hats', 'Hats', 'hat'], ['hatCols', 'Hat colour', 'hatCol'], ['glasses', 'Shades', 'glasses']],
+    barber: [['hair', 'Haircut', 'hair'], ['hairCols', 'Colour', 'hairCol'], ['facial', 'Face', 'facial']],
+  };
+  const priceOf = (cat, key) => {
+    if (cat === 'hair') return 10;
+    if (cat === 'hairCols') return key === 'black' ? 12 : 18;
+    if (cat === 'facial') return key === 'clean' ? 5 : 25;
+    if (cat === 'hatCols') return 10;
+    if (cat === 'glasses') return 20;
+    const e = ST[cat][key];
+    return e ? e.price : 0;
+  };
+  const nameOf = (cat, key) => (cat === 'glasses' ? (key ? 'Aviator shades' : 'No shades') : typeof ST[cat][key] === 'string' ? ST[cat][key] : ST[cat][key].name);
+  const swatch = (cat, key) => {
+    const e = ST[cat] && ST[cat][key];
+    if (!e) return '';
+    const c = e.c ? (Array.isArray(e.c) ? e.c[2] : null) : null;
+    return c ? `<i class="sw" style="background:${c}"></i>` : '';
+  };
+
+  R.openWardrobe = function (mode) {
+    const g = R.game, ui = g.ui, pl = g.player;
+    const orig = Object.assign({}, pl.style);
+    const prev = Object.assign({}, pl.style);
+    pl.wardrobe = pl.wardrobe || {};
+    let cat = CATS[mode][0][0];
+    const owned = (c, k) => priceOf(c, k) === 0 || pl.wardrobe[c + ':' + k] || (c === 'hair' || c === 'hairCols' || c === 'facial' ? false : false);
+    const bill = () => {
+      let t = 0;
+      for (const [c, , field] of CATS[mode]) {
+        const k = prev[field];
+        if (k !== orig[field] && !owned(c, k)) t += priceOf(c, k);
+      }
+      return t;
+    };
+    const render = () => {
+      const cdef = CATS[mode].find((c) => c[0] === cat), field = cdef[2];
+      const keys = cat === 'glasses' ? [false, true] : Object.keys(ST[cat]);
+      const cost = bill();
+      const html = ui.header(mode === 'tailor' ? 'Tailor' : 'Barber', mode === 'tailor' ? 'Try things on. You only pay for what you walk out in. A new look throws off anyone hunting the old one.' : 'Sit down, relax. A new look throws off anyone hunting the old one.') +
+        `<div class="body wardrobe"><div class="wtop"><canvas class="wport" width="48" height="60"></canvas><div class="wcats">${CATS[mode].map(([k, l]) => `<button data-c="${k}" class="${k === cat ? 'sel' : ''}">${l}</button>`).join('')}</div></div>` +
+        `<div class="wlist">${keys.map((k) => { const on = prev[field] === k; const p = priceOf(cat, k); const own = owned(cat, k); return `<button class="wi ${on ? 'sel' : ''}" data-k="${k}">${swatch(cat, k)}<span>${nameOf(cat, k)}</span><em>${own || !p ? (on ? 'ON' : '') : '$' + p}</em></button>`; }).join('')}</div>` +
+        `<div class="wfoot"><button class="opt" data-a="cancel">Put it all back</button><button class="opt good" data-a="buy">${cost ? `Buy & wear  ${R.fmtMoney(cost)}` : 'Wear it'}</button></div></div>`;
+      const s = ui.openSheet('wardrobe', html);
+      const cv = s.querySelector('.wport'), cg = cv.getContext('2d');
+      cg.imageSmoothingEnabled = false;
+      cg.fillStyle = '#e6d0a4'; cg.fillRect(0, 0, 48, 60);
+      const look = R.lookFromStyle(prev, false);
+      cg.save(); cg.scale(1.5, 1.5); A.drawPerson(cg, 16, 37, 2, 0, look, {}); cg.restore();
+      s.querySelectorAll('[data-c]').forEach((b) => b.addEventListener('click', () => { cat = b.dataset.c; render(); }));
+      s.querySelectorAll('.wi').forEach((b) => b.addEventListener('click', () => { const k = b.dataset.k; prev[field] = cat === 'glasses' ? k === 'true' : k; g.audio.sfx('click'); render(); }));
+      s.querySelector('[data-a="cancel"]').addEventListener('click', () => { ui.closeSheet(); });
+      s.querySelector('[data-a="buy"]').addEventListener('click', () => {
+        const c = bill();
+        if (c && !pl.pay(c)) return ui.toast(`That comes to ${R.fmtMoney(c)}. You're short.`, 'warn');
+        for (const [cc, , f] of CATS[mode]) if (!/^hair|facial/.test(cc)) pl.wardrobe[cc + ':' + prev[f]] = 1;
+        const changed = CATS[mode].some(([, , f]) => prev[f] !== orig[f]);
+        pl.style = Object.assign({}, prev);
+        pl.buildLook();
+        if (changed) { pl.outfitChangedSince = 900; pl.bloody = 0; g.audio.sfx('cash'); ui.toast(mode === 'tailor' ? 'Looking sharp. The cops will need a second look.' : 'Fresh look. Your own mother would walk past you.', 'good'); }
+        ui.closeSheet();
+      });
+    };
+    render();
+  };
+})();
+
 // ---- 14_audio.js
 // RHAPSODY — WebAudio: synthesized sound effects and three procedural radio
 // stations (funk, disco, outlaw country) plus tense police music.
@@ -11311,7 +11512,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
         break;
       case 'pawn': opts.push({ label: 'Sell your goods', fn: () => this.openShop('pawn') }); buy('Brass Knuckles', 40, () => { pl.giveWeapon('knuckles'); say('Knuckles. Fits like a wedding ring.'); }); buy('Baseball Bat', 35, () => { pl.giveWeapon('bat'); say("Louisville Slugger. Not for baseball."); }); break;
       case 'guns': opts.push({ label: 'Browse the counter', fn: () => this.openShop('guns') }); break;
-      case 'tailor': opts.push({ label: 'Try on suits', fn: () => this.openShop('tailor') }); buy('Ski Mask', 10, () => { pl.inv.tools.mask = 1; say('Wear it with MASK. Witnesses can\'t name you.'); }); break;
+      case 'tailor': opts.push({ label: 'Try things on', small: 'Jackets, shirts, trousers, hats, shades', fn: () => { this.closeSheet(); R.openWardrobe('tailor'); } }); buy('Ski Mask', 10, () => { pl.inv.tools.mask = 1; say('Wear it with MASK. Witnesses can\'t name you.'); }); break;
       case 'bank':
         if (!pl.room) opts.push({ label: 'Rob the vault', small: 'Big money. The whole city will come for you.', cls: 'bad', fn: () => this.heist(b) });
         break;
@@ -11344,7 +11545,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
         buy('Champagne', 12, () => { pl.drink(); pl.cool = Math.min(100, pl.cool + 20); say('Bubbles up your nose. Very classy.'); });
         break;
       case 'arcade': buy('Play pinball', 1, () => { const s = Math.floor(R.rng() * 90000) + 1000; pl.cool = Math.min(100, pl.cool + 10); say(`TILT! You scored ${s.toLocaleString()}. ${s > 70000 ? 'High score. The kids stare in awe.' : 'A kid in a striped shirt snickers.'}`); }); break;
-      case 'barber': buy('Haircut & shave', 8, () => { pl.outfitChangedSince = 600; say('Fresh shave, new part. Cops will have a harder time recognising you for a while.'); }); break;
+      case 'barber': opts.push({ label: 'Take a seat', small: 'Haircut, colour, moustache or beard', fn: () => { this.closeSheet(); R.openWardrobe('barber'); } }); break;
       case 'laundry': buy('Wash your suit', 2, () => { pl.bloody = 0; say('The blood comes out. Mostly.'); }); break;
       case 'farm': buy('Buy a side of beef', 10, () => { pl.inv.cons.sandwich = (pl.inv.cons.sandwich || 0) + 2; say('Wrapped in paper. Makes two sandwiches.'); }); break;
       default: break;
@@ -11583,6 +11784,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
       opts.push({ label: 'Molotov', small: `You have ${pl.inv.ammo.molotov || 0}`, price: '$25', fn: () => { if (!pl.pay(25)) return; pl.inv.ammo.molotov = (pl.inv.ammo.molotov || 0) + 1; this.openShop('guns'); } });
       opts.push({ label: 'Dynamite', small: g.jobs.rank() < 1 ? 'Soldier rank only' : `You have ${pl.inv.ammo.dynamite || 0}`, price: '$60', cls: g.jobs.rank() < 1 ? 'dim' : '', fn: () => { if (g.jobs.rank() < 1 || !pl.pay(60)) return; pl.inv.ammo.dynamite = (pl.inv.ammo.dynamite || 0) + 1; this.openShop('guns'); } });
     } else if (kind === 'tailor') {
+      return R.openWardrobe('tailor');
       title = 'Tailor';
       sub = 'A new suit also throws off anyone looking for the old one.';
       for (const id in D.outfits) {
@@ -11748,7 +11950,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
       const weapons = pl.weaponList().map((w) => (w === 'gascan' ? `Gas Can ×${pl.inv.tools.gascan}` : D.weapons[w].name + (D.weapons[w].gun ? ` (${pl.clip[w] || 0}+${pl.inv.ammo[D.weapons[w].ammo] || 0})` : D.weapons[w].thrown ? ` ×${pl.inv.ammo[w]}` : ''))).join(', ');
       const loot = Object.keys(pl.inv.loot).filter((k) => pl.inv.loot[k]).map((k) => `${D.loot[k].name} ×${pl.inv.loot[k]}`).join(', ');
       const tools = Object.keys(pl.inv.tools).filter((k) => pl.inv.tools[k]).map((k) => `${D.tools[k].name}${pl.inv.tools[k] > 1 ? ' ×' + pl.inv.tools[k] : ''}`).join(', ');
-      body.innerHTML = `<div class="sect">Weapons</div><p>${esc(weapons)}</p><div class="sect">Pockets</div>${this.optsHtml(rows)}<div class="sect">Tools</div><p>${esc(tools || 'Nothing')}</p><div class="sect">Goods to fence</div><p>${esc(loot || 'Nothing')}</p><div class="sect">Outfit</div><p>${esc(D.outfits[pl.outfit].name)}</p>`;
+      body.innerHTML = `<div class="sect">Weapons</div><p>${esc(weapons)}</p><div class="sect">Pockets</div>${this.optsHtml(rows)}<div class="sect">Tools</div><p>${esc(tools || 'Nothing')}</p><div class="sect">Goods to fence</div><p>${esc(loot || 'Nothing')}</p><div class="sect">Wearing</div><p>${esc([D.style.jackets[pl.style.jacket].name, D.style.shirts[pl.style.shirt].name + ' shirt', D.style.pants[pl.style.pants].name, pl.style.hat !== 'none' ? D.style.hatCols[pl.style.hatCol].name + ' ' + D.style.hats[pl.style.hat].name : null, D.style.hair[pl.style.hair] + ' hair', pl.style.facial !== 'clean' ? D.style.facial[pl.style.facial] : null].filter(Boolean).join(', '))}</p>`;
       this.bindOpts(body, rows);
     } else if (tab === 'news') {
       const day = g.pop.day;
@@ -12008,6 +12210,8 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
   };
 
   P.drawHuman = function (g, h) {
+    // made men favour a fedora
+    if (h.look.hatKind === undefined) h.look.hatKind = h.faction && h.faction !== 'law' && (R.hash2(h.x | 0, h.y | 0, 3) < 0.55) ? R.rng.pick(['fedora', 'fedora', 'trilby', 'porkpie']) : null;
     const st = { weapon: h.drawn || h.state === 'fight' ? h.weapon : null, down: h.down > 0 || h.state === 'sleep', scale: h.scale, alpha: h.ghost ? 0.4 + Math.sin(this.game.clock.real * 3) * 0.15 : null };
     if (h.state === 'sleep') {
       A.drawPerson(g, h.x + 4, h.y + 4, 2, 0, h.look, st);
@@ -12660,7 +12864,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     const data = {
       v: 2, seed: this.seed, t: this.clock.t, log: this.worldLog, weather: this.env.weather.kind,
       player: {
-        x: pl.room ? this.interiors.outside(pl.x, pl.y).x : pl.x, y: pl.room ? this.interiors.outside(pl.x, pl.y).y : pl.y, hp: pl.hp, cool: pl.cool, cash: pl.cash, inv: pl.inv, clip: pl.clip, outfit: pl.outfit, outfits: pl.outfits || {},
+        x: pl.room ? this.interiors.outside(pl.x, pl.y).x : pl.x, y: pl.room ? this.interiors.outside(pl.x, pl.y).y : pl.y, hp: pl.hp, cool: pl.cool, cash: pl.cash, inv: pl.inv, clip: pl.clip, outfit: pl.outfit, outfits: pl.outfits || {}, style: pl.style, wardrobe: pl.wardrobe,
         will: pl.will, rep: pl.rep, standing: pl.standing, stats: pl.stats, sweetheart: pl.sweetheart, properties: pl.properties, masked: pl.masked,
         cars: pl.ownedCars.filter((c) => !c.removed && !c.wrecked).map((c) => [c.modelId, c.x, c.y, c.angle, c.color]),
       },
@@ -12686,6 +12890,8 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
       const pl = this.player, p = s.player;
       Object.assign(pl, { hp: p.hp, cool: p.cool, cash: p.cash, inv: p.inv, clip: p.clip, outfit: p.outfit, outfits: p.outfits, rep: p.rep, standing: p.standing, stats: Object.assign(pl.stats, p.stats), sweetheart: p.sweetheart, properties: p.properties || [], masked: !!p.masked });
       if (p.will != null) pl.will = p.will;
+      if (p.style) pl.style = Object.assign(R.styleDefault(), p.style);
+      pl.wardrobe = p.wardrobe || {};
       pl.place(p.x, p.y);
       pl.buildLook();
       for (const [id, fam, due, owned] of s.rackets || []) { const b = this.world.buildings[id]; if (b) { b.racket = 1; b.racketFamily = fam; b.racketDue = due; if (owned) b.playerOwned = true; } }
@@ -13240,7 +13446,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr, Ue, props: Dr, pa
     if (f.game) return { label: f.verb, fn: () => this.gamble(f.game[0], f.game[1], f.game[2]) };
     if (f.arcade) return { label: f.verb, fn: () => { if (!pl.pay(1)) return; const s = R.rng.int(1000, 99000); pl.cool = Math.min(100, pl.cool + 8); g.ui.toast(`TILT! ${s.toLocaleString()} points.${s > 70000 ? ' High score!' : ''}`); } };
     if (f.wash) return { label: f.verb, fn: () => { if (!pl.pay(2)) return; pl.bloody = 0; g.ui.toast('The blood comes out. Mostly.'); } };
-    if (f.barber) return { label: f.verb, fn: () => { if (!pl.pay(8)) return; pl.outfitChangedSince = 600; g.ui.toast('Fresh shave, new part. Harder to recognise for a while.', 'good'); } };
+    if (f.barber) return { label: f.verb, fn: () => R.openWardrobe('barber') };
     if (f.pray) return { label: f.verb, fn: () => { g.clock.skip(30); pl.cool = Math.min(100, pl.cool + 10); pl.rep.honor += 0.5; g.ui.toast('Half an hour of quiet. Stained glass and old wood.'); } };
     if (f.confess) return { label: f.verb, fn: () => { if (!pl.pay(40)) return g.ui.toast('The Lord takes IOUs. The church does not.', 'warn'); pl.rep.infamy = Math.max(0, pl.rep.infamy - 8); pl.rep.honor += 5; g.ui.toast('Ten Hail Marys and stop hitting people.', 'good'); } };
     if (f.piano) return { label: f.verb, fn: () => { g.audio.sfx('promote'); pl.cool = Math.min(100, pl.cool + 6); for (const a of g.actors.list) if (a.room === room && !a.dead && R.rng() < 0.5) g.actors.say(a, R.rng.pick(['Bravo!', 'Play it again!', 'Not bad for a hood.'])); } };

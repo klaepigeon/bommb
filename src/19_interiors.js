@@ -527,7 +527,7 @@
     if (f.game) return { label: f.verb, fn: () => this.gamble(f.game[0], f.game[1], f.game[2]) };
     if (f.arcade) return { label: f.verb, fn: () => { if (!pl.pay(1)) return; const s = R.rng.int(1000, 99000); pl.cool = Math.min(100, pl.cool + 8); g.ui.toast(`TILT! ${s.toLocaleString()} points.${s > 70000 ? ' High score!' : ''}`); } };
     if (f.wash) return { label: f.verb, fn: () => { if (!pl.pay(2)) return; pl.bloody = 0; g.ui.toast('The blood comes out. Mostly.'); } };
-    if (f.barber) return { label: f.verb, fn: () => { if (!pl.pay(8)) return; pl.outfitChangedSince = 600; g.ui.toast('Fresh shave, new part. Harder to recognise for a while.', 'good'); } };
+    if (f.barber) return { label: f.verb, fn: () => R.openWardrobe('barber') };
     if (f.pray) return { label: f.verb, fn: () => { g.clock.skip(30); pl.cool = Math.min(100, pl.cool + 10); pl.rep.honor += 0.5; g.ui.toast('Half an hour of quiet. Stained glass and old wood.'); } };
     if (f.confess) return { label: f.verb, fn: () => { if (!pl.pay(40)) return g.ui.toast('The Lord takes IOUs. The church does not.', 'warn'); pl.rep.infamy = Math.max(0, pl.rep.infamy - 8); pl.rep.honor += 5; g.ui.toast('Ten Hail Marys and stop hitting people.', 'good'); } };
     if (f.piano) return { label: f.verb, fn: () => { g.audio.sfx('promote'); pl.cool = Math.min(100, pl.cool + 6); for (const a of g.actors.list) if (a.room === room && !a.dead && R.rng() < 0.5) g.actors.say(a, R.rng.pick(['Bravo!', 'Play it again!', 'Not bad for a hood.'])); } };

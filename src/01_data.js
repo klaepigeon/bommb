@@ -79,7 +79,7 @@
     [O.CARDTABLE]: { verb: 'Play blackjack', mini: 'blackjack' },
     [O.ARCADE]: { verb: 'Play pinball ($1)', arcade: 1 },
     [O.WASHER]: { verb: 'Wash your suit ($2)', wash: 1 },
-    [O.BCHAIR]: { verb: 'Haircut & shave ($8)', barber: 1 },
+    [O.BCHAIR]: { verb: 'Sit in the barber chair', barber: 1 },
     [O.PEW]: { verb: 'Sit and pray', pray: 1 },
     [O.ALTAR]: { verb: 'Confess ($40)', confess: 1 },
     [O.PIANO]: { verb: 'Play the piano', piano: 1 },

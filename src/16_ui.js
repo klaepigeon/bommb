@@ -589,7 +589,7 @@
         break;
       case 'pawn': opts.push({ label: 'Sell your goods', fn: () => this.openShop('pawn') }); buy('Brass Knuckles', 40, () => { pl.giveWeapon('knuckles'); say('Knuckles. Fits like a wedding ring.'); }); buy('Baseball Bat', 35, () => { pl.giveWeapon('bat'); say("Louisville Slugger. Not for baseball."); }); break;
       case 'guns': opts.push({ label: 'Browse the counter', fn: () => this.openShop('guns') }); break;
-      case 'tailor': opts.push({ label: 'Try on suits', fn: () => this.openShop('tailor') }); buy('Ski Mask', 10, () => { pl.inv.tools.mask = 1; say('Wear it with MASK. Witnesses can\'t name you.'); }); break;
+      case 'tailor': opts.push({ label: 'Try things on', small: 'Jackets, shirts, trousers, hats, shades', fn: () => { this.closeSheet(); R.openWardrobe('tailor'); } }); buy('Ski Mask', 10, () => { pl.inv.tools.mask = 1; say('Wear it with MASK. Witnesses can\'t name you.'); }); break;
       case 'bank':
         if (!pl.room) opts.push({ label: 'Rob the vault', small: 'Big money. The whole city will come for you.', cls: 'bad', fn: () => this.heist(b) });
         break;
@@ -622,7 +622,7 @@
         buy('Champagne', 12, () => { pl.drink(); pl.cool = Math.min(100, pl.cool + 20); say('Bubbles up your nose. Very classy.'); });
         break;
       case 'arcade': buy('Play pinball', 1, () => { const s = Math.floor(R.rng() * 90000) + 1000; pl.cool = Math.min(100, pl.cool + 10); say(`TILT! You scored ${s.toLocaleString()}. ${s > 70000 ? 'High score. The kids stare in awe.' : 'A kid in a striped shirt snickers.'}`); }); break;
-      case 'barber': buy('Haircut & shave', 8, () => { pl.outfitChangedSince = 600; say('Fresh shave, new part. Cops will have a harder time recognising you for a while.'); }); break;
+      case 'barber': opts.push({ label: 'Take a seat', small: 'Haircut, colour, moustache or beard', fn: () => { this.closeSheet(); R.openWardrobe('barber'); } }); break;
       case 'laundry': buy('Wash your suit', 2, () => { pl.bloody = 0; say('The blood comes out. Mostly.'); }); break;
       case 'farm': buy('Buy a side of beef', 10, () => { pl.inv.cons.sandwich = (pl.inv.cons.sandwich || 0) + 2; say('Wrapped in paper. Makes two sandwiches.'); }); break;
       default: break;
@@ -861,6 +861,7 @@
       opts.push({ label: 'Molotov', small: `You have ${pl.inv.ammo.molotov || 0}`, price: '$25', fn: () => { if (!pl.pay(25)) return; pl.inv.ammo.molotov = (pl.inv.ammo.molotov || 0) + 1; this.openShop('guns'); } });
       opts.push({ label: 'Dynamite', small: g.jobs.rank() < 1 ? 'Soldier rank only' : `You have ${pl.inv.ammo.dynamite || 0}`, price: '$60', cls: g.jobs.rank() < 1 ? 'dim' : '', fn: () => { if (g.jobs.rank() < 1 || !pl.pay(60)) return; pl.inv.ammo.dynamite = (pl.inv.ammo.dynamite || 0) + 1; this.openShop('guns'); } });
     } else if (kind === 'tailor') {
+      return R.openWardrobe('tailor');
       title = 'Tailor';
       sub = 'A new suit also throws off anyone looking for the old one.';
       for (const id in D.outfits) {
@@ -1026,7 +1027,7 @@
       const weapons = pl.weaponList().map((w) => (w === 'gascan' ? `Gas Can ×${pl.inv.tools.gascan}` : D.weapons[w].name + (D.weapons[w].gun ? ` (${pl.clip[w] || 0}+${pl.inv.ammo[D.weapons[w].ammo] || 0})` : D.weapons[w].thrown ? ` ×${pl.inv.ammo[w]}` : ''))).join(', ');
       const loot = Object.keys(pl.inv.loot).filter((k) => pl.inv.loot[k]).map((k) => `${D.loot[k].name} ×${pl.inv.loot[k]}`).join(', ');
       const tools = Object.keys(pl.inv.tools).filter((k) => pl.inv.tools[k]).map((k) => `${D.tools[k].name}${pl.inv.tools[k] > 1 ? ' ×' + pl.inv.tools[k] : ''}`).join(', ');
-      body.innerHTML = `<div class="sect">Weapons</div><p>${esc(weapons)}</p><div class="sect">Pockets</div>${this.optsHtml(rows)}<div class="sect">Tools</div><p>${esc(tools || 'Nothing')}</p><div class="sect">Goods to fence</div><p>${esc(loot || 'Nothing')}</p><div class="sect">Outfit</div><p>${esc(D.outfits[pl.outfit].name)}</p>`;
+      body.innerHTML = `<div class="sect">Weapons</div><p>${esc(weapons)}</p><div class="sect">Pockets</div>${this.optsHtml(rows)}<div class="sect">Tools</div><p>${esc(tools || 'Nothing')}</p><div class="sect">Goods to fence</div><p>${esc(loot || 'Nothing')}</p><div class="sect">Wearing</div><p>${esc([D.style.jackets[pl.style.jacket].name, D.style.shirts[pl.style.shirt].name + ' shirt', D.style.pants[pl.style.pants].name, pl.style.hat !== 'none' ? D.style.hatCols[pl.style.hatCol].name + ' ' + D.style.hats[pl.style.hat].name : null, D.style.hair[pl.style.hair] + ' hair', pl.style.facial !== 'clean' ? D.style.facial[pl.style.facial] : null].filter(Boolean).join(', '))}</p>`;
       this.bindOpts(body, rows);
     } else if (tab === 'news') {
       const day = g.pop.day;

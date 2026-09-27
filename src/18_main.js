@@ -301,7 +301,7 @@
     const data = {
       v: 2, seed: this.seed, t: this.clock.t, log: this.worldLog, weather: this.env.weather.kind,
       player: {
-        x: pl.room ? this.interiors.outside(pl.x, pl.y).x : pl.x, y: pl.room ? this.interiors.outside(pl.x, pl.y).y : pl.y, hp: pl.hp, cool: pl.cool, cash: pl.cash, inv: pl.inv, clip: pl.clip, outfit: pl.outfit, outfits: pl.outfits || {},
+        x: pl.room ? this.interiors.outside(pl.x, pl.y).x : pl.x, y: pl.room ? this.interiors.outside(pl.x, pl.y).y : pl.y, hp: pl.hp, cool: pl.cool, cash: pl.cash, inv: pl.inv, clip: pl.clip, outfit: pl.outfit, outfits: pl.outfits || {}, style: pl.style, wardrobe: pl.wardrobe,
         will: pl.will, rep: pl.rep, standing: pl.standing, stats: pl.stats, sweetheart: pl.sweetheart, properties: pl.properties, masked: pl.masked,
         cars: pl.ownedCars.filter((c) => !c.removed && !c.wrecked).map((c) => [c.modelId, c.x, c.y, c.angle, c.color]),
       },
@@ -327,6 +327,8 @@
       const pl = this.player, p = s.player;
       Object.assign(pl, { hp: p.hp, cool: p.cool, cash: p.cash, inv: p.inv, clip: p.clip, outfit: p.outfit, outfits: p.outfits, rep: p.rep, standing: p.standing, stats: Object.assign(pl.stats, p.stats), sweetheart: p.sweetheart, properties: p.properties || [], masked: !!p.masked });
       if (p.will != null) pl.will = p.will;
+      if (p.style) pl.style = Object.assign(R.styleDefault(), p.style);
+      pl.wardrobe = p.wardrobe || {};
       pl.place(p.x, p.y);
       pl.buildLook();
       for (const [id, fam, due, owned] of s.rackets || []) { const b = this.world.buildings[id]; if (b) { b.racket = 1; b.racketFamily = fam; b.racketDue = due; if (owned) b.playerOwned = true; } }

@@ -170,6 +170,8 @@
   };
 
   P.drawHuman = function (g, h) {
+    // made men favour a fedora
+    if (h.look.hatKind === undefined) h.look.hatKind = h.faction && h.faction !== 'law' && (R.hash2(h.x | 0, h.y | 0, 3) < 0.55) ? R.rng.pick(['fedora', 'fedora', 'trilby', 'porkpie']) : null;
     const st = { weapon: h.drawn || h.state === 'fight' ? h.weapon : null, down: h.down > 0 || h.state === 'sleep', scale: h.scale, alpha: h.ghost ? 0.4 + Math.sin(this.game.clock.real * 3) * 0.15 : null };
     if (h.state === 'sleep') {
       A.drawPerson(g, h.x + 4, h.y + 4, 2, 0, h.look, st);

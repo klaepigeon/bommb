@@ -24,6 +24,8 @@
     this.inCar = null;
     this.inside = null;
     this.outfit = 'mook';
+    this.style = R.styleDefault();
+    this.wardrobe = {};
     this.outfitChangedSince = 0;
     this.rep = { infamy: 0, honor: 0 };
     this.standing = {};
@@ -42,31 +44,20 @@
   });
   const P = Player.prototype;
 
-  // A young mafioso, painted by the original game's own character routine.
-  const SUITS = {
-    mook: { jacket: ['#14141c', '#24243a', '#383852', '#54547a'], shirt: ['#4a1018', '#6c1c26', '#92303a', '#b8505a'], pants: ['#14141c', '#24243a', '#383852', '#54547a'] },
-    velvet: { jacket: ['#2a1024', '#4a1c40', '#6c2c5e', '#945084'], shirt: ['#6a5a20', '#9a8430', '#c8ac48', '#ecd070'], pants: ['#1c1a24', '#2e2c3a', '#46445a', '#62607a'] },
-    leisure: { jacket: ['#1c3c5c', '#2c5c88', '#4880b0', '#78a8d8'], shirt: ['#8a8068', '#b8ae90', '#dcd4b8', '#f0ead4'], pants: ['#1c3c5c', '#2c5c88', '#4880b0', '#78a8d8'] },
-    tracksuit: { jacket: null, shirt: ['#5a2408', '#8c3c10', '#c85c1c', '#f08c40'], pants: ['#5a2408', '#8c3c10', '#c85c1c', '#f08c40'], top: 'stripe' },
-    leather: { jacket: ['#2a1a12', '#44281a', '#624028', '#86583a'], shirt: ['#6a1c1c', '#a02c2c', '#d04848', '#f07878'], pants: ['#1c2c48', '#2c4470', '#40609a', '#6488c0'] },
-    workman: { jacket: null, shirt: ['#2c3418', '#44502a', '#5e6c3a', '#7c8c50'], pants: ['#2c3418', '#44502a', '#5e6c3a', '#7c8c50'] },
-    tux: { jacket: ['#3a5a78', '#5a80a8', '#80a8cc', '#a8cce8'], shirt: ['#b8b8b0', '#d8d8d0', '#f0f0e8', '#ffffff'], pants: ['#3a5a78', '#5a80a8', '#80a8cc', '#a8cce8'] },
-    camelcoat: { jacket: ['#4a3418', '#7a5a2c', '#a88048', '#ceaa70'], shirt: ['#141418', '#24242e', '#383846', '#50505e'], pants: ['#1c1a24', '#2e2c3a', '#46445a', '#62607a'] },
-  };
+  // A young mafioso, painted by the original game's own character routine (see 13_style.js).
   P.buildLook = function () {
-    const o = D.outfits[this.outfit];
-    const suit = SUITS[this.outfit] || SUITS.mook;
-    this.look = {
-      skin: '#e0ac7e', hair: '#141010', hairStyle: 0, top: o.suit, bottom: o.suit, build: 1, fem: false, mask: this.masked,
-      seedStr: 'player-' + this.outfit + (this.masked ? '-m' : ''),
-      oldOverride: { shirt: suit.shirt, jacket: suit.jacket, pants: suit.pants, style: 'short', top: suit.top || 'collar', flare: true, stache: false, beard: false, glasses: false, dress: false, shoes: ['#141418', '#24242c', '#3a3a46'], kid: false, mask: this.masked },
-    };
+    if (!this.style) this.style = R.styleDefault();
+    this.outfit = this.style.jacket in D.outfits ? this.style.jacket : 'mook';
+    this.look = R.lookFromStyle(this.style, this.masked);
   };
   P.outfitScore = function () {
     const city = this.game.world.cityAt((this.x / TS) | 0, (this.y / TS) | 0);
-    const fancy = ['mook', 'velvet', 'tux', 'camelcoat'].includes(this.outfit);
-    if (!city) return this.outfit === 'workman' || this.outfit === 'leather' ? 10 : fancy ? -5 : 0;
-    return fancy ? 8 : this.outfit === 'tracksuit' ? -5 : 2;
+    const j = this.style ? this.style.jacket : this.outfit;
+    const jd = D.style.jackets[j] || {};
+    const fancy = !!jd.fancy, rugged = j === 'leather' || j === 'denim' || j === 'none' || j === 'corduroy';
+    const hatBonus = this.style && this.style.hat !== 'none' ? (this.style.hat === 'cowboy' ? (city ? -2 : 4) : 2) : 0;
+    if (!city) return (rugged ? 10 : fancy ? -5 : 0) + hatBonus;
+    return (fancy ? 8 : rugged ? 2 : 3) + hatBonus;
   };
   P.place = function (x, y) {
     this.x = x; this.y = y;
