@@ -108,7 +108,7 @@
     if (f && !f.dead && !pl.inCar) {
       g.strokeStyle = f.hostile && f.state === 'fight' ? '#c8321e' : '#e4a92a';
       g.lineWidth = 1;
-      g.beginPath(); g.ellipse(f.x, f.y + 1, 7, 3, 0, 0, 7); g.stroke();
+      g.beginPath(); g.ellipse(f.x, f.y + 0.5, 4.5, 2, 0, 0, 7); g.stroke();
     }
     for (const e of ents) {
       if (e.dead && e.kind !== 'v') continue;
@@ -134,7 +134,7 @@
     if (m && inView(m.x, m.y)) {
       const bob = Math.sin(t * 4) * 2;
       g.fillStyle = '#e4a92a'; g.strokeStyle = '#1b1410'; g.lineWidth = 1;
-      g.beginPath(); g.moveTo(m.x, m.y - 22 + bob); g.lineTo(m.x - 4, m.y - 30 + bob); g.lineTo(m.x + 4, m.y - 30 + bob); g.closePath(); g.fill(); g.stroke();
+      g.beginPath(); g.moveTo(m.x, m.y - 15 + bob); g.lineTo(m.x - 3, m.y - 20 + bob); g.lineTo(m.x + 3, m.y - 20 + bob); g.closePath(); g.fill(); g.stroke();
     }
     // weather + lighting in screen space
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -467,12 +467,12 @@
     if (!pl.inCar && !pl.dead && !game.ui.sheetOpen) {
       const act = pl.contextAction();
       const f = pl.focus;
-      if (f && !f.dead && !pl.bubble) { const [fx, fy] = toS(f.x, f.y - 27); this.tag(g, fx, fy, game.actors.displayName(f).slice(0, 22), 'T'); }
-      if (act && !(f && !f.dead)) { const [px, py] = toS(pl.x, pl.y - 29); this.tag(g, px, py, act.label.slice(0, 24), 'A'); }
+      if (f && !f.dead && !pl.bubble) { const [fx, fy] = toS(f.x, f.y - 16); this.tag(g, fx, fy, game.actors.displayName(f).slice(0, 22), 'T'); }
+      if (act && !(f && !f.dead)) { const [px, py] = toS(pl.x, pl.y - 17); this.tag(g, px, py, act.label.slice(0, 24), 'A'); }
     }
     for (const a of list) {
       const [sx, sy0] = toS(a.x, a.y);
-      const sy = sy0 - 27 * z;
+      const sy = sy0 - 15 * z;
       if (a.alert) {
         const icon = a.alert === 'thief' ? '$' : '!';
         g.fillStyle = '#2a1a12'; g.fillRect(Math.round(sx) - 6, Math.round(sy) - 16, 13, 15);

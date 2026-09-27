@@ -243,18 +243,18 @@
 
   // ---------------- Vehicles ----------------
   D.vehicles = {
-    sedan: { name: 'Ponce Grand', w: 30, h: 15, top: 150, acc: 130, hp: 100, colors: ['#8a3a2a', '#2a4a6a', '#6a6a3a', '#c8b060', '#3a5a3a', '#7a5a8a', '#d0d0c0'], price: 900 },
-    wagon: { name: 'Brougham Wagon', w: 34, h: 16, top: 135, acc: 110, hp: 110, colors: ['#8a6a3a', '#5a7a5a', '#c8a060', '#8a3a3a'], wood: 1, price: 700 },
-    muscle: { name: 'Stallion GT', w: 30, h: 15, top: 230, acc: 220, hp: 90, colors: ['#c83a1a', '#1a1a1a', '#e4a92a', '#2a6ac0', '#f0f0f0'], stripes: 1, price: 2600 },
-    pickup: { name: 'Bison Pickup', w: 31, h: 16, top: 145, acc: 140, hp: 130, colors: ['#6a4a2a', '#3a5a6a', '#8a8a6a', '#a83a2a'], bed: 1, price: 800 },
-    van: { name: 'Mystic Van', w: 30, h: 16, top: 125, acc: 100, hp: 120, colors: ['#5c2a4a', '#2a7d7a', '#d9621e'], mural: 1, price: 1100 },
-    coupe: { name: 'Monarch Coupe', w: 29, h: 14, top: 190, acc: 180, hp: 85, colors: ['#e0c090', '#4a2a1a', '#2a4a3a', '#8ab0d0'], vinyl: 1, price: 1800 },
-    taxi: { name: 'Checker Cab', w: 31, h: 15, top: 150, acc: 130, hp: 110, colors: ['#e8c030'], checker: 1 },
-    police: { name: 'Interceptor', w: 31, h: 15, top: 220, acc: 210, hp: 140, colors: ['#1a1a24'], police: 1 },
-    bus: { name: 'City Bus', w: 54, h: 18, top: 110, acc: 70, hp: 250, colors: ['#e4a92a', '#2a7d7a'], bus: 1 },
-    truck: { name: 'Hauler', w: 50, h: 18, top: 115, acc: 70, hp: 250, colors: ['#8a3a2a', '#3a4a5a', '#d0d0c0'], box: 1 },
-    ambulance: { name: 'Ambulance', w: 34, h: 16, top: 190, acc: 160, hp: 150, colors: ['#f0f0f0'], medic: 1 },
-    firetruck: { name: 'Fire Engine', w: 50, h: 18, top: 160, acc: 110, hp: 300, colors: ['#c02020'], fire: 1 },
+    sedan: { name: 'Ponce Grand', w: 22, h: 11, top: 150, acc: 130, hp: 100, colors: ['#8a3a2a', '#2a4a6a', '#6a6a3a', '#c8b060', '#3a5a3a', '#7a5a8a', '#d0d0c0'], price: 900 },
+    wagon: { name: 'Brougham Wagon', w: 24, h: 12, top: 135, acc: 110, hp: 110, colors: ['#8a6a3a', '#5a7a5a', '#c8a060', '#8a3a3a'], wood: 1, price: 700 },
+    muscle: { name: 'Stallion GT', w: 22, h: 11, top: 230, acc: 220, hp: 90, colors: ['#c83a1a', '#1a1a1a', '#e4a92a', '#2a6ac0', '#f0f0f0'], stripes: 1, price: 2600 },
+    pickup: { name: 'Bison Pickup', w: 22, h: 12, top: 145, acc: 140, hp: 130, colors: ['#6a4a2a', '#3a5a6a', '#8a8a6a', '#a83a2a'], bed: 1, price: 800 },
+    van: { name: 'Mystic Van', w: 22, h: 12, top: 125, acc: 100, hp: 120, colors: ['#5c2a4a', '#2a7d7a', '#d9621e'], mural: 1, price: 1100 },
+    coupe: { name: 'Monarch Coupe', w: 21, h: 10, top: 190, acc: 180, hp: 85, colors: ['#e0c090', '#4a2a1a', '#2a4a3a', '#8ab0d0'], vinyl: 1, price: 1800 },
+    taxi: { name: 'Checker Cab', w: 22, h: 11, top: 150, acc: 130, hp: 110, colors: ['#e8c030'], checker: 1 },
+    police: { name: 'Interceptor', w: 22, h: 11, top: 220, acc: 210, hp: 140, colors: ['#1a1a24'], police: 1 },
+    bus: { name: 'City Bus', w: 39, h: 13, top: 110, acc: 70, hp: 250, colors: ['#e4a92a', '#2a7d7a'], bus: 1 },
+    truck: { name: 'Hauler', w: 36, h: 13, top: 115, acc: 70, hp: 250, colors: ['#8a3a2a', '#3a4a5a', '#d0d0c0'], box: 1 },
+    ambulance: { name: 'Ambulance', w: 24, h: 12, top: 190, acc: 160, hp: 150, colors: ['#f0f0f0'], medic: 1 },
+    firetruck: { name: 'Fire Engine', w: 36, h: 13, top: 160, acc: 110, hp: 300, colors: ['#c02020'], fire: 1 },
   };
   D.civCars = [['sedan', 6], ['wagon', 3], ['muscle', 1], ['pickup', 3], ['van', 1.2], ['coupe', 2], ['taxi', 1.5], ['truck', 0.8]];
   D.ruralCars = [['pickup', 6], ['wagon', 2], ['sedan', 2], ['truck', 2], ['van', 1], ['muscle', 0.6]];

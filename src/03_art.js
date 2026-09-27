@@ -770,7 +770,8 @@
   A.drawAnimal = function (g, a) {
     const d = a.def, s = d.size;
     g.save();
-    g.translate(Math.round(a.x), Math.round(a.y));
+    g.translate(Math.round(a.x * 2) / 2, Math.round(a.y * 2) / 2);
+    g.scale(0.6, 0.6);
     if (d.bird && a.flying) {
       g.translate(0, -10 - Math.sin(a.t * 3) * 2);
       g.fillStyle = 'rgba(0,0,0,0.15)';

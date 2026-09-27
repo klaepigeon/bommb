@@ -10,7 +10,7 @@
     this.name = 'Nicky Marchetti';
     this.nick = 'Nicky';
     this.family = 'Vane';
-    this.x = 0; this.y = 0; this.r = 4;
+    this.x = 0; this.y = 0; this.r = 3;
     this.dir = 2; this.ang = Math.PI / 2; this.walk = 0;
     this.hp = 100; this.maxHp = 100;
     this.cool = 40; this.coolOn = false;
@@ -238,7 +238,7 @@
     const tg = this.aimTarget();
     let ang = this.ang;
     if (tg) {
-      ang = Math.atan2((tg.y - (tg.kind === 'h' && w.gun ? 10 : 0)) - (this.y - 10), tg.x - this.x);
+      ang = Math.atan2((tg.y - (tg.kind === 'h' && w.gun ? 6 : 0)) - (this.y - 6), tg.x - this.x);
       this.ang = Math.atan2(tg.y - this.y, tg.x - this.x);
       this.dir = R.dir4(Math.cos(this.ang), Math.sin(this.ang));
     }

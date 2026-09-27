@@ -10,7 +10,7 @@
 
   // hit test: humans are about 6px wide and stand from y-18 to y
   function hitHuman(a, x, y) {
-    if (a.kind === 'h') return Math.abs(x - a.x) < 5 && y < a.y + 2 && y > a.y - 18;
+    if (a.kind === 'h') return Math.abs(x - a.x) < 3.5 && y < a.y + 2 && y > a.y - 11;
     if (a.kind === 'a') return R.dist(x, y, a.x, a.y - a.def.size * 0.4) < a.def.size * 0.7 + 2;
     return false;
   }
@@ -220,7 +220,7 @@
     const g = game();
     if (att === g.player && g.player.cool > 0 && g.player.coolOn) w = Object.assign({}, w, { spread: 0 });
     const n = w.pellets || 1;
-    const sx = att.x + Math.cos(ang) * 8, sy = att.y - 10 + Math.sin(ang) * 6;
+    const sx = att.x + Math.cos(ang) * 5, sy = att.y - 6 + Math.sin(ang) * 4;
     g.fx.flash(sx, sy);
     g.audio.sfx(w === D.weapons.shotgun ? 'shotgun' : w === D.weapons.chopper ? 'smg' : w === D.weapons.rifle ? 'rifle' : 'shot', att.x, att.y);
     g.actors.noise(att.x, att.y, TS * 22 * (w.loud || 1), 'gunshot', att);
@@ -285,7 +285,7 @@
         if (t === att || t.dead || t.inCar || (t.kind === 'a' && t.flying && R.rng() < 0.5)) continue;
         if (t.kind === 'v') continue;
         if (hitHuman(t, x, y)) {
-          const head = t.kind === 'h' && y < t.y - 13;
+          const head = t.kind === 'h' && y < t.y - 7;
           C.damage(t, dmg * (head ? 1.8 : 1), att, 'bullet');
           if (head && att === pl) g.fx.text(t.x, t.y - 26, 'HEADSHOT', '#e4a92a');
           hitT = t;
