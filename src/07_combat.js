@@ -20,7 +20,10 @@
     const g = game();
     if (!target || target.dead) return;
     const byPlayer = source === g.player || (source && source.driver === g.player);
-    if (target === g.player) return g.player.hurt(amt, source, kind);
+    if (target === g.player) {
+      if (source && source.kind === 'h') source.attackedPlayer = true;
+      return g.player.hurt(amt, source, kind);
+    }
     if (target.kind === 'v') return g.traffic.damage(target, amt, source);
     if (g.cheats && g.cheats.oneHit && byPlayer) amt = 999;
     target.hp -= amt;
@@ -80,7 +83,7 @@
       if (!h.copHit) { h.copHit = true; g.law.crime('copAssault', h.x, h.y, { victim: h }); }
       return;
     }
-    const selfDefence = h.hostile && (h.state === 'fight' || h.tag === 'mugger' || h.tag === 'bounty');
+    const selfDefence = h.attackedPlayer || h.hostile && (h.state === 'fight' || h.tag === 'mugger' || h.tag === 'bounty');
     if (selfDefence) return;
     if (h.brawl) return; // mutual fistfight after an antagonize
     if (!h.assaulted) {
@@ -120,7 +123,7 @@
       const armedHostile = h.hostile && h.armed && h.drawn;
       const excessive = h.hostile && !h.armed && D.weapons[g.player.weapon] && D.weapons[g.player.weapon].gun;
       if (h.cop) g.law.crime('copMurder', h.x, h.y, { victim: h });
-      else if (!(h.hostile && (armedHostile || h.tag === 'mugger' || h.tag === 'bounty' || !excessive)) && !h.brawlOnly) g.law.crime(kind === 'car' ? 'manslaughter' : 'murder', h.x, h.y, { victim: h });
+      else if (!h.attackedPlayer && !(h.hostile && (armedHostile || h.tag === 'mugger' || h.tag === 'bounty' || !excessive)) && !h.brawlOnly) g.law.crime(kind === 'car' ? 'manslaughter' : 'murder', h.x, h.y, { victim: h });
       const city = g.world.cityAt((h.x / TS) | 0, (h.y / TS) | 0);
       if (city) { city.fear = Math.min(100, city.fear + 4); city.heat += 3; }
       g.player.rep.infamy += h.cop ? 6 : 3;
@@ -147,7 +150,7 @@
       const byPlayer = v.driver === g.player;
       if (byPlayer && !a.hostile && !a.cop) {
         if (dmg >= a.hp) {} // handled by kill -> manslaughter
-        else if (!a.assaulted) { a.assaulted = true; g.law.crime('reckless', a.x, a.y, { victim: a, minor: true }); }
+        else if (!a.assaulted && speed > 70) { a.assaulted = true; g.law.crime('reckless', a.x, a.y, { victim: a, minor: true }); }
       }
       if (dmg >= a.hp) C.kill(a, v.driver || v, 'car');
       else {

@@ -55,8 +55,10 @@
     this.t -= dt;
     this.eventT -= dt;
     if (this.eventT <= 0) {
-      this.eventT = 25 + R.rng() * 35;
-      R.events.random(g);
+      // the world starts quiet and livens up as the days go by and your name spreads
+      const calm = g.calm();
+      this.eventT = (40 + R.rng() * 50) / Math.max(0.25, calm);
+      if (R.rng() < 0.35 + calm * 0.65) R.events.random(g);
     }
     if (this.t > 0) return;
     this.t = 1.2;
@@ -210,21 +212,23 @@
     const city = w.cityAt((pl.x / TS) | 0, (pl.y / TS) | 0);
     const hour = g.clock.hour();
     const roll = R.rng();
+    const calm = g.calm();
+    const rough = calm * calm; // violent events ramp in slower than friendly ones
     if (city) {
       const evs = [
-        ['brawl', hour > 20 || hour < 3 ? 3 : 0.6],
-        ['robbery', 1],
+        ['brawl', (hour > 20 || hour < 3 ? 3 : 0.6) * rough],
+        ['robbery', 1 * rough],
         ['newsboy', hour > 6 && hour < 12 ? 2 : 0.4],
         ['party', hour > 21 || hour < 3 ? 1.6 : 0],
         ['wedding', g.pop.news.some((n) => n.city === city.id && n.day === g.pop.day && /Wedding/.test(n.text)) && hour > 10 && hour < 18 ? 3 : 0],
-        ['footchase', 0.8],
-        ['crash', 0.7],
+        ['footchase', 0.8 * rough],
+        ['crash', 0.7 * calm],
         ['nothing', 2],
       ];
       const ev = R.rng.weighted(evs.filter((e) => e[1] > 0).map(([k, v]) => [k, v * (k === 'nothing' ? 1 : g.settings.events)]));
       if (EV[ev]) EV[ev](g, city);
     } else {
-      const ev = R.rng.weighted([['hitchhiker', 1.3], ['ambush', 0.6], ['predator', 1], ['nothing', 2.5]].map(([k, v]) => [k, v * (k === 'nothing' ? 1 : g.settings.events)]));
+      const ev = R.rng.weighted([['hitchhiker', 1.3], ['ambush', 0.6 * rough], ['predator', 1 * rough], ['nothing', 2.5]].map(([k, v]) => [k, v * (k === 'nothing' ? 1 : g.settings.events)]));
       if (EV[ev]) EV[ev](g);
     }
   };

@@ -5158,7 +5158,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr };
       if (R.rng() < 0.02 * game.settings.events) v.ai.reckless = true;
       n++;
       // ambient police chase
-      if (sc && R.rng() < 0.012 * game.settings.events && !game.law.active()) this.ambientChase(v);
+      if (sc && R.rng() < 0.012 * game.settings.events * game.calm() * game.calm() && !game.law.active()) this.ambientChase(v);
       else if (sc && R.rng() < 0.12 && this.list.filter((q) => q.modelId === 'police' && !q.removed).length < 2) {
         // patrol car
         v.model = D.vehicles.police; v.modelId = 'police'; v.color = '#1a1a24';
@@ -5223,7 +5223,10 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr };
     const g = game();
     if (!target || target.dead) return;
     const byPlayer = source === g.player || (source && source.driver === g.player);
-    if (target === g.player) return g.player.hurt(amt, source, kind);
+    if (target === g.player) {
+      if (source && source.kind === 'h') source.attackedPlayer = true;
+      return g.player.hurt(amt, source, kind);
+    }
     if (target.kind === 'v') return g.traffic.damage(target, amt, source);
     if (g.cheats && g.cheats.oneHit && byPlayer) amt = 999;
     target.hp -= amt;
@@ -5283,7 +5286,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr };
       if (!h.copHit) { h.copHit = true; g.law.crime('copAssault', h.x, h.y, { victim: h }); }
       return;
     }
-    const selfDefence = h.hostile && (h.state === 'fight' || h.tag === 'mugger' || h.tag === 'bounty');
+    const selfDefence = h.attackedPlayer || h.hostile && (h.state === 'fight' || h.tag === 'mugger' || h.tag === 'bounty');
     if (selfDefence) return;
     if (h.brawl) return; // mutual fistfight after an antagonize
     if (!h.assaulted) {
@@ -5323,7 +5326,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr };
       const armedHostile = h.hostile && h.armed && h.drawn;
       const excessive = h.hostile && !h.armed && D.weapons[g.player.weapon] && D.weapons[g.player.weapon].gun;
       if (h.cop) g.law.crime('copMurder', h.x, h.y, { victim: h });
-      else if (!(h.hostile && (armedHostile || h.tag === 'mugger' || h.tag === 'bounty' || !excessive)) && !h.brawlOnly) g.law.crime(kind === 'car' ? 'manslaughter' : 'murder', h.x, h.y, { victim: h });
+      else if (!h.attackedPlayer && !(h.hostile && (armedHostile || h.tag === 'mugger' || h.tag === 'bounty' || !excessive)) && !h.brawlOnly) g.law.crime(kind === 'car' ? 'manslaughter' : 'murder', h.x, h.y, { victim: h });
       const city = g.world.cityAt((h.x / TS) | 0, (h.y / TS) | 0);
       if (city) { city.fear = Math.min(100, city.fear + 4); city.heat += 3; }
       g.player.rep.infamy += h.cop ? 6 : 3;
@@ -5350,7 +5353,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr };
       const byPlayer = v.driver === g.player;
       if (byPlayer && !a.hostile && !a.cop) {
         if (dmg >= a.hp) {} // handled by kill -> manslaughter
-        else if (!a.assaulted) { a.assaulted = true; g.law.crime('reckless', a.x, a.y, { victim: a, minor: true }); }
+        else if (!a.assaulted && speed > 70) { a.assaulted = true; g.law.crime('reckless', a.x, a.y, { victim: a, minor: true }); }
       }
       if (dmg >= a.hp) C.kill(a, v.driver || v, 'car');
       else {
@@ -5949,6 +5952,8 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr };
     // firing in town near cops without an incident is brandishing at least
     const g = this.game;
     if (this.incident) return;
+    // shooting back at someone who is shooting at you is not a crime
+    for (const a of g.actors.near(g.player.x, g.player.y, TS * 16)) if (!a.dead && a.kind === 'h' && (a.attackedPlayer || a.hostile && a.state === 'fight' && a.target === g.player)) return;
     for (const a of g.actors.near(x, y, TS * 12)) {
       if (a.cop && !a.dead && g.world.los(a.x, a.y - 8, x, y - 8)) {
         g.actors.say(a, R.dialog.line('copSaw', a));
@@ -6746,8 +6751,10 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr };
     this.t -= dt;
     this.eventT -= dt;
     if (this.eventT <= 0) {
-      this.eventT = 25 + R.rng() * 35;
-      R.events.random(g);
+      // the world starts quiet and livens up as the days go by and your name spreads
+      const calm = g.calm();
+      this.eventT = (40 + R.rng() * 50) / Math.max(0.25, calm);
+      if (R.rng() < 0.35 + calm * 0.65) R.events.random(g);
     }
     if (this.t > 0) return;
     this.t = 1.2;
@@ -6901,21 +6908,23 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr };
     const city = w.cityAt((pl.x / TS) | 0, (pl.y / TS) | 0);
     const hour = g.clock.hour();
     const roll = R.rng();
+    const calm = g.calm();
+    const rough = calm * calm; // violent events ramp in slower than friendly ones
     if (city) {
       const evs = [
-        ['brawl', hour > 20 || hour < 3 ? 3 : 0.6],
-        ['robbery', 1],
+        ['brawl', (hour > 20 || hour < 3 ? 3 : 0.6) * rough],
+        ['robbery', 1 * rough],
         ['newsboy', hour > 6 && hour < 12 ? 2 : 0.4],
         ['party', hour > 21 || hour < 3 ? 1.6 : 0],
         ['wedding', g.pop.news.some((n) => n.city === city.id && n.day === g.pop.day && /Wedding/.test(n.text)) && hour > 10 && hour < 18 ? 3 : 0],
-        ['footchase', 0.8],
-        ['crash', 0.7],
+        ['footchase', 0.8 * rough],
+        ['crash', 0.7 * calm],
         ['nothing', 2],
       ];
       const ev = R.rng.weighted(evs.filter((e) => e[1] > 0).map(([k, v]) => [k, v * (k === 'nothing' ? 1 : g.settings.events)]));
       if (EV[ev]) EV[ev](g, city);
     } else {
-      const ev = R.rng.weighted([['hitchhiker', 1.3], ['ambush', 0.6], ['predator', 1], ['nothing', 2.5]].map(([k, v]) => [k, v * (k === 'nothing' ? 1 : g.settings.events)]));
+      const ev = R.rng.weighted([['hitchhiker', 1.3], ['ambush', 0.6 * rough], ['predator', 1 * rough], ['nothing', 2.5]].map(([k, v]) => [k, v * (k === 'nothing' ? 1 : g.settings.events)]));
       if (EV[ev]) EV[ev](g);
     }
   };
@@ -7904,7 +7913,7 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr };
     this.outfitChangedSince = 0;
     this.rep = { infamy: 0, honor: 0 };
     this.standing = {};
-    this.stats = { kills: 0, crimes: 0, arrests: 0, escapes: 0, jobs: 0, deaths: 0, hunted: 0, fish: 0, robbed: 0, greeted: 0, miles: 0 };
+    this.stats = { kills: 0, crimes: 0, arrests: 0, escapes: 0, jobs: 0, deaths: 0, hunted: 0, fish: 0, robbed: 0, greeted: 0, miles: 0, startT: null };
     this.crew = [];
     this.sweetheart = -1;
     this.drunk = 0;
@@ -10705,8 +10714,17 @@ R.old = { O, x, Re, Qr, Ks, ls, npcShirts, na, ko, ha, wo, Jr };
     this.start(true);
   };
 
+  // 0.2 on your first day, 1 once you've been around a while or made a name.
+  // Scales how often street trouble finds you.
+  G.calm = function () {
+    const st = this.player.stats;
+    const days = st.startT == null ? 6 : (this.clock.t - st.startT) / 1440;
+    return R.clamp(0.2 + days * 0.16 + this.player.rep.infamy / 120 + st.jobs * 0.03, 0.2, 1);
+  };
+
   G.intro = function () {
     const pl = this.player;
+    pl.stats.startT = this.clock.t;
     const club = this.world.buildings[this.homeClub];
     this.interiors.enter(club, 'guest');
     this.ui.story('Port Hollow, 2026', `The calendar says 2026. The Brass Coast never got the memo: wide collars, eight-tracks, disco on every radio.\n\nYou're Nicky "The Mook" Marchetti, fresh off the bus with a pinstripe suit and a cousin's recommendation. Don Gus Vane runs Port Hollow out of ${club.name}, and you're standing in his back room.\n\nHe's got work for you. Everyone else is just living their lives.`, () => {

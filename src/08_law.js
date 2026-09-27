@@ -297,6 +297,8 @@
     // firing in town near cops without an incident is brandishing at least
     const g = this.game;
     if (this.incident) return;
+    // shooting back at someone who is shooting at you is not a crime
+    for (const a of g.actors.near(g.player.x, g.player.y, TS * 16)) if (!a.dead && a.kind === 'h' && (a.attackedPlayer || a.hostile && a.state === 'fight' && a.target === g.player)) return;
     for (const a of g.actors.near(x, y, TS * 12)) {
       if (a.cop && !a.dead && g.world.los(a.x, a.y - 8, x, y - 8)) {
         g.actors.say(a, R.dialog.line('copSaw', a));

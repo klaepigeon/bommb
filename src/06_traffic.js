@@ -552,7 +552,7 @@
       if (R.rng() < 0.02 * game.settings.events) v.ai.reckless = true;
       n++;
       // ambient police chase
-      if (sc && R.rng() < 0.012 * game.settings.events && !game.law.active()) this.ambientChase(v);
+      if (sc && R.rng() < 0.012 * game.settings.events * game.calm() * game.calm() && !game.law.active()) this.ambientChase(v);
       else if (sc && R.rng() < 0.12 && this.list.filter((q) => q.modelId === 'police' && !q.removed).length < 2) {
         // patrol car
         v.model = D.vehicles.police; v.modelId = 'police'; v.color = '#1a1a24';

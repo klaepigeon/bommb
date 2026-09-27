@@ -27,7 +27,7 @@
     this.outfitChangedSince = 0;
     this.rep = { infamy: 0, honor: 0 };
     this.standing = {};
-    this.stats = { kills: 0, crimes: 0, arrests: 0, escapes: 0, jobs: 0, deaths: 0, hunted: 0, fish: 0, robbed: 0, greeted: 0, miles: 0 };
+    this.stats = { kills: 0, crimes: 0, arrests: 0, escapes: 0, jobs: 0, deaths: 0, hunted: 0, fish: 0, robbed: 0, greeted: 0, miles: 0, startT: null };
     this.crew = [];
     this.sweetheart = -1;
     this.drunk = 0;

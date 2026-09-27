@@ -149,8 +149,17 @@
     this.start(true);
   };
 
+  // 0.2 on your first day, 1 once you've been around a while or made a name.
+  // Scales how often street trouble finds you.
+  G.calm = function () {
+    const st = this.player.stats;
+    const days = st.startT == null ? 6 : (this.clock.t - st.startT) / 1440;
+    return R.clamp(0.2 + days * 0.16 + this.player.rep.infamy / 120 + st.jobs * 0.03, 0.2, 1);
+  };
+
   G.intro = function () {
     const pl = this.player;
+    pl.stats.startT = this.clock.t;
     const club = this.world.buildings[this.homeClub];
     this.interiors.enter(club, 'guest');
     this.ui.story('Port Hollow, 2026', `The calendar says 2026. The Brass Coast never got the memo: wide collars, eight-tracks, disco on every radio.\n\nYou're Nicky "The Mook" Marchetti, fresh off the bus with a pinstripe suit and a cousin's recommendation. Don Gus Vane runs Port Hollow out of ${club.name}, and you're standing in his back room.\n\nHe's got work for you. Everyone else is just living their lives.`, () => {
