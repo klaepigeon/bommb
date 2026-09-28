@@ -10,13 +10,13 @@
     house: [14, 10], cabin: [12, 9], apartment: [14, 10], barn: [16, 11], bar: [18, 12], club: [20, 13], diner: [16, 10],
     bank: [20, 12], police: [20, 12], hospital: [20, 12], casino: [22, 13], church: [16, 13], social: [18, 12], garage: [18, 11],
     hotel: [16, 11], motel: [14, 10], arcade: [16, 10], laundry: [14, 9], barber: [12, 9], school: [20, 12], factory: [22, 13],
-    warehouse: [22, 13], office: [18, 11], jail: [22, 14], suite: [14, 10],
+    warehouse: [22, 13], office: [18, 11], jail: [22, 14], suite: [14, 10], strip: [20, 13], costume: [12, 9],
   };
   const FLOOR = {
     bar: T.WOOD, club: T.CARPET, diner: T.TILEF, bank: T.CARPET, police: T.TILEF, hospital: T.TILEF, casino: T.CARPET, church: T.WOOD,
     social: T.CARPET, garage: T.CONCRETE, house: T.WOOD, cabin: T.WOOD, apartment: T.WOOD, barn: T.CONCRETE, factory: T.CONCRETE,
     warehouse: T.CONCRETE, arcade: T.CARPET, laundry: T.TILEF, barber: T.TILEF, school: T.WOOD, office: T.CARPET, hotel: T.CARPET, motel: T.WOOD,
-    pharmacy: T.TILEF, general: T.TILEF, liquor: T.WOOD, pawn: T.WOOD, gunshop: T.WOOD, tailor: T.CARPET, butcher: T.TILEF, gas: T.TILEF,
+    pharmacy: T.TILEF, general: T.TILEF, liquor: T.WOOD, pawn: T.WOOD, gunshop: T.WOOD, tailor: T.CARPET, butcher: T.TILEF, gas: T.TILEF, strip: T.CARPET, costume: T.WOOD,
   };
 
   const Int = (R.Interiors = function (game) {
@@ -135,6 +135,17 @@
         set(1, rh - 3, O.SOFA); set(2, rh - 3, O.SOFA); spot(room.seats, 2, rh - 4);
         for (let y = 5; y <= rh - 4; y += 2) for (let x = 6; x <= rw - 7; x += 3) spot(room.extra, x, y);
         lamp(1, 3); lamp(rw - 2, rh - 3);
+        break;
+      }
+      case 'strip': {
+        // a runway down the middle, chrome poles, chairs along the rail, a bar and a velvet booth
+        for (let y = 4; y <= rh - 5; y++) for (let x = ex - 2; x <= ex + 2; x++) floorAt(x, y, T.DANCE);
+        for (const y of [5, rh - 6]) { set(ex, y, O.FLOORLAMP); spot(room.extra, ex + 1, y); }
+        for (let y = 4; y <= rh - 5; y += 2) { set(ex - 4, y, O.CHAIR); spot(room.seats, ex - 4, y); set(ex + 4, y, O.CHAIR); spot(room.seats, ex + 4, y); }
+        counter(2, 2, 6, 2);
+        set(rw - 2, 3, O.SOFA); set(rw - 3, 3, O.SOFA); spot(room.seats, rw - 3, 4);
+        set(rw - 2, rh - 3, O.SOFA); set(rw - 3, rh - 3, O.SOFA); spot(room.seats, rw - 3, rh - 4);
+        lamp(1, rh - 3);
         break;
       }
       case 'diner': {
@@ -421,11 +432,12 @@
       if (h) { h.staff = true; h.role = role; }
     }
     // a lively crowd at night spots
-    if ((b.type === 'bar' || b.type === 'club' || b.type === 'casino') && room.mode !== 'breakin') {
-      const n = g.clock.hour() > 19 || g.clock.hour() < 3 ? R.rng.int(2, 5) : R.rng.int(0, 2);
+    if ((b.type === 'bar' || b.type === 'club' || b.type === 'casino' || b.type === 'strip') && room.mode !== 'breakin') {
+      const n = g.clock.hour() > 19 || g.clock.hour() < 3 ? R.rng.int(5, 9) : R.rng.int(2, 4); // busy rooms
       for (let k = 0; k < n; k++) {
         const h = this.spawnAt(room, null, pick(room.extra.concat(room.seats), used), { arch: R.rng.pick(['flirt', 'friendly', 'gossip', 'tough', 'eccentric']), city: b.cityId });
         if (h && b.type === 'club' && R.rng() < 0.7) { h.state = 'perform'; h.role = 'dancer'; h.timer = 20 + R.rng() * 30; }
+        if (h && b.type === 'strip' && R.rng() < 0.2) { h.look.fem = !h.look.fem; h.look.old = null; }
       }
       // somebody in the back is always selling something after dark
       if (g.clock.isNight() && R.rng() < (b.type === 'club' ? 0.8 : 0.4)) { const s = pick(room.extra.length ? room.extra : [room.center], used); const d = R.goods.spawnDealer(s.x * TS + 8, s.y * TS + 8, room); d.keep = true; d.stay = true; d.state = 'idle'; d.timer = 1e9; d.destKey = 'b:' + b.id; d.spot = { x: s.x, y: s.y, city: b.city, kind: 'room' }; }

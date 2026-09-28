@@ -299,6 +299,7 @@
     const shirtHex = Array.isArray(shirt[0]) ? shirt[0] : shirt;
     look.old = O2.Qr(seed, shirtHex.map ? shirtHex.map((c) => (typeof c === 'number' ? c : parseInt(String(c).slice(1), 16))) : shirtHex, hairKey(look.hair), ov);
     look.old.mask = !!look.mask;
+    if (ov.maskCol) look.old.maskCol = ov.maskCol;
     // overrides the original's look roller doesn't take directly
     if (ov.hair) look.old.hair = ov.hair;
     if ('beard' in ov) look.old.beard = ov.beard;

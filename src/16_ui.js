@@ -275,7 +275,7 @@
     for (let i = 0; i < 5; i++) heart(g, 12 + i * 17, 12, hk >= (i + 1) * 2 ? 2 : hk === i * 2 + 1 ? 1 : 0, 2);
     pt(g, R.fmtMoney(pl.cash), 12, 28, { scale: 2, color: '#3a7a20' });
     pt(g, game.clock.label().replace(' ', ''), 180, 30, { align: 'right', color: '#3a2418' });
-    pt(g, `DAY ${game.clock.day() + 1}`, 180, 16, { align: 'right', color: '#7a5e44' });
+    pt(g, R.calendar ? R.calendar(game.clock.day()) : `DAY ${game.clock.day() + 1}`, 180, 16, { align: 'right', color: '#7a5e44' });
     // weapon + ammo
     const ww = R.data.weapons[pl.weapon];
     const held = pl.held && R.data.props[pl.held.k];
@@ -1098,7 +1098,7 @@
         const proj = g.pop.projects.filter((p) => p.lot.city === c).length;
         return `<span>${c.name}</span><span>${n} · ${kids} kids · ${Math.round(c.prosperity)}% ${proj ? '· 🏗' + proj : ''}</span>`;
       }).join('');
-      body.innerHTML = `<div class="news"><h3>The Brass Coast Bugle</h3><div class="dateline">Day ${day + 1} · ${g.clock.weekday()} · Still 1970-something in spirit</div>${items.map((n) => `<p><b>${esc((g.pop.cityObj(n.city) || { name: 'County' }).name)} · day ${n.day + 1}</b>${esc(n.text)}</p>`).join('') || '<p>Slow news day.</p>'}</div><div class="sect">Cities (people · kids · prosperity)</div><div class="kv">${cityRows}</div>`;
+      body.innerHTML = `<div class="news"><h3>The Brass Coast Bugle</h3><div class="dateline">${g.clock.weekday()}, ${R.calendar(day, true)} · Still the Seventies, forever</div>${items.map((n) => `<p><b>${esc((g.pop.cityObj(n.city) || { name: 'County' }).name)} · ${R.calendar(n.day, true)}</b>${esc(n.text)}</p>`).join('') || '<p>Slow news day.</p>'}</div><div class="sect">Cities (people · kids · prosperity)</div><div class="kv">${cityRows}</div>`;
     } else if (tab === 'settings') {
       const st = g.settings;
       const sel = (id, vals, cur) => `<select id="${id}">${vals.map(([v, l]) => `<option value="${v}" ${String(v) === String(cur) ? 'selected' : ''}>${l}</option>`).join('')}</select>`;

@@ -89,6 +89,7 @@
     R.profile.init(this);
     R.carry.init(this);
     R.charm.init(this); R.charm.reinit();
+    R.night.init(this);
     R.vice.init(this);
     R.gore.init(this);
     R.relics.init(this);
@@ -247,6 +248,7 @@
       R.vendetta.update(sdt);
       R.profile.update(sdt);
       R.carry.update(sdt);
+      R.night.update(sdt);
       R.route.update(this, sdt);
       R.vice.update(sdt);
       R.water.update(sdt);

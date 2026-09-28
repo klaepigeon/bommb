@@ -154,6 +154,8 @@
     warehouse: { name: 'Warehouse', w: [12, 15], h: [8, 10], roof: ['#6a6a5a'], wall: ['#8a8070'], jobs: { dockhand: 4 }, hours: [5, 20], shop: 'work', fl: 0.6 },
     barn: { name: 'Farm', w: [8, 10], h: [7, 8], roof: ['#8a2a1a'], wall: ['#a8402a'], jobs: { farmer: 2 }, hours: [5, 20], shop: 'farm', fl: 1.3, house: 3 },
     cabin: { name: 'Cabin', w: [7, 7], h: [5, 5], roof: ['#5a3a2a'], wall: ['#8a5a3a'], house: 3, fl: 1.2 },
+    costume: { name: 'Costume & Novelty', w: [7, 8], h: [5, 7], roof: ['#7a2a6a'], wall: ['#e8c850'], jobs: { clerk: 1 }, hours: [10, 21], shop: 'costume', fl: 0.8, rob: 1 },
+    strip: { name: 'Strip Club', w: [10, 12], h: [8, 9], roof: ['#3a0a2a'], wall: ['#7a1a4a'], jobs: { dancer: 4, bartender: 1, bouncer: 1 }, hours: [19, 5], shop: 'strip', fl: 0.7, leisure: 4, neon: 1, adult: 1 },
     motel: { name: 'Motel', w: [12, 13], h: [5, 7], roof: ['#3a6a6a'], wall: ['#e0c8a0'], jobs: { clerk: 1 }, hours: [0, 24], shop: 'hotel', fl: 0.9, house: 2 },
   };
   // How cities spend their lots. Downtown = inner blocks.
@@ -163,14 +165,14 @@
     edge: [['house', 10], ['factory', 1], ['warehouse', 1], ['gas', 0.5], ['garage', 0.4], ['motel', 0.4]],
   };
   // Buildings every city must have
-  D.cityRequired = ['police', 'hospital', 'social', 'bank', 'bar', 'general', 'diner', 'pawn', 'gunshop', 'tailor', 'garage', 'church', 'hotel', 'butcher', 'gas', 'school', 'club', 'pharmacy'];
+  D.cityRequired = ['police', 'hospital', 'social', 'bank', 'bar', 'general', 'diner', 'pawn', 'gunshop', 'tailor', 'garage', 'church', 'hotel', 'butcher', 'gas', 'school', 'club', 'pharmacy', 'costume', 'strip'];
 
   D.roleNames = {
     clerk: 'Clerk', cook: 'Cook', waitress: 'Waitress', bartender: 'Bartender', bouncer: 'Bouncer', dj: 'DJ', fence: 'Fence',
     gunsmith: 'Gunsmith', tailor: 'Tailor', teller: 'Bank Teller', guard: 'Security', cop: 'Cop', detective: 'Detective',
     doctor: 'Doctor', nurse: 'Nurse', mechanic: 'Mechanic', priest: 'Priest', capo: 'Capo', soldier: 'Made Man', attendant: 'Pump Jockey',
     butcher: 'Butcher', dealer: 'Card Dealer', teacher: 'Teacher', worker: 'Line Worker', dockhand: 'Dockhand', farmer: 'Farmer',
-    barber: 'Barber', none: 'Out of Work', retired: 'Retired', kid: 'Kid', student: 'Student', don: 'Don', hustler: 'Hustler',
+    barber: 'Barber', dancer: 'Dancer', none: 'Out of Work', retired: 'Retired', kid: 'Kid', student: 'Student', don: 'Don', hustler: 'Hustler',
     hunter: 'Trapper', fisher: 'Fisherman', drifter: 'Drifter', musician: 'Street Musician', artist: 'Painter', preacher: 'Street Preacher',
   };
 
@@ -306,6 +308,8 @@
     diner: ['The Blue Plate', "{F}'s Diner", 'Silver Spoon', 'Rise & Shine', 'Chrome Cup'],
     bar: ['The Rusty Anchor', 'Last Call', "{L}'s Tavern", 'The Velvet Rope', 'Bottom of the Glass', 'The Loose Caboose', 'The Crooked Fedora'],
     club: ['Club Neon', 'Studio 77', 'The Mirrorball', 'Boogie Palace', 'Starlight Lounge'],
+    costume: ['Masquerade {L}', 'Funhouse Novelties', 'Mask & Mayhem', '{F}\'s Costumes', 'The Joke Shop'],
+    strip: ['The Velvet Pole', 'Club Tease', 'The Pink Pussycat', 'Satin & Sin', 'The Honey Pot', 'Studs & Sequins'],
     pawn: ["{F}'s Pawn", 'Honest {F} Loans', 'Second Chance Pawn'],
     gunshop: ["{L} Arms", 'Sportsman Supply', 'Iron & Oak'],
     tailor: ['{L} Tailoring', 'The Dapper Needle', 'Sharp Dressed'],

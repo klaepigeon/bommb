@@ -592,6 +592,8 @@ R.store = {
     warehouse: { name: 'Warehouse', w: [12, 15], h: [8, 10], roof: ['#6a6a5a'], wall: ['#8a8070'], jobs: { dockhand: 4 }, hours: [5, 20], shop: 'work', fl: 0.6 },
     barn: { name: 'Farm', w: [8, 10], h: [7, 8], roof: ['#8a2a1a'], wall: ['#a8402a'], jobs: { farmer: 2 }, hours: [5, 20], shop: 'farm', fl: 1.3, house: 3 },
     cabin: { name: 'Cabin', w: [7, 7], h: [5, 5], roof: ['#5a3a2a'], wall: ['#8a5a3a'], house: 3, fl: 1.2 },
+    costume: { name: 'Costume & Novelty', w: [7, 8], h: [5, 7], roof: ['#7a2a6a'], wall: ['#e8c850'], jobs: { clerk: 1 }, hours: [10, 21], shop: 'costume', fl: 0.8, rob: 1 },
+    strip: { name: 'Strip Club', w: [10, 12], h: [8, 9], roof: ['#3a0a2a'], wall: ['#7a1a4a'], jobs: { dancer: 4, bartender: 1, bouncer: 1 }, hours: [19, 5], shop: 'strip', fl: 0.7, leisure: 4, neon: 1, adult: 1 },
     motel: { name: 'Motel', w: [12, 13], h: [5, 7], roof: ['#3a6a6a'], wall: ['#e0c8a0'], jobs: { clerk: 1 }, hours: [0, 24], shop: 'hotel', fl: 0.9, house: 2 },
   };
   // How cities spend their lots. Downtown = inner blocks.
@@ -601,14 +603,14 @@ R.store = {
     edge: [['house', 10], ['factory', 1], ['warehouse', 1], ['gas', 0.5], ['garage', 0.4], ['motel', 0.4]],
   };
   // Buildings every city must have
-  D.cityRequired = ['police', 'hospital', 'social', 'bank', 'bar', 'general', 'diner', 'pawn', 'gunshop', 'tailor', 'garage', 'church', 'hotel', 'butcher', 'gas', 'school', 'club', 'pharmacy'];
+  D.cityRequired = ['police', 'hospital', 'social', 'bank', 'bar', 'general', 'diner', 'pawn', 'gunshop', 'tailor', 'garage', 'church', 'hotel', 'butcher', 'gas', 'school', 'club', 'pharmacy', 'costume', 'strip'];
 
   D.roleNames = {
     clerk: 'Clerk', cook: 'Cook', waitress: 'Waitress', bartender: 'Bartender', bouncer: 'Bouncer', dj: 'DJ', fence: 'Fence',
     gunsmith: 'Gunsmith', tailor: 'Tailor', teller: 'Bank Teller', guard: 'Security', cop: 'Cop', detective: 'Detective',
     doctor: 'Doctor', nurse: 'Nurse', mechanic: 'Mechanic', priest: 'Priest', capo: 'Capo', soldier: 'Made Man', attendant: 'Pump Jockey',
     butcher: 'Butcher', dealer: 'Card Dealer', teacher: 'Teacher', worker: 'Line Worker', dockhand: 'Dockhand', farmer: 'Farmer',
-    barber: 'Barber', none: 'Out of Work', retired: 'Retired', kid: 'Kid', student: 'Student', don: 'Don', hustler: 'Hustler',
+    barber: 'Barber', dancer: 'Dancer', none: 'Out of Work', retired: 'Retired', kid: 'Kid', student: 'Student', don: 'Don', hustler: 'Hustler',
     hunter: 'Trapper', fisher: 'Fisherman', drifter: 'Drifter', musician: 'Street Musician', artist: 'Painter', preacher: 'Street Preacher',
   };
 
@@ -744,6 +746,8 @@ R.store = {
     diner: ['The Blue Plate', "{F}'s Diner", 'Silver Spoon', 'Rise & Shine', 'Chrome Cup'],
     bar: ['The Rusty Anchor', 'Last Call', "{L}'s Tavern", 'The Velvet Rope', 'Bottom of the Glass', 'The Loose Caboose', 'The Crooked Fedora'],
     club: ['Club Neon', 'Studio 77', 'The Mirrorball', 'Boogie Palace', 'Starlight Lounge'],
+    costume: ['Masquerade {L}', 'Funhouse Novelties', 'Mask & Mayhem', '{F}\'s Costumes', 'The Joke Shop'],
+    strip: ['The Velvet Pole', 'Club Tease', 'The Pink Pussycat', 'Satin & Sin', 'The Honey Pot', 'Studs & Sequins'],
     pawn: ["{F}'s Pawn", 'Honest {F} Loans', 'Second Chance Pawn'],
     gunshop: ["{L} Arms", 'Sportsman Supply', 'Iron & Oak'],
     tailor: ['{L} Tailoring', 'The Dapper Needle', 'Sharp Dressed'],
@@ -2821,6 +2825,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     const shirtHex = Array.isArray(shirt[0]) ? shirt[0] : shirt;
     look.old = O2.Qr(seed, shirtHex.map ? shirtHex.map((c) => (typeof c === 'number' ? c : parseInt(String(c).slice(1), 16))) : shirtHex, hairKey(look.hair), ov);
     look.old.mask = !!look.mask;
+    if (ov.maskCol) look.old.maskCol = ov.maskCol;
     // overrides the original's look roller doesn't take directly
     if (ov.hair) look.old.hair = ov.hair;
     if ('beard' in ov) look.old.beard = ov.beard;
@@ -15512,7 +15517,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     const seed = h.person ? h.person.seed || h.person.id : (h.look && h.look.seedStr ? h.look.seedStr.length * 31 : (h.x | 0));
     const r = R.hash2(seed | 0, 7, 99);
     const fem = !!h.look.fem;
-    return r < 0.8 ? !fem : r < 0.92 ? fem : 'both';
+    return 'both'; // everybody on the Brass Coast swings both ways
   };
   CH.attracted = function (h) {
     const pl = G().player, want = this.likes(h);
@@ -15523,14 +15528,54 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   };
   CH.chipLabel = function (h) { return (h.flirted || 0) >= 2 || (h.person && h.person.opinion > 55) ? 'Seduce' : 'Flirt'; };
   const ARCH = { flirt: 0.35, friendly: 0.1, eccentric: 0.05, gossip: 0.05, hustler: 0.05, tough: 0, square: -0.05, timid: -0.12, grumpy: -0.2, pious: -0.3 };
+  // everyone has a type: seeded tastes in morals, reputation, clothes, hair and mob ties
+  const HAIRS = ['short', 'shag', 'long', 'afro', 'spiky', 'bald', 'ponytail', 'bun'], FACIAL = ['clean', 'stache', 'beard'];
+  CH.taste = function (h) {
+    if (h._taste) return h._taste;
+    const seed = h.person ? (h.person.seed || h.person.id * 7919) : ((h.look && h.look.seedStr ? h.look.seedStr.split('').reduce((a, c) => (a * 31 + c.charCodeAt(0)) | 0, 7) : h.x * 13 + h.y) | 0);
+    const r = R.mulberry(Math.abs(seed) + 12345);
+    const t = {
+      morals: r() < 0.35 ? 'saint' : r() < 0.55 ? 'thug' : null, // likes good boys, bad boys, or doesn't care
+      danger: r() < 0.3 ? 1 : r() < 0.55 ? -1 : 0, // a reputation turns them on, or off
+      fancy: r() < 0.4 ? 1 : r() < 0.6 ? -1 : 0, // loves a sharp suit, or hates a peacock
+      hairLove: HAIRS[(r() * HAIRS.length) | 0], hairHate: HAIRS[(r() * HAIRS.length) | 0],
+      faceLove: FACIAL[(r() * 3) | 0], faceHate: FACIAL[(r() * 3) | 0],
+      mob: r() < 0.3 ? 1 : r() < 0.55 ? -1 : 0, // wiseguys: yes please, or absolutely not
+    };
+    if (t.hairHate === t.hairLove) t.hairHate = null;
+    if (t.faceHate === t.faceLove) t.faceHate = null;
+    return (h._taste = t);
+  };
+  // how much they're drawn to you, and the thing they'd say about it
+  CH.appeal = function (h) {
+    const g = G(), pl = g.player, t = this.taste(h), st = pl.style, rep = pl.rep, tier = this.tier(), notes = [];
+    let a = 0;
+    const add = (v, line) => { a += v; if (line) notes.push([v, line]); };
+    if (t.morals && tier === t.morals) add(0.2, t.morals === 'saint' ? 'I like a gentleman.' : 'I like a man with a little danger in him.');
+    else if (t.morals && tier !== 'gent') add(-0.2, t.morals === 'saint' ? 'I heard what kind of man you are.' : 'You\'re a little too clean-cut for me.');
+    if (t.danger) add(t.danger * (rep.infamy - 30) / 150, t.danger > 0 && rep.infamy > 50 ? 'I know who you are. That\'s kind of exciting.' : t.danger < 0 && rep.infamy > 50 ? 'I\'ve read about you in the papers. No thanks.' : null);
+    const fancy = pl.outfitScore ? pl.outfitScore() : 0;
+    if (t.fancy) add(t.fancy * (fancy - 3) / 18, t.fancy > 0 && fancy > 6 ? 'Sharp suit.' : t.fancy < 0 && fancy > 6 ? 'Bit of a peacock, aren\'t you?' : null);
+    if (st.hair === t.hairLove) add(0.15, 'Love the hair.'); else if (st.hair === t.hairHate) add(-0.2, `Lose the ${st.hair === 'bald' ? 'chrome dome' : st.hair}, then we'll talk.`);
+    if (st.facial === t.faceLove && st.facial !== 'clean') add(0.12, st.facial === 'beard' ? 'I like a beard.' : 'Nice moustache.');
+    else if (st.facial === t.faceHate) add(-0.15, st.facial === 'clean' ? 'Grow some whiskers, baby face.' : 'That thing on your lip has to go.');
+    const theirs = h.faction || g.jobs.cityFamily(h);
+    if (h.person && (h.person.role === 'cop' || h.person.role === 'detective')) add(pl.family ? -0.3 : 0, pl.family ? 'I don\'t date wiseguys.' : null);
+    else if (pl.family && theirs) { const sd = g.jobs.familyStanding(theirs); if (theirs === pl.family) add(0.12, 'Any friend of the family.'); else if (sd < -20) add(-0.3, `You're with the ${pl.family}s? My people would kill me.`); }
+    if (t.mob && pl.family) add(t.mob * 0.12, t.mob > 0 ? 'Is it true what they say about you boys?' : 'Mob guys are nothing but trouble.');
+    if (pl.masked) add(-0.35, 'Take the mask off, weirdo.');
+    if (pl.bloody > 0.3) add(-0.3, 'Is that... blood?');
+    return { a, notes };
+  };
   CH.odds = function (h) {
-    const g = G(), pl = g.player, p = h.person, t = this.tier();
-    let o = 0.25 + R.dialog.mood(h) / 180 + (ARCH[h.arch] || 0) + pl.cool / 400;
-    if (t === 'saint') o += h.arch === 'pious' || h.arch === 'timid' ? 0.2 : 0.05;
-    if (t === 'thug') o += h.arch === 'flirt' || h.arch === 'hustler' || h.arch === 'tough' ? 0.15 : -0.1; // some like a bad boy
+    const pl = G().player, p = h.person;
+    let o = 0.25 + R.dialog.mood(h) / 180 + (ARCH[h.arch] || 0) + pl.cool / 400 + this.appeal(h).a;
     if (p && p.spouse >= 0) o -= 0.25;
-    if (!this.attracted(h)) o -= 0.6;
     return R.clamp(o, 0.02, 0.95);
+  };
+  CH.remark = function (h, good) {
+    const n = this.appeal(h).notes.filter((x) => (good ? x[0] > 0 : x[0] < 0));
+    return n.length ? n.sort((a, b) => Math.abs(b[0]) - Math.abs(a[0]))[0][1] : null;
   };
   CH.flirt = function (h) {
     const g = G(), pl = g.player, p = h.person;
@@ -15542,8 +15587,8 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     setTimeout(() => {
       if (h.dead || h.removed) return;
       if (!ok) {
-        const attracted = this.attracted(h);
-        g.actors.say(h, !attracted ? pick(['Sorry, pal. You\'re not my type. At all.', 'Wrong tree, friend.', 'Ha! Not in a million years.']) : p && p.spouse >= 0 ? pick(['I\'m married, you creep.', 'My husband\'s the jealous type.', 'Put a ring on it? Somebody already did.']) : pick(clean() ? ['In your dreams.', 'Pig.', 'Keep walking, Casanova.', 'Does that line ever work?'] : ['In your dreams, creep.', 'Pig.', 'Get lost, you sleaze.', 'Does that shit ever work?']));
+        const why = CH.remark(h, false);
+        g.actors.say(h, why && R.rng() < 0.75 ? why : p && p.spouse >= 0 ? pick(['I\'m married, you creep.', 'My husband\'s the jealous type.', 'Put a ring on it? Somebody already did.']) : pick(clean() ? ['In your dreams.', 'Pig.', 'Keep walking, Casanova.', 'Does that line ever work?'] : ['In your dreams, creep.', 'Pig.', 'Get lost, you sleaze.', 'Does that shit ever work?']));
         if (R.rng() < 0.25 && h.arch !== 'timid') { g.fx.text(h.x, h.y - 26, 'SLAP!', '#ff8a80'); g.audio.sfx('punch', pl.x, pl.y); pl.cool = Math.max(0, pl.cool - 15); }
         if (p) p.opinion = Math.max(-100, p.opinion - 4);
         h.flirted = Math.max(0, (h.flirted || 0) - 1);
@@ -15552,7 +15597,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       h.flirted = (h.flirted || 0) + 1;
       if (p) p.opinion = Math.min(100, p.opinion + 8);
       pl.cool = Math.min(100, pl.cool + 10);
-      if (!seduce) { g.actors.say(h, pick(['Well, aren\'t you smooth.', 'Ha! You\'re trouble, aren\'t you?', 'Keep talking, handsome.', 'Maybe I\'ll let you buy me a drink.', 'Oh, stop. No, keep going.'])); g.fx.text(h.x, h.y - 28, '♥', '#ff6a8a'); return; }
+      if (!seduce) { const why = CH.remark(h, true); if (why && R.rng() < 0.6) { g.actors.say(h, why); g.fx.text(h.x, h.y - 28, '♥', '#ff6a8a'); return; } g.actors.say(h, pick(['Well, aren\'t you smooth.', 'Ha! You\'re trouble, aren\'t you?', 'Keep talking, handsome.', 'Maybe I\'ll let you buy me a drink.', 'Oh, stop. No, keep going.'])); g.fx.text(h.x, h.y - 28, '♥', '#ff6a8a'); return; }
       // seduced
       g.actors.say(h, pick(['Lead the way.', 'I thought you\'d never ask.', 'Your place. Before I change my mind.']));
       g.fx.text(h.x, h.y - 28, '♥♥', '#ff6a8a');
@@ -15771,6 +15816,219 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     if (!LP.CRIMES.tax) LP.CRIMES.tax = { name: 'Tax Evasion', bounty: 150, lvl: 1 };
     const J = R.Jobs.prototype, jd = J.daily;
     J.daily = function () { jd.call(this); MN.daily(); };
+  };
+})();
+
+// ---- 14_night.js
+// RHAPSODY — after dark. A costume shop in every city with a wall of masks (each one
+// changes your face, not just hides it). Bars and clubs that fill up, with folks dropping
+// in on a whim when they pass an open door. A strip club in every city, dancers of every
+// kind. Working girls and boys under the motel signs, and one in eight of them is a cop.
+// And the calendar: it's always the Seventies here, the year is XX7X.
+'use strict';
+(function () {
+  const D = R.data, TS = R.TILE;
+  const G = () => R.game;
+  const NT = (R.night = { workers: [] });
+  const DIR8 = ['right', 'downright', 'down', 'downright', 'right', 'upright', 'up', 'upright'];
+  const FLIP8 = [false, false, false, true, true, true, false, false];
+
+  // ---------------------------------------------------------------- the calendar
+  const MONTHS = [['JAN', 31], ['FEB', 28], ['MAR', 31], ['APR', 30], ['MAY', 31], ['JUN', 30], ['JUL', 31], ['AUG', 31], ['SEP', 30], ['OCT', 31], ['NOV', 30], ['DEC', 31]];
+  R.calendar = function (day, long) {
+    let d = (day + 151) % 365, m = 0; // the story starts on the first of June
+    while (d >= MONTHS[m][1]) { d -= MONTHS[m][1]; m++; }
+    const mon = MONTHS[m][0];
+    return long ? `${mon.charAt(0)}${mon.slice(1).toLowerCase()} ${d + 1}, XX7X` : `${mon} ${d + 1} XX7X`;
+  };
+
+  // ---------------------------------------------------------------- masks
+  const ramp = (a, b, c, d) => [a, b, c, d];
+  const MASKS = (NT.MASKS = {
+    ski: { name: 'Ski Mask', price: 10, col: ramp('#141418', '#24242e', '#383846', '#50505e') },
+    stocking: { name: 'Nylon Stocking', price: 5, col: ramp('#7a5a44', '#9a7a60', '#b8987c', '#d4b496') },
+    hockey: { name: 'Goalie Mask', price: 40, col: ramp('#a8a498', '#cfcbc0', '#e8e4da', '#fbf8f0'), feat: 'hockey' },
+    clown: { name: 'Clown Mask', price: 35, col: ramp('#c8c0b8', '#e4dcd4', '#f2eee8', '#ffffff'), feat: 'clown' },
+    skull: { name: 'Skull Mask', price: 30, col: ramp('#9a9282', '#c8c0ac', '#e2dac6', '#f6f2e6'), feat: 'skull' },
+    lucha: { name: 'Luchador Mask', price: 45, col: ramp('#5a0a14', '#94141e', '#c8262a', '#f05248'), feat: 'lucha' },
+    pig: { name: 'Rubber Pig', price: 25, col: ramp('#a85a6a', '#cc7a8a', '#e89aa8', '#fcc0c8'), feat: 'pig' },
+    gorilla: { name: 'Gorilla Mask', price: 50, col: ramp('#100c0c', '#1e1814', '#302620', '#44362c'), feat: 'gorilla' },
+    devil: { name: 'Devil Mask', price: 30, col: ramp('#4a0606', '#7a0e0e', '#a81c1c', '#d83a34'), feat: 'devil' },
+    pumpkin: { name: 'Jack-o\'-Lantern', price: 20, col: ramp('#7a3206', '#b0520e', '#d8721c', '#fa9a3a'), feat: 'pumpkin' },
+    bunny: { name: 'Easter Bunny', price: 35, col: ramp('#aca49c', '#d0c8c0', '#e8e2da', '#fcfaf6'), feat: 'bunny' },
+    prez: { name: 'Rubber "Mr. President"', price: 60, col: ramp('#8a5a44', '#b07a5c', '#d09a7a', '#ecbc9a'), feat: 'prez' },
+  });
+  const FEAT = {
+    // [dx, dy, w, h, colour] in front-facing head cells, dx from the face centre
+    clown: [[-0.5, 11, 2, 2, '#e02020'], [-2, 13, 4, 1, '#c01818'], [-3.5, 11, 1, 1, '#3a6ae0'], [2.5, 11, 1, 1, '#3a6ae0'], [-4, 5, 8, 1, '#e8601c']],
+    skull: [[-4, 9, 2, 2, '#141010'], [2, 9, 2, 2, '#141010'], [-0.5, 11, 1, 1, '#141010'], [-2, 13, 1, 1, '#3a342c'], [0, 13, 1, 1, '#3a342c'], [2, 13, 1, 1, '#3a342c']],
+    hockey: [[-4, 8, 2, 1, '#c01818'], [2, 8, 2, 1, '#c01818'], [-2, 12, 1, 1, '#3a3a3a'], [0, 12, 1, 1, '#3a3a3a'], [2, 12, 1, 1, '#3a3a3a'], [-1, 13, 1, 1, '#3a3a3a'], [1, 13, 1, 1, '#3a3a3a']],
+    lucha: [[-4, 9, 3, 1, '#f0c030'], [1, 9, 3, 1, '#f0c030'], [-2, 12, 4, 1, '#f0c030'], [-0.5, 5, 1, 3, '#f0c030']],
+    pig: [[-2, 11, 4, 2, '#f4b0bc'], [-1, 12, 1, 1, '#6a2a34'], [1, 12, 1, 1, '#6a2a34'], [-5, 4, 2, 2, '#cc7a8a'], [3, 4, 2, 2, '#cc7a8a']],
+    gorilla: [[-4, 8, 8, 1, '#0a0808'], [-2, 11, 4, 3, '#5a463a'], [-1, 12, 1, 1, '#140e0c'], [1, 12, 1, 1, '#140e0c']],
+    devil: [[-5, 1, 2, 3, '#2a0404'], [3, 1, 2, 3, '#2a0404'], [-3, 12, 6, 1, '#2a0404'], [-4, 9, 2, 1, '#f0d040'], [2, 9, 2, 1, '#f0d040']],
+    pumpkin: [[-4, 9, 2, 2, '#140a04'], [2, 9, 2, 2, '#140a04'], [-3, 12, 1, 1, '#140a04'], [-1, 12, 3, 1, '#140a04'], [2, 12, 1, 1, '#140a04'], [-0.5, 2, 2, 2, '#3a6a20']],
+    bunny: [[-4, -3, 2, 7, '#f4f0ea'], [2, -3, 2, 7, '#f4f0ea'], [-3.5, -2, 1, 5, '#f0a0b0'], [2.5, -2, 1, 5, '#f0a0b0'], [-0.5, 11, 1, 1, '#f080a0']],
+    prez: [[-5, 4, 10, 2, '#b8b4ac'], [-3, 12, 6, 1, '#5a1a14'], [-2, 12, 4, 1, '#f0ece0'], [-4, 8, 2, 1, '#3a2a20'], [2, 8, 2, 1, '#3a2a20']],
+  };
+  const ALWAYS = { devil: [0, 1], bunny: [0, 1, 2, 3], pig: [3, 4] }; // horns and ears show from any angle
+  NT.drawMaskFeat = function (g, X, Y, look, st) {
+    const f = FEAT[look.maskKind];
+    if (!f) return;
+    const d8 = R.art.dir8(st.dir != null ? st.dir : 2, st.ang), n = DIR8[d8], flip = FLIP8[d8];
+    const front = n === 'down' || n === 'downright', cx = n === 'down' ? 7.5 : n === 'downright' ? 9.5 : n === 'right' ? 10.5 : 7.5;
+    const kid = look.kid ? 2 : 0;
+    f.forEach((p, i) => {
+      if (!front && !(ALWAYS[look.maskKind] || []).includes(i)) return;
+      const sx = cx + p[0] * (n === 'right' ? 0.6 : n === 'downright' ? 0.85 : 1);
+      const x = flip ? 15 - sx - p[2] + 1 : sx;
+      g.fillStyle = p[4];
+      g.fillRect(Math.round(X - 8 + x), Math.round(Y - 25 + p[1] + kid), p[2], p[3]);
+    });
+  };
+
+  // ---------------------------------------------------------------- shops
+  NT.buyMask = function (k, price) {
+    const g = G(), pl = g.player, m = MASKS[k];
+    if (!(pl.inv.masks || {})[k]) { if (!pl.pay(price)) return g.ui.toast('Can\'t afford it.', 'warn'); (pl.inv.masks = pl.inv.masks || {})[k] = 1; g.audio.sfx('cash'); }
+    pl.inv.tools.mask = 1;
+    pl.style.maskKind = k;
+    pl.buildLook();
+    g.ui.toast(`${m.name}${pl.masked ? ' on.' : '. Press MASK to put it on.'}`, 'good');
+  };
+  NT.maskOpts = function (list, opts) {
+    const pl = G().player;
+    for (const k of list) {
+      const m = MASKS[k], own = (pl.inv.masks || {})[k] || (k === 'ski' && pl.inv.tools.mask);
+      opts.push({ label: own ? `${m.name}${pl.style.maskKind === k ? ' (wearing)' : ' (wear)'}` : m.name, price: own ? '' : R.fmtMoney(m.price), small: own ? 'Yours' : 'Rubber, latex, or worse', icon: 'mask', fn: () => this.buyMask(k, own ? 0 : m.price) });
+    }
+  };
+  NT.stripOpts = function (b, opts) {
+    const g = G(), pl = g.player, ui = g.ui;
+    const dancers = g.actors.list.filter((a) => a.room === pl.room && a.dancer && !a.dead);
+    opts.unshift({ label: 'Tip the dancers', price: '$5', small: 'Folded twice, tucked in', fn: () => { if (!pl.pay(5)) return; pl.cool = Math.min(100, pl.cool + 15); const d = R.rng.pick(dancers); if (d) g.actors.say(d, R.rng.pick(['Thanks, sugar.', 'Big spender!', 'Come back anytime, handsome.', 'Mm, don\'t be a stranger.'])); g.audio.sfx('cash'); } });
+    opts.splice(1, 0, { label: 'A private dance', price: '$40', small: 'Three songs behind the velvet curtain', fn: () => { if (!pl.pay(40)) return ui.toast('Forty, cash.', 'warn'); g.clock.skip(20); pl.cool = 100; ui.closeSheet(); ui.story('Behind the curtain', `${R.rng.pick(['A disco ball, a velvet chair, and three songs that feel like one.', 'Donna Summer on the speakers and a strict hands-off policy, mostly observed.'])}\n\nYou walk out lighter in the wallet and cooler in the head.\n\n(Full Cool)`); } });
+    opts.splice(2, 0, { label: 'Buy the house a round', price: '$30', small: 'Everybody here likes you a little more', fn: () => { if (!pl.pay(30)) return; for (const a of g.actors.list) if (a.room === pl.room && a.person) a.person.opinion = Math.min(100, a.person.opinion + 4); pl.rep.honor = Math.min(100, pl.rep.honor + 0.5); ui.toast('A cheer goes up. Somebody starts a conga line.', 'good'); } });
+    opts.splice(3, 0, { label: 'Ask the manager what\'s going on', price: '$20', small: 'He sees everybody, eventually', fn: () => { if (!pl.pay(20)) return; const lead = g.jobs.makeLead({ x: pl.x, y: pl.y }); ui.toast(lead ? `"${lead}"` : '"Quiet week. Too quiet."'); } });
+  };
+
+  // ---------------------------------------------------------------- the stroll
+  const NAMES_F = ['Candy', 'Roxy', 'Destiny', 'Ginger', 'Velvet', 'Cherry', 'Starla', 'Honey'];
+  const NAMES_M = ['Rico', 'Dante', 'Lance', 'Stallion', 'Johnny Gold', 'Sonny', 'Blaze', 'Cash'];
+  NT.spawnWorker = function (b) {
+    const g = G();
+    const s = g.world.findNear(b.out.x, b.out.y + 1, 1, 5, (x, y) => !g.world.solidPed(x, y) && !g.world.isWater(x, y));
+    if (!s) return null;
+    const fem = R.rng() < 0.5;
+    const h = g.actors.makeHuman(s.x * TS + 8, s.y * TS + 8, { arch: 'flirt', tag: 'worker', cash: R.rng.int(20, 80), look: { fem, age: 26, skin: R.rng.pick(['#f0c8a0', '#c89070', '#8a5a3a', '#5a3a24']), hair: R.rng.pick(['#e8c860', '#1a1010', '#8a3a1a', '#d84a8a']), top: '#c02080', bottom: '#1a1a1a', seedStr: 'worker' + R.rng.int(0, 1e6), oldOverride: fem ? { style: R.rng.pick(['long', 'afro', 'bob', 'shag']), dress: true, shirt: R.rng.pick([ramp('#6a0a4a', '#a0186a', '#d830a0', '#ff70c8'), ramp('#6a4a0a', '#a07818', '#d8a830', '#ffe070'), ramp('#0a3a6a', '#185a9a', '#3a8ad8', '#80c0ff')]) } : { style: R.rng.pick(['shag', 'afro', 'long']), top: 'collar', shirt: ramp('#6a4a0a', '#a07818', '#d8a830', '#ffe070'), jacket: ramp('#1a0a2a', '#2a1440', '#402060', '#60308a'), pants: ramp('#e8e0d0', '#f0e8dc', '#f8f4ec', '#ffffff'), stache: true } } });
+    h.keep = true; h.stay = true; h.state = 'idle'; h.timer = 1e9; h.worker = true;
+    h.strangerName = R.rng.pick(fem ? NAMES_F : NAMES_M);
+    h.sting = R.rng() < 0.12;
+    this.workers.push(h);
+    return h;
+  };
+  NT.workerTree = function (h) {
+    const g = G(), pl = g.player, ui = g.ui, say = (t) => ui.talkLine(t), close = () => ui.closeSheet(), V = R.vice;
+    setTimeout(() => say(R.rng.pick(['Looking for company, sugar?', 'Hey there, big spender.', 'You look like you could use a little fun.'])), 0);
+    const car = g.traffic.list.find((v) => !v.removed && !v.wrecked && (v.owner === 'player' || v.stolen) && R.dist(v.x, v.y, pl.x, pl.y) < TS * 5);
+    const motel = g.world.buildings.find((b) => b && !b.destroyed && (b.type === 'motel' || b.type === 'hotel') && R.dist(b.out.x * TS, b.out.y * TS, pl.x, pl.y) < TS * 18);
+    const where = car ? 'your car' : V && V.hasPlace() ? 'your place' : motel ? `a room at ${motel.name}` : null;
+    const price = 60 + (motel && !car && !(V && V.hasPlace()) ? 15 : 0);
+    const opts = [
+      { label: '"How much?"', fn: () => say(`"Sixty for an hour, sugar. More if you want the whole night."`) },
+      { label: `"Let's go somewhere."`, small: where ? `${where} · $${price}` : 'You need a car, a room, or a motel nearby', price: where ? R.fmtMoney(price) : '', fn: () => {
+        if (!where) return say('"Where, the sidewalk? Get a car, honey."');
+        if (h.sting) { close(); h.cop = true; h.hostile = false; g.actors.say(h, 'Vice squad. You\'re under arrest for solicitation.'); g.law.startIncident({ type: 'solicit', def: g.law.CRIMES.solicit, x: pl.x, y: pl.y, jur: g.law.jurAt(pl.x, pl.y), identified: true, lvl: 1, bounty: 25, t: g.clock.t }, h); ui.toast('An undercover sting. Of course it was.', 'bad'); return; }
+        if (!pl.pay(price)) return say('"Cash first, handsome. I\'m not a charity."');
+        close();
+        g.clock.skip(60);
+        pl.cool = 100; pl.hp = Math.min(pl.maxHp, pl.hp + 25);
+        ui.story('An hour later...', `${where === 'your car' ? 'The windows fog up. The radio plays something by the Bee Gees.' : 'A buzzing neon sign, a creaky bed, and a Gideon Bible nobody opens.'}\n\nThe rest is between you and ${h.strangerName}.\n\n(Full Cool)`);
+        // somebody at home may hear about it
+        const s = V && V.state(), sweet = pl.sweetheart != null && s && s.love[pl.sweetheart];
+        if (sweet && R.rng() < 0.3) setTimeout(() => { sweet.love = Math.max(0, sweet.love - 20); g.ui.toast(`Word got back to ${g.pop.people[pl.sweetheart].first}. They're not answering the phone. (♥ −20)`, 'bad'); }, 4000);
+        h.stay = false; h.keep = false; h.state = 'idle'; h.timer = 1;
+      } },
+      { label: '"Heard anything interesting?"', price: '$10', small: 'Working people hear everything', fn: () => { if (!pl.pay(10)) return; const lead = g.jobs.makeLead({ x: pl.x, y: pl.y }); say(lead ? `"${lead}"` : '"Only that the vice squad\'s been sniffing around. Careful, sugar."'); } },
+      { label: 'Goodbye', fn: close },
+    ];
+    return { title: h.strangerName, sub: 'Working the corner', options: opts };
+  };
+
+  // ---------------------------------------------------------------- the whole night
+  NT.update = function (dt) {
+    const g = G(), pl = g.player;
+    this.workers = this.workers.filter((h) => !h.dead && !h.removed && (R.dist(h.x, h.y, pl.x, pl.y) < TS * 45 || (g.actors.remove(h), false)));
+    this.t = (this.t == null ? 3 : this.t) - dt;
+    if (this.t > 0 || pl.room) return;
+    this.t = 6;
+    const hr = g.clock.hour(), night = hr >= 21 || hr < 4;
+    const c = g.world.cityAt((pl.x / TS) | 0, (pl.y / TS) | 0);
+    // workers under the neon
+    if (c && night && this.workers.length < 2) {
+      const spots = c.buildings.filter((b) => b && !b.destroyed && ['motel', 'strip', 'bar', 'hotel'].includes(b.type) && R.dist(b.out.x * TS, b.out.y * TS, pl.x, pl.y) < TS * 26 && R.dist(b.out.x * TS, b.out.y * TS, pl.x, pl.y) > TS * 8);
+      if (spots.length && R.rng() < 0.5) this.spawnWorker(R.rng.pick(spots));
+    }
+    if (!night) for (const h of this.workers) { h.keep = false; h.stay = false; }
+    // passers-by drop into an open bar on a whim
+    if (c) {
+      const bars = c.buildings.filter((b) => b && !b.destroyed && ['bar', 'club', 'strip', 'casino'].includes(b.type) && g.ui.isOpen(b) && R.dist(b.out.x * TS, b.out.y * TS, pl.x, pl.y) < TS * 24);
+      if (bars.length) for (const a of g.actors.near(pl.x, pl.y, TS * 22, (q) => q.kind === 'h' && !q.dead && q.tag === 'ambient' && !q.look.kid && q.state !== 'travel' && q.state !== 'fight' && !q.goal && (!q.person || q.person.age >= 21))) {
+        if (R.rng() > (hr >= 18 || hr < 2 ? 0.08 : 0.025)) continue;
+        const b = bars.reduce((best, x) => (R.dist(x.out.x * TS, x.out.y * TS, a.x, a.y) < R.dist(best.out.x * TS, best.out.y * TS, a.x, a.y) ? x : best), bars[0]);
+        if (R.dist(b.out.x * TS, b.out.y * TS, a.x, a.y) > TS * 14) continue;
+        a.state = 'travel'; g.actors.goTo(a, b.out.x, b.out.y, { enter: true, placeKey: 'b:' + b.id });
+        if (R.rng() < 0.3) g.actors.say(a, R.rng.pick(['One drink. Just one.', 'I could use a cold one.', 'Why not? It\'s Friday somewhere.', 'Hell of a day. Bartender better be working.']));
+      }
+    }
+  };
+
+  NT.init = function (g) {
+    this.workers = []; this.t = 3;
+    if (this.wrapped) return;
+    this.wrapped = true;
+    const LP = R.Law.prototype;
+    if (!LP.CRIMES.solicit) LP.CRIMES.solicit = { name: 'Solicitation', bounty: 25, lvl: 1, minor: true };
+    // masks: colours through the sprite painter, details painted on top
+    const lfs = R.lookFromStyle;
+    R.lookFromStyle = function (s, masked) {
+      const l = lfs.call(this, s, masked);
+      if (masked) { const k = s.maskKind || 'ski', m = MASKS[k] || MASKS.ski; l.maskKind = k; l.oldOverride = Object.assign({}, l.oldOverride || {}, { maskCol: m.col }); l.seedStr += '-mask-' + k; }
+      return l;
+    };
+    const A = R.art, draw = A.drawPerson;
+    A.drawPerson = function (g, x, y, dir, walk, look, st) {
+      const r = draw.call(this, g, x, y, dir, walk, look, st);
+      if (look && look.mask && look.maskKind && !(st && (st.down || st.scale || st.crouch))) NT.drawMaskFeat(g, Math.round(x), Math.round(y) - (walk && Math.abs(walk) > 0.01 && (Math.floor(walk * 0.5) % 4) % 2 ? 1 : 0), look, Object.assign({ dir }, st || {}));
+      return r;
+    };
+    // shops and rooms
+    const U = R.UI.prototype, io = U.interiorOptions;
+    U.interiorOptions = function (b) {
+      const o = io.call(this, b);
+      if (b.type === 'costume') NT.maskOpts(Object.keys(MASKS), o);
+      if (b.type === 'pawn') NT.maskOpts(['ski', 'stocking', 'hockey'], o);
+      if (b.type === 'strip') NT.stripOpts(b, o);
+      return o;
+    };
+    // dancers on the runway, both kinds
+    const IP = R.Interiors.prototype, pop = IP.populate;
+    IP.populate = function (room) {
+      const r = pop.call(this, room);
+      if (room.b.type === 'strip' && room.mode !== 'breakin' && G().ui.isOpen(room.b)) {
+        const spots = room.extra.slice(0, 2);
+        for (const s of spots) {
+          const fem = R.rng() < 0.6;
+          const h = this.spawnAt(room, null, s, { stay: true, arch: 'flirt', city: room.b.cityId });
+          if (!h) continue;
+          h.look.fem = fem; h.look.dress = fem; h.look.old = null; h.look.oldOverride = Object.assign({}, h.look.oldOverride || {}, fem ? { dress: true, shirt: ramp('#6a0a4a', '#a0186a', '#d830a0', '#ff70c8') } : { top: 'turtle', shirt: ramp('#6a4a0a', '#a07818', '#d8a830', '#ffe070'), pants: ramp('#141414', '#242424', '#3a3a3a', '#505050'), jacket: null });
+          h.state = 'perform'; h.timer = 1e9; h.dancer = true; h.role = 'dancer'; h.strangerName = R.rng.pick(fem ? NAMES_F : NAMES_M);
+        }
+      }
+      return r;
+    };
+    const tree = R.dialog.tree;
+    R.dialog.tree = function (h) { return h.worker && !h.cop ? NT.workerTree(h) : tree.call(this, h); };
   };
 })();
 
@@ -17792,7 +18050,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     for (let i = 0; i < 5; i++) heart(g, 12 + i * 17, 12, hk >= (i + 1) * 2 ? 2 : hk === i * 2 + 1 ? 1 : 0, 2);
     pt(g, R.fmtMoney(pl.cash), 12, 28, { scale: 2, color: '#3a7a20' });
     pt(g, game.clock.label().replace(' ', ''), 180, 30, { align: 'right', color: '#3a2418' });
-    pt(g, `DAY ${game.clock.day() + 1}`, 180, 16, { align: 'right', color: '#7a5e44' });
+    pt(g, R.calendar ? R.calendar(game.clock.day()) : `DAY ${game.clock.day() + 1}`, 180, 16, { align: 'right', color: '#7a5e44' });
     // weapon + ammo
     const ww = R.data.weapons[pl.weapon];
     const held = pl.held && R.data.props[pl.held.k];
@@ -18615,7 +18873,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
         const proj = g.pop.projects.filter((p) => p.lot.city === c).length;
         return `<span>${c.name}</span><span>${n} · ${kids} kids · ${Math.round(c.prosperity)}% ${proj ? '· 🏗' + proj : ''}</span>`;
       }).join('');
-      body.innerHTML = `<div class="news"><h3>The Brass Coast Bugle</h3><div class="dateline">Day ${day + 1} · ${g.clock.weekday()} · Still 1970-something in spirit</div>${items.map((n) => `<p><b>${esc((g.pop.cityObj(n.city) || { name: 'County' }).name)} · day ${n.day + 1}</b>${esc(n.text)}</p>`).join('') || '<p>Slow news day.</p>'}</div><div class="sect">Cities (people · kids · prosperity)</div><div class="kv">${cityRows}</div>`;
+      body.innerHTML = `<div class="news"><h3>The Brass Coast Bugle</h3><div class="dateline">${g.clock.weekday()}, ${R.calendar(day, true)} · Still the Seventies, forever</div>${items.map((n) => `<p><b>${esc((g.pop.cityObj(n.city) || { name: 'County' }).name)} · ${R.calendar(n.day, true)}</b>${esc(n.text)}</p>`).join('') || '<p>Slow news day.</p>'}</div><div class="sect">Cities (people · kids · prosperity)</div><div class="kv">${cityRows}</div>`;
     } else if (tab === 'settings') {
       const st = g.settings;
       const sel = (id, vals, cur) => `<select id="${id}">${vals.map(([v, l]) => `<option value="${v}" ${String(v) === String(cur) ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
@@ -19370,6 +19628,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     R.profile.init(this);
     R.carry.init(this);
     R.charm.init(this); R.charm.reinit();
+    R.night.init(this);
     R.vice.init(this);
     R.gore.init(this);
     R.relics.init(this);
@@ -19528,6 +19787,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       R.vendetta.update(sdt);
       R.profile.update(sdt);
       R.carry.update(sdt);
+      R.night.update(sdt);
       R.route.update(this, sdt);
       R.vice.update(sdt);
       R.water.update(sdt);
@@ -19712,13 +19972,13 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     house: [14, 10], cabin: [12, 9], apartment: [14, 10], barn: [16, 11], bar: [18, 12], club: [20, 13], diner: [16, 10],
     bank: [20, 12], police: [20, 12], hospital: [20, 12], casino: [22, 13], church: [16, 13], social: [18, 12], garage: [18, 11],
     hotel: [16, 11], motel: [14, 10], arcade: [16, 10], laundry: [14, 9], barber: [12, 9], school: [20, 12], factory: [22, 13],
-    warehouse: [22, 13], office: [18, 11], jail: [22, 14], suite: [14, 10],
+    warehouse: [22, 13], office: [18, 11], jail: [22, 14], suite: [14, 10], strip: [20, 13], costume: [12, 9],
   };
   const FLOOR = {
     bar: T.WOOD, club: T.CARPET, diner: T.TILEF, bank: T.CARPET, police: T.TILEF, hospital: T.TILEF, casino: T.CARPET, church: T.WOOD,
     social: T.CARPET, garage: T.CONCRETE, house: T.WOOD, cabin: T.WOOD, apartment: T.WOOD, barn: T.CONCRETE, factory: T.CONCRETE,
     warehouse: T.CONCRETE, arcade: T.CARPET, laundry: T.TILEF, barber: T.TILEF, school: T.WOOD, office: T.CARPET, hotel: T.CARPET, motel: T.WOOD,
-    pharmacy: T.TILEF, general: T.TILEF, liquor: T.WOOD, pawn: T.WOOD, gunshop: T.WOOD, tailor: T.CARPET, butcher: T.TILEF, gas: T.TILEF,
+    pharmacy: T.TILEF, general: T.TILEF, liquor: T.WOOD, pawn: T.WOOD, gunshop: T.WOOD, tailor: T.CARPET, butcher: T.TILEF, gas: T.TILEF, strip: T.CARPET, costume: T.WOOD,
   };
 
   const Int = (R.Interiors = function (game) {
@@ -19837,6 +20097,17 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
         set(1, rh - 3, O.SOFA); set(2, rh - 3, O.SOFA); spot(room.seats, 2, rh - 4);
         for (let y = 5; y <= rh - 4; y += 2) for (let x = 6; x <= rw - 7; x += 3) spot(room.extra, x, y);
         lamp(1, 3); lamp(rw - 2, rh - 3);
+        break;
+      }
+      case 'strip': {
+        // a runway down the middle, chrome poles, chairs along the rail, a bar and a velvet booth
+        for (let y = 4; y <= rh - 5; y++) for (let x = ex - 2; x <= ex + 2; x++) floorAt(x, y, T.DANCE);
+        for (const y of [5, rh - 6]) { set(ex, y, O.FLOORLAMP); spot(room.extra, ex + 1, y); }
+        for (let y = 4; y <= rh - 5; y += 2) { set(ex - 4, y, O.CHAIR); spot(room.seats, ex - 4, y); set(ex + 4, y, O.CHAIR); spot(room.seats, ex + 4, y); }
+        counter(2, 2, 6, 2);
+        set(rw - 2, 3, O.SOFA); set(rw - 3, 3, O.SOFA); spot(room.seats, rw - 3, 4);
+        set(rw - 2, rh - 3, O.SOFA); set(rw - 3, rh - 3, O.SOFA); spot(room.seats, rw - 3, rh - 4);
+        lamp(1, rh - 3);
         break;
       }
       case 'diner': {
@@ -20123,11 +20394,12 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       if (h) { h.staff = true; h.role = role; }
     }
     // a lively crowd at night spots
-    if ((b.type === 'bar' || b.type === 'club' || b.type === 'casino') && room.mode !== 'breakin') {
-      const n = g.clock.hour() > 19 || g.clock.hour() < 3 ? R.rng.int(2, 5) : R.rng.int(0, 2);
+    if ((b.type === 'bar' || b.type === 'club' || b.type === 'casino' || b.type === 'strip') && room.mode !== 'breakin') {
+      const n = g.clock.hour() > 19 || g.clock.hour() < 3 ? R.rng.int(5, 9) : R.rng.int(2, 4); // busy rooms
       for (let k = 0; k < n; k++) {
         const h = this.spawnAt(room, null, pick(room.extra.concat(room.seats), used), { arch: R.rng.pick(['flirt', 'friendly', 'gossip', 'tough', 'eccentric']), city: b.cityId });
         if (h && b.type === 'club' && R.rng() < 0.7) { h.state = 'perform'; h.role = 'dancer'; h.timer = 20 + R.rng() * 30; }
+        if (h && b.type === 'strip' && R.rng() < 0.2) { h.look.fem = !h.look.fem; h.look.old = null; }
       }
       // somebody in the back is always selling something after dark
       if (g.clock.isNight() && R.rng() < (b.type === 'club' ? 0.8 : 0.4)) { const s = pick(room.extra.length ? room.extra : [room.center], used); const d = R.goods.spawnDealer(s.x * TS + 8, s.y * TS + 8, room); d.keep = true; d.stay = true; d.state = 'idle'; d.timer = 1e9; d.destKey = 'b:' + b.id; d.spot = { x: s.x, y: s.y, city: b.city, kind: 'room' }; }
