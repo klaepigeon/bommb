@@ -5350,12 +5350,14 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     const road = w.t(ai.tx, ai.ty);
     const hwy = road === T.HWY || road === T.BRIDGE;
     let want = v.model.top * (hwy ? 0.78 : 0.48) * (ai.reckless ? 1.6 : 1) * (this.game.env.weather.rain > 0.5 ? 0.85 : 1);
+    // ease off through intersections, and take corners gently
+    if (!ai.reckless && !hwy) { const fN = w.flow[w.idx(nx, ny)], fH = w.flow[w.idx(ai.tx, ai.ty)]; if ((fN & F.X) || (fH & F.X)) want = Math.min(want, ai.turned ? 38 : 52); }
     // obstacle ahead: keep about one car-space of road between bumpers, plus more the faster you go,
     // and settle to the speed of whatever's in front instead of stop-starting
     const obst = this.obstacleAhead(v);
     if (obst) {
       const d = obst.d, lead = obst.o.kind === 'v' ? Math.max(0, obst.o.speed || 0) : 0;
-      const s0 = obst.o.kind === 'v' ? TS * 0.9 : TS * 0.8, gap = s0 + v.speed * 0.45;
+      const s0 = v.model.w * 0.5 + (obst.o.kind === 'v' ? TS * 0.9 : TS * 0.7), gap = s0 + v.speed * 0.45; // d runs from our centre: add our half-length so the space is bumper to bumper
       if (d < s0) want = 0;
       else want = Math.min(want, lead + (d - s0) * 1.6 * (d < gap ? 0.6 : 1));
       if (v.speed < 5) {
@@ -5382,7 +5384,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     }
     v.braking = want < v.speed - 8;
     // ease on and off the pedal; brake harder only when it's genuinely close
-    const brakeK = want === 0 && obst && obst.d < TS * 0.9 ? 320 : 140;
+    const brakeK = want === 0 && obst && obst.d < v.model.w * 0.5 + TS * 0.9 ? 320 : 140;
     v.speed = R.approach(v.speed, want, (want > v.speed ? v.model.acc * 0.45 : brakeK) * dt);
     // move along the lane. On a straight, travel parallel to it and ease back onto the line;
     // only aim straight at the next tile centre when turning a corner
@@ -5464,17 +5466,21 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     return true;
   };
   TP.obstacleAhead = function (v) {
-    const fx = Math.cos(v.angle), fy = Math.sin(v.angle);
-    const reach = v.model.w * 0.5 + 10 + v.speed * 0.45;
+    // lane cars look down the lane they're committed to, not where the body happens to point mid-turn
+    const ld = v.mode === 'lane' && v.ai && v.ai.dir != null ? R.DIRS[v.ai.dir] : null;
+    const fx = ld ? ld[0] : Math.cos(v.angle), fy = ld ? ld[1] : Math.sin(v.angle);
+    const reach = v.model.w * 0.5 + TS * 1.6 + v.speed * 0.8; // far enough to see the gap and the stopping distance
     let best = null;
     const test = (o, isPlayer) => {
       const rx = o.x - v.x, ry = o.y - v.y;
       const along = rx * fx + ry * fy;
       const lat = Math.abs(-rx * fy + ry * fx);
-      // people get a wide berth: brake for anyone who'd be clipped by the bumper
-      const lw = o.kind === 'v' ? o.model.h * 0.5 + 2 : v.model.h * 0.5 + 5;
-      if (along > 0 && along < reach + (o.kind === 'v' ? o.model.w * 0.5 : 0) && lat < lw) {
-        const d = along - (o.kind === 'v' ? o.model.w * 0.5 : 0);
+      // people get a wide berth: brake for anyone who'd be clipped by the bumper.
+      // Vehicles count by their real footprint, so a long bus poking across the lane is seen
+      let oA = 0, lw = v.model.h * 0.5 + 5;
+      if (o.kind === 'v') { const ra = Math.atan2(fy, fx) - o.angle, ca = Math.abs(Math.cos(ra)), sa = Math.abs(Math.sin(ra)); oA = ca * o.model.w * 0.5 + sa * o.model.h * 0.5; lw = v.model.h * 0.5 + sa * o.model.w * 0.5 + ca * o.model.h * 0.5 - 3; }
+      if (along > -oA && along < reach + oA && lat < lw) {
+        const d = along - oA;
         if (!best || d < best.d) best = { d, o, player: isPlayer };
       }
     };
