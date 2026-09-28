@@ -79,12 +79,46 @@
     }
   };
 
+  // ---------------------------------------------------------------- drivers are people
+  // They slow down to stare at a wreck, and some of them yell back when you lean on the horn.
+  CR.drivers = function (dt) {
+    const g = G();
+    this.lookT = (this.lookT || 0) - dt;
+    const scan = this.lookT <= 0;
+    if (scan) this.lookT = 0.5;
+    if (!scan) return;
+    const wrecks = g.traffic.list.filter((v) => (v.wrecked || v.burning > 0) && !v.removed);
+    if (!wrecks.length) return;
+    for (const v of g.traffic.list) {
+      if (v.removed || v.wrecked || !v.driver || v.driver === g.player || v.mode !== 'lane') continue;
+      const wr = wrecks.find((q) => q !== v && R.dist(q.x, q.y, v.x, v.y) < TS * 5);
+      if (!wr) { v.gawk = 0; continue; }
+      v.gawk = 1.2; // seconds of crawling past
+      if (!v.gawked && Math.random() < 0.3) { v.gawked = true; g.actors.say(v.driver, R.rng.pick(['Jesus, look at that.', 'Somebody call somebody!', 'Is he okay in there?', 'Holy moly.'])); }
+    }
+  };
+
   CR.init = function () {
     if (this.wrapped) return;
     this.wrapped = true;
+    const TPx = R.Traffic.prototype, ld = TPx.laneDrive;
+    TPx.laneDrive = function (v, dt) {
+      if (v.gawk > 0) { v.gawk -= dt; const top = v.speed; ld.call(this, v, dt); if (v.speed > 28) v.speed = Math.max(28, top - 120 * dt); return; }
+      return ld.call(this, v, dt);
+    };
+    const hk = TPx.honk;
+    TPx.honk = function (v) {
+      const r = hk.call(this, v);
+      // the car in front sometimes answers
+      if (v.driver === this.game.player || Math.random() < 0.25) {
+        const ob = this.obstacleAhead ? this.obstacleAhead(v) : null, o = ob && ob.o;
+        if (o && o.kind === 'v' && o.driver && o.driver !== this.game.player && !o.honked) { o.honked = true; setTimeout(() => { if (!o.removed && o.driver) this.game.actors.say(o.driver, R.rng.pick(['Hold your horses!', 'Honk again. I dare you.', 'It\'s RED, genius!', 'Relax, Mario Andretti.'])); o.honked = false; }, 700); }
+      }
+      return r;
+    };
     const A = R.art, dc = A.drawCar;
     A.drawCar = function (g, v) { dc.call(this, g, v); if ((v.dents && v.dents.length) || v.hp < (v.maxHp || v.model.hp) * 0.75) CR.overlay(g, v); };
     const TP = R.Traffic.prototype, up = TP.update;
-    TP.update = function (dt) { up.call(this, dt); CR.tick(dt); };
+    TP.update = function (dt) { up.call(this, dt); CR.tick(dt); CR.drivers(dt); };
   };
 })();

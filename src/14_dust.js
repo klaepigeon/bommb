@@ -45,9 +45,30 @@
         g.fx.add({ x, y, vx: 140 + R.rng() * 80, vy: 10 + R.rng() * 16, life: 1, max: 1, c: R.rng() < 0.5 ? 'rgba(214,176,120,0.55)' : 'rgba(150,110,62,0.45)', s: R.rng() < 0.3 ? 2 : 1 });
       }
     }
+    this.shimmer(dt);
     const el = this.el();
     if (this.level > 0.02) { if (!this.fitted) { this.fit(); this.fitted = true; window.addEventListener('resize', () => this.fit()); } el.style.opacity = (this.level * 0.85).toFixed(2); }
     else if (el.style.opacity !== '0') el.style.opacity = '0';
   };
+  // ---------------------------------------------------------------- heat shimmer
+  // Midday in the desert on a hot day the air over the road wobbles.
+  DU.shimmer = function (dt) {
+    const g = G(), w = g.env.weather, pl = g.player, hr = g.clock.hour();
+    const on = this.inDesert() && !pl.room && w.kind === 'heat' && hr >= 11 && hr <= 16 && this.level < 0.1 && g.settings.shimmer !== false;
+    const cv = document.querySelector('#view canvas') || document.querySelector('canvas');
+    if (!cv) return;
+    if (!on) { if (this.shimOn) { cv.style.filter = ''; this.shimOn = false; } return; }
+    if (!document.getElementById('heatshimmer')) {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('width', '0'); svg.setAttribute('height', '0'); svg.style.position = 'absolute';
+      svg.innerHTML = '<filter id="heatshimmer" x="0" y="0" width="100%" height="100%"><feTurbulence id="hsTurb" type="fractalNoise" baseFrequency="0.004 0.06" numOctaves="1" seed="1"/><feDisplacementMap in="SourceGraphic" scale="3" xChannelSelector="R" yChannelSelector="G"/></filter>';
+      document.body.appendChild(svg);
+    }
+    if (!this.shimOn) { cv.style.filter = 'url(#heatshimmer)'; this.shimOn = true; }
+    this.shimT = (this.shimT || 0) + dt;
+    this.shimP = (this.shimP || 0) + dt;
+    if (this.shimT > 0.06) { this.shimT = 0; const t = document.getElementById('hsTurb'); if (t) t.setAttribute('baseFrequency', `0.004 ${(0.055 + Math.sin(this.shimP * 1.7) * 0.012).toFixed(4)}`); }
+  };
+
   DU.init = function () { this.storm = null; this.level = 0; if (document.getElementById('dustveil')) this.el().style.opacity = '0'; };
 })();

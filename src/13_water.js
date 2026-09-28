@@ -40,8 +40,13 @@
         a.drownT = (a.drownT || 0) + dt;
         if (a.drownT > 3) { a.lastHitKind = 'drown'; R.combat.kill(a, a.lastHitBy || null, 'drown'); }
       } else if (a.dead && !a.sunk) {
-        a.sinkT = (a.sinkT || 0) + dt;
-        if (a.sinkT > 5) this.sink(a, false);
+        // floats a moment, clouding the water red, then settles and slides under
+        if (!a.sinkT) { a.sinkT = 0; this.splash(a.x, a.y); if (g.settings.gore !== false) g.fx.decal({ x: a.x + 3, y: a.y - 2, r: 7, c: 'rgba(120,22,18,0.28)', t: 900 }); }
+        a.sinkT += dt;
+        if (a.look) a.look._sink = Math.max(0, (a.sinkT - 2) / 5);
+        if (a.sinkT > 2 && R.rng() < dt * 8) this.bubble(a.x + (R.rng() - 0.3) * 16, a.y - 3);
+        if (R.rng() < dt * 1.5) this.ripple(a.x + 3, a.y - 2);
+        if (a.sinkT > 7) { if (a.look) a.look._sink = null; this.sink(a, false); }
       } else if (!a.dead && R.rng() < dt * 2) this.ripple(a.x, a.y);
     }
     // cars
@@ -66,6 +71,16 @@
           if (v.stolen || v.owner === 'player') g.ui.toast(`The ${v.model.name} is at the bottom of the water now.`);
         }
       } else if (v.sinkT) v.sinkT = Math.max(0, v.sinkT - dt);
+    }
+    // severed parts that land in the water go down too
+    if (R.gore && R.gore.parts) {
+      for (const p of R.gore.parts) {
+        if (!p.rest || p.sunk || !wet(p.x, p.y)) continue;
+        p.sinkT = (p.sinkT || 0) + dt;
+        if (R.rng() < dt * 6) this.bubble(p.x, p.y - 1);
+        if (p.sinkT > 3) { p.sunk = true; this.splash(p.x, p.y); }
+      }
+      if (R.gore.parts.some((p) => p.sunk)) R.gore.parts = R.gore.parts.filter((p) => !p.sunk);
     }
     // cement shoes going down
     for (let i = this.sinking.length - 1; i >= 0; i--) {
@@ -120,6 +135,24 @@
   const A = R.art, baseDraw = A.drawPerson;
   A.drawPerson = function (g, x, y, dir, walk, look, st) {
     const game = G();
+    // a body in the water: bobbing, then going under
+    if (look && look._sink != null && st && st.down && game && game.renderer && g === game.renderer.g) {
+      const k = Math.min(1, look._sink), t = game.clock.real, X = Math.round(x), Y = Math.round(y);
+      const bob = k < 0.05 ? Math.round(Math.sin(t * 2.2) * 1) : 0;
+      g.save();
+      g.globalAlpha = 1 - k * 0.9;
+      baseDraw.call(this, g, x, y + bob + Math.round(k * 3), dir, walk, look, st);
+      g.restore();
+      // the water closing over it
+      g.save();
+      g.fillStyle = `rgba(28,78,108,${(0.18 + k * 0.6).toFixed(2)})`;
+      g.beginPath(); g.ellipse(X + 3, Y - 3, 16, 7, 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = 'rgba(220,240,250,0.5)';
+      g.fillRect(X - 10 + Math.round(Math.sin(t * 3) * 2), Y - 9 + Math.round(k * 2), 8, 1);
+      g.fillRect(X + 6 - Math.round(Math.sin(t * 3) * 2), Y + 2, 7, 1);
+      g.restore();
+      return;
+    }
     if (!game || !game.renderer || g !== game.renderer.g || !wet(x, y) || (st && st.down && !(st && st.dead))) return baseDraw.call(this, g, x, y, dir, walk, look, st);
     const X = Math.round(x), Y = Math.round(y);
     g.save();

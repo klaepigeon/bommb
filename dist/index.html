@@ -14403,8 +14403,13 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
         a.drownT = (a.drownT || 0) + dt;
         if (a.drownT > 3) { a.lastHitKind = 'drown'; R.combat.kill(a, a.lastHitBy || null, 'drown'); }
       } else if (a.dead && !a.sunk) {
-        a.sinkT = (a.sinkT || 0) + dt;
-        if (a.sinkT > 5) this.sink(a, false);
+        // floats a moment, clouding the water red, then settles and slides under
+        if (!a.sinkT) { a.sinkT = 0; this.splash(a.x, a.y); if (g.settings.gore !== false) g.fx.decal({ x: a.x + 3, y: a.y - 2, r: 7, c: 'rgba(120,22,18,0.28)', t: 900 }); }
+        a.sinkT += dt;
+        if (a.look) a.look._sink = Math.max(0, (a.sinkT - 2) / 5);
+        if (a.sinkT > 2 && R.rng() < dt * 8) this.bubble(a.x + (R.rng() - 0.3) * 16, a.y - 3);
+        if (R.rng() < dt * 1.5) this.ripple(a.x + 3, a.y - 2);
+        if (a.sinkT > 7) { if (a.look) a.look._sink = null; this.sink(a, false); }
       } else if (!a.dead && R.rng() < dt * 2) this.ripple(a.x, a.y);
     }
     // cars
@@ -14429,6 +14434,16 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
           if (v.stolen || v.owner === 'player') g.ui.toast(`The ${v.model.name} is at the bottom of the water now.`);
         }
       } else if (v.sinkT) v.sinkT = Math.max(0, v.sinkT - dt);
+    }
+    // severed parts that land in the water go down too
+    if (R.gore && R.gore.parts) {
+      for (const p of R.gore.parts) {
+        if (!p.rest || p.sunk || !wet(p.x, p.y)) continue;
+        p.sinkT = (p.sinkT || 0) + dt;
+        if (R.rng() < dt * 6) this.bubble(p.x, p.y - 1);
+        if (p.sinkT > 3) { p.sunk = true; this.splash(p.x, p.y); }
+      }
+      if (R.gore.parts.some((p) => p.sunk)) R.gore.parts = R.gore.parts.filter((p) => !p.sunk);
     }
     // cement shoes going down
     for (let i = this.sinking.length - 1; i >= 0; i--) {
@@ -14483,6 +14498,24 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   const A = R.art, baseDraw = A.drawPerson;
   A.drawPerson = function (g, x, y, dir, walk, look, st) {
     const game = G();
+    // a body in the water: bobbing, then going under
+    if (look && look._sink != null && st && st.down && game && game.renderer && g === game.renderer.g) {
+      const k = Math.min(1, look._sink), t = game.clock.real, X = Math.round(x), Y = Math.round(y);
+      const bob = k < 0.05 ? Math.round(Math.sin(t * 2.2) * 1) : 0;
+      g.save();
+      g.globalAlpha = 1 - k * 0.9;
+      baseDraw.call(this, g, x, y + bob + Math.round(k * 3), dir, walk, look, st);
+      g.restore();
+      // the water closing over it
+      g.save();
+      g.fillStyle = `rgba(28,78,108,${(0.18 + k * 0.6).toFixed(2)})`;
+      g.beginPath(); g.ellipse(X + 3, Y - 3, 16, 7, 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = 'rgba(220,240,250,0.5)';
+      g.fillRect(X - 10 + Math.round(Math.sin(t * 3) * 2), Y - 9 + Math.round(k * 2), 8, 1);
+      g.fillRect(X + 6 - Math.round(Math.sin(t * 3) * 2), Y + 2, 7, 1);
+      g.restore();
+      return;
+    }
     if (!game || !game.renderer || g !== game.renderer.g || !wet(x, y) || (st && st.down && !(st && st.dead))) return baseDraw.call(this, g, x, y, dir, walk, look, st);
     const X = Math.round(x), Y = Math.round(y);
     g.save();
@@ -15355,13 +15388,47 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     }
   };
 
+  // ---------------------------------------------------------------- drivers are people
+  // They slow down to stare at a wreck, and some of them yell back when you lean on the horn.
+  CR.drivers = function (dt) {
+    const g = G();
+    this.lookT = (this.lookT || 0) - dt;
+    const scan = this.lookT <= 0;
+    if (scan) this.lookT = 0.5;
+    if (!scan) return;
+    const wrecks = g.traffic.list.filter((v) => (v.wrecked || v.burning > 0) && !v.removed);
+    if (!wrecks.length) return;
+    for (const v of g.traffic.list) {
+      if (v.removed || v.wrecked || !v.driver || v.driver === g.player || v.mode !== 'lane') continue;
+      const wr = wrecks.find((q) => q !== v && R.dist(q.x, q.y, v.x, v.y) < TS * 5);
+      if (!wr) { v.gawk = 0; continue; }
+      v.gawk = 1.2; // seconds of crawling past
+      if (!v.gawked && Math.random() < 0.3) { v.gawked = true; g.actors.say(v.driver, R.rng.pick(['Jesus, look at that.', 'Somebody call somebody!', 'Is he okay in there?', 'Holy moly.'])); }
+    }
+  };
+
   CR.init = function () {
     if (this.wrapped) return;
     this.wrapped = true;
+    const TPx = R.Traffic.prototype, ld = TPx.laneDrive;
+    TPx.laneDrive = function (v, dt) {
+      if (v.gawk > 0) { v.gawk -= dt; const top = v.speed; ld.call(this, v, dt); if (v.speed > 28) v.speed = Math.max(28, top - 120 * dt); return; }
+      return ld.call(this, v, dt);
+    };
+    const hk = TPx.honk;
+    TPx.honk = function (v) {
+      const r = hk.call(this, v);
+      // the car in front sometimes answers
+      if (v.driver === this.game.player || Math.random() < 0.25) {
+        const ob = this.obstacleAhead ? this.obstacleAhead(v) : null, o = ob && ob.o;
+        if (o && o.kind === 'v' && o.driver && o.driver !== this.game.player && !o.honked) { o.honked = true; setTimeout(() => { if (!o.removed && o.driver) this.game.actors.say(o.driver, R.rng.pick(['Hold your horses!', 'Honk again. I dare you.', 'It\'s RED, genius!', 'Relax, Mario Andretti.'])); o.honked = false; }, 700); }
+      }
+      return r;
+    };
     const A = R.art, dc = A.drawCar;
     A.drawCar = function (g, v) { dc.call(this, g, v); if ((v.dents && v.dents.length) || v.hp < (v.maxHp || v.model.hp) * 0.75) CR.overlay(g, v); };
     const TP = R.Traffic.prototype, up = TP.update;
-    TP.update = function (dt) { up.call(this, dt); CR.tick(dt); };
+    TP.update = function (dt) { up.call(this, dt); CR.tick(dt); CR.drivers(dt); };
   };
 })();
 
@@ -16013,10 +16080,31 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
         g.fx.add({ x, y, vx: 140 + R.rng() * 80, vy: 10 + R.rng() * 16, life: 1, max: 1, c: R.rng() < 0.5 ? 'rgba(214,176,120,0.55)' : 'rgba(150,110,62,0.45)', s: R.rng() < 0.3 ? 2 : 1 });
       }
     }
+    this.shimmer(dt);
     const el = this.el();
     if (this.level > 0.02) { if (!this.fitted) { this.fit(); this.fitted = true; window.addEventListener('resize', () => this.fit()); } el.style.opacity = (this.level * 0.85).toFixed(2); }
     else if (el.style.opacity !== '0') el.style.opacity = '0';
   };
+  // ---------------------------------------------------------------- heat shimmer
+  // Midday in the desert on a hot day the air over the road wobbles.
+  DU.shimmer = function (dt) {
+    const g = G(), w = g.env.weather, pl = g.player, hr = g.clock.hour();
+    const on = this.inDesert() && !pl.room && w.kind === 'heat' && hr >= 11 && hr <= 16 && this.level < 0.1 && g.settings.shimmer !== false;
+    const cv = document.querySelector('#view canvas') || document.querySelector('canvas');
+    if (!cv) return;
+    if (!on) { if (this.shimOn) { cv.style.filter = ''; this.shimOn = false; } return; }
+    if (!document.getElementById('heatshimmer')) {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('width', '0'); svg.setAttribute('height', '0'); svg.style.position = 'absolute';
+      svg.innerHTML = '<filter id="heatshimmer" x="0" y="0" width="100%" height="100%"><feTurbulence id="hsTurb" type="fractalNoise" baseFrequency="0.004 0.06" numOctaves="1" seed="1"/><feDisplacementMap in="SourceGraphic" scale="3" xChannelSelector="R" yChannelSelector="G"/></filter>';
+      document.body.appendChild(svg);
+    }
+    if (!this.shimOn) { cv.style.filter = 'url(#heatshimmer)'; this.shimOn = true; }
+    this.shimT = (this.shimT || 0) + dt;
+    this.shimP = (this.shimP || 0) + dt;
+    if (this.shimT > 0.06) { this.shimT = 0; const t = document.getElementById('hsTurb'); if (t) t.setAttribute('baseFrequency', `0.004 ${(0.055 + Math.sin(this.shimP * 1.7) * 0.012).toFixed(4)}`); }
+  };
+
   DU.init = function () { this.storm = null; this.level = 0; if (document.getElementById('dustveil')) this.el().style.opacity = '0'; };
 })();
 
@@ -18046,6 +18134,159 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   };
 })();
 
+// ---- 14_rivals.js
+// RHAPSODY — the other families are working too. Their collectors lean on people in the
+// street for money owed to somebody else's shark; step in, pay it off, or tell them the
+// block is yours now. Out on the highways their crews stop trucks and unload them into
+// a van, and a man with a gun and some nerve can rob the robbers.
+'use strict';
+(function () {
+  const D = R.data, TS = R.TILE;
+  const G = () => R.game;
+  const RV = (R.rivals = { scene: null, t: 60 });
+  const LINES = {
+    shake: ['Mr. {D} says you\'re late. Again.', 'Where\'s the money, {N}?', 'You think we forget? We don\'t forget.', 'Friday, you said. It\'s Tuesday.'],
+    beg: ['Please! I\'ll have it tomorrow!', 'I got kids, man!', 'Not the face, not the face!', 'I swear on my mother!'],
+    leave: ['Next week. All of it.', 'Don\'t make me come back.', 'Tell your wife I said hi.'],
+    crew: ['Keep driving, pal.', 'Nothing to see here.', 'You didn\'t see nothing.', 'Move along before you get hurt.'],
+  };
+  const fill = (s, h) => s.replace('{N}', h && h.person ? h.person.first : 'pal').replace('{D}', RV.scene ? G().jobs.donName(RV.scene.fam) : 'the boss');
+  const pick = (a) => a[(Math.random() * a.length) | 0];
+
+  RV.rivalOf = function (city) {
+    const g = G(), pl = g.player;
+    const f = city && city.def && city.def.family;
+    if (f && f !== pl.family) return f;
+    const fams = D.cities.map((c) => c.family).filter((x) => x !== pl.family);
+    return fams[(Math.random() * fams.length) | 0];
+  };
+  RV.goon = function (x, y, fam, tag, weapon) {
+    const g = G();
+    const h = g.actors.makeHuman(x, y, { arch: 'tough', tag, weapon, cash: 40 + ((Math.random() * 80) | 0) });
+    h.keep = true; h.rivalFam = fam; h.strangerName = `${fam} ${tag}`; h.tr.brave = 0.85;
+    h.look.hatKind = 'fedora'; h.look.hatCol = '#2a1a12';
+    h.weaponOut = false;
+    return h;
+  };
+
+  // ---------------------------------------------------------------- scenes
+  RV.update = function (dt) {
+    const g = G(), pl = g.player, w = g.world;
+    const sc = this.scene;
+    if (sc) return this.run(g, sc, dt);
+    this.t -= dt;
+    if (this.t > 0) return;
+    this.t = 70 + Math.random() * 80;
+    if (pl.room || pl.inCar && pl.inCar.speed > 40 || g.law.incident || (R.opening && R.opening.active) || g.calm() < 0.5) return;
+    const city = w.cityAt((pl.x / TS) | 0, (pl.y / TS) | 0);
+    if (city && Math.random() < 0.5) this.collector(g, city);
+    else if (!city && Math.random() < 0.35) this.crew(g);
+  };
+  RV.collector = function (g, city) {
+    const pl = g.player;
+    const victim = g.actors.near(pl.x, pl.y, TS * 12).find((a) => a.kind === 'h' && !a.dead && !a.inCar && !a.cop && !a.crew && a.person && !a.person.isDon && a.state !== 'fight' && !a.hostile && !a.keep && (a.person.wealth || 30) < 50 && R.dist(a.x, a.y, pl.x, pl.y) > TS * 3);
+    if (!victim) return;
+    const sp = g.world.findNear((victim.x / TS) | 0, (victim.y / TS) | 0, 7, 11, (x, y) => !g.world.solidPed(x, y) && !g.world.isWater(x, y));
+    if (!sp || g.cam.onScreen(sp.x * TS + 8, sp.y * TS + 8, 10)) return;
+    const fam = this.rivalOf(city);
+    const c = this.goon(sp.x * TS + 8, sp.y * TS + 8, fam, 'collector', 'knuckles');
+    c.rivalCollector = true;
+    victim.keep = true;
+    this.scene = { kind: 'collect', fam, c, v: victim, stage: 'walk', t: 0, owed: 60 + ((victim.person.wealth || 20) * 3) | 0 };
+  };
+  RV.crew = function (g) {
+    const pl = g.player, w = g.world;
+    const s = w.findNear((pl.x / TS) | 0, (pl.y / TS) | 0, 14, 22, (x, y) => D.roadTile[w.t(x, y)] && !w.cityAt(x, y) && D.roadTile[w.t(x + 1, y)] && D.roadTile[w.t(x - 1, y)]);
+    if (!s || g.cam.onScreen(s.x * TS + 8, s.y * TS + 8, 40)) return;
+    const fam = this.rivalOf(null);
+    const truck = g.traffic.make('truck', s.x * TS + 8, s.y * TS + 8, 0, { parked: true, keep: true, locked: false });
+    if (R.hijack) R.hijack.load(truck, true);
+    truck.rivalLoad = fam; truck.hotwired = true;
+    const van = g.traffic.make('van', s.x * TS + 8 + 60, s.y * TS + 8, 0, { parked: true, keep: true, locked: true });
+    const men = [0, 1].map((i) => { const h = this.goon(truck.x + 20 + i * 14, truck.y + 16, fam, 'hijacker', i ? 'shotgun' : 'revolver'); h.crewTruck = truck; return h; });
+    this.scene = { kind: 'crew', fam, truck, van, men, t: 0, warned: false };
+    if (R.hijack) g.pop.addNews((w.cityAt(s.x, s.y) || { id: 'port' }).id, `Truckers report ${fam}-connected men stopping rigs on the county highways. Police "are aware".`);
+  };
+
+  RV.run = function (g, sc, dt) {
+    const pl = g.player;
+    sc.t += dt;
+    if (sc.kind === 'collect') {
+      const { c, v } = sc;
+      if (!c || c.dead || c.removed || !v || v.dead || v.removed || sc.t > 60) return this.end();
+      if (c.state === 'fight' || c.hostile) { if (sc.stage !== 'fight') { sc.stage = 'fight'; v.keep = false; if (v.state !== 'flee') g.actors.setFlee(v, c, 5); } if (sc.t > 50) this.end(); return; }
+      const d = R.dist(c.x, c.y, v.x, v.y);
+      if (sc.stage === 'walk') { if (d > 14) { g.actors.goTo(c, (v.x / TS) | 0, (v.y / TS) | 0, { near: 1 }); v.state = 'idle'; v.timer = 3; } else { sc.stage = 'shake'; sc.t = 0; g.actors.say(c, fill(pick(LINES.shake), v)); } }
+      if (sc.stage === 'shake') {
+        v.state = 'cower'; v.timer = 3;
+        if (sc.t > 2.6 && !sc.begged) { sc.begged = true; g.actors.say(v, pick(LINES.beg)); }
+        if (sc.t > 4.5 && !sc.hit) { sc.hit = true; v.hp = Math.max(5, v.hp - 10); g.audio.sfx('punch', v.x, v.y); g.cam.shake(0.5); if (R.butcher) R.butcher.mark(v, 12, c, 'melee'); if (v.person) v.person.fear = Math.min(100, (v.person.fear || 0) + 30); }
+        if (sc.t > 6.5) { sc.stage = 'leave'; sc.t = 0; g.actors.say(c, pick(LINES.leave)); const far = g.world.findNear((c.x / TS) | 0, (c.y / TS) | 0, 20, 30, (x, y) => !g.world.solidPed(x, y)); if (far) g.actors.goTo(c, far.x, far.y, {}); }
+      }
+      if (sc.stage === 'leave' && sc.t > 15) this.end();
+      return;
+    }
+    if (sc.kind === 'crew') {
+      const { truck, men } = sc;
+      if (truck.removed || sc.t > 180 || R.dist(pl.x, pl.y, truck.x, truck.y) > TS * 60) return this.end();
+      const alive = men.filter((h) => !h.dead && !h.removed);
+      const near = R.dist(pl.x, pl.y, truck.x, truck.y) < TS * 6;
+      for (const h of alive) {
+        if (h.hostile) continue;
+        h.ang = Math.atan2(pl.y - h.y, pl.x - h.x);
+        if (near && !sc.warned) { sc.warned = true; g.actors.say(h, pick(LINES.crew)); h.weaponOut = true; }
+        if (near && (pl.weaponOut || pl.inCar === truck)) { h.hostile = true; h.hostileLocked = true; h.weaponOut = true; g.actors.setFight(h, pl); }
+      }
+      if (!alive.length && !sc.cleared) { sc.cleared = true; g.ui.toast(`The ${sc.fam} crew is down. The truck's full, and nobody's going to report it stolen.`, 'good'); if (truck.cargo) truck.cargo.noReport = true; }
+    }
+  };
+  RV.end = function () {
+    const g = G(), sc = this.scene;
+    this.scene = null;
+    if (!sc) return;
+    for (const h of [sc.c, ...(sc.men || [])]) if (h && !h.dead && !h.removed) { h.keep = false; }
+    if (sc.v) sc.v.keep = false;
+    for (const v of [sc.truck, sc.van]) if (v && !v.removed) v.keep = false;
+  };
+
+  // ---------------------------------------------------------------- stepping in
+  RV.opts = function (h, opts) {
+    const g = G(), pl = g.player, sc = this.scene;
+    if (!h.rivalCollector || !sc || sc.kind !== 'collect' || sc.c !== h || sc.stage === 'fight') return;
+    const i = Math.max(0, opts.findIndex((o) => /Goodbye/.test(o.label)));
+    opts.splice(i, 0,
+      { label: '"Leave them alone."', small: `They owe the ${sc.fam}s. Stepping in means a fight`, cls: 'bad', fn: () => { g.actors.say(h, 'This ain\'t your business, friend.'); h.hostile = true; h.hostileLocked = true; g.actors.setFight(h, pl); pl.rep.honor += 1; } },
+      { label: `"What do they owe? I'll cover it." (${R.fmtMoney(sc.owed)})`, small: 'Honor +2. They\'ll remember who paid', fn: () => { if (!pl.pay(sc.owed)) return g.ui.toast('You don\'t have it.'); pl.rep.honor += 2; if (sc.v.person) sc.v.person.opinion = Math.min(100, (sc.v.person.opinion || 0) + 40); g.actors.say(h, 'Huh. Your funeral.'); g.actors.say(sc.v, 'God bless you. I won\'t forget this.'); sc.stage = 'leave'; sc.t = 0; } },
+      { label: `"Tell Don ${g.jobs.donName(sc.fam)} this block is mine now."`, small: 'Infamy +2. The family takes it personally', fn: () => { pl.rep.infamy += 2; if (R.turf) { const t = R.turf.state(); if (t.grudge && t.grudge.hasOwnProperty(sc.fam)) t.grudge[sc.fam] += 12; } if (Math.random() < 0.5 + pl.rep.infamy / 200) { g.actors.say(h, 'Okay... okay. I\'ll tell him.'); sc.stage = 'leave'; sc.t = 0; } else { g.actors.say(h, 'Yours? Let\'s see about that.'); h.hostile = true; h.hostileLocked = true; g.actors.setFight(h, pl); } } },
+    );
+  };
+
+  RV.init = function (g) {
+    this.scene = null; this.t = 60;
+    if (this.wrapped) return;
+    this.wrapped = true;
+    const tree = R.dialog.tree;
+    R.dialog.tree = function (h) { const t = tree.call(this, h); if (t && t.options) RV.opts(h, t.options); return t; };
+    // killing a family's men is noticed by the family
+    const C = R.combat, kill = C.kill;
+    C.kill = function (h, source, kind) {
+      const r = kill.call(this, h, source, kind);
+      if (h && h.rivalFam && source === G().player && R.turf) { const t = R.turf.state(); if (t.grudge && t.grudge.hasOwnProperty(h.rivalFam)) t.grudge[h.rivalFam] += 8; }
+      return r;
+    };
+    // a load stolen from thieves doesn't get reported
+    if (R.hijack) {
+      const up = R.hijack.update;
+      R.hijack.update = function (dt) {
+        const v = G().player.inCar;
+        if (v && v.cargo && v.cargo.noReport && !v.cargoCrime) v.cargoCrime = true;
+        return up.call(this, dt);
+      };
+    }
+    void g;
+  };
+})();
+
 // ---- 14_shark.js
 // RHAPSODY — the juice. Lend money to people the banks won't touch: the gambler, the
 // widow with the roof, the kid with the car payment. The loan comes back with 10% a week
@@ -18977,7 +19218,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       sect('Exploration', PL.map((p, i) => btn('lm:' + i, p.name.replace(/^The /, ''))).concat([btn('tins', 'Show tins on map'), btn('smash', 'Street furniture here')])),
       sect('Opening', [btn('opening', 'Replay the opening'), btn('rename', 'Change my name')]),
       sect('Street business', [btn('loan', 'A debtor, a week late'), btn('fix', 'A fixed race'), btn('cops', '3 cops + captain here'), btn('ia', 'Internal Affairs sweep'), btn('rat', 'Someone flips'), btn('ratclue', 'Next rat clue'), btn('truck', 'Truck tip'), btn('shooters', 'Desert gunmen: all leads')]),
-      sect('Reputation & weather', [btn('respect', 'Respected (honor 80)'), btn('fear', 'Feared (infamy 80)'), btn('dust', 'Dust storm'), btn('dent', 'Beat up the nearest car')]),
+      sect('Reputation & weather', [btn('respect', 'Respected (honor 80)'), btn('fear', 'Feared (infamy 80)'), btn('dust', 'Dust storm'), btn('dent', 'Beat up the nearest car'), btn('collector', 'Rival collector here'), btn('crew', 'Rival hijack crew'), btn('wreck', 'Wreck on the road')]),
     ].join('');
     body.insertAdjacentHTML('beforeend', html);
     const near = () => w.findNear(pl.x / TS, pl.y / TS, 2, 6, (x, y) => !w.solidPed(x, y) && !w.isWater(x, y)) || { x: pl.x / TS, y: pl.y / TS };
@@ -18999,6 +19240,9 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
           case 'ratclue': { const r = R.rat.active(); if (r) R.rat.clue(r); else ui.toast('No rat right now.'); break; }
           case 'truck': R.hijack.state().tip = null; R.hijack.tip(null); break;
           case 'shooters': { const s = R.desert.state(); if (!s.shooters) { const pool = g.pop.people.filter((q) => q.alive && !q.fem && q.age > 22 && q.age < 50 && q.role !== 'cop' && !q.isDon && !q.faction); s.shooters = [pool[1].id, pool[5].id]; } for (const p of R.desert.men()) { const L = R.desert.lead(p); L.name = L.where = true; } ui.toast('Both names and where they work. Check the Jobs tab.'); break; }
+          case 'collector': R.rivals.end(); ui.closeSheet(); R.rivals.collector(g, city()); if (!R.rivals.scene) ui.toast('Nobody broke enough around here. Try a busier street.'); break;
+          case 'crew': R.rivals.end(); ui.closeSheet(); R.rivals.crew(g); if (!R.rivals.scene) ui.toast('Needs a highway outside town.'); break;
+          case 'wreck': { const v = g.traffic.list.find((q) => !q.removed && !q.wrecked && q.driver && q.driver !== pl && R.dist(q.x, q.y, pl.x, pl.y) < TS * 16); if (v) { g.traffic.exitVehicle(v, v.driver); v.hp = v.maxHp * 0.1; v.burning = 0.01; ui.toast('A car\'s on fire up the road. Watch the drivers gawk.'); } else ui.toast('No traffic nearby.'); break; }
           case 'respect': pl.rep.honor = 80; pl.rep.infamy = Math.min(pl.rep.infamy, 30); break;
           case 'fear': pl.rep.infamy = 80; break;
           case 'dust': R.dust.storm = { left: 90 }; ui.toast(R.dust.inDesert() ? 'Dust storm.' : 'Dust storm (it only shows out in the Dustwater desert).'); break;
@@ -21635,7 +21879,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     R.money.init(this);
     R.turf.init(this);
     R.vendetta.init(this);
-    R.shark.init(this); R.payroll.init(this); R.rat.init(this); R.hijack.init(this); R.desert.init(this); R.cars.init(this); R.honor.init(this); R.dust.init(this);
+    R.shark.init(this); R.payroll.init(this); R.rat.init(this); R.hijack.init(this); R.desert.init(this); R.cars.init(this); R.honor.init(this); R.dust.init(this); R.rivals.init(this);
     R.butcher.init(this);
     R.arms.init(this);
     R.profile.init(this);
@@ -21804,6 +22048,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       R.desert.update(sdt);
       R.dust.update(sdt);
       R.payroll.update(sdt);
+      R.rivals.update(sdt);
       R.profile.update(sdt);
       R.carry.update(sdt);
       R.night.update(sdt);

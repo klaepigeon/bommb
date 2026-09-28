@@ -22,7 +22,7 @@
       sect('Exploration', PL.map((p, i) => btn('lm:' + i, p.name.replace(/^The /, ''))).concat([btn('tins', 'Show tins on map'), btn('smash', 'Street furniture here')])),
       sect('Opening', [btn('opening', 'Replay the opening'), btn('rename', 'Change my name')]),
       sect('Street business', [btn('loan', 'A debtor, a week late'), btn('fix', 'A fixed race'), btn('cops', '3 cops + captain here'), btn('ia', 'Internal Affairs sweep'), btn('rat', 'Someone flips'), btn('ratclue', 'Next rat clue'), btn('truck', 'Truck tip'), btn('shooters', 'Desert gunmen: all leads')]),
-      sect('Reputation & weather', [btn('respect', 'Respected (honor 80)'), btn('fear', 'Feared (infamy 80)'), btn('dust', 'Dust storm'), btn('dent', 'Beat up the nearest car')]),
+      sect('Reputation & weather', [btn('respect', 'Respected (honor 80)'), btn('fear', 'Feared (infamy 80)'), btn('dust', 'Dust storm'), btn('dent', 'Beat up the nearest car'), btn('collector', 'Rival collector here'), btn('crew', 'Rival hijack crew'), btn('wreck', 'Wreck on the road')]),
     ].join('');
     body.insertAdjacentHTML('beforeend', html);
     const near = () => w.findNear(pl.x / TS, pl.y / TS, 2, 6, (x, y) => !w.solidPed(x, y) && !w.isWater(x, y)) || { x: pl.x / TS, y: pl.y / TS };
@@ -44,6 +44,9 @@
           case 'ratclue': { const r = R.rat.active(); if (r) R.rat.clue(r); else ui.toast('No rat right now.'); break; }
           case 'truck': R.hijack.state().tip = null; R.hijack.tip(null); break;
           case 'shooters': { const s = R.desert.state(); if (!s.shooters) { const pool = g.pop.people.filter((q) => q.alive && !q.fem && q.age > 22 && q.age < 50 && q.role !== 'cop' && !q.isDon && !q.faction); s.shooters = [pool[1].id, pool[5].id]; } for (const p of R.desert.men()) { const L = R.desert.lead(p); L.name = L.where = true; } ui.toast('Both names and where they work. Check the Jobs tab.'); break; }
+          case 'collector': R.rivals.end(); ui.closeSheet(); R.rivals.collector(g, city()); if (!R.rivals.scene) ui.toast('Nobody broke enough around here. Try a busier street.'); break;
+          case 'crew': R.rivals.end(); ui.closeSheet(); R.rivals.crew(g); if (!R.rivals.scene) ui.toast('Needs a highway outside town.'); break;
+          case 'wreck': { const v = g.traffic.list.find((q) => !q.removed && !q.wrecked && q.driver && q.driver !== pl && R.dist(q.x, q.y, pl.x, pl.y) < TS * 16); if (v) { g.traffic.exitVehicle(v, v.driver); v.hp = v.maxHp * 0.1; v.burning = 0.01; ui.toast('A car\'s on fire up the road. Watch the drivers gawk.'); } else ui.toast('No traffic nearby.'); break; }
           case 'respect': pl.rep.honor = 80; pl.rep.infamy = Math.min(pl.rep.infamy, 30); break;
           case 'fear': pl.rep.infamy = 80; break;
           case 'dust': R.dust.storm = { left: 90 }; ui.toast(R.dust.inDesert() ? 'Dust storm.' : 'Dust storm (it only shows out in the Dustwater desert).'); break;
