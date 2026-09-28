@@ -833,7 +833,7 @@
         if (def.dog && dp < TS * 5 && a.timer < 0.2 && R.rng() < 0.3) { game.fx.text(a.x, a.y - 14, 'woof!', '#f2e2c0'); if (R.rng() < 0.3) { a.state = 'follow'; a.timer = 12; } }
         if (def.predator && !def.dog) {
           const aggro = (night ? def.night || 1 : 1) * (a.anger > 0 ? 3 : 1);
-          if (!pl.inCar && dp < TS * (def.ambush ? 2.5 : 5) * aggro * sneakMul && (def === D.animals.bear || def === D.animals.gator || def === D.animals.snake || night || a.anger > 0 || R.rng() < 0.02)) {
+          if (!pl.inCar && !(pl.relics && pl.relics.tuft && a.anger <= 0 && !a.legendary) && dp < TS * (def.ambush ? 2.5 : 5) * aggro * sneakMul && (def === D.animals.bear || def === D.animals.gator || def === D.animals.snake || night || a.anger > 0 || R.rng() < 0.02)) {
             if (def === D.animals.snake && !a.warned) { a.warned = true; game.fx.text(a.x, a.y - 12, '*rattle*', '#e4a92a'); a.timer = 1.5; break; }
             a.state = 'attack';
             a.target = pl;

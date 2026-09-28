@@ -80,6 +80,7 @@
     R.campaign.init(this);
     R.vice.init(this);
     R.gore.init(this);
+    R.relics.init(this);
     R.legends.init(this);
     R.poi.init(this);
     R.art.chunkCache.clear();
@@ -235,6 +236,7 @@
       R.gore.update(sdt);
       R.slammer.update(sdt);
       R.heist.update(sdt);
+      R.relics.update(sdt);
       if (R.testRooms.active) R.testRooms.update(this, sdt);
       R.legends.update(sdt);
       R.goods.update(sdt);
@@ -326,7 +328,7 @@
       v: 2, seed: this.seed, t: this.clock.t, log: this.worldLog, weather: this.env.weather.kind,
       player: {
         x: pl.room ? this.interiors.outside(pl.x, pl.y).x : pl.x, y: pl.room ? this.interiors.outside(pl.x, pl.y).y : pl.y, hp: pl.hp, cool: pl.cool, cash: pl.cash, inv: pl.inv, clip: pl.clip, outfit: pl.outfit, outfits: pl.outfits || {}, style: pl.style, wardrobe: pl.wardrobe,
-        will: pl.will, willMax: pl.willMax || 100, fearQ: pl.fearQ || null, jail: pl.jail || null, vice: pl.vice || null, affairs: this.pop.people.filter((q) => q.affair != null).map((q) => [q.id, q.affair]), partners: this.pop.people.filter((q) => q.playerPartner || q.playerChild).map((q) => [q.id, q.playerPartner ? 1 : 0, q.playerChild ? 1 : 0]), hotel: pl.hotel || null, stash: pl.stash || null, propUp: (pl.properties || []).map((id) => { const b = this.world.buildings[id]; return b ? [id, b.sec ? 1 : 0, b.reno ? 1 : 0] : null; }).filter(Boolean), campaign: pl.campaign || null, ringColor: pl.ringColor || null, errands: pl.errands || [], poi: R.poi.serialize(), rep: pl.rep, standing: pl.standing, stats: pl.stats, sweetheart: pl.sweetheart, properties: pl.properties, masked: pl.masked,
+        will: pl.will, willMax: pl.willMax || 100, fearQ: pl.fearQ || null, relics: pl.relics || null, jail: pl.jail || null, vice: pl.vice || null, affairs: this.pop.people.filter((q) => q.affair != null).map((q) => [q.id, q.affair]), partners: this.pop.people.filter((q) => q.playerPartner || q.playerChild).map((q) => [q.id, q.playerPartner ? 1 : 0, q.playerChild ? 1 : 0]), hotel: pl.hotel || null, stash: pl.stash || null, propUp: (pl.properties || []).map((id) => { const b = this.world.buildings[id]; return b ? [id, b.sec ? 1 : 0, b.reno ? 1 : 0] : null; }).filter(Boolean), campaign: pl.campaign || null, ringColor: pl.ringColor || null, errands: pl.errands || [], poi: R.poi.serialize(), rep: pl.rep, standing: pl.standing, stats: pl.stats, sweetheart: pl.sweetheart, properties: pl.properties, masked: pl.masked,
         cars: pl.ownedCars.filter((c) => !c.removed && !c.wrecked).map((c) => [c.modelId, c.x, c.y, c.angle, c.color]),
       },
       pop: this.pop.serialize(), law: this.law.serialize(), jobs: this.jobs.serialize(), hints: this.hints,
@@ -353,6 +355,7 @@
       if (p.will != null) pl.will = p.will;
       if (p.willMax) pl.willMax = p.willMax;
       if (p.fearQ) pl.fearQ = p.fearQ;
+      pl.relics = p.relics || null;
       pl.jail = p.jail || null; if (pl.jail) setTimeout(() => R.slammer.resume(), 0);
       pl.vice = p.vice || null;
       for (const [a, b] of p.affairs || []) if (this.pop.people[a]) this.pop.people[a].affair = b;

@@ -1000,7 +1000,7 @@
     const g = this.game, pl = g.player;
     if (!pl.inv.tools.bait) return this.toast('You need bait. The general store sells it.', 'warn');
     pl.inv.tools.bait--;
-    let state = 'wait', t = 1.5 + R.rng() * 4, bite = 0;
+    let state = 'wait', t = (1.5 + R.rng() * 4) * (R.relics && R.relics.has('doubloon') ? 0.4 : 1), bite = 0;
     const s = this.openSheet('fish', this.header('Fishing', 'Wait for the bite, then reel.') + `<div class="body"><div class="line" id="tline">You cast the line. The bobber floats.</div><div class="opts"><button class="opt go" id="reel">Reel!</button><button class="opt" id="quit">Pack up</button></div></div>`);
     g.audio.sfx('splash');
     const iv = setInterval(() => {

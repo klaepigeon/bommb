@@ -5042,7 +5042,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
         if (def.dog && dp < TS * 5 && a.timer < 0.2 && R.rng() < 0.3) { game.fx.text(a.x, a.y - 14, 'woof!', '#f2e2c0'); if (R.rng() < 0.3) { a.state = 'follow'; a.timer = 12; } }
         if (def.predator && !def.dog) {
           const aggro = (night ? def.night || 1 : 1) * (a.anger > 0 ? 3 : 1);
-          if (!pl.inCar && dp < TS * (def.ambush ? 2.5 : 5) * aggro * sneakMul && (def === D.animals.bear || def === D.animals.gator || def === D.animals.snake || night || a.anger > 0 || R.rng() < 0.02)) {
+          if (!pl.inCar && !(pl.relics && pl.relics.tuft && a.anger <= 0 && !a.legendary) && dp < TS * (def.ambush ? 2.5 : 5) * aggro * sneakMul && (def === D.animals.bear || def === D.animals.gator || def === D.animals.snake || night || a.anger > 0 || R.rng() < 0.02)) {
             if (def === D.animals.snake && !a.warned) { a.warned = true; game.fx.text(a.x, a.y - 12, '*rattle*', '#e4a92a'); a.timer = 1.5; break; }
             a.state = 'attack';
             a.target = pl;
@@ -9604,7 +9604,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     for (const k in inv.drugs || {}) if (inv.drugs[k]) { const d = D.drugs[k]; push('Drugs', k, `${d.name} ${d.street}`, inv.drugs[k], d.desc, [['take', 'Take']]); }
     for (const k in inv.tools) if (inv.tools[k]) { if (k === 'ring') { push('Tools', 'ring', 'The Yellow Ring', '', 'Hard light from will. SWAP to it and press B for bolts, hold B for the beam. Press A on nothing to summon a construct.', [['lib', 'Summon']]); continue; }
       if (k === 'battery') { push('Tools', 'battery', 'Power Battery', '', 'Hal\'s green lantern. Recite the oath once a day to fill your Will.', [['gcharge', 'Recite the oath']]); continue; }
-      if (k === 'lantern') { push('Tools', 'lantern', 'Power Lantern', '', 'The Fear Man\'s lantern. Recite the oath to refill your Will, once a day.', [['charge', 'Recite the oath']]); continue; } const t = D.tools[k]; if (t) push('Tools', k, t.name, inv.tools[k] > 1 ? inv.tools[k] : '', { lockpick: 'Opens doors and car locks quietly.', gascan: 'Pour a trail, then light it.', rod: 'Stand by water and press USE.', mask: 'MASK button. Witnesses can\'t name you.', bait: 'Fish bite faster.', rope: 'For tying things up.' }[k] || ''); }
+      if (k === 'lantern') { push('Tools', 'lantern', 'Power Lantern', '', 'The Fear Man\'s lantern. Recite the oath to refill your Will, once a day.', [['charge', 'Recite the oath']]); continue; } const t = D.tools[k]; if (t) push('Tools', k, t.name, inv.tools[k] > 1 ? inv.tools[k] : '', { lockpick: 'Opens doors and car locks quietly.', gascan: 'Pour a trail, then light it.', rod: 'Stand by water and press USE.', mask: 'MASK button. Witnesses can\'t name you.', bait: 'Fish bite faster.', rope: 'Tie up anyone who has given up or been knocked out.', tape: 'Gag anyone you\'ve tied up.', cinder: 'Beside the water, on someone out cold or surrendered...', bluebox: 'Stand by a payphone or a house and press USE to tap the line.', drill: 'Eats through a vault door. Loud.' }[k] || (k.startsWith('relic_') && R.relics ? R.relics.DEF[k.slice(6)].desc : '')); }
     for (const k in inv.loot) if (inv.loot[k]) { const l = D.loot[k]; if (l) push(l.pelt ? 'Pelts & catch' : 'Valuables', k, l.name, inv.loot[k], `Worth about ${R.fmtMoney(l.v)} to a ${l.pelt ? 'butcher' : 'fence'}.`, [], k); }
     for (const k in inv.ammo) if (inv.ammo[k] && !D.weapons[k]) push('Ammo', k, D.ammoNames[k] || k, inv.ammo[k], 'Loose rounds.', [], 'ammo');
     return out;
@@ -11038,6 +11038,109 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     g.rotate(a);
     g.drawImage(s, -3, -8);
     g.restore();
+  };
+})();
+
+// ---- 13_relics.js
+// RHAPSODY — relics: every brush with the uncanny leaves you something that changes how
+// you play. They live in your pockets (Tools) and last forever.
+//   Captain's Doubloon  (lay the Drowned Captain to rest): swim full speed, never tire, fish bite fast
+//   Tuft of Sasquatch Fur (see the big fella): predators leave you alone
+//   Probe Implant       (get abducted): you hear the police radio; search circles shrink
+//   Devil's Luck        (sell your soul): better odds at every table, and some hits just miss
+//   Scratch's Tooth     (kill Old Scratch): fists and blades hit a third harder
+//   Ember Collar        (kill a hellhound): punches can set people alight
+'use strict';
+(function () {
+  const D = R.data, TS = R.TILE;
+  const RL = (R.relics = {});
+  const G = () => R.game;
+  const DEF = {
+    doubloon: { name: 'Captain\'s Doubloon', desc: 'Salt-green gold from the Mary Alice. You swim like you were born in the water, never tire, and fish bite faster.' },
+    tuft: { name: 'Tuft of Sasquatch Fur', desc: 'It smells like the deep woods. Bears, wolves and gators leave you alone unless you start it.' },
+    implant: { name: 'Probe Implant', desc: 'Something behind your ear hums on police frequencies. You hear every dispatch, and search circles are a quarter smaller.' },
+    luck: { name: 'Devil\'s Luck', desc: 'Part of the bargain. Every table leans your way, and one hit in eight just... misses.' },
+    tooth: { name: 'Scratch\'s Tooth', desc: 'A gator tooth the size of a railroad spike. Fists and blades hit a third harder.' },
+    collar: { name: 'Ember Collar', desc: 'Still warm. One punch in six sets the other guy on fire.' },
+  };
+  RL.DEF = DEF;
+  for (const k in DEF) D.tools['relic_' + k] = { name: DEF[k].name };
+  RL.has = (k) => { const pl = G() && G().player; return !!(pl && pl.relics && pl.relics[k]); };
+  RL.grant = function (k) {
+    const g = G(), pl = g.player;
+    pl.relics = pl.relics || {};
+    if (pl.relics[k]) return;
+    pl.relics[k] = 1;
+    pl.inv.tools['relic_' + k] = 1;
+    g.audio.sfx('promote');
+    g.ui.story(`RELIC: ${DEF[k].name.toUpperCase()}`, DEF[k].desc);
+  };
+  RL.init = function (g) {
+    if (this.wrapped) return;
+    this.wrapped = true;
+    const L = R.legends;
+    // the Captain's doubloon becomes a relic instead of pawn fodder
+    // (checked every frame in update)
+    // the sasquatch: the first sighting
+    // (update watches the legends' seen marks)
+    // UFO abduction: patch the abduction by watching for the missing-time story
+    const baseStory = g.ui.story;
+    const U = R.UI.prototype, st = U.story;
+    U.story = function (title, body, cb) {
+      if (/MISSING TIME|ABDUCT/i.test(title || '')) setTimeout(() => RL.grant('implant'), 600);
+      return st.apply(this, arguments);
+    };
+    // the police radio
+    const LP = R.Law.prototype, baseRadius = LP.searchRadius, baseDispatch = LP.dispatch;
+    LP.searchRadius = function () { return baseRadius.call(this) * (RL.has('implant') ? 0.75 : 1); };
+    LP.dispatch = function () { if (RL.has('implant') && this.incident) this.game.ui.toast('*kzzt* "All units, suspect last seen near ' + (this.incident.lastX ? `${Math.round(this.incident.lastX / TS)}, ${Math.round(this.incident.lastY / TS)}` : 'the scene') + '..."'); return baseDispatch.apply(this, arguments); };
+    // the tables
+    const gamble = U.gamble;
+    U.gamble = function (p, stake, mult) { return gamble.call(this, p + (RL.has('luck') ? 0.08 : 0), stake, mult); };
+    // some hits just miss
+    const PP = R.Player.prototype, baseHurt = PP.hurt;
+    PP.hurt = function (amt, src, kind) {
+      if (RL.has('luck') && kind !== 'fall' && kind !== 'drown' && R.rng() < 0.125) { this.game.fx.text(this.x, this.y - 26, 'MISSED', '#ff5030'); return; }
+      return baseHurt.call(this, amt, src, kind);
+    };
+    // harder hits, burning fists
+    const C = R.combat, baseDamage = C.damage;
+    C.damage = function (target, amt, source, kind) {
+      const pl = G().player;
+      if (source === pl && (kind === 'melee')) {
+        if (RL.has('tooth')) amt *= 1.35;
+        if (RL.has('collar') && target && target.kind === 'h' && R.rng() < 1 / 6) { target.burning = Math.max(target.burning || 0, 3); G().fx.text(target.x, target.y - 26, 'FWOOSH', '#ff8a30'); }
+      }
+      return baseDamage.call(this, target, amt, source, kind);
+    };
+    // legendary kills
+    const baseKill = C.kill;
+    C.kill = function (h, source, kind) {
+      const was = h && h.dead;
+      const r = baseKill.call(this, h, source, kind);
+      const pl = G().player;
+      if (!was && h && h.kind === 'a' && (source === pl || (source && source.driver === pl))) {
+        if (h.legendary === 'scratch') setTimeout(() => RL.grant('tooth'), 500);
+        if (h.def && h.def.name === 'Hellhound') setTimeout(() => RL.grant('collar'), 500);
+      }
+      return r;
+    };
+  };
+  RL.update = function (dt) {
+    const g = G(), pl = g.player;
+    if (pl.inv.loot.doubloon > 0 && !this.has('doubloon')) { pl.inv.loot.doubloon--; this.grant('doubloon'); }
+    if (g.hints.soulSold && !this.has('luck')) this.grant('luck');
+    if (!g.hints.soulSold && this.has('luck')) { pl.relics.luck = 0; pl.inv.tools.relic_luck = 0; g.ui.toast('The Devil\'s luck leaves you with your soul.'); }
+    const sq = R.legends.active && R.legends.active.squatch;
+    if (sq && sq.spotted && !this.has('tuft')) { this.grant('tuft'); }
+    // the doubloon: the water can't tire you
+    if (this.has('doubloon') && pl.swimming) pl.swimT = 0;
+  };
+  // the doubloon swimmer isn't slowed by water
+  const AP = R.Actors.prototype, baseMove = AP.moveActor;
+  AP.moveActor = function (a, vx, vy, dt) {
+    if (a && a === G().player && RL.has('doubloon') && R.water && R.water.wet(a.x, a.y)) { vx *= 2; vy *= 2; }
+    return baseMove.call(this, a, vx, vy, dt);
   };
 })();
 
@@ -15838,7 +15941,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     const g = this.game, pl = g.player;
     if (!pl.inv.tools.bait) return this.toast('You need bait. The general store sells it.', 'warn');
     pl.inv.tools.bait--;
-    let state = 'wait', t = 1.5 + R.rng() * 4, bite = 0;
+    let state = 'wait', t = (1.5 + R.rng() * 4) * (R.relics && R.relics.has('doubloon') ? 0.4 : 1), bite = 0;
     const s = this.openSheet('fish', this.header('Fishing', 'Wait for the bite, then reel.') + `<div class="body"><div class="line" id="tline">You cast the line. The bobber floats.</div><div class="opts"><button class="opt go" id="reel">Reel!</button><button class="opt" id="quit">Pack up</button></div></div>`);
     g.audio.sfx('splash');
     const iv = setInterval(() => {
@@ -16674,6 +16777,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     R.campaign.init(this);
     R.vice.init(this);
     R.gore.init(this);
+    R.relics.init(this);
     R.legends.init(this);
     R.poi.init(this);
     R.art.chunkCache.clear();
@@ -16829,6 +16933,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       R.gore.update(sdt);
       R.slammer.update(sdt);
       R.heist.update(sdt);
+      R.relics.update(sdt);
       if (R.testRooms.active) R.testRooms.update(this, sdt);
       R.legends.update(sdt);
       R.goods.update(sdt);
@@ -16920,7 +17025,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       v: 2, seed: this.seed, t: this.clock.t, log: this.worldLog, weather: this.env.weather.kind,
       player: {
         x: pl.room ? this.interiors.outside(pl.x, pl.y).x : pl.x, y: pl.room ? this.interiors.outside(pl.x, pl.y).y : pl.y, hp: pl.hp, cool: pl.cool, cash: pl.cash, inv: pl.inv, clip: pl.clip, outfit: pl.outfit, outfits: pl.outfits || {}, style: pl.style, wardrobe: pl.wardrobe,
-        will: pl.will, willMax: pl.willMax || 100, fearQ: pl.fearQ || null, jail: pl.jail || null, vice: pl.vice || null, affairs: this.pop.people.filter((q) => q.affair != null).map((q) => [q.id, q.affair]), partners: this.pop.people.filter((q) => q.playerPartner || q.playerChild).map((q) => [q.id, q.playerPartner ? 1 : 0, q.playerChild ? 1 : 0]), hotel: pl.hotel || null, stash: pl.stash || null, propUp: (pl.properties || []).map((id) => { const b = this.world.buildings[id]; return b ? [id, b.sec ? 1 : 0, b.reno ? 1 : 0] : null; }).filter(Boolean), campaign: pl.campaign || null, ringColor: pl.ringColor || null, errands: pl.errands || [], poi: R.poi.serialize(), rep: pl.rep, standing: pl.standing, stats: pl.stats, sweetheart: pl.sweetheart, properties: pl.properties, masked: pl.masked,
+        will: pl.will, willMax: pl.willMax || 100, fearQ: pl.fearQ || null, relics: pl.relics || null, jail: pl.jail || null, vice: pl.vice || null, affairs: this.pop.people.filter((q) => q.affair != null).map((q) => [q.id, q.affair]), partners: this.pop.people.filter((q) => q.playerPartner || q.playerChild).map((q) => [q.id, q.playerPartner ? 1 : 0, q.playerChild ? 1 : 0]), hotel: pl.hotel || null, stash: pl.stash || null, propUp: (pl.properties || []).map((id) => { const b = this.world.buildings[id]; return b ? [id, b.sec ? 1 : 0, b.reno ? 1 : 0] : null; }).filter(Boolean), campaign: pl.campaign || null, ringColor: pl.ringColor || null, errands: pl.errands || [], poi: R.poi.serialize(), rep: pl.rep, standing: pl.standing, stats: pl.stats, sweetheart: pl.sweetheart, properties: pl.properties, masked: pl.masked,
         cars: pl.ownedCars.filter((c) => !c.removed && !c.wrecked).map((c) => [c.modelId, c.x, c.y, c.angle, c.color]),
       },
       pop: this.pop.serialize(), law: this.law.serialize(), jobs: this.jobs.serialize(), hints: this.hints,
@@ -16947,6 +17052,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       if (p.will != null) pl.will = p.will;
       if (p.willMax) pl.willMax = p.willMax;
       if (p.fearQ) pl.fearQ = p.fearQ;
+      pl.relics = p.relics || null;
       pl.jail = p.jail || null; if (pl.jail) setTimeout(() => R.slammer.resume(), 0);
       pl.vice = p.vice || null;
       for (const [a, b] of p.affairs || []) if (this.pop.people[a]) this.pop.people[a].affair = b;
