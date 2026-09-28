@@ -15832,6 +15832,123 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   };
 })();
 
+// ---- 14_hijack.js
+// RHAPSODY — swag. Every box truck on the Brass Coast is carrying something: cigarettes,
+// furs, Scotch, color TVs, frozen steaks. Pull the driver out, drive it somewhere quiet
+// and a fence at a pawn shop or a garage will empty it for cash, no questions. The good
+// loads come with a tip (from a bartender, a debtor, a driver who owes you) and a guard
+// riding shotgun. The trucking company calls the police, and the papers call it a crime wave.
+'use strict';
+(function () {
+  const TS = R.TILE;
+  const G = () => R.game;
+  const HJ = (R.hijack = {});
+  const CARGO = [
+    ['cigarettes', '400 cartons of Luckies', 700], ['scotch', '60 cases of Scotch', 900], ['furs', 'a rack of mink coats', 1600],
+    ['tvs', '30 color TVs', 1300], ['steaks', 'frozen steaks', 450], ['suits', 'Italian suits, still in plastic', 800],
+    ['hifi', 'hi-fi stereos and eight-tracks', 1000], ['razors', 'crates of razor blades', 350], ['perfume', 'French perfume', 1100], ['tires', 'whitewall tires', 500],
+  ];
+  const FENCE = { pawn: 0.55, garage: 0.45, butcher: 0.5 };
+
+  HJ.state = function () { const st = R.shark.street(); return (st.swag = st.swag || { trucks: 0, earned: 0, tip: null }); };
+  HJ.load = function (v, rich) {
+    const c = R.rng.pick(rich ? CARGO.filter((c) => c[2] >= 900) : CARGO);
+    v.cargo = { id: c[0], name: c[1], value: Math.round(c[2] * (rich ? 1.5 : 0.6 + R.rng() * 0.6)) };
+  };
+
+  // a tip: a truck parked at a truck stop outside town, a guard on it
+  HJ.tip = function (from) {
+    const g = G(), s = this.state(), w = g.world;
+    const gas = w.buildings.filter((b) => b && !b.destroyed && b.type === 'gas');
+    const b = R.rng.pick(gas.length ? gas : w.buildings.filter((b) => b && b.type === 'garage'));
+    if (!b) return;
+    s.tip = { bid: b.id, day: g.pop.day, until: g.pop.day + 2, from: from ? g.pop.name(from) : 'a bartender' };
+    g.waypoint = { x: b.out.x * TS + 8, y: b.out.y * TS + 8 };
+    g.ui.toast(`A load worth stealing sits at ${b.name} until day ${s.tip.until + 1}. One guard. Waypoint set.`, 'good');
+  };
+  HJ.barOpts = function (b, opts) {
+    const g = G(), pl = g.player, s = this.state();
+    if (b.type !== 'bar' && b.type !== 'diner' && b.type !== 'gas') return;
+    if (s.tip && g.pop.day <= s.tip.until) return;
+    opts.push({ label: 'Ask the regulars about trucks', small: '$60 for a tip on a good load', fn: () => { if (!pl.pay(60)) return g.ui.toast('Tips cost money.'); this.tip(null); } });
+  };
+  // stage the tipped truck when you get close
+  HJ.stage = function () {
+    const g = G(), s = this.state(), pl = g.player, t = s.tip;
+    if (!t || t.spawned || g.pop.day > t.until) return;
+    const b = g.world.buildings[t.bid];
+    if (!b || R.dist(pl.x, pl.y, b.out.x * TS, b.out.y * TS) > TS * 30) return;
+    const sp = g.world.findNear(b.out.x, b.out.y, 2, 7, (x, y) => !g.world.solidPed(x, y) && !g.world.isWater(x, y) && !g.world.solidPed(x + 1, y) && !g.world.solidPed(x - 1, y));
+    if (!sp) return;
+    t.spawned = true;
+    const v = g.traffic.make('truck', sp.x * TS + 8, sp.y * TS + 8, 0, { parked: true, keep: true, locked: false });
+    this.load(v, true);
+    v.tipped = true;
+    const gd = g.actors.makeHuman(v.x + 10, v.y + 16, { weapon: R.rng.pick(['shotgun', 'revolver']), arch: 'tough', tag: 'guard', cash: 40 });
+    gd.keep = true; gd.strangerName = 'Guard'; gd.tr.brave = 0.95; gd.guarding = v; gd.state = 'idle'; gd.timer = 1e9;
+    v.guard = gd;
+  };
+
+  // ---------------------------------------------------------------- while you drive it
+  HJ.update = function (dt) {
+    const g = G(), pl = g.player, s = this.state();
+    this.t = (this.t || 0) - dt;
+    if (this.t > 0) return;
+    this.t = 0.5;
+    this.stage();
+    for (const v of g.traffic.list) if (v.modelId === 'truck' && v.cargo === undefined && !v.removed) { if (R.rng() < 0.7) this.load(v, false); else v.cargo = null; }
+    const v = pl.inCar;
+    // the guard notices
+    for (const tv of g.traffic.list) {
+      const gd = tv.guard;
+      if (!gd || gd.dead || gd.hostile) continue;
+      if (R.dist(pl.x, pl.y, tv.x, tv.y) < TS * 3.5 && (pl.inCar === tv || pl.weaponOut)) { gd.hostile = true; gd.hostileLocked = true; g.actors.setFight(gd, pl); g.actors.say(gd, 'Hey! Get away from the truck!'); }
+    }
+    if (!v || !v.cargo) return;
+    if (!v.cargoSeen) {
+      v.cargoSeen = true;
+      g.ui.toast(`The truck's full of ${v.cargo.name}. A fence would pay about ${R.fmtMoney(v.cargo.value * 0.5)}. Park by a pawn shop or garage and get out.`, 'good');
+      if (!v.cargoCrime) { v.cargoCrime = true; g.law.crime('hijack', v.x, v.y, {}); g.pop.addNews((g.world.cityAt((v.x / TS) | 0, (v.y / TS) | 0) || { id: 'port' }).id, `HIJACKERS STRIKE AGAIN. A truckload of ${v.cargo.name} vanished off the road yesterday. The Teamsters are "very upset."`); }
+    }
+  };
+  // get out beside a fence and they'll unload it
+  HJ.fenceNear = function (v) {
+    const g = G();
+    return g.world.buildings.find((b) => b && !b.destroyed && FENCE[b.type] && R.dist(v.x, v.y, b.out.x * TS + 8, b.out.y * TS + 8) < TS * 6);
+  };
+  HJ.exit = function (v) {
+    const g = G(), pl = g.player, s = this.state();
+    if (!v || !v.cargo) return;
+    const b = this.fenceNear(v);
+    if (!b) return;
+    const pay = Math.round(v.cargo.value * FENCE[b.type] * (1 + g.jobs.rank() * 0.05));
+    setTimeout(() => g.ui.choice(`${b.name}: the back door opens`, [
+      { label: `Sell ${v.cargo.name} (${R.fmtMoney(pay)})`, small: 'Dirty cash. They\'ll strip the truck too', cls: 'go', fn: () => { pl.addCash(pay); s.trucks++; s.earned += pay; v.cargo = null; g.audio.sfx('cash'); g.ui.toast(`Unloaded in eleven minutes flat. ${R.fmtMoney(pay)}.`, 'good'); setTimeout(() => { if (!v.removed && pl.inCar !== v) g.traffic.remove(v); }, 4000); } },
+      { label: 'Not here', fn: () => {} },
+    ]), 200);
+  };
+
+  HJ.html = function () {
+    const s = this.state(), g = G();
+    if (!s.trucks && !s.tip) return '';
+    let h = '<div class="sect">Swag</div>';
+    if (s.tip && g.pop.day <= s.tip.until) { const b = g.world.buildings[s.tip.bid]; h += `<p>• A load at <b>${b ? b.name : '?'}</b> until day ${s.tip.until + 1}. One guard.</p>`; }
+    if (s.trucks) h += `<p><small>${s.trucks} truckload${s.trucks > 1 ? 's' : ''} fenced for ${R.fmtMoney(s.earned)}.</small></p>`;
+    return h;
+  };
+
+  HJ.init = function (g) {
+    if (this.wrapped) return;
+    this.wrapped = true;
+    const TP = R.Traffic.prototype, ex = TP.exitVehicle;
+    TP.exitVehicle = function (v, h) { const r = ex.call(this, v, h); if (h === this.game.player) HJ.exit(v); return r; };
+    const U = R.UI.prototype, io = U.interiorOptions;
+    U.interiorOptions = function (b) { const o = io.call(this, b); HJ.barOpts(b, o); return o; };
+    const cj = R.campaign.jobsHtml;
+    R.campaign.jobsHtml = function () { return cj.call(this) + HJ.html(); };
+  };
+})();
+
 // ---- 14_money.js
 // RHAPSODY — dirty money. Cash from crime is dirty: robbery, heists, ransoms, dealing,
 // muggings, the families' envelopes. Spend a lot of it at once and people notice, and
@@ -16263,24 +16380,141 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     for (let r = 14; r < 160 && !road; r += 6) for (let k = 0; k < 6 && !road; k++) road = w.findNear(dust.cx, dust.cy, r, r + 6, (x, y) => open(x, y) && desert(x, y));
     for (let r = 14; r < 160 && !road; r += 12) road = w.findNear(dust.cx, dust.cy, r, r + 12, open);
     if (!road) for (let i = 0; i < 4000 && !road; i++) { const x = (Math.random() * w.W) | 0, y = (Math.random() * w.H) | 0; if (open(x, y)) road = { x, y }; }
-    const spot = road && w.findNear(road.x, road.y - 18, 0, 14, (x, y) => !w.solidPed(x, y) && !w.isWater(x, y) && !D.roadTile[w.t(x, y)] && !w.cityAt(x, y) && Math.hypot(x - road.x, y - road.y) > 12);
-    if (!road || !spot) return this.wake(g); // no desert handy: skip to the back room
+    // any road out of town will do
+    if (!road) for (let i = 0; i < 20000 && !road; i++) { const x = (Math.random() * w.W) | 0, y = (Math.random() * w.H) | 0; if (D.roadTile[w.t(x, y)] && !w.cityAt(x, y)) road = { x, y }; }
+    const clear = (x, y) => !w.solidPed(x, y) && !w.isWater(x, y) && !D.roadTile[w.t(x, y)] && !w.cityAt(x, y);
+    let spot = null;
+    if (road) for (let r = 10; r <= 22 && !spot; r += 2) for (let k = 0; k < 16 && !spot; k++) { const a = k / 16 * Math.PI * 2, x = Math.round(road.x + Math.cos(a) * r), y = Math.round(road.y + Math.sin(a) * r); if (clear(x, y) && clear(x, y - 1) && clear(x, y - 2)) spot = { x, y }; }
+    if (!road || !spot) return this.wake(g); // a world with no roads at all
     this.road = road;
-    g.clock.t = Math.floor(g.clock.t / 1440) * 1440 + 5 * 60 + 40; // dawn
-    pl.place(spot.x * TS + 8, spot.y * TS + 8);
+    g.clock.t = Math.floor(g.clock.t / 1440) * 1440 + 4 * 60 + 50; // before dawn
+    pl.cash = 0; pl.inv.weapons = { fists: 1 }; pl.weapon = 'fists'; pl.weaponOut = false;
+    this.stage(g, spot);
+  };
+
+  // ---------------------------------------------------------------- 2a. the shooting
+  // Two men, a car with its lights off, a walk into the sand. You get one thing to say.
+  OP.stage = function (g, spot) {
+    const pl = g.player, sx = spot.x * TS + 8, sy = spot.y * TS + 8;
+    const st = this.street(g);
+    // two real people from the Coast, so you can find them again someday
+    const pool = g.pop.people.filter((p) => p.alive && !p.fem && p.age >= 22 && p.age <= 52 && p.role !== 'cop' && p.role !== 'don' && !p.isDon && !p.actor && !p.faction);
+    const men = [R.rng.pick(pool), null]; men[1] = R.rng.pick(pool.filter((p) => p !== men[0]));
+    st.shooters = men.filter(Boolean).map((p) => p.id);
+    const toRoad = Math.atan2(this.road.y * TS - sy, this.road.x * TS - sx);
+    const car = g.traffic.make('sedan', sx + Math.cos(toRoad) * 40, sy + 30, toRoad + Math.PI, { parked: true, keep: true, color: '#1c1c20', locked: true });
+    pl.place(sx, sy + 12);
     g.cam.x = pl.x; g.cam.y = pl.y;
-    pl.hp = 22; pl.crawling = true; pl.bloody = 1; pl.weaponOut = false;
-    pl.cash = 0; pl.inv.weapons = { fists: 1 }; pl.weapon = 'fists';
+    pl.hp = pl.maxHp;
+    const thugs = men.filter(Boolean).map((p, i) => {
+      if (p.actor && !p.actor.dead) g.actors.remove(p.actor);
+      const h = g.life.spawnPerson(p, sx + (i ? 12 : -12), sy + 28);
+      if (!h) return null;
+      h.keep = true; h.stay = true; h.state = 'idle'; h.timer = 1e9; h.hostile = false; h.noTalk = true; h.scripted = true;
+      g.actors.arm(h, i ? 'shotgun' : 'revolver');
+      h.look.hatKind = 'fedora'; h.look.hatCol = '#2a2a2a';
+      return h;
+    }).filter(Boolean);
+    this.scene = { t: 0, stage: 0, car, thugs, sx, sy, toRoad };
+    this.lock = { x: 0, y: 0 };
+    g.ui.toast('Dustwater flats. 4:50 in the morning.', 'warn');
+    if (thugs[0]) g.actors.say(thugs[0], 'Out. Walk. Into the desert, nice and slow.');
+  };
+  OP.street = function (g) { const pl = g.player; pl.street = pl.street || {}; return (pl.street.desert = pl.street.desert || {}); };
+  OP.runScene = function (g, dt) {
+    const sc = this.scene, pl = g.player, [a, b] = sc.thugs;
+    sc.t += dt;
+    const follow = (h, ox, oy, spd) => { if (!h || h.dead) return; const tx = pl.x + ox, ty = pl.y + oy, d = Math.hypot(tx - h.x, ty - h.y); if (d > 3) g.actors.moveActor(h, (tx - h.x) / d * spd, (ty - h.y) / d * spd, dt); h.state = 'idle'; h.timer = 1e9; };
+    const face = (h) => { if (h) { h.ang = Math.atan2(pl.y - h.y, pl.x - h.x); h.dir = pl.y < h.y ? 3 : 0; } };
+    if (sc.stage === 0 && sc.t > 1.6) { sc.stage = 1; sc.t = 0; }
+    if (sc.stage === 1) { // the walk
+      this.lock = { x: 0, y: -0.55 };
+      follow(a, -9, 20, 38); follow(b, 9, 22, 38);
+      if (pl.y <= sc.sy - 22 || sc.t > 6) { sc.stage = 2; sc.t = 0; this.lock = { x: 0, y: 0 }; if (b) g.actors.say(b, 'That\'s far enough. Turn around.'); }
+    }
+    if (sc.stage === 2) {
+      face(a); face(b);
+      if (sc.t > 0.35 && sc.t < 0.5) this.lock = { x: 0, y: 0.05 }; else this.lock = { x: 0, y: 0 };
+      if (sc.t > 1.5 && !sc.asked) { sc.asked = true; this.lastWords(g); }
+      // closed the question without answering: silence is an answer too
+      if (sc.asked && sc.t > 2.5 && !g.ui.sheetOpen) { sc.stage = 3; sc.t = 0; }
+    }
+    if (sc.stage === 3) { // the shots
+      face(a); face(b);
+      if (a) { a.weaponOut = true; a.aiming = true; }
+      if (sc.t > 0.2 && !sc.said) { sc.said = true; if (a) g.actors.say(a, sc.lunged ? 'Hold STILL, you son of a—' : 'Nothing personal, kid.'); }
+      if (sc.t > 1.4 && !sc.shot1) { sc.shot1 = true; this.shoot(g, a, true); }
+      if (sc.t > 2.0 && !sc.shot2) { sc.shot2 = true; this.shoot(g, a, !sc.lunged); pl.crawling = true; pl.hp = sc.lunged ? 30 : 22; }
+      if (sc.t > 3.4) { sc.stage = 4; sc.t = 0; if (b) g.actors.say(b, 'Leave him for the buzzards. Come on.'); }
+    }
+    if (sc.stage === 4) { // they leave
+      for (const h of sc.thugs) { if (!h || h.removed) continue; const d = Math.hypot(sc.car.x - h.x, sc.car.y - h.y); if (sc.t > 1 && d > 10) g.actors.moveActor(h, (sc.car.x - h.x) / d * 45, (sc.car.y - h.y) / d * 45, dt); if (d <= 12 || sc.t > 5) { h.weaponOut = false; g.actors.remove(h); h.removed = true; } }
+      if (sc.thugs.every((h) => !h || h.removed)) {
+        if (!sc.driving) { sc.driving = 0; sc.car.lights = true; g.audio.sfx('horn'); }
+        sc.driving += dt;
+        const ang = sc.toRoad; sc.car.angle = ang; sc.car.x += Math.cos(ang) * 70 * dt; sc.car.y += Math.sin(ang) * 70 * dt;
+        if (sc.driving > 3.2) { g.traffic.remove(sc.car); sc.stage = 5; this.afterShots(g); }
+      }
+    }
+  };
+  OP.lastWords = function (g) {
+    const sc = this.scene, pl = g.player, [a, b] = sc.thugs, st = this.street(g);
+    const say = (h, t) => h && g.actors.say(h, t);
+    const go = () => { sc.stage = 3; sc.t = 0; };
+    g.ui.choice('"Any last words?"', [
+      { label: '"Who sent you?"', small: 'Maybe they slip', fn: () => { const fams = D.cities.map((c) => c.family); st.sentBy = R.rng.pick(fams); say(a, `Doesn't matter now. But the ${st.sentBy}s say hello.`); go(); } },
+      { label: 'Look them in the eye', small: 'Remember these faces', fn: () => { st.faces = true; say(b, 'Quit staring at me.'); go(); } },
+      { label: '"Please. I got money. I can get money—"', small: 'Beg', fn: () => { say(a, 'No you don\'t. We checked.'); go(); } },
+      { label: 'Spit on his shoes', small: 'Infamy +', fn: () => { pl.rep.infamy += 2; say(a, 'Tough guy. Tough guys bleed the same.'); go(); } },
+      { label: 'Lunge at him', small: 'You won\'t win. But he might miss', fn: () => { sc.lunged = true; pl.rep.infamy += 1; if (a) { a.hp -= 6; g.cam.shake(3); g.audio.sfx('punch'); a.x -= 6; } say(a, 'Son of a—!'); go(); } },
+    ]);
+  };
+  OP.shoot = function (g, h, hit) {
+    const pl = g.player;
+    if (!h) return;
+    const ang = Math.atan2(pl.y - 6 - h.y, pl.x - h.x);
+    h.ang = ang;
+    const [mx, my] = R.art.muzzle ? R.art.muzzle(h, h.weapon, ang) : [h.x, h.y - 10];
+    g.fx.flash(mx, my); g.fx.sparks(mx, my, 4);
+    g.audio.sfx(h.weapon === 'shotgun' ? 'shotgun' : 'shot');
+    g.cam.shake(4); g.hitStop = 0.12;
+    if (hit) {
+      if (g.settings.gore !== false) { g.fx.blood(pl.x, pl.y - 6, 18); for (let k = 0; k < 6; k++) g.fx.decal({ x: pl.x + (Math.random() - 0.5) * 12, y: pl.y + (Math.random() - 0.3) * 8, r: 1 + Math.random() * 2.4, c: 'rgba(110,16,12,0.8)', t: 900 }); }
+      pl.bloody = 1; if (R.butcher) R.butcher.mark(pl, 20, h, 'bullet');
+    } else g.fx.sparks(pl.x + 10, pl.y + 4, 6);
+  };
+  OP.afterShots = function (g) {
+    const pl = g.player, road = this.road;
+    this.scene = null; this.lock = null;
+    pl.crawling = true; pl.bloody = 1; pl.gutWound = true;
     g.waypoint = { x: road.x * TS + 8, y: road.y * TS + 8 };
-    g.ui.story(`${pl.first} "${pl.nick}" ${pl.last}`, 'A car trunk. A dirt road. Two men you never saw clearly, and two shots.\n\nThey drove off laughing and left you for the buzzards.\n\nYou\'re not dead. Not yet. There\'s a highway out there somewhere. Crawl.', () => g.ui.toast('Crawl to the highway. Follow the gold line.', 'warn'));
+    g.ui.story(`${pl.first} "${pl.nick}" ${pl.last}`, 'Two holes in you, one in the gut. The taillights shrink to nothing.\n\nThey think you\'re dead. You\'re not. Not yet.\n\nThere\'s a highway out there somewhere. Crawl.', () => g.ui.toast('Crawl to the highway. Follow the gold line.', 'warn'));
   };
   OP.update = function (dt) {
     const g = R.game, pl = g.player;
+    if (this.scene) return this.runScene(g, dt);
     if (!pl.crawling) return;
     pl.hp = Math.max(8, pl.hp); // you're too stubborn to die out here
-    // a trail of blood behind you
-    this.trail = (this.trail || 0) - dt;
-    if (this.trail <= 0 && g.settings.gore !== false) { this.trail = 0.35; g.fx.decal({ x: pl.x + (Math.random() - 0.5) * 3, y: pl.y + 1, r: 1.2, c: 'rgba(110,20,16,0.55)', t: 700 }); }
+    // which way you're dragging yourself
+    const dx = pl.x - (this.lastX == null ? pl.x : this.lastX), dy = pl.y - (this.lastY == null ? pl.y : this.lastY);
+    this.lastX = pl.x; this.lastY = pl.y;
+    if (Math.abs(dx) > 0.02 || Math.abs(dy) > 0.02) { this.dirX = dx; this.dirY = dy; this.faceL = dx < 0; }
+    const moving = Math.hypot(dx, dy) > 0.02;
+    // the gut wound leaves a smear behind you, and a pool when you stop to rest
+    if (g.settings.gore !== false) {
+      const m = Math.hypot(this.dirX || 1, this.dirY || 0) || 1, bx = pl.x - (this.dirX || 1) / m * 1, by = pl.y - (this.dirY || 0) / m * 1 + 1;
+      this.trail = (this.trail || 0) - dt;
+      if (moving && this.trail <= 0) {
+        this.trail = 0.07;
+        g.fx.decal({ x: bx + (Math.random() - 0.5) * 2, y: by + (Math.random() - 0.5) * 3, r: 1.3 + Math.random() * 0.9, c: `rgba(${100 + (Math.random() * 30) | 0},14,10,0.6)`, t: 900 });
+        if (Math.random() < 0.25) g.fx.decal({ x: bx + (Math.random() - 0.5) * 8, y: by + (Math.random() - 0.5) * 7, r: 0.6, c: 'rgba(120,18,12,0.7)', t: 900 });
+      } else if (!moving && this.trail <= 0) {
+        this.trail = 0.5;
+        this.pool = Math.min(4.5, (this.pool || 1.5) + 0.25);
+        g.fx.decal({ x: bx, y: by + 1, r: this.pool, c: 'rgba(90,10,8,0.35)', t: 900 });
+      }
+      if (moving) this.pool = 1.5;
+    }
     const r = this.road;
     if (r && Math.hypot(pl.x / TS - r.x, pl.y / TS - r.y) < 2.2 && !this.pickedUp) { this.pickedUp = true; this.pickup(g); }
   };
@@ -16358,26 +16592,320 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     if (this.wrapped) return;
     this.wrapped = true;
     const AP = R.Actors.prototype, mv = AP.moveActor;
-    AP.moveActor = function (a, vx, vy, dt) { if (a && a.crawling) { vx *= 0.3; vy *= 0.3; } return mv.call(this, a, vx, vy, dt); };
+    // crawling comes in pulls: reach, grab the sand, drag
+    AP.moveActor = function (a, vx, vy, dt) {
+      if (a && a.crawling) { const k = 0.34 * (0.15 + 1.7 * Math.max(0, Math.sin(R.game.clock.real * Math.PI * 2 * 0.9))); vx *= k; vy *= k; }
+      return mv.call(this, a, vx, vy, dt);
+    };
+    // no one moves you but the men with the guns
+    const IP = R.Input.prototype, iu = IP.update;
+    IP.update = function () {
+      iu.call(this);
+      const L = OP.lock;
+      if (L) { this.stick.x = L.x; this.stick.y = L.y; for (const k in this.pressedA) this.pressedA[k] = false; for (const k in this.heldA) this.heldA[k] = false; }
+    };
+    // nobody makes small talk with the men who are about to shoot you
+    const U = R.UI.prototype, uc = U.updateCtx;
+    U.updateCtx = function () { if (OP.scene) this.game.player.focus = null; return uc.call(this); };
     const RP = R.Renderer.prototype, dp = RP.drawPlayer;
     RP.drawPlayer = function (g, pl) {
       if (!pl.crawling) return dp.call(this, g, pl);
-      // face down in the sand, dragging yourself along
-      const t = R.game.clock.real, moving = pl.walk && Math.abs(pl.walk) > 0.01;
-      R.art.drawPerson(g, pl.x - 8 + (moving ? Math.round(Math.sin(t * 6)) : 0), pl.y + 4, 2, 0, pl.look, { down: true });
-      // vultures circling overhead: only their shadows sweep across the sand
-      g.save(); g.fillStyle = '#000';
-      for (let i = 0; i < 3; i++) {
-        const a = t * (0.5 + i * 0.13) + i * 2.1, r = 26 + i * 11 + Math.sin(t * 0.7 + i) * 5;
-        const x = Math.round(pl.x + Math.cos(a) * r), y = Math.round(pl.y + Math.sin(a) * r * 0.6);
-        const flap = Math.sin(t * 3 + i * 1.7) > 0.6 ? 1 : 0;
-        g.globalAlpha = 0.16;
-        g.fillRect(x - 1, y - 1, 3, 2);
-        g.fillRect(x - 5, y - 1 + flap, 4, 1); g.fillRect(x + 2, y - 1 + flap, 4, 1);
-        g.fillRect(x - 7, y - flap, 2, 1); g.fillRect(x + 6, y - flap, 2, 1);
-      }
-      g.restore();
+      OP.drawCrawl(g, pl);
     };
+  };
+  // ---------------------------------------------------------------- the crawl sprite sheet
+  // A prone, top-down figure in the same style as every other person in the game: chibi
+  // proportions (the big round head), a clean one-pixel outline and the diagonal light on
+  // the hair. Every colour is sampled from your own sprite, so it's your jacket, your
+  // trousers, your hair. Four frames: left arm thrown ahead with the left knee drawn up,
+  // pull, right arm ahead with the right knee up, pull.
+  const crawlCache = new Map();
+  const lum = (c) => c[0] * 0.3 + c[1] * 0.59 + c[2] * 0.11;
+  OP.crawlPalette = function (look) {
+    const spr = R.art.oldSprite(look, 6, 0, null), W = spr.width, H = spr.height, k = W / 16;
+    const d = spr.getContext('2d').getImageData(0, 0, W, H).data;
+    const region = (x0, y0, x1, y1) => { const m = new Map(); for (let y = y0 * k; y <= y1 * k; y++) for (let x = x0 * k; x <= x1 * k; x++) { const i = (y * W + x) * 4; if (d[i + 3] < 200) continue; const key = (d[i] << 16) | (d[i + 1] << 8) | d[i + 2]; m.set(key, (m.get(key) || 0) + 1); } return [...m].map(([v, n]) => ({ c: [v >> 16, (v >> 8) & 255, v & 255], n })); };
+    const all = region(0, 0, 15, 31);
+    const outline = all.reduce((a, b) => (lum(b.c) < lum(a.c) ? b : a)).c;
+    const hex = (c) => '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
+    const ramp = (list) => {
+      list = list.filter((e) => hex(e.c) !== hex(outline));
+      if (!list.length) return ['#333', '#555', '#777'];
+      const mid = list.reduce((a, b) => (b.n > a.n ? b : a)).c;
+      const byL = list.slice().sort((a, b) => lum(a.c) - lum(b.c));
+      const dark = byL[0].c, light = byL[byL.length - 1].c;
+      return [hex(dark), hex(mid), hex(light)];
+    };
+    const skinC = region(0, 18, 15, 22).filter((e) => e.c[0] - e.c[2] > 40 && lum(e.c) > 90);
+    return { O: hex(outline), hair: ramp(region(4, 4, 11, 11)), coat: ramp(region(4, 16, 11, 19)), pants: ramp(region(4, 22, 11, 24)), skin: skinC.length ? hex(skinC.reduce((a, b) => (b.n > a.n ? b : a)).c) : (look.skin || '#e0a070') };
+  };
+  OP.crawlSheet = function (look) {
+    const base = R.art.oldSprite(look, 6, 0, null);
+    const hit = crawlCache.get(base);
+    if (hit) return hit;
+    const P = this.crawlPalette(look);
+    const GW = 34, GH = 24, CY = 12; // grid, facing right, centre row
+    const frames = [0, 1, 2, 3].map((f) => {
+      const g = []; for (let y = 0; y < GH; y++) g.push(new Array(GW).fill(null));
+      const put = (x, y, c) => { x = Math.round(x); y = Math.round(y + CY); if (x >= 0 && y >= 0 && x < GW && y < GH) g[y][x] = c; };
+      const rect = (x0, y0, w, h, c) => { for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) put(x, y, c); };
+      const slide = f === 1 || f === 3 ? 1 : 0;
+      const topKnee = f === 0, botKnee = f === 2;
+      // legs: straight, or the knee drawn up and out to push
+      const leg = (side, bent) => {
+        const y = side < 0 ? -4 : 1;
+        if (!bent) { rect(2 + slide, y, 6, 3, P.pants[1]); rect(2 + slide, side < 0 ? y + 2 : y, 6, 1, P.pants[0]); rect(0 + slide, y, 2, 3, P.O); }
+        else { const ky = side < 0 ? -7 : 4; rect(5 + slide, y, 3, 3, P.pants[1]); rect(3 + slide, ky, 3, 3, P.pants[2]); rect(1 + slide, ky + (side < 0 ? 1 : -1), 3, 3, P.pants[1]); rect(0 + slide, ky + (side < 0 ? 1 : -1), 1, 3, P.O); }
+      };
+      leg(-1, topKnee); leg(1, botKnee);
+      // hips
+      rect(7 + slide, -4, 3, 8, P.pants[1]); rect(7 + slide, -4, 3, 1, P.pants[2]);
+      // back of the coat: light along the top edge, shadow along the bottom and down the spine
+      rect(9 + slide, -5, 8, 10, P.coat[1]); rect(9 + slide, -5, 8, 1, P.coat[2]); rect(9 + slide, 4, 8, 1, P.coat[0]); rect(9 + slide, 0, 7, 1, P.coat[0]);
+      rect(16 + slide, -3, 1, 6, P.coat[0]); // collar shadow
+      // arms: 3px sleeves in your coat colour, hands in your skin
+      const arm = (side, st) => {
+        const y0 = side < 0 ? -7 : 5, yy = (d) => (side < 0 ? y0 + d : y0 - d);
+        if (st === 'reach') { rect(14 + slide, side < 0 ? -7 : 5, 12, 3, P.coat[1]); rect(14 + slide, side < 0 ? -7 : 7, 12, 1, side < 0 ? P.coat[2] : P.coat[0]); rect(26 + slide, side < 0 ? -7 : 5, 3, 3, P.skin); }
+        else if (st === 'pull') { rect(14 + slide, side < 0 ? -8 : 6, 5, 3, P.coat[1]); rect(18 + slide, side < 0 ? -9 : 7, 4, 3, P.coat[1]); rect(18 + slide, side < 0 ? -9 : 9, 4, 1, side < 0 ? P.coat[2] : P.coat[0]); rect(22 + slide, side < 0 ? -9 : 7, 3, 3, P.skin); }
+        else { rect(10 + slide, side < 0 ? -7 : 5, 7, 3, P.coat[1]); rect(10 + slide, side < 0 ? -7 : 7, 7, 1, side < 0 ? P.coat[2] : P.coat[0]); rect(8 + slide, side < 0 ? -7 : 5, 2, 3, P.skin); }
+        void yy;
+      };
+      const ST = [['reach', 'tuck'], ['pull', 'tuck'], ['tuck', 'reach'], ['tuck', 'pull']][f];
+      arm(-1, ST[0]); arm(1, ST[1]);
+      // neck, then the big round head seen from behind, lit from the top left
+      rect(17 + slide, -2, 2, 4, P.skin);
+      const hx = 24 + slide + (ST[0] === 'reach' || ST[1] === 'reach' ? 1 : 0), R0 = 6.4;
+      for (let y = -7; y <= 7; y++) for (let x = -7; x <= 7; x++) {
+        if (x * x + y * y > R0 * R0 - 1) continue;
+        // like the standing sprites: a big mid tone, a shadow crescent low right, a sheen up top
+        const shadow = (x + 1.8) * (x + 1.8) + (y + 1.8) * (y + 1.8) > (R0 - 0.2) * (R0 - 0.2);
+        const sheen = (x + 1) * (x + 1) * 0.35 + (y + 4) * (y + 4) < 2.2;
+        put(hx + x, y, shadow ? P.hair[0] : sheen ? P.hair[2] : P.hair[1]);
+      }
+      put(hx - 1, -7, P.skin); put(hx - 1, 7, P.skin); // the tips of the ears
+      // auto outline: any empty pixel touching the figure
+      const out = g.map((row) => row.slice());
+      for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) if (!g[y][x] && ((g[y - 1] && g[y - 1][x]) || (g[y + 1] && g[y + 1][x]) || g[y][x - 1] || g[y][x + 1])) out[y][x] = P.O;
+      const c = document.createElement('canvas'); c.width = GW; c.height = GH;
+      const cx = c.getContext('2d');
+      for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) if (out[y][x]) { cx.fillStyle = out[y][x]; cx.fillRect(x, y, 1, 1); }
+      return c;
+    });
+    const sheet = { frames, w: GW, h: GH, cy: CY };
+    if (crawlCache.size > 40) crawlCache.clear();
+    crawlCache.set(base, sheet);
+    return sheet;
+  };
+  // face down in the sand, dragging yourself toward the highway
+  OP.drawCrawl = function (g, pl) {
+    const G = R.game, t = G.clock.real, gore = G.settings.gore !== false;
+    const moving = !!(pl.walk && Math.abs(pl.walk) > 0.01) || (!OP.scene && G.input.stick && Math.hypot(G.input.stick.x, G.input.stick.y) > 0.1);
+    const f = moving ? Math.floor(t * 0.9 * 4) % 4 : 0; // in step with the pull in moveActor
+    const sh = this.crawlSheet(pl.look);
+    const dx = OP.dirX == null ? 1 : OP.dirX, dy = OP.dirY || 0;
+    const vert = Math.abs(dy) > Math.abs(dx);
+    g.save();
+    g.translate(Math.round(pl.x), Math.round(pl.y));
+    if (vert) g.rotate(dy < 0 ? -Math.PI / 2 : Math.PI / 2); else if (dx < 0) g.scale(-1, 1);
+    // local space: head toward +x. Shadow, and the blood you're lying in
+    g.fillStyle = 'rgba(0,0,0,0.2)'; g.fillRect(-14, -5, 26, 11);
+    if (gore) { g.fillStyle = 'rgba(96,10,8,0.5)'; g.fillRect(-6, 4, 6, 3); g.fillRect(-4, 6, 3, 2); }
+    g.drawImage(sh.frames[f], -16, -sh.cy);
+    // the gut wound, soaking out from under you
+    if (gore) { const p = 0.55 + Math.sin(t * 3) * 0.2; g.fillStyle = `rgba(130,12,8,${p})`; g.fillRect(-4, 3, 3, 2); g.fillStyle = 'rgba(70,4,4,0.85)'; g.fillRect(-3, 4, 1, 1); }
+    g.restore();
+  };
+})();
+
+// ---- 14_payroll.js
+// RHAPSODY — the envelope. Every precinct has cops who'd like a better car. Buy a beat
+// cop a coffee with a fifty folded under the cup and he starts missing things. Get enough
+// of them and the captain will see you, and a captain loses files, warns you before the
+// raid, and knows who's been talking to the feds. It all costs money every week, and
+// Internal Affairs is always looking for a headline. A cop who gets burned for you has a
+// choice to make about who he's more afraid of.
+'use strict';
+(function () {
+  const TS = R.TILE;
+  const G = () => R.game;
+  const PR = (R.payroll = {});
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const BEAT = 40, CAPTAIN = 250;
+  const SERIOUS = { copAssault: 1, copMurder: 1, heist: 1, jailbreak: 1, rico: 1 };
+
+  PR.state = function () { const st = R.shark.street(); return (st.pay = st.pay || { jur: {}, due: null, paid: 0, sweeps: 0, looked: 0 }); };
+  PR.jur = function (j) { const s = this.state(); return (s.jur[j] = s.jur[j] || { beats: [], captain: null }); };
+  PR.weekly = function () { let n = 0; for (const j in this.state().jur) { const r = this.state().jur[j]; n += r.beats.length * BEAT + (r.captain != null ? CAPTAIN : 0); } return n; };
+  PR.hasCaptain = function (j) { const r = this.state().jur[j]; return !!(r && r.captain != null); };
+  PR.anyCaptain = function () { const s = this.state(); return Object.keys(s.jur).find((j) => s.jur[j].captain != null) || null; };
+  PR.lookAway = function (j) { const r = this.state().jur[j]; if (!r) return 0; return Math.min(0.85, r.beats.length * 0.14 + (r.captain != null ? 0.3 : 0)); };
+  // a real officer from that precinct's roster
+  PR.officer = function (j, taken) {
+    const g = G();
+    const pool = g.pop.people.filter((p) => p.alive && p.role === 'cop' && (p.city === j || j === 'county') && !taken.includes(p.id));
+    return pool.length ? R.rng.pick(pool) : null;
+  };
+
+  // ---------------------------------------------------------------- a word with an officer
+  PR.copOpts = function (h, opts) {
+    const g = G(), pl = g.player;
+    if (!h.cop || h.detectiveFor || g.law.incident || h.hostile) return;
+    const j = g.law.jurAt(h.x, h.y), r = this.jur(j);
+    if (h.onPayroll) { opts.unshift({ label: '"Everything good, officer?"', small: 'He\'s on your payroll', fn: () => g.actors.say(h, R.rng.pick(['Quiet night. Keep it that way.', 'Didn\'t see you. Never do.', 'Captain says hello.'])) }); return; }
+    if (r.beats.length >= 6) return;
+    opts.unshift({ label: `"Let me buy you a coffee, officer."`, small: `Bribe: ${R.fmtMoney(BEAT)} now and every week`, cls: 'go', fn: () => {
+      const chance = 0.35 + pl.rep.infamy / 250 + g.jobs.rank() * 0.08 + (h.tr && h.tr.greedy ? h.tr.greedy * 0.3 : 0.1) - (g.law.totalBounty() > 0 ? 0.15 : 0);
+      if (R.rng() < chance) {
+        if (!pl.pay(BEAT)) return g.ui.toast('You don\'t have the fifty.');
+        const p = this.officer(j, r.beats.concat(r.captain != null ? [r.captain] : []));
+        r.beats.push(p ? p.id : -1 - r.beats.length);
+        h.onPayroll = true;
+        if (p) h.strangerName = 'Officer ' + p.last;
+        if (this.state().due == null) this.state().due = g.pop.day + 7;
+        g.actors.say(h, R.rng.pick(['Cream, two sugars. I\'ll be seeing you around.', 'Nice doing business. I work this beat Tuesdays.', 'You didn\'t get this from me.']));
+        g.ui.toast(`${h.strangerName || 'The officer'} is on your payroll in ${g.law.jurName(j)}. ${R.fmtMoney(BEAT)} a week.`, 'good');
+      } else {
+        g.actors.say(h, R.rng.pick(['Are you trying to bribe a police officer? Beat it before I change my mind.', 'I\'m gonna pretend I didn\'t hear that.', 'Put your wallet away, pal.']));
+        g.law.bounty[j] = (g.law.bounty[j] || 0) + 10;
+        g.ui.toast('He\'s straight. That cost you a $10 bounty.', 'warn');
+      }
+    } });
+  };
+
+  // ---------------------------------------------------------------- at the precinct
+  PR.stationOpts = function (b, opts) {
+    const g = G(), pl = g.player, ui = g.ui;
+    if (b.type !== 'police') return;
+    const j = b.cityId, r = this.jur(j);
+    if (r.captain == null) {
+      const ok = r.beats.length >= 2 || g.jobs.rank() >= 2;
+      opts.push({ label: 'Ask to see the captain', small: ok ? `Put the precinct on your payroll: ${R.fmtMoney(CAPTAIN)} a week` : 'Nobody here knows you yet. Get two beat cops on the envelope first', fn: () => {
+        if (!ok) return ui.toast('"The captain\'s busy." He\'s always busy, for strangers.');
+        const p = this.officer(j, r.beats);
+        const name = p ? 'Captain ' + p.last : 'The captain';
+        ui.choice(`${name} closes the blinds`, [
+          { label: `Slide over the envelope (${R.fmtMoney(CAPTAIN)})`, small: 'Files go missing. Raids get warned. Rats get named', cls: 'go', fn: () => {
+            if (!pl.pay(CAPTAIN)) return ui.toast('Short. He doesn\'t take IOUs.');
+            r.captain = p ? p.id : -99; r.capName = name;
+            if (this.state().due == null) this.state().due = g.pop.day + 7;
+            ui.toast(`${name} is yours. Cases in ${g.law.jurName(j)} slow down, and he'll warn you when they're close.`, 'good');
+          } },
+          { label: 'Think better of it', fn: () => {} },
+        ]);
+      } });
+    } else {
+      opts.push({ label: `A word with ${r.capName || 'the captain'}`, small: 'He works for you', fn: () => this.captainMenu(j) });
+    }
+  };
+  PR.captainMenu = function (j) {
+    const g = G(), pl = g.player, ui = g.ui, r = this.jur(j), CS = R.cases;
+    const cases = CS ? CS.open().filter((c) => c.jur === j && c.status === 'open' && c.type !== 'rico') : [];
+    const bnt = g.law.bounty[j] || 0;
+    const opts = cases.map((c) => ({ label: `Lose the file on the ${c.name.toLowerCase()} ($300)`, small: `${Math.round(c.progress)}% solved. Knocks it back hard`, fn: () => { if (!pl.pay(300)) return ui.toast('Not enough.'); c.progress = Math.max(0, c.progress - 45); c.coldH += 12; ui.toast('A box of evidence goes to the wrong warehouse.', 'good'); } }));
+    if (bnt) opts.push({ label: `Tear up the warrant (${R.fmtMoney(Math.ceil(bnt * 0.5))})`, small: 'Half your bounty here, off the books', fn: () => { if (!pl.pay(Math.ceil(bnt * 0.5))) return ui.toast('Not enough.'); g.law.bounty[j] = 0; ui.toast('"What warrant?"', 'good'); } });
+    if (R.rat && R.rat.active()) opts.push({ label: '"Anybody been talking to the feds?"', small: 'He hears things', fn: () => R.rat.captainTip(j) });
+    opts.push({ label: 'Cut him loose', small: 'Stops the weekly envelope', fn: () => { const pid = r.captain; r.captain = null; if (R.rat && pid >= 0) R.rat.pressure(pid, 3); ui.toast('He looks at you a long time. "Your call."', 'warn'); } });
+    opts.push({ label: 'Leave', fn: () => {} });
+    ui.choice(`${r.capName || 'The captain'} · ${g.law.jurName(j)}`, opts);
+  };
+
+  // ---------------------------------------------------------------- effects
+  PR.wrapLaw = function () {
+    const LP = R.Law.prototype, si = LP.startIncident;
+    LP.startIncident = function (crime, cop) {
+      const g = this.game;
+      if (cop && !this.incident && !SERIOUS[crime.type] && R.rng() < PR.lookAway(crime.jur)) {
+        PR.state().looked++;
+        cop.brandishT = 30;
+        g.actors.say(cop, R.rng.pick(['...I didn\'t see nothing.', 'Huh. Look at the time.', 'Not my beat.']));
+        g.ui.toast('The officer looks at his shoes. That\'s what the envelope is for.', 'good');
+        return;
+      }
+      return si.call(this, crime, cop);
+    };
+    const ab = LP.addBounty;
+    LP.addBounty = function (crime) {
+      if (PR.hasCaptain(crime.jur) && !SERIOUS[crime.type]) { const b = crime.bounty; crime.bounty = Math.round(b * 0.6); const r = ab.call(this, crime); crime.bounty = b; return r; }
+      return ab.call(this, crime);
+    };
+    const CS = R.cases, weigh = CS.weigh, hour = CS.hour;
+    CS.weigh = function (c) {
+      const parts = weigh.call(this, c);
+      if (c.type !== 'rico' && c.type !== 'tax' && PR.hasCaptain(c.jur)) {
+        const sum = parts.reduce((a, p) => a + Math.max(0, p.v), 0);
+        if (sum > 0) parts.push({ k: 'captain', v: -sum * 0.4, label: `${PR.jur(c.jur).capName || 'Your captain'} keeps misplacing the paperwork` });
+      }
+      return parts;
+    };
+    CS.hour = function () {
+      hour.call(this);
+      for (const c of this.open()) {
+        if (c.tipped || c.progress < 70 || !PR.hasCaptain(c.jur)) continue;
+        c.tipped = true;
+        G().ui.toast(`${PR.jur(c.jur).capName}: "The ${c.name.toLowerCase()} file is getting thick. Do something about it."`, 'warn');
+      }
+    };
+  };
+
+  // ---------------------------------------------------------------- payday, and Internal Affairs
+  PR.daily = function () {
+    const g = G(), pl = g.player, s = this.state();
+    if (s.due == null || g.pop.day < s.due) return;
+    const cost = this.weekly();
+    if (!cost) { s.due = null; return; }
+    s.due = g.pop.day + 7;
+    const st = pl.stash || { cash: 0 };
+    if (pl.cash + st.cash >= cost) {
+      const a = Math.min(pl.cash, cost); pl.cash -= a; if (cost > a) st.cash -= cost - a;
+      s.paid += cost;
+      g.ui.toast(`The weekly envelopes went out: ${R.fmtMoney(cost)} to your friends in blue.`);
+    } else {
+      // nobody works for free
+      for (const j in s.jur) { const r = s.jur[j]; for (const pid of r.beats.concat(r.captain != null ? [r.captain] : [])) if (R.rat && pid >= 0) R.rat.pressure(pid, 2); r.beats = []; r.captain = null; }
+      g.ui.story('NO ENVELOPE', 'You missed the week. Your friends in the department are not your friends any more, and they know a lot about you.');
+      return;
+    }
+    // Internal Affairs
+    for (const j in s.jur) {
+      const r = s.jur[j], n = r.beats.length + (r.captain != null ? 3 : 0);
+      if (!n) continue;
+      if (R.rng() < 0.012 * n + pl.rep.infamy / 3000) {
+        s.sweeps++;
+        const burned = r.captain != null ? r.captain : R.rng.pick(r.beats);
+        const name = r.captain != null ? r.capName : 'a patrolman';
+        g.pop.addNews(j === 'county' ? 'port' : j, `INTERNAL AFFAIRS SWEEP: ${name} and ${Math.max(0, r.beats.length - (r.captain != null ? 0 : 1))} officers suspended in ${g.law.jurName(j)}. "The rot runs deep," says the commissioner.`);
+        g.ui.story('INTERNAL AFFAIRS', `IA came through the ${g.law.jurName(j)} precinct like a fire. Everybody you paid there is suspended.\n\n${name} is looking at prison time. He'd very much like a deal.`);
+        if (R.rat && burned >= 0) R.rat.pressure(burned, 8);
+        r.beats = []; r.captain = null;
+      }
+    }
+  };
+
+  PR.html = function () {
+    const g = G(), s = this.state(), rows = Object.keys(s.jur).filter((j) => s.jur[j].beats.length || s.jur[j].captain != null);
+    if (!rows.length) return '';
+    let h = '<div class="sect">On the payroll</div>';
+    for (const j of rows) { const r = s.jur[j]; h += `<p>• <b>${esc(g.law.jurName(j))}</b>: ${r.beats.length} beat cop${r.beats.length === 1 ? '' : 's'}${r.captain != null ? ` and <b>${esc(r.capName)}</b>` : ''} · they look away ${Math.round(this.lookAway(j) * 100)}% of the time</p>`; }
+    h += `<p><small>${R.fmtMoney(this.weekly())} a week, next envelope on day ${(s.due || 0) + 1}. Paid so far ${R.fmtMoney(s.paid)}. They looked the other way ${s.looked} time${s.looked === 1 ? '' : 's'}. Internal Affairs sweeps: ${s.sweeps}.</small></p>`;
+    return h;
+  };
+
+  PR.init = function (g) {
+    if (this.wrapped) return;
+    this.wrapped = true;
+    this.wrapLaw();
+    const tree = R.dialog.tree;
+    R.dialog.tree = function (h) { const t = tree.call(this, h); if (t && t.options) PR.copOpts(h, t.options); return t; };
+    const U = R.UI.prototype, io = U.interiorOptions;
+    U.interiorOptions = function (b) { const o = io.call(this, b); PR.stationOpts(b, o); return o; };
+    const J = R.Jobs.prototype, jd = J.daily;
+    J.daily = function () { jd.call(this); PR.daily(); };
+    const html = R.cases.html;
+    R.cases.html = function () { return html.call(this) + PR.html(); };
+    const LP = R.Law.prototype;
+    if (!LP.CRIMES.rico) LP.CRIMES.rico = { name: 'Racketeering', bounty: 200, lvl: 2 };
+    if (!LP.CRIMES.hijack) LP.CRIMES.hijack = { name: 'Hijacking', bounty: 40, lvl: 2 };
   };
 })();
 
@@ -16710,6 +17238,433 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       if (a && pl.carrying && /trunk/i.test(a.label)) { const body = pl.carrying, fn = a.fn; a.fn = function () { body.inTrunk = true; return fn.apply(this, arguments); }; }
       return a;
     };
+  };
+})();
+
+// ---- 14_rat.js
+// RHAPSODY — rats. Everyone you lean on is a door the FBI can knock on: the debtor whose
+// fingers you broke, the cop who got burned by Internal Affairs, the crew member you
+// forgot to pay. Push people hard enough and one of them starts wearing a wire. You hear
+// about it sideways: a whisper, a clue, a captain who owes you. Find them before the
+// grand jury does, and then decide: another funeral, a bus ticket out of town, or a
+// better idea, which is to let them keep talking, only now they say what you tell them.
+'use strict';
+(function () {
+  const TS = R.TILE;
+  const G = () => R.game;
+  const RT = (R.rat = {});
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const AGENTS = ['Special Agent Dale Whitcomb', 'Special Agent Ruth Ellery', 'Special Agent Carl Moody', 'Special Agent Joan Prewitt'];
+
+  RT.state = function () { const st = R.shark.street(); return (st.rat = st.rat || { pressure: {}, why: {}, cur: null, caught: 0, turned: 0 }); };
+  RT.active = function () { const r = this.state().cur; return r && r.status === 'talking' ? r : null; };
+  RT.pressure = function (pid, n, why) {
+    if (pid == null || pid < 0) return;
+    const s = this.state();
+    s.pressure[pid] = Math.min(30, (s.pressure[pid] || 0) + n);
+    if (why) s.why[pid] = why;
+    else if (!s.why[pid]) s.why[pid] = this.kindOf(pid);
+  };
+  RT.kindOf = function (pid) {
+    const g = G(), p = g.pop.people[pid];
+    if (!p) return 'leaned';
+    if (p.role === 'cop') return 'cop';
+    if (R.shark.state().loans.some((l) => l.pid === pid)) return 'debtor';
+    if (g.player.crew.some((h) => h.person && h.person.id === pid)) return 'crew';
+    return 'leaned';
+  };
+  const KIND = { cop: 'a cop you paid', debtor: 'somebody who owes you money', crew: 'somebody in your crew', leaned: 'somebody you leaned on' };
+  RT.candidates = function () {
+    const g = G(), s = this.state(), ids = new Set(Object.keys(s.pressure).map(Number));
+    for (const h of g.player.crew) if (h.person) ids.add(h.person.id);
+    return [...ids].map((id) => g.pop.people[id]).filter((p) => p && p.alive);
+  };
+  RT.caseOf = function (r) { return r && R.cases.state().list.find((c) => c.id === r.caseId); };
+
+  // ---------------------------------------------------------------- someone flips
+  RT.daily = function () {
+    const g = G(), pl = g.player, s = this.state(), CS = R.cases;
+    for (const k in s.pressure) { s.pressure[k] *= 0.93; if (s.pressure[k] < 0.3) { delete s.pressure[k]; } }
+    for (const h of pl.crew) if (h.person) this.pressure(h.person.id, (h.person.opinion || 0) < 30 ? 0.8 : 0.25, 'crew');
+    const r = s.cur;
+    if (r && r.status === 'talking') return this.progress(r);
+    if (r && r.status === 'turned') return this.doubleAgent(r);
+    if (g.pop.day < 6) return;
+    const open = CS ? CS.open().length : 0;
+    for (const p of this.candidates()) {
+      const pr = s.pressure[p.id] || 0.2;
+      if (R.rng() < 0.006 * pr * (1 + open * 0.3) * (0.6 + pl.rep.infamy / 120)) { this.flip(p); break; }
+    }
+  };
+  RT.flip = function (p) {
+    const g = G(), s = this.state();
+    s.cur = { pid: p.id, name: g.pop.name(p), day: g.pop.day, progress: 0, clues: [], status: 'talking', kind: s.why[p.id] || this.kindOf(p.id), agent: R.rng.pick(AGENTS), caseId: null, nextClue: g.pop.day + 1 + R.rng.int(0, 1) };
+    g.pop.remember(p, 'rat', 'Two men in a grey sedan asked me about you. I told them I didn\'t know anything.', g.pop.day);
+  };
+  RT.progress = function (r) {
+    const g = G(), p = g.pop.people[r.pid], CS = R.cases;
+    if (!p || !p.alive) return this.silenced(r, false);
+    r.progress = Math.min(100, r.progress + 6 + (r.kind === 'crew' ? 3 : 0) + (r.kind === 'cop' ? 2 : 0));
+    if (g.pop.day >= r.nextClue) { this.clue(r); r.nextClue = g.pop.day + 2 + R.rng.int(0, 1); }
+    const c = this.caseOf(r);
+    if (c) {
+      c.progress = r.progress;
+      if (r.progress >= 100 && c.status === 'open') { r.status = 'testified'; CS.warrant(c); g.pop.addNews('avalon', `GRAND JURY INDICTS. A cooperating witness, identified only as "a close associate", testified for six hours. ${r.agent}: "This is the beginning."`); }
+    }
+  };
+  // the whispers
+  RT.clue = function (r) {
+    const g = G(), p = g.pop.people[r.pid], CS = R.cases;
+    const have = r.clues.map((c) => c.k);
+    const pool = ['kind', 'fem', 'city', 'work', 'age'].filter((k) => !have.includes(k));
+    if (!r.caseId) {
+      const cs = CS.state(), city = g.pop.cityObj(p.city);
+      const c = { id: cs.next++, type: 'rico', name: 'Federal Racketeering', jur: p.city || 'avalon', day: g.pop.day, t: g.clock.t, lastT: g.clock.t, progress: r.progress, status: 'open', det: r.agent + ', FBI', witnesses: [], coldH: 0, masked: true, face: {}, clothes: {}, bloody: false, bounty: 250, where: city ? city.name : 'New Avalon' };
+      cs.list.unshift(c);
+      r.caseId = c.id;
+      g.ui.story('A WHISPER', `The bartender leans in close. "Friend of mine at the courthouse says the FBI has a new pal. Somebody close to you. Somebody who knows things."\n\nThere's a federal case open. Find the rat before the grand jury hears from them.`);
+    }
+    if (!pool.length) return;
+    const k = R.rng.pick(pool);
+    const text = { kind: `It's ${KIND[r.kind]}.`, fem: `It's a ${p.fem ? 'woman' : 'man'}.`, city: `They live in ${(g.pop.cityObj(p.city) || {}).name || 'the county'}.`, work: p.work != null && g.world.buildings[p.work] ? `They work at ${g.world.buildings[p.work].name}.` : `They're out of work.`, age: `They're ${p.age < 30 ? 'young, under thirty' : p.age < 50 ? 'somewhere between thirty and fifty' : 'over fifty'}.` }[k];
+    r.clues.push({ k, text });
+    if (r.clues.length > 1) g.ui.toast(`A whisper about the rat: "${text}"`, 'warn');
+  };
+  RT.matches = function (r, p) {
+    for (const c of r.clues) {
+      if (c.k === 'kind' && (this.state().why[p.id] || this.kindOf(p.id)) !== r.kind) return false;
+      const q = G().pop.people[r.pid];
+      if (c.k === 'fem' && !!p.fem !== !!q.fem) return false;
+      if (c.k === 'city' && p.city !== q.city) return false;
+      if (c.k === 'work' && p.work !== q.work) return false;
+      if (c.k === 'age' && (p.age < 30 ? 0 : p.age < 50 ? 1 : 2) !== (q.age < 30 ? 0 : q.age < 50 ? 1 : 2)) return false;
+    }
+    return true;
+  };
+  RT.suspects = function () { const r = this.active(); return r ? this.candidates().filter((p) => this.matches(r, p)) : []; };
+  RT.captainTip = function (j) {
+    const g = G(), r = this.active(), cap = R.payroll.jur(j).capName || 'The captain';
+    if (!r) return g.ui.toast(`${cap}: "Nobody. You're clean, far as I hear."`);
+    if (r.progress < 20) return g.ui.toast(`${cap}: "The feds are sniffing. Give me a few days."`);
+    r.named = true;
+    g.ui.story('A NAME', `${cap} writes something on the back of a parking ticket and slides it across the desk.\n\n"${r.name}. You didn't get it from me."`);
+  };
+
+  // ---------------------------------------------------------------- taking a ride
+  RT.opts = function (h, opts) {
+    const g = G(), r = this.active(), p = h.person;
+    if (!r || !r.caseId || !p || !this.candidates().includes(p)) return;
+    const i = Math.max(0, opts.findIndex((o) => /Goodbye/.test(o.label)));
+    opts.splice(i, 0, { label: '"Let\'s take a ride. Just you and me."', small: 'Accuse them of talking to the FBI', cls: 'bad', fn: () => this.confront(h) });
+  };
+  RT.confront = function (h) {
+    const g = G(), pl = g.player, p = h.person, r = this.active(), ui = g.ui;
+    if (r.pid !== p.id) {
+      p.opinion = Math.min(p.opinion || 0, -30);
+      pl.rep.honor = Math.max(0, pl.rep.honor - 1);
+      g.actors.say(h, R.rng.pick(['Me?! After everything? You got the wrong guy!', 'I never said a word to nobody. Not one word!', 'You\'re paranoid. You know that? Paranoid.']));
+      if (h.crew) { pl.dismiss(h); ui.toast(`${g.pop.name(p)} walked out of your crew. You were wrong about them.`, 'bad'); }
+      else ui.toast('Wrong one. They were telling the truth, and now they\'re scared of you.', 'warn');
+      this.pressure(p.id, 3);
+      return;
+    }
+    const brave = (h.tr && h.tr.brave) || 0.5, fear = (p.fear || 0) / 100 + (pl.weaponOut ? 0.3 : 0) + pl.rep.infamy / 300;
+    if (R.rng() < 0.4 + fear - brave * 0.4) {
+      g.actors.say(h, R.rng.pick(['They were gonna put me away for twenty years! What was I supposed to do?', 'Okay... OKAY. They had me by the throat. I\'m sorry. I\'m sorry.', 'I only told them little stuff! Nothing that matters! I swear!']));
+      h.state = 'cower';
+      ui.choice(`${r.name} is a rat`, [
+        { label: 'You know what happens to rats', small: 'Make an example. It\'s murder', cls: 'bad', fn: () => { r.exposed = true; h.intimidated = true; g.actors.say(h, 'No, no, no, please...'); ui.toast('Finish it. Quietly, if you can.', 'warn'); } },
+        { label: '"Get out of town. Tonight." ($300)', small: 'Bus fare and a warning. The case falls apart', fn: () => { if (!pl.pay(300)) return ui.toast('You don\'t have the bus fare.'); this.silenced(r, false, 'gone'); p.leftTown = true; if (g.actors.remove) g.actors.remove(h); ui.toast(`${r.name} is on the midnight bus with a suitcase. The FBI lost its witness.`, 'good'); } },
+        { label: '"Keep talking to them. Only now you tell them what I say."', small: 'Turn them. Feed the feds lies', cls: 'go', fn: () => this.turn(r, h) },
+      ]);
+    } else {
+      g.actors.say(h, R.rng.pick(['I don\'t know what you\'re talking about.', 'You\'re crazy. I gotta go.', 'Get away from me!']));
+      h.state = 'flee';
+      r.progress = Math.min(100, r.progress + 8);
+      r.named = true;
+      ui.toast(`${r.name} bolted. That was as good as a confession, and now the FBI knows you know.`, 'warn');
+    }
+  };
+  RT.turn = function (r, h) {
+    const g = G(), s = this.state(), c = this.caseOf(r);
+    r.status = 'turned'; s.turned++;
+    if (c) { c.status = 'cold'; c.progress = Math.max(0, c.progress - 50); }
+    g.actors.say(h, 'Whatever you want. Whatever you say. Just... thank you.');
+    g.ui.toast(`${r.name} works for you now. The FBI will hear exactly what you want them to.`, 'good');
+  };
+  // a double agent muddies every file the police have
+  RT.doubleAgent = function (r) {
+    const g = G(), p = g.pop.people[r.pid];
+    if (!p || !p.alive) { r.status = 'done'; return; }
+    for (const c of R.cases.open()) if (c.type !== 'rico' && c.status === 'open') c.progress = Math.max(0, c.progress - 3);
+    // the feds aren't stupid forever
+    if (R.rng() < 0.03) { r.status = 'burned'; g.pop.addNews('avalon', `An FBI informant was charged with obstruction yesterday. "He lied to us for months," said ${r.agent}.`); g.ui.toast(`The FBI caught on to ${r.name}. Your double agent is burned.`, 'warn'); }
+  };
+  // the rat is dead, gone, or both
+  RT.silenced = function (r, byPlayer, how) {
+    const g = G(), s = this.state(), c = this.caseOf(r);
+    if (r.status !== 'talking' && r.status !== 'turned') return;
+    const was = r.status;
+    r.status = how || 'dead';
+    s.caught++;
+    if (c && was === 'talking') {
+      c.progress = Math.max(0, c.progress - 70);
+      if (c.progress < 40) { c.status = 'cold'; g.pop.addNews('avalon', `Federal case collapses. "Without our witness, there is no case," admits ${r.agent}.`); }
+      g.ui.toast(how === 'gone' ? 'The rat is gone. The federal case is falling apart.' : 'The rat won\'t be testifying. The federal case is falling apart.', 'good');
+    }
+    delete s.pressure[r.pid];
+  };
+
+  // ---------------------------------------------------------------- the heat tab
+  RT.html = function () {
+    const g = G(), r = this.active();
+    if (!r || !r.caseId) return '';
+    let h = '<div class="sect">There\'s a rat</div>';
+    h += r.named ? `<p>It's <b>${esc(r.name)}</b>.</p>` : '';
+    h += r.clues.map((c) => `<p>• ${esc(c.text)}</p>`).join('');
+    const sus = this.suspects();
+    if (!r.named && sus.length && sus.length <= 8) h += `<p><small>Could be: ${sus.map((p) => esc(g.pop.name(p))).join(', ')}</small></p>`;
+    h += `<p><small>Talk to a suspect and take them for a ride. A captain on your payroll can find out for sure.</small></p>`;
+    return h;
+  };
+
+  RT.init = function (g) {
+    if (!this.onDeathFn) this.onDeathFn = (p, by) => { const r = RT.state().cur; if (r && p && r.pid === p.id) RT.silenced(r, by); };
+    const ls = R.bus.map.get('person:died');
+    if (!ls || !ls.includes(this.onDeathFn)) R.bus.on('person:died', this.onDeathFn);
+    if (this.wrapped) return;
+    this.wrapped = true;
+    const tree = R.dialog.tree;
+    R.dialog.tree = function (h) { const t = tree.call(this, h); if (t && t.options && h.person) RT.opts(h, t.options); return t; };
+    const J = R.Jobs.prototype, jd = J.daily;
+    J.daily = function () { jd.call(this); RT.daily(); };
+    const CS = R.cases, weigh = CS.weigh, hour = CS.hour, html = CS.html;
+    CS.weigh = function (c) {
+      if (c.type !== 'rico') return weigh.call(this, c);
+      const r = RT.state().cur;
+      return [{ k: 'rat', v: 0, label: r && r.status === 'talking' ? 'A cooperating witness close to you is talking to the FBI' : 'Their witness is gone', fix: r && r.status === 'talking' ? 'Find the rat. See the section below.' : null }];
+    };
+    // the FBI keeps its own clock
+    CS.hour = function () {
+      const fed = this.state().list.filter((c) => c.type === 'rico' && c.status === 'open');
+      for (const c of fed) c.status = 'fed';
+      try { hour.call(this); } finally { for (const c of fed) c.status = 'open'; }
+    };
+    CS.html = function () { return html.call(this) + RT.html(); };
+  };
+})();
+
+// ---- 14_shark.js
+// RHAPSODY — the juice. Lend money to people the banks won't touch: the gambler, the
+// widow with the roof, the kid with the car payment. The loan comes back with 10% a week
+// on top (the vig), for as long as they carry it. Most people pay. Some can't, and then
+// you choose: patience, the fingers, the car in their driveway, or a favour they owe you
+// instead. People who are frightened of you sometimes talk to the wrong people.
+// Also here: the bookie in the back of every bar, and the race that's already decided.
+'use strict';
+(function () {
+  const TS = R.TILE;
+  const G = () => R.game;
+  const SH = (R.shark = {});
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const VIG = 0.1;
+
+  SH.street = function () { const pl = G().player; return (pl.street = pl.street || {}); };
+  SH.state = function () { const st = this.street(); return (st.book = st.book || { loans: [], lent: 0, juice: 0, broke: 0, fixed: 0 }); };
+  SH.open = function () { return this.state().loans.filter((l) => !l.done); };
+  SH.loanOf = function (p) { return p && this.open().find((l) => l.pid === p.id); };
+  SH.owed = function (l) { return l.principal + l.vig; };
+
+  // ---------------------------------------------------------------- who asks
+  SH.canLend = function (h) {
+    const p = h.person, pl = G().player;
+    if (!p || h.cop || h.detectiveFor || h.storyNpc || h.isDon || p.role === 'don' || p.age < 18 || !p.alive) return false;
+    if (this.loanOf(p)) return false;
+    if (pl.cash < 100 || (p.opinion || 0) < -30) return false;
+    return (p.wealth || 30) < 55 || /gambler|hustler|drunk/.test(p.arch || '');
+  };
+  SH.need = function (p) {
+    const hash = R.hash2(p.id, 17, 3);
+    return ['the rent', 'a bookie in Port Hollow', 'the car payment', 'my mother\'s operation', 'the roof', 'a bad night at cards', 'my kid\'s braces', 'a guy named Sal'][Math.floor(hash * 8)];
+  };
+  SH.offer = function (h) {
+    const g = G(), pl = g.player, p = h.person, ui = g.ui;
+    const cap = Math.min(pl.cash, 150 + Math.round((60 - Math.min(60, p.wealth || 30)) * 12));
+    const sizes = [100, 250, 500, 1000].filter((n) => n <= cap);
+    if (!sizes.length) return ui.toast('You don\'t have enough on you to be anybody\'s bank.');
+    const keen = (p.wealth || 30) < 30 || /gambler|hustler/.test(p.arch || '');
+    ui.choice(`${g.pop.name(p)} needs it for ${this.need(p)}`, sizes.map((n) => ({
+      label: `Lend ${R.fmtMoney(n)}`,
+      small: `They owe ${R.fmtMoney(Math.round(n * VIG))} a week in juice until they pay it back`,
+      fn: () => {
+        if (!keen && R.rng() < 0.35 && n > 250) { g.actors.say(h, 'That much? With your interest? No, no. I\'ll figure something out.'); return; }
+        if (!pl.pay(n)) return;
+        const l = { pid: p.id, name: g.pop.name(p), principal: n, vig: 0, day: g.pop.day, due: g.pop.day + 7, late: 0, paid: 0, broke: 0, done: false, city: p.city };
+        this.state().loans.push(l);
+        this.state().lent += n;
+        p.opinion = Math.min(100, (p.opinion || 0) + 10);
+        g.actors.say(h, R.rng.pick(['You\'re a lifesaver. Seven days, I swear.', 'I won\'t forget this. Really.', 'Thank you. Thank you. Don\'t tell my wife.']));
+        ui.toast(`Loaned ${R.fmtMoney(n)} to ${l.name}. The juice is ${R.fmtMoney(Math.round(n * VIG))} a week. First payment in 7 days.`, 'good');
+      },
+    })).concat([{ label: 'Never mind', fn: () => {} }]));
+  };
+
+  // ---------------------------------------------------------------- collecting
+  // what they can scrape together today
+  SH.purse = function (p, l) {
+    const w = p.wealth || 30, luck = R.hash2(p.id, G().pop.day, 11);
+    return Math.round((w * 9 + 40) * (0.5 + luck) * (l.broke ? 1.4 : 1) * (p.fear > 60 ? 1.3 : 1));
+  };
+  SH.collect = function (h) {
+    const g = G(), pl = g.player, p = h.person, l = this.loanOf(p), ui = g.ui, s = this.state();
+    if (!l) return;
+    const owed = this.owed(l), weekly = Math.round(l.principal * VIG), purse = this.purse(p, l);
+    const opts = [];
+    if (purse >= owed) opts.push({ label: `"All of it. ${R.fmtMoney(owed)}."`, small: 'They can cover it today', cls: 'go', fn: () => this.pay(h, l, owed, true) });
+    if (purse >= Math.max(weekly, l.vig)) opts.push({ label: `"Just the juice, then. ${R.fmtMoney(Math.max(weekly, l.vig))}."`, small: 'Keeps the loan running. You keep earning', fn: () => this.pay(h, l, Math.max(weekly, l.vig), false) });
+    if (purse < Math.max(weekly, l.vig)) {
+      opts.push({ label: 'Break a finger', small: `Assault. They'll find the money next time, and they'll never love you`, cls: 'bad', fn: () => this.hurt(h, l) });
+      opts.push({ label: 'Take something instead', small: 'The car, the TV, the watch. Clears the debt', fn: () => this.seize(h, l) });
+      opts.push({ label: '"Then you owe me a favour."', small: 'Work it off: a tip, a door left open, a fixed race', fn: () => this.favour(h, l) });
+    }
+    opts.push({ label: 'Give them another week', small: 'Honor +1. The juice keeps adding up', fn: () => { l.due = g.pop.day + 7; pl.rep.honor += 1; g.actors.say(h, 'God bless you. Next week. Swear to God.'); } });
+    if (l.principal <= 250 || pl.rep.honor > 40) opts.push({ label: 'Forgive the whole thing', small: 'Honor +3. They\'ll remember', fn: () => { l.done = true; l.forgiven = true; pl.rep.honor += 3; p.opinion = 100; g.actors.say(h, 'I... I don\'t know what to say. Anything you ever need.'); ui.toast(`You tore up ${l.name}'s marker.`, 'good'); } });
+    opts.push({ label: 'Walk away', fn: () => {} });
+    ui.choice(`${l.name} owes you ${R.fmtMoney(owed)}${l.late ? ` · ${l.late} day${l.late > 1 ? 's' : ''} late` : ''}`, opts);
+    s.lastAsk = g.pop.day;
+  };
+  SH.pay = function (h, l, amt, all) {
+    const g = G(), pl = g.player, s = this.state();
+    pl.addCash(amt); // dirty
+    l.paid += amt;
+    if (all) { l.done = true; s.juice += amt - l.principal; g.actors.say(h, 'We\'re square. Don\'t ever lend me money again.'); g.ui.toast(`${l.name} paid in full: ${R.fmtMoney(amt)}.`, 'good'); }
+    else { const vig = Math.min(amt, l.vig || amt); l.vig = Math.max(0, l.vig - amt); s.juice += vig; l.due = g.pop.day + 7; l.late = 0; g.actors.say(h, R.rng.pick(['Here. Same time next week, I know.', 'It\'s all I got. It\'s the juice.', 'Take it. I\'m working on the rest.'])); g.ui.toast(`Collected ${R.fmtMoney(amt)} in juice from ${l.name}.`, 'good'); }
+    g.audio.sfx('cash');
+  };
+  SH.hurt = function (h, l) {
+    const g = G(), pl = g.player, p = h.person;
+    l.broke++; this.state().broke++;
+    h.hp = Math.max(1, h.hp - 12);
+    if (R.butcher) R.butcher.mark(h, 12, null, 'melee');
+    g.audio.sfx('punch');
+    g.actors.say(h, R.rng.pick(['AAGH! My hand! Okay! OKAY!', 'Jesus! Friday! You\'ll have it Friday!', 'Please... please, I got kids...']));
+    p.fear = Math.min(100, (p.fear || 0) + 50); p.opinion = Math.min(p.opinion || 0, -40);
+    pl.rep.infamy += 2; pl.rep.honor = Math.max(0, pl.rep.honor - 2);
+    l.due = g.pop.day + 3;
+    g.law.crime('assault', h.x, h.y, { victim: h });
+    h.state = 'flee';
+    if (R.rat) R.rat.pressure(p.id, 3);
+  };
+  SH.seize = function (h, l) {
+    const g = G(), pl = g.player, p = h.person, owed = this.owed(l);
+    const what = (p.wealth || 30) > 35 ? R.rng.pick(['the car', 'the color TV', 'the gold watch', 'the hi-fi']) : R.rng.pick(['the wedding ring', 'the TV', 'the fur coat', 'the record collection']);
+    const worth = Math.round(owed * (0.7 + R.rng() * 0.5));
+    pl.addCash(worth);
+    l.done = true; l.seized = what;
+    this.state().juice += Math.max(0, worth - l.principal);
+    p.opinion = Math.min(p.opinion || 0, -50); p.fear = Math.min(100, (p.fear || 0) + 25);
+    pl.rep.infamy += 1;
+    g.actors.say(h, `Not ${what}... fine. FINE. Take it.`);
+    g.ui.toast(`You took ${what}. Sold for ${R.fmtMoney(worth)}. Debt cleared.`, 'warn');
+    if (R.rat) R.rat.pressure(p.id, 2);
+  };
+  // they owe you something better than money
+  SH.favour = function (h, l) {
+    const g = G(), p = h.person;
+    l.done = true; l.favour = true;
+    const kind = R.rng.pick(['truck', 'race', 'race', 'truck', 'mark']);
+    if (kind === 'race') { this.state().fixed++; g.actors.say(h, 'My cousin walks horses at the track. Next time you\'re at a bar, bet the long shot. Trust me.'); g.ui.toast('You have a fixed race. The next pony bet at any bar is a sure thing.', 'good'); }
+    else if (kind === 'truck' && R.hijack) { g.actors.say(h, 'I drive for the depot. There\'s a load coming through I can tell you about.'); R.hijack.tip(p); }
+    else { const pl = g.player; pl.addCash(Math.round(this.owed(l) * 0.8)); g.actors.say(h, 'The guy I work for keeps his cash in a coffee can. I\'ll leave the back door open.'); g.ui.toast(`${l.name} let you into their boss's back room. You found ${R.fmtMoney(Math.round(this.owed(l) * 0.8))}.`, 'good'); }
+  };
+
+  // ---------------------------------------------------------------- every morning
+  SH.daily = function () {
+    const g = G(), pop = g.pop;
+    for (const l of this.open()) {
+      const p = pop.people[l.pid];
+      if (!p || !p.alive) { l.done = true; l.dead = true; continue; }
+      if (pop.day >= l.due) {
+        // a week's juice rolls onto the tab
+        if (pop.day === l.due) { l.vig += Math.round(l.principal * VIG); }
+        l.late = pop.day - l.due;
+        if (l.late === 1) {
+          g.ui.toast(`${l.name} missed a payment. They owe you ${R.fmtMoney(this.owed(l))}.`, 'warn');
+          const b = g.world.buildings[p.home];
+          if (b && !g.waypoint) g.waypoint = { x: b.out.x * TS + 8, y: b.out.y * TS + 8 };
+        }
+        if (l.late > 0 && l.late % 7 === 0) l.vig += Math.round(l.principal * VIG);
+        // the frightened ones run, or go to the police
+        if (l.late > 9 && R.rng() < 0.12) {
+          l.done = true; l.skipped = true;
+          pop.addNews(p.city, `Neighbours say ${pop.name(p)} left town in the night. "Owed money all over," says one.`);
+          g.ui.toast(`${l.name} skipped town owing you ${R.fmtMoney(this.owed(l))}.`, 'bad');
+        }
+        if (R.rat && l.late > 3) R.rat.pressure(p.id, 1);
+      }
+    }
+  };
+
+  // ---------------------------------------------------------------- the ponies
+  const HORSES = ['Midnight Ramble', 'Lucky Lorraine', 'Sgt. Pepperoni', 'Disco Inferno', 'Old Glory', 'Mama\'s Pearls', 'Second Mortgage', 'Tax Refund', 'Blue Suede', 'Rhapsody in Brown', 'Johnny Two-Times', 'Big Ol\' Tuesday'];
+  SH.ponies = function (b, opts) {
+    const g = G();
+    if (b.type !== 'bar' && b.type !== 'club' && b.type !== 'casino') return;
+    opts.push({ label: 'The bookie in the back', small: 'Bet on the 4:15 at Hollow Downs', fn: () => this.race() });
+  };
+  SH.race = function () {
+    const g = G(), pl = g.player, ui = g.ui, s = this.state();
+    const seed = g.pop.day * 7 + Math.floor(g.clock.hour());
+    const field = [0, 1, 2, 3].map((i) => HORSES[Math.floor(R.hash2(seed, i, 5) * HORSES.length)] + (i && HORSES[Math.floor(R.hash2(seed, i, 5) * HORSES.length)] === HORSES[Math.floor(R.hash2(seed, 0, 5) * HORSES.length)] ? ' II' : ''));
+    const odds = [2, 3, 5, 12];
+    const stake = Math.min(pl.cash, 50 + g.jobs.rank() * 50);
+    if (stake < 10) return ui.toast('The bookie doesn\'t take IOUs.');
+    ui.choice(`Hollow Downs, 4:15 · ${R.fmtMoney(stake)} a ticket`, field.map((name, i) => ({
+      label: `${name} (${odds[i]}–1)`,
+      small: i === 3 && s.fixed ? 'Your tip. The fix is in' : ['The favourite', 'Runs well in the wet', 'Hasn\'t won since spring', 'A long shot'][i],
+      fn: () => {
+        if (!pl.pay(stake)) return;
+        const fixed = i === 3 && s.fixed > 0;
+        const w = [0.42, 0.28, 0.19, 0.11], r = R.rng();
+        let win = 0, acc = 0; for (let k = 0; k < 4; k++) { acc += w[k]; if (r < acc) { win = k; break; } }
+        if (s.fixed > 0) { win = 3; s.fixed--; }
+        const call = `And down the stretch they come... it's ${field[win]} by a length!`;
+        if (win === i) { const pot = stake * (odds[i] + 1); R.money ? R.money.clean(() => pl.addCash(pot)) : pl.addCash(pot); g.audio.sfx('cash'); ui.story('THE 4:15', `${call}\n\nThe bookie counts out ${R.fmtMoney(pot)} with a sour face.${fixed ? ' He knows. He can\'t prove it.' : ''}`); }
+        else ui.story('THE 4:15', `${call}\n\nYour ticket goes in the ashtray with the others.`);
+      },
+    })).concat([{ label: 'Not today', fn: () => {} }]));
+  };
+
+  // ---------------------------------------------------------------- the jobs tab
+  SH.html = function () {
+    const g = G(), s = this.state(), open = this.open();
+    if (!open.length && !s.lent) return '';
+    let h = `<div class="sect">Your book</div><p><small>Lent ${R.fmtMoney(s.lent)} · juice collected ${R.fmtMoney(Math.round(s.juice))}${s.fixed ? ` · <b>${s.fixed} fixed race${s.fixed > 1 ? 's' : ''}</b> waiting at the bookie` : ''}</small></p>`;
+    for (const l of open) {
+      const p = g.pop.people[l.pid], b = p && g.world.buildings[p.home];
+      h += `<p>• <b>${esc(l.name)}</b> owes <b>${R.fmtMoney(this.owed(l))}</b> ${l.late ? `<span style="color:var(--red)">${l.late} day${l.late > 1 ? 's' : ''} late</span>` : `<small>due day ${l.due + 1}</small>`}${l.broke ? ' · <small>fingers broken</small>' : ''}<br><small>${esc(b ? b.name : '')}${p ? ', ' + esc((g.pop.cityObj(p.city) || {}).name || '') : ''}</small></p>`;
+    }
+    return h;
+  };
+
+  SH.init = function (g) {
+    if (this.wrapped) return;
+    this.wrapped = true;
+    const tree = R.dialog.tree;
+    R.dialog.tree = function (h) {
+      const t = tree.call(this, h);
+      if (!t || !t.options || !h.person) return t;
+      const i = Math.max(0, t.options.findIndex((o) => /Goodbye/.test(o.label)));
+      if (SH.loanOf(h.person)) t.options.splice(i, 0, { label: `"About the money you owe me..."`, small: `${R.fmtMoney(SH.owed(SH.loanOf(h.person)))} on the tab`, cls: 'go', fn: () => SH.collect(h) });
+      else if (SH.canLend(h)) t.options.splice(i, 0, { label: '"Short on cash? I can help with that."', small: 'Loan shark: 10% a week', fn: () => SH.offer(h) });
+      return t;
+    };
+    const U = R.UI.prototype, io = U.interiorOptions;
+    U.interiorOptions = function (b) { const o = io.call(this, b); SH.ponies(b, o); return o; };
+    const J = R.Jobs.prototype, jd = J.daily;
+    J.daily = function () { jd.call(this); SH.daily(); };
+    const cj = R.campaign.jobsHtml;
+    R.campaign.jobsHtml = function () { return cj.call(this) + SH.html(); };
   };
 })();
 
@@ -20074,6 +21029,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     R.money.init(this);
     R.turf.init(this);
     R.vendetta.init(this);
+    R.shark.init(this); R.payroll.init(this); R.rat.init(this); R.hijack.init(this);
     R.butcher.init(this);
     R.arms.init(this);
     R.profile.init(this);
@@ -20238,6 +21194,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       R.cases.update(sdt);
       R.turf.update(sdt);
       R.vendetta.update(sdt);
+      R.hijack.update(sdt);
       R.profile.update(sdt);
       R.carry.update(sdt);
       R.night.update(sdt);
@@ -20341,7 +21298,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       v: 2, seed: this.seed, t: this.clock.t, log: this.worldLog, weather: this.env.weather.kind,
       player: {
         x: pl.room ? this.interiors.outside(pl.x, pl.y).x : pl.x, y: pl.room ? this.interiors.outside(pl.x, pl.y).y : pl.y, hp: pl.hp, cool: pl.cool, cash: pl.cash, inv: pl.inv, clip: pl.clip, outfit: pl.outfit, outfits: pl.outfits || {}, style: pl.style, wardrobe: pl.wardrobe,
-        will: pl.will, willMax: pl.willMax || 100, docHp: pl.docHp || 0, explore: pl.explore || null, cases: pl.cases || null, money: pl.money || null, turf: pl.turf || null, vend: pl.vend || null, killer: pl.killer || null, who: { first: pl.first, last: pl.last, nick: pl.nick, family: pl.family, club: this.homeClub, crawl: !!pl.crawling, road: R.opening && R.opening.road }, maxHp: pl.maxHp, fearQ: pl.fearQ || null, relics: pl.relics || null, jail: pl.jail || null, vice: pl.vice || null, affairs: this.pop.people.filter((q) => q.affair != null).map((q) => [q.id, q.affair]), partners: this.pop.people.filter((q) => q.playerPartner || q.playerChild).map((q) => [q.id, q.playerPartner ? 1 : 0, q.playerChild ? 1 : 0]), hotel: pl.hotel || null, stash: pl.stash || null, propUp: (pl.properties || []).map((id) => { const b = this.world.buildings[id]; return b ? [id, b.sec ? 1 : 0, b.reno ? 1 : 0] : null; }).filter(Boolean), campaign: pl.campaign || null, ringColor: pl.ringColor || null, errands: pl.errands || [], poi: R.poi.serialize(), rep: pl.rep, standing: pl.standing, stats: pl.stats, sweetheart: pl.sweetheart, properties: pl.properties, masked: pl.masked,
+        will: pl.will, willMax: pl.willMax || 100, docHp: pl.docHp || 0, explore: pl.explore || null, cases: pl.cases || null, money: pl.money || null, turf: pl.turf || null, vend: pl.vend || null, street: pl.street || null, killer: pl.killer || null, who: { first: pl.first, last: pl.last, nick: pl.nick, family: pl.family, club: this.homeClub, crawl: !!pl.crawling, road: R.opening && R.opening.road }, maxHp: pl.maxHp, fearQ: pl.fearQ || null, relics: pl.relics || null, jail: pl.jail || null, vice: pl.vice || null, affairs: this.pop.people.filter((q) => q.affair != null).map((q) => [q.id, q.affair]), partners: this.pop.people.filter((q) => q.playerPartner || q.playerChild).map((q) => [q.id, q.playerPartner ? 1 : 0, q.playerChild ? 1 : 0]), hotel: pl.hotel || null, stash: pl.stash || null, propUp: (pl.properties || []).map((id) => { const b = this.world.buildings[id]; return b ? [id, b.sec ? 1 : 0, b.reno ? 1 : 0] : null; }).filter(Boolean), campaign: pl.campaign || null, ringColor: pl.ringColor || null, errands: pl.errands || [], poi: R.poi.serialize(), rep: pl.rep, standing: pl.standing, stats: pl.stats, sweetheart: pl.sweetheart, properties: pl.properties, masked: pl.masked,
         cars: pl.ownedCars.filter((c) => !c.removed && !c.wrecked).map((c) => [c.modelId, c.x, c.y, c.angle, c.color]),
       },
       pop: this.pop.serialize(), law: this.law.serialize(), jobs: this.jobs.serialize(), hints: this.hints,
@@ -20373,6 +21330,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       pl.money = p.money || null;
       pl.turf = p.turf || null;
       pl.vend = p.vend || null;
+      pl.street = p.street || null;
       pl.killer = p.killer || null;
       if (p.who) { pl.first = p.who.first; pl.last = p.who.last; pl.nick = p.who.nick || pl.nick; if (p.who.family) pl.family = p.who.family; if (p.who.club != null) this.homeClub = p.who.club; if (p.who.crawl && p.who.road) { pl.crawling = true; R.opening.road = p.who.road; R.opening.pickedUp = false; this.waypoint = { x: p.who.road.x * 16 + 8, y: p.who.road.y * 16 + 8 }; } }
       if (p.maxHp) pl.maxHp = p.maxHp;

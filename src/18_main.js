@@ -84,6 +84,7 @@
     R.money.init(this);
     R.turf.init(this);
     R.vendetta.init(this);
+    R.shark.init(this); R.payroll.init(this); R.rat.init(this); R.hijack.init(this);
     R.butcher.init(this);
     R.arms.init(this);
     R.profile.init(this);
@@ -248,6 +249,7 @@
       R.cases.update(sdt);
       R.turf.update(sdt);
       R.vendetta.update(sdt);
+      R.hijack.update(sdt);
       R.profile.update(sdt);
       R.carry.update(sdt);
       R.night.update(sdt);
@@ -351,7 +353,7 @@
       v: 2, seed: this.seed, t: this.clock.t, log: this.worldLog, weather: this.env.weather.kind,
       player: {
         x: pl.room ? this.interiors.outside(pl.x, pl.y).x : pl.x, y: pl.room ? this.interiors.outside(pl.x, pl.y).y : pl.y, hp: pl.hp, cool: pl.cool, cash: pl.cash, inv: pl.inv, clip: pl.clip, outfit: pl.outfit, outfits: pl.outfits || {}, style: pl.style, wardrobe: pl.wardrobe,
-        will: pl.will, willMax: pl.willMax || 100, docHp: pl.docHp || 0, explore: pl.explore || null, cases: pl.cases || null, money: pl.money || null, turf: pl.turf || null, vend: pl.vend || null, killer: pl.killer || null, who: { first: pl.first, last: pl.last, nick: pl.nick, family: pl.family, club: this.homeClub, crawl: !!pl.crawling, road: R.opening && R.opening.road }, maxHp: pl.maxHp, fearQ: pl.fearQ || null, relics: pl.relics || null, jail: pl.jail || null, vice: pl.vice || null, affairs: this.pop.people.filter((q) => q.affair != null).map((q) => [q.id, q.affair]), partners: this.pop.people.filter((q) => q.playerPartner || q.playerChild).map((q) => [q.id, q.playerPartner ? 1 : 0, q.playerChild ? 1 : 0]), hotel: pl.hotel || null, stash: pl.stash || null, propUp: (pl.properties || []).map((id) => { const b = this.world.buildings[id]; return b ? [id, b.sec ? 1 : 0, b.reno ? 1 : 0] : null; }).filter(Boolean), campaign: pl.campaign || null, ringColor: pl.ringColor || null, errands: pl.errands || [], poi: R.poi.serialize(), rep: pl.rep, standing: pl.standing, stats: pl.stats, sweetheart: pl.sweetheart, properties: pl.properties, masked: pl.masked,
+        will: pl.will, willMax: pl.willMax || 100, docHp: pl.docHp || 0, explore: pl.explore || null, cases: pl.cases || null, money: pl.money || null, turf: pl.turf || null, vend: pl.vend || null, street: pl.street || null, killer: pl.killer || null, who: { first: pl.first, last: pl.last, nick: pl.nick, family: pl.family, club: this.homeClub, crawl: !!pl.crawling, road: R.opening && R.opening.road }, maxHp: pl.maxHp, fearQ: pl.fearQ || null, relics: pl.relics || null, jail: pl.jail || null, vice: pl.vice || null, affairs: this.pop.people.filter((q) => q.affair != null).map((q) => [q.id, q.affair]), partners: this.pop.people.filter((q) => q.playerPartner || q.playerChild).map((q) => [q.id, q.playerPartner ? 1 : 0, q.playerChild ? 1 : 0]), hotel: pl.hotel || null, stash: pl.stash || null, propUp: (pl.properties || []).map((id) => { const b = this.world.buildings[id]; return b ? [id, b.sec ? 1 : 0, b.reno ? 1 : 0] : null; }).filter(Boolean), campaign: pl.campaign || null, ringColor: pl.ringColor || null, errands: pl.errands || [], poi: R.poi.serialize(), rep: pl.rep, standing: pl.standing, stats: pl.stats, sweetheart: pl.sweetheart, properties: pl.properties, masked: pl.masked,
         cars: pl.ownedCars.filter((c) => !c.removed && !c.wrecked).map((c) => [c.modelId, c.x, c.y, c.angle, c.color]),
       },
       pop: this.pop.serialize(), law: this.law.serialize(), jobs: this.jobs.serialize(), hints: this.hints,
@@ -383,6 +385,7 @@
       pl.money = p.money || null;
       pl.turf = p.turf || null;
       pl.vend = p.vend || null;
+      pl.street = p.street || null;
       pl.killer = p.killer || null;
       if (p.who) { pl.first = p.who.first; pl.last = p.who.last; pl.nick = p.who.nick || pl.nick; if (p.who.family) pl.family = p.who.family; if (p.who.club != null) this.homeClub = p.who.club; if (p.who.crawl && p.who.road) { pl.crawling = true; R.opening.road = p.who.road; R.opening.pickedUp = false; this.waypoint = { x: p.who.road.x * 16 + 8, y: p.who.road.y * 16 + 8 }; } }
       if (p.maxHp) pl.maxHp = p.maxHp;
