@@ -229,6 +229,7 @@
       R.campaign.update(sdt);
       R.route.update(this, sdt);
       R.vice.update(sdt);
+      R.water.update(sdt);
       if (R.testRooms.active) R.testRooms.update(this, sdt);
       R.legends.update(sdt);
       R.goods.update(sdt);
