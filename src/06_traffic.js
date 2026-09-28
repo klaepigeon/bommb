@@ -68,6 +68,7 @@
       for (const p of v.passengers || []) { p.x = v.x; p.y = v.y; }
       this.collide(v, dt);
       if (v.burning > 0) this.burn(v, dt);
+      else if (!v.wrecked && v.hp < v.maxHp * 0.4 && R.rng() < dt * (v.hp < v.maxHp * 0.25 ? 6 : 2.5)) game.fx.smoke(v.x + Math.cos(v.angle) * v.model.w * 0.35, v.y + Math.sin(v.angle) * v.model.w * 0.35 - 4, false);
       v.lights = game.clock.isNight() || game.env.weather.rain > 0.5 || game.env.weather.fog > 0.4;
       if (v.honkT > 0) v.honkT -= dt;
     }
@@ -92,11 +93,14 @@
     const road = w.t(ai.tx, ai.ty);
     const hwy = road === T.HWY || road === T.BRIDGE;
     let want = v.model.top * (hwy ? 0.78 : 0.48) * (ai.reckless ? 1.6 : 1) * (this.game.env.weather.rain > 0.5 ? 0.85 : 1);
-    // obstacle ahead
+    // obstacle ahead: keep about one car-space of road between bumpers, plus more the faster you go,
+    // and settle to the speed of whatever's in front instead of stop-starting
     const obst = this.obstacleAhead(v);
     if (obst) {
-      const d = obst.d;
-      want = d < v.model.w * 0.5 + 6 ? 0 : Math.min(want, (d - v.model.w * 0.5) * 2.2);
+      const d = obst.d, lead = obst.o.kind === 'v' ? Math.max(0, obst.o.speed || 0) : 0;
+      const s0 = obst.o.kind === 'v' ? TS * 0.9 : TS * 0.8, gap = s0 + v.speed * 0.45;
+      if (d < s0) want = 0;
+      else want = Math.min(want, lead + (d - s0) * 1.6 * (d < gap ? 0.6 : 1));
       if (v.speed < 5) {
         v.wait += dt;
         const o = obst.o;
@@ -104,7 +108,7 @@
         // One of them noses through (briefly ignores other cars) so nobody waits forever.
         if (o.kind === 'v' && o.driver !== this.game.player && Math.abs(o.speed || 0) < 5) {
           v.uid = v.uid || ++UID; o.uid = o.uid || ++UID;
-          if ((o.wait > 2.5 && v.wait > 2.5 && v.uid < o.uid) || v.wait > 8) { v.ghostT = 2.2; v.wait = 0; }
+          if ((o.wait > 4 && v.wait > 4 && v.uid < o.uid) || v.wait > 12) { v.ghostT = 2.2; v.wait = 0; }
         }
         // someone standing in the road: honk, and they step aside
         if (o.kind === 'a' && v.wait > 2.5 && !o.dead) { o.state = 'flee'; o.target = v; o.timer = 2; if (v.honkT <= 0) this.honk(v); }
@@ -116,12 +120,15 @@
     } else v.wait = Math.max(0, v.wait - dt);
     // light / yield before entering intersection
     if (ai.hold) {
-      want = 0;
-      if (this.canEnter(v, nx, ny)) ai.hold = false;
+      want = 0; ai.holdT = (ai.holdT || 0) + dt;
+      if (this.canEnter(v, nx, ny)) { ai.hold = false; ai.holdT = 0; }
     }
-    v.braking = want < v.speed - 5;
-    v.speed = R.approach(v.speed, want, (want > v.speed ? v.model.acc * 0.6 : 260) * dt);
-    // move towards target
+    v.braking = want < v.speed - 8;
+    // ease on and off the pedal; brake harder only when it's genuinely close
+    const brakeK = want === 0 && obst && obst.d < TS * 0.9 ? 320 : 140;
+    v.speed = R.approach(v.speed, want, (want > v.speed ? v.model.acc * 0.45 : brakeK) * dt);
+    // move along the lane. On a straight, travel parallel to it and ease back onto the line;
+    // only aim straight at the next tile centre when turning a corner
     const dist = R.dist(v.x, v.y, tgx, tgy);
     const step = v.speed * dt;
     if (dist <= step + 0.5 || dist < 1) {
@@ -129,11 +136,17 @@
       ai.tx = nx; ai.ty = ny;
       this.decide(v);
     } else {
-      v.x += ((tgx - v.x) / dist) * step;
-      v.y += ((tgy - v.y) / dist) * step;
+      const lat = dx ? tgy - v.y : tgx - v.x, along = dx ? (tgx - v.x) * dx : (tgy - v.y) * dy;
+      if (Math.abs(lat) < 6 && along > 0) {
+        const fix = Math.sign(lat) * Math.min(Math.abs(lat), 14 * dt);
+        if (dx) { v.x += dx * step; v.y += fix; } else { v.y += dy * step; v.x += fix; }
+      } else {
+        v.x += ((tgx - v.x) / dist) * step;
+        v.y += ((tgy - v.y) / dist) * step;
+      }
     }
-    const heading = Math.atan2(tgy - v.y, tgx - v.x);
-    if (dist > 0.5) v.angle += R.angDiff(v.angle, heading) * Math.min(1, dt * 10);
+    const straight = Math.atan2(dy, dx), heading = Math.abs(dx ? tgy - v.y : tgx - v.x) < 6 ? straight : Math.atan2(tgy - v.y, tgx - v.x);
+    if (dist > 0.5) v.angle += R.angDiff(v.angle, heading) * Math.min(1, dt * 7);
     // lost the road (knocked off): switch to coasting
     if (!w.flow[w.idx(ai.tx, ai.ty)]) { v.mode = 'chase'; ai.wanderT = 3; }
   };
@@ -184,6 +197,9 @@
     }
     // occupied by a crossing vehicle?
     const cx = it.cx * TS + 8, cy = it.cy * TS + 8;
+    // room on the far side? if the exit is backed up, wait here instead of blocking the box
+    const [ddx, ddy] = R.DIRS[v.ai.dir], ex = cx + ddx * (R.ROAD_W * TS * 0.5 + TS), ey = cy + ddy * (R.ROAD_W * TS * 0.5 + TS);
+    if ((v.ai.holdT || 0) < 6) for (const o of this.hash.query(ex, ey, TS * 1.2)) if (o !== v && !o.removed && Math.abs(o.speed || 0) < 6 && R.dist(o.x, o.y, ex, ey) < TS * 1.2) return false;
     for (const o of this.hash.query(cx, cy, R.ROAD_W * 10)) {
       if (o === v || o.removed) continue;
       if (o.speed > 8 && o.ai && ((o.ai.dir & 1) !== (v.ai.dir & 1))) return false;
@@ -420,18 +436,29 @@
     const sp = Math.hypot(v.vx, v.vy) || Math.abs(v.speed);
     for (const o of this.hash.query(v.x, v.y, v.model.w)) {
       if (o === v || o.removed || o.id < v.id) continue;
-      const d = R.dist(v.x, v.y, o.x, o.y);
-      const minD = (v.model.h + o.model.h) * 0.5 + Math.min(v.model.w, o.model.w) * 0.12;
-      if (d < minD && d > 0.01) {
-        const nx = (o.x - v.x) / d, ny = (o.y - v.y) / d;
-        const push = (minD - d) * 0.5;
+      if ((v.ghostT > 0 || o.ghostT > 0) && v.driver !== game.player && o.driver !== game.player) continue;
+      // boxes, not circles: cars side by side in neighbouring lanes are 16px apart and must not touch
+      const c = Math.cos(v.angle), sn = Math.sin(v.angle), rx = o.x - v.x, ry = o.y - v.y;
+      const along = rx * c + ry * sn, lat = -rx * sn + ry * c;
+      const relA = o.angle - v.angle, ca = Math.abs(Math.cos(relA)), sa = Math.abs(Math.sin(relA));
+      const oAlong = ca * o.model.w * 0.5 + sa * o.model.h * 0.5, oLat = sa * o.model.w * 0.5 + ca * o.model.h * 0.5;
+      const penA = v.model.w * 0.5 + oAlong - 2 - Math.abs(along), penL = v.model.h * 0.5 + oLat - 3 - Math.abs(lat);
+      const d = Math.hypot(rx, ry);
+      if (penA > 0 && penL > 0 && d > 0.01) {
+        // push apart along whichever axis overlaps least
+        let nx, ny, pen;
+        if (penA < penL) { const sg = Math.sign(along) || 1; nx = c * sg; ny = sn * sg; pen = penA; }
+        else { const sg = Math.sign(lat) || 1; nx = -sn * sg; ny = c * sg; pen = penL; }
+        const push = pen * 0.5;
         const heavyV = v.model.hp > 200 ? 0.3 : 1, heavyO = o.model.hp > 200 ? 0.3 : 1;
         v.x -= nx * push * heavyV; v.y -= ny * push * heavyV;
         o.x += nx * push * heavyO; o.y += ny * push * heavyO;
         const rel = Math.abs((v.vx - o.vx) * nx + (v.vy - o.vy) * ny) + Math.abs(v.speed - o.speed) * 0.3;
         if (rel > 25) {
-          this.damage(v, rel * 0.1, o.driver);
-          this.damage(o, rel * 0.1, v.driver);
+          // fender benders dent; it takes a real hit to hurt the engine (and traffic scrapes barely count)
+          const pl0 = game.player, involved = v.driver === pl0 || o.driver === pl0 || v.mode === 'chase' || o.mode === 'chase';
+          const dmg = Math.max(0, rel - 45) * 0.07 * (involved ? 1 : 0.35);
+          if (dmg > 0) { this.damage(v, dmg, o.driver); this.damage(o, dmg, v.driver); }
           game.fx.sparks((v.x + o.x) / 2, (v.y + o.y) / 2, 5);
           game.audio.sfx('crash', v.x, v.y);
           // kick lane cars out of their lane
@@ -442,7 +469,7 @@
           if (other && other.driver && other.driver.kind === 'h' && !other.driver.dead) this.aggrieved(other, rel);
           if (v.driver === pl || o.driver === pl) game.cam.shake(Math.min(5, rel / 30));
         }
-        if (v.mode === 'lane' && v.driver !== game.player) { v.speed *= 0.5; }
+        if (v.mode === 'lane' && v.driver !== game.player && push > 0.5) { v.speed *= 0.8; }
       }
     }
     // pedestrians and animals
@@ -474,22 +501,26 @@
       setTimeout(() => { if (!car.removed && car.driver === h && !h.dead) this.roadRage(car); }, 900);
     }
   };
-  TP.damage = function (v, amt, by) {
+  TP.damage = function (v, amt, by, blast) {
     if (v.wrecked) return;
-    v.hp -= amt;
+    // explosions go straight through; everything else is soaked by the body panels first
+    v.hp -= blast ? amt : amt * 0.6;
+    if (v.burning > 0 && !blast) v.burning += amt * 0.06; // shooting a burning car hurries it along
     const mine = v.driver === this.game.player;
     // your own car always gives you a few seconds of flames to bail out
     if (mine && v.hp <= 0 && !(v.burning > 0)) v.hp = 1;
-    if (v.hp < 20 && !(v.burning > 0) && v.hp > 0 && (mine || R.rng() < 0.4)) {
+    // like the old games: the engine smokes, then catches, then you have a few seconds
+    if (v.hp <= v.maxHp * 0.12 && !(v.burning > 0)) {
       v.burning = 0.01;
-      if (mine) { this.game.ui.toast('Your car is on fire. Get out (A)!', 'bad'); this.game.audio.sfx('alarm'); }
+      if (v.hp < 1) v.hp = 1;
+      if (mine) { this.game.ui.toast('Your engine\'s on fire. Get out (A)!', 'bad'); this.game.audio.sfx('alarm'); }
     }
-    if (v.hp <= 0) this.explode(v, by);
+    if (v.hp <= 0 && blast) this.explode(v, by);
   };
   TP.burn = function (v, dt) {
     v.burning += dt;
     if (R.rng() < dt * 10) this.game.fx.smoke(v.x, v.y - 4, v.burning > 3);
-    if (v.burning > 6 && !v.wrecked) this.explode(v);
+    if (v.burning > 9 && !v.wrecked) this.explode(v);
   };
   TP.explode = function (v, by) {
     if (v.wrecked) return;

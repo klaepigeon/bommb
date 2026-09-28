@@ -387,7 +387,7 @@
       if (v.wrecked) continue;
       const d = R.dist(x, y, v.x, v.y);
       const f = 1 - d / (radius + 20);
-      if (f > 0) { g.traffic.damage(v, dmg * f * 1.2, owner); v.vx += (v.x - x) * f * 5; v.vy += (v.y - y) * f * 5; }
+      if (f > 0) { g.traffic.damage(v, dmg * f * 1.2, owner, true); v.vx += (v.x - x) * f * 5; v.vy += (v.y - y) * f * 5; }
     }
     const pl = g.player;
     const pd = R.dist(x, y, pl.x, pl.y);

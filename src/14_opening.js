@@ -43,7 +43,7 @@
     el = document.createElement('div'); el.id = 'cine';
     el.innerHTML = '<div class="cb t"></div><div class="cb b"><span class="cap"></span></div><div class="cf"></div>';
     const st = document.createElement('style');
-    st.textContent = '#cine{position:fixed;pointer-events:none;z-index:40}#cine .cb{position:absolute;left:0;right:0;height:0;background:#000;transition:height .7s ease}#cine .t{top:0}#cine .b{bottom:0;display:flex;align-items:center;justify-content:center}#cine.on .cb{height:13%}#cine .cap{font:inherit;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#f0e0b0;opacity:0;transition:opacity .6s;text-align:center;padding:0 12px}#cine .cap.show{opacity:1}#cine .cf{position:absolute;inset:0;background:#000;opacity:0;transition:opacity 1s}#cine .cf.black{opacity:1}body.cine #hudL,body.cine #hudR,body.cine #toasts,body.cine #wanted{visibility:hidden}';
+    st.textContent = '#cine{position:fixed;pointer-events:none;z-index:40}#cine .cb{position:absolute;left:0;right:0;height:0;background:#000;transition:height .7s ease}#cine .t{top:0}#cine .b{bottom:0;display:flex;align-items:center;justify-content:center}#cine.on .cb{height:13%}#cine .cap{font:inherit;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#f0e0b0;opacity:0;transition:opacity .6s;text-align:center;padding:0 12px}#cine .cap.show{opacity:1}#cine .cf{position:absolute;inset:0;background:#000;opacity:0;transition:opacity 1s}#cine .cf.black{opacity:1}body.cine #hudL,body.cine #hudR,body.cine #toasts,body.cine #wanted,body.cine #mapwrap,body.cine #menubtn,body.cine #padL,body.cine #padR,body.cine #ctx{visibility:hidden}';
     document.head.appendChild(st);
     document.body.appendChild(el);
     const fit = () => { const v = document.querySelector('#view canvas') || document.querySelector('#view') || document.querySelector('canvas'); if (!v) return; const r = v.getBoundingClientRect(); Object.assign(el.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' }); };
@@ -58,7 +58,7 @@
     const g = R.game;
     if (who && !who.inCar && !who.hidden) g.actors.say(who, text, 2 + text.length * 0.05);
     else g.ui.subtitle(name || (who && g.actors.displayName(who)) || '', text);
-    return this.wait(1.3 + text.length * 0.045);
+    return this.wait(1.1 + text.length * 0.038);
   };
   // a choice in the dialogue sheet; closing it picks the first answer
   OP.ask = function (title, opts) {
@@ -103,6 +103,7 @@
   // ---------------------------------------------------------------- 1. the ride
   OP.run = function (g) {
     const pl = g.player;
+    this.active = true;
     pl.stats.startT = g.clock.t;
     for (const a of g.actors.list.slice()) if (a !== pl && !a.keep) g.actors.remove(a);
     if (pl.room) g.interiors.exit();
@@ -308,7 +309,7 @@
     await this.wait(1.5);
     this.caption('Headlights.');
     // it slows when it reaches you
-    for (let i = 0; i < 200 && R.dist(car.x, car.y, pl.x, pl.y) > 34; i++) await this.wait(0.05);
+    for (let i = 0; i < 240; i++) { const c = car.cine, ahead = (pl.x - car.x) * c.dx + (pl.y - car.y) * c.dy; if (ahead < 26 || !c.want && c.speed < 1) break; if (ahead < 70) c.want = Math.max(18, ahead * 0.9); await this.wait(0.05); }
     car.cine.want = 0;
     this.caption('');
     await this.wait(1.4);
@@ -389,6 +390,7 @@
     this.lock = null;
     this.cine(false);
     if (h) h.scripted = false;
+    this.active = false;
     g.ui.toast(`Talk to Don ${dn} for more work. Your first job is marked in gold. Walk out the doormat to leave.`, 'good');
     setTimeout(() => g.ui.toast('Crimes only count if someone sees them. Watch for gold "!" witnesses.'), 7000);
     g.save();
@@ -396,7 +398,7 @@
 
   // ---------------------------------------------------------------- crawling
   OP.init = function (g) {
-    this.pickedUp = false; this.road = null; this.waits = []; this.scene = null; this.lock = null; this.riding = null; this.asking = null; this.car = null;
+    this.pickedUp = false; this.road = null; this.active = false; this.waits = []; this.scene = null; this.lock = null; this.riding = null; this.asking = null; this.car = null;
     if (document.getElementById('cine')) { this.cine(false); this.cineEl().querySelector('.cf').classList.remove('black'); }
     if (g.player) g.player.hidden = false;
     if (this.wrapped) return;
@@ -417,11 +419,15 @@
     const U0 = R.UI.prototype;
     // while a scene has the controls, the script decides what hurts you
     const PP = R.Player.prototype, ph = PP.hurt, pk = PP.knock;
-    PP.hurt = function () { if (OP.lock || OP.riding) return; return ph.apply(this, arguments); };
-    if (pk) PP.knock = function () { if (OP.lock || OP.riding) return; return pk.apply(this, arguments); };
+    PP.hurt = function () { if (OP.lock || OP.riding || OP.active) return; return ph.apply(this, arguments); };
+    if (pk) PP.knock = function () { if (OP.lock || OP.riding || OP.active) return; return pk.apply(this, arguments); };
+    // 4:30 in the morning on a desert highway: no traffic but the cars in the story
+    const TP = R.Traffic.prototype, man = TP.manage;
+    TP.manage = function () { if (OP.active) { for (const v of this.list) if (!v.keep && !v.cine && v.driver !== this.game.player) this.remove(v); return; } return man.call(this); };
     // extras keep quiet during a scene; only the cast speaks
     const AP2 = R.Actors.prototype, asay = AP2.say;
     AP2.say = function (h, text, dur, color) { if ((OP.lock || OP.cineOn) && h && !h.scripted) return; return asay.call(this, h, text, dur, color); };
+    const dh = U0.drawHud; if (dh) U0.drawHud = function () { if (OP.cineOn) return; return dh.apply(this, arguments); };
     const ban = U0.banner; U0.banner = function () { if (OP.cineOn) return; return ban.apply(this, arguments); };
     const GP = R.Game.prototype, hc = GP.hintCheck; if (hc) GP.hintCheck = function () { if (OP.cineOn || OP.lock) return; return hc.apply(this, arguments); };
     // nobody makes small talk with the men who are about to shoot you
