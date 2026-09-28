@@ -55,6 +55,7 @@
   const sprites = {};
   const sprite = (k) => sprites[k] || (sprites[k] = R.old.props[k] ? R.old.paintProp(k) : null);
 
+  const A_OVER = (k) => { const a = R.art.itemArt(k); return !a || !a.grip; };
   const Props = (R.props = {
     loose: [],
     flying: [],
@@ -206,7 +207,7 @@
     const g = this.game, h = pl.held, d = PROPS[h.k];
     if (pl.atkT > 0) return;
     pl.atkT = d.swing / 1000;
-    pl.punchT = 0.22;
+    pl.punchT = pl.punchDur = A_OVER(h.k) ? 0.3 : 0.22;
     pl.punchN = (pl.punchN || 0) + 1;
     const w = { name: d.name, melee: 1, dmg: 8 + d.dmg * 9, range: 12 + d.reach, rate: d.swing / 1000, knock: d.kb };
     const tg = pl.aimTarget();

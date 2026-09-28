@@ -275,7 +275,7 @@
     } else {
       this.atkT = w.rate;
       this.power = (1 + (this.drunk > 0.3 ? 0.2 : 0)) * R.goods.mod(this, 'power', 1);
-      this.punchT = 0.18;
+      this.punchT = 0.18; this.punchDur = 0.22;
       this.punchN = (this.punchN || 0) + 1;
       R.combat.melee(this, w, ang);
     }

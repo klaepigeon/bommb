@@ -351,10 +351,12 @@
     const wdef = st.weapon && st.weapon !== 'fists' ? D.weapons[st.weapon] : null;
     if (!pose && wdef) pose = wdef.gun || wdef.ring ? 'g' : st.weapon === 'knuckles' ? null : 'k';
     if (!pose && st.held) pose = A.heldPose(st.held, 0, 1);
+    // slamming an overhead prop: the arms come down with it
+    const slamming = pose === 'h' && st.held && st.swing >= 0.5;
     // seen from behind, a windup is the raised frame and the follow-through the low one
     if (DIR8[d8] === 'up' || DIR8[d8] === 'upright') { if (pose === 'b1') pose = 'b2'; else if (pose === 'b2') pose = 'b1'; else if (pose === 'w1') pose = 'w2'; }
     // legs keep walking whatever the arms are doing
-    const spr = A.oldSprite(look, d8, st.down ? 0 : frame, st.down ? null : pose);
+    const spr = A.oldSprite(look, d8, st.down ? 0 : frame, st.down ? null : slamming ? 'p2' : pose);
     if (st.down) {
       g.save();
       g.translate(X, Y - 3);
@@ -367,7 +369,7 @@
     // things in the hand go behind the body when the hand is on the far side
     const hand = () => {
       if (wdef) drawWeapon8(g, X, Y, d8, st.weapon, st.ang, pose, look.kid);
-      else if (st.held) A.drawHeldItem(g, X, Y, d8, st.held, pose, look.kid);
+      else if (st.held) A.drawHeldItem(g, X, Y, d8, st.held, pose, look.kid, { phase: moving ? phase : -1, swing: st.swing, skin: look.skin });
     };
     const behind = (wdef || st.held) && (wdef && wdef.gun ? DIR8[d8] === 'up' || DIR8[d8] === 'upright' : A.itemBehind(d8, pose));
     if (behind) hand();
@@ -463,13 +465,35 @@
     return art && art.grip ? 'k' : 'h';
   };
   // draw an item in the hand. behind: true when the hand is on the far side of the body
-  A.drawHeldItem = function (g, X, Y, d8, k, pose, kid) {
+  A.drawHeldItem = function (g, X, Y, d8, k, pose, kid, anim) {
     const art = A.itemArt(k);
     if (!art) return;
     const dirName = DIR8[d8], flip = FLIP8[d8], sgn = flip ? -1 : 1;
     if (!art.grip || pose === 'h') {
-      // overhead, both hands up
-      g.drawImage(art.cv, Math.round(X - 8), Math.round(Y - 25 - 7 + (kid ? 2 : 0)));
+      // overhead, both hands up. It lags a step behind your stride, and a swing hoists it
+      // back over your head before slamming it down in front of you.
+      let ox = 0, oy = 0, rot = 0, slam = false;
+      const ph = anim ? anim.phase : -1, sw = anim && anim.swing >= 0 ? anim.swing : -1;
+      if (ph >= 0) { oy = ph === 0 || ph === 2 ? 1 : -1; ox = ph === 1 ? 1 : ph === 3 ? -1 : 0; rot = ph === 1 ? 0.06 : ph === 3 ? -0.06 : 0; }
+      if (sw >= 0) {
+        const up = dirName === 'up' || dirName === 'upright', side = dirName !== 'down' && dirName !== 'up';
+        const fx = side ? sgn : 0, fy = up ? -1 : dirName === 'down' || dirName === 'downright' ? 1 : 0;
+        if (sw < 0.4) { const t = sw / 0.4; oy -= 4 * t; ox -= fx * 3 * t; rot -= fx * 0.35 * t; }
+        else {
+          const t = Math.min(1, (sw - 0.4) / 0.25), e = t * t * (3 - 2 * t);
+          const dx = fx * 10, dy = up ? -3 : fy > 0 ? 10 : 8;
+          oy += -4 + (4 + dy) * e; ox += -fx * 3 + (fx * 3 + dx) * e; rot += fx * (-0.35 + 1.1 * e);
+          slam = sw >= 0.5;
+        }
+      }
+      const cx = X + ox, cy = Y - 25 + 1 + oy + (kid ? 2 : 0);
+      g.save();
+      g.translate(Math.round(cx), Math.round(cy));
+      if (rot) g.rotate(rot);
+      g.drawImage(art.cv, -8, -8);
+      // mid-slam the arms are down with it, fists gripping the sides
+      if (slam && anim.skin) { g.fillStyle = '#140e10'; g.fillRect(-9, -1, 4, 4); g.fillRect(5, -1, 4, 4); g.fillStyle = anim.skin; g.fillRect(-8, 0, 2, 2); g.fillRect(6, 0, 2, 2); }
+      g.restore();
       return;
     }
     let hx, hy, h;

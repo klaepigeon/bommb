@@ -222,12 +222,12 @@
     const w = pl.weaponOut || pl.punchT > 0 ? pl.weapon : null;
     const st = { weapon: w === 'gascan' ? null : w, ang: pl.ang };
     if (w === 'gascan') st.held = 'gascan';
-    const swing = pl.punchT > 0 ? 1 - pl.punchT / 0.22 : -1; // 0..1 through the blow
+    const swing = pl.punchT > 0 ? Math.max(0, 1 - pl.punchT / (pl.punchDur || 0.22)) : -1; // 0..1 through the blow
     if (pl.held) {
       // an improvised weapon, held at its grip; swung through the original's arcs
       st.weapon = null;
       st.held = pl.held.k;
-      if (swing >= 0) st.pose = A.itemArt(pl.held.k) && A.itemArt(pl.held.k).grip ? (swing < 0.45 ? 'w1' : 'w2') : 'h';
+      if (swing >= 0) { st.pose = A.itemArt(pl.held.k) && A.itemArt(pl.held.k).grip ? (swing < 0.45 ? 'w1' : 'w2') : 'h'; st.swing = swing; }
     } else if (swing >= 0) {
       if (pl.weapon === 'bat') { st.pose = swing < 0.45 ? 'b1' : 'b2'; st.weapon = null; }
       else if (pl.weapon === 'knife') { st.pose = swing < 0.45 ? 'w1' : 'w2'; st.weapon = null; st.held = 'knife'; }
