@@ -305,55 +305,51 @@
       const dark = byL[0].c, light = byL[byL.length - 1].c;
       return [hex(dark), hex(mid), hex(light)];
     };
+    const notSkin = (list) => list.filter((e) => !(e.c[0] - e.c[2] > 40 && lum(e.c) > 90));
     const skinC = region(0, 18, 15, 22).filter((e) => e.c[0] - e.c[2] > 40 && lum(e.c) > 90);
-    return { O: hex(outline), hair: ramp(region(4, 4, 11, 11)), coat: ramp(region(4, 16, 11, 19)), pants: ramp(region(4, 22, 11, 24)), skin: skinC.length ? hex(skinC.reduce((a, b) => (b.n > a.n ? b : a)).c) : (look.skin || '#e0a070') };
+    const legs = notSkin(region(3, 21, 12, 25)), shoe = legs.slice().sort((a, b) => lum(a.c) - lum(b.c)).find((e) => hex(e.c) !== hex(outline));
+    return { O: hex(outline), hair: ramp(notSkin(region(2, 4, 13, 12))), coat: ramp(notSkin(region(1, 16, 14, 19))), pants: ramp(notSkin(region(3, 21, 12, 24))), shoe: shoe ? hex(shoe.c) : hex(outline), skin: skinC.length ? hex(skinC.reduce((a, b) => (b.n > a.n ? b : a)).c) : (look.skin || '#e0a070') };
   };
   OP.crawlSheet = function (look) {
     const base = R.art.oldSprite(look, 6, 0, null);
     const hit = crawlCache.get(base);
     if (hit) return hit;
     const P = this.crawlPalette(look);
-    const GW = 34, GH = 24, CY = 12; // grid, facing right, centre row
+    // same scale as the standing sprite: 12px head, 10px-wide shoulders, 5px legs, 2px arms
+    const GW = 26, GH = 20, CY = 10; // grid, facing right, centre row
     const frames = [0, 1, 2, 3].map((f) => {
       const g = []; for (let y = 0; y < GH; y++) g.push(new Array(GW).fill(null));
       const put = (x, y, c) => { x = Math.round(x); y = Math.round(y + CY); if (x >= 0 && y >= 0 && x < GW && y < GH) g[y][x] = c; };
       const rect = (x0, y0, w, h, c) => { for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) put(x, y, c); };
-      const slide = f === 1 || f === 3 ? 1 : 0;
-      const topKnee = f === 0, botKnee = f === 2;
-      // legs: straight, or the knee drawn up and out to push
+      const o = f === 1 || f === 3 ? 2 : 1; // x origin; the body slides a pixel on the pull
+      // legs, 3px wide like the standing sprite's; one knee drawn up to push
       const leg = (side, bent) => {
         const y = side < 0 ? -4 : 1;
-        if (!bent) { rect(2 + slide, y, 6, 3, P.pants[1]); rect(2 + slide, side < 0 ? y + 2 : y, 6, 1, P.pants[0]); rect(0 + slide, y, 2, 3, P.O); }
-        else { const ky = side < 0 ? -7 : 4; rect(5 + slide, y, 3, 3, P.pants[1]); rect(3 + slide, ky, 3, 3, P.pants[2]); rect(1 + slide, ky + (side < 0 ? 1 : -1), 3, 3, P.pants[1]); rect(0 + slide, ky + (side < 0 ? 1 : -1), 1, 3, P.O); }
-      };
-      leg(-1, topKnee); leg(1, botKnee);
-      // hips
-      rect(7 + slide, -4, 3, 8, P.pants[1]); rect(7 + slide, -4, 3, 1, P.pants[2]);
-      // back of the coat: light along the top edge, shadow along the bottom and down the spine
-      rect(9 + slide, -5, 8, 10, P.coat[1]); rect(9 + slide, -5, 8, 1, P.coat[2]); rect(9 + slide, 4, 8, 1, P.coat[0]); rect(9 + slide, 0, 7, 1, P.coat[0]);
-      rect(16 + slide, -3, 1, 6, P.coat[0]); // collar shadow
-      // arms: 3px sleeves in your coat colour, hands in your skin
-      const arm = (side, st) => {
-        const y0 = side < 0 ? -7 : 5, yy = (d) => (side < 0 ? y0 + d : y0 - d);
-        if (st === 'reach') { rect(14 + slide, side < 0 ? -7 : 5, 12, 3, P.coat[1]); rect(14 + slide, side < 0 ? -7 : 7, 12, 1, side < 0 ? P.coat[2] : P.coat[0]); rect(26 + slide, side < 0 ? -7 : 5, 3, 3, P.skin); }
-        else if (st === 'pull') { rect(14 + slide, side < 0 ? -8 : 6, 5, 3, P.coat[1]); rect(18 + slide, side < 0 ? -9 : 7, 4, 3, P.coat[1]); rect(18 + slide, side < 0 ? -9 : 9, 4, 1, side < 0 ? P.coat[2] : P.coat[0]); rect(22 + slide, side < 0 ? -9 : 7, 3, 3, P.skin); }
-        else { rect(10 + slide, side < 0 ? -7 : 5, 7, 3, P.coat[1]); rect(10 + slide, side < 0 ? -7 : 7, 7, 1, side < 0 ? P.coat[2] : P.coat[0]); rect(8 + slide, side < 0 ? -7 : 5, 2, 3, P.skin); }
-        void yy;
+        if (!bent) { rect(o + 1, y, 4, 3, P.pants[1]); rect(o + 1, side < 0 ? y : y + 2, 4, 1, side < 0 ? P.pants[2] : P.pants[0]); rect(o, y, 1, 3, P.shoe); }
+        else { const ky = side < 0 ? -6 : 4; rect(o + 3, y, 2, 3, P.pants[1]); rect(o + 1, ky, 3, 2, P.pants[1]); rect(o + 1, ky + (side < 0 ? 0 : 1), 3, 1, side < 0 ? P.pants[2] : P.pants[0]); rect(o, ky, 1, 2, P.shoe); }
       };
       const ST = [['reach', 'tuck'], ['pull', 'tuck'], ['tuck', 'reach'], ['tuck', 'pull']][f];
+      leg(-1, f === 0); leg(1, f === 2);
+      // back of the coat: 6 long, 10 across, lit along the top edge
+      rect(o + 5, -5, 6, 10, P.coat[1]); rect(o + 5, -5, 6, 1, P.coat[2]); rect(o + 5, 4, 6, 1, P.coat[0]); rect(o + 10, -4, 1, 8, P.coat[0]);
+      // arms: 2px sleeves, 2x2 hands, exactly like the standing frames
+      const arm = (side, st) => {
+        const y = side < 0 ? -7 : 5, hi = side < 0 ? P.coat[2] : P.coat[0];
+        if (st === 'reach') { rect(o + 8, y, 8, 2, P.coat[1]); rect(o + 8, side < 0 ? y : y + 1, 8, 1, hi); rect(o + 16, y, 2, 2, P.skin); }
+        else if (st === 'pull') { const ey = side < 0 ? y - 1 : y + 1; rect(o + 8, y, 3, 2, P.coat[1]); rect(o + 10, ey, 4, 2, P.coat[1]); rect(o + 10, side < 0 ? ey : ey + 1, 4, 1, hi); rect(o + 14, ey, 2, 2, P.skin); }
+        else { rect(o + 5, y, 5, 2, P.coat[1]); rect(o + 5, side < 0 ? y : y + 1, 5, 1, hi); rect(o + 3, y, 2, 2, P.skin); }
+      };
       arm(-1, ST[0]); arm(1, ST[1]);
-      // neck, then the big round head seen from behind, lit from the top left
-      rect(17 + slide, -2, 2, 4, P.skin);
-      const hx = 24 + slide + (ST[0] === 'reach' || ST[1] === 'reach' ? 1 : 0), R0 = 6.4;
-      for (let y = -7; y <= 7; y++) for (let x = -7; x <= 7; x++) {
-        if (x * x + y * y > R0 * R0 - 1) continue;
-        // like the standing sprites: a big mid tone, a shadow crescent low right, a sheen up top
-        const shadow = (x + 1.8) * (x + 1.8) + (y + 1.8) * (y + 1.8) > (R0 - 0.2) * (R0 - 0.2);
-        const sheen = (x + 1) * (x + 1) * 0.35 + (y + 4) * (y + 4) < 2.2;
+      // neck, then the head: 12 across with its outline, lit like the standing sprite
+      rect(o + 11, -1, 1, 2, P.skin);
+      const hx = o + 16.5, R0 = 5.3;
+      for (let y = -6; y <= 6; y++) for (let x = -6; x <= 6; x++) {
+        if (x * x + y * y > R0 * R0) continue;
+        const shadow = (x + 1.6) * (x + 1.6) + (y + 1.6) * (y + 1.6) > (R0 - 0.1) * (R0 - 0.1);
+        const sheen = (x + 1) * (x + 1) * 0.4 + (y + 3.5) * (y + 3.5) < 1.6;
         put(hx + x, y, shadow ? P.hair[0] : sheen ? P.hair[2] : P.hair[1]);
       }
-      put(hx - 1, -7, P.skin); put(hx - 1, 7, P.skin); // the tips of the ears
-      // auto outline: any empty pixel touching the figure
+      // auto outline in the sprite's own outline colour
       const out = g.map((row) => row.slice());
       for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) if (!g[y][x] && ((g[y - 1] && g[y - 1][x]) || (g[y + 1] && g[y + 1][x]) || g[y][x - 1] || g[y][x + 1])) out[y][x] = P.O;
       const c = document.createElement('canvas'); c.width = GW; c.height = GH;
@@ -378,11 +374,11 @@
     g.translate(Math.round(pl.x), Math.round(pl.y));
     if (vert) g.rotate(dy < 0 ? -Math.PI / 2 : Math.PI / 2); else if (dx < 0) g.scale(-1, 1);
     // local space: head toward +x. Shadow, and the blood you're lying in
-    g.fillStyle = 'rgba(0,0,0,0.2)'; g.fillRect(-14, -5, 26, 11);
-    if (gore) { g.fillStyle = 'rgba(96,10,8,0.5)'; g.fillRect(-6, 4, 6, 3); g.fillRect(-4, 6, 3, 2); }
-    g.drawImage(sh.frames[f], -16, -sh.cy);
+    g.fillStyle = 'rgba(0,0,0,0.2)'; g.fillRect(-11, -5, 22, 11);
+    if (gore) { g.fillStyle = 'rgba(96,10,8,0.5)'; g.fillRect(-6, 5, 5, 2); g.fillRect(-5, 6, 3, 2); }
+    g.drawImage(sh.frames[f], -12, -sh.cy);
     // the gut wound, soaking out from under you
-    if (gore) { const p = 0.55 + Math.sin(t * 3) * 0.2; g.fillStyle = `rgba(130,12,8,${p})`; g.fillRect(-4, 3, 3, 2); g.fillStyle = 'rgba(70,4,4,0.85)'; g.fillRect(-3, 4, 1, 1); }
+    if (gore) { const p = 0.55 + Math.sin(t * 3) * 0.2; g.fillStyle = `rgba(130,12,8,${p})`; g.fillRect(-5, 3, 3, 2); g.fillStyle = 'rgba(70,4,4,0.85)'; g.fillRect(-4, 4, 1, 1); }
     g.restore();
   };
 })();
