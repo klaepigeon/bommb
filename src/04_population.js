@@ -378,7 +378,7 @@
     if (aging) {
       // marriages
       for (const cityId in this.byCity) {
-        const singles = this.byCity[cityId].filter((p) => p.alive && p.spouse < 0 && p.age >= 20 && p.age <= 55 && !p.isDon);
+        const singles = this.byCity[cityId].filter((p) => p.alive && p.spouse < 0 && p.age >= 20 && p.age <= 55 && !p.isDon && !p.playerPartner);
         rnd.shuffle(singles);
         for (let i = 0; i < singles.length; i++) {
           const a = singles[i];

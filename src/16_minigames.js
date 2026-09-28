@@ -120,7 +120,7 @@
   M.hotwire = function (opts, done) {
     const cols = [['#d83a2a', 'RED'], ['#2a6ad8', 'BLUE'], ['#e0c020', 'YEL'], ['#3aa84a', 'GRN'], ['#e8e8e8', 'WHT']].slice(0, opts.wires || 4);
     return M.open({
-      title: 'Hotwire', sub: 'Tap a wire on the left, then its match on the right. Then crank it over before the timer runs out.', w: 240, h: 130,
+      title: opts.title || 'Hotwire', sub: opts.sub || 'Tap a wire on the left, then its match on the right. Then crank it over before the timer runs out.', w: 240, h: 130,
       buttons: [['crank', 'CRANK', 'big'], ['quit', 'GIVE UP']],
       init(s) {
         s.left = cols.map((c, i) => ({ c, i })); s.right = cols.map((c, i) => ({ c, i })).sort(() => Math.random() - 0.5);

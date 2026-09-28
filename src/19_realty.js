@@ -69,6 +69,8 @@
       if (o === O.DRESSER) return { label: 'Your closet', fn: () => R.openWardrobe('tailor') };
       if (o === O.SAFE) return { label: 'Your stash', fn: () => ES.openStash(g) };
     }
+    // a combination heard on a phone tap opens the safe without the dial
+    if (room && room.b.comboKnown && fa.f && fa.f.safe) return { label: 'Open the safe (you know the combination)', fn: () => { if (room.searched.get(fa.x * 1000 + fa.y) === g.pop.day) return g.ui.toast('Already cleaned out.'); this.search(fa, fa.f); } };
     return baseFA.call(this, fa);
   };
   ES.openStash = function (g) {

@@ -600,7 +600,7 @@
         buy('Cover charge & dance', 5, () => { pl.cool = Math.min(100, pl.cool + 45); pl.rep.honor += 0.5; say('You tear up the light-up floor. Everyone saw. COOL restored.'); });
         buy('Tequila Sunrise', 5, () => { pl.drink(); say('Tastes like a sunset in Dustwater.'); });
         break;
-      case 'pawn': opts.push({ label: 'Sell your goods', fn: () => this.openShop('pawn') }); buy('Brass Knuckles', 40, () => { pl.giveWeapon('knuckles'); say('Knuckles. Fits like a wedding ring.'); }); buy('Baseball Bat', 35, () => { pl.giveWeapon('bat'); say("Louisville Slugger. Not for baseball."); }); break;
+      case 'pawn': opts.push({ label: 'Sell your goods', fn: () => this.openShop('pawn') }); if (!pl.inv.tools.bluebox) buy('Blue Box', 120, () => { pl.inv.tools.bluebox = 1; say('Under the counter. Stand by a payphone or a house and press USE to tap the line.'); }, 'Taps phone lines. Secrets go in your Files.'); buy('Brass Knuckles', 40, () => { pl.giveWeapon('knuckles'); say('Knuckles. Fits like a wedding ring.'); }); buy('Baseball Bat', 35, () => { pl.giveWeapon('bat'); say("Louisville Slugger. Not for baseball."); }); break;
       case 'guns': opts.push({ label: 'Browse the counter', fn: () => this.openShop('guns') }); break;
       case 'tailor': opts.push({ label: 'Try things on', small: 'Jackets, shirts, trousers, hats, shades', fn: () => { this.closeSheet(); R.openWardrobe('tailor'); } }); buy('Ski Mask', 10, () => { pl.inv.tools.mask = 1; say('Wear it with MASK. Witnesses can\'t name you.'); }); break;
       case 'bank':
@@ -1034,7 +1034,7 @@
   };
   U.openMenu = function (tab) {
     if (this.sheetOpen && this.sheetOpen !== 'menu') return;
-    const tabs = [['map', 'Map'], ['jobs', 'Jobs'], ['people', 'People'], ['status', 'Status'], ['items', 'Pockets'], ['news', 'Paper'], ['settings', 'Settings'], ['help', 'Help'], ['debug', 'Debug']];
+    const tabs = [['map', 'Map'], ['jobs', 'Jobs'], ['people', 'People'], ['files', 'Files'], ['status', 'Status'], ['items', 'Pockets'], ['news', 'Paper'], ['settings', 'Settings'], ['help', 'Help'], ['debug', 'Debug']];
     const s = this.openSheet('menu', `<div class="tabs">${tabs.map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'sel' : ''}">${l}</button>`).join('')}<button data-tab="close" aria-label="Close">✕</button></div><div class="body" id="mbody"></div>`, true);
     s.style.maxHeight = '92%';
     s.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => (b.dataset.tab === 'close' ? this.closeSheet() : this.openMenuTab(b.dataset.tab, s))));
@@ -1069,6 +1069,9 @@
       const pop = g.pop.people.filter((p) => p.alive).length;
       body.innerHTML = `<p style="font-size:14px;color:var(--brown)">${pop} people live on the Brass Coast. You know ${met.length}.</p><div class="people">${met.map((p) => `<div class="person"><canvas class="portrait" width="28" height="36" style="width:28px;height:36px" data-p="${p.id}"></canvas><div class="n">${esc(g.pop.name(p))}${p.alive ? '' : ' †'}<small>${esc(g.pop.title(p))} · ${p.age} · ${esc((g.pop.cityObj(p.city) || {}).name || 'County')}${p.id === pl.sweetheart ? ' · sweetheart' : ''}</small></div><div class="meter"><i style="width:${50 + p.opinion / 2}%;background:${p.opinion > 20 ? 'var(--good)' : p.opinion < -20 ? 'var(--red)' : 'var(--mustard)'}"></i></div></div>`).join('') || '<p>Nobody yet. Greet people twice to learn their names.</p>'}</div>`;
       body.querySelectorAll('canvas[data-p]').forEach((cv) => this.drawPortrait(cv, g.pop.people[+cv.dataset.p].look));
+    } else if (tab === 'files') {
+      body.innerHTML = R.vice.filesHtml();
+      R.vice.bindFiles(body);
     } else if (tab === 'status') {
       const fam = D.cities.map((c) => `<span>${c.family} (${c.name})</span><span>${Math.round(g.jobs.familyStanding(c.family))}</span>`).join('');
       const bnt = D.cities.map((c) => `<span>${c.name}</span><span>${R.fmtMoney(g.law.bounty[c.id] || 0)}</span>`).join('') + `<span>The County</span><span>${R.fmtMoney(g.law.bounty.county || 0)}</span>`;
