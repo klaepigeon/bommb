@@ -150,7 +150,7 @@
       if (!opts.some((o) => /Pick|Throw|Carry/.test(o.label))) opts.push({ label: h.dead ? 'Pick up the body' : 'Throw them over your shoulder', fn: () => R.bodies.pickUp(h) });
       const tie = R.bodies.captiveCtx && R.bodies.captiveCtx(pl);
       if (tie && !opts.some((o) => o.label === tie.label)) opts.push({ label: tie.label, fn: tie.fn });
-      if (h.dead && D.weapons[pl.weapon] && D.weapons[pl.weapon].blade && R.butcher && g.settings.gore !== false) opts.push({ label: 'Cut up the body', fn: () => R.butcher.menu(h) });
+      if (h.dead && !opts.some((o) => /Cut up/.test(o.label)) && D.weapons[pl.weapon] && D.weapons[pl.weapon].blade && R.butcher && g.settings.gore !== false) opts.push({ label: 'Cut up the body', fn: () => R.butcher.menu(h) });
       if (opts.length === 1) return opts[0];
       const name = h.person && h.person.met && !h.person.unidentified ? g.pop.name(h.person) : h.dead ? 'The body' : 'Out cold';
       return { label: name, fn: () => g.ui.choice(name, opts.concat([{ label: 'Leave it', fn: () => {} }])) };

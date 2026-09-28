@@ -82,7 +82,7 @@
       }
       q.grudge = Math.max(q.grudge, 80); // it doesn't fade
       if (v.mode === 'wait' && q.age >= 18) { v.mode = q.tr && q.tr.brave > 0.4 ? 'hunt' : 'hire'; g.pop.addNews(q.city, `${pop.name(q)} turned 18 this week. Friends say ${q.fem ? 'she' : 'he'} "never got over" what happened to ${q.fem ? 'her' : 'his'} family.`); }
-      if (v.mode === 'hunt' || v.mode === 'hire') v.heat = Math.min(100, v.heat + 20);
+      if (v.mode === 'hunt' || v.mode === 'hire') v.heat = Math.min(100, v.heat + (v.mode === 'hire' ? 12 : 20)); // hiring takes time and money
       if (v.mode === 'blackmail' && pop.day >= (v.dueDay || 0)) this.letter(v);
     }
   };
@@ -107,7 +107,7 @@
     this.t = 60 + R.rng() * 60;
     const c = g.world.cityAt((pl.x / TS) | 0, (pl.y / TS) | 0);
     for (const v of this.active()) {
-      if (!v.knows || (v.mode !== 'hunt' && v.mode !== 'hire') || v.heat < 40) continue;
+      if (!v.knows || (v.mode !== 'hunt' && v.mode !== 'hire') || v.heat < (v.mode === 'hire' ? 60 : 40)) continue;
       const q = g.pop.people[v.pid], vic = g.pop.people[v.vid];
       if (!q || !q.alive || q.jailed > g.pop.day) continue;
       if (v.mode === 'hunt' && (!c || c.id !== q.city) && R.rng() < 0.7) continue; // they look where they live, mostly

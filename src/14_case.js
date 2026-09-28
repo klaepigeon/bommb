@@ -40,6 +40,9 @@
     if (car && (pl.inCar === car || car.owner === 'player' || car.stolen)) { c.car = { name: car.model.name, color: car.color || '', gone: false, sprayed: false }; r.car = car; }
     const victim = opts && opts.victim;
     if (victim && (type === 'murder' || type === 'manslaughter' || type === 'copMurder')) { c.body = { state: 'there', who: victim.person ? g.pop.name(victim.person) : 'a stranger', pid: victim.person ? victim.person.id : null }; r.victim = victim; }
+    // a contract the family ordered: their lawyers and their cops lean on the file
+    const j = g.jobs.active;
+    if (victim && victim.person && j && j.kind === 'hit' && j.person === victim.person.id) c.contract = true;
     // witnesses from this crime (the law module tags them)
     setTimeout(() => {
       for (const a of g.actors.list) {
@@ -91,7 +94,9 @@
       const parts = this.weigh(c);
       const sum = parts.reduce((a, p) => a + p.v, 0);
       const lawyer = c.lawyerUntil && g.clock.t < c.lawyerUntil;
-      if (!lawyer) c.progress = Math.min(100, c.progress + sum * 0.7 * (R.campaign && R.campaign.state().route === 'badge' ? 0.5 : 1));
+      // the higher you stand in the family, the more friends you have in the precinct
+      const shield = (c.contract ? 0.45 : 1) * Math.max(0.4, 1 - g.jobs.rank() * 0.12);
+      if (!lawyer) c.progress = Math.min(100, c.progress + sum * 0.7 * shield * (R.campaign && R.campaign.state().route === 'badge' ? 0.5 : 1));
       if (sum < 0.8) c.coldH++; else c.coldH = 0;
       if (c.coldH >= 36) { c.status = 'cold'; g.ui.toast(`${c.det} closed the file on the ${c.name.toLowerCase()} in ${c.where}. Unsolved.`, 'good'); continue; }
       if (c.progress >= 40 && !c.sketch && c.witnesses.some((x) => !x.gone && !x.masked)) { c.sketch = true; g.pop.addNews(c.jur === 'county' ? 'port' : c.jur, `Police release a sketch in the ${c.name.toLowerCase()} in ${c.where}. "Young, well dressed, and very dangerous," says ${c.det}.`); g.ui.toast('The papers printed a police sketch of you. Check the Heat tab.', 'warn'); }
@@ -192,7 +197,7 @@
     let h = '';
     for (const c of open) {
       const parts = this.weigh(c);
-      h += `<div class="case"><div style="display:flex;gap:10px;align-items:flex-start"><canvas class="sketch" data-case="${c.id}" width="30" height="36" style="width:60px;height:72px;image-rendering:pixelated;border:2px solid var(--ink);background:#e8dcc0"></canvas><div style="flex:1"><b style="font-size:16px">${esc(c.name)}, ${esc(c.where)}</b>${c.status === 'warrant' ? ' <b style="color:var(--red)">WARRANT</b>' : ''}<br><small>${esc(c.det)} · day ${c.day + 1}</small><div class="meter" style="margin-top:4px"><i style="width:${Math.round(c.progress)}%;background:${c.progress > 70 ? 'var(--red)' : c.progress > 40 ? 'var(--mustard)' : 'var(--good)'}"></i></div><small>${Math.round(c.progress)}% solved${c.lawyerUntil && g.clock.t < c.lawyerUntil ? ' · stalled by your lawyer' : ''}</small></div></div>`;
+      h += `<div class="case"><div style="display:flex;gap:10px;align-items:flex-start"><canvas class="sketch" data-case="${c.id}" width="30" height="36" style="width:60px;height:72px;image-rendering:pixelated;border:2px solid var(--ink);background:#e8dcc0"></canvas><div style="flex:1"><b style="font-size:16px">${esc(c.name)}, ${esc(c.where)}</b>${c.status === 'warrant' ? ' <b style="color:var(--red)">WARRANT</b>' : ''}<br><small>${esc(c.det)} · day ${c.day + 1}</small><div class="meter" style="margin-top:4px"><i style="width:${Math.round(c.progress)}%;background:${c.progress > 70 ? 'var(--red)' : c.progress > 40 ? 'var(--mustard)' : 'var(--good)'}"></i></div><small>${Math.round(c.progress)}% solved${c.lawyerUntil && g.clock.t < c.lawyerUntil ? ' · stalled by your lawyer' : ''}${c.contract ? ' · the family is leaning on this file' : ''}</small></div></div>`;
       h += parts.length ? parts.map((p) => `<p style="margin:4px 0">${p.v >= 1.5 ? '●' : p.v >= 0.8 ? '◐' : '○'} ${esc(p.label)}${p.fix ? `<br><small style="color:var(--brown)">↳ ${esc(p.fix)}</small>` : ''}</p>`).join('') : '<p>Nothing solid. It\'ll go cold.</p>';
       const gone = c.witnesses.filter((x) => x.gone && x.gone !== 'forgot');
       if (gone.length) h += `<p><small>Witnesses who won't talk: ${gone.map((x) => esc(x.name)).join(', ')}</small></p>`;

@@ -16,9 +16,9 @@
   OP.nameSheet = function (g, done) {
     const pl = g.player, ui = g.ui, pick = (a) => a[(Math.random() * a.length) | 0];
     const vals = { first: pick(FIRST), last: pick(LAST), nick: pick(NICK) };
-    const html = `${ui.header('Who are you?')}<div class="body"><p style="font-size:14px;color:var(--brown)">A name the papers will spell wrong for years.</p>
-      ${[['first', 'First name'], ['last', 'Last name'], ['nick', 'They call you']].map(([k, l]) => `<label style="display:block;margin:8px 0 2px;font-size:13px">${l}</label><div style="display:flex;gap:6px"><input data-k="${k}" maxlength="18" value="${esc(vals[k])}" style="flex:1;font:inherit;font-size:18px;padding:6px 8px;border:3px solid var(--ink);background:#fffaf0;color:var(--ink)"><button class="chip c-talk" data-roll="${k}">🎲</button></div>`).join('')}
-      <div class="opts" style="margin-top:14px"><button class="opt go" id="nameGo">That's me</button></div></div>`;
+    const html = `${ui.header('Who are you?')}<div class="body"><p style="font-size:13px;color:var(--brown);margin:0 0 4px">A name the papers will spell wrong for years.</p>
+      ${[['first', 'First name'], ['last', 'Last name'], ['nick', 'They call you']].map(([k, l]) => `<div style="display:flex;gap:6px;align-items:center;margin:5px 0"><label style="width:6.5em;font-size:13px">${l}</label><input data-k="${k}" maxlength="18" value="${esc(vals[k])}" style="flex:1;min-width:0;font:inherit;font-size:16px;padding:4px 8px;border:3px solid var(--ink);background:#fffaf0;color:var(--ink)"><button class="chip c-talk" data-roll="${k}">🎲</button></div>`).join('')}
+      <div class="opts" style="margin-top:8px"><button class="opt go" id="nameGo">That's me</button></div></div>`;
     const s = ui.openSheet('name', html, true);
     s.querySelectorAll('button').forEach((b) => { if (b.textContent.trim() === '✕' || b.getAttribute('aria-label') === 'Close') b.remove(); });
     const input = (k) => s.querySelector(`input[data-k="${k}"]`);
@@ -26,7 +26,7 @@
     s.querySelector('#nameGo').addEventListener('click', () => {
       const v = (k) => (input(k).value || '').trim().slice(0, 18) || vals[k];
       pl.first = v('first'); pl.last = v('last'); pl.nick = v('nick');
-      ui.closeSheet();
+      ui.forceClose = true; ui.closeSheet(); ui.forceClose = false;
       done();
     });
   };
@@ -35,6 +35,7 @@
   OP.run = function (g) {
     const pl = g.player;
     pl.stats.startT = g.clock.t;
+    for (const a of g.actors.list.slice()) if (a !== pl && !a.keep) g.actors.remove(a);
     this.nameSheet(g, () => this.desert(g));
   };
   OP.desert = function (g) {
@@ -98,6 +99,7 @@
     pl.inv.weapons = { fists: 1, revolver: 1 }; pl.weapon = 'fists'; pl.cash = 60;
     pl.place(club.out.x * TS + 8, club.out.y * TS + 12);
     g.interiors.enter(club, 'guest');
+    g.cutscene = true;
     const J = g.jobs, st = (d) => { J.standing[fam] = R.clamp((J.standing[fam] || 0) + d, -100, 100); };
     const ask = (title, line, opts) => new Promise((res) => g.ui.story(title, line, () => setTimeout(() => g.ui.choice(`Don ${dn}`, opts.map((o) => ({ label: o[0], small: o[1], fn: () => { o[2](); res(o[3]); } }))), 150)));
     (async () => {
@@ -119,6 +121,7 @@
       const offers = J.offersFor(fam);
       const first = offers.find((o) => o.kind === 'collect') || offers[0];
       if (first) { J.accept(first); J.offers[fam] = offers.filter((o) => o !== first); }
+      g.cutscene = false;
       g.ui.story('Welcome to the family', `"Good. Here's something small, to start."\n\nHe slides a slip of paper across the table. A name, an address, an amount.\n\nSomewhere out there are the men who left you in the desert. For now, you work for Don ${dn}.`, () => {
         g.ui.toast(`Talk to Don ${dn} for more work. Your first job is marked in gold. Walk out the doormat to leave.`, 'good');
         setTimeout(() => g.ui.toast('Crimes only count if someone sees them. Watch for gold "!" witnesses.'), 7000);

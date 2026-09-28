@@ -60,7 +60,9 @@
       // settle scores with you first
       if (s.grudge[f] >= 30 && f !== pl.family && (s.squadDay[f] || -9) < day - 1) { s.squadDay[f] = day; this.pendingSquad = f; continue; }
       if (s.grudge[f] >= 20 && r < 0.5 && this.hitRacket(f)) continue;
-      if (foe && s.rel[key(f, foe)] < -35 && !this.atWar(f, foe) && s.wars.length < 2 && r < 0.35) {
+      // the player's own family stays out of open war for the first week: the early game is meant to be calm
+      const involvesYou = f === pl.family || foe === pl.family, early = day < 7 || g.jobs.rank() < 1;
+      if (foe && s.rel[key(f, foe)] < -35 && !this.atWar(f, foe) && s.wars.length < 2 && r < 0.35 && !(involvesYou && early)) {
         s.wars.push({ a: f, b: foe, days: 0 });
         this.note(`WAR: ${PLF(f)} and ${PLF(foe)} are at war. Stay off the streets after dark.`, (g.jobs.cityOfFamily(f) || {}).id);
         if (f === pl.family || foe === pl.family) g.ui.toast(`Your family is at war with ${PLF(f === pl.family ? foe : f)}. Their soldiers will shoot on sight.`, 'bad');

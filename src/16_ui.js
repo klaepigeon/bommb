@@ -31,7 +31,7 @@
     });
     $('#menubtn').addEventListener('click', () => this.toggleMenu());
     $('#mapwrap').addEventListener('click', () => this.openMenu('map'));
-    this.el.dim.addEventListener('click', () => { if (performance.now() - (this.openedAt || 0) < 450) return; if (this.sheetOpen && this.sheetOpen !== 'fish' && this.sheetOpen !== 'burgle' && this.sheetOpen !== 'heist') this.closeSheet(); });
+    this.el.dim.addEventListener('click', () => { if (performance.now() - (this.openedAt || 0) < 450 || this.game.cutscene || this.sheetOpen === 'name') return; if (this.sheetOpen && this.sheetOpen !== 'fish' && this.sheetOpen !== 'burgle' && this.sheetOpen !== 'heist') this.closeSheet(); });
     $('#surrender').addEventListener('click', () => { this.closeArrest(); game.law.surrender(); });
     $('#resist').addEventListener('click', () => { this.closeArrest(); game.law.resist('You resisted'); });
     this.el.death.querySelector('button').addEventListener('click', () => { this.el.death.style.display = 'none'; game.player.respawn(); });
@@ -47,7 +47,7 @@
     return !!this.sheetOpen || this.el.story.style.display === 'flex' || this.el.death.style.display === 'flex' || $('#title').style.display === 'flex';
   };
   U.paused = function () {
-    return this.sheetOpen === 'menu' || this.sheetOpen === 'shop' || this.el.story.style.display === 'flex' || $('#title').style.display === 'flex' || this.sheetOpen === 'board' || this.sheetOpen === 'phone';
+    return this.sheetOpen === 'name' || this.game.cutscene || this.sheetOpen === 'menu' || this.sheetOpen === 'shop' || this.el.story.style.display === 'flex' || $('#title').style.display === 'flex' || this.sheetOpen === 'board' || this.sheetOpen === 'phone';
   };
 
   // ---------------------------------------------------------------- toasts & subtitles
@@ -397,6 +397,8 @@
 
   // ---------------------------------------------------------------- sheets
   U.openSheet = function (kind, html, center) {
+    // naming yourself is modal: nothing else gets to open over it
+    if ((this.sheetOpen === 'name' && kind !== 'name') || (this.game.cutscene && kind !== 'choice' && kind !== 'name')) return document.createElement('div');
     const s = this.el.sheet;
     s.className = 'sheet' + (center ? ' center' : '');
     s.innerHTML = html;
@@ -413,6 +415,7 @@
     return s;
   };
   U.closeSheet = function () {
+    if (this.sheetOpen === 'name' && !this.forceClose) return;
     const was = this.sheetOpen;
     this.el.sheet.style.display = 'none';
     this.el.dim.style.display = 'none';

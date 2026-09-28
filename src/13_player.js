@@ -287,7 +287,14 @@
     if (!w || !w.gun) return;
     const have = this.inv.ammo[w.ammo] || 0;
     const need = w.clip - (this.clip[this.weapon] || 0);
-    if (!have) return g.ui.toast('Out of ammo. The gun store has more.', 'warn');
+    if (!have) {
+      // dry: a click, then you reach for whatever else you've got
+      g.audio.sfx('bump', this.x, this.y);
+      if ((this.ammoWarnT || 0) < g.clock.real) { this.ammoWarnT = g.clock.real + 20; g.ui.toast(`Out of ${D.ammoNames[w.ammo] ? D.ammoNames[w.ammo].toLowerCase() : 'ammo'}. The gun store has more.`, 'warn'); }
+      const melee = ['machete', 'hatchet', 'bat', 'crowbar', 'knife', 'razor', 'knuckles', 'sap', 'fists'].find((k) => this.inv.weapons[k]);
+      if (melee) { this.weapon = melee; this.weaponOut = melee !== 'fists'; }
+      return;
+    }
     const n = Math.min(need, have);
     this.inv.ammo[w.ammo] -= n;
     this.clip[this.weapon] = (this.clip[this.weapon] || 0) + n;

@@ -14,7 +14,7 @@ try { ({ chromium } = require('playwright')); } catch { ({ chromium } = require(
 const DAYS = +(process.argv[2] || 100);
 const OUT = process.argv[3] || join(dirname(fileURLToPath(import.meta.url)), '..', 'playtest-out');
 mkdirSync(OUT, { recursive: true });
-const page = 'file://' + join(dirname(fileURLToPath(import.meta.url)), '..', 'dist', 'index.html');
+const page = 'file://' + join(dirname(fileURLToPath(import.meta.url)), '..', 'dist', 'index.html') + '?quick';
 const browser = await chromium.launch();
 const p = await (await browser.newContext({ viewport: { width: 844, height: 390 }, deviceScaleFactor: 1, hasTouch: true })).newPage();
 const errors = [];
@@ -300,6 +300,18 @@ for (let d = 1; ; d++) {
   const snap = await p.evaluate(() => window.BOT.snapshot());
   snap.gameDay = (await p.evaluate(() => R.game.clock.day())) - startDay + 1;
   snap.notes = notes;
+  // the newer systems, summarised
+  snap.sys = await p.evaluate(() => {
+    const g = R.game, pl = g.player, cs = pl.cases ? pl.cases.list : [], m = pl.money || {}, t = pl.turf || {}, v = pl.vend ? pl.vend.list : [], k = pl.killer || {};
+    return {
+      cases: cs.map((c) => `${c.type}:${c.status}:${Math.round(c.progress)}`).join(' '),
+      dirty: Math.round(R.money ? R.money.dirty() : 0), susp: Math.round(m.susp || 0), audits: m.audits || 0,
+      wars: (t.wars || []).map((w) => w.a + '-' + w.b).join(' '), grudge: JSON.stringify(t.grudge || {}), lost: Object.keys(t.lost || {}).length,
+      avengers: v.filter((x) => x.knows && !x.done).map((x) => x.mode).join(','), suspecting: v.filter((x) => !x.knows && !x.done).length,
+      killer: k.profile ? `${k.profile.name}:${k.profile.phase}:${Math.round(k.profile.heat)}` : '', unsolved: (k.unsolved || []).length, poi: Math.round(k.poi || 0),
+      family: pl.family, honor: Math.round(pl.rep.honor), infamy: Math.round(pl.rep.infamy),
+    };
+  });
   report.days.push(snap);
   if (snap.gameDay >= DAYS) break;
   if (d === 1 || Math.floor(snap.gameDay / 10) !== lastShot) {

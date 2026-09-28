@@ -640,7 +640,7 @@
   };
   A.roomPal = function (type) {
     const map = { bar: 'bar', club: 'club', diner: 'diner', police: 'police', hospital: 'hospital', bank: 'bank', church: 'church', social: 'social', casino: 'casino',
-      garage: 'garage', house: 'house', cabin: 'house', apartment: 'house', barn: 'house', hotel: 'bank', motel: 'house', arcade: 'arcade', factory: 'work', warehouse: 'work', office: 'police', school: 'house' };
+      garage: 'garage', house: 'house', cabin: 'house', apartment: 'house', barn: 'house', hotel: 'bank', motel: 'house', arcade: 'arcade', strip: 'club', costume: 'arcade', factory: 'work', warehouse: 'work', office: 'police', school: 'house' };
     return ROOMPAL[map[type] || 'shop'];
   };
   A.drawInteriorTile = function (g, w, x, y, px, py, t) {
