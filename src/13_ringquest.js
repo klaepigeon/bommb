@@ -16,15 +16,15 @@
     { id: 'lantern', title: 'A Lantern for the Light', goal: 'Find the Fear Man\'s power lantern in the wreck of his ship, high in the northern snows.',
       give: 'My ship came down in the snow north of Pinecrest. My lantern is in the wreck. Things came through with me, from the anti-matter side. They will not want to give it up.',
       done: 'The lantern. Speak the words and the ring drinks its fill. Once a day. Do not abuse it.', reward: 'The Power Lantern: recharge Will to full once a day. Constructs hit harder.' },
-    { id: 'pilot', title: 'The Emerald Pilot', goal: 'Find the green-ringed test pilot out on the Dustwater airstrip (daytime) and beat him in a duel.',
-      give: 'There is a man in a flight jacket out on the Dustwater strip with a green ring. His kind chased me off a thousand worlds. He fills people with nerve. Show him what nerve is worth.',
-      done: 'He ran. They always run, eventually. You have learned to hold the light steady.', reward: 'Duelist\'s Edge: ring bolts hit 50% harder, the beam costs half.' },
+    { id: 'pilot', title: 'Kill Hal Jordan', goal: 'Hal Jordan, the green-ringed test pilot, flies out of the Dustwater airstrip by day. Kill him. Not beat: kill.',
+      give: 'There is a man in a flight jacket out on the Dustwater strip. Hal Jordan. His ring is green, and his kind chased me off a thousand worlds. He fills people with nerve. I do not want him beaten. I want him in the ground, and his ring on my table.',
+      done: 'His ring. Still warm. Keep it; a trophy teaches as well as a lantern. There is no going back now, and that is the point. Half the lesson is done.', reward: 'Duelist\'s Edge: ring bolts hit 50% harder, the beam costs half. Hal\'s green ring is yours to wear (swap rings at any wardrobe).' },
     { id: 'moth', title: 'The Moth of Fear', goal: 'At night in Port Hollow, free the possessed and drive off the great yellow moth with the ring.',
       give: 'Something followed me. A moth the size of a house, made of fear itself. It is feeding on Port Hollow at night, wearing people like coats. Burn it off them.',
       done: 'Gone, for now. It will be back in some other century. You have its taste in your ring.', reward: 'Fear Aura: when you\'re badly hurt, enemies may break and run. Constructs cost a quarter less.' },
     { id: 'corps', title: 'A Corps of Your Own', goal: 'Give three lesser rings to people who fear you (fear 50+): Talk to them.',
       give: 'Every lantern needs a corps. Here: three lesser rings. Find three who fear you, and let them carry a little of it.',
-      done: 'A corps. Small, badly dressed, but a corps. I can go home now. Keep the light burning, Nicky.', reward: 'The Fear Corps: your ring-bearers fight beside you with bolts of yellow light.' },
+      done: 'A corps. Small, badly dressed, but a corps. Wear the uniform: black, and gold, and the lantern on your chest. When I send for you, and I will, it will be from very far away.', reward: 'The Fear Corps: your ring-bearers fight beside you with bolts of yellow light. The Sinestro Corps uniform (free at any tailor, or wear it from the wardrobe).' },
   ];
 
   const Q = (R.fearQuest = { game: null });
@@ -73,7 +73,7 @@
     const s = this.state();
     if (q.id === 'lesson') return `(${this.scared.size}/6 tonight)`;
     if (q.id === 'lantern') return this.game.player.inv.tools.lantern ? '(You have it.)' : '(Still in the wreck.)';
-    if (q.id === 'pilot') return s.pilotBeaten ? '(He ran.)' : '(Unfinished.)';
+    if (q.id === 'pilot') return s.halDead ? '(He is dead.)' : '(He is still breathing.)';
     if (q.id === 'moth') return s.mothDone ? '(The moth is gone.)' : '(It still feeds.)';
     if (q.id === 'corps') return `(${s.rings}/3 rings given)`;
     return '';
@@ -82,7 +82,7 @@
     const s = this.state(), pl = this.game.player;
     if (q.id === 'lesson') return s.lessonDone;
     if (q.id === 'lantern') return !!pl.inv.tools.lantern;
-    if (q.id === 'pilot') return !!s.pilotBeaten;
+    if (q.id === 'pilot') return !!s.halDead;
     if (q.id === 'moth') return !!s.mothDone;
     if (q.id === 'corps') return s.rings >= 3;
     return false;
@@ -90,7 +90,7 @@
   Q.onStart = function (q) {
     const P = R.poi;
     if (q.id === 'lantern') P.add(this.wreck.x, this.wreck.y, 'tip', 'Crashed ship', 'The Fear Man\'s lantern');
-    if (q.id === 'pilot') P.add(this.strip.x, this.strip.y, 'tip', 'Dustwater airstrip', 'The emerald pilot');
+    if (q.id === 'pilot') P.add(this.strip.x, this.strip.y, 'tip', 'Dustwater airstrip', 'Hal Jordan');
     if (q.id === 'moth') { const c = this.game.world.cities[0]; P.add(c.cx, c.cy, 'tip', 'The Moth of Fear', 'Port Hollow, at night'); }
     if (q.id === 'corps') this.state().rings = 0;
   };
@@ -102,8 +102,8 @@
     if (q.id === 'lantern') s.perks.lantern = 1;
     if (q.id === 'pilot') s.perks.duel = 1;
     if (q.id === 'moth') s.perks.aura = 1;
-    if (q.id === 'corps') { s.perks.corps = 1; g.pop.addNews('dust', 'The yellow light over the Dustwater flats is gone. Truckers say it went straight up.'); }
-    g.ui.story(`${q.title}: done`, `${q.done}\n\nReward: ${q.reward}`);
+    if (q.id === 'corps') { s.perks.corps = 1; pl.wardrobe = pl.wardrobe || {}; pl.wardrobe['unlock:scsuit'] = 1; g.pop.addNews('dust', 'The yellow light over the Dustwater flats is gone. Truckers say it went straight up.'); }
+    g.ui.story(`${q.title}: done`, `${q.done}\n\nReward: ${q.reward}`, q.id === 'corps' ? () => g.ui.story('TO BE CONTINUED...', 'Three nights later a yellow star moves wrong across the sky over the Dustwater flats. It is not a star.\n\nOn a world called Qward, in a universe where everything runs backwards, a lantern the size of a city is being lit.\n\nThe Fear Man is calling his corps home. Pack light.\n\n(Your ring now whispers a word you don\'t know yet: KORUGAR.)') : undefined);
     if (q.id === 'corps') setTimeout(() => { if (R.ring.fearMan) { g.fx.text(R.ring.fearMan.x, R.ring.fearMan.y - 24, 'Farewell.', '#fff27a'); R.ring.goneForever = true; } }, 500);
   };
   Q.suitUp = function () {
@@ -196,19 +196,30 @@
     if (!this.pilot && near && h > 7 && h < 19 && !s.pilotBeaten) {
       const p = g.actors.makeHuman(st.x * TS + 8, st.y * TS + 8, { tag: 'pilot', cash: 0, arch: 'tough',
         look: { fem: false, age: 32, skin: '#e0ac7e', hair: '#5a3a20', top: '#6a4a2a', bottom: '#2a3a2a', seedStr: 'pilot', oldOverride: { style: 'short', jacket: ['#3a2410', '#5a3a1c', '#7c5228', '#a06c38'], shirt: ['#1a4a24', '#2a6a34', '#3a8a48', '#5aaa68'], pants: ['#1a2a1a', '#243424', '#344a34', '#4a6a4a'], glasses: false } } });
-      p.strangerName = 'Test Pilot'; p.keep = true; p.hp = p.maxHp = 320; p.tr.brave = 1; p.pilot = true;
-      g.actors.say(p, 'Nice ring. Wrong color, pal.');
+      p.strangerName = 'Hal Jordan'; p.keep = true; p.hp = p.maxHp = 320; p.tr.brave = 1; p.pilot = true;
+      g.actors.say(p, 'Nice ring. Wrong color, pal. He sent you to kill me, didn\'t he?');
       this.pilot = p;
     }
     const p = this.pilot;
     if (!p) return;
-    if (p.dead || !g.actors.list.includes(p)) { this.pilot = null; if (p.dead) { s.pilotBeaten = true; g.ui.toast('The pilot is down. His ring flickers out. That will do.', 'good'); } return; }
-    if (p.hp < p.maxHp * 0.2 && !s.pilotBeaten) {
-      s.pilotBeaten = true;
-      g.actors.say(p, 'Okay, okay! You win this round. In brightest day, pal!');
-      g.actors.setFlee(p, pl, 30);
-      g.ui.toast('The pilot runs for his plane. Tell the Fear Man.', 'good');
+    if (p.dead || !g.actors.list.includes(p)) {
+      this.pilot = null;
+      if (p.dead) {
+        s.pilotBeaten = true; s.halDead = true;
+        g.actors.say(p, 'In brightest... day...');
+        p.halBody = true; p.keep = true;
+        g.pop.addNews('dust', 'A test pilot was found dead on the Dustwater airstrip. Witnesses describe "a yellow light, then a green one going out."');
+        g.ui.toast('Hal Jordan is dead. Search his body, then tell the Fear Man.', 'good');
+      } else if (!s.halDead) g.ui.toast('Hal got away. He will be back on the strip another day.', 'warn');
+      return;
     }
+    if (p.hp < p.maxHp * 0.25 && !p.halRun) {
+      p.halRun = true;
+      g.actors.say(p, 'Okay, okay! You win this round! In brightest day, pal!');
+      g.actors.setFlee(p, pl, 40);
+      g.ui.toast('He\'s running for his plane. The Fear Man said kill.', 'warn');
+    }
+    if (p.halRun) { if (Math.hypot(p.x - pl.x, p.y - pl.y) > TS * 40) { g.fx.text(p.x, p.y - 26, 'Gotta fly!', '#70f080'); g.actors.remove(p); } return; }
     if (s.pilotBeaten) return;
     // he fights back with green light
     if (p.hp < p.maxHp && p.state !== 'fight') { p.hostile = true; g.actors.setFight(p, pl); }
@@ -365,19 +376,23 @@
 })();
 
 // ---------------------------------------------------------------- the green path
-// Talk to the test pilot instead of fighting him and you can side with Hal: prove you
-// protect people, earn a green ring, uniform and power battery, then face the Fear Man.
+// Talk to Hal instead of fighting him and you can side with him: find his wife Carol (his
+// battery, and the violet path), take a spare ring to Guy Gardner, then face the Fear Man
+// for the green ring and the uniform.
 // He cannot be killed. At the brink he goes up like a flare, and that's another story.
 (function () {
   const D = R.data, TS = R.TILE, Q = R.fearQuest;
   const GREEN_OATH = 'When all is dark and hope is slight,\nI hold the line with all my might.\nLet every fear that stalks the night\nfall back before my will\'s green light.';
   const GQ = [
-    { id: 'protect', title: 'Prove It', goal: 'Take off the yellow ring and protect people: put down 5 muggers, robbers or thugs who are hurting someone.',
-      give: 'That ring runs on fear. It\'ll hollow you out. Take it off. Show me you\'d stand up for somebody, five times, and I\'ll show you a better light.',
-      done: 'You did good. Here. Hold it up to the battery, say the words, and mean them.', reward: 'The green ring (bolts, beam and constructs in green; Will returns faster near people who like you), the green-and-black uniform and a power battery.' },
+    { id: 'carol', title: 'Find Carol', goal: 'Hal\'s wife Carol went out to the old glade in the northern woods three nights ago and never came home. Find her.',
+      give: 'Before anything else: my wife. Carol. She\'s been hearing a hum out in the northern woods, a violet light between the trees. Three nights ago she drove out there and didn\'t come back. I can\'t leave the sky. You can.',
+      done: 'You brought her back. I owe you more than a ring. Take the battery, it\'ll charge whatever you\'re wearing. And listen to Carol. That violet stone of hers seems to like you.', reward: 'Hal\'s power battery (recite the oath once a day for a full charge, any ring). Carol starts you on the violet path.' },
+    { id: 'gardner', title: 'The Spare Ring', goal: 'Hal has a spare green ring for a hothead named Guy Gardner who coaches at the Port Hollow school (7 AM to 4 PM). Deliver it.',
+      give: 'The Fear Man\'s going to come for us both. We need a third. There\'s a gym teacher in Port Hollow, Guy Gardner. Loud, rude, can\'t be scared. Take him this spare. He won\'t say thank you.',
+      done: 'Gardner\'s in? Good. Don\'t tell him I said this, but he\'s the bravest idiot I know.', reward: 'Guy Gardner will back you up against the Fear Man.' },
     { id: 'showdown', title: 'Face the Fear Man', goal: 'Confront the Fear Man under his dead tree between 1 and 4 AM. He will not go quietly.',
-      give: 'He knows by now. He\'ll be waiting at that tree, and he\'ll be angry. I\'d go with you but somebody has to watch the sky. Don\'t let him scare you. That\'s all he\'s got.',
-      done: '', reward: 'Emerald Knight: constructs cost a quarter less, the bubble shield lasts twice as long, and you can call Hal for backup from any payphone.' },
+      give: 'He knows by now. He\'ll be waiting at that tree, and he\'ll be angry. Gardner will meet you there. Don\'t let him scare you. That\'s all he\'s got.',
+      done: '', reward: 'The green ring and the green-and-black uniform. Emerald Knight: constructs cost a quarter less, the shield lasts twice as long, and you can call Hal for backup from any payphone.' },
   ];
 
   Q.gcurrent = function () { const s = this.state(); return s.path === 'green' && s.gstage < GQ.length ? GQ[s.gstage] : null; };
@@ -396,15 +411,17 @@
       opts.push({ label: 'Side with Hal (turn on the Fear Man)', cls: 'go', fn: () => {
         s.path = 'green'; s.gstage = 0; s.gactive = true; s.saved = 0; s.gperks = s.gperks || {};
         s.active = false; // the Fear Man's lesson is abandoned
-        pl.weapon = pl.weapon === 'ring' ? 'fists' : pl.weapon;
         say(GQ[0].give); ui.closeSheet();
+        this.gstart(GQ[0]);
         g.ui.toast(`Hal: ${GQ[0].title}. ${GQ[0].goal}`, 'good');
         h.hostile = false; h.state = 'idle'; h.timer = 1e9; h.stay = true; h.strangerName = 'Hal';
       } });
       opts.push({ label: '"Let\'s settle this." (fight him)', cls: 'bad', fn: () => { ui.closeSheet(); h.hostile = true; g.actors.setFight(h, pl); } });
-    } else if (gq && s.gactive && gq.id === 'protect' && s.saved >= 5) {
-      opts.push({ label: '"Five of them. Satisfied?"', cls: 'go', fn: () => { say(GQ[0].done); ui.closeSheet(); this.gfinish(); } });
-    } else if (gq) opts.push({ label: `"About ${gq.title.toLowerCase()}..."`, fn: () => say(`${gq.goal}${gq.id === 'protect' ? ` (${s.saved}/5)` : ''}`) });
+    } else if (gq && gq.id === 'carol' && s.carolFreed) {
+      opts.push({ label: '"Carol\'s safe. She\'s home."', cls: 'go', fn: () => { say(GQ[0].done); ui.closeSheet(); this.gfinish(); } });
+    } else if (gq && gq.id === 'gardner' && s.guyRing) {
+      opts.push({ label: '"Gardner took the ring."', cls: 'go', fn: () => { say(GQ[1].done); ui.closeSheet(); this.gfinish(); } });
+    } else if (gq) opts.push({ label: `"About ${gq.title.toLowerCase()}..."`, fn: () => say(gq.goal) });
     else opts.push({ label: '"How\'s the sky?"', fn: () => say('Quiet. Too quiet. Somewhere up there he\'s licking his wounds. Keep that ring charged.') });
     if (pl.wardrobe && pl.wardrobe['unlock:glsuit'] && pl.style.shirt !== 'gljersey') opts.push({ label: 'Put on the green uniform', fn: () => { this.greenSuit(); say('Looks good on you. Don\'t get cocky.'); } });
     opts.push({ label: 'Leave', fn: () => ui.closeSheet() });
@@ -419,30 +436,37 @@
   Q.gfinish = function () {
     const g = this.game, pl = g.player, s = this.state(), q = GQ[s.gstage];
     s.gstage++;
-    if (q.id === 'protect') {
-      pl.ringColor = 'green';
-      pl.inv.tools.ring = 1;
+    if (q.id === 'carol') {
       pl.inv.tools.battery = 1;
-      pl.wardrobe = pl.wardrobe || {}; pl.wardrobe['unlock:glsuit'] = 1;
-      D.weapons.ring.name = 'Green Ring';
-      g.ui.setRingButtons();
-      s.gactive = true;
       g.audio.sfx('promote');
-      g.ui.story('The Green Ring', `Hal presses a ring into your palm. It is cool, and it hums a different note.\n\n${GREEN_OATH}\n\nYour constructs, bolts and beam burn green now. Will comes back faster near people who like you. Recite the oath at the power battery once a day for a full charge.\n\nNext: ${GQ[1].goal}`);
-      g.ui.toast(`Hal: ${GQ[1].title}.`, 'good');
-      R.poi.add(R.ring.fearSpot.x, R.ring.fearSpot.y, 'tip', 'The dead tree', 'Face the Fear Man, 1-4 AM');
+      g.ui.story('The Power Battery', `Hal sets a green lantern in your hands. It is heavier than it looks, and warm.\n\n${GREEN_OATH}\n\nRecite the oath once a day and whatever ring you wear drinks its fill.\n\nCarol wants a word with you about that violet stone.\n\nNext: ${GQ[1].goal}`);
+      if (R.corps) R.corps.startViolet();
     }
+    if (q.id !== 'showdown' && GQ[s.gstage]) this.gstart(GQ[s.gstage]);
     if (q.id === 'showdown') {
       s.gperks.knight = 1;
+      pl.inv.tools.ring = 1;
+      pl.wardrobe = pl.wardrobe || {}; pl.wardrobe['unlock:glsuit'] = 1;
+      if (R.corps) R.corps.give('green', true); else { pl.ringColor = 'green'; D.weapons.ring.name = 'Green Ring'; }
+      g.ui.setRingButtons();
       s.fmGone = true;
       g.audio.sfx('promote');
       g.pop.addNews('dust', 'A pillar of yellow light rose from the Dustwater flats at 3 AM and did not come down. Observatory staff "have no comment".');
-      g.ui.story('TO BE CONTINUED...', 'He is gone. Not dead: gone. A streak of yellow went straight up past the clouds, past the moon, and kept going.\n\nSomewhere out there, a planet of little blue men and a lantern the size of a city are waiting.\n\nThe Brass Coast is quiet tonight. For now.\n\n(Emerald Knight: constructs cost a quarter less, the shield lasts twice as long, and you can call Hal from any payphone.)');
+      g.ui.story('TO BE CONTINUED...', 'He is gone. Not dead: gone. A streak of yellow went straight up past the clouds, past the moon, and kept going.\n\nSomewhere out there, a planet of little blue men and a lantern the size of a city are waiting.\n\nThe Brass Coast is quiet tonight. For now.\n\n(Hal drops out of the sky, looks at you a long moment, and slides a green ring onto your finger. "You earned it. And the uniform. Wear them both where people can see."\n\nEmerald Knight: constructs cost a quarter less, the shield lasts twice as long, and you can call Hal from any payphone. Swap rings at any wardrobe.)');
     }
   };
+  Q.gstart = function (q) {
+    const g = this.game, P = R.poi;
+    g.ui.toast(`Hal: ${q.title}. ${q.goal}`, 'good');
+    if (q.id === 'carol') { const c = this.glade; P.add(c.x, c.y, 'tip', 'The violet glade', 'Carol went here'); g.waypoint = { x: c.x * TS + 8, y: c.y * TS + 8 }; }
+    if (q.id === 'gardner') { const b = this.school(); if (b) { P.add(b.out.x, b.out.y, 'tip', b.name, 'Guy Gardner, gym teacher'); g.waypoint = { x: b.out.x * TS + 8, y: b.out.y * TS + 8 }; } }
+    if (q.id === 'showdown') R.poi.add(R.ring.fearSpot.x, R.ring.fearSpot.y, 'tip', 'The dead tree', 'Face the Fear Man, 1-4 AM');
+  };
+  Q.school = function () { const w = this.game.world, c0 = w.cities[0]; return w.buildings.find((b) => b && b.type === 'school' && b.city === c0) || w.buildings.find((b) => b && b.type === 'school'); };
   // bad guys you put down while they're hurting someone
   Q.onDefeat = function (h, byPlayer) {
     const s = this.state();
+    if (!s.protectQuest) return; // the old "Prove It" count, retired for Hal's new quests
     if (!byPlayer || s.path !== 'green' || !s.gactive || s.gstage !== 0 || !h || h.kind !== 'h') return;
     const baddie = ['mugger', 'robber', 'perp', 'thief', 'qward', 'bounty'].includes(h.tag) || h.possessed || (h.hostile && h.target && h.target !== this.game.player && h.target.kind === 'h');
     if (!baddie || h.countedSave) return;
@@ -470,10 +494,7 @@
       if (!this.pilot && Math.hypot(pl.x / TS - st1.x, pl.y / TS - st1.y) < 32 && hr > 7 && hr < 19) this.spawnHal();
       return;
     }
-    if (s.gstage === 0 && s.gactive && s.saved < 5) {
-      this.crimeT = (this.crimeT || 20) - dt;
-      if (this.crimeT <= 0 && !pl.room && g.world.cityAt((pl.x / TS) | 0, (pl.y / TS) | 0)) { this.crimeT = 45; const city = g.world.cityAt((pl.x / TS) | 0, (pl.y / TS) | 0); if (R.events.robbery) R.events.robbery(g, city); }
-    }
+    this.updateCarol(dt); this.updateGuy(dt);
     // Hal waits on the strip for you in daylight
     const st = this.strip, h = g.clock.hour();
     if (!this.pilot && (s.gstage === 0 || s.gstage >= 1) && Math.hypot(pl.x / TS - st.x, pl.y / TS - st.y) < 32 && h > 7 && h < 19) this.spawnHal();
@@ -489,7 +510,7 @@
     const g = this.game, st = this.strip;
     const p = g.actors.makeHuman(st.x * TS + 8, st.y * TS + 8, { tag: 'pilot', cash: 0, arch: 'friendly',
       look: { fem: false, age: 32, skin: '#e0ac7e', hair: '#5a3a20', top: '#6a4a2a', bottom: '#2a3a2a', seedStr: 'pilot', oldOverride: { style: 'short', jacket: ['#3a2410', '#5a3a1c', '#7c5228', '#a06c38'], shirt: ['#1a4a24', '#2a6a34', '#3a8a48', '#5aaa68'], pants: ['#1a2a1a', '#243424', '#344a34', '#4a6a4a'] } } });
-    p.strangerName = 'Hal'; p.keep = true; p.hp = p.maxHp = 320; p.tr.brave = 1; p.pilot = true; p.stay = true; p.state = 'idle'; p.timer = 1e9;
+    p.strangerName = 'Hal Jordan'; p.keep = true; p.hp = p.maxHp = 320; p.tr.brave = 1; p.pilot = true; p.stay = true; p.state = 'idle'; p.timer = 1e9;
     this.pilot = p;
   };
   // the showdown: he fights, he can't die, he leaves

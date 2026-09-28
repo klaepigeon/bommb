@@ -23,6 +23,7 @@
       sect('Opening', [btn('opening', 'Replay the opening'), btn('rename', 'Change my name')]),
       sect('Street business', [btn('loan', 'A debtor, a week late'), btn('fix', 'A fixed race'), btn('cops', '3 cops + captain here'), btn('ia', 'Internal Affairs sweep'), btn('rat', 'Someone flips'), btn('ratclue', 'Next rat clue'), btn('truck', 'Truck tip'), btn('shooters', 'Desert gunmen: all leads')]),
       sect('Reputation & weather', [btn('respect', 'Respected (honor 80)'), btn('fear', 'Feared (infamy 80)'), btn('dust', 'Dust storm'), btn('dent', 'Beat up the nearest car'), btn('collector', 'Rival collector here'), btn('crew', 'Rival hijack crew'), btn('wreck', 'Wreck on the road')]),
+      sect('Lantern corps', ['yellow', 'green', 'red', 'orange', 'blue', 'indigo', 'violet', 'black', 'white'].map((c) => btn('ring:' + c, c[0].toUpperCase() + c.slice(1) + ' ring')).concat([btn('rings', 'All nine'), btn('larf', 'Larfleeze here'), btn('ghosts', '5 ghosts'), btn('rage', 'Rage: 9 kills today'), btn('carol', 'Hal: Find Carol'), btn('guy', 'Hal: Gardner'), btn('killhal', 'Fear Man: Kill Hal')])),
     ].join('');
     body.insertAdjacentHTML('beforeend', html);
     const near = () => w.findNear(pl.x / TS, pl.y / TS, 2, 6, (x, y) => !w.solidPed(x, y) && !w.isWater(x, y)) || { x: pl.x / TS, y: pl.y / TS };
@@ -35,6 +36,7 @@
       const [k, v] = el.dataset.x.split(':');
       const C = R.cases, MN = R.money, TF = R.turf, SK = R.profile, VD = R.vendetta;
       try {
+        if (k === 'ring') { R.corps.give(v); R.corps.wear(v); ui.closeSheet(); return; }
         switch (k) {
           case 'loan': { const p = person(); if (!p) break; const L = { pid: p.id, name: g.pop.name(p), principal: 250, vig: 25, day: g.pop.day - 8, due: g.pop.day - 1, late: 1, paid: 0, broke: 0, done: false, city: p.city }; R.shark.state().loans.push(L); if (p.actor && !p.actor.dead) g.actors.remove(p.actor); const s = near(); g.life.spawnPerson(p, s.x * TS + 8, s.y * TS + 8); ui.toast(`${L.name} owes you $275. Talk to them.`); break; }
           case 'fix': R.shark.state().fixed++; ui.toast('Bet the long shot at any bar.'); break;
@@ -46,6 +48,12 @@
           case 'shooters': { const s = R.desert.state(); if (!s.shooters) { const pool = g.pop.people.filter((q) => q.alive && !q.fem && q.age > 22 && q.age < 50 && q.role !== 'cop' && !q.isDon && !q.faction); s.shooters = [pool[1].id, pool[5].id]; } for (const p of R.desert.men()) { const L = R.desert.lead(p); L.name = L.where = true; } ui.toast('Both names and where they work. Check the Jobs tab.'); break; }
           case 'collector': R.rivals.end(); ui.closeSheet(); R.rivals.collector(g, city()); if (!R.rivals.scene) ui.toast('Nobody broke enough around here. Try a busier street.'); break;
           case 'crew': R.rivals.end(); ui.closeSheet(); R.rivals.crew(g); if (!R.rivals.scene) ui.toast('Needs a highway outside town.'); break;
+          case 'rings': for (const c of R.corps.ORDER) R.corps.give(c, true); ui.closeSheet(); ui.toast('Nine lights. Swap at any wardrobe.', 'good'); break;
+          case 'larf': { const s = near(); R.corps.hoard = { x: s.x + 8, y: s.y }; R.corps.state().larf.hint = true; R.corps.spawnLarfleeze(); ui.closeSheet(); break; }
+          case 'ghosts': { const s = R.corps.state(); for (let i = 0; i < 5; i++) s.ghosts.push({ n: 'Ghost ' + (s.ghosts.length + 1), f: i % 2, a: 30 + i * 5 }); ui.toast(`${s.ghosts.length} ghosts in the orange ring.`); break; }
+          case 'rage': { const s = R.corps.state(); s.rage.day = g.pop.day; s.rage.n = 9; ui.toast('Nine today. One more.'); break; }
+          case 'carol': case 'guy': { const Q = R.fearQuest, s = Q.state(); pl.inv.tools.ring = 1; s.path = 'green'; s.gperks = s.gperks || {}; s.gactive = true; s.gstage = k === 'carol' ? 0 : 1; Q.gstart(k === 'carol' ? { id: 'carol', title: 'Find Carol', goal: 'Find Carol.' } : { id: 'gardner', title: 'The Spare Ring', goal: 'Deliver the ring.' }); tp(k === 'carol' ? R.corps.glade.x + 12 : Q.school().out.x + 4, k === 'carol' ? R.corps.glade.y : Q.school().out.y); break; }
+          case 'killhal': { const Q = R.fearQuest, s = Q.state(); pl.inv.tools.ring = 1; s.stage = 2; s.active = true; s.path = null; g.clock.t = Math.floor(g.clock.t / 1440) * 1440 + 11 * 60; tp(Q.strip.x + 6, Q.strip.y); break; }
           case 'wreck': { const v = g.traffic.list.find((q) => !q.removed && !q.wrecked && q.driver && q.driver !== pl && R.dist(q.x, q.y, pl.x, pl.y) < TS * 16); if (v) { g.traffic.exitVehicle(v, v.driver); v.hp = v.maxHp * 0.1; v.burning = 0.01; ui.toast('A car\'s on fire up the road. Watch the drivers gawk.'); } else ui.toast('No traffic nearby.'); break; }
           case 'respect': pl.rep.honor = 80; pl.rep.infamy = Math.min(pl.rep.infamy, 30); break;
           case 'fear': pl.rep.infamy = 80; break;

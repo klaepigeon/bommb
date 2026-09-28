@@ -84,7 +84,7 @@
     R.money.init(this);
     R.turf.init(this);
     R.vendetta.init(this);
-    R.shark.init(this); R.payroll.init(this); R.rat.init(this); R.hijack.init(this); R.desert.init(this); R.cars.init(this); R.honor.init(this); R.dust.init(this); R.rivals.init(this); R.sky.init(this); R.monte.init(this);
+    R.shark.init(this); R.payroll.init(this); R.rat.init(this); R.hijack.init(this); R.desert.init(this); R.cars.init(this); R.honor.init(this); R.dust.init(this); R.rivals.init(this); R.sky.init(this); R.monte.init(this); R.corps.init(this); R.track.init(this);
     R.butcher.init(this);
     R.arms.init(this);
     R.profile.init(this);
@@ -256,6 +256,8 @@
       R.rivals.update(sdt);
       R.sky.tick(sdt);
       R.monte.update(sdt);
+      R.corps.update(sdt);
+      R.track.update(sdt);
       R.profile.update(sdt);
       R.carry.update(sdt);
       R.night.update(sdt);
@@ -404,7 +406,7 @@
       pl.hotel = p.hotel || null; pl.stash = p.stash || null;
       for (const [id, sec, reno] of p.propUp || []) { const b = this.world.buildings[id]; if (b) { b.sec = sec; b.reno = reno; } }
       if (p.campaign) { pl.campaign = p.campaign; R.campaign.run = null; R.campaign.afterLoad(); }
-      if (p.ringColor) { pl.ringColor = p.ringColor; R.data.weapons.ring.name = 'Green Ring'; }
+      if (p.ringColor) { pl.ringColor = p.ringColor; R.data.weapons.ring.name = (R.corps.COL[p.ringColor] || R.corps.COL.yellow).name; }
       if (p.style) pl.style = Object.assign(R.styleDefault(), p.style);
       pl.wardrobe = p.wardrobe || {};
       pl.errands = p.errands || [];

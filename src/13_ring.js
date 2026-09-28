@@ -13,7 +13,8 @@
     yellow: { Y: ['#6a4600', '#b88400', '#f0c020', '#fff27a'], glow: 'rgba(255,226,60,', core: '#ffe23c', hi: '#fff27a', light: '#fffbe0', mid: '#f0c020' },
     green: { Y: ['#0a4a1a', '#1a8a34', '#30c050', '#9af0a8'], glow: 'rgba(80,240,110,', core: '#50f070', hi: '#9af0a8', light: '#eaffee', mid: '#30c050' },
   };
-  const pal = () => PAL[R.game && R.game.player && R.game.player.ringColor === 'green' ? 'green' : 'yellow'];
+  R.ringPALS = PAL; // the other corps add their colours in 14_corps
+  const pal = () => PAL[(R.game && R.game.player && R.game.player.ringColor) || 'yellow'] || PAL.yellow;
   const GL = () => pal().glow;
   R.ringPal = pal;
 
@@ -112,7 +113,8 @@
     return c;
   }
   const sprite = (k) => {
-    const key = pal() === PAL.green ? 'g:' + k : k;
+    const col = Object.keys(PAL).find((c) => PAL[c] === pal()) || 'yellow';
+    const key = col === 'yellow' ? k : col + ':' + k;
     if (sprites[key]) return sprites[key];
     Y = pal().Y;
     const c = LIB[k];
