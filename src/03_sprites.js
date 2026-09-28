@@ -347,8 +347,11 @@
     g.fillRect(X - 4, Y - 1, 8, 2);
     g.fillRect(X - 3, Y - 2, 6, 4);
     let pose = st.pose || null;
-    if (!pose && st.weapon && st.weapon !== 'fists') pose = D.weapons[st.weapon] && D.weapons[st.weapon].gun ? 'g' : null;
-    const spr = A.oldSprite(look, d8, pose ? 0 : frame, pose);
+    const wdef = st.weapon && st.weapon !== 'fists' ? D.weapons[st.weapon] : null;
+    if (!pose && wdef) pose = wdef.gun ? 'g' : st.weapon === 'knuckles' ? null : 'k';
+    if (!pose && st.held) pose = A.heldPose(st.held, 0, 1);
+    // legs keep walking whatever the arms are doing
+    const spr = A.oldSprite(look, d8, frame, pose);
     if (st.down) {
       g.save();
       g.translate(X, Y - 3);
@@ -358,24 +361,157 @@
       if (fx) g.restore();
       return;
     }
+    // things in the hand go behind the body when the hand is on the far side
+    const hand = () => {
+      if (wdef) drawWeapon8(g, X, Y, d8, st.weapon, st.ang, pose, look.kid);
+      else if (st.held) A.drawHeldItem(g, X, Y, d8, st.held, pose, look.kid);
+    };
+    const behind = (wdef || st.held) && (wdef && wdef.gun ? DIR8[d8] === 'up' || DIR8[d8] === 'upright' : A.itemBehind(d8, pose));
+    if (behind) hand();
     g.drawImage(spr, X - spr.width / 2, Y - 25);
     if (look.hatKind && A.drawHat) A.drawHat(g, X, Y - 25 + (look.kid ? 2 : 0), look.hatKind, d8, look.hatCol);
-    if (st.weapon && st.weapon !== 'fists' && pose !== 'g' || pose === 'g') drawWeapon8(g, X, Y, d8, st.weapon);
+    if (!behind) hand();
     if (fx) g.restore();
   };
-  function drawWeapon8(g, X, Y, d8, w) {
+  // ---------------------------------------------------------------- held items
+  // Guns are built from the original's gun definitions (barrel, slide, drum, grip, mag,
+  // pump, stock) and rotated around a real grip point so shots leave the muzzle.
+  // Props, bats, knives and bottles use the original's hand anchors (ea / Zi) and its
+  // grip-rotation maths (Xs), so they sit in the fist instead of floating by the hip.
+  const GUNDEF = {
+    revolver: { barrel: [6, 14, 5, 2], drum: [5, 6], grip: [2, 7, 3, 5], wood: 1, sc: 0.62 },
+    magnum: { barrel: [5, 15, 5, 2], drum: [5, 6], grip: [2, 7, 3, 5], wood: 1, sc: 0.7, dark: 1 },
+    chopper: { barrel: [2, 14, 5, 3], grip: [5, 8, 2, 4], mag: [8, 8, 2, 5], drum2: 1, sc: 0.72 },
+    shotgun: { barrel: [5, 15, 5, 2], pump: [9, 7, 3, 1], stock: [0, 6, 6, 3], wood: 1, sc: 0.85 },
+    rifle: { barrel: [4, 15, 5, 2], stock: [0, 5, 6, 3], scope: [7, 11, 3, 1], wood: 1, sc: 0.95 },
+  };
+  const gunCache = {};
+  A.gunArt = function (w) {
+    if (gunCache[w]) return gunCache[w];
+    const d = GUNDEF[w];
+    if (!d) return null;
+    const xx = OLD.x, sc = d.sc, off = Math.round(8 - 8 * sc);
+    const metal = d.dark ? xx.black : xx.metal, wood = xx.wood;
+    const o = new OLD.O(16, 16);
+    const R_ = (x, y, ww, hh, ramp) => o.shadedRect(Math.round(x * sc) + off, Math.round(y * sc) + off, Math.max(1, Math.round(ww * sc)), Math.max(1, Math.round(hh * sc)), ramp);
+    const [b0, b1, by, bh] = d.barrel;
+    R_(b0, by, b1 - b0 + 1, bh, metal);
+    if (d.drum) R_(d.drum[0] - 1, d.drum[1], 4, 3, metal);
+    if (d.grip) R_(d.grip[0], d.grip[1] + 1, d.grip[2], d.grip[3], d.wood ? wood : metal);
+    if (d.mag) R_(d.mag[0], d.mag[1], d.mag[2], d.mag[3], metal);
+    if (d.pump) R_(d.pump[0], d.pump[1], d.pump[2], 2, wood);
+    if (d.stock) R_(d.stock[0], d.stock[2], d.stock[1] - d.stock[0], d.stock[3], wood);
+    if (d.scope) R_(d.scope[0], d.scope[2], d.scope[1] - d.scope[0], d.scope[3] + 1, xx.black);
+    o.outline('#282828');
+    const px = (v) => Math.round(v * sc) + off;
+    // where the hand goes and where the bullet comes out
+    const grip = d.grip ? [px(d.grip[0] + d.grip[2] / 2), px(d.grip[1] + 2)] : d.pump ? [px(d.pump[0] + 1), px(d.pump[1] + 1)] : [px(d.stock[1]), px(d.stock[2] + 1)];
+    const muzzle = [px(b1) + 1, px(by + bh / 2)];
+    return (gunCache[w] = { cv: o.toCanvas(), grip, muzzle });
+  };
+  // gun-pose fist positions (from the original's pose 'g'), in 16x32 sprite cells
+  const GUN_HAND = { down: [11, 20], downright: [14, 19], right: [14, 16], upright: [13, 10], up: [11, 6] };
+  const handWorld = (X, Y, d8, cell, kid) => {
+    const flip = FLIP8[d8];
+    return [X + (flip ? 15 - cell[0] : cell[0]) - 8 + 0.5, Y - 25 + cell[1] + 0.5 + (kid ? 2 : 0)];
+  };
+  // world-space muzzle for someone holding a gun and aiming at ang
+  A.muzzle = function (actor, weapon, ang) {
+    const art = A.gunArt(weapon === 'revolver' || !GUNDEF[weapon] ? 'revolver' : weapon);
+    const d8 = A.dir8(actor.dir, ang);
+    const [hx, hy] = handWorld(actor.x, actor.y, d8, GUN_HAND[DIR8[d8]], actor.look && actor.look.kid);
+    const flip = Math.cos(ang) < 0 ? -1 : 1;
+    const mx = art.muzzle[0] - art.grip[0], my = (art.muzzle[1] - art.grip[1]) * flip;
+    const c = Math.cos(ang), s_ = Math.sin(ang);
+    return [hx + mx * c - my * s_, hy + mx * s_ + my * c];
+  };
+  // the original's grip maths: bucket the angle, flip for left, rotate around the grip
+  A.gripXs = function (grip, e) {
+    const t = ((Math.round(e / (Math.PI * 2) * 16) % 16) + 16) % 16, s2 = (t / 16) * Math.PI * 2, flip = Math.cos(s2) < -0.01;
+    const o = grip[0] + 0.5 - 8, r = (flip ? 15 - grip[1] : grip[1]) + 0.5 - 8;
+    const n = s2 - Math.atan2(-r, -o), h = Math.cos(n), l = Math.sin(n);
+    return { k: t, flip, rot: n, ox: h * o - l * r, oy: l * o + h * r };
+  };
+  // small melee/throwable items, painted in the original's style
+  const ITEM = {
+    bat: [(o) => { const w = OLD.x.wood; o.line(2, 13, 12, 3, w[4]); o.line(3, 13, 13, 3, w[3]); o.line(3, 14, 13, 4, w[2]); o.rect(12, 2, 2, 2, w[4]); o.line(2, 13, 4, 11, OLD.x.black[2]); }, [3, 12]],
+    knife: [(o) => { const m = OLD.x.metal; o.line(7, 8, 13, 2, m[4]); o.line(7, 9, 13, 3, m[2]); o.line(3, 12, 6, 9, OLD.x.wood[1]); o.line(4, 12, 6, 10, OLD.x.wood[2]); }, [4, 11]],
+    molotov: [(o) => { o.shadedRect(6, 6, 5, 8, OLD.x.glass); o.rect(7, 3, 3, 3, OLD.x.glass[2]); o.rect(8, 1, 2, 3, '#e8d8b0'); o.set(9, 0, '#ffb030'); }, [8, 10]],
+    dynamite: [(o) => { o.shadedRect(5, 5, 6, 9, OLD.x.red); o.hline(5, 10, 9, OLD.x.red[0]); o.line(8, 5, 10, 1, '#9a9a9a'); o.set(10, 1, '#ffd040'); }, [8, 10]],
+    gascan: [(o) => { o.shadedRect(3, 5, 10, 9, OLD.x.red); o.rect(10, 3, 3, 2, OLD.x.metal[2]); o.rect(5, 3, 4, 2, OLD.x.black[2]); }, [7, 4]],
+    knuckles: [(o) => { const m = OLD.x.yellow; for (let i = 0; i < 4; i++) o.shadedEllipse(5 + i * 2, 8, 1.3, 1.6, m); o.shadedRect(4, 9, 8, 2, m); }, [8, 9]],
+  };
+  const itemCache = {};
+  A.itemArt = function (k) {
+    if (itemCache[k]) return itemCache[k];
+    let cv, grip;
+    if (ITEM[k]) { const o = new OLD.O(16, 16); ITEM[k][0](o); cv = o.outline('#282828').toCanvas(); grip = ITEM[k][1]; }
+    else if (OLD.props[k]) { cv = OLD.paintProp(k); grip = PROP_GRIP[k] || null; }
+    else return null;
+    return (itemCache[k] = { cv, grip });
+  };
+  // the original's grip points for one-handed props (heavy things are held overhead)
+  const PROP_GRIP = { pan: [15, 6], bottle: [7, 4], chair: [8, 2], stool: [5, 13], broom: [3, 1], plank: [1, 12], pipe: [2, 13], wrench: [3, 13], sign: [7, 14], guitar: [14, 1], fish: [14, 9], shovel: [2, 0], flare: [4, 13], extinguisher: [8, 3], paint: [8, 2], bucket: [8, 1], lamp: [8, 12], cone: [8, 3], gnome: [8, 2], plant: [8, 9], dumbbell: [8, 10], bowling: [8, 5], cake: [8, 12] };
+  A.propGrip = (k) => PROP_GRIP[k];
+  // which pose a held item needs: 'k' holds it out, 'h' hoists it overhead, 'w1/w2' swing
+  A.heldPose = function (k, swingT, swingDur) {
+    const art = A.itemArt(k);
+    if (swingT > 0) return swingT / swingDur > 0.55 ? 'w1' : 'w2';
+    return art && art.grip ? 'k' : 'h';
+  };
+  // draw an item in the hand. behind: true when the hand is on the far side of the body
+  A.drawHeldItem = function (g, X, Y, d8, k, pose, kid) {
+    const art = A.itemArt(k);
+    if (!art) return;
+    const dirName = DIR8[d8], flip = FLIP8[d8], sgn = flip ? -1 : 1;
+    if (!art.grip || pose === 'h') {
+      // overhead, both hands up
+      g.drawImage(art.cv, Math.round(X - 8), Math.round(Y - 25 - 7 + (kid ? 2 : 0)));
+      return;
+    }
+    let hx, hy, h;
+    if (pose === 'w1' || pose === 'w2') {
+      const [x0, y0, x1, y1] = OLD.Zi(dirName, pose === 'w1' ? 1 : 2, kid);
+      hx = x0; hy = y0; h = Math.atan2(y1 - y0, (x1 - x0) * sgn);
+    } else {
+      [hx, hy] = OLD.ea(dirName, kid);
+      const long = Math.hypot(art.grip[0] - 7.5, art.grip[1] - 7.5) > 5.5;
+      const kk = dirName === 'down' || dirName === 'up' ? 0 : sgn;
+      h = Math.PI / 2 - (long ? 0.5 * kk : 0);
+    }
+    const d = A.gripXs(art.grip, h);
+    const u = X + (hx + 0.5 - 8) * sgn, p = Y - 25 + hy + 0.5 - (kid ? 0 : 0);
+    g.save();
+    g.translate(Math.round(u - d.ox), Math.round(p - d.oy));
+    g.rotate(d.rot);
+    if (d.flip) g.scale(1, -1);
+    g.drawImage(art.cv, -8, -8);
+    g.restore();
+  };
+  A.itemBehind = function (d8, pose) {
+    const n = DIR8[d8];
+    if (pose === 'w2') return n === 'up' || n === 'upright';
+    if (pose === 'w1') return n === 'right' || n === 'downright';
+    return n === 'up' || n === 'upright';
+  };
+  // guns: pointed along the aim, grip in the fist
+  A.drawGun = function (g, X, Y, d8, w, ang, kid) {
+    const art = A.gunArt(GUNDEF[w] ? w : 'revolver');
+    const [hx, hy] = handWorld(X, Y, d8, GUN_HAND[DIR8[d8]], kid);
+    const a = ang == null ? d8 * Math.PI / 4 : ang;
+    g.save();
+    g.translate(Math.round(hx), Math.round(hy));
+    g.rotate(a);
+    if (Math.cos(a) < 0) g.scale(1, -1);
+    g.drawImage(art.cv, -art.grip[0], -art.grip[1]);
+    g.restore();
+  };
+  function drawWeapon8(g, X, Y, d8, w, ang, pose, kid) {
     if (!w || w === 'fists') return;
     const def = D.weapons[w];
-    const col = w === 'bat' ? '#b08050' : w === 'knife' ? '#d8d8e0' : w === 'molotov' ? '#6aa060' : w === 'dynamite' ? '#c83a1a' : '#2a2a34';
-    const len = w === 'bat' ? 8 : w === 'shotgun' || w === 'rifle' ? 9 : w === 'chopper' ? 7 : 4;
-    const hand = { 0: [6, -9], 1: [5, -7], 2: [4, -8], 3: [-5, -7], 4: [-6, -9], 5: [-5, -11], 6: [4, -12], 7: [5, -11] }[d8];
-    const ang = d8 * Math.PI / 4;
-    const hx = X + hand[0], hy = Y + hand[1];
-    g.fillStyle = INK;
-    for (let k = -1; k <= len; k++) g.fillRect(Math.round(hx + Math.cos(ang) * k) - 1, Math.round(hy + Math.sin(ang) * k) - 1, 3, 3);
-    g.fillStyle = col;
-    for (let k = 0; k < len; k++) g.fillRect(Math.round(hx + Math.cos(ang) * k), Math.round(hy + Math.sin(ang) * k), 1, 1);
-    if (def && def.gun) { g.fillStyle = '#6a4a2a'; g.fillRect(Math.round(hx) , Math.round(hy), 1, 2); }
+    if (def && def.gun) return A.drawGun(g, X, Y, d8, w, ang, kid);
+    if (w === 'bat' && pose && pose[0] === 'b') return; // the swing pose paints the bat itself
+    A.drawHeldItem(g, X, Y, d8, w, pose === 'p1' || pose === 'p2' ? 'w1' : pose, kid);
   }
   function drawWeapon(g, X, Y, dir, w) {
     const col = w === 'bat' ? '#b08050' : w === 'knife' ? '#d8d8e0' : w === 'molotov' ? '#6aa060' : w === 'dynamite' ? '#c83a1a' : '#2a2a30';

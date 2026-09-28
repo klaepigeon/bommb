@@ -237,7 +237,8 @@
     const g = game();
     if (att === g.player && g.player.cool > 0 && g.player.coolOn) w = Object.assign({}, w, { spread: 0 });
     const n = w.pellets || 1;
-    const sx = att.x + Math.cos(ang) * 8, sy = att.y - 10 + Math.sin(ang) * 6;
+    // bullets leave the muzzle of the gun actually drawn in their hand
+    const [sx, sy] = R.art.muzzle && !att.inCar ? R.art.muzzle(att, att.weapon, ang) : [att.x + Math.cos(ang) * 8, att.y - 10 + Math.sin(ang) * 6];
     g.fx.flash(sx, sy);
     g.audio.sfx(w === D.weapons.shotgun ? 'shotgun' : w === D.weapons.chopper ? 'smg' : w === D.weapons.rifle ? 'rifle' : 'shot', att.x, att.y);
     g.actors.noise(att.x, att.y, TS * 22 * (w.loud || 1), 'gunshot', att);

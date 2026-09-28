@@ -190,11 +190,20 @@
   P.drawPlayer = function (g, pl) {
     const w = pl.weaponOut || pl.punchT > 0 ? pl.weapon : null;
     const st = { weapon: w === 'gascan' ? null : w, ang: pl.ang };
-    if (pl.punchT > 0) { st.pose = pl.weapon === 'bat' ? 'b1' : (pl.punchN || 0) % 2 ? 'p2' : 'p1'; st.weapon = null; }
-    if (pl.held) st.weapon = null;
+    if (w === 'gascan') st.held = 'gascan';
+    const swing = pl.punchT > 0 ? 1 - pl.punchT / 0.22 : -1; // 0..1 through the blow
+    if (pl.held) {
+      // an improvised weapon, held at its grip; swung through the original's arcs
+      st.weapon = null;
+      st.held = pl.held.k;
+      if (swing >= 0) st.pose = A.itemArt(pl.held.k) && A.itemArt(pl.held.k).grip ? (swing < 0.45 ? 'w1' : 'w2') : 'h';
+    } else if (swing >= 0) {
+      if (pl.weapon === 'bat') { st.pose = swing < 0.45 ? 'b1' : 'b2'; st.weapon = null; }
+      else if (pl.weapon === 'fists' || pl.weapon === 'knuckles' || !D.weapons[pl.weapon] || !D.weapons[pl.weapon].gun) st.pose = (pl.punchN || 0) % 2 ? 'p2' : 'p1';
+      if (pl.weapon === 'fists' || pl.weapon === 'knuckles') st.weapon = null;
+    }
     if (pl.sneak && !pl.inCar) st.crouch = true;
     A.drawPerson(g, pl.x, pl.y, pl.dir, pl.walk, pl.look, st);
-    R.props.drawHeld(g, pl);
     R.ring.drawSwing(g, pl);
   };
 

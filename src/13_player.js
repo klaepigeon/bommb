@@ -245,6 +245,8 @@
       ang = Math.atan2((tg.y - (tg.kind === 'h' && w.gun ? 10 : 0)) - (this.y - 10), tg.x - this.x);
       this.ang = Math.atan2(tg.y - this.y, tg.x - this.x);
       this.dir = R.dir4(Math.cos(this.ang), Math.sin(this.ang));
+      // aim from the muzzle, not the chest, so the shot lines up with the barrel
+      if (w.gun && R.art.muzzle) { const [mx, my] = R.art.muzzle(this, this.weapon, ang); ang = Math.atan2((tg.y - (tg.kind === 'h' ? 10 : 0)) - my, tg.x - mx); }
     }
     if (w.gun) {
       const c = this.clip[this.weapon] || 0;
