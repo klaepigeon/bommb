@@ -850,11 +850,12 @@
     const g = this.game, pl = g.player, bt = D.btypes[b.type];
     let items = this.interiorOptions(b).filter((o) => o.price && o.fn);
     if (bt.shop === 'guns') {
-      for (const id of ['revolver', 'magnum', 'shotgun', 'rifle', 'chopper', 'knife']) {
-        const w = D.weapons[id], have = pl.inv.weapons[id], locked = id === 'chopper' && g.jobs.rank() < 2;
-        items.push({ label: w.name, price: have ? 'Owned' : R.fmtMoney(w.price), small: locked ? 'Capo rank only.' : `Damage ${w.dmg}${w.pellets ? '×' + w.pellets : ''}, range ${w.range}${w.clip ? `, ${w.clip}-round clip` : ''}.`, icon: id, fn: () => { if (have || locked) return; if (!pl.pay(w.price)) return this.toast("Can't afford it.", 'warn'); pl.giveWeapon(id); g.audio.sfx('cash'); } });
+      for (const id of ['derringer', 'revolver', 'colt45', 'magnum', 'shotgun', 'sawedoff', 'rifle', 'carbine', 'crossbow', 'chopper', 'tommy', 'knife', 'razor', 'machete', 'hatchet', 'crowbar', 'sap']) {
+        const w = D.weapons[id], have = pl.inv.weapons[id], locked = (id === 'chopper' || id === 'tommy') && g.jobs.rank() < 2;
+        items.push({ label: w.name, price: have ? 'Owned' : R.fmtMoney(w.price), small: locked ? 'Capo rank only.' : w.melee ? `Damage ${w.dmg}${w.blade ? ', a blade' : ''}${w.ko ? ', knocks people out' : ''}.` : `Damage ${w.dmg}${w.pellets ? '×' + w.pellets : ''}, range ${w.range}${w.clip ? `, ${w.clip}-round clip` : ''}${w.silent ? ', silent' : w.sil ? ', takes a silencer' : ''}.`, icon: id, fn: () => { if (have || locked) return; if (!pl.pay(w.price)) return this.toast("Can't afford it.", 'warn'); pl.giveWeapon(id); g.audio.sfx('cash'); } });
       }
       for (const am in D.ammoPrice) { const [n, pr] = D.ammoPrice[am]; items.push({ label: `${D.ammoNames[am]} ×${n}`, price: R.fmtMoney(pr), small: `You have ${pl.inv.ammo[am] || 0}.`, icon: 'ammo', fn: () => { if (!pl.pay(pr)) return this.toast("Can't afford it.", 'warn'); pl.inv.ammo[am] = (pl.inv.ammo[am] || 0) + n; g.audio.sfx('cash'); } }); }
+      for (const id of Object.keys(pl.inv.weapons)) { const w = D.weapons[id]; if (!w || !w.sil || pl.silencedGun(id)) continue; items.push({ label: `Silencer for the ${w.name}`, price: '$150', small: 'Threaded and fitted. Shots become a cough nobody reports.', icon: 'silencer', fn: () => { if (!pl.pay(150)) return this.toast("Can't afford it.", 'warn'); (pl.inv.silenced = pl.inv.silenced || {})[id] = 1; g.audio.sfx('cash'); this.toast(`The ${w.name} whispers now.`, 'good'); } }); }
       items.push({ label: 'Molotov', price: '$25', small: `You have ${pl.inv.ammo.molotov || 0}. Throw it at anything that burns.`, icon: 'molotov', fn: () => { if (!pl.pay(25)) return; pl.inv.ammo.molotov = (pl.inv.ammo.molotov || 0) + 1; g.audio.sfx('cash'); } });
     }
     const iconOf = (it) => it.icon || (SHOPICON.find(([re]) => re.test(it.label)) || [0, 'loot'])[1];
@@ -897,16 +898,17 @@
     } else if (kind === 'guns') {
       title = 'Gun Counter';
       sub = 'Cash only. No waiting period in the Brass Coast.';
-      for (const id of ['revolver', 'magnum', 'shotgun', 'rifle', 'chopper', 'knife']) {
+      for (const id of ['derringer', 'revolver', 'colt45', 'magnum', 'shotgun', 'sawedoff', 'rifle', 'carbine', 'crossbow', 'chopper', 'tommy', 'knife', 'razor', 'machete', 'hatchet', 'crowbar', 'sap']) {
         const w = D.weapons[id];
         const have = pl.inv.weapons[id];
-        if (id === 'chopper' && g.jobs.rank() < 2) { opts.push({ label: `${w.name}`, small: 'Capo rank only. Ask the family.', cls: 'dim' }); continue; }
+        if ((id === 'chopper' || id === 'tommy') && g.jobs.rank() < 2) { opts.push({ label: `${w.name}`, small: 'Capo rank only. Ask the family.', cls: 'dim' }); continue; }
         opts.push({ label: have ? `${w.name} (owned)` : w.name, price: have ? '—' : R.fmtMoney(w.price), cls: have ? 'dim' : '', fn: () => { if (have) return; if (!pl.pay(w.price)) return this.toast("Can't afford it.", 'warn'); pl.giveWeapon(id); this.toast(`Bought ${w.name}.`, 'good'); g.audio.sfx('cash'); this.openShop('guns'); } });
       }
       for (const am in D.ammoPrice) {
         const [n, p] = D.ammoPrice[am];
         opts.push({ label: `${D.ammoNames[am]} ×${n}`, small: `You have ${pl.inv.ammo[am] || 0}`, price: R.fmtMoney(p), fn: () => { if (!pl.pay(p)) return this.toast("Can't afford it.", 'warn'); pl.inv.ammo[am] = (pl.inv.ammo[am] || 0) + n; g.audio.sfx('cash'); this.openShop('guns'); } });
       }
+      for (const id of Object.keys(pl.inv.weapons)) { const w = D.weapons[id]; if (!w || !w.sil || pl.silencedGun(id)) continue; opts.push({ label: `Silencer for the ${w.name}`, small: 'Shots become a cough nobody reports', price: '$150', fn: () => { if (!pl.pay(150)) return this.toast("Can't afford it.", 'warn'); (pl.inv.silenced = pl.inv.silenced || {})[id] = 1; g.audio.sfx('cash'); this.toast(`The ${w.name} whispers now.`, 'good'); this.openShop('guns'); } }); }
       opts.push({ label: 'Molotov', small: `You have ${pl.inv.ammo.molotov || 0}`, price: '$25', fn: () => { if (!pl.pay(25)) return; pl.inv.ammo.molotov = (pl.inv.ammo.molotov || 0) + 1; this.openShop('guns'); } });
       opts.push({ label: 'Dynamite', small: g.jobs.rank() < 1 ? 'Soldier rank only' : `You have ${pl.inv.ammo.dynamite || 0}`, price: '$60', cls: g.jobs.rank() < 1 ? 'dim' : '', fn: () => { if (g.jobs.rank() < 1 || !pl.pay(60)) return; pl.inv.ammo.dynamite = (pl.inv.ammo.dynamite || 0) + 1; this.openShop('guns'); } });
     } else if (kind === 'tailor') {

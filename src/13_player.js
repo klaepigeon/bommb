@@ -199,8 +199,9 @@
     g.ui.toast(this.masked ? 'Mask on. Witnesses won\'t know who you are, but everyone gets nervous.' : 'Mask off.');
   };
 
+  P.silencedGun = function (w) { return !!(this.inv.silenced && this.inv.silenced[w]); };
   P.weaponList = function () {
-    const order = ['fists', 'knuckles', 'bat', 'knife', 'revolver', 'magnum', 'shotgun', 'chopper', 'rifle', 'molotov', 'dynamite'];
+    const order = ['fists', 'knuckles', 'sap', 'bat', 'crowbar', 'knife', 'razor', 'hatchet', 'machete', 'derringer', 'revolver', 'colt45', 'magnum', 'shotgun', 'sawedoff', 'chopper', 'tommy', 'rifle', 'carbine', 'crossbow', 'molotov', 'dynamite'];
     const out = order.filter((w) => this.inv.weapons[w] || (D.weapons[w].thrown && this.inv.ammo[w] > 0));
     if (this.inv.tools.ring) out.splice(1, 0, 'ring');
     if (this.inv.tools.gascan) out.push('gascan');

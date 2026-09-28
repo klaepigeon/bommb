@@ -193,17 +193,28 @@
     fists: { name: 'Fists', melee: 1, dmg: 9, range: 18, rate: 0.35, knock: 60 },
     knuckles: { name: 'Brass Knuckles', melee: 1, dmg: 16, range: 18, rate: 0.35, knock: 110, price: 40 },
     bat: { name: 'Louisville Slugger', melee: 1, dmg: 24, range: 24, rate: 0.55, knock: 160, price: 35 },
-    knife: { name: 'Switchblade', melee: 1, dmg: 32, range: 18, rate: 0.4, knock: 40, price: 50 },
+    knife: { name: 'Switchblade', melee: 1, blade: 1, dmg: 32, range: 18, rate: 0.4, knock: 40, price: 50 },
     revolver: { name: '.38 Snub Nose', gun: 1, dmg: 34, range: 190, rate: 0.42, clip: 6, spread: 0.05, ammo: 'pistol', price: 180, loud: 1 },
     magnum: { name: '.357 Magnum', gun: 1, dmg: 58, range: 230, rate: 0.7, clip: 6, spread: 0.03, ammo: 'pistol', price: 420, loud: 1.3 },
     shotgun: { name: 'Pump Shotgun', gun: 1, dmg: 13, pellets: 7, range: 120, rate: 0.9, clip: 5, spread: 0.22, ammo: 'shells', price: 350, loud: 1.5 },
-    chopper: { name: 'Chopper SMG', gun: 1, dmg: 15, range: 170, rate: 0.09, clip: 30, spread: 0.1, ammo: 'smg', price: 900, loud: 1.4, auto: 1 },
+    chopper: { name: 'Chopper SMG', gun: 1, dmg: 15, range: 170, rate: 0.09, clip: 30, spread: 0.1, ammo: 'smg', price: 900, loud: 1.4, auto: 1, sil: 1 },
     rifle: { name: 'Hunting Rifle', gun: 1, dmg: 80, range: 330, rate: 1.1, clip: 5, spread: 0.01, ammo: 'rifle', price: 300, loud: 1.4 },
+    derringer: { name: '.22 Derringer', gun: 1, dmg: 24, range: 120, rate: 0.5, clip: 2, spread: 0.06, ammo: 'pistol', price: 90, loud: 0.6, sil: 1 },
+    colt45: { name: 'M1911 .45', gun: 1, dmg: 40, range: 200, rate: 0.36, clip: 7, spread: 0.04, ammo: 'pistol', price: 320, loud: 1.1, sil: 1 },
+    sawedoff: { name: 'Sawed-Off', gun: 1, dmg: 16, pellets: 9, range: 80, rate: 1.0, clip: 2, spread: 0.32, ammo: 'shells', price: 260, loud: 1.7 },
+    carbine: { name: 'M1 Carbine', gun: 1, dmg: 46, range: 280, rate: 0.34, clip: 15, spread: 0.025, ammo: 'rifle', price: 700, loud: 1.3 },
+    crossbow: { name: 'Crossbow', gun: 1, dmg: 75, range: 220, rate: 1.4, clip: 1, spread: 0.01, ammo: 'bolts', price: 250, loud: 0, silent: 1 },
+    tommy: { name: 'Tommy Gun', gun: 1, dmg: 17, range: 180, rate: 0.075, clip: 50, spread: 0.12, ammo: 'smg', price: 1500, loud: 1.5, auto: 1 },
+    razor: { name: 'Straight Razor', melee: 1, blade: 1, dmg: 28, range: 14, rate: 0.28, knock: 20, price: 30 },
+    machete: { name: 'Machete', melee: 1, blade: 1, dmg: 40, range: 21, rate: 0.5, knock: 70, price: 60 },
+    hatchet: { name: 'Hatchet', melee: 1, blade: 1, dmg: 35, range: 19, rate: 0.52, knock: 90, price: 45 },
+    crowbar: { name: 'Crowbar', melee: 1, dmg: 23, range: 22, rate: 0.45, knock: 130, price: 25 },
+    sap: { name: 'Leather Sap', melee: 1, dmg: 12, range: 15, rate: 0.5, knock: 50, price: 20, ko: 1 },
     molotov: { name: 'Molotov', thrown: 1, dmg: 20, range: 110, rate: 0.8, ammo: 'molotov', price: 25, fire: 1 },
     dynamite: { name: 'Dynamite', thrown: 1, dmg: 120, range: 100, rate: 1.0, ammo: 'dynamite', price: 60, blast: 1 },
   };
-  D.ammoNames = { pistol: 'Pistol rounds', shells: 'Shells', smg: 'SMG mags', rifle: 'Rifle rounds', molotov: 'Molotovs', dynamite: 'Dynamite' };
-  D.ammoPrice = { pistol: [12, 18], shells: [10, 16], smg: [30, 40], rifle: [5, 18] }; // [amount, price]
+  D.ammoNames = { pistol: 'Pistol rounds', shells: 'Shells', smg: 'SMG mags', rifle: 'Rifle rounds', bolts: 'Crossbow bolts', molotov: 'Molotovs', dynamite: 'Dynamite' };
+  D.ammoPrice = { pistol: [12, 18], shells: [10, 16], smg: [30, 40], rifle: [5, 18], bolts: [6, 15] }; // [amount, price]
 
   // Loot sells at pawn. value in $.
   D.loot = {

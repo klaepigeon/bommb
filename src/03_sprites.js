@@ -371,6 +371,7 @@
       if (wdef) drawWeapon8(g, X, Y, d8, st.weapon, st.ang, pose, look.kid);
       else if (st.held) A.drawHeldItem(g, X, Y, d8, st.held, pose, look.kid, { phase: moving ? phase : -1, swing: st.swing, skin: look.skin });
     };
+    A._sil = !!st.silenced;
     const behind = (wdef || st.held) && (wdef && wdef.gun ? DIR8[d8] === 'up' || DIR8[d8] === 'upright' : A.itemBehind(d8, pose));
     if (behind) hand();
     g.drawImage(spr, X - spr.width / 2, Y - 25);
@@ -389,6 +390,12 @@
     chopper: { barrel: [2, 14, 5, 3], grip: [5, 8, 2, 4], mag: [8, 8, 2, 5], drum2: 1, sc: 0.72 },
     shotgun: { barrel: [5, 15, 5, 2], pump: [9, 7, 3, 1], stock: [0, 6, 6, 3], wood: 1, sc: 0.85 },
     rifle: { barrel: [4, 15, 5, 2], stock: [0, 5, 6, 3], scope: [7, 11, 3, 1], wood: 1, sc: 0.95 },
+    derringer: { barrel: [7, 12, 6, 2], grip: [5, 7, 3, 4], wood: 1, sc: 0.5 },
+    colt45: { barrel: [5, 14, 5, 3], grip: [5, 7, 3, 5], wood: 1, sc: 0.62 },
+    sawedoff: { barrel: [6, 12, 5, 3], stock: [2, 6, 6, 3], wood: 1, sc: 0.8 },
+    carbine: { barrel: [4, 15, 5, 2], stock: [0, 6, 6, 3], mag: [8, 8, 2, 3], wood: 1, sc: 0.92 },
+    crossbow: { barrel: [3, 14, 6, 2], stock: [0, 5, 6, 3], bow: 12, wood: 1, sc: 0.85 },
+    tommy: { barrel: [2, 15, 5, 2], grip: [5, 8, 2, 4], mag: [7, 8, 4, 4], stock: [0, 3, 5, 3], pump: [11, 7, 2, 1], wood: 1, sc: 0.85 },
   };
   const gunCache = {};
   A.gunArt = function (w) {
@@ -407,6 +414,7 @@
     if (d.pump) R_(d.pump[0], d.pump[1], d.pump[2], 2, wood);
     if (d.stock) R_(d.stock[0], d.stock[2], d.stock[1] - d.stock[0], d.stock[3], wood);
     if (d.scope) R_(d.scope[0], d.scope[2], d.scope[1] - d.scope[0], d.scope[3] + 1, xx.black);
+    if (d.bow) { R_(d.bow, by - 5, 1, bh + 10, wood); o.line(Math.round(d.bow * sc) + off, Math.round((by - 5) * sc) + off, Math.round(3 * sc) + off, Math.round((by + 1) * sc) + off, '#d8d0b8'); o.line(Math.round(d.bow * sc) + off, Math.round((by + bh + 5) * sc) + off, Math.round(3 * sc) + off, Math.round((by + 1) * sc) + off, '#d8d0b8'); }
     o.outline('#282828');
     const px = (v) => Math.round(v * sc) + off;
     // where the hand goes and where the bullet comes out
@@ -426,7 +434,8 @@
     const d8 = A.dir8(actor.dir, ang);
     const [hx, hy] = handWorld(actor.x, actor.y, d8, GUN_HAND[DIR8[d8]], actor.look && actor.look.kid);
     const flip = Math.cos(ang) < 0 ? -1 : 1;
-    const mx = art.muzzle[0] - art.grip[0], my = (art.muzzle[1] - art.grip[1]) * flip;
+    const sil = actor.silencedGun && actor.silencedGun(weapon);
+    const mx = art.muzzle[0] - art.grip[0] + (sil ? 4 : 0), my = (art.muzzle[1] - art.grip[1]) * flip;
     const c = Math.cos(ang), s_ = Math.sin(ang);
     return [hx + mx * c - my * s_, hy + mx * s_ + my * c];
   };
@@ -444,6 +453,11 @@
     molotov: [(o) => { o.shadedRect(6, 6, 5, 8, OLD.x.glass); o.rect(7, 3, 3, 3, OLD.x.glass[2]); o.rect(8, 1, 2, 3, '#e8d8b0'); o.set(9, 0, '#ffb030'); }, [8, 10]],
     dynamite: [(o) => { o.shadedRect(5, 5, 6, 9, OLD.x.red); o.hline(5, 10, 9, OLD.x.red[0]); o.line(8, 5, 10, 1, '#9a9a9a'); o.set(10, 1, '#ffd040'); }, [8, 10]],
     gascan: [(o) => { o.shadedRect(3, 5, 10, 9, OLD.x.red); o.rect(10, 3, 3, 2, OLD.x.metal[2]); o.rect(5, 3, 4, 2, OLD.x.black[2]); }, [7, 4]],
+    razor: [(o) => { const m = OLD.x.metal; o.line(3, 12, 7, 8, OLD.x.black[2]); o.line(4, 12, 7, 9, OLD.x.black[3]); o.line(7, 8, 12, 3, m[4]); o.line(8, 8, 12, 4, m[2]); o.line(8, 9, 13, 4, m[3]); }, [4, 11]],
+    machete: [(o) => { const m = OLD.x.metal, w = OLD.x.wood; o.line(2, 14, 5, 11, w[1]); o.line(3, 14, 5, 12, w[2]); o.line(5, 10, 14, 1, m[4]); o.line(6, 10, 14, 2, m[3]); o.line(6, 11, 15, 2, m[2]); o.line(4, 10, 6, 12, OLD.x.black[2]); }, [3, 13]],
+    hatchet: [(o) => { const m = OLD.x.metal, w = OLD.x.wood; o.line(3, 14, 11, 6, w[2]); o.line(4, 14, 12, 6, w[1]); o.shadedRect(9, 2, 4, 6, m); o.line(13, 2, 13, 7, m[4]); }, [4, 13]],
+    crowbar: [(o) => { const b = OLD.x.black; o.line(2, 14, 12, 4, b[3]); o.line(3, 14, 13, 4, b[2]); o.set(13, 3, b[3]); o.set(12, 2, b[3]); o.set(11, 2, b[2]); o.set(2, 14, '#b02a20'); }, [3, 13]],
+    sap: [(o) => { const b = OLD.x.black; o.line(4, 12, 8, 8, b[2]); o.shadedEllipse(10, 6, 2.6, 2.6, b); o.set(9, 5, b[4] || b[3]); }, [5, 11]],
     knuckles: [(o) => { const m = OLD.x.yellow; for (let i = 0; i < 4; i++) o.shadedEllipse(5 + i * 2, 8, 1.3, 1.6, m); o.shadedRect(4, 9, 8, 2, m); }, [8, 9]],
   };
   const itemCache = {};
@@ -533,7 +547,7 @@
     g.drawImage(art.cv, -8, -8);
     g.restore();
   };
-  const CARRY = { knife: { fwd: 1, sc: 0.7 }, bat: { sc: 0.9 } };
+  const CARRY = { knife: { fwd: 1, sc: 0.7 }, razor: { fwd: 1, sc: 0.75 }, sap: { fwd: 1, sc: 0.8 }, bat: { sc: 0.9 } };
   // ---------------------------------------------------------------- sneaking in plain sight
   // Sneak and you duck into something: a cardboard box, a bush, a trash can, a barrel or a
   // potted fern. Your shoes stick out of the bottom and shuffle along when you move.
@@ -592,6 +606,7 @@
     const vert = Math.abs(Math.sin(a));
     if (vert > 0.92) g.scale(Math.sin(a) > 0 ? 0.5 : 0.65, 1);
     g.drawImage(art.cv, -art.grip[0], -art.grip[1]);
+    if (A._sil) { const mx = art.muzzle[0] - art.grip[0], my = art.muzzle[1] - art.grip[1]; g.fillStyle = '#141414'; g.fillRect(mx - 1, my - 1.5, 6, 3); g.fillStyle = '#4a4a50'; g.fillRect(mx - 1, my - 1, 5, 2); g.fillStyle = '#7a7a84'; g.fillRect(mx, my - 1, 3, 1); }
     g.restore();
   };
   function drawWeapon8(g, X, Y, d8, w, ang, pose, kid) {

@@ -85,6 +85,7 @@
     R.turf.init(this);
     R.vendetta.init(this);
     R.butcher.init(this);
+    R.arms.init(this);
     R.vice.init(this);
     R.gore.init(this);
     R.relics.init(this);

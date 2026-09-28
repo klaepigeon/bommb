@@ -5,7 +5,7 @@
 // Everything here respects the Blood & gore setting.
 'use strict';
 (function () {
-  const TS = R.TILE;
+  const TS = R.TILE, D = R.data;
   const GO = (R.gore = { parts: [] });
   const G = () => R.game;
   const on = () => G() && G().settings.gore !== false;
@@ -20,7 +20,7 @@
   };
   GO.hurt = function (a, amt, source, kind) {
     const w = wnd(a);
-    const blade = source && (source.weapon === 'knife' || (source.held && source.held.k === 'bottle'));
+    const blade = source && ((D.weapons[source.weapon] && D.weapons[source.weapon].blade) || (source.held && source.held.k === 'bottle'));
     if (kind === 'melee' && !blade) w.bruise = Math.min(1, w.bruise + amt / 45);
     else if (kind === 'bullet' || kind === 'blast' || blade) w.bleed = Math.min(1, w.bleed + amt / (kind === 'blast' ? 60 : 90));
     else if (kind === 'car' || kind === 'fall') { w.bruise = Math.min(1, w.bruise + amt / 60); w.bleed = Math.min(1, w.bleed + amt / 200); }
@@ -118,7 +118,7 @@
       const r = baseHurt.call(this, amt, src, kind);
       if (this.hp < hp0) {
         const w = this.wnd = this.wnd || { bruise: 0, bleed: 0 };
-        const blade = src && src.weapon === 'knife';
+        const blade = src && D.weapons[src.weapon] && D.weapons[src.weapon].blade;
         if (kind === 'melee' && !blade) w.bruise = Math.min(1, w.bruise + amt / 50);
         else if (kind === 'bullet' || kind === 'blast' || blade) w.bleed = Math.min(1, w.bleed + amt / 100);
       }

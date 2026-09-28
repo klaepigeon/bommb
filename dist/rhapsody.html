@@ -631,17 +631,28 @@ R.store = {
     fists: { name: 'Fists', melee: 1, dmg: 9, range: 18, rate: 0.35, knock: 60 },
     knuckles: { name: 'Brass Knuckles', melee: 1, dmg: 16, range: 18, rate: 0.35, knock: 110, price: 40 },
     bat: { name: 'Louisville Slugger', melee: 1, dmg: 24, range: 24, rate: 0.55, knock: 160, price: 35 },
-    knife: { name: 'Switchblade', melee: 1, dmg: 32, range: 18, rate: 0.4, knock: 40, price: 50 },
+    knife: { name: 'Switchblade', melee: 1, blade: 1, dmg: 32, range: 18, rate: 0.4, knock: 40, price: 50 },
     revolver: { name: '.38 Snub Nose', gun: 1, dmg: 34, range: 190, rate: 0.42, clip: 6, spread: 0.05, ammo: 'pistol', price: 180, loud: 1 },
     magnum: { name: '.357 Magnum', gun: 1, dmg: 58, range: 230, rate: 0.7, clip: 6, spread: 0.03, ammo: 'pistol', price: 420, loud: 1.3 },
     shotgun: { name: 'Pump Shotgun', gun: 1, dmg: 13, pellets: 7, range: 120, rate: 0.9, clip: 5, spread: 0.22, ammo: 'shells', price: 350, loud: 1.5 },
-    chopper: { name: 'Chopper SMG', gun: 1, dmg: 15, range: 170, rate: 0.09, clip: 30, spread: 0.1, ammo: 'smg', price: 900, loud: 1.4, auto: 1 },
+    chopper: { name: 'Chopper SMG', gun: 1, dmg: 15, range: 170, rate: 0.09, clip: 30, spread: 0.1, ammo: 'smg', price: 900, loud: 1.4, auto: 1, sil: 1 },
     rifle: { name: 'Hunting Rifle', gun: 1, dmg: 80, range: 330, rate: 1.1, clip: 5, spread: 0.01, ammo: 'rifle', price: 300, loud: 1.4 },
+    derringer: { name: '.22 Derringer', gun: 1, dmg: 24, range: 120, rate: 0.5, clip: 2, spread: 0.06, ammo: 'pistol', price: 90, loud: 0.6, sil: 1 },
+    colt45: { name: 'M1911 .45', gun: 1, dmg: 40, range: 200, rate: 0.36, clip: 7, spread: 0.04, ammo: 'pistol', price: 320, loud: 1.1, sil: 1 },
+    sawedoff: { name: 'Sawed-Off', gun: 1, dmg: 16, pellets: 9, range: 80, rate: 1.0, clip: 2, spread: 0.32, ammo: 'shells', price: 260, loud: 1.7 },
+    carbine: { name: 'M1 Carbine', gun: 1, dmg: 46, range: 280, rate: 0.34, clip: 15, spread: 0.025, ammo: 'rifle', price: 700, loud: 1.3 },
+    crossbow: { name: 'Crossbow', gun: 1, dmg: 75, range: 220, rate: 1.4, clip: 1, spread: 0.01, ammo: 'bolts', price: 250, loud: 0, silent: 1 },
+    tommy: { name: 'Tommy Gun', gun: 1, dmg: 17, range: 180, rate: 0.075, clip: 50, spread: 0.12, ammo: 'smg', price: 1500, loud: 1.5, auto: 1 },
+    razor: { name: 'Straight Razor', melee: 1, blade: 1, dmg: 28, range: 14, rate: 0.28, knock: 20, price: 30 },
+    machete: { name: 'Machete', melee: 1, blade: 1, dmg: 40, range: 21, rate: 0.5, knock: 70, price: 60 },
+    hatchet: { name: 'Hatchet', melee: 1, blade: 1, dmg: 35, range: 19, rate: 0.52, knock: 90, price: 45 },
+    crowbar: { name: 'Crowbar', melee: 1, dmg: 23, range: 22, rate: 0.45, knock: 130, price: 25 },
+    sap: { name: 'Leather Sap', melee: 1, dmg: 12, range: 15, rate: 0.5, knock: 50, price: 20, ko: 1 },
     molotov: { name: 'Molotov', thrown: 1, dmg: 20, range: 110, rate: 0.8, ammo: 'molotov', price: 25, fire: 1 },
     dynamite: { name: 'Dynamite', thrown: 1, dmg: 120, range: 100, rate: 1.0, ammo: 'dynamite', price: 60, blast: 1 },
   };
-  D.ammoNames = { pistol: 'Pistol rounds', shells: 'Shells', smg: 'SMG mags', rifle: 'Rifle rounds', molotov: 'Molotovs', dynamite: 'Dynamite' };
-  D.ammoPrice = { pistol: [12, 18], shells: [10, 16], smg: [30, 40], rifle: [5, 18] }; // [amount, price]
+  D.ammoNames = { pistol: 'Pistol rounds', shells: 'Shells', smg: 'SMG mags', rifle: 'Rifle rounds', bolts: 'Crossbow bolts', molotov: 'Molotovs', dynamite: 'Dynamite' };
+  D.ammoPrice = { pistol: [12, 18], shells: [10, 16], smg: [30, 40], rifle: [5, 18], bolts: [6, 15] }; // [amount, price]
 
   // Loot sells at pawn. value in $.
   D.loot = {
@@ -2882,6 +2893,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       if (wdef) drawWeapon8(g, X, Y, d8, st.weapon, st.ang, pose, look.kid);
       else if (st.held) A.drawHeldItem(g, X, Y, d8, st.held, pose, look.kid, { phase: moving ? phase : -1, swing: st.swing, skin: look.skin });
     };
+    A._sil = !!st.silenced;
     const behind = (wdef || st.held) && (wdef && wdef.gun ? DIR8[d8] === 'up' || DIR8[d8] === 'upright' : A.itemBehind(d8, pose));
     if (behind) hand();
     g.drawImage(spr, X - spr.width / 2, Y - 25);
@@ -2900,6 +2912,12 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     chopper: { barrel: [2, 14, 5, 3], grip: [5, 8, 2, 4], mag: [8, 8, 2, 5], drum2: 1, sc: 0.72 },
     shotgun: { barrel: [5, 15, 5, 2], pump: [9, 7, 3, 1], stock: [0, 6, 6, 3], wood: 1, sc: 0.85 },
     rifle: { barrel: [4, 15, 5, 2], stock: [0, 5, 6, 3], scope: [7, 11, 3, 1], wood: 1, sc: 0.95 },
+    derringer: { barrel: [7, 12, 6, 2], grip: [5, 7, 3, 4], wood: 1, sc: 0.5 },
+    colt45: { barrel: [5, 14, 5, 3], grip: [5, 7, 3, 5], wood: 1, sc: 0.62 },
+    sawedoff: { barrel: [6, 12, 5, 3], stock: [2, 6, 6, 3], wood: 1, sc: 0.8 },
+    carbine: { barrel: [4, 15, 5, 2], stock: [0, 6, 6, 3], mag: [8, 8, 2, 3], wood: 1, sc: 0.92 },
+    crossbow: { barrel: [3, 14, 6, 2], stock: [0, 5, 6, 3], bow: 12, wood: 1, sc: 0.85 },
+    tommy: { barrel: [2, 15, 5, 2], grip: [5, 8, 2, 4], mag: [7, 8, 4, 4], stock: [0, 3, 5, 3], pump: [11, 7, 2, 1], wood: 1, sc: 0.85 },
   };
   const gunCache = {};
   A.gunArt = function (w) {
@@ -2918,6 +2936,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     if (d.pump) R_(d.pump[0], d.pump[1], d.pump[2], 2, wood);
     if (d.stock) R_(d.stock[0], d.stock[2], d.stock[1] - d.stock[0], d.stock[3], wood);
     if (d.scope) R_(d.scope[0], d.scope[2], d.scope[1] - d.scope[0], d.scope[3] + 1, xx.black);
+    if (d.bow) { R_(d.bow, by - 5, 1, bh + 10, wood); o.line(Math.round(d.bow * sc) + off, Math.round((by - 5) * sc) + off, Math.round(3 * sc) + off, Math.round((by + 1) * sc) + off, '#d8d0b8'); o.line(Math.round(d.bow * sc) + off, Math.round((by + bh + 5) * sc) + off, Math.round(3 * sc) + off, Math.round((by + 1) * sc) + off, '#d8d0b8'); }
     o.outline('#282828');
     const px = (v) => Math.round(v * sc) + off;
     // where the hand goes and where the bullet comes out
@@ -2937,7 +2956,8 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     const d8 = A.dir8(actor.dir, ang);
     const [hx, hy] = handWorld(actor.x, actor.y, d8, GUN_HAND[DIR8[d8]], actor.look && actor.look.kid);
     const flip = Math.cos(ang) < 0 ? -1 : 1;
-    const mx = art.muzzle[0] - art.grip[0], my = (art.muzzle[1] - art.grip[1]) * flip;
+    const sil = actor.silencedGun && actor.silencedGun(weapon);
+    const mx = art.muzzle[0] - art.grip[0] + (sil ? 4 : 0), my = (art.muzzle[1] - art.grip[1]) * flip;
     const c = Math.cos(ang), s_ = Math.sin(ang);
     return [hx + mx * c - my * s_, hy + mx * s_ + my * c];
   };
@@ -2955,6 +2975,11 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     molotov: [(o) => { o.shadedRect(6, 6, 5, 8, OLD.x.glass); o.rect(7, 3, 3, 3, OLD.x.glass[2]); o.rect(8, 1, 2, 3, '#e8d8b0'); o.set(9, 0, '#ffb030'); }, [8, 10]],
     dynamite: [(o) => { o.shadedRect(5, 5, 6, 9, OLD.x.red); o.hline(5, 10, 9, OLD.x.red[0]); o.line(8, 5, 10, 1, '#9a9a9a'); o.set(10, 1, '#ffd040'); }, [8, 10]],
     gascan: [(o) => { o.shadedRect(3, 5, 10, 9, OLD.x.red); o.rect(10, 3, 3, 2, OLD.x.metal[2]); o.rect(5, 3, 4, 2, OLD.x.black[2]); }, [7, 4]],
+    razor: [(o) => { const m = OLD.x.metal; o.line(3, 12, 7, 8, OLD.x.black[2]); o.line(4, 12, 7, 9, OLD.x.black[3]); o.line(7, 8, 12, 3, m[4]); o.line(8, 8, 12, 4, m[2]); o.line(8, 9, 13, 4, m[3]); }, [4, 11]],
+    machete: [(o) => { const m = OLD.x.metal, w = OLD.x.wood; o.line(2, 14, 5, 11, w[1]); o.line(3, 14, 5, 12, w[2]); o.line(5, 10, 14, 1, m[4]); o.line(6, 10, 14, 2, m[3]); o.line(6, 11, 15, 2, m[2]); o.line(4, 10, 6, 12, OLD.x.black[2]); }, [3, 13]],
+    hatchet: [(o) => { const m = OLD.x.metal, w = OLD.x.wood; o.line(3, 14, 11, 6, w[2]); o.line(4, 14, 12, 6, w[1]); o.shadedRect(9, 2, 4, 6, m); o.line(13, 2, 13, 7, m[4]); }, [4, 13]],
+    crowbar: [(o) => { const b = OLD.x.black; o.line(2, 14, 12, 4, b[3]); o.line(3, 14, 13, 4, b[2]); o.set(13, 3, b[3]); o.set(12, 2, b[3]); o.set(11, 2, b[2]); o.set(2, 14, '#b02a20'); }, [3, 13]],
+    sap: [(o) => { const b = OLD.x.black; o.line(4, 12, 8, 8, b[2]); o.shadedEllipse(10, 6, 2.6, 2.6, b); o.set(9, 5, b[4] || b[3]); }, [5, 11]],
     knuckles: [(o) => { const m = OLD.x.yellow; for (let i = 0; i < 4; i++) o.shadedEllipse(5 + i * 2, 8, 1.3, 1.6, m); o.shadedRect(4, 9, 8, 2, m); }, [8, 9]],
   };
   const itemCache = {};
@@ -3044,7 +3069,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     g.drawImage(art.cv, -8, -8);
     g.restore();
   };
-  const CARRY = { knife: { fwd: 1, sc: 0.7 }, bat: { sc: 0.9 } };
+  const CARRY = { knife: { fwd: 1, sc: 0.7 }, razor: { fwd: 1, sc: 0.75 }, sap: { fwd: 1, sc: 0.8 }, bat: { sc: 0.9 } };
   // ---------------------------------------------------------------- sneaking in plain sight
   // Sneak and you duck into something: a cardboard box, a bush, a trash can, a barrel or a
   // potted fern. Your shoes stick out of the bottom and shuffle along when you move.
@@ -3103,6 +3128,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     const vert = Math.abs(Math.sin(a));
     if (vert > 0.92) g.scale(Math.sin(a) > 0 ? 0.5 : 0.65, 1);
     g.drawImage(art.cv, -art.grip[0], -art.grip[1]);
+    if (A._sil) { const mx = art.muzzle[0] - art.grip[0], my = art.muzzle[1] - art.grip[1]; g.fillStyle = '#141414'; g.fillRect(mx - 1, my - 1.5, 6, 3); g.fillStyle = '#4a4a50'; g.fillRect(mx - 1, my - 1, 5, 2); g.fillStyle = '#7a7a84'; g.fillRect(mx, my - 1, 3, 1); }
     g.restore();
   };
   function drawWeapon8(g, X, Y, d8, w, ang, pose, kid) {
@@ -6078,12 +6104,15 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     const n = w.pellets || 1;
     // bullets leave the muzzle of the gun actually drawn in their hand
     const [sx, sy] = R.art.muzzle && !att.inCar ? R.art.muzzle(att, att.weapon, ang) : [att.x + Math.cos(ang) * 8, att.y - 10 + Math.sin(ang) * 6];
-    g.fx.flash(sx, sy);
-    g.audio.sfx(w === D.weapons.shotgun ? 'shotgun' : w === D.weapons.chopper ? 'smg' : w === D.weapons.rifle ? 'rifle' : 'shot', att.x, att.y);
-    g.actors.noise(att.x, att.y, TS * 22 * (w.loud || 1), 'gunshot', att);
+    // a silencer (or a crossbow) keeps it between you and whoever you shot
+    const quiet = w.silent || (att.silencedGun && att.silencedGun(att.weapon));
+    if (!quiet) g.fx.flash(sx, sy);
+    const id = att.weapon;
+    g.audio.sfx(quiet ? 'thup' : w.pellets ? 'shotgun' : w.auto ? 'smg' : id === 'rifle' || id === 'carbine' ? 'rifle' : 'shot', att.x, att.y);
+    g.actors.noise(att.x, att.y, TS * (quiet ? 2.5 : 22 * (w.loud || 1)), quiet ? 'rustle' : 'gunshot', att);
     if (att === g.player) {
-      g.cam.shake(w.pellets ? 3 : 1.5);
-      g.law.shotsFired(att.x, att.y);
+      g.cam.shake(w.pellets ? 3 : quiet ? 0.6 : 1.5);
+      if (!quiet) g.law.shotsFired(att.x, att.y);
     }
     const skill = att === g.player ? 1 : att.cop ? 0.75 : 0.55;
     for (let p = 0; p < n; p++) {
@@ -9909,7 +9938,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
 // Everything here respects the Blood & gore setting.
 'use strict';
 (function () {
-  const TS = R.TILE;
+  const TS = R.TILE, D = R.data;
   const GO = (R.gore = { parts: [] });
   const G = () => R.game;
   const on = () => G() && G().settings.gore !== false;
@@ -9924,7 +9953,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   };
   GO.hurt = function (a, amt, source, kind) {
     const w = wnd(a);
-    const blade = source && (source.weapon === 'knife' || (source.held && source.held.k === 'bottle'));
+    const blade = source && ((D.weapons[source.weapon] && D.weapons[source.weapon].blade) || (source.held && source.held.k === 'bottle'));
     if (kind === 'melee' && !blade) w.bruise = Math.min(1, w.bruise + amt / 45);
     else if (kind === 'bullet' || kind === 'blast' || blade) w.bleed = Math.min(1, w.bleed + amt / (kind === 'blast' ? 60 : 90));
     else if (kind === 'car' || kind === 'fall') { w.bruise = Math.min(1, w.bruise + amt / 60); w.bleed = Math.min(1, w.bleed + amt / 200); }
@@ -10022,7 +10051,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       const r = baseHurt.call(this, amt, src, kind);
       if (this.hp < hp0) {
         const w = this.wnd = this.wnd || { bruise: 0, bleed: 0 };
-        const blade = src && src.weapon === 'knife';
+        const blade = src && D.weapons[src.weapon] && D.weapons[src.weapon].blade;
         if (kind === 'melee' && !blade) w.bruise = Math.min(1, w.bruise + amt / 50);
         else if (kind === 'bullet' || kind === 'blast' || blade) w.bleed = Math.min(1, w.bleed + amt / 100);
       }
@@ -10293,8 +10322,9 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     g.ui.toast(this.masked ? 'Mask on. Witnesses won\'t know who you are, but everyone gets nervous.' : 'Mask off.');
   };
 
+  P.silencedGun = function (w) { return !!(this.inv.silenced && this.inv.silenced[w]); };
   P.weaponList = function () {
-    const order = ['fists', 'knuckles', 'bat', 'knife', 'revolver', 'magnum', 'shotgun', 'chopper', 'rifle', 'molotov', 'dynamite'];
+    const order = ['fists', 'knuckles', 'sap', 'bat', 'crowbar', 'knife', 'razor', 'hatchet', 'machete', 'derringer', 'revolver', 'colt45', 'magnum', 'shotgun', 'sawedoff', 'chopper', 'tommy', 'rifle', 'carbine', 'crossbow', 'molotov', 'dynamite'];
     const out = order.filter((w) => this.inv.weapons[w] || (D.weapons[w].thrown && this.inv.ammo[w] > 0));
     if (this.inv.tools.ring) out.splice(1, 0, 'ring');
     if (this.inv.tools.gascan) out.push('gascan');
@@ -14424,6 +14454,58 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   };
 })();
 
+// ---- 14_arms.js
+// RHAPSODY — the armory, extended. The sap puts people to sleep instead of in the ground
+// (best from behind, on someone who never saw you coming). New guns and blades show up
+// in the hands of the coast's worse citizens, and every new weapon gets its own icon.
+'use strict';
+(function () {
+  const D = R.data, TS = R.TILE;
+  const G = () => R.game;
+  const AR = (R.arms = {});
+
+  AR.init = function (g) {
+    if (this.wrapped) return;
+    this.wrapped = true;
+    // the sap: a knockout, not a killing
+    const C = R.combat, dmg = C.damage;
+    C.damage = function (t, amt, source, kind) {
+      const pl = G().player;
+      if (source === pl && kind === 'melee' && pl.weapon === 'sap' && t && t.kind === 'h' && !t.dead && !t.cop) {
+        const unaware = t.state !== 'fight' && t.state !== 'flee' && !t.hostile;
+        const behind = Math.abs(R.angDiff(t.ang || 0, Math.atan2(t.y - pl.y, t.x - pl.x))) < 1.2;
+        if (unaware || t.hp < 45) {
+          t.down = Math.max(t.down || 0, behind ? 30 : 16);
+          t.ko = true;
+          G().fx.text(t.x, t.y - 26, 'OUT COLD', '#e0d0a0');
+          G().audio.sfx('punch', t.x, t.y);
+          return dmg.call(this, t, Math.min(amt, Math.max(0, t.hp - 5)), source, kind);
+        }
+      }
+      return dmg.call(this, t, amt, source, kind);
+    };
+    // icons for the new hardware
+    const Goods = R.goods, icon = Goods.icon;
+    const extra = { silencer: () => { const o = new R.old.O(16, 16); o.shadedRect(3, 6, 10, 4, R.old.x.black); o.hline(3, 12, 6, '#7a7a84'); return o.outlineBy(R.old.Ue).toCanvas(); }, bolts: () => { const o = new R.old.O(16, 16); for (let k = 0; k < 3; k++) { o.line(3 + k * 3, 13, 9 + k * 3, 3, R.old.x.wood[2]); o.set(9 + k * 3, 3, '#c8c8d0'); } return o.outlineBy(R.old.Ue).toCanvas(); } };
+    const cache = {};
+    Goods.icon = function (key, j) {
+      if (!j && (extra[key] || (D.weapons[key] && ['derringer', 'colt45', 'sawedoff', 'carbine', 'crossbow', 'tommy', 'razor', 'machete', 'hatchet', 'crowbar', 'sap'].includes(key)))) {
+        if (cache[key]) return cache[key];
+        let cv = extra[key] ? extra[key]() : null;
+        if (!cv) { const a = R.art.gunArt(key) || R.art.itemArt(key); cv = a && a.cv; }
+        if (cv) return (cache[key] = cv);
+      }
+      return icon.call(this, key, j);
+    };
+    // the underworld re-arms
+    const AP = R.Actors.prototype, arm = AP.arm;
+    AP.arm = function (h, w) {
+      if (h && h.faction && h.faction !== 'law' && !h.cop && R.rng() < 0.35) w = R.rng.pick({ revolver: ['colt45', 'derringer'], magnum: ['colt45'], shotgun: ['sawedoff'], chopper: ['tommy'], knife: ['razor', 'machete'], bat: ['crowbar', 'hatchet'] }[w] || [w]);
+      return arm.call(this, h, w);
+    };
+  };
+})();
+
 // ---- 14_audio.js
 // RHAPSODY — WebAudio: synthesized sound effects and three procedural radio
 // stations (funk, disco, outlaw country) plus tense police music.
@@ -14529,6 +14611,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       case 'punch': this.burst(0.08, v(0.6), 300, 1); this.tone('sine', 120, 50, 0.08, v(0.5)); break;
       case 'swing': this.burst(0.1, v(0.15), 1500, 0.8, null, null, 'highpass'); break;
       case 'stab': this.burst(0.06, v(0.4), 2500, 2); break;
+      case 'thup': this.burst(0.05, v(0.35), 2200, 1.2); this.tone('sine', 260, 120, 0.05, v(0.12)); break;
       case 'shot': this.burst(0.18, v(0.8), 900, 0.6); this.tone('square', 180, 40, 0.1, v(0.25)); break;
       case 'shotgun': this.burst(0.35, v(0.9), 500, 0.5); this.tone('sine', 90, 30, 0.25, v(0.5)); break;
       case 'smg': this.burst(0.07, v(0.5), 1200, 0.8); break;
@@ -14700,7 +14783,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   // ---------------------------------------------------------------- where it hit
   BU.mark = function (a, amt, source, kind) {
     const w = wnd(a), g = G();
-    const blade = source && (source.weapon === 'knife' || (source.held && source.held.k === 'bottle'));
+    const blade = source && ((D.weapons[source.weapon] && D.weapons[source.weapon].blade) || (source.held && source.held.k === 'bottle'));
     const k = kind === 'melee' ? (blade ? 'cut' : 'bruise') : kind === 'bullet' ? 'hole' : kind === 'blast' ? 'burn' : kind === 'car' ? 'bruise' : null;
     if (!k) return;
     w.marks = w.marks || [];
@@ -14856,7 +14939,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       if (s.water) return { label: `Sink the bag of remains (${tools.remains})`, fn: () => { tools.remains--; R.water && R.water.splash && R.water.splash(s.water.x * TS + 8, s.water.y * TS + 8); g.audio.sfx('splash', pl.x, pl.y); g.ui.toast('A few bubbles, and then the water is flat again.', 'good'); } };
       if (s.trash) return { label: `Dump the bag of remains (${tools.remains})`, fn: () => { tools.remains--; g.audio.sfx('bump', pl.x, pl.y); g.ui.toast('One more black bag in a city full of them.', 'good'); if (R.rng() < 0.25) setTimeout(() => g.pop.addNews(R.rng.pick(g.world.cities).id, 'Sanitation worker makes grisly discovery on his route. Police are "keeping an open mind".'), 20000); } };
     }
-    if (pl.weapon !== 'knife') return null;
+    if (!D.weapons[pl.weapon] || !D.weapons[pl.weapon].blade) return null;
     const a = this.body(pl);
     if (!a) return null;
     const w = wnd(a);
@@ -17611,11 +17694,12 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     const g = this.game, pl = g.player, bt = D.btypes[b.type];
     let items = this.interiorOptions(b).filter((o) => o.price && o.fn);
     if (bt.shop === 'guns') {
-      for (const id of ['revolver', 'magnum', 'shotgun', 'rifle', 'chopper', 'knife']) {
-        const w = D.weapons[id], have = pl.inv.weapons[id], locked = id === 'chopper' && g.jobs.rank() < 2;
-        items.push({ label: w.name, price: have ? 'Owned' : R.fmtMoney(w.price), small: locked ? 'Capo rank only.' : `Damage ${w.dmg}${w.pellets ? '×' + w.pellets : ''}, range ${w.range}${w.clip ? `, ${w.clip}-round clip` : ''}.`, icon: id, fn: () => { if (have || locked) return; if (!pl.pay(w.price)) return this.toast("Can't afford it.", 'warn'); pl.giveWeapon(id); g.audio.sfx('cash'); } });
+      for (const id of ['derringer', 'revolver', 'colt45', 'magnum', 'shotgun', 'sawedoff', 'rifle', 'carbine', 'crossbow', 'chopper', 'tommy', 'knife', 'razor', 'machete', 'hatchet', 'crowbar', 'sap']) {
+        const w = D.weapons[id], have = pl.inv.weapons[id], locked = (id === 'chopper' || id === 'tommy') && g.jobs.rank() < 2;
+        items.push({ label: w.name, price: have ? 'Owned' : R.fmtMoney(w.price), small: locked ? 'Capo rank only.' : w.melee ? `Damage ${w.dmg}${w.blade ? ', a blade' : ''}${w.ko ? ', knocks people out' : ''}.` : `Damage ${w.dmg}${w.pellets ? '×' + w.pellets : ''}, range ${w.range}${w.clip ? `, ${w.clip}-round clip` : ''}${w.silent ? ', silent' : w.sil ? ', takes a silencer' : ''}.`, icon: id, fn: () => { if (have || locked) return; if (!pl.pay(w.price)) return this.toast("Can't afford it.", 'warn'); pl.giveWeapon(id); g.audio.sfx('cash'); } });
       }
       for (const am in D.ammoPrice) { const [n, pr] = D.ammoPrice[am]; items.push({ label: `${D.ammoNames[am]} ×${n}`, price: R.fmtMoney(pr), small: `You have ${pl.inv.ammo[am] || 0}.`, icon: 'ammo', fn: () => { if (!pl.pay(pr)) return this.toast("Can't afford it.", 'warn'); pl.inv.ammo[am] = (pl.inv.ammo[am] || 0) + n; g.audio.sfx('cash'); } }); }
+      for (const id of Object.keys(pl.inv.weapons)) { const w = D.weapons[id]; if (!w || !w.sil || pl.silencedGun(id)) continue; items.push({ label: `Silencer for the ${w.name}`, price: '$150', small: 'Threaded and fitted. Shots become a cough nobody reports.', icon: 'silencer', fn: () => { if (!pl.pay(150)) return this.toast("Can't afford it.", 'warn'); (pl.inv.silenced = pl.inv.silenced || {})[id] = 1; g.audio.sfx('cash'); this.toast(`The ${w.name} whispers now.`, 'good'); } }); }
       items.push({ label: 'Molotov', price: '$25', small: `You have ${pl.inv.ammo.molotov || 0}. Throw it at anything that burns.`, icon: 'molotov', fn: () => { if (!pl.pay(25)) return; pl.inv.ammo.molotov = (pl.inv.ammo.molotov || 0) + 1; g.audio.sfx('cash'); } });
     }
     const iconOf = (it) => it.icon || (SHOPICON.find(([re]) => re.test(it.label)) || [0, 'loot'])[1];
@@ -17658,16 +17742,17 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     } else if (kind === 'guns') {
       title = 'Gun Counter';
       sub = 'Cash only. No waiting period in the Brass Coast.';
-      for (const id of ['revolver', 'magnum', 'shotgun', 'rifle', 'chopper', 'knife']) {
+      for (const id of ['derringer', 'revolver', 'colt45', 'magnum', 'shotgun', 'sawedoff', 'rifle', 'carbine', 'crossbow', 'chopper', 'tommy', 'knife', 'razor', 'machete', 'hatchet', 'crowbar', 'sap']) {
         const w = D.weapons[id];
         const have = pl.inv.weapons[id];
-        if (id === 'chopper' && g.jobs.rank() < 2) { opts.push({ label: `${w.name}`, small: 'Capo rank only. Ask the family.', cls: 'dim' }); continue; }
+        if ((id === 'chopper' || id === 'tommy') && g.jobs.rank() < 2) { opts.push({ label: `${w.name}`, small: 'Capo rank only. Ask the family.', cls: 'dim' }); continue; }
         opts.push({ label: have ? `${w.name} (owned)` : w.name, price: have ? '—' : R.fmtMoney(w.price), cls: have ? 'dim' : '', fn: () => { if (have) return; if (!pl.pay(w.price)) return this.toast("Can't afford it.", 'warn'); pl.giveWeapon(id); this.toast(`Bought ${w.name}.`, 'good'); g.audio.sfx('cash'); this.openShop('guns'); } });
       }
       for (const am in D.ammoPrice) {
         const [n, p] = D.ammoPrice[am];
         opts.push({ label: `${D.ammoNames[am]} ×${n}`, small: `You have ${pl.inv.ammo[am] || 0}`, price: R.fmtMoney(p), fn: () => { if (!pl.pay(p)) return this.toast("Can't afford it.", 'warn'); pl.inv.ammo[am] = (pl.inv.ammo[am] || 0) + n; g.audio.sfx('cash'); this.openShop('guns'); } });
       }
+      for (const id of Object.keys(pl.inv.weapons)) { const w = D.weapons[id]; if (!w || !w.sil || pl.silencedGun(id)) continue; opts.push({ label: `Silencer for the ${w.name}`, small: 'Shots become a cough nobody reports', price: '$150', fn: () => { if (!pl.pay(150)) return this.toast("Can't afford it.", 'warn'); (pl.inv.silenced = pl.inv.silenced || {})[id] = 1; g.audio.sfx('cash'); this.toast(`The ${w.name} whispers now.`, 'good'); this.openShop('guns'); } }); }
       opts.push({ label: 'Molotov', small: `You have ${pl.inv.ammo.molotov || 0}`, price: '$25', fn: () => { if (!pl.pay(25)) return; pl.inv.ammo.molotov = (pl.inv.ammo.molotov || 0) + 1; this.openShop('guns'); } });
       opts.push({ label: 'Dynamite', small: g.jobs.rank() < 1 ? 'Soldier rank only' : `You have ${pl.inv.ammo.dynamite || 0}`, price: '$60', cls: g.jobs.rank() < 1 ? 'dim' : '', fn: () => { if (g.jobs.rank() < 1 || !pl.pay(60)) return; pl.inv.ammo.dynamite = (pl.inv.ammo.dynamite || 0) + 1; this.openShop('guns'); } });
     } else if (kind === 'tailor') {
@@ -18133,6 +18218,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     this.present();
   };
 
+  const SWUNG = { knife: 1, razor: 1, machete: 1, hatchet: 1, crowbar: 1, sap: 1 };
   P.drawHuman = function (g, h) {
     if (h.tied && !h.dead) { A.drawPerson(g, h.x, h.y, h.dir, 0, h.look, {}); R.bodies.drawBound(g, h); return; }
     // test-room mannequins hold a fixed pose
@@ -18154,7 +18240,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       // wind up, then follow through
       const sw = 1 - h.swingT / 0.22;
       if (h.weapon === 'bat') { st.pose = sw < 0.45 ? 'b1' : 'b2'; st.weapon = null; }
-      else if (h.weapon === 'knife') { st.pose = sw < 0.45 ? 'w1' : 'w2'; st.weapon = null; st.held = 'knife'; }
+      else if (SWUNG[h.weapon]) { st.pose = sw < 0.45 ? 'w1' : 'w2'; st.weapon = null; st.held = h.weapon; }
       else { st.pose = h.swingN % 2 ? 'p2' : 'p1'; st.weapon = null; }
     }
     if (st.down) { st.weapon = null; st.pose = null; }
@@ -18164,7 +18250,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   };
   P.drawPlayer = function (g, pl) {
     const w = pl.weaponOut || pl.punchT > 0 ? pl.weapon : null;
-    const st = { weapon: w === 'gascan' ? null : w, ang: pl.ang };
+    const st = { weapon: w === 'gascan' ? null : w, ang: pl.ang, silenced: pl.silencedGun(w) };
     if (w === 'gascan') st.held = 'gascan';
     const swing = pl.punchT > 0 ? Math.max(0, 1 - pl.punchT / (pl.punchDur || 0.22)) : -1; // 0..1 through the blow
     if (pl.held) {
@@ -18174,7 +18260,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       if (swing >= 0) { st.pose = A.itemArt(pl.held.k) && A.itemArt(pl.held.k).grip ? (swing < 0.45 ? 'w1' : 'w2') : 'h'; st.swing = swing; }
     } else if (swing >= 0) {
       if (pl.weapon === 'bat') { st.pose = swing < 0.45 ? 'b1' : 'b2'; st.weapon = null; }
-      else if (pl.weapon === 'knife') { st.pose = swing < 0.45 ? 'w1' : 'w2'; st.weapon = null; st.held = 'knife'; }
+      else if (SWUNG[pl.weapon]) { st.pose = swing < 0.45 ? 'w1' : 'w2'; st.weapon = null; st.held = pl.weapon; }
       else if (pl.weapon === 'fists' || pl.weapon === 'knuckles' || !D.weapons[pl.weapon] || !D.weapons[pl.weapon].gun) st.pose = (pl.punchN || 0) % 2 ? 'p2' : 'p1';
       if (pl.weapon === 'fists' || pl.weapon === 'knuckles') st.weapon = null;
     }
@@ -18607,6 +18693,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     R.turf.init(this);
     R.vendetta.init(this);
     R.butcher.init(this);
+    R.arms.init(this);
     R.vice.init(this);
     R.gore.init(this);
     R.relics.init(this);

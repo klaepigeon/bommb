@@ -15,7 +15,7 @@
   // ---------------------------------------------------------------- where it hit
   BU.mark = function (a, amt, source, kind) {
     const w = wnd(a), g = G();
-    const blade = source && (source.weapon === 'knife' || (source.held && source.held.k === 'bottle'));
+    const blade = source && ((D.weapons[source.weapon] && D.weapons[source.weapon].blade) || (source.held && source.held.k === 'bottle'));
     const k = kind === 'melee' ? (blade ? 'cut' : 'bruise') : kind === 'bullet' ? 'hole' : kind === 'blast' ? 'burn' : kind === 'car' ? 'bruise' : null;
     if (!k) return;
     w.marks = w.marks || [];
@@ -171,7 +171,7 @@
       if (s.water) return { label: `Sink the bag of remains (${tools.remains})`, fn: () => { tools.remains--; R.water && R.water.splash && R.water.splash(s.water.x * TS + 8, s.water.y * TS + 8); g.audio.sfx('splash', pl.x, pl.y); g.ui.toast('A few bubbles, and then the water is flat again.', 'good'); } };
       if (s.trash) return { label: `Dump the bag of remains (${tools.remains})`, fn: () => { tools.remains--; g.audio.sfx('bump', pl.x, pl.y); g.ui.toast('One more black bag in a city full of them.', 'good'); if (R.rng() < 0.25) setTimeout(() => g.pop.addNews(R.rng.pick(g.world.cities).id, 'Sanitation worker makes grisly discovery on his route. Police are "keeping an open mind".'), 20000); } };
     }
-    if (pl.weapon !== 'knife') return null;
+    if (!D.weapons[pl.weapon] || !D.weapons[pl.weapon].blade) return null;
     const a = this.body(pl);
     if (!a) return null;
     const w = wnd(a);

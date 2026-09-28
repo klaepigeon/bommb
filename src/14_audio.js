@@ -102,6 +102,7 @@
       case 'punch': this.burst(0.08, v(0.6), 300, 1); this.tone('sine', 120, 50, 0.08, v(0.5)); break;
       case 'swing': this.burst(0.1, v(0.15), 1500, 0.8, null, null, 'highpass'); break;
       case 'stab': this.burst(0.06, v(0.4), 2500, 2); break;
+      case 'thup': this.burst(0.05, v(0.35), 2200, 1.2); this.tone('sine', 260, 120, 0.05, v(0.12)); break;
       case 'shot': this.burst(0.18, v(0.8), 900, 0.6); this.tone('square', 180, 40, 0.1, v(0.25)); break;
       case 'shotgun': this.burst(0.35, v(0.9), 500, 0.5); this.tone('sine', 90, 30, 0.25, v(0.5)); break;
       case 'smg': this.burst(0.07, v(0.5), 1200, 0.8); break;

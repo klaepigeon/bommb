@@ -189,6 +189,7 @@
     this.present();
   };
 
+  const SWUNG = { knife: 1, razor: 1, machete: 1, hatchet: 1, crowbar: 1, sap: 1 };
   P.drawHuman = function (g, h) {
     if (h.tied && !h.dead) { A.drawPerson(g, h.x, h.y, h.dir, 0, h.look, {}); R.bodies.drawBound(g, h); return; }
     // test-room mannequins hold a fixed pose
@@ -210,7 +211,7 @@
       // wind up, then follow through
       const sw = 1 - h.swingT / 0.22;
       if (h.weapon === 'bat') { st.pose = sw < 0.45 ? 'b1' : 'b2'; st.weapon = null; }
-      else if (h.weapon === 'knife') { st.pose = sw < 0.45 ? 'w1' : 'w2'; st.weapon = null; st.held = 'knife'; }
+      else if (SWUNG[h.weapon]) { st.pose = sw < 0.45 ? 'w1' : 'w2'; st.weapon = null; st.held = h.weapon; }
       else { st.pose = h.swingN % 2 ? 'p2' : 'p1'; st.weapon = null; }
     }
     if (st.down) { st.weapon = null; st.pose = null; }
@@ -220,7 +221,7 @@
   };
   P.drawPlayer = function (g, pl) {
     const w = pl.weaponOut || pl.punchT > 0 ? pl.weapon : null;
-    const st = { weapon: w === 'gascan' ? null : w, ang: pl.ang };
+    const st = { weapon: w === 'gascan' ? null : w, ang: pl.ang, silenced: pl.silencedGun(w) };
     if (w === 'gascan') st.held = 'gascan';
     const swing = pl.punchT > 0 ? Math.max(0, 1 - pl.punchT / (pl.punchDur || 0.22)) : -1; // 0..1 through the blow
     if (pl.held) {
@@ -230,7 +231,7 @@
       if (swing >= 0) { st.pose = A.itemArt(pl.held.k) && A.itemArt(pl.held.k).grip ? (swing < 0.45 ? 'w1' : 'w2') : 'h'; st.swing = swing; }
     } else if (swing >= 0) {
       if (pl.weapon === 'bat') { st.pose = swing < 0.45 ? 'b1' : 'b2'; st.weapon = null; }
-      else if (pl.weapon === 'knife') { st.pose = swing < 0.45 ? 'w1' : 'w2'; st.weapon = null; st.held = 'knife'; }
+      else if (SWUNG[pl.weapon]) { st.pose = swing < 0.45 ? 'w1' : 'w2'; st.weapon = null; st.held = pl.weapon; }
       else if (pl.weapon === 'fists' || pl.weapon === 'knuckles' || !D.weapons[pl.weapon] || !D.weapons[pl.weapon].gun) st.pose = (pl.punchN || 0) % 2 ? 'p2' : 'p1';
       if (pl.weapon === 'fists' || pl.weapon === 'knuckles') st.weapon = null;
     }

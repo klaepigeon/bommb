@@ -240,12 +240,15 @@
     const n = w.pellets || 1;
     // bullets leave the muzzle of the gun actually drawn in their hand
     const [sx, sy] = R.art.muzzle && !att.inCar ? R.art.muzzle(att, att.weapon, ang) : [att.x + Math.cos(ang) * 8, att.y - 10 + Math.sin(ang) * 6];
-    g.fx.flash(sx, sy);
-    g.audio.sfx(w === D.weapons.shotgun ? 'shotgun' : w === D.weapons.chopper ? 'smg' : w === D.weapons.rifle ? 'rifle' : 'shot', att.x, att.y);
-    g.actors.noise(att.x, att.y, TS * 22 * (w.loud || 1), 'gunshot', att);
+    // a silencer (or a crossbow) keeps it between you and whoever you shot
+    const quiet = w.silent || (att.silencedGun && att.silencedGun(att.weapon));
+    if (!quiet) g.fx.flash(sx, sy);
+    const id = att.weapon;
+    g.audio.sfx(quiet ? 'thup' : w.pellets ? 'shotgun' : w.auto ? 'smg' : id === 'rifle' || id === 'carbine' ? 'rifle' : 'shot', att.x, att.y);
+    g.actors.noise(att.x, att.y, TS * (quiet ? 2.5 : 22 * (w.loud || 1)), quiet ? 'rustle' : 'gunshot', att);
     if (att === g.player) {
-      g.cam.shake(w.pellets ? 3 : 1.5);
-      g.law.shotsFired(att.x, att.y);
+      g.cam.shake(w.pellets ? 3 : quiet ? 0.6 : 1.5);
+      if (!quiet) g.law.shotsFired(att.x, att.y);
     }
     const skill = att === g.player ? 1 : att.cop ? 0.75 : 0.55;
     for (let p = 0; p < n; p++) {
