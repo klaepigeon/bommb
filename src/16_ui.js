@@ -675,6 +675,8 @@
       } });
     }
     opts.push({ label: pl.room ? 'Done' : 'Leave', fn: () => this.closeSheet() });
+    // every shop can be browsed as a shelf of items with icons
+    if (bt.shop && (opts.filter((o) => o.price).length >= 2 || bt.shop === 'guns')) opts.unshift({ label: 'Browse the shelves', small: 'See everything they sell', cls: 'go', fn: () => this.browseShop(b) });
     return opts;
   };
 
@@ -838,6 +840,40 @@
   };
 
   // ---------------------------------------------------------------- shops (sub-sheets)
+  // A shop's stock as a grid of icons, like the inventory: tap one for its price,
+  // what it does and how many you already have, then buy.
+  const SHOPICON = [[/bandage/i, 'bandage'], [/sandwich|beef|special/i, 'sandwich'], [/smoke/i, 'smokes'], [/coffee/i, 'coffee'], [/lockpick/i, 'lockpick'], [/fishing|rod/i, 'rod'], [/bait/i, 'bait'], [/rope/i, 'rope'],
+    [/whiskey|tequila|champagne|round|bottle/i, 'whiskey'], [/molotov/i, 'molotov'], [/dynamite/i, 'dynamite'], [/gas can/i, 'gascan'], [/knuckle/i, 'knuckles'], [/bat\b/i, 'bat'], [/mask/i, 'mask'], [/tonic/i, 'tonic'],
+    [/rifle/i, 'rifle'], [/shotgun|shells/i, 'shotgun'], [/magnum/i, 'magnum'], [/chopper|smg/i, 'chopper'], [/revolver|pistol/i, 'revolver'], [/knife/i, 'knife'], [/round|ammo|mag/i, 'ammo']];
+  U.browseShop = function (b, sel) {
+    const g = this.game, pl = g.player, bt = D.btypes[b.type];
+    let items = this.interiorOptions(b).filter((o) => o.price && o.fn);
+    if (bt.shop === 'guns') {
+      for (const id of ['revolver', 'magnum', 'shotgun', 'rifle', 'chopper', 'knife']) {
+        const w = D.weapons[id], have = pl.inv.weapons[id], locked = id === 'chopper' && g.jobs.rank() < 2;
+        items.push({ label: w.name, price: have ? 'Owned' : R.fmtMoney(w.price), small: locked ? 'Capo rank only.' : `Damage ${w.dmg}${w.pellets ? '×' + w.pellets : ''}, range ${w.range}${w.clip ? `, ${w.clip}-round clip` : ''}.`, icon: id, fn: () => { if (have || locked) return; if (!pl.pay(w.price)) return this.toast("Can't afford it.", 'warn'); pl.giveWeapon(id); g.audio.sfx('cash'); } });
+      }
+      for (const am in D.ammoPrice) { const [n, pr] = D.ammoPrice[am]; items.push({ label: `${D.ammoNames[am]} ×${n}`, price: R.fmtMoney(pr), small: `You have ${pl.inv.ammo[am] || 0}.`, icon: 'ammo', fn: () => { if (!pl.pay(pr)) return this.toast("Can't afford it.", 'warn'); pl.inv.ammo[am] = (pl.inv.ammo[am] || 0) + n; g.audio.sfx('cash'); } }); }
+      items.push({ label: 'Molotov', price: '$25', small: `You have ${pl.inv.ammo.molotov || 0}. Throw it at anything that burns.`, icon: 'molotov', fn: () => { if (!pl.pay(25)) return; pl.inv.ammo.molotov = (pl.inv.ammo.molotov || 0) + 1; g.audio.sfx('cash'); } });
+    }
+    const iconOf = (it) => it.icon || (SHOPICON.find(([re]) => re.test(it.label)) || [0, 'loot'])[1];
+    const cards = items.map((it, i) => `<button class="inv" data-i="${i}"><canvas width="32" height="32"></canvas><b>${esc(it.price)}</b><span>${esc(it.label.replace(/\s*\(.*?\)\s*/g, ' ').trim())}</span></button>`).join('');
+    const s = this.openSheet('shelves', this.header(b.name, `${bt.name} · ${R.fmtMoney(pl.cash)} in your pocket`) + `<div class="body">${items.length ? `<div class="invgrid">${cards}</div>` : '<p>The shelves are bare.</p>'}<div class="invdetail" id="shelfd">Tap something to look at it.</div><div class="opts"><button class="opt" id="shelfBack">Back to the counter</button></div></div>`);
+    s.querySelectorAll('.inv').forEach((btn) => {
+      const it = items[+btn.dataset.i];
+      const cg = btn.querySelector('canvas').getContext('2d');
+      cg.imageSmoothingEnabled = false;
+      cg.drawImage(R.goods.icon(iconOf(it)), 0, 0, 32, 32);
+      const show = () => {
+        const d = s.querySelector('#shelfd');
+        d.innerHTML = `<b>${esc(it.label)}</b><p>${esc(it.small || '')}</p><div class="opts"><button class="opt go" data-buy="1">Buy · ${esc(it.price)}</button></div>`;
+        d.querySelector('[data-buy]').addEventListener('click', () => { const cash = pl.cash; it.fn(); if (pl.cash < cash) this.toast(`Bought: ${it.label}`, 'good'); this.browseShop(b, +btn.dataset.i); });
+      };
+      btn.addEventListener('click', show);
+      if (sel === +btn.dataset.i) show();
+    });
+    s.querySelector('#shelfBack').addEventListener('click', () => { this.closeSheet(); this.renderInterior(); });
+  };
   U.openShop = function (kind) {
     const g = this.game, pl = g.player;
     const back = () => { this.closeSheet(); if (this.insideB) this.renderInterior(); };

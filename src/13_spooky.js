@@ -59,7 +59,7 @@
     // lights in the sky
     if (!this.ufo && h >= 2 && h < 4 && biome === 'desert' && !city && seen('ufo') !== day() + 1 && R.rng() < 0.4) this.spawnUfo();
     // the crossroads
-    if (!this.active.cross && h < 0.75 && !city) {
+    if (!this.active.cross && (h >= 23 || h < 3) && !city) {
       const it = w.inters.filter((i) => !w.inCityRect(Math.round(i.cx), Math.round(i.cy), 4)).sort((a, b) => Math.hypot(a.cx - tx, a.cy - ty) - Math.hypot(b.cx - tx, b.cy - ty))[0];
       if (it && Math.hypot(it.cx - tx, it.cy - ty) < 24) this.spawnCrossroads(it);
     }
@@ -100,7 +100,17 @@
       if (d > TS * 40) { g.actors.remove(sq); delete this.active.squatch; }
     }
     const cr = this.active.cross;
-    if (cr && hr() >= 0.75 && hr() < 23) { g.fx.smoke(cr.x, cr.y - 10); g.actors.remove(cr); delete this.active.cross; }
+    if (cr) {
+      // he keeps his appointment from eleven till three, and never walks out on a deal
+      const d = Math.hypot(cr.x - pl.x, cr.y - pl.y);
+      const talking = g.ui.sheetOpen === 'talk' && g.ui.talkH === cr;
+      const late = hr() >= 3 && hr() < 23;
+      if (!talking && ((late && d > TS * 6) || d > TS * 70)) {
+        g.fx.smoke(cr.x, cr.y - 10, true); g.fx.smoke(cr.x + 4, cr.y - 14, true);
+        g.actors.remove(cr); delete this.active.cross;
+        if (d < TS * 20) g.ui.toast('The man in white is gone. The crossroads smell of struck matches.');
+      } else { cr.state = 'idle'; cr.timer = 1e9; cr.dir = R.dir4(pl.x - cr.x, pl.y - cr.y); }
+    }
   };
 
   L.legendLook = function (seed, ov) {
