@@ -257,12 +257,12 @@
         const t = this.tins[i];
         if (s.tins.includes(i) || Math.abs(px - t.x - 0.5) > 0.8 || Math.abs(py - t.y - 0.6) > 0.8) continue;
         s.tins.push(i);
-        pl.addCash(t.v);
+        pl.addCash(t.v, true);
         g.audio.sfx('cash');
         const n = s.tins.length;
         g.ui.toast(`A rusty tobacco tin, hidden ${R.rng.pick(['under a loose brick', 'behind a drainpipe', 'in the weeds', 'under a rock', 'in a hollow'])}: ${R.fmtMoney(t.v)}. (${n}/${this.tins.length})`, 'good');
         const m = MILESTONES[n] || (n === this.tins.length && MILESTONES[36]);
-        if (m) { if (m[2].cash) pl.addCash(m[2].cash); if (m[2].hp) { pl.maxHp += m[2].hp; pl.hp = pl.maxHp; } setTimeout(() => g.ui.story(m[0].toUpperCase(), `${m[1]}\n\n+${R.fmtMoney(m[2].cash)}${m[2].hp ? `, +${m[2].hp} max health` : ''}`), 600); }
+        if (m) { if (m[2].cash) pl.addCash(m[2].cash, true); if (m[2].hp) { pl.maxHp += m[2].hp; pl.hp = pl.maxHp; } setTimeout(() => g.ui.story(m[0].toUpperCase(), `${m[1]}\n\n+${R.fmtMoney(m[2].cash)}${m[2].hp ? `, +${m[2].hp} max health` : ''}`), 600); }
       }
     }
     // the plane still smokes a little
