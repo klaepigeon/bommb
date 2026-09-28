@@ -301,6 +301,7 @@
       else { v.vx *= -0.3; v.vy *= -0.3; }
       if (impact > 70) {
         this.damage(v, (impact - 60) * 0.18, null);
+        if (R.cars) { const va = Math.atan2(v.vy, v.vx) + Math.PI; R.cars.dent(v, v.x - Math.cos(va) * v.model.w * 0.5, v.y - Math.sin(va) * v.model.w * 0.5, impact); }
         this.game.fx.sparks(v.x + Math.cos(v.angle) * v.model.w * 0.5, v.y + Math.sin(v.angle) * v.model.w * 0.5, 6);
         this.game.audio.sfx('crash', v.x, v.y);
         if (v.driver === this.game.player) this.game.cam.shake(Math.min(6, impact / 40));
@@ -459,6 +460,7 @@
           const pl0 = game.player, involved = v.driver === pl0 || o.driver === pl0 || v.mode === 'chase' || o.mode === 'chase';
           const dmg = Math.max(0, rel - 45) * 0.07 * (involved ? 1 : 0.35);
           if (dmg > 0) { this.damage(v, dmg, o.driver); this.damage(o, dmg, v.driver); }
+          if (R.cars) { const mx = (v.x + o.x) / 2, my = (v.y + o.y) / 2; R.cars.dent(v, mx, my, rel); R.cars.dent(o, mx, my, rel); }
           game.fx.sparks((v.x + o.x) / 2, (v.y + o.y) / 2, 5);
           game.audio.sfx('crash', v.x, v.y);
           // kick lane cars out of their lane
