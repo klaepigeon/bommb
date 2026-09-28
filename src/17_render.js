@@ -96,6 +96,7 @@
     R.gore.draw(g);
     R.heist.draw(g);
     R.poi.drawSigns(g, left, top, vw, vh, t);
+    R.salvage.draw(g, left, top, vw, vh, t);
     R.props.drawGround(g, (x, y) => x > left - 40 && x < left + vw + 40 && y > top - 40 && y < top + vh + 40);
     // entities
     const ents = [];
@@ -162,6 +163,7 @@
     R.legends.draw(g);
     R.fearQuest.draw(g);
     R.campaign.draw(g);
+    R.salvage.glow(g, t);
     if (R.ring.fearMan && R.ring.fearMan.x) { const fm = R.ring.fearMan; g.fillStyle = 'rgba(255,226,60,' + (0.25 + Math.sin(t * 3) * 0.1) + ')'; g.fillRect(Math.round(fm.x + 4), Math.round(fm.y - 12), 2, 2); }
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     R.goods.overlay(g, cam.vw, cam.vh, t);
