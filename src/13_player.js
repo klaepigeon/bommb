@@ -193,6 +193,7 @@
   P.weaponList = function () {
     const order = ['fists', 'knuckles', 'bat', 'knife', 'revolver', 'magnum', 'shotgun', 'chopper', 'rifle', 'molotov', 'dynamite'];
     const out = order.filter((w) => this.inv.weapons[w] || (D.weapons[w].thrown && this.inv.ammo[w] > 0));
+    if (this.inv.tools.ring) out.splice(1, 0, 'ring');
     if (this.inv.tools.gascan) out.push('gascan');
     return out;
   };
@@ -238,6 +239,7 @@
     const g = this.game;
     const w = D.weapons[this.weapon];
     if (!w || this.atkT > 0) return;
+    if (this.weapon === 'ring') return R.ring.blast(this);
     if (R.ring.canSwing(this)) return R.ring.swing(this);
     const tg = this.aimTarget();
     let ang = this.ang;
@@ -314,6 +316,8 @@
       if (a.kind === 'a' && a.dead && !a.skinned && a.def.pelt) return { label: 'Skin ' + a.def.name, fn: () => this.skin(a) };
       if (a.kind === 'h' && (a.dead || a.down > 0) && !a.looted) return { label: a.dead ? 'Search body' : 'Go through pockets', fn: () => this.loot(a) };
     }
+    const fq = R.fearQuest.context(this);
+    if (fq) return fq;
     // loose junk lying right at your feet beats the door you happen to be near
     const gr = R.props.grabbable(this);
     if (gr && gr.p) return { label: R.props.label(gr), fn: () => R.props.pickUp(this, gr) };
@@ -331,12 +335,13 @@
     if (gr) return { label: R.props.label(gr), fn: () => R.props.pickUp(this, gr) };
     // phone booths
     const tx = (this.x / TS) | 0, ty = (this.y / TS) | 0;
-    for (let yy = ty - 1; yy <= ty + 1; yy++) for (let xx = tx - 1; xx <= tx + 1; xx++) if (w.o(xx, yy) === O.PHONE) return { label: 'Use payphone', fn: () => g.ui.openPhone() };
+    for (let yy = ty - 1; yy <= ty + 1; yy++) for (let xx = tx - 1; xx <= tx + 1; xx++) if (w.o(xx, yy) === O.PHONE) return R.fearQuest && R.fearQuest.perkG('knight') ? { label: 'Use payphone', fn: () => g.ui.choice ? g.ui.choice('Payphone', [{ label: 'Call around', fn: () => g.ui.openPhone() }, { label: 'Call Hal (backup from the sky)', fn: () => R.fearQuest.callHal() }]) : g.ui.openPhone() } : { label: 'Use payphone', fn: () => g.ui.openPhone() };
     // fishing
     if (this.inv.tools.rod) {
       for (const [dx, dy] of R.DIRS) if (w.isWater(tx + dx, ty + dy)) return { label: 'Fish', fn: () => g.ui.fish() };
     }
-    // hydrant: smash it
+    // nothing else to do here: the ring can make something
+    if (this.inv.tools.ring && !this.inCar) return { label: 'Summon construct', fn: () => R.ring.openLibrary(true) };
     return null;
   };
   P.use = function () {
@@ -560,6 +565,7 @@
     if (this.shieldT > 0) { g.fx.text(this.x, this.y - 26, 'BLOCKED', '#fff27a'); g.fx.sparks(this.x, this.y - 12, 3); return; }
     this.hp -= amt;
     this.bloody = Math.min(1, this.bloody + amt / 60);
+    R.fearQuest.onPlayerHurt();
     g.ui.hurtFlash(amt);
     g.fx.blood(this.x, this.y - 8, 3);
     if (src && src.kind === 'h' && src !== this) {

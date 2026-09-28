@@ -63,7 +63,7 @@
       e.t -= dt;
       if (!e.crash) {
         if (d.fx.coolRegen) pl.cool = Math.min(100, pl.cool + d.fx.coolRegen * dt);
-        if (d.fx.willRegen && pl.will != null) pl.will = Math.min(100, pl.will + 5 * dt);
+        if (d.fx.willRegen && pl.will != null) pl.will = Math.min(pl.willMax || 100, pl.will + 5 * dt);
         if (d.fx.drunk) pl.drunk = Math.max(pl.drunk, d.fx.drunk);
         if (d.fx.tough && pl.hp < 1) pl.hp = 1;
       }
@@ -259,6 +259,8 @@
     mask(o) { o.shadedEllipse(8, 8, 5.5, 6.5, X().black); o.rect(5, 6, 2, 2, '#e0ac7e'); o.rect(9, 6, 2, 2, '#e0ac7e'); o.rect(6, 11, 4, 1, '#e0ac7e'); },
     bait(o) { o.shadedRect(4, 6, 8, 7, X().wood); o.line(6, 5, 10, 3, '#c86a6a'); },
     rope(o) { o.ellipse(8, 8, 6, 6, X().wood[2]); o.ellipse(8, 8, 3.5, 3.5, null); o.ellipse(8, 8, 4, 4, X().wood[1]); o.ellipse(8, 8, 3, 3, null); },
+    battery(o) { const y = ['#0a4a1a', '#1a8a34', '#30c050', '#9af0a8']; o.shadedRect(3, 3, 10, 11, y); o.rect(5, 5, 6, 7, '#eaffee'); o.rect(4, 1, 8, 2, y[1]); o.rect(3, 14, 10, 1, y[0]); },
+    lantern(o) { const y = ['#6a4600', '#b88400', '#f0c020', '#fff27a']; o.shadedRect(4, 4, 8, 10, y); o.rect(5, 6, 6, 6, '#fff27a'); o.rect(6, 2, 4, 2, y[1]); o.rect(4, 14, 8, 1, y[0]); },
     ring(o) { o.ellipse(8, 9, 5, 4, '#f0c020'); o.ellipse(8, 9, 3, 2, null); o.shadedRect(6, 2, 4, 3, ['#6a4600', '#b88400', '#f0c020', '#fff27a']); },
     watch(o) { o.rect(6, 1, 4, 14, X().wood[1]); o.shadedEllipse(8, 8, 4, 4, X().yellow); o.ellipse(8, 8, 2.8, 2.8, '#fff8e0'); o.line(8, 8, 8, 6, INK); },
     chain(o) { for (let i = 0; i < 6; i++) o.ellipse(3 + i * 2, 5 + Math.abs(3 - i) * -1 + 6, 1.5, 1.2, X().yellow[2]); },
@@ -298,7 +300,9 @@
     if (pl.held) push('Weapons', 'held', D.props[pl.held.k].name, pl.held.dur >= 99 ? '' : pl.held.dur, 'Improvised. HIT swings it, SWAP throws it.', [['drop', 'Drop']], 'prop:' + pl.held.k);
     for (const k in inv.cons) if (inv.cons[k]) { const c = D.consumables[k]; push('Food & first aid', k, c.name, inv.cons[k], [c.heal ? `+${c.heal} health` : '', c.cool ? `+${c.cool} Cool` : '', c.drunk ? 'gets you tipsy' : '', c.sober ? 'sobers you up' : ''].filter(Boolean).join(', ') + '.', [['use', 'Use']]); }
     for (const k in inv.drugs || {}) if (inv.drugs[k]) { const d = D.drugs[k]; push('Drugs', k, `${d.name} ${d.street}`, inv.drugs[k], d.desc, [['take', 'Take']]); }
-    for (const k in inv.tools) if (inv.tools[k]) { if (k === 'ring') { push('Tools', 'ring', 'The Yellow Ring', '', 'Hard light from will. Tap RING to conjure, hold to beam, LIB to choose.', [['lib', 'Library']]); continue; } const t = D.tools[k]; if (t) push('Tools', k, t.name, inv.tools[k] > 1 ? inv.tools[k] : '', { lockpick: 'Opens doors and car locks quietly.', gascan: 'Pour a trail, then light it.', rod: 'Stand by water and press USE.', mask: 'MASK button. Witnesses can\'t name you.', bait: 'Fish bite faster.', rope: 'For tying things up.' }[k] || ''); }
+    for (const k in inv.tools) if (inv.tools[k]) { if (k === 'ring') { push('Tools', 'ring', 'The Yellow Ring', '', 'Hard light from will. SWAP to it and press B for bolts, hold B for the beam. Press A on nothing to summon a construct.', [['lib', 'Summon']]); continue; }
+      if (k === 'battery') { push('Tools', 'battery', 'Power Battery', '', 'Hal\'s green lantern. Recite the oath once a day to fill your Will.', [['gcharge', 'Recite the oath']]); continue; }
+      if (k === 'lantern') { push('Tools', 'lantern', 'Power Lantern', '', 'The Fear Man\'s lantern. Recite the oath to refill your Will, once a day.', [['charge', 'Recite the oath']]); continue; } const t = D.tools[k]; if (t) push('Tools', k, t.name, inv.tools[k] > 1 ? inv.tools[k] : '', { lockpick: 'Opens doors and car locks quietly.', gascan: 'Pour a trail, then light it.', rod: 'Stand by water and press USE.', mask: 'MASK button. Witnesses can\'t name you.', bait: 'Fish bite faster.', rope: 'For tying things up.' }[k] || ''); }
     for (const k in inv.loot) if (inv.loot[k]) { const l = D.loot[k]; if (l) push(l.pelt ? 'Pelts & catch' : 'Valuables', k, l.name, inv.loot[k], `Worth about ${R.fmtMoney(l.v)} to a ${l.pelt ? 'butcher' : 'fence'}.`, [], k); }
     for (const k in inv.ammo) if (inv.ammo[k] && !D.weapons[k]) push('Ammo', k, D.ammoNames[k] || k, inv.ammo[k], 'Loose rounds.', [], 'ammo');
     return out;
@@ -309,7 +313,9 @@
     if (a === 'use') { const c = D.consumables[it.key]; pl.inv.cons[it.key]--; if (c.heal) pl.hp = Math.min(pl.maxHp, pl.hp + c.heal); if (c.cool) pl.cool = Math.min(100, pl.cool + c.cool); if (c.drunk) pl.drunk = Math.min(1, pl.drunk + c.drunk); if (c.sober) pl.drunk = 0; g.audio.sfx('drink'); }
     if (a === 'take') this.take(it.key);
     if (a === 'drop') R.props.dropHeld(pl);
-    if (a === 'lib') { g.ui.closeSheet(); R.ring.openLibrary(); return true; }
+    if (a === 'lib') { g.ui.closeSheet(); R.ring.openLibrary(true); return true; }
+    if (a === 'gcharge') { g.ui.closeSheet(); R.fearQuest.chargeGreen(); return true; }
+    if (a === 'charge') { g.ui.closeSheet(); R.fearQuest.charge(); return true; }
   };
   Goods.renderInventory = function (body, onChange) {
     const g = G(), pl = g.player;

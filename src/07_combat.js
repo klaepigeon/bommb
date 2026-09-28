@@ -46,6 +46,7 @@
     h.lastHitKind = kind;
     if (byPlayer) C.onPlayerHits(h, amt, kind);
     const nonLethal = kind === 'melee' && (!source || !source.weapon || source.weapon === 'fists' || source.weapon === 'knuckles' || source.weapon === 'bat');
+    if (h.hp <= 0 && h.fearFight) h.hp = 1;
     if (h.hp <= 0) {
       if (nonLethal && h.down <= 0 && !h.wasKO) {
         h.hp = 0;

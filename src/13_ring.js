@@ -6,8 +6,16 @@
 // all, and fear refills it.
 (function () {
   const D = R.data, TS = R.TILE, T = D.T;
-  const Y = ['#6a4600', '#b88400', '#f0c020', '#fff27a'];
+  let Y = ['#6a4600', '#b88400', '#f0c020', '#fff27a'];
   const GLOW = 'rgba(255,226,60,';
+  // the ring's colour: yellow is fear, green is will. Everything hard-light reads it.
+  const PAL = {
+    yellow: { Y: ['#6a4600', '#b88400', '#f0c020', '#fff27a'], glow: 'rgba(255,226,60,', core: '#ffe23c', hi: '#fff27a', light: '#fffbe0', mid: '#f0c020' },
+    green: { Y: ['#0a4a1a', '#1a8a34', '#30c050', '#9af0a8'], glow: 'rgba(80,240,110,', core: '#50f070', hi: '#9af0a8', light: '#eaffee', mid: '#30c050' },
+  };
+  const pal = () => PAL[R.game && R.game.player && R.game.player.ringColor === 'green' ? 'green' : 'yellow'];
+  const GL = () => pal().glow;
+  R.ringPal = pal;
 
   // ---------------------------------------------------------------- the library
   // kind: throw (projectile), drop (falls from the sky on the target), trap (holds
@@ -104,13 +112,15 @@
     return c;
   }
   const sprite = (k) => {
-    if (sprites[k]) return sprites[k];
+    const key = pal() === PAL.green ? 'g:' + k : k;
+    if (sprites[key]) return sprites[key];
+    Y = pal().Y;
     const c = LIB[k];
     let cv;
     if (c.prop && R.old.props[c.prop]) cv = recolor(R.old.paintProp(c.prop));
     else if (PAINT[k]) { const o = new R.old.O(18, 18); PAINT[k](o); cv = o.outlineBy(() => Y[0]).toCanvas(); }
     else cv = document.createElement('canvas');
-    return (sprites[k] = cv);
+    return (sprites[key] = cv);
   };
   // hard light: the sprite plus a soft halo
   function drawLit(g, cv, x, y, scale, rot, alpha) {
@@ -126,6 +136,8 @@
   }
 
   // ---------------------------------------------------------------- state
+  // the ring as a weapon: B fires a bolt of hard light, holding B pours out the beam
+  D.weapons.ring = { name: 'Yellow Ring', ring: 1, rate: 0.28, range: 230, dmg: 26 };
   const Ring = (R.ring = { game: null, shots: [], drops: [], swings: [], beam: null, selected: 'anvil', cat: 'All' });
   Ring.init = function (game) {
     this.game = game;
@@ -165,7 +177,7 @@
     if (!s) return;
     const d = Math.hypot(pl.x / TS - s.x, pl.y / TS - s.y);
     const fm = this.fearMan && !this.fearMan.dead && g.actors.list.includes(this.fearMan) ? this.fearMan : null;
-    const want = this.fearHours() && d < 34 && !pl.room && g.clock.t > (this.goneUntil || 0);
+    const want = this.fearHours() && d < 34 && !pl.room && g.clock.t > (this.goneUntil || 0) && !this.goneForever && !(pl.fearQ && pl.fearQ.fmGone);
     if (want && !fm) {
       const h = g.actors.makeHuman(s.x * TS + 8, s.y * TS + 14, {
         tag: 'fearman', role: 'fearman', arch: 'eccentric', cash: 0,
@@ -182,18 +194,20 @@
       h.spot = { x: s.x, y: s.y, kind: 'fear' };
       this.fearMan = h;
     } else if (fm && !want) {
-      g.fx.text(fm.x, fm.y - 20, '...', '#fff27a');
+      g.fx.text(fm.x, fm.y - 20, '...', pal().hi);
       g.actors.remove(fm);
       this.fearMan = null;
     }
     if (fm) {
       fm.dir = R.dir4(pl.x - fm.x, pl.y - fm.y);
       fm.ang = Math.atan2(pl.y - fm.y, pl.x - fm.x);
-      if (R.rng() < 0.08) g.fx.add({ x: fm.x + (R.rng() - 0.5) * 10, y: fm.y - 10 - R.rng() * 8, vx: 0, vy: -12, life: 1, max: 1, c: '#fff27a', s: 1, glow: 1 });
+      if (R.rng() < 0.08) g.fx.add({ x: fm.x + (R.rng() - 0.5) * 10, y: fm.y - 10 - R.rng() * 8, vx: 0, vy: -12, life: 1, max: 1, c: pal().hi, s: 1, glow: 1 });
+      // the showdown on the green path is handled by the quest
+      if (R.fearQuest.fightFearMan(fm)) return;
       // strike him and he's gone for three nights
       if (fm.hp < fm.maxHp) {
         g.actors.say(fm, 'You mistake me for something that can be hurt.');
-        for (let i = 0; i < 14; i++) g.fx.add({ x: fm.x, y: fm.y - 10, vx: (R.rng() - 0.5) * 120, vy: (R.rng() - 0.5) * 120, life: 0.6, max: 0.6, c: '#fff27a', s: 2, glow: 1 });
+        for (let i = 0; i < 14; i++) g.fx.add({ x: fm.x, y: fm.y - 10, vx: (R.rng() - 0.5) * 120, vy: (R.rng() - 0.5) * 120, life: 0.6, max: 0.6, c: pal().hi, s: 2, glow: 1 });
         g.actors.remove(fm);
         this.fearMan = null;
         this.goneUntil = g.clock.t + 1440 * 3;
@@ -214,15 +228,16 @@
         if (!g.hints.fearMet) return say('You do not even know who I am. Ask.');
         pl.inv.tools.ring = 1;
         pl.will = 100;
+        pl.wardrobe = pl.wardrobe || {}; pl.wardrobe['unlock:fearsuit'] = 1;
         g.hints.fearMet = 1;
         say('Take it. You have the gift: people step aside for you. Imagine a thing, and it will be there.');
         g.ui.closeSheet();
         g.audio.sfx('promote');
         g.ui.setRingButtons();
-        g.ui.story('The Yellow Ring', 'A band of warm yellow metal. It hums against your knuckle.\n\nTAP the RING button to hurl the construct picked in the LIB (library). HOLD RING for a beam. With bare fists, every punch swings something enormous.\n\nIt runs on WILL. Will comes back on its own, and faster when the people around you are afraid.');
+        g.ui.story('The Yellow Ring', 'A band of warm yellow metal. It hums against your knuckle. He hands you a folded blue-and-black uniform too.\n\nSWAP to the RING and press B to fire bolts of hard light; hold B for a beam. Press A with nothing around to SUMMON a construct from the library. With bare fists, every punch swings something enormous.\n\nIt runs on WILL, which comes back faster when the people around you are afraid. The Fear Man has more lessons for you.');
         g.pop.addNews('dust', 'Truckers report "a yellow light like a second moon" over the Dustwater flats last night.');
       } });
-    } else opts.push({ label: '"About the ring..."', fn: () => say(R.rng.pick(['Fear is not cruelty. Fear is respect with the pretenses stripped away.', 'Your will is weak tonight. Frighten someone and it will return.', 'Use it well. Or do not. I have watched empires do both.'])) });
+    } else { for (const o of R.fearQuest.options(h, say, () => ui.closeSheet())) opts.push(o); opts.push({ label: '"About the ring..."', fn: () => say(R.rng.pick(['Fear is not cruelty. Fear is respect with the pretenses stripped away.', 'Your will is weak tonight. Frighten someone and it will return.', 'Use it well. Or do not. I have watched empires do both.'])) }); }
     opts.push({ label: 'Leave him be', fn: () => ui.closeSheet() });
     return { title: g.hints.fearMet ? 'The Fear Man' : 'A gaunt stranger', sub: 'Magenta skin, a widow\'s peak, a pencil moustache. He does not blink.', options: opts };
   };
@@ -236,7 +251,7 @@
     // will: comes back slowly, faster when the people nearby are afraid
     let fear = 0;
     for (const a of g.actors.near(pl.x, pl.y, TS * 10)) if (a.kind === 'h' && !a.dead && (a.state === 'flee' || a.state === 'cower' || a.state === 'surrender')) fear++;
-    pl.will = Math.min(100, pl.will + dt * (5 + Math.min(18, fear * 3)));
+    pl.will = Math.min(pl.willMax || 100, pl.will + dt * (5 + Math.min(18, fear * 3)));
     const inp = g.input;
     if (!pl.inCar && !pl.room) {
       if (inp.pressed('ring')) this.pressT = 0;
@@ -249,6 +264,11 @@
         this.beam = null;
       }
       if (inp.pressed('lib')) this.openLibrary();
+      // ring equipped: hold B for the beam (a tap fires a bolt through P.fire)
+      if (pl.weapon === 'ring' && pl.weaponOut && inp.held('attack')) {
+        this.holdB = (this.holdB || 0) + dt;
+        if (this.holdB > 0.35) this.fireBeam(dt);
+      } else if (this.holdB) { this.holdB = 0; if (!inp.held('ring')) this.beam = null; }
     }
     this.updateShots(dt);
   };
@@ -267,13 +287,13 @@
 
   Ring.conjure = function () {
     const g = this.game, pl = g.player, k = this.selected, c = LIB[k];
-    if (!c || !this.spend(c.cost)) return;
+    if (!c || !this.spend(Math.round(c.cost * (R.fearQuest && (R.fearQuest.perk('aura') || R.fearQuest.perkG('knight')) ? 0.75 : 1)))) return;
     const { tg, ang } = this.aim();
     pl.ang = ang;
     pl.punchT = 0.22;
     g.audio.sfx('coolOn', pl.x, pl.y);
     if (c.kind === 'shield') {
-      pl.shieldT = 10;
+      pl.shieldT = R.fearQuest && R.fearQuest.perkG('knight') ? 20 : 10;
       g.ui.toast('A bubble of hard light surrounds you.');
       return;
     }
@@ -289,7 +309,23 @@
   Ring.updateShots = function (dt) {
     const g = this.game, w = g.world, pl = g.player;
     for (let i = this.shots.length - 1; i >= 0; i--) {
-      const s = this.shots[i], c = LIB[s.k];
+      const s = this.shots[i];
+      if (s.bolt) {
+        s.t += dt; s.x += s.vx * dt; s.y += s.vy * dt;
+        const tt = w.t((s.x / TS) | 0, ((s.y + 8) / TS) | 0);
+        let end = s.t > s.life || tt === T.BLDG || tt === T.WALL || tt === T.VOID || tt === T.ROCK || R.fearQuest.hitTest(s.x, s.y, 30);
+        if (!end) for (const a of g.actors.near(s.x, s.y + 8, 12)) {
+          if (a.dead || a.inCar || (a.fearman && !a.fearFight) || Math.hypot(a.x - s.x, a.y - 10 - s.y) > 8) continue;
+          R.combat.damage(a, D.weapons.ring.dmg * (R.fearQuest && R.fearQuest.perk('duel') ? 1.5 : 1), s.owner || pl, 'bullet');
+          if (a.kind === 'h' && !a.dead) { g.actors.moveActor(a, s.vx * 0.12, s.vy * 0.12, 0.1); a.down = Math.max(a.down, 0.6); }
+          g.fx.text(a.x, a.y - 24, 'ZAP!', pal().hi);
+          end = true; break;
+        }
+        if (!end) { const v = g.traffic.nearestCar(s.x, s.y + 6, 12); if (v && !v.wrecked && v !== pl.inCar) { g.traffic.damage(v, 14, pl); end = true; } }
+        if (end) { this.shots.splice(i, 1); this.burst(s.x, s.y); }
+        continue;
+      }
+      const c = LIB[s.k];
       s.t += dt;
       if (c.kind === 'shark' && s.tg && !s.tg.dead) {
         const a = Math.atan2(s.tg.y - 6 - s.y, s.tg.x - s.x), cur = Math.atan2(s.vy, s.vx);
@@ -304,7 +340,7 @@
       let end = s.t > s.life || tt === T.BLDG || tt === T.WALL || tt === T.VOID || tt === T.ROCK;
       if (!end) {
         for (const a of g.actors.near(s.x, s.y + 6, c.r + 6)) {
-          if (a.dead || a.inCar || s.hits.has(a) || a.fearman) continue;
+          if (a.dead || a.inCar || s.hits.has(a) || (a.fearman && !a.fearFight)) continue;
           if (Math.hypot(a.x - s.x, a.y - 8 - s.y) > c.r + 6) continue;
           this.hit(s.k, a, s.x, s.y, Math.atan2(s.vy, s.vx));
           s.hits.add(a);
@@ -332,9 +368,9 @@
         this.drops.splice(i, 1);
         g.cam.shake(5);
         g.audio.sfx('thud', d.x, d.y);
-        g.fx.text(d.x, d.y - 20, d.k === 'piano' ? 'PLONNNG!' : 'KA-THUNK!', '#fff27a');
+        g.fx.text(d.x, d.y - 20, d.k === 'piano' ? 'PLONNNG!' : 'KA-THUNK!', pal().hi);
         this.burst(d.x, d.y - 6);
-        for (const a of g.actors.near(d.x, d.y, c.r + 4)) if (!a.dead && !a.inCar && !a.fearman) this.hit(d.k, a, d.x, d.y, -Math.PI / 2);
+        for (const a of g.actors.near(d.x, d.y, c.r + 4)) if (!a.dead && !a.inCar && !(a.fearman && !a.fearFight)) this.hit(d.k, a, d.x, d.y, -Math.PI / 2);
         const v = g.traffic.nearestCar(d.x, d.y, c.r + 6);
         if (v && !v.wrecked) g.traffic.damage(v, c.dmg * 1.5, pl);
       }
@@ -342,10 +378,27 @@
     for (let i = this.swings.length - 1; i >= 0; i--) if ((this.swings[i].t += dt) > 0.28) this.swings.splice(i, 1);
   };
 
+  // B with the ring equipped: a fast bolt of yellow light from the ring hand
+  Ring.blast = function (pl) {
+    const g = this.game;
+    if (pl.atkT > 0) return;
+    if (!this.spend(3)) return;
+    pl.atkT = D.weapons.ring.rate;
+    const { tg, ang } = this.aim();
+    pl.ang = ang;
+    pl.dir = R.dir4(Math.cos(ang), Math.sin(ang));
+    const [hx, hy] = R.art.handPos(pl, 'g');
+    let a = ang;
+    if (tg) a = Math.atan2(tg.y - 10 - hy, tg.x - hx);
+    this.shots.push({ k: 'bolt', bolt: true, x: hx, y: hy, vx: Math.cos(a) * 420, vy: Math.sin(a) * 420, t: 0, life: 0.55, rot: a, hits: new Set() });
+    g.fx.flash(hx, hy);
+    g.audio.sfx('coolOn', pl.x, pl.y);
+    g.actors.noise(pl.x, pl.y, TS * 8, 'fight', pl);
+  };
   Ring.hit = function (k, a, x, y, ang) {
     const g = this.game, pl = g.player, c = LIB[k];
     if (c.dmg) R.combat.damage(a, c.dmg, pl, 'melee');
-    g.fx.text(a.x, a.y - 24, R.rng.pick(['WHAM!', 'POW!', 'KRAKK!', 'BLAM!']), '#fff27a');
+    g.fx.text(a.x, a.y - 24, R.rng.pick(['WHAM!', 'POW!', 'KRAKK!', 'BLAM!']), pal().hi);
     g.cam.shake(2.5);
     if (a.kind !== 'h' || a.dead) return;
     if (c.kind === 'trap') {
@@ -354,7 +407,7 @@
     } else if (c.kind === 'spring') {
       g.actors.moveActor(a, Math.cos(ang) * 900, Math.sin(ang) * 900, 0.1);
       a.down = Math.max(a.down, 3);
-      g.fx.text(a.x, a.y - 30, 'BOING!', '#fff27a');
+      g.fx.text(a.x, a.y - 30, 'BOING!', pal().hi);
     } else {
       g.actors.moveActor(a, Math.cos(ang) * 260, Math.sin(ang) * 260, 0.1);
       if (!a.dead) a.down = Math.max(a.down, c.dmg > 40 ? 3 : 1.5);
@@ -364,13 +417,13 @@
   };
   Ring.burst = function (x, y) {
     const g = this.game;
-    for (let i = 0; i < 10; i++) g.fx.add({ x, y, vx: (R.rng() - 0.5) * 130, vy: (R.rng() - 0.5) * 130, life: 0.45, max: 0.45, c: R.rng() < 0.5 ? '#fff27a' : '#f0c020', s: 2, glow: 1 });
+    for (let i = 0; i < 10; i++) g.fx.add({ x, y, vx: (R.rng() - 0.5) * 130, vy: (R.rng() - 0.5) * 130, life: 0.45, max: 0.45, c: R.rng() < 0.5 ? pal().hi : pal().mid, s: 2, glow: 1 });
   };
 
   // hold RING: a lance of yellow light
   Ring.fireBeam = function (dt) {
     const g = this.game, w = g.world, pl = g.player;
-    if (!this.spend(32 * dt)) { this.beam = null; return; }
+    if (!this.spend(32 * dt * (R.fearQuest && R.fearQuest.perk('duel') ? 0.5 : 1))) { this.beam = null; return; }
     const { ang } = this.aim();
     pl.ang = ang;
     pl.dir = R.dir4(Math.cos(ang), Math.sin(ang));
@@ -381,7 +434,8 @@
       ex = x; ey = y;
       const tt = w.t((x / TS) | 0, ((y + 8) / TS) | 0);
       if (tt === T.BLDG || tt === T.WALL || tt === T.VOID || tt === T.ROCK) { const b = w.buildingAt((x / TS) | 0, ((y + 8) / TS) | 0); if (b) g.env.damageBuilding(b, 12 * dt, pl); break; }
-      const a = g.actors.near(x, y + 8, 12).find((q) => !q.dead && !q.inCar && !q.fearman && Math.hypot(q.x - x, q.y - 8 - y) < 8);
+      if (R.fearQuest.hitTest(x, y, 130 * dt)) { ex = x; ey = y; break; }
+      const a = g.actors.near(x, y + 8, 12).find((q) => !q.dead && !q.inCar && !(q.fearman && !q.fearFight) && Math.hypot(q.x - x, q.y - 8 - y) < 8);
       if (a) { hitA = a; break; }
       const v = g.traffic.nearestCar(x, y + 6, 10);
       if (v && !v.wrecked && v !== pl.inCar) { g.traffic.damage(v, 60 * dt, pl); v.vx += Math.cos(ang) * 200 * dt; v.vy += Math.sin(ang) * 200 * dt; break; }
@@ -412,7 +466,7 @@
     g.audio.sfx('swing', pl.x, pl.y);
     let n = 0;
     for (const a of g.actors.near(pl.x, pl.y, 40)) {
-      if (a.dead || a.inCar || a.fearman) continue;
+      if (a.dead || a.inCar || (a.fearman && !a.fearFight)) continue;
       const d = Math.hypot(a.x - pl.x, a.y - pl.y);
       if (d > 36 || Math.abs(R.angDiff(ang, Math.atan2(a.y - pl.y, a.x - pl.x))) > 1.3) continue;
       R.combat.damage(a, 34 + R.rng() * 12, pl, 'melee');
@@ -421,11 +475,11 @@
     }
     const v = g.traffic.nearestCar(pl.x + Math.cos(ang) * 22, pl.y + Math.sin(ang) * 22, 20);
     if (v && !v.wrecked) { g.traffic.damage(v, 25, pl); v.vx += Math.cos(ang) * 120; v.vy += Math.sin(ang) * 120; n++; }
-    if (n) { g.cam.shake(3); g.fx.text(pl.x + Math.cos(ang) * 20, pl.y - 20, R.rng.pick(['WHAM!', 'KRAK!', 'SMAAASH!']), '#fff27a'); g.audio.sfx('thud', pl.x, pl.y); }
+    if (n) { g.cam.shake(3); g.fx.text(pl.x + Math.cos(ang) * 20, pl.y - 20, R.rng.pick(['WHAM!', 'KRAK!', 'SMAAASH!']), pal().hi); g.audio.sfx('thud', pl.x, pl.y); }
   };
 
   // ---------------------------------------------------------------- library UI
-  Ring.openLibrary = function () {
+  Ring.openLibrary = function (summon) {
     const g = this.game, ui = g.ui;
     if (!this.owned()) return;
     const render = () => {
@@ -440,7 +494,11 @@
         cg.imageSmoothingEnabled = false;
         const sp = sprite(b.dataset.k);
         cg.drawImage(sp, (36 - sp.width * 2) / 2, (36 - sp.height * 2) / 2, sp.width * 2, sp.height * 2);
-        b.addEventListener('click', () => { this.selected = b.dataset.k; g.audio.sfx('click'); ui.closeSheet(); ui.toast(`${LIB[this.selected].name} ready. Tap RING to throw it.`); });
+        b.addEventListener('click', () => {
+          this.selected = b.dataset.k; g.audio.sfx('click'); ui.closeSheet();
+          if (summon) this.conjure();
+          else ui.toast(`${LIB[this.selected].name} ready. Tap RING to throw it.`);
+        });
       });
     };
     render();
@@ -456,6 +514,16 @@
       drawLit(g, sprite(d.k), d.x, d.y - 8 - (1 - f) * 140, 1.6, 0, 0.5 + f * 0.5);
     }
     for (const s of this.shots) {
+      if (s.bolt) {
+        const len = 10;
+        const tx = s.x - Math.cos(s.rot) * len, ty = s.y - Math.sin(s.rot) * len;
+        g.strokeStyle = GL() + '0.35)'; g.lineWidth = 5;
+        g.beginPath(); g.moveTo(tx, ty); g.lineTo(s.x, s.y); g.stroke();
+        g.strokeStyle = pal().core; g.lineWidth = 2;
+        g.beginPath(); g.moveTo(tx, ty); g.lineTo(s.x, s.y); g.stroke();
+        g.fillStyle = pal().light; g.fillRect(Math.round(s.x) - 1, Math.round(s.y) - 1, 2, 2);
+        continue;
+      }
       const c = LIB[s.k];
       g.fillStyle = 'rgba(20,14,0,0.25)';
       g.fillRect(Math.round(s.x) - 4, Math.round(s.y) + 8, 8, 2);
@@ -470,18 +538,18 @@
       drawLit(g, sprite(a.caged.k), a.x, a.y - 10, 1.6, 0, 0.75);
     }
     if (pl.shieldT > 0) {
-      g.strokeStyle = GLOW + (0.5 + Math.sin(t * 8) * 0.2) + ')';
+      g.strokeStyle = GL() + (0.5 + Math.sin(t * 8) * 0.2) + ')';
       g.lineWidth = 2;
       g.beginPath(); g.ellipse(pl.x, pl.y - 10, 14, 18, 0, 0, 7); g.stroke();
     }
     if (this.beam && game.clock.real - this.beam.t < 0.1) {
       const b = this.beam;
       const wob = Math.sin(t * 40);
-      g.strokeStyle = GLOW + '0.35)'; g.lineWidth = 7 + wob;
+      g.strokeStyle = GL() + '0.35)'; g.lineWidth = 7 + wob;
       g.beginPath(); g.moveTo(b.sx, b.sy); g.lineTo(b.ex, b.ey); g.stroke();
-      g.strokeStyle = '#ffe23c'; g.lineWidth = 3;
+      g.strokeStyle = pal().core; g.lineWidth = 3;
       g.beginPath(); g.moveTo(b.sx, b.sy); g.lineTo(b.ex, b.ey); g.stroke();
-      g.strokeStyle = '#fffbe0'; g.lineWidth = 1;
+      g.strokeStyle = pal().light; g.lineWidth = 1;
       g.beginPath(); g.moveTo(b.sx, b.sy); g.lineTo(b.ex, b.ey); g.stroke();
     }
   };
@@ -494,11 +562,16 @@
       drawLit(g, sprite(s.k), pl.x + Math.cos(a) * r, pl.y - 10 + Math.sin(a) * r * 0.7, 2, a + Math.PI / 2, 1 - f * 0.3);
     }
     if (this.owned() && !pl.inCar) {
-      // the ring glints on your hand
-      const hx = pl.x + Math.cos(pl.ang) * 5, hy = pl.y - 9 + Math.sin(pl.ang) * 2;
-      g.fillStyle = GLOW + (0.5 + Math.sin(this.game.clock.real * 5) * 0.3) + ')';
+      // the ring hand glows
+      const pose = pl.weapon === 'ring' && pl.weaponOut ? 'g' : pl._pose || null;
+      const [hx, hy, hidden] = R.art.handPos(pl, pose);
+      if (hidden) return;
+      const t = this.game.clock.real, bright = pl.weapon === 'ring' && pl.weaponOut ? 1 : 0.6;
+      g.fillStyle = GL() + (0.18 + Math.sin(t * 4) * 0.06) * bright + ')';
+      g.beginPath(); g.arc(hx, hy, 4 + bright, 0, 7); g.fill();
+      g.fillStyle = GL() + 0.55 * bright + ')';
       g.fillRect(Math.round(hx) - 1, Math.round(hy) - 1, 3, 3);
-      g.fillStyle = '#fff27a';
+      g.fillStyle = pal().hi;
       g.fillRect(Math.round(hx), Math.round(hy), 1, 1);
     }
   };

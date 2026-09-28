@@ -295,6 +295,7 @@
   };
   D2.tree = function (h) {
     if (h.fearman) return R.ring.fearTree(h);
+    if (h.pilot && R.fearQuest) return R.fearQuest.pilotTree(h);
     if (h.legend && R.legends) return R.legends.tree(h);
     const g = G(), pl = g.player, p = h.person;
     const name = g.actors.displayName(h);
@@ -333,6 +334,7 @@
     if (!h.cop && !h.look.kid && D2.mood(h) > -10) opts.push({ label: '"Know any good spots around here?"', fn: () => say(R.poi.askAround(h)) });
     // dealers, and people who'll work for you
     if (h.dealer) opts.unshift({ label: '"What are you selling?"', cls: 'go', fn: () => { close(); R.goods.openDealer(h); } });
+    if (R.fearQuest.canGiveRing(h)) opts.unshift({ label: 'Offer one of the Fear Man\'s lesser rings', cls: 'go', fn: () => { R.fearQuest.giveRing(h); close(); } });
     if (R.goods.canHire(h)) opts.push({ label: '"Got some work, if you want it."', small: 'Hire them for an errand', fn: () => { close(); R.goods.openHire(h); } });
     // role services
     if (h.arch === 'hustler' && !h.staff) opts.push({ label: 'Shoot dice ($10)', fn: () => { close(); R.mini.dice({ stake: 10 }); } });

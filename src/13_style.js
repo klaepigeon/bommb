@@ -30,6 +30,8 @@
       mustard: { name: 'Mustard', price: 25, c: ramp('#6a5a20', '#9a8430', '#c8ac48', '#ecd070') },
       orange: { name: 'Burnt Orange', price: 25, c: ramp('#5a2408', '#8c3c10', '#c85c1c', '#f08c40') },
       olive: { name: 'Olive', price: 20, c: ramp('#2c3418', '#44502a', '#5e6c3a', '#7c8c50') },
+      fearblue: { name: 'Fear Man\'s Tunic', price: 0, lock: 'fearsuit', c: ramp('#0a1236', '#14225e', '#22388e', '#3a58c0') },
+      gljersey: { name: 'Emerald Jersey', price: 0, lock: 'glsuit', c: ramp('#0a3a14', '#146a24', '#22a03a', '#5ad06a') },
       pink: { name: 'Salmon Pink', price: 30, c: ramp('#7a3a3a', '#a85a58', '#d88078', '#f8b0a0') },
       purple: { name: 'Paisley Purple', price: 35, c: ramp('#2a1a4a', '#44306e', '#664c98', '#9078c0') },
     },
@@ -41,6 +43,8 @@
       denim: { name: 'Denim Flares', price: 30, c: ramp('#1c2c48', '#2c4470', '#40609a', '#6488c0') },
       cream: { name: 'Cream Trousers', price: 40, c: ramp('#8a8068', '#b8ae90', '#dcd4b8', '#f0ead4') },
       white: { name: 'White Trousers', price: 45, c: ramp('#9a9890', '#c8c6be', '#e8e6de', '#fffdf6') },
+      fearblack: { name: 'Fear Man\'s Breeches', price: 0, lock: 'fearsuit', c: ramp('#06060a', '#101018', '#1a1a26', '#2a2a3a') },
+      glblack: { name: 'Black Flight Pants', price: 0, lock: 'glsuit', c: ramp('#06060a', '#101018', '#1a1a26', '#2a2a3a') },
       plaid: { name: 'Check Trousers', price: 40, c: ramp('#3a2418', '#5a3a24', '#7c5634', '#a07448') },
     },
     tops: { collar: { name: 'Wide Collar', price: 0 }, turtle: { name: 'Turtleneck', price: 25 }, stripe: { name: 'Striped Tee', price: 15 }, tee: { name: 'Plain Tee', price: 10 } },
@@ -88,7 +92,7 @@
       hatKind: s.hat && s.hat !== 'none' && !masked ? s.hat : null, hatCol: hc,
       oldOverride: {
         shirt: sh.c, jacket: j.c, pants: pa.c, style: s.hair || 'short', hair: (ST.hairCols[s.hairCol] || ST.hairCols.black).c,
-        top: s.top || 'collar', flare: true, stache: s.facial === 'stache', beard: s.facial === 'beard', glasses: !!s.glasses, dress: false,
+        top: s.top || 'collar', flare: s.pants !== 'fearblack' && s.pants !== 'glblack', belt: s.shirt === 'fearblue' ? '#f0c020' : s.shirt === 'gljersey' ? '#10101a' : undefined, shoes: s.pants === 'fearblack' || s.pants === 'glblack' ? ['#06060a', '#101018', '#1a1a26'] : undefined, stache: s.facial === 'stache', beard: s.facial === 'beard', glasses: !!s.glasses, dress: false,
         shoes: ['#141418', '#24242c', '#3a3a46'], kid: false, mask: masked,
       },
     };
@@ -159,7 +163,7 @@
     };
     const render = () => {
       const cdef = CATS[mode].find((c) => c[0] === cat), field = cdef[2];
-      const keys = cat === 'glasses' ? [false, true] : Object.keys(ST[cat]);
+      const keys = cat === 'glasses' ? [false, true] : Object.keys(ST[cat]).filter((k) => !ST[cat][k].lock || (pl.wardrobe && pl.wardrobe['unlock:' + ST[cat][k].lock]));
       const cost = bill();
       const html = ui.header(mode === 'tailor' ? 'Tailor' : 'Barber', mode === 'tailor' ? 'Try things on. You only pay for what you walk out in. A new look throws off anyone hunting the old one.' : 'Sit down, relax. A new look throws off anyone hunting the old one.') +
         `<div class="body wardrobe"><div class="wtop"><canvas class="wport" width="48" height="60"></canvas><div class="wcats">${CATS[mode].map(([k, l]) => `<button data-c="${k}" class="${k === cat ? 'sel' : ''}">${l}</button>`).join('')}</div></div>` +

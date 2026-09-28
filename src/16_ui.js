@@ -242,7 +242,7 @@
 
   // ---------------------------------------------------------------- the in-screen HUD (canvas, pixel text)
   const HEART = ['.XX.XX.', 'XXXXXXX', 'XXXXXXX', '.XXXXX.', '..XXX..', '...X...'];
-  const SHORTW = { fists: 'FISTS', knuckles: 'KNUCKLES', bat: 'BAT', knife: 'KNIFE', revolver: '.38', magnum: '.357', shotgun: 'SHOTGUN', chopper: 'CHOPPER', rifle: 'RIFLE', molotov: 'MOLOTOV', dynamite: 'DYNAMITE', gascan: 'GAS CAN' };
+  const SHORTW = { fists: 'FISTS', knuckles: 'KNUCKLES', bat: 'BAT', knife: 'KNIFE', revolver: '.38', magnum: '.357', shotgun: 'SHOTGUN', chopper: 'CHOPPER', rifle: 'RIFLE', molotov: 'MOLOTOV', dynamite: 'DYNAMITE', gascan: 'GAS CAN', ring: 'RING' };
   const A = () => R.art;
   function hbox(g, x, y, w, h, striped) {
     g.fillStyle = 'rgba(20,12,10,0.5)'; g.fillRect(x + 2, y + 3, w, h);
@@ -279,7 +279,7 @@
     const ww = R.data.weapons[pl.weapon];
     const held = pl.held && R.data.props[pl.held.k];
     const wn = held ? held.name.split(' ').pop().toUpperCase() : SHORTW[pl.weapon] || 'FISTS';
-    const ammo = held ? (held.dur >= 99 ? 'UNBREAKABLE' : 'USES ' + pl.held.dur) : pl.weapon === 'gascan' ? `x${pl.inv.tools.gascan || 0}` : ww && ww.gun ? `${pl.clip[pl.weapon] || 0}/${pl.inv.ammo[ww.ammo] || 0}` : ww && ww.thrown ? `x${pl.inv.ammo[pl.weapon] || 0}` : 'SWAP';
+    const ammo = held ? (held.dur >= 99 ? 'UNBREAKABLE' : 'USES ' + pl.held.dur) : pl.weapon === 'ring' ? `WILL ${Math.round(pl.will)}` : pl.weapon === 'gascan' ? `x${pl.inv.tools.gascan || 0}` : ww && ww.gun ? `${pl.clip[pl.weapon] || 0}/${pl.inv.ammo[ww.ammo] || 0}` : ww && ww.thrown ? `x${pl.inv.ammo[pl.weapon] || 0}` : 'SWAP';
     const bw = Math.max(A().ptWidth(wn, 2), A().ptWidth(ammo)) + 14;
     hbox(g, W - 6 - bw, 6, bw, 34, true);
     pt(g, wn, W - 13, 10, { align: 'right', scale: 2, color: '#3a2418' });
@@ -1021,6 +1021,8 @@
     } else if (tab === 'jobs') {
       const j = g.jobs.active;
       body.innerHTML = `<div class="sect">Current job</div>${j ? `<p style="font-size:16px"><b>${esc(j.title)}</b><br>${esc(j.desc)}</p>` : '<p>No job. Visit a Social Club or call the family from a payphone.</p>'}
+        ${R.fearQuest.current() && R.fearQuest.state().active ? `<div class="sect">The Fear Man</div><p style="font-size:15px"><b>${esc(R.fearQuest.current().title)}</b><br>${esc(R.fearQuest.current().goal)} ${esc(R.fearQuest.progressText(R.fearQuest.current()))}</p>` : ''}
+        ${R.fearQuest.gcurrent && R.fearQuest.gcurrent() ? `<div class="sect">Hal</div><p style="font-size:15px"><b>${esc(R.fearQuest.gcurrent().title)}</b><br>${esc(R.fearQuest.gcurrent().goal)}${R.fearQuest.gcurrent().id === 'protect' ? ` (${R.fearQuest.state().saved}/5)` : ''}</p>` : ''}
         <div class="sect">Leads</div>${g.jobs.leads.length ? g.jobs.leads.map((l) => `<p>• ${esc(l.text)}</p>`).join('') : '<p>No leads. Greet people; chatty folks and bartenders talk.</p>'}
         <div class="sect">Rackets</div>${g.world.buildings.filter((b) => b && b.racket && b.racketFamily === pl.family).map((b) => `<p>• ${esc(b.name)} (${esc(b.city.name)}) · ${R.fmtMoney(b.racketDue || 0)} due</p>`).join('') || '<p>No protection clients yet (Soldier rank and up).</p>'}`;
     } else if (tab === 'people') {

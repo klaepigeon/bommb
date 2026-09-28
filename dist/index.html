@@ -101,7 +101,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 #mCool { left: 0; top: 4px; } #mMask { left: 0; top: 38px; } #mSneak { left: 0; top: 72px; } #mItem { left: 0; top: 106px; }
 #mPhone { left: 0; top: 150px; width: 62px; height: 34px; border-radius: 10px; background: var(--orange); color: var(--paper); font-size: 11px; }
 #bRing { right: 0; top: 148px; width: 50px; height: 50px; background: #e0b020; color: var(--ink); box-shadow: 0 5px 0 var(--ink), 0 0 14px rgba(255,226,60,0.6); }
-#mLib { right: 56px; top: 186px; width: 40px; height: 22px; background: #fff27a; }
+#mLib { display: none !important; }
 .ringOnly { display: none !important; } #app.hasRing .ringOnly { display: flex !important; } #app.hasRing.incar .ringOnly { display: none !important; }
 .libgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; margin-top: 8px; }
 .libi { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; border: 3px solid var(--ink); border-radius: 8px; background: #2a1e10; color: #fff27a; font-size: 10px; }
@@ -2864,7 +2864,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     g.fillRect(X - 3, Y - 2, 6, 4);
     let pose = st.pose || null;
     const wdef = st.weapon && st.weapon !== 'fists' ? D.weapons[st.weapon] : null;
-    if (!pose && wdef) pose = wdef.gun ? 'g' : st.weapon === 'knuckles' ? null : 'k';
+    if (!pose && wdef) pose = wdef.gun || wdef.ring ? 'g' : st.weapon === 'knuckles' ? null : 'k';
     if (!pose && st.held) pose = A.heldPose(st.held, 0, 1);
     // legs keep walking whatever the arms are doing
     const spr = A.oldSprite(look, d8, frame, pose);
@@ -3010,6 +3010,15 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     if (pose === 'w1') return n === 'right' || n === 'downright';
     return n === 'up' || n === 'upright';
   };
+  // where someone's (right) hand is, in world space; third value true when it's hidden behind them
+  const IDLE_HAND = { down: [12.5, 20], downright: [11.5, 20], right: [7.5, 20], upright: [4.5, 19], up: [3.5, 19] };
+  A.handPos = function (actor, pose) {
+    const d8 = A.dir8(actor.dir, actor.ang);
+    const n = DIR8[d8], kid = actor.look && actor.look.kid;
+    const cell = pose === 'g' ? GUN_HAND[n] : pose === 'k' ? OLD.ea(n, kid) : IDLE_HAND[n];
+    const [x, y] = handWorld(actor.x, actor.y, d8, cell, kid);
+    return [x, y, pose !== 'g' && (n === 'up' || n === 'upright')];
+  };
   // guns: pointed along the aim, grip in the fist
   A.drawGun = function (g, X, Y, d8, w, ang, kid) {
     const art = A.gunArt(GUNDEF[w] ? w : 'revolver');
@@ -3023,7 +3032,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     g.restore();
   };
   function drawWeapon8(g, X, Y, d8, w, ang, pose, kid) {
-    if (!w || w === 'fists') return;
+    if (!w || w === 'fists' || w === 'ring') return;
     const def = D.weapons[w];
     if (def && def.gun) return A.drawGun(g, X, Y, d8, w, ang, kid);
     if (w === 'bat' && pose && pose[0] === 'b') return; // the swing pose paints the bat itself
@@ -5617,6 +5626,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     h.lastHitKind = kind;
     if (byPlayer) C.onPlayerHits(h, amt, kind);
     const nonLethal = kind === 'melee' && (!source || !source.weapon || source.weapon === 'fists' || source.weapon === 'knuckles' || source.weapon === 'bat');
+    if (h.hp <= 0 && h.fearFight) h.hp = 1;
     if (h.hp <= 0) {
       if (nonLethal && h.down <= 0 && !h.wasKO) {
         h.hp = 0;
@@ -7816,6 +7826,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   };
   D2.tree = function (h) {
     if (h.fearman) return R.ring.fearTree(h);
+    if (h.pilot && R.fearQuest) return R.fearQuest.pilotTree(h);
     if (h.legend && R.legends) return R.legends.tree(h);
     const g = G(), pl = g.player, p = h.person;
     const name = g.actors.displayName(h);
@@ -7854,6 +7865,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     if (!h.cop && !h.look.kid && D2.mood(h) > -10) opts.push({ label: '"Know any good spots around here?"', fn: () => say(R.poi.askAround(h)) });
     // dealers, and people who'll work for you
     if (h.dealer) opts.unshift({ label: '"What are you selling?"', cls: 'go', fn: () => { close(); R.goods.openDealer(h); } });
+    if (R.fearQuest.canGiveRing(h)) opts.unshift({ label: 'Offer one of the Fear Man\'s lesser rings', cls: 'go', fn: () => { R.fearQuest.giveRing(h); close(); } });
     if (R.goods.canHire(h)) opts.push({ label: '"Got some work, if you want it."', small: 'Hire them for an errand', fn: () => { close(); R.goods.openHire(h); } });
     // role services
     if (h.arch === 'hustler' && !h.staff) opts.push({ label: 'Shoot dice ($10)', fn: () => { close(); R.mini.dice({ stake: 10 }); } });
@@ -8414,7 +8426,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       e.t -= dt;
       if (!e.crash) {
         if (d.fx.coolRegen) pl.cool = Math.min(100, pl.cool + d.fx.coolRegen * dt);
-        if (d.fx.willRegen && pl.will != null) pl.will = Math.min(100, pl.will + 5 * dt);
+        if (d.fx.willRegen && pl.will != null) pl.will = Math.min(pl.willMax || 100, pl.will + 5 * dt);
         if (d.fx.drunk) pl.drunk = Math.max(pl.drunk, d.fx.drunk);
         if (d.fx.tough && pl.hp < 1) pl.hp = 1;
       }
@@ -8610,6 +8622,8 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     mask(o) { o.shadedEllipse(8, 8, 5.5, 6.5, X().black); o.rect(5, 6, 2, 2, '#e0ac7e'); o.rect(9, 6, 2, 2, '#e0ac7e'); o.rect(6, 11, 4, 1, '#e0ac7e'); },
     bait(o) { o.shadedRect(4, 6, 8, 7, X().wood); o.line(6, 5, 10, 3, '#c86a6a'); },
     rope(o) { o.ellipse(8, 8, 6, 6, X().wood[2]); o.ellipse(8, 8, 3.5, 3.5, null); o.ellipse(8, 8, 4, 4, X().wood[1]); o.ellipse(8, 8, 3, 3, null); },
+    battery(o) { const y = ['#0a4a1a', '#1a8a34', '#30c050', '#9af0a8']; o.shadedRect(3, 3, 10, 11, y); o.rect(5, 5, 6, 7, '#eaffee'); o.rect(4, 1, 8, 2, y[1]); o.rect(3, 14, 10, 1, y[0]); },
+    lantern(o) { const y = ['#6a4600', '#b88400', '#f0c020', '#fff27a']; o.shadedRect(4, 4, 8, 10, y); o.rect(5, 6, 6, 6, '#fff27a'); o.rect(6, 2, 4, 2, y[1]); o.rect(4, 14, 8, 1, y[0]); },
     ring(o) { o.ellipse(8, 9, 5, 4, '#f0c020'); o.ellipse(8, 9, 3, 2, null); o.shadedRect(6, 2, 4, 3, ['#6a4600', '#b88400', '#f0c020', '#fff27a']); },
     watch(o) { o.rect(6, 1, 4, 14, X().wood[1]); o.shadedEllipse(8, 8, 4, 4, X().yellow); o.ellipse(8, 8, 2.8, 2.8, '#fff8e0'); o.line(8, 8, 8, 6, INK); },
     chain(o) { for (let i = 0; i < 6; i++) o.ellipse(3 + i * 2, 5 + Math.abs(3 - i) * -1 + 6, 1.5, 1.2, X().yellow[2]); },
@@ -8649,7 +8663,9 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     if (pl.held) push('Weapons', 'held', D.props[pl.held.k].name, pl.held.dur >= 99 ? '' : pl.held.dur, 'Improvised. HIT swings it, SWAP throws it.', [['drop', 'Drop']], 'prop:' + pl.held.k);
     for (const k in inv.cons) if (inv.cons[k]) { const c = D.consumables[k]; push('Food & first aid', k, c.name, inv.cons[k], [c.heal ? `+${c.heal} health` : '', c.cool ? `+${c.cool} Cool` : '', c.drunk ? 'gets you tipsy' : '', c.sober ? 'sobers you up' : ''].filter(Boolean).join(', ') + '.', [['use', 'Use']]); }
     for (const k in inv.drugs || {}) if (inv.drugs[k]) { const d = D.drugs[k]; push('Drugs', k, `${d.name} ${d.street}`, inv.drugs[k], d.desc, [['take', 'Take']]); }
-    for (const k in inv.tools) if (inv.tools[k]) { if (k === 'ring') { push('Tools', 'ring', 'The Yellow Ring', '', 'Hard light from will. Tap RING to conjure, hold to beam, LIB to choose.', [['lib', 'Library']]); continue; } const t = D.tools[k]; if (t) push('Tools', k, t.name, inv.tools[k] > 1 ? inv.tools[k] : '', { lockpick: 'Opens doors and car locks quietly.', gascan: 'Pour a trail, then light it.', rod: 'Stand by water and press USE.', mask: 'MASK button. Witnesses can\'t name you.', bait: 'Fish bite faster.', rope: 'For tying things up.' }[k] || ''); }
+    for (const k in inv.tools) if (inv.tools[k]) { if (k === 'ring') { push('Tools', 'ring', 'The Yellow Ring', '', 'Hard light from will. SWAP to it and press B for bolts, hold B for the beam. Press A on nothing to summon a construct.', [['lib', 'Summon']]); continue; }
+      if (k === 'battery') { push('Tools', 'battery', 'Power Battery', '', 'Hal\'s green lantern. Recite the oath once a day to fill your Will.', [['gcharge', 'Recite the oath']]); continue; }
+      if (k === 'lantern') { push('Tools', 'lantern', 'Power Lantern', '', 'The Fear Man\'s lantern. Recite the oath to refill your Will, once a day.', [['charge', 'Recite the oath']]); continue; } const t = D.tools[k]; if (t) push('Tools', k, t.name, inv.tools[k] > 1 ? inv.tools[k] : '', { lockpick: 'Opens doors and car locks quietly.', gascan: 'Pour a trail, then light it.', rod: 'Stand by water and press USE.', mask: 'MASK button. Witnesses can\'t name you.', bait: 'Fish bite faster.', rope: 'For tying things up.' }[k] || ''); }
     for (const k in inv.loot) if (inv.loot[k]) { const l = D.loot[k]; if (l) push(l.pelt ? 'Pelts & catch' : 'Valuables', k, l.name, inv.loot[k], `Worth about ${R.fmtMoney(l.v)} to a ${l.pelt ? 'butcher' : 'fence'}.`, [], k); }
     for (const k in inv.ammo) if (inv.ammo[k] && !D.weapons[k]) push('Ammo', k, D.ammoNames[k] || k, inv.ammo[k], 'Loose rounds.', [], 'ammo');
     return out;
@@ -8660,7 +8676,9 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     if (a === 'use') { const c = D.consumables[it.key]; pl.inv.cons[it.key]--; if (c.heal) pl.hp = Math.min(pl.maxHp, pl.hp + c.heal); if (c.cool) pl.cool = Math.min(100, pl.cool + c.cool); if (c.drunk) pl.drunk = Math.min(1, pl.drunk + c.drunk); if (c.sober) pl.drunk = 0; g.audio.sfx('drink'); }
     if (a === 'take') this.take(it.key);
     if (a === 'drop') R.props.dropHeld(pl);
-    if (a === 'lib') { g.ui.closeSheet(); R.ring.openLibrary(); return true; }
+    if (a === 'lib') { g.ui.closeSheet(); R.ring.openLibrary(true); return true; }
+    if (a === 'gcharge') { g.ui.closeSheet(); R.fearQuest.chargeGreen(); return true; }
+    if (a === 'charge') { g.ui.closeSheet(); R.fearQuest.charge(); return true; }
   };
   Goods.renderInventory = function (body, onChange) {
     const g = G(), pl = g.player;
@@ -8890,6 +8908,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   P.weaponList = function () {
     const order = ['fists', 'knuckles', 'bat', 'knife', 'revolver', 'magnum', 'shotgun', 'chopper', 'rifle', 'molotov', 'dynamite'];
     const out = order.filter((w) => this.inv.weapons[w] || (D.weapons[w].thrown && this.inv.ammo[w] > 0));
+    if (this.inv.tools.ring) out.splice(1, 0, 'ring');
     if (this.inv.tools.gascan) out.push('gascan');
     return out;
   };
@@ -8935,6 +8954,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     const g = this.game;
     const w = D.weapons[this.weapon];
     if (!w || this.atkT > 0) return;
+    if (this.weapon === 'ring') return R.ring.blast(this);
     if (R.ring.canSwing(this)) return R.ring.swing(this);
     const tg = this.aimTarget();
     let ang = this.ang;
@@ -9011,6 +9031,8 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       if (a.kind === 'a' && a.dead && !a.skinned && a.def.pelt) return { label: 'Skin ' + a.def.name, fn: () => this.skin(a) };
       if (a.kind === 'h' && (a.dead || a.down > 0) && !a.looted) return { label: a.dead ? 'Search body' : 'Go through pockets', fn: () => this.loot(a) };
     }
+    const fq = R.fearQuest.context(this);
+    if (fq) return fq;
     // loose junk lying right at your feet beats the door you happen to be near
     const gr = R.props.grabbable(this);
     if (gr && gr.p) return { label: R.props.label(gr), fn: () => R.props.pickUp(this, gr) };
@@ -9028,12 +9050,13 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     if (gr) return { label: R.props.label(gr), fn: () => R.props.pickUp(this, gr) };
     // phone booths
     const tx = (this.x / TS) | 0, ty = (this.y / TS) | 0;
-    for (let yy = ty - 1; yy <= ty + 1; yy++) for (let xx = tx - 1; xx <= tx + 1; xx++) if (w.o(xx, yy) === O.PHONE) return { label: 'Use payphone', fn: () => g.ui.openPhone() };
+    for (let yy = ty - 1; yy <= ty + 1; yy++) for (let xx = tx - 1; xx <= tx + 1; xx++) if (w.o(xx, yy) === O.PHONE) return R.fearQuest && R.fearQuest.perkG('knight') ? { label: 'Use payphone', fn: () => g.ui.choice ? g.ui.choice('Payphone', [{ label: 'Call around', fn: () => g.ui.openPhone() }, { label: 'Call Hal (backup from the sky)', fn: () => R.fearQuest.callHal() }]) : g.ui.openPhone() } : { label: 'Use payphone', fn: () => g.ui.openPhone() };
     // fishing
     if (this.inv.tools.rod) {
       for (const [dx, dy] of R.DIRS) if (w.isWater(tx + dx, ty + dy)) return { label: 'Fish', fn: () => g.ui.fish() };
     }
-    // hydrant: smash it
+    // nothing else to do here: the ring can make something
+    if (this.inv.tools.ring && !this.inCar) return { label: 'Summon construct', fn: () => R.ring.openLibrary(true) };
     return null;
   };
   P.use = function () {
@@ -9257,6 +9280,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     if (this.shieldT > 0) { g.fx.text(this.x, this.y - 26, 'BLOCKED', '#fff27a'); g.fx.sparks(this.x, this.y - 12, 3); return; }
     this.hp -= amt;
     this.bloody = Math.min(1, this.bloody + amt / 60);
+    R.fearQuest.onPlayerHurt();
     g.ui.hurtFlash(amt);
     g.fx.blood(this.x, this.y - 8, 3);
     if (src && src.kind === 'h' && src !== this) {
@@ -9887,8 +9911,16 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
 // all, and fear refills it.
 (function () {
   const D = R.data, TS = R.TILE, T = D.T;
-  const Y = ['#6a4600', '#b88400', '#f0c020', '#fff27a'];
+  let Y = ['#6a4600', '#b88400', '#f0c020', '#fff27a'];
   const GLOW = 'rgba(255,226,60,';
+  // the ring's colour: yellow is fear, green is will. Everything hard-light reads it.
+  const PAL = {
+    yellow: { Y: ['#6a4600', '#b88400', '#f0c020', '#fff27a'], glow: 'rgba(255,226,60,', core: '#ffe23c', hi: '#fff27a', light: '#fffbe0', mid: '#f0c020' },
+    green: { Y: ['#0a4a1a', '#1a8a34', '#30c050', '#9af0a8'], glow: 'rgba(80,240,110,', core: '#50f070', hi: '#9af0a8', light: '#eaffee', mid: '#30c050' },
+  };
+  const pal = () => PAL[R.game && R.game.player && R.game.player.ringColor === 'green' ? 'green' : 'yellow'];
+  const GL = () => pal().glow;
+  R.ringPal = pal;
 
   // ---------------------------------------------------------------- the library
   // kind: throw (projectile), drop (falls from the sky on the target), trap (holds
@@ -9985,13 +10017,15 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     return c;
   }
   const sprite = (k) => {
-    if (sprites[k]) return sprites[k];
+    const key = pal() === PAL.green ? 'g:' + k : k;
+    if (sprites[key]) return sprites[key];
+    Y = pal().Y;
     const c = LIB[k];
     let cv;
     if (c.prop && R.old.props[c.prop]) cv = recolor(R.old.paintProp(c.prop));
     else if (PAINT[k]) { const o = new R.old.O(18, 18); PAINT[k](o); cv = o.outlineBy(() => Y[0]).toCanvas(); }
     else cv = document.createElement('canvas');
-    return (sprites[k] = cv);
+    return (sprites[key] = cv);
   };
   // hard light: the sprite plus a soft halo
   function drawLit(g, cv, x, y, scale, rot, alpha) {
@@ -10007,6 +10041,8 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   }
 
   // ---------------------------------------------------------------- state
+  // the ring as a weapon: B fires a bolt of hard light, holding B pours out the beam
+  D.weapons.ring = { name: 'Yellow Ring', ring: 1, rate: 0.28, range: 230, dmg: 26 };
   const Ring = (R.ring = { game: null, shots: [], drops: [], swings: [], beam: null, selected: 'anvil', cat: 'All' });
   Ring.init = function (game) {
     this.game = game;
@@ -10046,7 +10082,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     if (!s) return;
     const d = Math.hypot(pl.x / TS - s.x, pl.y / TS - s.y);
     const fm = this.fearMan && !this.fearMan.dead && g.actors.list.includes(this.fearMan) ? this.fearMan : null;
-    const want = this.fearHours() && d < 34 && !pl.room && g.clock.t > (this.goneUntil || 0);
+    const want = this.fearHours() && d < 34 && !pl.room && g.clock.t > (this.goneUntil || 0) && !this.goneForever && !(pl.fearQ && pl.fearQ.fmGone);
     if (want && !fm) {
       const h = g.actors.makeHuman(s.x * TS + 8, s.y * TS + 14, {
         tag: 'fearman', role: 'fearman', arch: 'eccentric', cash: 0,
@@ -10063,18 +10099,20 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       h.spot = { x: s.x, y: s.y, kind: 'fear' };
       this.fearMan = h;
     } else if (fm && !want) {
-      g.fx.text(fm.x, fm.y - 20, '...', '#fff27a');
+      g.fx.text(fm.x, fm.y - 20, '...', pal().hi);
       g.actors.remove(fm);
       this.fearMan = null;
     }
     if (fm) {
       fm.dir = R.dir4(pl.x - fm.x, pl.y - fm.y);
       fm.ang = Math.atan2(pl.y - fm.y, pl.x - fm.x);
-      if (R.rng() < 0.08) g.fx.add({ x: fm.x + (R.rng() - 0.5) * 10, y: fm.y - 10 - R.rng() * 8, vx: 0, vy: -12, life: 1, max: 1, c: '#fff27a', s: 1, glow: 1 });
+      if (R.rng() < 0.08) g.fx.add({ x: fm.x + (R.rng() - 0.5) * 10, y: fm.y - 10 - R.rng() * 8, vx: 0, vy: -12, life: 1, max: 1, c: pal().hi, s: 1, glow: 1 });
+      // the showdown on the green path is handled by the quest
+      if (R.fearQuest.fightFearMan(fm)) return;
       // strike him and he's gone for three nights
       if (fm.hp < fm.maxHp) {
         g.actors.say(fm, 'You mistake me for something that can be hurt.');
-        for (let i = 0; i < 14; i++) g.fx.add({ x: fm.x, y: fm.y - 10, vx: (R.rng() - 0.5) * 120, vy: (R.rng() - 0.5) * 120, life: 0.6, max: 0.6, c: '#fff27a', s: 2, glow: 1 });
+        for (let i = 0; i < 14; i++) g.fx.add({ x: fm.x, y: fm.y - 10, vx: (R.rng() - 0.5) * 120, vy: (R.rng() - 0.5) * 120, life: 0.6, max: 0.6, c: pal().hi, s: 2, glow: 1 });
         g.actors.remove(fm);
         this.fearMan = null;
         this.goneUntil = g.clock.t + 1440 * 3;
@@ -10095,15 +10133,16 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
         if (!g.hints.fearMet) return say('You do not even know who I am. Ask.');
         pl.inv.tools.ring = 1;
         pl.will = 100;
+        pl.wardrobe = pl.wardrobe || {}; pl.wardrobe['unlock:fearsuit'] = 1;
         g.hints.fearMet = 1;
         say('Take it. You have the gift: people step aside for you. Imagine a thing, and it will be there.');
         g.ui.closeSheet();
         g.audio.sfx('promote');
         g.ui.setRingButtons();
-        g.ui.story('The Yellow Ring', 'A band of warm yellow metal. It hums against your knuckle.\n\nTAP the RING button to hurl the construct picked in the LIB (library). HOLD RING for a beam. With bare fists, every punch swings something enormous.\n\nIt runs on WILL. Will comes back on its own, and faster when the people around you are afraid.');
+        g.ui.story('The Yellow Ring', 'A band of warm yellow metal. It hums against your knuckle. He hands you a folded blue-and-black uniform too.\n\nSWAP to the RING and press B to fire bolts of hard light; hold B for a beam. Press A with nothing around to SUMMON a construct from the library. With bare fists, every punch swings something enormous.\n\nIt runs on WILL, which comes back faster when the people around you are afraid. The Fear Man has more lessons for you.');
         g.pop.addNews('dust', 'Truckers report "a yellow light like a second moon" over the Dustwater flats last night.');
       } });
-    } else opts.push({ label: '"About the ring..."', fn: () => say(R.rng.pick(['Fear is not cruelty. Fear is respect with the pretenses stripped away.', 'Your will is weak tonight. Frighten someone and it will return.', 'Use it well. Or do not. I have watched empires do both.'])) });
+    } else { for (const o of R.fearQuest.options(h, say, () => ui.closeSheet())) opts.push(o); opts.push({ label: '"About the ring..."', fn: () => say(R.rng.pick(['Fear is not cruelty. Fear is respect with the pretenses stripped away.', 'Your will is weak tonight. Frighten someone and it will return.', 'Use it well. Or do not. I have watched empires do both.'])) }); }
     opts.push({ label: 'Leave him be', fn: () => ui.closeSheet() });
     return { title: g.hints.fearMet ? 'The Fear Man' : 'A gaunt stranger', sub: 'Magenta skin, a widow\'s peak, a pencil moustache. He does not blink.', options: opts };
   };
@@ -10117,7 +10156,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     // will: comes back slowly, faster when the people nearby are afraid
     let fear = 0;
     for (const a of g.actors.near(pl.x, pl.y, TS * 10)) if (a.kind === 'h' && !a.dead && (a.state === 'flee' || a.state === 'cower' || a.state === 'surrender')) fear++;
-    pl.will = Math.min(100, pl.will + dt * (5 + Math.min(18, fear * 3)));
+    pl.will = Math.min(pl.willMax || 100, pl.will + dt * (5 + Math.min(18, fear * 3)));
     const inp = g.input;
     if (!pl.inCar && !pl.room) {
       if (inp.pressed('ring')) this.pressT = 0;
@@ -10130,6 +10169,11 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
         this.beam = null;
       }
       if (inp.pressed('lib')) this.openLibrary();
+      // ring equipped: hold B for the beam (a tap fires a bolt through P.fire)
+      if (pl.weapon === 'ring' && pl.weaponOut && inp.held('attack')) {
+        this.holdB = (this.holdB || 0) + dt;
+        if (this.holdB > 0.35) this.fireBeam(dt);
+      } else if (this.holdB) { this.holdB = 0; if (!inp.held('ring')) this.beam = null; }
     }
     this.updateShots(dt);
   };
@@ -10148,13 +10192,13 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
 
   Ring.conjure = function () {
     const g = this.game, pl = g.player, k = this.selected, c = LIB[k];
-    if (!c || !this.spend(c.cost)) return;
+    if (!c || !this.spend(Math.round(c.cost * (R.fearQuest && (R.fearQuest.perk('aura') || R.fearQuest.perkG('knight')) ? 0.75 : 1)))) return;
     const { tg, ang } = this.aim();
     pl.ang = ang;
     pl.punchT = 0.22;
     g.audio.sfx('coolOn', pl.x, pl.y);
     if (c.kind === 'shield') {
-      pl.shieldT = 10;
+      pl.shieldT = R.fearQuest && R.fearQuest.perkG('knight') ? 20 : 10;
       g.ui.toast('A bubble of hard light surrounds you.');
       return;
     }
@@ -10170,7 +10214,23 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   Ring.updateShots = function (dt) {
     const g = this.game, w = g.world, pl = g.player;
     for (let i = this.shots.length - 1; i >= 0; i--) {
-      const s = this.shots[i], c = LIB[s.k];
+      const s = this.shots[i];
+      if (s.bolt) {
+        s.t += dt; s.x += s.vx * dt; s.y += s.vy * dt;
+        const tt = w.t((s.x / TS) | 0, ((s.y + 8) / TS) | 0);
+        let end = s.t > s.life || tt === T.BLDG || tt === T.WALL || tt === T.VOID || tt === T.ROCK || R.fearQuest.hitTest(s.x, s.y, 30);
+        if (!end) for (const a of g.actors.near(s.x, s.y + 8, 12)) {
+          if (a.dead || a.inCar || (a.fearman && !a.fearFight) || Math.hypot(a.x - s.x, a.y - 10 - s.y) > 8) continue;
+          R.combat.damage(a, D.weapons.ring.dmg * (R.fearQuest && R.fearQuest.perk('duel') ? 1.5 : 1), s.owner || pl, 'bullet');
+          if (a.kind === 'h' && !a.dead) { g.actors.moveActor(a, s.vx * 0.12, s.vy * 0.12, 0.1); a.down = Math.max(a.down, 0.6); }
+          g.fx.text(a.x, a.y - 24, 'ZAP!', pal().hi);
+          end = true; break;
+        }
+        if (!end) { const v = g.traffic.nearestCar(s.x, s.y + 6, 12); if (v && !v.wrecked && v !== pl.inCar) { g.traffic.damage(v, 14, pl); end = true; } }
+        if (end) { this.shots.splice(i, 1); this.burst(s.x, s.y); }
+        continue;
+      }
+      const c = LIB[s.k];
       s.t += dt;
       if (c.kind === 'shark' && s.tg && !s.tg.dead) {
         const a = Math.atan2(s.tg.y - 6 - s.y, s.tg.x - s.x), cur = Math.atan2(s.vy, s.vx);
@@ -10185,7 +10245,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       let end = s.t > s.life || tt === T.BLDG || tt === T.WALL || tt === T.VOID || tt === T.ROCK;
       if (!end) {
         for (const a of g.actors.near(s.x, s.y + 6, c.r + 6)) {
-          if (a.dead || a.inCar || s.hits.has(a) || a.fearman) continue;
+          if (a.dead || a.inCar || s.hits.has(a) || (a.fearman && !a.fearFight)) continue;
           if (Math.hypot(a.x - s.x, a.y - 8 - s.y) > c.r + 6) continue;
           this.hit(s.k, a, s.x, s.y, Math.atan2(s.vy, s.vx));
           s.hits.add(a);
@@ -10213,9 +10273,9 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
         this.drops.splice(i, 1);
         g.cam.shake(5);
         g.audio.sfx('thud', d.x, d.y);
-        g.fx.text(d.x, d.y - 20, d.k === 'piano' ? 'PLONNNG!' : 'KA-THUNK!', '#fff27a');
+        g.fx.text(d.x, d.y - 20, d.k === 'piano' ? 'PLONNNG!' : 'KA-THUNK!', pal().hi);
         this.burst(d.x, d.y - 6);
-        for (const a of g.actors.near(d.x, d.y, c.r + 4)) if (!a.dead && !a.inCar && !a.fearman) this.hit(d.k, a, d.x, d.y, -Math.PI / 2);
+        for (const a of g.actors.near(d.x, d.y, c.r + 4)) if (!a.dead && !a.inCar && !(a.fearman && !a.fearFight)) this.hit(d.k, a, d.x, d.y, -Math.PI / 2);
         const v = g.traffic.nearestCar(d.x, d.y, c.r + 6);
         if (v && !v.wrecked) g.traffic.damage(v, c.dmg * 1.5, pl);
       }
@@ -10223,10 +10283,27 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     for (let i = this.swings.length - 1; i >= 0; i--) if ((this.swings[i].t += dt) > 0.28) this.swings.splice(i, 1);
   };
 
+  // B with the ring equipped: a fast bolt of yellow light from the ring hand
+  Ring.blast = function (pl) {
+    const g = this.game;
+    if (pl.atkT > 0) return;
+    if (!this.spend(3)) return;
+    pl.atkT = D.weapons.ring.rate;
+    const { tg, ang } = this.aim();
+    pl.ang = ang;
+    pl.dir = R.dir4(Math.cos(ang), Math.sin(ang));
+    const [hx, hy] = R.art.handPos(pl, 'g');
+    let a = ang;
+    if (tg) a = Math.atan2(tg.y - 10 - hy, tg.x - hx);
+    this.shots.push({ k: 'bolt', bolt: true, x: hx, y: hy, vx: Math.cos(a) * 420, vy: Math.sin(a) * 420, t: 0, life: 0.55, rot: a, hits: new Set() });
+    g.fx.flash(hx, hy);
+    g.audio.sfx('coolOn', pl.x, pl.y);
+    g.actors.noise(pl.x, pl.y, TS * 8, 'fight', pl);
+  };
   Ring.hit = function (k, a, x, y, ang) {
     const g = this.game, pl = g.player, c = LIB[k];
     if (c.dmg) R.combat.damage(a, c.dmg, pl, 'melee');
-    g.fx.text(a.x, a.y - 24, R.rng.pick(['WHAM!', 'POW!', 'KRAKK!', 'BLAM!']), '#fff27a');
+    g.fx.text(a.x, a.y - 24, R.rng.pick(['WHAM!', 'POW!', 'KRAKK!', 'BLAM!']), pal().hi);
     g.cam.shake(2.5);
     if (a.kind !== 'h' || a.dead) return;
     if (c.kind === 'trap') {
@@ -10235,7 +10312,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     } else if (c.kind === 'spring') {
       g.actors.moveActor(a, Math.cos(ang) * 900, Math.sin(ang) * 900, 0.1);
       a.down = Math.max(a.down, 3);
-      g.fx.text(a.x, a.y - 30, 'BOING!', '#fff27a');
+      g.fx.text(a.x, a.y - 30, 'BOING!', pal().hi);
     } else {
       g.actors.moveActor(a, Math.cos(ang) * 260, Math.sin(ang) * 260, 0.1);
       if (!a.dead) a.down = Math.max(a.down, c.dmg > 40 ? 3 : 1.5);
@@ -10245,13 +10322,13 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   };
   Ring.burst = function (x, y) {
     const g = this.game;
-    for (let i = 0; i < 10; i++) g.fx.add({ x, y, vx: (R.rng() - 0.5) * 130, vy: (R.rng() - 0.5) * 130, life: 0.45, max: 0.45, c: R.rng() < 0.5 ? '#fff27a' : '#f0c020', s: 2, glow: 1 });
+    for (let i = 0; i < 10; i++) g.fx.add({ x, y, vx: (R.rng() - 0.5) * 130, vy: (R.rng() - 0.5) * 130, life: 0.45, max: 0.45, c: R.rng() < 0.5 ? pal().hi : pal().mid, s: 2, glow: 1 });
   };
 
   // hold RING: a lance of yellow light
   Ring.fireBeam = function (dt) {
     const g = this.game, w = g.world, pl = g.player;
-    if (!this.spend(32 * dt)) { this.beam = null; return; }
+    if (!this.spend(32 * dt * (R.fearQuest && R.fearQuest.perk('duel') ? 0.5 : 1))) { this.beam = null; return; }
     const { ang } = this.aim();
     pl.ang = ang;
     pl.dir = R.dir4(Math.cos(ang), Math.sin(ang));
@@ -10262,7 +10339,8 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       ex = x; ey = y;
       const tt = w.t((x / TS) | 0, ((y + 8) / TS) | 0);
       if (tt === T.BLDG || tt === T.WALL || tt === T.VOID || tt === T.ROCK) { const b = w.buildingAt((x / TS) | 0, ((y + 8) / TS) | 0); if (b) g.env.damageBuilding(b, 12 * dt, pl); break; }
-      const a = g.actors.near(x, y + 8, 12).find((q) => !q.dead && !q.inCar && !q.fearman && Math.hypot(q.x - x, q.y - 8 - y) < 8);
+      if (R.fearQuest.hitTest(x, y, 130 * dt)) { ex = x; ey = y; break; }
+      const a = g.actors.near(x, y + 8, 12).find((q) => !q.dead && !q.inCar && !(q.fearman && !q.fearFight) && Math.hypot(q.x - x, q.y - 8 - y) < 8);
       if (a) { hitA = a; break; }
       const v = g.traffic.nearestCar(x, y + 6, 10);
       if (v && !v.wrecked && v !== pl.inCar) { g.traffic.damage(v, 60 * dt, pl); v.vx += Math.cos(ang) * 200 * dt; v.vy += Math.sin(ang) * 200 * dt; break; }
@@ -10293,7 +10371,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     g.audio.sfx('swing', pl.x, pl.y);
     let n = 0;
     for (const a of g.actors.near(pl.x, pl.y, 40)) {
-      if (a.dead || a.inCar || a.fearman) continue;
+      if (a.dead || a.inCar || (a.fearman && !a.fearFight)) continue;
       const d = Math.hypot(a.x - pl.x, a.y - pl.y);
       if (d > 36 || Math.abs(R.angDiff(ang, Math.atan2(a.y - pl.y, a.x - pl.x))) > 1.3) continue;
       R.combat.damage(a, 34 + R.rng() * 12, pl, 'melee');
@@ -10302,11 +10380,11 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     }
     const v = g.traffic.nearestCar(pl.x + Math.cos(ang) * 22, pl.y + Math.sin(ang) * 22, 20);
     if (v && !v.wrecked) { g.traffic.damage(v, 25, pl); v.vx += Math.cos(ang) * 120; v.vy += Math.sin(ang) * 120; n++; }
-    if (n) { g.cam.shake(3); g.fx.text(pl.x + Math.cos(ang) * 20, pl.y - 20, R.rng.pick(['WHAM!', 'KRAK!', 'SMAAASH!']), '#fff27a'); g.audio.sfx('thud', pl.x, pl.y); }
+    if (n) { g.cam.shake(3); g.fx.text(pl.x + Math.cos(ang) * 20, pl.y - 20, R.rng.pick(['WHAM!', 'KRAK!', 'SMAAASH!']), pal().hi); g.audio.sfx('thud', pl.x, pl.y); }
   };
 
   // ---------------------------------------------------------------- library UI
-  Ring.openLibrary = function () {
+  Ring.openLibrary = function (summon) {
     const g = this.game, ui = g.ui;
     if (!this.owned()) return;
     const render = () => {
@@ -10321,7 +10399,11 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
         cg.imageSmoothingEnabled = false;
         const sp = sprite(b.dataset.k);
         cg.drawImage(sp, (36 - sp.width * 2) / 2, (36 - sp.height * 2) / 2, sp.width * 2, sp.height * 2);
-        b.addEventListener('click', () => { this.selected = b.dataset.k; g.audio.sfx('click'); ui.closeSheet(); ui.toast(`${LIB[this.selected].name} ready. Tap RING to throw it.`); });
+        b.addEventListener('click', () => {
+          this.selected = b.dataset.k; g.audio.sfx('click'); ui.closeSheet();
+          if (summon) this.conjure();
+          else ui.toast(`${LIB[this.selected].name} ready. Tap RING to throw it.`);
+        });
       });
     };
     render();
@@ -10337,6 +10419,16 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       drawLit(g, sprite(d.k), d.x, d.y - 8 - (1 - f) * 140, 1.6, 0, 0.5 + f * 0.5);
     }
     for (const s of this.shots) {
+      if (s.bolt) {
+        const len = 10;
+        const tx = s.x - Math.cos(s.rot) * len, ty = s.y - Math.sin(s.rot) * len;
+        g.strokeStyle = GL() + '0.35)'; g.lineWidth = 5;
+        g.beginPath(); g.moveTo(tx, ty); g.lineTo(s.x, s.y); g.stroke();
+        g.strokeStyle = pal().core; g.lineWidth = 2;
+        g.beginPath(); g.moveTo(tx, ty); g.lineTo(s.x, s.y); g.stroke();
+        g.fillStyle = pal().light; g.fillRect(Math.round(s.x) - 1, Math.round(s.y) - 1, 2, 2);
+        continue;
+      }
       const c = LIB[s.k];
       g.fillStyle = 'rgba(20,14,0,0.25)';
       g.fillRect(Math.round(s.x) - 4, Math.round(s.y) + 8, 8, 2);
@@ -10351,18 +10443,18 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       drawLit(g, sprite(a.caged.k), a.x, a.y - 10, 1.6, 0, 0.75);
     }
     if (pl.shieldT > 0) {
-      g.strokeStyle = GLOW + (0.5 + Math.sin(t * 8) * 0.2) + ')';
+      g.strokeStyle = GL() + (0.5 + Math.sin(t * 8) * 0.2) + ')';
       g.lineWidth = 2;
       g.beginPath(); g.ellipse(pl.x, pl.y - 10, 14, 18, 0, 0, 7); g.stroke();
     }
     if (this.beam && game.clock.real - this.beam.t < 0.1) {
       const b = this.beam;
       const wob = Math.sin(t * 40);
-      g.strokeStyle = GLOW + '0.35)'; g.lineWidth = 7 + wob;
+      g.strokeStyle = GL() + '0.35)'; g.lineWidth = 7 + wob;
       g.beginPath(); g.moveTo(b.sx, b.sy); g.lineTo(b.ex, b.ey); g.stroke();
-      g.strokeStyle = '#ffe23c'; g.lineWidth = 3;
+      g.strokeStyle = pal().core; g.lineWidth = 3;
       g.beginPath(); g.moveTo(b.sx, b.sy); g.lineTo(b.ex, b.ey); g.stroke();
-      g.strokeStyle = '#fffbe0'; g.lineWidth = 1;
+      g.strokeStyle = pal().light; g.lineWidth = 1;
       g.beginPath(); g.moveTo(b.sx, b.sy); g.lineTo(b.ex, b.ey); g.stroke();
     }
   };
@@ -10375,14 +10467,593 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       drawLit(g, sprite(s.k), pl.x + Math.cos(a) * r, pl.y - 10 + Math.sin(a) * r * 0.7, 2, a + Math.PI / 2, 1 - f * 0.3);
     }
     if (this.owned() && !pl.inCar) {
-      // the ring glints on your hand
-      const hx = pl.x + Math.cos(pl.ang) * 5, hy = pl.y - 9 + Math.sin(pl.ang) * 2;
-      g.fillStyle = GLOW + (0.5 + Math.sin(this.game.clock.real * 5) * 0.3) + ')';
+      // the ring hand glows
+      const pose = pl.weapon === 'ring' && pl.weaponOut ? 'g' : pl._pose || null;
+      const [hx, hy, hidden] = R.art.handPos(pl, pose);
+      if (hidden) return;
+      const t = this.game.clock.real, bright = pl.weapon === 'ring' && pl.weaponOut ? 1 : 0.6;
+      g.fillStyle = GL() + (0.18 + Math.sin(t * 4) * 0.06) * bright + ')';
+      g.beginPath(); g.arc(hx, hy, 4 + bright, 0, 7); g.fill();
+      g.fillStyle = GL() + 0.55 * bright + ')';
       g.fillRect(Math.round(hx) - 1, Math.round(hy) - 1, 3, 3);
-      g.fillStyle = '#fff27a';
+      g.fillStyle = pal().hi;
       g.fillRect(Math.round(hx), Math.round(hy), 1, 1);
     }
   };
+})();
+
+// ---- 13_ringquest.js
+// RHAPSODY — the Fear Man's lessons. Once you wear his ring he has five jobs for you,
+// each a nod to the emerald-and-yellow space-cop saga he walked out of: fear taught on
+// the streets, a lost power lantern, a green-ringed test pilot, a moth that eats
+// courage, and a corps of your own. Every step pays out in new powers.
+(function () {
+  const D = R.data, TS = R.TILE, T = D.T;
+  const GLOW = 'rgba(255,226,60,';
+  const GREEN = 'rgba(80,240,110,';
+  // the oath is our own words, recited at the lantern
+  const OATH = 'By dread of dark and fear of light,\nI bind the brave and bend their might.\nLet all who stand against my sight\nlearn terror\'s yellow, burning bright.';
+
+  const QUESTS = [
+    { id: 'lesson', title: 'The First Lesson', goal: 'Frighten 6 people in a single night (antagonize, draw on them, or use the ring).',
+      give: 'Order is a kind of fear, properly applied. Go out tonight and teach six of them to step aside for you. Then come back.',
+      done: 'Better. You have the gift. Wear this: on my world it meant the law.', reward: 'His blue-and-black uniform (free at any tailor), +25 max Will.' },
+    { id: 'lantern', title: 'A Lantern for the Light', goal: 'Find the Fear Man\'s power lantern in the wreck of his ship, high in the northern snows.',
+      give: 'My ship came down in the snow north of Pinecrest. My lantern is in the wreck. Things came through with me, from the anti-matter side. They will not want to give it up.',
+      done: 'The lantern. Speak the words and the ring drinks its fill. Once a day. Do not abuse it.', reward: 'The Power Lantern: recharge Will to full once a day. Constructs hit harder.' },
+    { id: 'pilot', title: 'The Emerald Pilot', goal: 'Find the green-ringed test pilot out on the Dustwater airstrip (daytime) and beat him in a duel.',
+      give: 'There is a man in a flight jacket out on the Dustwater strip with a green ring. His kind chased me off a thousand worlds. He fills people with nerve. Show him what nerve is worth.',
+      done: 'He ran. They always run, eventually. You have learned to hold the light steady.', reward: 'Duelist\'s Edge: ring bolts hit 50% harder, the beam costs half.' },
+    { id: 'moth', title: 'The Moth of Fear', goal: 'At night in Port Hollow, free the possessed and drive off the great yellow moth with the ring.',
+      give: 'Something followed me. A moth the size of a house, made of fear itself. It is feeding on Port Hollow at night, wearing people like coats. Burn it off them.',
+      done: 'Gone, for now. It will be back in some other century. You have its taste in your ring.', reward: 'Fear Aura: when you\'re badly hurt, enemies may break and run. Constructs cost a quarter less.' },
+    { id: 'corps', title: 'A Corps of Your Own', goal: 'Give three lesser rings to people who fear you (fear 50+): Talk to them.',
+      give: 'Every lantern needs a corps. Here: three lesser rings. Find three who fear you, and let them carry a little of it.',
+      done: 'A corps. Small, badly dressed, but a corps. I can go home now. Keep the light burning, Nicky.', reward: 'The Fear Corps: your ring-bearers fight beside you with bolts of yellow light.' },
+  ];
+
+  const Q = (R.fearQuest = { game: null });
+  Q.init = function (game) {
+    this.game = game;
+    this.scared = new Set();
+    this.night = -1;
+    this.moth = null;
+    this.greens = [];
+    this.placeSites();
+  };
+  Q.state = function () { const pl = this.game.player; return (pl.fearQ = pl.fearQ || { stage: 0, active: false, perks: {}, progress: 0, rings: 0 }); };
+  Q.perk = function (k) { const s = this.game && this.game.player && this.game.player.fearQ; return !!(s && s.perks[k]); };
+  Q.current = function () { const s = this.state(); return s.stage < QUESTS.length ? QUESTS[s.stage] : null; };
+
+  // where things are: the ship wreck in the snow, the airstrip in the desert
+  Q.placeSites = function () {
+    const w = this.game.world;
+    const rnd = R.mulberry(w.seed * 3 + 71);
+    const pine = w.cities.find((c) => c.id === 'pine'), dust = w.cities.find((c) => c.id === 'dust');
+    const find = (cx, cy, r0, r1, pred) => { for (let k = 0; k < 600; k++) { const a = rnd() * 6.28, r = r0 + rnd() * (r1 - r0); const x = Math.round(cx + Math.cos(a) * r), y = Math.round(cy + Math.sin(a) * r); if (w.inb(x, y) && pred(x, y)) return { x, y }; } return null; };
+    const open = (x, y) => !w.isWater(x, y) && !w.bid[w.idx(x, y)] && !D.roadTile[w.t(x, y)] && !w.inCityRect(x, y, 10);
+    this.wreck = find(pine.cx, pine.cy - 20, 40, 110, (x, y) => (w.t(x, y) === T.SNOW || w.t(x, y) === T.ROCK || w.t(x, y) === T.FOREST) && open(x, y) && y < pine.cy) || { x: pine.cx, y: Math.max(8, pine.y0 - 40) };
+    this.strip = find(dust.cx, dust.cy, dust.nbx * 13 + 20, dust.nbx * 13 + 60, (x, y) => w.biomeAt(x, y) === 'desert' && open(x, y)) || { x: dust.cx + 70, y: dust.cy };
+    // clear and mark the crash and the airstrip
+    const clear = (s, r) => { for (let yy = s.y - r; yy <= s.y + r; yy++) for (let xx = s.x - r; xx <= s.x + r; xx++) if (w.inb(xx, yy) && !w.bid[w.idx(xx, yy)]) w.obj[w.idx(xx, yy)] = 0; };
+    clear(this.wreck, 5);
+    for (let k = 0; k < 7; k++) { const a = k * 0.9, xx = Math.round(this.wreck.x + Math.cos(a) * 5), yy = Math.round(this.wreck.y + Math.sin(a) * 4); if (w.inb(xx, yy)) w.obj[w.idx(xx, yy)] = D.O.BOULDER; }
+    for (let xx = this.strip.x - 14; xx <= this.strip.x + 14; xx++) for (let yy = this.strip.y - 1; yy <= this.strip.y + 1; yy++) if (w.inb(xx, yy) && !w.bid[w.idx(xx, yy)] && !w.isWater(xx, yy)) { w.tile[w.idx(xx, yy)] = T.DIRTROAD; w.obj[w.idx(xx, yy)] = 0; }
+  };
+
+  // ---------------------------------------------------------------- talking to him
+  Q.options = function (h, say, close) {
+    const g = this.game, pl = g.player, s = this.state(), q = this.current();
+    const opts = [];
+    if (!q) { opts.push({ label: '"What now?"', fn: () => say('Now you keep order. I am going home to Korugar... to what is left of it.') }); return opts; }
+    if (!s.active) {
+      opts.push({ label: `"Got something for me?" (${q.title})`, cls: 'go', fn: () => { s.active = true; s.progress = 0; say(q.give); this.onStart(q); g.ui.toast(`Fear Man: ${q.title}. ${q.goal}`, 'good'); } });
+    } else if (this.complete(q)) {
+      opts.push({ label: `"It's done." (${q.title})`, cls: 'go', fn: () => { say(q.done); this.finish(q); } });
+    } else opts.push({ label: `"About ${q.title.toLowerCase()}..."`, fn: () => say(`${q.goal} ${this.progressText(q)}`) });
+    if (pl.wardrobe && pl.wardrobe['unlock:fearsuit'] && pl.style.shirt !== 'fearblue') opts.push({ label: 'Put on his uniform', fn: () => { this.suitUp(); say('Now you look like someone.'); } });
+    return opts;
+  };
+  Q.progressText = function (q) {
+    const s = this.state();
+    if (q.id === 'lesson') return `(${this.scared.size}/6 tonight)`;
+    if (q.id === 'lantern') return this.game.player.inv.tools.lantern ? '(You have it.)' : '(Still in the wreck.)';
+    if (q.id === 'pilot') return s.pilotBeaten ? '(He ran.)' : '(Unfinished.)';
+    if (q.id === 'moth') return s.mothDone ? '(The moth is gone.)' : '(It still feeds.)';
+    if (q.id === 'corps') return `(${s.rings}/3 rings given)`;
+    return '';
+  };
+  Q.complete = function (q) {
+    const s = this.state(), pl = this.game.player;
+    if (q.id === 'lesson') return s.lessonDone;
+    if (q.id === 'lantern') return !!pl.inv.tools.lantern;
+    if (q.id === 'pilot') return !!s.pilotBeaten;
+    if (q.id === 'moth') return !!s.mothDone;
+    if (q.id === 'corps') return s.rings >= 3;
+    return false;
+  };
+  Q.onStart = function (q) {
+    const P = R.poi;
+    if (q.id === 'lantern') P.add(this.wreck.x, this.wreck.y, 'tip', 'Crashed ship', 'The Fear Man\'s lantern');
+    if (q.id === 'pilot') P.add(this.strip.x, this.strip.y, 'tip', 'Dustwater airstrip', 'The emerald pilot');
+    if (q.id === 'moth') { const c = this.game.world.cities[0]; P.add(c.cx, c.cy, 'tip', 'The Moth of Fear', 'Port Hollow, at night'); }
+    if (q.id === 'corps') this.state().rings = 0;
+  };
+  Q.finish = function (q) {
+    const g = this.game, pl = g.player, s = this.state();
+    s.stage++; s.active = false;
+    g.audio.sfx('promote');
+    if (q.id === 'lesson') { pl.wardrobe = pl.wardrobe || {}; pl.wardrobe['unlock:fearsuit'] = 1; s.perks.suit = 1; pl.willMax = (pl.willMax || 100) + 25; pl.will = pl.willMax; }
+    if (q.id === 'lantern') s.perks.lantern = 1;
+    if (q.id === 'pilot') s.perks.duel = 1;
+    if (q.id === 'moth') s.perks.aura = 1;
+    if (q.id === 'corps') { s.perks.corps = 1; g.pop.addNews('dust', 'The yellow light over the Dustwater flats is gone. Truckers say it went straight up.'); }
+    g.ui.story(`${q.title}: done`, `${q.done}\n\nReward: ${q.reward}`);
+    if (q.id === 'corps') setTimeout(() => { if (R.ring.fearMan) { g.fx.text(R.ring.fearMan.x, R.ring.fearMan.y - 24, 'Farewell.', '#fff27a'); R.ring.goneForever = true; } }, 500);
+  };
+  Q.suitUp = function () {
+    const pl = this.game.player;
+    Object.assign(pl.style, { jacket: 'none', shirt: 'fearblue', top: 'turtle', pants: 'fearblack', hat: 'none' });
+    pl.buildLook();
+    this.game.ui.toast('Blue and black. People cross the street when they see you coming.', 'good');
+  };
+
+  // ---------------------------------------------------------------- tracking
+  // people you frighten tonight (lesson one); hooks the actor fear states
+  Q.scare = function (h) {
+    const s = this.state(), q = this.current();
+    if (!q || q.id !== 'lesson' || !s.active || s.lessonDone || !h || h.kind !== 'h' || h.dead) return;
+    const g = this.game, night = Math.floor((g.clock.t - 300) / 1440);
+    if (!g.clock.isNight()) return;
+    if (night !== this.night) { this.night = night; this.scared.clear(); }
+    if (this.scared.has(h)) return;
+    this.scared.add(h);
+    g.fx.text(h.x, h.y - 26, `FEAR ${this.scared.size}/6`, '#fff27a');
+    if (this.scared.size >= 6) { s.lessonDone = true; g.ui.toast('Six of them. The Fear Man will want to hear about it.', 'good'); }
+  };
+  (function hookFear() {
+    const AP = R.Actors.prototype;
+    for (const m of ['setFlee', 'setCower']) {
+      const base = AP[m];
+      AP[m] = function (h, from, secs) {
+        const r = base.apply(this, arguments);
+        if ((from === this.game.player || (from && from.driver === this.game.player)) && R.fearQuest.game) R.fearQuest.scare(h);
+        return r;
+      };
+    }
+  })();
+
+  // ---------------------------------------------------------------- per frame
+  Q.update = function (dt) {
+    const g = this.game, pl = g.player, s = this.state(), q = this.current();
+    // lantern recharge cooldown
+    // quest encounters
+    if (q && s.active) {
+      if (q.id === 'lantern') this.updateWreck(dt);
+      if (q.id === 'pilot') this.updatePilot(dt);
+      if (q.id === 'moth') this.updateMoth(dt);
+    }
+    this.updateGreens(dt);
+    if (s.perks.corps) this.updateCorps(dt);
+  };
+
+  // the wreck: guardians from the anti-matter side, and the lantern in the snow
+  Q.updateWreck = function () {
+    const g = this.game, pl = g.player, w = this.wreck;
+    const d = Math.hypot(pl.x / TS - w.x, pl.y / TS - w.y);
+    if (d < 30 && !this.guards && !pl.inv.tools.lantern) {
+      this.guards = [];
+      for (let k = 0; k < 3; k++) {
+        const h = g.actors.makeHuman((w.x + 3 - k * 3) * TS, (w.y + 3) * TS, { tag: 'qward', weapon: 'knife', cash: 0,
+          look: { fem: false, age: 40, skin: '#402050', hair: '#000', top: '#201030', bottom: '#100818', seedStr: 'qward' + k, oldOverride: { skin: ['#1a0a24', '#2c1238', '#401c50', '#5a2a6a'], style: 'bald', jacket: ['#08040c', '#120818', '#1c0c24', '#281030'], shirt: ['#08040c', '#120818', '#1c0c24', '#281030'], pants: ['#08040c', '#120818', '#1c0c24', '#281030'], glasses: true } } });
+        h.strangerName = 'Shadow Man'; h.keep = true; h.hostile = true; h.hostileLocked = true; h.tr.brave = 1; h.hp = h.maxHp = 90;
+        g.actors.setFight(h, pl);
+        this.guards.push(h);
+      }
+      g.ui.toast('Grey men with no faces climb out of the wreck. They don\'t cast shadows. They ARE shadows.', 'warn');
+    }
+  };
+  Q.context = function (pl) {
+    const s = this.state(), q = this.current();
+    // the lantern in the wreck
+    if (q && s.active && q.id === 'lantern' && !pl.inv.tools.lantern && Math.hypot(pl.x / TS - this.wreck.x, pl.y / TS - this.wreck.y) < 2.2)
+      return { label: 'Take the lantern', fn: () => { pl.inv.tools.lantern = 1; this.game.audio.sfx('promote'); this.game.ui.story('The Power Lantern', 'A squat lantern of yellow metal, warm as a stove. The ring on your hand hums when you hold it close.\n\nTake it back to the Fear Man.'); } };
+    return null;
+  };
+  // recite the oath at the lantern (inventory action)
+  Q.charge = function () {
+    const g = this.game, pl = g.player, s = this.state();
+    const day = Math.floor(g.clock.t / 1440);
+    if (!s.perks.lantern) return g.ui.toast('The lantern is cold. Bring it to the Fear Man first.', 'warn');
+    if (s.chargedDay === day) return g.ui.toast('The lantern needs a day to glow again.', 'warn');
+    s.chargedDay = day;
+    pl.will = pl.willMax || 100;
+    g.audio.sfx('coolOn');
+    for (let k = 0; k < 24; k++) g.fx.add({ x: pl.x, y: pl.y - 10, vx: (R.rng() - 0.5) * 160, vy: (R.rng() - 0.5) * 160, life: 0.8, max: 0.8, c: '#fff27a', s: 2, glow: 1 });
+    g.ui.story('The Oath', OATH + '\n\n(Will fully charged.)');
+  };
+
+  // the emerald pilot: a duel on the Dustwater airstrip
+  Q.updatePilot = function (dt) {
+    const g = this.game, pl = g.player, s = this.state(), st = this.strip;
+    const h = g.clock.hour();
+    const near = Math.hypot(pl.x / TS - st.x, pl.y / TS - st.y) < 32;
+    if (!this.pilot && near && h > 7 && h < 19 && !s.pilotBeaten) {
+      const p = g.actors.makeHuman(st.x * TS + 8, st.y * TS + 8, { tag: 'pilot', cash: 0, arch: 'tough',
+        look: { fem: false, age: 32, skin: '#e0ac7e', hair: '#5a3a20', top: '#6a4a2a', bottom: '#2a3a2a', seedStr: 'pilot', oldOverride: { style: 'short', jacket: ['#3a2410', '#5a3a1c', '#7c5228', '#a06c38'], shirt: ['#1a4a24', '#2a6a34', '#3a8a48', '#5aaa68'], pants: ['#1a2a1a', '#243424', '#344a34', '#4a6a4a'], glasses: false } } });
+      p.strangerName = 'Test Pilot'; p.keep = true; p.hp = p.maxHp = 320; p.tr.brave = 1; p.pilot = true;
+      g.actors.say(p, 'Nice ring. Wrong color, pal.');
+      this.pilot = p;
+    }
+    const p = this.pilot;
+    if (!p) return;
+    if (p.dead || !g.actors.list.includes(p)) { this.pilot = null; if (p.dead) { s.pilotBeaten = true; g.ui.toast('The pilot is down. His ring flickers out. That will do.', 'good'); } return; }
+    if (p.hp < p.maxHp * 0.2 && !s.pilotBeaten) {
+      s.pilotBeaten = true;
+      g.actors.say(p, 'Okay, okay! You win this round. In brightest day, pal!');
+      g.actors.setFlee(p, pl, 30);
+      g.ui.toast('The pilot runs for his plane. Tell the Fear Man.', 'good');
+    }
+    if (s.pilotBeaten) return;
+    // he fights back with green light
+    if (p.hp < p.maxHp && p.state !== 'fight') { p.hostile = true; g.actors.setFight(p, pl); }
+    if (p.state === 'fight') {
+      p.greenT = (p.greenT || 0) - dt;
+      if (p.greenT <= 0 && Math.hypot(p.x - pl.x, p.y - pl.y) < TS * 12) {
+        p.greenT = 1.4 + R.rng();
+        const a = Math.atan2(pl.y - 10 - (p.y - 10), pl.x - p.x);
+        this.greens.push({ x: p.x, y: p.y - 10, vx: Math.cos(a) * 190, vy: Math.sin(a) * 190, t: 0, glove: R.rng() < 0.4 });
+        if (R.rng() < 0.3) g.actors.say(p, R.rng.pick(['Boxing glove!', 'Got a jet with your name on it!', 'Fear\'s got nothing on will, pal!']));
+      }
+    }
+  };
+  Q.updateGreens = function (dt) {
+    const g = this.game, pl = g.player;
+    for (let i = this.greens.length - 1; i >= 0; i--) {
+      const b = this.greens[i];
+      b.t += dt; b.x += b.vx * dt; b.y += b.vy * dt;
+      if (Math.hypot(b.x - pl.x, b.y - (pl.y - 10)) < 10 && !pl.inCar) { pl.hurt((b.glove ? 14 : 9) * (b.yellow ? 1.3 : 1), b.yellow ? R.ring.fearMan : this.pilot || null, 'blast'); pl.knock(Math.atan2(b.vy, b.vx), b.glove ? 180 : 80); this.greens.splice(i, 1); g.fx.text(pl.x, pl.y - 26, b.glove ? 'POW!' : 'ZING!', b.yellow ? '#ffe23c' : '#70f080'); continue; }
+      if (b.t > 1.4) this.greens.splice(i, 1);
+    }
+  };
+
+  // the moth: a fear-eater over Port Hollow at night, riding possessed townsfolk
+  Q.updateMoth = function (dt) {
+    const g = this.game, pl = g.player, s = this.state();
+    const c = g.world.cities[0];
+    const inTown = g.world.cityAt((pl.x / TS) | 0, (pl.y / TS) | 0) === c;
+    if (!this.moth && inTown && g.clock.isNight() && !s.mothDone && !pl.room) {
+      this.moth = { x: pl.x + 90, y: pl.y - 30, hp: 360, maxHp: 360, t: 0, hosts: [] };
+      for (let k = 0; k < 3; k++) {
+        const hsp = g.world.findNear(pl.x / TS, pl.y / TS, 5, 10, (x, y) => !g.world.solidPed(x, y) && !g.world.isWater(x, y));
+        if (!hsp) continue;
+        const h = g.actors.makeHuman(hsp.x * TS + 8, hsp.y * TS + 8, {});
+        h.possessed = true; h.keep = true; h.hostile = true; h.hostileLocked = true; h.tr.brave = 1; h.strangerName = 'Possessed';
+        g.actors.setFight(h, pl);
+        this.moth.hosts.push(h);
+      }
+      g.ui.toast('A shape the size of a house blots out the moon. Yellow wings. Three people with yellow eyes turn toward you.', 'bad');
+    }
+    const m = this.moth;
+    if (!m) return;
+    m.t += dt;
+    m.x += (pl.x + Math.cos(m.t * 0.7) * 70 - m.x) * dt * 0.8;
+    m.y += (pl.y - 40 + Math.sin(m.t * 1.1) * 30 - m.y) * dt * 0.8;
+    // freed hosts: knocked out or killed
+    for (const h of m.hosts) if (h.possessed && (h.dead || h.down > 0)) { h.possessed = false; h.hostile = false; if (!h.dead) g.actors.say(h, 'Where... where am I?'); }
+    // it swoops at you
+    m.swoopT = (m.swoopT || 3) - dt;
+    if (m.swoopT <= 0 && !pl.inCar) { m.swoopT = 3 + R.rng() * 2; if (Math.hypot(m.x - pl.x, m.y - pl.y) < 70) { pl.hurt(10, null, 'blast'); g.cam.shake(4); g.fx.text(pl.x, pl.y - 28, 'DREAD', '#f0c020'); } }
+    if (m.hp <= 0) {
+      this.moth = null;
+      s.mothDone = true;
+      for (const h of m.hosts) if (h.possessed) { h.possessed = false; h.hostile = false; }
+      for (let k = 0; k < 40; k++) g.fx.add({ x: m.x, y: m.y, vx: (R.rng() - 0.5) * 220, vy: (R.rng() - 0.5) * 220, life: 1.2, max: 1.2, c: R.rng() < 0.5 ? '#fff27a' : '#f0c020', s: 3, glow: 1 });
+      g.ui.toast('The moth shreds into yellow light and is gone. The Fear Man will know.', 'good');
+      g.pop.addNews('port', 'Residents of Port Hollow report "a terrible dream" last night, then a light show over the harbor.');
+    }
+  };
+  // ring fire can hit the moth
+  Q.hitTest = function (x, y, dmg) {
+    const m = this.moth;
+    if (!m || Math.hypot(x - m.x, y - m.y) > 26) return false;
+    m.hp -= dmg;
+    m.hurtT = 0.15;
+    return true;
+  };
+
+  // your corps: ring-bearers who fire yellow bolts at whoever you're fighting
+  Q.updateCorps = function (dt) {
+    const g = this.game, pl = g.player;
+    for (const c of pl.crew) {
+      if (!c.fearRing || c.dead || c.inCar) continue;
+      c.boltT = (c.boltT || 0) - dt;
+      if (c.boltT > 0) continue;
+      const foe = g.actors.near(c.x, c.y, TS * 10, (a) => a.kind === 'h' && !a.dead && a.hostile && a.state === 'fight' && !a.crew)[0];
+      if (!foe) continue;
+      c.boltT = 1.1 + R.rng() * 0.6;
+      const a = Math.atan2(foe.y - c.y, foe.x - c.x);
+      R.ring.shots.push({ k: 'bolt', bolt: true, x: c.x + Math.cos(a) * 6, y: c.y - 10, vx: Math.cos(a) * 380, vy: Math.sin(a) * 380, t: 0, life: 0.6, rot: a, hits: new Set(), owner: c });
+    }
+  };
+  // give a lesser ring (talk option on people who fear you)
+  Q.canGiveRing = function (h) {
+    const s = this.state(), q = this.current();
+    return q && q.id === 'corps' && s.active && s.rings < 3 && h.person && (h.person.fear || 0) >= 50 && !h.fearRing && !h.cop && !h.look.kid;
+  };
+  Q.giveRing = function (h) {
+    const g = this.game, pl = g.player, s = this.state();
+    s.rings++;
+    h.fearRing = true;
+    if (!h.crew) pl.recruit(h);
+    h.person.opinion = Math.max(h.person.opinion, 40);
+    g.actors.say(h, R.rng.pick(['It\'s... warm. I can feel it watching.', 'Yes sir. Whatever you say, sir.', 'I never felt so... tall.']));
+    g.ui.toast(`${s.rings}/3 ring-bearers.`, 'good');
+  };
+
+  // ---------------------------------------------------------------- drawing (emissive layer)
+  Q.draw = function (g) {
+    const t = this.game.clock.real;
+    // the wreck glows in the snow
+    const w = this.wreck, pl = this.game.player;
+    if (w && Math.abs(w.x * TS - pl.x) < 400 && Math.abs(w.y * TS - pl.y) < 300) {
+      const x = w.x * TS + 8, y = w.y * TS + 8;
+      g.fillStyle = '#2a2a34'; g.beginPath(); g.ellipse(x, y + 4, 34, 12, 0, 0, 7); g.fill();
+      g.fillStyle = '#6a6a78'; g.beginPath(); g.moveTo(x - 30, y); g.lineTo(x + 10, y - 16); g.lineTo(x + 26, y - 4); g.lineTo(x - 6, y + 8); g.closePath(); g.fill();
+      g.fillStyle = '#9a9aa8'; g.fillRect(x - 12, y - 10, 16, 3);
+      if (!pl.inv.tools.lantern) {
+        g.fillStyle = GLOW + (0.2 + Math.sin(t * 3) * 0.08) + ')'; g.beginPath(); g.arc(x, y - 2, 14, 0, 7); g.fill();
+        g.fillStyle = '#b88400'; g.fillRect(x - 3, y - 8, 7, 9); g.fillStyle = '#fff27a'; g.fillRect(x - 2, y - 7, 5, 6);
+      }
+    }
+    // green constructs from the pilot
+    for (const b of this.greens) {
+      g.fillStyle = (b.yellow ? 'rgba(255,226,60,' : GREEN) + '0.35)'; g.beginPath(); g.arc(b.x, b.y, b.glove ? 7 : 4, 0, 7); g.fill();
+      g.fillStyle = b.yellow ? '#ffe23c' : '#70f080';
+      if (b.glove) { g.fillRect(b.x - 4, b.y - 4, 8, 7); g.fillRect(b.x - 6, b.y - 2, 3, 4); }
+      else g.fillRect(b.x - 2, b.y - 2, 4, 4);
+    }
+    if (this.pilot && !this.pilot.dead) { const p = this.pilot; g.fillStyle = GREEN + (0.5 + Math.sin(t * 5) * 0.2) + ')'; g.fillRect(Math.round(p.x) + 3, Math.round(p.y) - 11, 2, 2); }
+    // possessed eyes
+    if (this.moth) for (const h of this.moth.hosts) if (h.possessed && !h.dead) { g.fillStyle = '#fff27a'; g.fillRect(Math.round(h.x) - 3, Math.round(h.y) - 19, 2, 1); g.fillRect(Math.round(h.x) + 1, Math.round(h.y) - 19, 2, 1); }
+    const m = this.moth;
+    if (m) {
+      const flap = Math.sin(t * 9) * 0.6;
+      g.fillStyle = GLOW + '0.12)'; g.beginPath(); g.arc(m.x, m.y, 60, 0, 7); g.fill();
+      g.save(); g.translate(m.x, m.y);
+      for (const sgn of [-1, 1]) {
+        g.fillStyle = m.hurtT > 0 ? '#ffffff' : '#c89a10';
+        g.beginPath(); g.ellipse(sgn * 18, -4, 20, 12 * (1 + flap * sgn * 0.3), sgn * 0.4, 0, 7); g.fill();
+        g.fillStyle = '#f0c020'; g.beginPath(); g.ellipse(sgn * 16, 10, 12, 8, -sgn * 0.3, 0, 7); g.fill();
+        g.fillStyle = '#6a4600'; g.beginPath(); g.arc(sgn * 18, -4, 5, 0, 7); g.fill();
+      }
+      g.fillStyle = '#3a2800'; g.fillRect(-3, -14, 6, 28);
+      g.fillStyle = '#ff3020'; g.fillRect(-3, -14, 2, 2); g.fillRect(1, -14, 2, 2);
+      g.restore();
+      if (m.hurtT > 0) m.hurtT -= 1 / 60;
+      // health bar
+      g.fillStyle = '#1b1410'; g.fillRect(m.x - 21, m.y - 34, 42, 5);
+      g.fillStyle = '#f0c020'; g.fillRect(m.x - 20, m.y - 33, 40 * Math.max(0, m.hp / m.maxHp), 3);
+    }
+    // your corps' rings
+    for (const c of pl.crew) if (c.fearRing && !c.dead) { g.fillStyle = GLOW + '0.7)'; g.fillRect(Math.round(c.x) + 3, Math.round(c.y) - 6, 2, 2); }
+  };
+  // Fear Aura: badly hurt, you frighten the people fighting you
+  Q.onPlayerHurt = function () {
+    const g = this.game, pl = g.player;
+    if (!this.perk('aura') || pl.hp > pl.maxHp * 0.35 || g.clock.real - (this.auraT || -99) < 12) return;
+    this.auraT = g.clock.real;
+    let n = 0;
+    for (const a of g.actors.near(pl.x, pl.y, TS * 9)) if (a.kind === 'h' && !a.dead && a.hostile && !a.hostileLocked && R.rng() < 0.7) { g.actors.setFlee(a, pl, 6); g.actors.say(a, R.rng.pick(['Its EYES!', 'No no no no!', 'Get away from me!'])); n++; }
+    if (n) { g.fx.text(pl.x, pl.y - 30, 'FEAR AURA', '#fff27a'); for (let k = 0; k < 30; k++) g.fx.add({ x: pl.x, y: pl.y - 10, vx: (R.rng() - 0.5) * 240, vy: (R.rng() - 0.5) * 240, life: 0.6, max: 0.6, c: '#f0c020', s: 2, glow: 1 }); }
+  };
+})();
+
+// ---------------------------------------------------------------- the green path
+// Talk to the test pilot instead of fighting him and you can side with Hal: prove you
+// protect people, earn a green ring, uniform and power battery, then face the Fear Man.
+// He cannot be killed. At the brink he goes up like a flare, and that's another story.
+(function () {
+  const D = R.data, TS = R.TILE, Q = R.fearQuest;
+  const GREEN_OATH = 'When all is dark and hope is slight,\nI hold the line with all my might.\nLet every fear that stalks the night\nfall back before my will\'s green light.';
+  const GQ = [
+    { id: 'protect', title: 'Prove It', goal: 'Take off the yellow ring and protect people: put down 5 muggers, robbers or thugs who are hurting someone.',
+      give: 'That ring runs on fear. It\'ll hollow you out. Take it off. Show me you\'d stand up for somebody, five times, and I\'ll show you a better light.',
+      done: 'You did good. Here. Hold it up to the battery, say the words, and mean them.', reward: 'The green ring (bolts, beam and constructs in green; Will returns faster near people who like you), the green-and-black uniform and a power battery.' },
+    { id: 'showdown', title: 'Face the Fear Man', goal: 'Confront the Fear Man under his dead tree between 1 and 4 AM. He will not go quietly.',
+      give: 'He knows by now. He\'ll be waiting at that tree, and he\'ll be angry. I\'d go with you but somebody has to watch the sky. Don\'t let him scare you. That\'s all he\'s got.',
+      done: '', reward: 'Emerald Knight: constructs cost a quarter less, the bubble shield lasts twice as long, and you can call Hal for backup from any payphone.' },
+  ];
+
+  Q.gcurrent = function () { const s = this.state(); return s.path === 'green' && s.gstage < GQ.length ? GQ[s.gstage] : null; };
+  Q.perkG = (k) => { const s = R.game && R.game.player && R.game.player.fearQ; return !!(s && s.gperks && s.gperks[k]); };
+
+  // the pilot's conversation, instead of a fight
+  Q.pilotTree = function (h) {
+    const g = this.game, pl = g.player, s = this.state(), ui = g.ui;
+    const say = (t) => ui.talkLine(t);
+    const opts = [];
+    const gq = this.gcurrent();
+    if (s.path !== 'green') {
+      opts.push({ label: '"Who are you?"', fn: () => say('Hal. I fly test planes out of this strip. Among other things. That ring on your hand... where\'d you get it?') });
+      opts.push({ label: '"The Fear Man sent me."', fn: () => say('Then you\'re wearing his leash. That ring feeds on fear: everybody else\'s first, then yours.') });
+      opts.push({ label: '"What would you have me do?"', fn: () => say('Take it off. Help me stop him. You\'d be surprised what you can do with a little willpower.') });
+      opts.push({ label: 'Side with Hal (turn on the Fear Man)', cls: 'go', fn: () => {
+        s.path = 'green'; s.gstage = 0; s.gactive = true; s.saved = 0; s.gperks = s.gperks || {};
+        s.active = false; // the Fear Man's lesson is abandoned
+        pl.weapon = pl.weapon === 'ring' ? 'fists' : pl.weapon;
+        say(GQ[0].give); ui.closeSheet();
+        g.ui.toast(`Hal: ${GQ[0].title}. ${GQ[0].goal}`, 'good');
+        h.hostile = false; h.state = 'idle'; h.timer = 1e9; h.stay = true; h.strangerName = 'Hal';
+      } });
+      opts.push({ label: '"Let\'s settle this." (fight him)', cls: 'bad', fn: () => { ui.closeSheet(); h.hostile = true; g.actors.setFight(h, pl); } });
+    } else if (gq && s.gactive && gq.id === 'protect' && s.saved >= 5) {
+      opts.push({ label: '"Five of them. Satisfied?"', cls: 'go', fn: () => { say(GQ[0].done); ui.closeSheet(); this.gfinish(); } });
+    } else if (gq) opts.push({ label: `"About ${gq.title.toLowerCase()}..."`, fn: () => say(`${gq.goal}${gq.id === 'protect' ? ` (${s.saved}/5)` : ''}`) });
+    else opts.push({ label: '"How\'s the sky?"', fn: () => say('Quiet. Too quiet. Somewhere up there he\'s licking his wounds. Keep that ring charged.') });
+    if (pl.wardrobe && pl.wardrobe['unlock:glsuit'] && pl.style.shirt !== 'gljersey') opts.push({ label: 'Put on the green uniform', fn: () => { this.greenSuit(); say('Looks good on you. Don\'t get cocky.'); } });
+    opts.push({ label: 'Leave', fn: () => ui.closeSheet() });
+    return { title: 'Hal', sub: 'Leather flight jacket, green shirt, a grin like he owns the sky. A ring glows green on his hand.', options: opts };
+  };
+  Q.greenSuit = function () {
+    const pl = this.game.player;
+    Object.assign(pl.style, { jacket: 'none', shirt: 'gljersey', top: 'turtle', pants: 'glblack', hat: 'none' });
+    pl.buildLook();
+    this.game.ui.toast('Green and black. Kids point at you on the street.', 'good');
+  };
+  Q.gfinish = function () {
+    const g = this.game, pl = g.player, s = this.state(), q = GQ[s.gstage];
+    s.gstage++;
+    if (q.id === 'protect') {
+      pl.ringColor = 'green';
+      pl.inv.tools.ring = 1;
+      pl.inv.tools.battery = 1;
+      pl.wardrobe = pl.wardrobe || {}; pl.wardrobe['unlock:glsuit'] = 1;
+      D.weapons.ring.name = 'Green Ring';
+      g.ui.setRingButtons();
+      s.gactive = true;
+      g.audio.sfx('promote');
+      g.ui.story('The Green Ring', `Hal presses a ring into your palm. It is cool, and it hums a different note.\n\n${GREEN_OATH}\n\nYour constructs, bolts and beam burn green now. Will comes back faster near people who like you. Recite the oath at the power battery once a day for a full charge.\n\nNext: ${GQ[1].goal}`);
+      g.ui.toast(`Hal: ${GQ[1].title}.`, 'good');
+      R.poi.add(R.ring.fearSpot.x, R.ring.fearSpot.y, 'tip', 'The dead tree', 'Face the Fear Man, 1-4 AM');
+    }
+    if (q.id === 'showdown') {
+      s.gperks.knight = 1;
+      s.fmGone = true;
+      g.audio.sfx('promote');
+      g.pop.addNews('dust', 'A pillar of yellow light rose from the Dustwater flats at 3 AM and did not come down. Observatory staff "have no comment".');
+      g.ui.story('TO BE CONTINUED...', 'He is gone. Not dead: gone. A streak of yellow went straight up past the clouds, past the moon, and kept going.\n\nSomewhere out there, a planet of little blue men and a lantern the size of a city are waiting.\n\nThe Brass Coast is quiet tonight. For now.\n\n(Emerald Knight: constructs cost a quarter less, the shield lasts twice as long, and you can call Hal from any payphone.)');
+    }
+  };
+  // bad guys you put down while they're hurting someone
+  Q.onDefeat = function (h, byPlayer) {
+    const s = this.state();
+    if (!byPlayer || s.path !== 'green' || !s.gactive || s.gstage !== 0 || !h || h.kind !== 'h') return;
+    const baddie = ['mugger', 'robber', 'perp', 'thief', 'qward', 'bounty'].includes(h.tag) || h.possessed || (h.hostile && h.target && h.target !== this.game.player && h.target.kind === 'h');
+    if (!baddie || h.countedSave) return;
+    h.countedSave = true;
+    s.saved++;
+    this.game.fx.text(h.x, h.y - 26, `PROTECTED ${Math.min(5, s.saved)}/5`, '#70f080');
+    if (s.saved === 5) this.game.ui.toast('Five. Go tell Hal on the Dustwater airstrip.', 'good');
+  };
+  // trouble finds a would-be hero: more street crime while you're proving yourself
+  Q.gupdate = function (dt) {
+    const g = this.game, s = this.state(), pl = g.player;
+    if (s.path !== 'green') return;
+    if (s.gstage === 0 && s.gactive && s.saved < 5) {
+      this.crimeT = (this.crimeT || 20) - dt;
+      if (this.crimeT <= 0 && !pl.room && g.world.cityAt((pl.x / TS) | 0, (pl.y / TS) | 0)) { this.crimeT = 45; const city = g.world.cityAt((pl.x / TS) | 0, (pl.y / TS) | 0); if (R.events.robbery) R.events.robbery(g, city); }
+    }
+    // Hal waits on the strip for you in daylight
+    const st = this.strip, h = g.clock.hour();
+    if (!this.pilot && (s.gstage === 0 || s.gstage >= 1) && Math.hypot(pl.x / TS - st.x, pl.y / TS - st.y) < 32 && h > 7 && h < 19) this.spawnHal();
+    // Will from hope: people who like you nearby
+    if (pl.ringColor === 'green' && pl.will != null) {
+      let hope = 0;
+      for (const a of g.actors.near(pl.x, pl.y, TS * 8)) if (a.person && a.person.opinion > 30 && !a.dead) hope++;
+      pl.will = Math.min(pl.willMax || 100, pl.will + dt * Math.min(15, hope * 3));
+    }
+    this.updateHalBackup(dt);
+  };
+  Q.spawnHal = function () {
+    const g = this.game, st = this.strip;
+    const p = g.actors.makeHuman(st.x * TS + 8, st.y * TS + 8, { tag: 'pilot', cash: 0, arch: 'friendly',
+      look: { fem: false, age: 32, skin: '#e0ac7e', hair: '#5a3a20', top: '#6a4a2a', bottom: '#2a3a2a', seedStr: 'pilot', oldOverride: { style: 'short', jacket: ['#3a2410', '#5a3a1c', '#7c5228', '#a06c38'], shirt: ['#1a4a24', '#2a6a34', '#3a8a48', '#5aaa68'], pants: ['#1a2a1a', '#243424', '#344a34', '#4a6a4a'] } } });
+    p.strangerName = 'Hal'; p.keep = true; p.hp = p.maxHp = 320; p.tr.brave = 1; p.pilot = true; p.stay = true; p.state = 'idle'; p.timer = 1e9;
+    this.pilot = p;
+  };
+  // the showdown: he fights, he can't die, he leaves
+  Q.fightFearMan = function (fm) {
+    const g = this.game, pl = g.player, s = this.state(), gq = this.gcurrent();
+    if (!gq || gq.id !== 'showdown') return false;
+    if (!fm.fearFight) {
+      fm.fearFight = true; fm.maxHp = fm.hp = 700; fm.hostile = true; fm.hostileLocked = true; fm.stay = false; fm.tr.brave = 1;
+      g.actors.say(fm, 'Hal\'s little recruit. You could have ruled this coast. Now you will fear it.');
+      g.actors.setFight(fm, pl);
+      g.ui.toast('The Fear Man rises off the ground. Yellow light pours from his fist.', 'bad');
+    }
+    fm.boltT = (fm.boltT || 1) - 1 / 30;
+    if (fm.boltT <= 0 && Math.hypot(fm.x - pl.x, fm.y - pl.y) < TS * 14) {
+      fm.boltT = 0.9 + R.rng() * 0.5;
+      const a = Math.atan2(pl.y - fm.y, pl.x - fm.x);
+      this.greens.push({ x: fm.x, y: fm.y - 10, vx: Math.cos(a) * 210, vy: Math.sin(a) * 210, t: 0, glove: R.rng() < 0.35, yellow: true });
+      if (R.rng() < 0.25) g.actors.say(fm, R.rng.pick(['Kneel.', 'I have ended wars bigger than your planet.', 'Fear is the only honest emotion.', 'You will not be remembered.']));
+    }
+    // he can't be killed: at the brink, he goes
+    if (fm.hp < fm.maxHp * 0.15) {
+      fm.hp = Math.max(1, fm.hp); fm.fearGone = true;
+      g.actors.say(fm, 'This is not over. The stars are wide, and I am patient.');
+      for (let k = 0; k < 60; k++) g.fx.add({ x: fm.x + (R.rng() - 0.5) * 10, y: fm.y - R.rng() * 200, vx: (R.rng() - 0.5) * 20, vy: -200 - R.rng() * 200, life: 1.5, max: 1.5, c: R.rng() < 0.5 ? '#fff27a' : '#f0c020', s: 3, glow: 1 });
+      g.cam.shake(8);
+      g.actors.remove(fm);
+      R.ring.fearMan = null;
+      this.gfinish();
+    }
+    return true;
+  };
+  // Emerald Knight: call Hal from a payphone and he flies in to help for a minute
+  Q.callHal = function () {
+    const g = this.game, pl = g.player;
+    if (this.halT > 0) return g.ui.toast('Hal: "Already on my way, hotshot."');
+    const s = g.world.findNear((pl.x / TS) | 0, (pl.y / TS) | 0, 3, 6, (x, y) => !g.world.solidPed(x, y) && !g.world.isWater(x, y));
+    if (!s) return;
+    const h = g.actors.makeHuman(s.x * TS + 8, s.y * TS + 8, { tag: 'hal', weapon: 'revolver', arch: 'friendly' });
+    h.strangerName = 'Hal'; h.keep = true; h.hp = h.maxHp = 300; h.tr.brave = 1; h.halBackup = true;
+    h.look.oldOverride = { style: 'short', jacket: ['#3a2410', '#5a3a1c', '#7c5228', '#a06c38'], shirt: ['#1a4a24', '#2a6a34', '#3a8a48', '#5aaa68'], pants: ['#1a2a1a', '#243424', '#344a34', '#4a6a4a'] }; h.look.seedStr = 'halbackup'; h.look.old = null;
+    pl.recruit(h);
+    h.fearRing = true; // fires ring bolts with your corps logic (green here)
+    this.halT = 60;
+    this.halRef = h;
+    g.ui.toast('A green streak drops out of the sky. "Heard you needed a hand."', 'good');
+  };
+  Q.updateHalBackup = function (dt) {
+    if (!(this.halT > 0)) return;
+    this.halT -= dt;
+    const h = this.halRef;
+    if (h && !h.dead) {
+      const g = this.game;
+      h.boltT = (h.boltT || 0) - dt;
+      const foe = g.actors.near(h.x, h.y, TS * 10, (a) => a.kind === 'h' && !a.dead && a.hostile && a.state === 'fight' && !a.crew)[0];
+      if (foe && h.boltT <= 0) { h.boltT = 0.8; const a = Math.atan2(foe.y - h.y, foe.x - h.x); R.ring.shots.push({ k: 'bolt', bolt: true, x: h.x, y: h.y - 10, vx: Math.cos(a) * 400, vy: Math.sin(a) * 400, t: 0, life: 0.6, rot: a, hits: new Set(), owner: h }); }
+    }
+    if (this.halT <= 0 && h && !h.dead) { this.game.player.dismiss(h); this.game.fx.text(h.x, h.y - 26, 'Gotta fly!', '#70f080'); this.game.actors.remove(h); this.halRef = null; }
+  };
+  // the green battery: recite the oath once a day
+  Q.chargeGreen = function () {
+    const g = this.game, pl = g.player, s = this.state();
+    const day = Math.floor(g.clock.t / 1440);
+    if (s.gChargedDay === day) return g.ui.toast('The battery needs a day to glow again.', 'warn');
+    s.gChargedDay = day;
+    pl.will = pl.willMax || 100;
+    g.audio.sfx('coolOn');
+    for (let k = 0; k < 24; k++) g.fx.add({ x: pl.x, y: pl.y - 10, vx: (R.rng() - 0.5) * 160, vy: (R.rng() - 0.5) * 160, life: 0.8, max: 0.8, c: '#9af0a8', s: 2, glow: 1 });
+    g.ui.story('The Oath', GREEN_OATH + '\n\n(Will fully charged.)');
+  };
+  // the pilot fight on the fear path shouldn't happen until you choose it
+  const baseUpdatePilot = Q.updatePilot;
+  Q.updatePilot = function (dt) {
+    const s = this.state();
+    if (this.pilot && !this.pilot.hostile && this.pilot.state !== 'fight' && s.path !== 'green') { this.pilot.state = 'idle'; this.pilot.timer = 1e9; }
+    return baseUpdatePilot.call(this, dt);
+  };
+  const baseUpdate = Q.update;
+  Q.update = function (dt) { baseUpdate.call(this, dt); this.gupdate(dt); };
+  const baseOptions = Q.options;
+  Q.options = function (h, say, close) {
+    const s = this.state();
+    if (s.path === 'green') return [{ label: '"It\'s over, old man."', fn: () => say('You chose the pilot. Then we have nothing to say until one of us is on the ground.') }];
+    return baseOptions.call(this, h, say, close);
+  };
+})();
+// count the bad guys the would-be hero puts down (killed or knocked out)
+(function () {
+  const baseKill = R.combat.kill;
+  R.combat.kill = function (h, source, kind) {
+    const g = R.game, was = h && h.dead;
+    baseKill.call(this, h, source, kind);
+    if (!was && g && R.fearQuest.onDefeat) R.fearQuest.onDefeat(h, source === g.player || (source && source.driver === g.player) || (source && source.owner === g.player));
+  };
+  R.bus.on('player:ko', (h) => R.fearQuest.onDefeat && R.fearQuest.onDefeat(h, true));
 })();
 
 // ---- 13_spooky.js
@@ -10669,6 +11340,8 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       mustard: { name: 'Mustard', price: 25, c: ramp('#6a5a20', '#9a8430', '#c8ac48', '#ecd070') },
       orange: { name: 'Burnt Orange', price: 25, c: ramp('#5a2408', '#8c3c10', '#c85c1c', '#f08c40') },
       olive: { name: 'Olive', price: 20, c: ramp('#2c3418', '#44502a', '#5e6c3a', '#7c8c50') },
+      fearblue: { name: 'Fear Man\'s Tunic', price: 0, lock: 'fearsuit', c: ramp('#0a1236', '#14225e', '#22388e', '#3a58c0') },
+      gljersey: { name: 'Emerald Jersey', price: 0, lock: 'glsuit', c: ramp('#0a3a14', '#146a24', '#22a03a', '#5ad06a') },
       pink: { name: 'Salmon Pink', price: 30, c: ramp('#7a3a3a', '#a85a58', '#d88078', '#f8b0a0') },
       purple: { name: 'Paisley Purple', price: 35, c: ramp('#2a1a4a', '#44306e', '#664c98', '#9078c0') },
     },
@@ -10680,6 +11353,8 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       denim: { name: 'Denim Flares', price: 30, c: ramp('#1c2c48', '#2c4470', '#40609a', '#6488c0') },
       cream: { name: 'Cream Trousers', price: 40, c: ramp('#8a8068', '#b8ae90', '#dcd4b8', '#f0ead4') },
       white: { name: 'White Trousers', price: 45, c: ramp('#9a9890', '#c8c6be', '#e8e6de', '#fffdf6') },
+      fearblack: { name: 'Fear Man\'s Breeches', price: 0, lock: 'fearsuit', c: ramp('#06060a', '#101018', '#1a1a26', '#2a2a3a') },
+      glblack: { name: 'Black Flight Pants', price: 0, lock: 'glsuit', c: ramp('#06060a', '#101018', '#1a1a26', '#2a2a3a') },
       plaid: { name: 'Check Trousers', price: 40, c: ramp('#3a2418', '#5a3a24', '#7c5634', '#a07448') },
     },
     tops: { collar: { name: 'Wide Collar', price: 0 }, turtle: { name: 'Turtleneck', price: 25 }, stripe: { name: 'Striped Tee', price: 15 }, tee: { name: 'Plain Tee', price: 10 } },
@@ -10727,7 +11402,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       hatKind: s.hat && s.hat !== 'none' && !masked ? s.hat : null, hatCol: hc,
       oldOverride: {
         shirt: sh.c, jacket: j.c, pants: pa.c, style: s.hair || 'short', hair: (ST.hairCols[s.hairCol] || ST.hairCols.black).c,
-        top: s.top || 'collar', flare: true, stache: s.facial === 'stache', beard: s.facial === 'beard', glasses: !!s.glasses, dress: false,
+        top: s.top || 'collar', flare: s.pants !== 'fearblack' && s.pants !== 'glblack', belt: s.shirt === 'fearblue' ? '#f0c020' : s.shirt === 'gljersey' ? '#10101a' : undefined, shoes: s.pants === 'fearblack' || s.pants === 'glblack' ? ['#06060a', '#101018', '#1a1a26'] : undefined, stache: s.facial === 'stache', beard: s.facial === 'beard', glasses: !!s.glasses, dress: false,
         shoes: ['#141418', '#24242c', '#3a3a46'], kid: false, mask: masked,
       },
     };
@@ -10798,7 +11473,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     };
     const render = () => {
       const cdef = CATS[mode].find((c) => c[0] === cat), field = cdef[2];
-      const keys = cat === 'glasses' ? [false, true] : Object.keys(ST[cat]);
+      const keys = cat === 'glasses' ? [false, true] : Object.keys(ST[cat]).filter((k) => !ST[cat][k].lock || (pl.wardrobe && pl.wardrobe['unlock:' + ST[cat][k].lock]));
       const cost = bill();
       const html = ui.header(mode === 'tailor' ? 'Tailor' : 'Barber', mode === 'tailor' ? 'Try things on. You only pay for what you walk out in. A new look throws off anyone hunting the old one.' : 'Sit down, relax. A new look throws off anyone hunting the old one.') +
         `<div class="body wardrobe"><div class="wtop"><canvas class="wport" width="48" height="60"></canvas><div class="wcats">${CATS[mode].map(([k, l]) => `<button data-c="${k}" class="${k === cat ? 'sel' : ''}">${l}</button>`).join('')}</div></div>` +
@@ -12124,7 +12799,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
 
   // ---------------------------------------------------------------- the in-screen HUD (canvas, pixel text)
   const HEART = ['.XX.XX.', 'XXXXXXX', 'XXXXXXX', '.XXXXX.', '..XXX..', '...X...'];
-  const SHORTW = { fists: 'FISTS', knuckles: 'KNUCKLES', bat: 'BAT', knife: 'KNIFE', revolver: '.38', magnum: '.357', shotgun: 'SHOTGUN', chopper: 'CHOPPER', rifle: 'RIFLE', molotov: 'MOLOTOV', dynamite: 'DYNAMITE', gascan: 'GAS CAN' };
+  const SHORTW = { fists: 'FISTS', knuckles: 'KNUCKLES', bat: 'BAT', knife: 'KNIFE', revolver: '.38', magnum: '.357', shotgun: 'SHOTGUN', chopper: 'CHOPPER', rifle: 'RIFLE', molotov: 'MOLOTOV', dynamite: 'DYNAMITE', gascan: 'GAS CAN', ring: 'RING' };
   const A = () => R.art;
   function hbox(g, x, y, w, h, striped) {
     g.fillStyle = 'rgba(20,12,10,0.5)'; g.fillRect(x + 2, y + 3, w, h);
@@ -12161,7 +12836,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     const ww = R.data.weapons[pl.weapon];
     const held = pl.held && R.data.props[pl.held.k];
     const wn = held ? held.name.split(' ').pop().toUpperCase() : SHORTW[pl.weapon] || 'FISTS';
-    const ammo = held ? (held.dur >= 99 ? 'UNBREAKABLE' : 'USES ' + pl.held.dur) : pl.weapon === 'gascan' ? `x${pl.inv.tools.gascan || 0}` : ww && ww.gun ? `${pl.clip[pl.weapon] || 0}/${pl.inv.ammo[ww.ammo] || 0}` : ww && ww.thrown ? `x${pl.inv.ammo[pl.weapon] || 0}` : 'SWAP';
+    const ammo = held ? (held.dur >= 99 ? 'UNBREAKABLE' : 'USES ' + pl.held.dur) : pl.weapon === 'ring' ? `WILL ${Math.round(pl.will)}` : pl.weapon === 'gascan' ? `x${pl.inv.tools.gascan || 0}` : ww && ww.gun ? `${pl.clip[pl.weapon] || 0}/${pl.inv.ammo[ww.ammo] || 0}` : ww && ww.thrown ? `x${pl.inv.ammo[pl.weapon] || 0}` : 'SWAP';
     const bw = Math.max(A().ptWidth(wn, 2), A().ptWidth(ammo)) + 14;
     hbox(g, W - 6 - bw, 6, bw, 34, true);
     pt(g, wn, W - 13, 10, { align: 'right', scale: 2, color: '#3a2418' });
@@ -12903,6 +13578,8 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     } else if (tab === 'jobs') {
       const j = g.jobs.active;
       body.innerHTML = `<div class="sect">Current job</div>${j ? `<p style="font-size:16px"><b>${esc(j.title)}</b><br>${esc(j.desc)}</p>` : '<p>No job. Visit a Social Club or call the family from a payphone.</p>'}
+        ${R.fearQuest.current() && R.fearQuest.state().active ? `<div class="sect">The Fear Man</div><p style="font-size:15px"><b>${esc(R.fearQuest.current().title)}</b><br>${esc(R.fearQuest.current().goal)} ${esc(R.fearQuest.progressText(R.fearQuest.current()))}</p>` : ''}
+        ${R.fearQuest.gcurrent && R.fearQuest.gcurrent() ? `<div class="sect">Hal</div><p style="font-size:15px"><b>${esc(R.fearQuest.gcurrent().title)}</b><br>${esc(R.fearQuest.gcurrent().goal)}${R.fearQuest.gcurrent().id === 'protect' ? ` (${R.fearQuest.state().saved}/5)` : ''}</p>` : ''}
         <div class="sect">Leads</div>${g.jobs.leads.length ? g.jobs.leads.map((l) => `<p>• ${esc(l.text)}</p>`).join('') : '<p>No leads. Greet people; chatty folks and bartenders talk.</p>'}
         <div class="sect">Rackets</div>${g.world.buildings.filter((b) => b && b.racket && b.racketFamily === pl.family).map((b) => `<p>• ${esc(b.name)} (${esc(b.city.name)}) · ${R.fmtMoney(b.racketDue || 0)} due</p>`).join('') || '<p>No protection clients yet (Soldier rank and up).</p>'}`;
     } else if (tab === 'people') {
@@ -13160,6 +13837,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     g.setTransform(sc, 0, 0, sc, Math.round(-left * sc), Math.round(-top * sc));
     R.ring.draw(g);
     R.legends.draw(g);
+    R.fearQuest.draw(g);
     if (R.ring.fearMan && R.ring.fearMan.x) { const fm = R.ring.fearMan; g.fillStyle = 'rgba(255,226,60,' + (0.25 + Math.sin(t * 3) * 0.1) + ')'; g.fillRect(Math.round(fm.x + 4), Math.round(fm.y - 12), 2, 2); }
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     R.goods.overlay(g, cam.vw, cam.vh, t);
@@ -13217,6 +13895,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       if (pl.weapon === 'fists' || pl.weapon === 'knuckles') st.weapon = null;
     }
     if (pl.sneak && !pl.inCar) st.crouch = true;
+    pl._pose = st.pose || (st.held ? 'k' : null);
     A.drawPerson(g, pl.x, pl.y, pl.dir, pl.walk, pl.look, st);
     R.ring.drawSwing(g, pl);
   };
@@ -13624,6 +14303,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     this.interiors = new R.Interiors(this);
     R.props.init(this);
     R.ring.init(this);
+    R.fearQuest.init(this);
     R.legends.init(this);
     R.poi.init(this);
     R.art.chunkCache.clear();
@@ -13770,6 +14450,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       this.interiors.update(sdt);
       R.props.update(sdt);
       R.ring.update(sdt);
+      R.fearQuest.update(sdt);
       R.legends.update(sdt);
       R.goods.update(sdt);
       R.poi.update(sdt);
@@ -13860,7 +14541,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       v: 2, seed: this.seed, t: this.clock.t, log: this.worldLog, weather: this.env.weather.kind,
       player: {
         x: pl.room ? this.interiors.outside(pl.x, pl.y).x : pl.x, y: pl.room ? this.interiors.outside(pl.x, pl.y).y : pl.y, hp: pl.hp, cool: pl.cool, cash: pl.cash, inv: pl.inv, clip: pl.clip, outfit: pl.outfit, outfits: pl.outfits || {}, style: pl.style, wardrobe: pl.wardrobe,
-        will: pl.will, errands: pl.errands || [], poi: R.poi.serialize(), rep: pl.rep, standing: pl.standing, stats: pl.stats, sweetheart: pl.sweetheart, properties: pl.properties, masked: pl.masked,
+        will: pl.will, willMax: pl.willMax || 100, fearQ: pl.fearQ || null, ringColor: pl.ringColor || null, errands: pl.errands || [], poi: R.poi.serialize(), rep: pl.rep, standing: pl.standing, stats: pl.stats, sweetheart: pl.sweetheart, properties: pl.properties, masked: pl.masked,
         cars: pl.ownedCars.filter((c) => !c.removed && !c.wrecked).map((c) => [c.modelId, c.x, c.y, c.angle, c.color]),
       },
       pop: this.pop.serialize(), law: this.law.serialize(), jobs: this.jobs.serialize(), hints: this.hints,
@@ -13885,6 +14566,9 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       const pl = this.player, p = s.player;
       Object.assign(pl, { hp: p.hp, cool: p.cool, cash: p.cash, inv: p.inv, clip: p.clip, outfit: p.outfit, outfits: p.outfits, rep: p.rep, standing: p.standing, stats: Object.assign(pl.stats, p.stats), sweetheart: p.sweetheart, properties: p.properties || [], masked: !!p.masked });
       if (p.will != null) pl.will = p.will;
+      if (p.willMax) pl.willMax = p.willMax;
+      if (p.fearQ) pl.fearQ = p.fearQ;
+      if (p.ringColor) { pl.ringColor = p.ringColor; R.data.weapons.ring.name = 'Green Ring'; }
       if (p.style) pl.style = Object.assign(R.styleDefault(), p.style);
       pl.wardrobe = p.wardrobe || {};
       pl.errands = p.errands || [];

@@ -146,6 +146,7 @@
     g.setTransform(sc, 0, 0, sc, Math.round(-left * sc), Math.round(-top * sc));
     R.ring.draw(g);
     R.legends.draw(g);
+    R.fearQuest.draw(g);
     if (R.ring.fearMan && R.ring.fearMan.x) { const fm = R.ring.fearMan; g.fillStyle = 'rgba(255,226,60,' + (0.25 + Math.sin(t * 3) * 0.1) + ')'; g.fillRect(Math.round(fm.x + 4), Math.round(fm.y - 12), 2, 2); }
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     R.goods.overlay(g, cam.vw, cam.vh, t);
@@ -203,6 +204,7 @@
       if (pl.weapon === 'fists' || pl.weapon === 'knuckles') st.weapon = null;
     }
     if (pl.sneak && !pl.inCar) st.crouch = true;
+    pl._pose = st.pose || (st.held ? 'k' : null);
     A.drawPerson(g, pl.x, pl.y, pl.dir, pl.walk, pl.look, st);
     R.ring.drawSwing(g, pl);
   };

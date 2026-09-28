@@ -348,7 +348,7 @@
     g.fillRect(X - 3, Y - 2, 6, 4);
     let pose = st.pose || null;
     const wdef = st.weapon && st.weapon !== 'fists' ? D.weapons[st.weapon] : null;
-    if (!pose && wdef) pose = wdef.gun ? 'g' : st.weapon === 'knuckles' ? null : 'k';
+    if (!pose && wdef) pose = wdef.gun || wdef.ring ? 'g' : st.weapon === 'knuckles' ? null : 'k';
     if (!pose && st.held) pose = A.heldPose(st.held, 0, 1);
     // legs keep walking whatever the arms are doing
     const spr = A.oldSprite(look, d8, frame, pose);
@@ -494,6 +494,15 @@
     if (pose === 'w1') return n === 'right' || n === 'downright';
     return n === 'up' || n === 'upright';
   };
+  // where someone's (right) hand is, in world space; third value true when it's hidden behind them
+  const IDLE_HAND = { down: [12.5, 20], downright: [11.5, 20], right: [7.5, 20], upright: [4.5, 19], up: [3.5, 19] };
+  A.handPos = function (actor, pose) {
+    const d8 = A.dir8(actor.dir, actor.ang);
+    const n = DIR8[d8], kid = actor.look && actor.look.kid;
+    const cell = pose === 'g' ? GUN_HAND[n] : pose === 'k' ? OLD.ea(n, kid) : IDLE_HAND[n];
+    const [x, y] = handWorld(actor.x, actor.y, d8, cell, kid);
+    return [x, y, pose !== 'g' && (n === 'up' || n === 'upright')];
+  };
   // guns: pointed along the aim, grip in the fist
   A.drawGun = function (g, X, Y, d8, w, ang, kid) {
     const art = A.gunArt(GUNDEF[w] ? w : 'revolver');
@@ -507,7 +516,7 @@
     g.restore();
   };
   function drawWeapon8(g, X, Y, d8, w, ang, pose, kid) {
-    if (!w || w === 'fists') return;
+    if (!w || w === 'fists' || w === 'ring') return;
     const def = D.weapons[w];
     if (def && def.gun) return A.drawGun(g, X, Y, d8, w, ang, kid);
     if (w === 'bat' && pose && pose[0] === 'b') return; // the swing pose paints the bat itself
