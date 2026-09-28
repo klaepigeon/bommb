@@ -10,7 +10,7 @@ let chromium;
 try { ({ chromium } = require('playwright')); } catch {
   try { ({ chromium } = require('/opt/node22/lib/node_modules/playwright')); } catch { console.log('playwright not installed; skipping'); process.exit(0); }
 }
-const page = 'file://' + join(dirname(fileURLToPath(import.meta.url)), '..', 'dist', 'index.html');
+const page = 'file://' + join(dirname(fileURLToPath(import.meta.url)), '..', 'dist', 'index.html') + '?quick';
 const browser = await chromium.launch();
 const p = await (await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })).newPage();
 const errors = [];

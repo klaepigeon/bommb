@@ -300,10 +300,12 @@
     const g = this.game, pl = g.player, inc = this.incident;
     const jur = inc ? inc.jur : this.jurAt(pl.x, pl.y);
     const b = this.bounty[jur] || 0, fine = Math.max(25, Math.round(b));
-    if (pl.cash >= fine) return baseSurrender.call(this);
-    this.clearIncident(true);
-    this.bounty[jur] = 0;
-    pl.stats.arrests++;
-    J.book(jur, Math.min(7, 1 + Math.floor(b / 150)));
+    const book = () => { this.clearIncident(true); this.bounty[jur] = 0; pl.stats.arrests++; J.book(jur, Math.min(7, 1 + Math.floor(b / 150))); };
+    // serious bounties mean a cell, no fine to pay; small ones, your choice
+    if (b >= 150 || pl.cash < fine) return book();
+    g.ui.choice(`Arrested · ${R.fmtMoney(fine)} bounty`, [
+      { label: `Pay the fine (${R.fmtMoney(fine)})`, small: 'Walk out today', fn: () => baseSurrender.call(this) },
+      { label: 'Take the cell instead', small: 'Keep your money. Do the time, or break out', fn: book },
+    ]);
   };
 })();
