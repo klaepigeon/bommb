@@ -79,6 +79,7 @@
     R.fearQuest.init(this);
     R.campaign.init(this);
     R.vice.init(this);
+    R.gore.init(this);
     R.legends.init(this);
     R.poi.init(this);
     R.art.chunkCache.clear();
@@ -231,6 +232,7 @@
       R.vice.update(sdt);
       R.water.update(sdt);
       R.bodies.update(sdt);
+      R.gore.update(sdt);
       if (R.testRooms.active) R.testRooms.update(this, sdt);
       R.legends.update(sdt);
       R.goods.update(sdt);

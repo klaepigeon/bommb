@@ -93,6 +93,7 @@
     }
     game.fx.drawDecals(g);
     R.route.drawWorld(g, game, left, top, vw, vh);
+    R.gore.draw(g);
     R.poi.drawSigns(g, left, top, vw, vh, t);
     R.props.drawGround(g, (x, y) => x > left - 40 && x < left + vw + 40 && y > top - 40 && y < top + vh + 40);
     // entities
