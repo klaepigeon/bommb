@@ -104,7 +104,7 @@
     if (!pl.inCar && !pl.inside && !pl.deadHidden) ents.push(pl);
     ents.sort((a, b) => (a.kind === 'v' ? a.y - 4 : a.y) - (b.kind === 'v' ? b.y - 4 : b.y));
     // dead bodies first (they lie on the ground)
-    for (const e of ents) if (e.dead && e.kind === 'h' && !e.gibbed) A.drawPerson(g, e.x, e.y, e.dir, 0, e.look, { down: true });
+    for (const e of ents) if (e.dead && e.kind === 'h' && !e.gibbed) { if (e.hidden) R.bodies.drawHidden(g, e); else A.drawPerson(g, e.x, e.y, e.dir, 0, e.look, { down: true }); }
     for (const e of ents) if (e.dead && e.kind === 'a') A.drawAnimal(g, e);
     // focus ring
     const f = pl.focus;
@@ -232,6 +232,7 @@
     pl._pose = st.pose || (st.held ? 'k' : null);
     if (pl.sneak && !pl.inCar && !pl.held && !(swing >= 0)) { A.drawDisguise(g, pl, pl.disguise || 'box'); pl._pose = 'hidden'; return; }
     A.drawPerson(g, pl.x, pl.y, pl.dir, pl.walk, pl.look, st);
+    R.bodies.drawCarried(g, pl);
     R.ring.drawSwing(g, pl);
   };
 
