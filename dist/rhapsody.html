@@ -15958,6 +15958,61 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   };
 })();
 
+// ---- 14_dust.js
+// RHAPSODY — dust storms. Out in the Dustwater country a hot afternoon can turn brown in
+// ten minutes: the wind comes up, the sky goes the colour of a paper bag, and you can't
+// see the next telephone pole. Witnesses can't see much either. Good weather for a job.
+'use strict';
+(function () {
+  const TS = R.TILE;
+  const G = () => R.game;
+  const DU = (R.dust = { level: 0, storm: null });
+
+  DU.inDesert = function () { const g = G(), pl = g.player; return pl.x / TS / g.world.W > 0.6 && pl.y / TS / g.world.H > 0.6; };
+  DU.el = function () {
+    let el = document.getElementById('dustveil');
+    if (el) return el;
+    el = document.createElement('div'); el.id = 'dustveil';
+    const st = document.createElement('style');
+    st.textContent = '#dustveil{position:fixed;pointer-events:none;z-index:30;opacity:0;background:rgba(190,146,90,.55);overflow:hidden}#dustveil:after{content:"";position:absolute;inset:-50%;background:repeating-linear-gradient(4deg,rgba(255,236,196,0) 0 9px,rgba(255,236,196,.16) 9px 10px,rgba(120,84,40,0) 10px 23px,rgba(120,84,40,.14) 23px 24px);animation:dustblow .7s linear infinite}@keyframes dustblow{from{transform:translate(0,0)}to{transform:translate(160px,6px)}}';
+    document.head.appendChild(st);
+    document.body.appendChild(el);
+    return el;
+  };
+  DU.fit = function () { const v = document.querySelector('#view canvas') || document.querySelector('canvas'), el = this.el(); if (!v) return; const r = v.getBoundingClientRect(); Object.assign(el.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' }); };
+
+  DU.update = function (dt) {
+    const g = G(), w = g.env.weather, pl = g.player;
+    const desert = this.inDesert() && !pl.room;
+    // a storm blows in on hot, dry days in the desert
+    this.roll = (this.roll || 0) - dt * g.clock.rate;
+    if (this.roll <= 0) {
+      this.roll = 60; // once an in-game hour
+      if (!this.storm && desert && (w.kind === 'heat' || w.kind === 'clear') && w.dry > 0.5 && R.rng() < 0.08 && !(R.opening && R.opening.active)) {
+        this.storm = { left: (60 + R.rng() * 120) }; // in-game minutes
+        g.ui.toast('Weather: a dust storm is blowing in. Nobody will see a thing.', 'warn');
+      }
+    }
+    if (this.storm) { this.storm.left -= dt * g.clock.rate; if (this.storm.left <= 0) this.storm = null; }
+    const want = this.storm && desert ? 1 : 0;
+    this.level += (want - this.level) * Math.min(1, dt * 0.35);
+    if (this.level > 0.02) {
+      // it behaves like thick fog for everything that looks (witnesses, cops), and pushes hard
+      w.fog = Math.max(w.fog, this.level * 0.8);
+      w.wind.x = 1.8 * this.level + (1 - this.level) * w.wind.x;
+      const n = dt * 40 * this.level;
+      for (let k = 0; k < n; k++) {
+        const x = pl.x + (R.rng() - 0.6) * 320, y = pl.y + (R.rng() - 0.5) * 200;
+        g.fx.add({ x, y, vx: 140 + R.rng() * 80, vy: 10 + R.rng() * 16, life: 1, max: 1, c: R.rng() < 0.5 ? 'rgba(214,176,120,0.55)' : 'rgba(150,110,62,0.45)', s: R.rng() < 0.3 ? 2 : 1 });
+      }
+    }
+    const el = this.el();
+    if (this.level > 0.02) { if (!this.fitted) { this.fit(); this.fitted = true; window.addEventListener('resize', () => this.fit()); } el.style.opacity = (this.level * 0.85).toFixed(2); }
+    else if (el.style.opacity !== '0') el.style.opacity = '0';
+  };
+  DU.init = function () { this.storm = null; this.level = 0; if (document.getElementById('dustveil')) this.el().style.opacity = '0'; };
+})();
+
 // ---- 14_fashion.js
 // RHAPSODY — the full Seventies closet. Dozens more jackets, shirts, slacks and hats, a
 // wall of hair colours, and haircuts and whiskers the old painter never knew: pompadour,
@@ -16224,6 +16279,81 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     U.interiorOptions = function (b) { const o = io.call(this, b); HJ.barOpts(b, o); return o; };
     const cj = R.campaign.jobsHtml;
     R.campaign.jobsHtml = function () { return cj.call(this) + HJ.html(); };
+  };
+})();
+
+// ---- 14_honor.js
+// RHAPSODY — your name on the street. Two reputations pull against each other. Honor is
+// what the neighbourhood thinks of you: shopkeepers give you the regulars' price and a
+// witness who likes you might decide they didn't see anything. Infamy is what they're
+// afraid of: nobody haggles with you and some witnesses are too scared to talk, but the
+// police take your name personally and every bounty on you is steeper.
+'use strict';
+(function () {
+  const G = () => R.game;
+  const HN = (R.honor = {});
+  const SHOPS = new Set(['general', 'gunshop', 'tailor', 'barber', 'pawn', 'diner', 'pharmacy', 'liquor', 'butcher', 'bar', 'club', 'costume', 'garage', 'gas', 'hardware']);
+
+  HN.respected = function () { const r = G().player.rep; return r.honor >= 60 && r.infamy < 50; };
+  HN.feared = function () { return G().player.rep.infamy >= 60; };
+  HN.title = function () {
+    const r = G().player.rep;
+    if (this.respected()) return r.honor >= 85 ? 'A pillar of the community' : 'Respected';
+    if (this.feared()) return r.infamy >= 85 ? 'A name people whisper' : 'Feared';
+    if (r.honor >= 35) return 'Decent enough';
+    if (r.infamy >= 30) return 'Trouble';
+    return 'Nobody, yet';
+  };
+
+  HN.wrap = function () {
+    const g0 = G();
+    // shop prices
+    const PP = R.Player.prototype, pay = PP.pay;
+    PP.pay = function (n) {
+      const b = this.room && this.room.b;
+      if (b && SHOPS.has(b.type) && n > 4 && this === G().player) {
+        const k = HN.respected() ? 0.9 : HN.feared() ? 0.85 : 1;
+        if (k < 1) {
+          const m = Math.max(1, Math.round(n * k));
+          if ((this.discountToast || 0) < G().clock.real) { this.discountToast = G().clock.real + 30; G().ui.toast(HN.respected() ? 'The regulars\' price. They like you here.' : 'Nobody in here wants to argue about the price.', 'good'); }
+          return pay.call(this, m);
+        }
+      }
+      return pay.call(this, n);
+    };
+    // witnesses
+    const LP = R.Law.prototype, rep = LP.report, ab = LP.addBounty;
+    LP.report = function (crime, witness) {
+      const g = this.game, p = witness && witness.person;
+      if (p && !witness.cop && crime.type !== 'copMurder') {
+        if (HN.respected() && (p.opinion || 0) >= 0 && R.rng() < 0.35) { g.ui.toast('A witness saw it, and decided they didn\'t. People like you around here.', 'good'); return; }
+        if (HN.feared() && R.rng() < 0.3) { g.ui.toast('A witness saw it, and knows exactly who you are. They keep their mouth shut.', 'warn'); p.fear = Math.min(100, (p.fear || 0) + 15); return; }
+      }
+      return rep.call(this, crime, witness);
+    };
+    // the police take a feared name personally
+    LP.addBounty = function (crime) {
+      if (HN.feared() && crime.bounty > 0) { const b = crime.bounty; crime.bounty = Math.round(b * 1.25); const r = ab.call(this, crime); crime.bounty = b; return r; }
+      return ab.call(this, crime);
+    };
+    void g0;
+  };
+
+  HN.html = function () {
+    const r = G().player.rep;
+    const perks = [];
+    if (this.respected()) perks.push('Shops give you the regulars\' price (−10%)', 'Witnesses who like you sometimes look away');
+    if (this.feared()) perks.push('Nobody haggles with you (−15% in shops)', 'Some witnesses are too scared to talk', 'Bounties on you are 25% steeper');
+    if (!perks.length) perks.push(r.honor > r.infamy ? `Reach 60 honor for the regulars' price and friendlier witnesses` : `Reach 60 infamy and people start to fear you`);
+    return `<div class="sect">Your name on the street</div><p><b>${this.title()}</b> · honor ${Math.round(r.honor)} · infamy ${Math.round(r.infamy)}</p>${perks.map((p) => `<p><small>• ${p}</small></p>`).join('')}`;
+  };
+
+  HN.init = function () {
+    if (this.wrapped) return;
+    this.wrapped = true;
+    this.wrap();
+    const cj = R.campaign.jobsHtml;
+    R.campaign.jobsHtml = function () { return HN.html() + cj.call(this); };
   };
 })();
 
@@ -18817,6 +18947,8 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       sect('Story NPCs', Object.keys(R.stories ? R.stories.PEOPLE : {}).map((k) => btn('npc:' + k, R.stories.PEOPLE[k].name)).concat([btn('perks', 'All story perks')])),
       sect('Exploration', PL.map((p, i) => btn('lm:' + i, p.name.replace(/^The /, ''))).concat([btn('tins', 'Show tins on map'), btn('smash', 'Street furniture here')])),
       sect('Opening', [btn('opening', 'Replay the opening'), btn('rename', 'Change my name')]),
+      sect('Street business', [btn('loan', 'A debtor, a week late'), btn('fix', 'A fixed race'), btn('cops', '3 cops + captain here'), btn('ia', 'Internal Affairs sweep'), btn('rat', 'Someone flips'), btn('ratclue', 'Next rat clue'), btn('truck', 'Truck tip'), btn('shooters', 'Desert gunmen: all leads')]),
+      sect('Reputation & weather', [btn('respect', 'Respected (honor 80)'), btn('fear', 'Feared (infamy 80)'), btn('dust', 'Dust storm'), btn('dent', 'Beat up the nearest car')]),
     ].join('');
     body.insertAdjacentHTML('beforeend', html);
     const near = () => w.findNear(pl.x / TS, pl.y / TS, 2, 6, (x, y) => !w.solidPed(x, y) && !w.isWater(x, y)) || { x: pl.x / TS, y: pl.y / TS };
@@ -18830,6 +18962,18 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       const C = R.cases, MN = R.money, TF = R.turf, SK = R.profile, VD = R.vendetta;
       try {
         switch (k) {
+          case 'loan': { const p = person(); if (!p) break; const L = { pid: p.id, name: g.pop.name(p), principal: 250, vig: 25, day: g.pop.day - 8, due: g.pop.day - 1, late: 1, paid: 0, broke: 0, done: false, city: p.city }; R.shark.state().loans.push(L); if (p.actor && !p.actor.dead) g.actors.remove(p.actor); const s = near(); g.life.spawnPerson(p, s.x * TS + 8, s.y * TS + 8); ui.toast(`${L.name} owes you $275. Talk to them.`); break; }
+          case 'fix': R.shark.state().fixed++; ui.toast('Bet the long shot at any bar.'); break;
+          case 'cops': { const j = g.law.jurAt(pl.x, pl.y), r = R.payroll.jur(j); const cops = g.pop.people.filter((q) => q.alive && q.role === 'cop'); r.beats = cops.slice(0, 3).map((q) => q.id); r.captain = cops[3] ? cops[3].id : -99; r.capName = 'Captain ' + (cops[3] ? cops[3].last : 'Doyle'); R.payroll.state().due = g.pop.day + 7; ui.toast(`The ${g.law.jurName(j)} precinct is on your payroll.`); break; }
+          case 'ia': { const s = R.payroll.state(), j = Object.keys(s.jur).find((q) => s.jur[q].beats.length || s.jur[q].captain != null); if (!j) { ui.toast('Buy some cops first.'); break; } const r = s.jur[j], burned = r.captain != null ? r.captain : r.beats[0]; ui.closeSheet(); ui.story('INTERNAL AFFAIRS', 'IA swept the precinct. Everybody you paid there is suspended, and one of them would very much like a deal.'); if (burned >= 0) R.rat.pressure(burned, 8); r.beats = []; r.captain = null; s.sweeps++; break; }
+          case 'rat': { const p = R.shark.open()[0] ? g.pop.people[R.shark.open()[0].pid] : person(); if (!p) break; R.rat.pressure(p.id, 20, 'debtor'); R.rat.flip(p); const r = R.rat.state().cur; r.nextClue = g.pop.day; R.rat.clue(r); ui.toast(`${r.name} is talking to the FBI. Check the Heat tab.`); break; }
+          case 'ratclue': { const r = R.rat.active(); if (r) R.rat.clue(r); else ui.toast('No rat right now.'); break; }
+          case 'truck': R.hijack.state().tip = null; R.hijack.tip(null); break;
+          case 'shooters': { const s = R.desert.state(); if (!s.shooters) { const pool = g.pop.people.filter((q) => q.alive && !q.fem && q.age > 22 && q.age < 50 && q.role !== 'cop' && !q.isDon && !q.faction); s.shooters = [pool[1].id, pool[5].id]; } for (const p of R.desert.men()) { const L = R.desert.lead(p); L.name = L.where = true; } ui.toast('Both names and where they work. Check the Jobs tab.'); break; }
+          case 'respect': pl.rep.honor = 80; pl.rep.infamy = Math.min(pl.rep.infamy, 30); break;
+          case 'fear': pl.rep.infamy = 80; break;
+          case 'dust': R.dust.storm = { left: 90 }; ui.toast(R.dust.inDesert() ? 'Dust storm.' : 'Dust storm (it only shows out in the Dustwater desert).'); break;
+          case 'dent': { const v = g.traffic.nearestCar(pl.x, pl.y, 200); if (v) { v.hp = v.maxHp * 0.2; for (let i = 0; i < 5; i++) R.cars.dent(v, v.x + (Math.random() - 0.5) * 40, v.y + (Math.random() - 0.5) * 16, 90); } break; }
           case 'guns': for (const id in D.weapons) if (!D.weapons[id].thrown && !D.weapons[id].ring) pl.giveWeapon(id); Object.assign(pl.inv.ammo, { pistol: 300, shells: 100, smg: 400, rifle: 100, bolts: 40, molotov: 10, dynamite: 10 }); ui.toast('Every weapon on the coast.'); break;
           case 'sil': pl.inv.silenced = {}; for (const id in D.weapons) if (D.weapons[id].sil) pl.inv.silenced[id] = 1; ui.toast('Silencers on everything that takes one.'); break;
           case 'masks': pl.inv.masks = {}; for (const m in R.night.MASKS) pl.inv.masks[m] = 1; pl.inv.tools.mask = 1; ui.toast('All masks. Buy/wear at a costume shop, or MASK to toggle.'); break;
@@ -21462,7 +21606,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     R.money.init(this);
     R.turf.init(this);
     R.vendetta.init(this);
-    R.shark.init(this); R.payroll.init(this); R.rat.init(this); R.hijack.init(this); R.desert.init(this); R.cars.init(this);
+    R.shark.init(this); R.payroll.init(this); R.rat.init(this); R.hijack.init(this); R.desert.init(this); R.cars.init(this); R.honor.init(this); R.dust.init(this);
     R.butcher.init(this);
     R.arms.init(this);
     R.profile.init(this);
@@ -21629,6 +21773,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       R.vendetta.update(sdt);
       R.hijack.update(sdt);
       R.desert.update(sdt);
+      R.dust.update(sdt);
       R.profile.update(sdt);
       R.carry.update(sdt);
       R.night.update(sdt);

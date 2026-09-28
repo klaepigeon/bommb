@@ -21,6 +21,8 @@
       sect('Story NPCs', Object.keys(R.stories ? R.stories.PEOPLE : {}).map((k) => btn('npc:' + k, R.stories.PEOPLE[k].name)).concat([btn('perks', 'All story perks')])),
       sect('Exploration', PL.map((p, i) => btn('lm:' + i, p.name.replace(/^The /, ''))).concat([btn('tins', 'Show tins on map'), btn('smash', 'Street furniture here')])),
       sect('Opening', [btn('opening', 'Replay the opening'), btn('rename', 'Change my name')]),
+      sect('Street business', [btn('loan', 'A debtor, a week late'), btn('fix', 'A fixed race'), btn('cops', '3 cops + captain here'), btn('ia', 'Internal Affairs sweep'), btn('rat', 'Someone flips'), btn('ratclue', 'Next rat clue'), btn('truck', 'Truck tip'), btn('shooters', 'Desert gunmen: all leads')]),
+      sect('Reputation & weather', [btn('respect', 'Respected (honor 80)'), btn('fear', 'Feared (infamy 80)'), btn('dust', 'Dust storm'), btn('dent', 'Beat up the nearest car')]),
     ].join('');
     body.insertAdjacentHTML('beforeend', html);
     const near = () => w.findNear(pl.x / TS, pl.y / TS, 2, 6, (x, y) => !w.solidPed(x, y) && !w.isWater(x, y)) || { x: pl.x / TS, y: pl.y / TS };
@@ -34,6 +36,18 @@
       const C = R.cases, MN = R.money, TF = R.turf, SK = R.profile, VD = R.vendetta;
       try {
         switch (k) {
+          case 'loan': { const p = person(); if (!p) break; const L = { pid: p.id, name: g.pop.name(p), principal: 250, vig: 25, day: g.pop.day - 8, due: g.pop.day - 1, late: 1, paid: 0, broke: 0, done: false, city: p.city }; R.shark.state().loans.push(L); if (p.actor && !p.actor.dead) g.actors.remove(p.actor); const s = near(); g.life.spawnPerson(p, s.x * TS + 8, s.y * TS + 8); ui.toast(`${L.name} owes you $275. Talk to them.`); break; }
+          case 'fix': R.shark.state().fixed++; ui.toast('Bet the long shot at any bar.'); break;
+          case 'cops': { const j = g.law.jurAt(pl.x, pl.y), r = R.payroll.jur(j); const cops = g.pop.people.filter((q) => q.alive && q.role === 'cop'); r.beats = cops.slice(0, 3).map((q) => q.id); r.captain = cops[3] ? cops[3].id : -99; r.capName = 'Captain ' + (cops[3] ? cops[3].last : 'Doyle'); R.payroll.state().due = g.pop.day + 7; ui.toast(`The ${g.law.jurName(j)} precinct is on your payroll.`); break; }
+          case 'ia': { const s = R.payroll.state(), j = Object.keys(s.jur).find((q) => s.jur[q].beats.length || s.jur[q].captain != null); if (!j) { ui.toast('Buy some cops first.'); break; } const r = s.jur[j], burned = r.captain != null ? r.captain : r.beats[0]; ui.closeSheet(); ui.story('INTERNAL AFFAIRS', 'IA swept the precinct. Everybody you paid there is suspended, and one of them would very much like a deal.'); if (burned >= 0) R.rat.pressure(burned, 8); r.beats = []; r.captain = null; s.sweeps++; break; }
+          case 'rat': { const p = R.shark.open()[0] ? g.pop.people[R.shark.open()[0].pid] : person(); if (!p) break; R.rat.pressure(p.id, 20, 'debtor'); R.rat.flip(p); const r = R.rat.state().cur; r.nextClue = g.pop.day; R.rat.clue(r); ui.toast(`${r.name} is talking to the FBI. Check the Heat tab.`); break; }
+          case 'ratclue': { const r = R.rat.active(); if (r) R.rat.clue(r); else ui.toast('No rat right now.'); break; }
+          case 'truck': R.hijack.state().tip = null; R.hijack.tip(null); break;
+          case 'shooters': { const s = R.desert.state(); if (!s.shooters) { const pool = g.pop.people.filter((q) => q.alive && !q.fem && q.age > 22 && q.age < 50 && q.role !== 'cop' && !q.isDon && !q.faction); s.shooters = [pool[1].id, pool[5].id]; } for (const p of R.desert.men()) { const L = R.desert.lead(p); L.name = L.where = true; } ui.toast('Both names and where they work. Check the Jobs tab.'); break; }
+          case 'respect': pl.rep.honor = 80; pl.rep.infamy = Math.min(pl.rep.infamy, 30); break;
+          case 'fear': pl.rep.infamy = 80; break;
+          case 'dust': R.dust.storm = { left: 90 }; ui.toast(R.dust.inDesert() ? 'Dust storm.' : 'Dust storm (it only shows out in the Dustwater desert).'); break;
+          case 'dent': { const v = g.traffic.nearestCar(pl.x, pl.y, 200); if (v) { v.hp = v.maxHp * 0.2; for (let i = 0; i < 5; i++) R.cars.dent(v, v.x + (Math.random() - 0.5) * 40, v.y + (Math.random() - 0.5) * 16, 90); } break; }
           case 'guns': for (const id in D.weapons) if (!D.weapons[id].thrown && !D.weapons[id].ring) pl.giveWeapon(id); Object.assign(pl.inv.ammo, { pistol: 300, shells: 100, smg: 400, rifle: 100, bolts: 40, molotov: 10, dynamite: 10 }); ui.toast('Every weapon on the coast.'); break;
           case 'sil': pl.inv.silenced = {}; for (const id in D.weapons) if (D.weapons[id].sil) pl.inv.silenced[id] = 1; ui.toast('Silencers on everything that takes one.'); break;
           case 'masks': pl.inv.masks = {}; for (const m in R.night.MASKS) pl.inv.masks[m] = 1; pl.inv.tools.mask = 1; ui.toast('All masks. Buy/wear at a costume shop, or MASK to toggle.'); break;

@@ -1,6 +1,6 @@
 # Rhapsody: The Brass Coast
 
-A mobile-first, top-down crime sandbox. It's 2026 on the Brass Coast, but the seventies never ended. You're Nicky "The Mook" Marchetti: fedora, pinstripe suit, shades, gold chain. You work your way up the Vane family in a region of five cities and about a thousand named people who live their own lives.
+A mobile-first, top-down crime sandbox. The year is XX7X on the Brass Coast, and the seventies never ended. You choose your first name, last name and the name the street calls you. Two men walk you into the Dustwater desert and shoot you, and you crawl back to the highway, where one of five dons decides you're worth saving. From his back room you work your way up (or through) the families, in a region of five cities and about a thousand named people who live their own lives.
 
 This is a ground-up rebuild of the original single-file *Rhapsody* (Port Hollow) artifact.
 
@@ -71,6 +71,22 @@ This is a ground-up rebuild of the original single-file *Rhapsody* (Port Hollow)
 | Clothes, hats, hair, facial hair | Tailor (12 jackets, 10 shirts, 8 trousers, 4 collars, 7 hats in 7 colours, shades) and barber (8 cuts, 6 colours, moustache or beard) |
 | Playtest 100 days with notes | See [docs/PLAYTEST.md](docs/PLAYTEST.md). `tools/playtest.mjs` plays N in-game days through the real controls and writes a report |
 
+## Later rounds
+
+| Area | What's in the game |
+|---|---|
+| The opening | Entirely in-engine and letterboxed: the gunmen's car on the desert highway (they ask your name), the walk into the sand, a last-words choice, two shots, the crawl back with a gut wound (its own prone sprite sheet, built from your colours), the don's car, and a back-room conversation that sets your standing. `?quick` in the URL skips it |
+| Unfinished business | The two gunmen are real people. Leads arrive over the first weeks, they know you on sight (flee or draw), and one of them can be made to name the family that paid |
+| Law & heat | Detectives build cases from witnesses, your face, clothes, the body, the weapon and the car (Heat tab, with police sketches). Unsolved killings in a similar style get linked to a serial-killer profile with task forces, curfews, decoys, frisks and stakeouts. Serious bounties mean jail (and jailbreaks) |
+| Street business | Loan sharking with weekly juice, deadbeats, collateral and favours. The bookie in every bar (and fixed races). Cops and captains on a weekly envelope, with Internal Affairs sweeps. Rats who flip to the FBI, found through clues and dealt with three ways. Truck hijacking and fences |
+| Money & families | Dirty cash, suspicion and Treasury audits, laundering through businesses you own or casino chips. Living rival families with wars, rackets, hit squads and city loyalty. Vendettas: the kin of the people you kill find out and come for you, hire guns, blackmail you or go to the police |
+| Reputation | Honor and infamy shape what you say (you cuss when you're a thug), how people react, who's attracted to you (flirt and seduce) and, at the top end, prices and whether witnesses talk. Feared names get steeper bounties |
+| Bodies & gore | Wounds show where they landed (and only on the side you can see), close when healed, and bruises age. Knife work: heads, limbs, skinning, bagging remains. Shotgun headshots. Carrying bodies, unconscious people and game (the red wagon), rope and tape, trunks, cinder-block shoes |
+| Weapons | Derringer to tommy gun, a crossbow, blades, a sap for knockouts, silencers, and the original's 32 improvised props |
+| Cars | Car-length following distance, lanes held without weaving, intersections kept clear, box collisions, and GTA-style durability (dents where hit, cracked glass, smoking engine, then fire, then the bang). Tyre marks and dust plumes |
+| Night & style | Strip clubs, costume shops and masks, street workers, busier bars, lit windows and colour neon at night. Dozens of jackets, shirts, trousers, hats, haircuts and facial hair |
+| Places & people | Five story characters with chaptered quests, landmarks and hidden tins, destructible street furniture, dust storms in the desert |
+
 ## Architecture
 
 Plain ES2020, no dependencies and no bundler. Every module hangs off a global `R` namespace, and `tools/build.mjs` concatenates the modules in filename order into one HTML file.
@@ -107,6 +123,16 @@ Plain ES2020, no dependencies and no bundler. Every module hangs off a global `R
 | `16_ui.js` | HUD, context chips, sheets, interiors, shops, phone, fishing, burglary, heist, menu, map |
 | `17_render.js` | Rendering, lighting, weather, speech bubbles |
 | `19_interiors.js` | Walk-in rooms: layouts per building type, occupants, furniture actions, searching, register robberies |
+| `12_campaign.js`, `12_stories.js` | Family campaigns and endgame routes; the five story characters |
+| `13_*` (salvage, vice, relics, remains, water, route…) | Destructible furniture and exploration, relationships and affairs, supernatural rewards, bodies, swimming and sinking, waypoints |
+| `14_opening.js`, `14_desert.js` | The in-engine opening and crawl sprite; hunting the men who shot you |
+| `14_case.js`, `14_profile.js`, `14_vendetta.js` | Detective cases, the serial-killer task force, vendettas |
+| `14_money.js`, `14_turf.js` | Dirty money and laundering; living rival families |
+| `14_shark.js`, `14_payroll.js`, `14_rat.js`, `14_hijack.js` | Loan sharking and the ponies, cops on the payroll, rats, hijacking |
+| `14_butcher.js`, `14_carry.js`, `14_arms.js` | Wounds and knife work, carrying and the red wagon, new weapons |
+| `14_charm.js`, `14_honor.js`, `14_night.js`, `14_fashion.js` | Reputation-driven dialogue and attraction, reputation perks, nightlife and masks, clothes and hair |
+| `14_cars.js`, `14_dust.js` | Car damage, tyre marks and dust; dust storms |
+| `16_debugx.js`, `19_slammer.js`, `19_realty.js`, `19_vault.js` | Debug shortcuts for every system; jail; property; bank vaults |
 | `18_main.js` | Game object, loop, daily tick, save/load (seed + world-mutation log + population snapshot) |
 
 Saves go to `localStorage`. The world regenerates from its seed, and construction or destruction events are replayed on top of it.

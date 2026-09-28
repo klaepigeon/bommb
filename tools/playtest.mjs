@@ -13,6 +13,8 @@ let chromium;
 try { ({ chromium } = require('playwright')); } catch { ({ chromium } = require('/opt/node22/lib/node_modules/playwright')); }
 const DAYS = +(process.argv[2] || 100);
 const OUT = process.argv[3] || join(dirname(fileURLToPath(import.meta.url)), '..', 'playtest-out');
+// playstyle: shark (loans and the ponies), fixer (cops, captains, rats), hijacker (trucks), all, or none
+const STYLE = process.argv[4] || 'all';
 mkdirSync(OUT, { recursive: true });
 const page = 'file://' + join(dirname(fileURLToPath(import.meta.url)), '..', 'dist', 'index.html') + '?quick';
 const browser = await chromium.launch();
@@ -109,7 +111,7 @@ await p.evaluate(() => {
 });
 
 // ---------------------------------------------------------------- daily routine
-const routine = async (day) => p.evaluate((day) => {
+const routine = async (day) => p.evaluate(({ day, style }) => {
   const g = R.game, pl = g.player, B = window.BOT, TS = R.TILE, D = R.data, w = g.world;
   const r = Math.random;
   const pick = (a) => a[Math.floor(r() * a.length)];
@@ -283,6 +285,57 @@ const routine = async (day) => p.evaluate((day) => {
     // back to a city
     B.taxiTo(pick(w.cities));
   }
+  // ---- playstyles: work a trade every day through its real menus
+  const want = (s) => style === 'all' || style === s;
+  const autopick = (re) => { const ch = g.ui.choice; g.ui.choice = function (t, o) { g.ui.choice = ch; const x = o.find((q) => re.test(q.label)); if (x) { if (x.fn) x.fn(); return; } return ch.call(this, t, o); }; };
+  const optOf = (h, re) => { const t = R.dialog.tree(h); return t && t.options ? t.options.find((o) => re.test(o.label)) : null; };
+  if (want('shark') && R.shark) {
+    setTime(14);
+    // collect from anyone late: go to their door
+    for (const l of R.shark.open().filter((q) => q.late > 0).slice(0, 2)) {
+      const p = g.pop.people[l.pid], b = p && w.buildings[p.home];
+      if (!b) continue;
+      B.goto(b.out.x, b.out.y + 1, 1500);
+      const h = p.actor && !p.actor.dead ? p.actor : g.life.spawnPerson(p, pl.x + 12, pl.y);
+      const o = h && optOf(h, /money you owe/);
+      if (o) { const c0 = pl.cash; autopick(r() < 0.25 ? /favour|Take something|Break a finger|All of it|Just the juice/ : /All of it|Just the juice|Break a finger/); o.fn(); B.act('shark:collect'); note(`shark: ${l.name} +$${pl.cash - c0}`); }
+    }
+    // lend to the broke on this block
+    for (const h of g.actors.near(pl.x, pl.y, TS * 14).filter((a) => a.kind === 'h' && !a.dead && a.person && !a.inCar).slice(0, 5)) {
+      const o = optOf(h, /Short on cash/);
+      if (o && R.shark.open().length < 6 && pl.cash > 400) { autopick(r() < 0.5 ? /Lend \$250/ : /Lend \$100/); o.fn(); B.act('shark:lend'); }
+    }
+    if (R.shark.state().fixed) { const bar = B.city().buildings.find((b) => b && b.type === 'bar'); const o = bar && g.ui.interiorOptions(bar).find((x) => /bookie/.test(x.label)); if (o) { autopick(/12–1/); o.fn(); B.act('ponies:fixed'); } }
+  }
+  if (want('fixer') && R.payroll) {
+    setTime(15);
+    const cop = g.actors.near(pl.x, pl.y, TS * 20).find((a) => a.cop && !a.hostile && !a.detectiveFor && !a.onPayroll);
+    if (cop && !g.law.incident) { B.approach(cop); const o = optOf(cop, /coffee/); if (o) { o.fn(); B.act(cop.onPayroll ? 'fixer:beat' : 'fixer:refused'); } }
+    const j = g.law.jurAt(pl.x, pl.y), r0 = R.payroll.jur(j);
+    if (r0.beats.length >= 2 && r0.captain == null && pl.cash > 400) { const ps = w.buildings.find((b) => b && b.type === 'police' && b.cityId === j); const o = ps && g.ui.interiorOptions(ps).find((x) => /captain/.test(x.label)); if (o) { autopick(/envelope/); o.fn(); B.act(r0.captain != null ? 'fixer:captain' : 'fixer:captainFailed'); } }
+    if (R.rat && R.rat.active() && r0.captain != null) { const ps = w.buildings.find((b) => b && b.type === 'police' && b.cityId === j); const o = ps && g.ui.interiorOptions(ps).find((x) => /word with/.test(x.label)); if (o) { autopick(/feds/); o.fn(); B.act('fixer:ratTip'); } }
+    // deal with a named rat
+    const rat = R.rat && R.rat.active();
+    if (rat && rat.named) { const p = g.pop.people[rat.pid], b = p && w.buildings[p.home]; if (b) { B.goto(b.out.x, b.out.y + 1, 1500); const h = p.actor && !p.actor.dead ? p.actor : g.life.spawnPerson(p, pl.x + 12, pl.y); const o = h && optOf(h, /take a ride/); if (o) { pl.weaponOut = true; autopick(r() < 0.5 ? /Keep talking/ : /Get out of town/); o.fn(); pl.weaponOut = false; B.act('rat:' + rat.status); } } }
+  }
+  if (want('hijacker') && R.hijack) {
+    setTime(20);
+    const bar = B.city().buildings.find((b) => b && (b.type === 'bar' || b.type === 'diner'));
+    const s = R.hijack.state();
+    if (bar && !(s.tip && g.pop.day <= s.tip.until)) { const o = g.ui.interiorOptions(bar).find((x) => /trucks/.test(x.label)); if (o) { o.fn(); B.act('hijack:tip'); } }
+    const tb = s.tip && w.buildings[s.tip.bid];
+    if (tb && g.pop.day <= s.tip.until) {
+      B.teleport(tb.out.x, tb.out.y + 3); B.tick(20);
+      const truck = g.traffic.list.find((v2) => v2.tipped && !v2.removed && v2.cargo);
+      if (truck) {
+        truck.hotwired = true; pl.place(truck.x + 20, truck.y); pl.enterCar(truck, true); B.tick(30);
+        const pawn = w.buildings.filter((b) => b && b.type === 'pawn').sort((a, b2) => Math.hypot(a.out.x - tb.out.x, a.out.y - tb.out.y) - Math.hypot(b2.out.x - tb.out.x, b2.out.y - tb.out.y))[0];
+        if (pl.inCar === truck && pawn) { truck.x = pawn.out.x * TS + 8; truck.y = pawn.out.y * TS + 30; autopick(/Sell/); const c0 = pl.cash; pl.exitCar(); B.tick(20); B.act(pl.cash > c0 ? 'hijack:fenced' : 'hijack:unsold'); note(`hijack: +$${pl.cash - c0}`); }
+        if (g.law.incident) { B.act('hijack:heat'); }
+      }
+    }
+  }
+
   // ring practice
   if (pl.inv.tools.ring) { for (const k of ['anvil', 'cage', 'rocket', 'fish']) { R.ring.selected = k; pl.will = 100; R.ring.conjure(); B.tick(30); } B.act('ring:use'); }
 
@@ -293,7 +346,7 @@ const routine = async (day) => p.evaluate((day) => {
   if (g.law.active() && r() < 0.5) { const jur = g.law.jurAt(pl.x, pl.y); g.law.payBounty(jur); B.act('bounty:paid'); }
   B.tick(30);
   return out;
-}, day);
+}, { day, style: STYLE });
 
 const report = { days: [], notes: {}, errors };
 const t0 = Date.now();
@@ -315,6 +368,12 @@ for (let d = 1; ; d++) {
       avengers: v.filter((x) => x.knows && !x.done).map((x) => x.mode).join(','), suspecting: v.filter((x) => !x.knows && !x.done).length,
       killer: k.profile ? `${k.profile.name}:${k.profile.phase}:${Math.round(k.profile.heat)}` : '', unsolved: (k.unsolved || []).length, poi: Math.round(k.poi || 0),
       family: pl.family, honor: Math.round(pl.rep.honor), infamy: Math.round(pl.rep.infamy),
+      name: R.honor ? R.honor.title() : '',
+      loans: R.shark ? R.shark.open().length : 0, juice: R.shark ? Math.round(R.shark.state().juice) : 0,
+      payroll: R.payroll ? `${R.payroll.weekly()}/wk looked:${R.payroll.state().looked} ia:${R.payroll.state().sweeps}` : '',
+      rat: R.rat && R.rat.state().cur ? `${R.rat.state().cur.status}:${Math.round(R.rat.state().cur.progress)}` : '',
+      swag: R.hijack ? `${R.hijack.state().trucks}/$${R.hijack.state().earned}` : '',
+      desert: R.desert && R.desert.state().shooters ? `${(R.desert.state().done || []).length}/2${R.desert.state().knowsWho ? ' who' : ''}` : '',
     };
   });
   report.days.push(snap);
