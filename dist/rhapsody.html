@@ -15124,7 +15124,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       // one button, several things you can do with someone who's down: like a hold-prompt wheel
       if (this.carrying || this.inCar || this.room) return base;
       const g = G(), pl = this;
-      const h = g.actors.near(pl.x, pl.y, TS * 1.3, (q) => q.kind === 'h' && !q.carried && !q.sunk && !q.hidden && !q.gibbed && (q.dead || q.down > 0 || q.tied))[0];
+      const h = g.actors.near(pl.x, pl.y, TS * 1.3, (q) => q.kind === 'h' && !q.carried && !q.sunk && !q.hidden && !q.gibbed && !q.tied && (q.dead || q.down > 0))[0];
       if (!h) return base;
       const opts = [];
       if (base && /pocket|Search|Pick|Tie|Tape|Throw|Carry|Cut/i.test(base.label)) opts.push({ label: base.label, fn: base.fn });
