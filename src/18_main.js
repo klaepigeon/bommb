@@ -234,6 +234,7 @@
       R.bodies.update(sdt);
       R.gore.update(sdt);
       R.slammer.update(sdt);
+      R.heist.update(sdt);
       if (R.testRooms.active) R.testRooms.update(this, sdt);
       R.legends.update(sdt);
       R.goods.update(sdt);
