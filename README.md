@@ -86,8 +86,21 @@ This is a ground-up rebuild of the original single-file *Rhapsody* (Port Hollow)
 | Cars | Car-length following distance, lanes held without weaving, intersections kept clear, box collisions, and GTA-style durability (dents where hit, cracked glass, smoking engine, then fire, then the bang). Tyre marks and dust plumes |
 | Night & style | Strip clubs, costume shops and masks, street workers, busier bars, lit windows and colour neon at night. Dozens of jackets, shirts, trousers, hats, haircuts and facial hair |
 | The emotional spectrum | Nine rings, each leading to the next. The Fear Man's five lessons (the midpoint is killing Hal Jordan; the finale gives the Sinestro Corps uniform and sets up a space sequel). Or side with Hal: find his wife Carol (his battery, and the violet path), take a spare ring to Guy Gardner, then fight the Fear Man for the green ring and uniform. Red comes from rage, orange from killing Larfleeze and searching his hoard, black from a churchyard at midnight, white from the dead tree at dawn, violet from being loved, indigo and blue from the people the crystal shows you. Each has its own bolt, RING power and way of refilling Will (orange keeps ghosts of the people it kills and fills on crimes that pay). Swap rings and uniforms at any wardrobe |
+| World memory | One event log of what you did, where, whether you were seen and what you wore. It feeds the morning Herald (newsboys shout the headline; a copy waits when you sleep), street gossip (with a double take if you walk past in the described shirt) and a detective's brown sedan outside your place once a case warms up |
+| The crew | Everyone who rides with you joins a roster that hangs out in your club's back room. Loyalty, mood, needs, weekly wages, personal troubles to help with, and morale that changes how they fight (and whether they walk, or talk) |
+| Plan board | In the back room: pick a bank or casino, case it for the 2 to 4 AM shift change, choose quiet, loud or an inside man, pick the vault tool, and put the crew on wireman, lookout, muscle and driver. The take is split |
+| Gunfights | Take cover by standing still armed beside anything solid (walls, trees, furniture, cars); shots from that side mostly hit the cover. Near misses suppress: pinned gunmen crouch, hold and fire slower |
+| Light & seasons | Rim light: people catch the colour of the nearest lamp, sign, headlight, fire or muzzle flash on the side facing it. The calendar turns: winter snow comes south, autumn leaves, holidays (fireworks, jack-o'-lanterns, Christmas lights). Footprints in snow, sand and mud; idle people smoke and fidget; conversations push the camera in |
+| Your legend | A running epilogue written from your honor, infamy, kills, crew, rings, heists and endings, in the Stats tab and after each road to the top |
 | Tracking | TRACK beside the minimap (T on a keyboard) cycles your waypoint through the current job, quest errands, leads and map tips, following moving targets. The Jobs tab lists them with a Track button each |
 | Places & people | Five story characters with chaptered quests, landmarks and hidden tins, destructible street furniture, dust storms in the desert |
+
+## Tools
+
+- `node tools/smoke.mjs`: boot and tick check.
+- `node tools/scenarios.mjs`: real-input scenario suite.
+- `node tools/playtest.mjs DAYS OUT STYLE`: the long-haul bot (styles: all, shark, fixer, hijacker).
+- `node tools/nightly.mjs [days] [--update-baseline]`: runs the bot per style and flags any metric that drifted more than 40% from `tools/baseline.json` (writes `nightly-out/summary.md`).
 
 ## Architecture
 
