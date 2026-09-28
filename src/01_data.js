@@ -226,7 +226,7 @@
   };
   D.tools = {
     lockpick: { name: 'Lockpick', price: 15 }, gascan: { name: 'Gas Can', price: 20 }, rod: { name: 'Fishing Rod', price: 30 },
-    mask: { name: 'Ski Mask', price: 10 }, bait: { name: 'Bait', price: 2 }, rope: { name: 'Lasso Rope', price: 12 },
+    mask: { name: 'Ski Mask', price: 10 }, bait: { name: 'Bait', price: 2 }, rope: { name: 'Rope', price: 6 }, tape: { name: 'Duct Tape', price: 3 },
   };
 
   // Outfits change your silhouette (and reset recognition)

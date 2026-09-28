@@ -61,19 +61,29 @@
     // take one back out of a trunk
     const v = g.traffic.list.find((c) => !c.removed && c.trunk && c.trunk.length && R.dist(c.x - Math.cos(c.angle) * c.model.w * 0.5, c.y - Math.sin(c.angle) * c.model.w * 0.5, pl.x, pl.y) < 16);
     if (v) return { label: 'Open the trunk', fn: () => { const a = v.trunk.pop(); a.hidden = false; a.x = pl.x; a.y = pl.y; this.pickUp(a); } };
-    // pick up the searched dead, or anyone out cold
-    const a = g.actors.near(pl.x, pl.y, TS * 1.2, (q) => q.kind === 'h' && !q.carried && !q.sunk && ((q.dead && q.looted && !q.gibbed) || (!q.dead && q.down > 0)))[0];
-    if (a) return { label: a.dead ? 'Pick up the body' : 'Carry them', fn: () => this.pickUp(a) };
+    // pick up the searched dead, anyone out cold, or anyone tied up
+    const a = g.actors.near(pl.x, pl.y, TS * 1.2, (q) => q.kind === 'h' && !q.carried && !q.sunk && ((q.dead && q.looted && !q.gibbed) || (!q.dead && (q.down > 0 || q.tied))))[0];
+    if (a) return { label: a.dead ? 'Pick up the body' : a.tied ? 'Throw them over your shoulder' : 'Carry them', fn: () => this.pickUp(a) };
     return null;
   };
   const PP = R.Player.prototype, baseCtx = PP.contextAction;
+  // tie up the surrendered, the cowering or the knocked out; gag the tied
+  B.captiveCtx = function (pl) {
+    const g = G();
+    if (pl.carrying || pl.inCar || pl.room && pl.room.b.type === 'jail') return null;
+    const cap = g.actors.near(pl.x, pl.y, TS * 1.3, (q) => q.kind === 'h' && !q.dead && !q.carried && !q.cop && !q.crew && (q.tied || q.down > 0 || q.state === 'surrender' || q.state === 'cower'))[0];
+    if (cap && !cap.tied && pl.inv.tools.rope) return { label: 'Tie them up', fn: () => this.tie(cap) };
+    if (cap && cap.tied && !cap.gagged && pl.inv.tools.tape) return { label: 'Tape their mouth shut', fn: () => { pl.inv.tools.tape--; cap.gagged = true; g.actors.say(cap, 'Mmmph!'); if (cap.witness) cap.witness.silenced = true; } };
+    if (cap && cap.tied) return { label: 'Throw them over your shoulder', fn: () => this.pickUp(cap) };
+    return null;
+  };
   B.trunkCtx = function (pl) {
     const g = G();
     if (pl.carrying || pl.inCar || pl.room) return null;
     const v = g.traffic.list.find((c) => !c.removed && c.trunk && c.trunk.length && R.dist(c.x - Math.cos(c.angle) * c.model.w * 0.5, c.y - Math.sin(c.angle) * c.model.w * 0.5, pl.x, pl.y) < 16);
     return v ? { label: 'Open the trunk', fn: () => { const a = v.trunk.pop(); a.hidden = false; a.x = pl.x; a.y = pl.y; this.pickUp(a); } } : null;
   };
-  PP.contextAction = function () { return (this.carrying && B.context(this)) || B.trunkCtx(this) || baseCtx.call(this) || B.context(this); };
+  PP.contextAction = function () { return (this.carrying && B.context(this)) || B.captiveCtx(this) || B.trunkCtx(this) || baseCtx.call(this) || B.context(this); };
   // slow, no running, no shooting while you carry
   const AP = R.Actors.prototype, baseMove = AP.moveActor;
   AP.moveActor = function (a, vx, vy, dt) {
@@ -85,13 +95,75 @@
   const baseEnter = PP.enterCar;
   PP.enterCar = function (v, wired) { if (this.carrying) { const a = this.carrying; this.carrying = null; a.carried = false; a.hidden = true; (v.trunk = v.trunk || []).push(a); this.game.ui.toast('You toss them in the trunk first.'); } return baseEnter.call(this, v, wired); };
 
+  // ---------------------------------------------------------------- captives
+  B.tie = function (h) {
+    const g = G(), pl = g.player;
+    pl.inv.tools.rope--;
+    h.tied = true; h.tiedAt = g.clock.real; h.down = 0; h.stay = true; h.state = 'tied'; h.timer = 1e9; h.hostile = false;
+    if (h.witness) h.witness.silenced = true;
+    g.actors.say(h, R.rng.pick(['Please! Don\'t hurt me!', 'What are you gonna do with me?!', 'You won\'t get away with this!']));
+    g.audio.sfx('swing', h.x, h.y);
+    // tying someone up in front of people is a crime
+    for (const a of g.actors.near(h.x, h.y, TS * 7)) if (a !== h && a.kind === 'h' && !a.dead && (a.cop || R.rng() < 0.5) && g.world.los(a.x, a.y - 8, h.x, h.y - 8)) { g.law.crime('kidnap', h.x, h.y, { victim: h }); break; }
+  };
+  B.updateCaptives = function (dt) {
+    const g = G(), pl = g.player;
+    for (const a of g.actors.list) {
+      if (!a.tied || a.dead) continue;
+      a.state = 'tied'; a.timer = 1e9; a.vx = a.vy = 0; a.stay = true;
+      if (!a.gagged && R.rng() < dt * 0.15) { g.actors.say(a, R.rng.pick(['HELP! Somebody help me!', 'I\'m tied up over here!', 'Police! POLICE!'])); g.actors.noise(a.x, a.y, TS * 9, 'scream', pl); const cop = g.actors.near(a.x, a.y, TS * 9, (q) => q.cop && !q.dead)[0]; if (cop) g.law.crime('kidnap', a.x, a.y, { victim: a, witness: cop }); }
+      // left alone long enough, anyone can work the knots loose
+      if (g.clock.real - (a.tiedAt || 0) > (a.gagged ? 300 : 150) && R.rng() < dt * 0.05 && Math.hypot(a.x - pl.x, a.y - pl.y) > TS * 4) {
+        a.tied = false; a.gagged = false; a.stay = false; a.state = 'idle';
+        g.actors.say(a, 'I\'m free!'); g.actors.setFlee(a, pl, 12);
+        if (g.actors.startReport) g.actors.startReport(a);
+      }
+    }
+  };
+  // ransom: call the family of someone you're holding
+  B.captives = function () {
+    const g = G(), out = [];
+    for (const a of g.actors.list) if (a.tied && !a.dead && !a.removed && !a.hidden && a.person) out.push(a);
+    for (const v of g.traffic.list) for (const a of v.trunk || []) if (!a.dead && a.person) out.push(a);
+    if (G().player.carrying && !G().player.carrying.dead && G().player.carrying.person) out.push(G().player.carrying);
+    return [...new Set(out)];
+  };
+  B.ransom = function (a) {
+    const g = G(), p = a.person, pop = g.pop;
+    const kin = pop.people[p.spouse] || (p.parents || []).map((id) => pop.people[id]).find((q) => q && q.alive);
+    const amt = Math.round(150 + (p.wealth || 20) * 6 + (p.isDon ? 3000 : 0) + (p.faction && p.faction !== 'law' ? 400 : 0));
+    const who = kin ? `${kin.first} ${kin.last}` : `the ${p.last} family`;
+    g.ui.choice(`Ransom for ${pop.name(p)}`, [
+      { label: `Demand ${R.fmtMoney(amt)} from ${who}`, small: 'They pay, you let them go', fn: () => {
+        if (R.rng() < 0.15 && !p.isDon) { g.law.crime('kidnap', g.player.x, g.player.y, {}); return g.ui.toast(`${who} called the cops instead. They're tracing the call!`, 'bad'); }
+        g.player.addCash(amt); g.audio.sfx('cash');
+        // the hostage walks free
+        for (const v of g.traffic.list) if (v.trunk) v.trunk = v.trunk.filter((q) => q !== a);
+        if (g.player.carrying === a) g.player.carrying = null;
+        a.tied = false; a.gagged = false; g.actors.remove(a);
+        p.fear = 100; p.opinion = -100; p.grudge = 1;
+        g.pop.addNews(p.city, `${p.first} ${p.last} released unharmed after ${who} paid a ransom. Police have "no comment".`);
+        g.player.rep.infamy += 6;
+        g.ui.toast(`The money's in a locker at the bus depot. ${p.first} walks home.`, 'good');
+      } },
+      { label: 'Hang up', fn: () => {} },
+    ]);
+  };
+  B.drawBound = function (g, h) {
+    const X = Math.round(h.x), Y = Math.round(h.y);
+    g.fillStyle = '#8a6a3a'; g.fillRect(X - 5, Y - 11, 10, 1); g.fillRect(X - 5, Y - 7, 10, 1); g.fillRect(X - 3, Y - 3, 6, 1);
+    g.fillStyle = '#c8a060'; g.fillRect(X - 4, Y - 11, 2, 1); g.fillRect(X + 1, Y - 7, 2, 1);
+    if (h.gagged) { g.fillStyle = '#a8a8b0'; g.fillRect(X - 2, Y - 15, 5, 2); g.fillStyle = '#e0e0e8'; g.fillRect(X - 2, Y - 15, 5, 1); }
+  };
+
   // ---------------------------------------------------------------- discovery
   B.update = function (dt) {
     const g = G(), pl = g.player;
+    this.updateCaptives(dt);
     const c = pl.carrying;
     if (c) {
       pl.weaponOut = false;
-      if (!c.dead) {
+      if (!c.dead && !c.tied) {
         c.down -= dt;
         if (c.down <= 0) {
           this.putDown();

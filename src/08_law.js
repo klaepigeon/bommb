@@ -24,6 +24,7 @@
     explosion: { name: 'Explosives', bounty: 40, lvl: 2 },
     manslaughter: { name: 'Vehicular Manslaughter', bounty: 45, lvl: 1 },
     murder: { name: 'Murder', bounty: 100, lvl: 2 },
+    kidnap: { name: 'Kidnapping', bounty: 80, lvl: 2 },
     copAssault: { name: 'Assaulting an Officer', bounty: 40, lvl: 2 },
     copMurder: { name: 'Killing an Officer', bounty: 250, lvl: 3 },
     heist: { name: 'Bank Robbery', bounty: 300, lvl: 3 },

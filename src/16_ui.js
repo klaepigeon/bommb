@@ -587,7 +587,7 @@
     const buy = (label, price, fn, small) => opts.push({ label, price: R.fmtMoney(price), small, fn: () => { if (!pl.pay(price)) return say("You're short on cash."); fn(); g.audio.sfx('cash'); } });
     const cons = (id) => buy(D.consumables[id].name, D.consumables[id].price, () => { pl.inv.cons[id] = (pl.inv.cons[id] || 0) + 1; say(`Bought ${D.consumables[id].name}. (${pl.inv.cons[id]} in pocket, ITEM uses them)`); });
     switch (bt.shop) {
-      case 'general': buy('Cinder Block & Rope', 8, () => { pl.inv.tools.cinder = (pl.inv.tools.cinder || 0) + 1; say('For the garden. Sure.'); }, 'Stand someone at the water\'s edge...'); cons('bandage'); cons('sandwich'); cons('smokes'); cons('coffee'); buy('Lockpick', 15, () => { pl.inv.tools.lockpick = (pl.inv.tools.lockpick || 0) + 1; say('Lockpick in your pocket.'); }); buy('Fishing Rod', 30, () => { pl.inv.tools.rod = 1; say('Rod bought. Stand by water and press USE.'); }); buy('Bait', 2, () => { pl.inv.tools.bait = (pl.inv.tools.bait || 0) + 3; say('3 bait.'); }); break;
+      case 'general': buy('Rope', 6, () => { pl.inv.tools.rope = (pl.inv.tools.rope || 0) + 2; say('Two lengths of good hemp. Tie up anyone who\'s given up.'); }, 'Tie up the surrendered or the knocked out'); buy('Duct Tape', 3, () => { pl.inv.tools.tape = (pl.inv.tools.tape || 0) + 3; say('Three strips. Nobody yells through duct tape.'); }, 'Gag anyone you\'ve tied up'); buy('Cinder Block & Rope', 8, () => { pl.inv.tools.cinder = (pl.inv.tools.cinder || 0) + 1; say('For the garden. Sure.'); }, 'Stand someone at the water\'s edge...'); cons('bandage'); cons('sandwich'); cons('smokes'); cons('coffee'); buy('Lockpick', 15, () => { pl.inv.tools.lockpick = (pl.inv.tools.lockpick || 0) + 1; say('Lockpick in your pocket.'); }); buy('Fishing Rod', 30, () => { pl.inv.tools.rod = 1; say('Rod bought. Stand by water and press USE.'); }); buy('Bait', 2, () => { pl.inv.tools.bait = (pl.inv.tools.bait || 0) + 3; say('3 bait.'); }); break;
       case 'liquor': cons('whiskey'); cons('smokes'); buy('Molotov fixings', 25, () => { pl.inv.ammo.molotov = (pl.inv.ammo.molotov || 0) + 1; say('A bottle, a rag, and bad intentions.'); }); break;
       case 'pharmacy': cons('bandage'); cons('tonic'); cons('coffee'); break;
       case 'diner': buy('Blue plate special (eat now)', 6, () => { pl.hp = Math.min(pl.maxHp, pl.hp + 45); say('Meatloaf, mashed potatoes, pie. You feel human again.'); }); cons('sandwich'); cons('coffee'); break;
@@ -973,6 +973,7 @@
     const opts = [];
     opts.push({ label: `Call the ${pl.family} family`, small: 'Hear about work', fn: () => { this.closeSheet(); g.jobs.openBoard({ faction: pl.family, x: pl.x, y: pl.y }); } });
     opts.push({ label: 'Call the realtor', small: 'Houses, cabins and businesses for sale', fn: () => { this.closeSheet(); R.estate.openRealtor(g); } });
+    for (const cap of R.bodies.captives()) opts.push({ label: `Call about ${g.pop.name(cap.person)}`, small: 'Ransom', cls: 'bad', fn: () => { this.closeSheet(); R.bodies.ransom(cap); } });
     for (const c of g.world.cities) {
       opts.push({ label: `Taxi to ${c.name}`, small: c.def.tag, price: '$25', fn: () => {
         if (g.law.active()) return this.toast('No cab will take you with the cops on your tail.', 'warn');

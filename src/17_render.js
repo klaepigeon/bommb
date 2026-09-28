@@ -188,6 +188,7 @@
   };
 
   P.drawHuman = function (g, h) {
+    if (h.tied && !h.dead) { A.drawPerson(g, h.x, h.y, h.dir, 0, h.look, {}); R.bodies.drawBound(g, h); return; }
     // test-room mannequins hold a fixed pose
     if (h.testPose && !h.dead && h.state !== 'fight') {
       const tp = h.testPose, isW = tp.weapon && D.weapons[tp.weapon];
