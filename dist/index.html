@@ -23085,15 +23085,16 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     if (r) g.interiors.clearRoom(r);
     g.interiors.enter(b, 'normal');
     this.setup();
-    g.ui.story('BOOKED', `Fingerprints, a mugshot, an orange jumpsuit. Your things go in the evidence locker behind the guard desk.\n\n${days} day${days > 1 ? 's' : ''} to serve. Sleep in your bunk to do your time, or find another way out:\n• a lockpick for the cell and the gate (inmates and bent guards sell them)\n• a guard's uniform\n• a sharpened spoon and a few nights of digging\n• a riot\n• the hall phone`);
+    g.ui.story('BOOKED', `Fingerprints, a mugshot, an orange jumpsuit. Your things go in the evidence locker behind the guard desk.\n\n${days} day${days > 1 ? 's' : ''} to serve. Cells open for yard time from 8 AM to 8 PM. Sleep in your bunk to do your time, or find another way out:\n• a lockpick for the cell and the gate (inmates and bent guards sell them)\n• a guard's uniform\n• a sharpened spoon and a few nights of digging\n• a riot\n• the hall phone`);
   };
   J.setup = function () {
     const g = G(), pl = g.player, room = pl.room;
     if (!room || room.b.type !== 'jail') return;
     const at = (x, y) => ({ x: (room.x0 + x) * TS + 8, y: (room.y0 + y) * TS + 8 });
-    // your cell
+    // your cell (freshly built with its door shut; the routine opens it if it's yard time)
     const c = at(2, 3);
     pl.place(c.x, c.y);
+    if (pl.jail) pl.jail.yardOpen = false;
     // guards
     this.guards = [];
     const routes = [[[3, 6], [18, 6]], [[14, 9], [14, 12], [8, 12]], [[18, 7], [18, 11]]];
@@ -23293,9 +23294,34 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   };
 
   // ---------------------------------------------------------------- guards
+  // the daily routine: cells open for yard time, lock at lights out
+  const yardTime = () => { const h = G().clock.hour(); return h >= 8 && h < 20; };
+  // behind the guard desk, the evidence locker, the front gate: off limits any time
+  const restricted = (pl, room) => { const x = ((pl.x / TS) | 0) - room.x0, y = ((pl.y / TS) | 0) - room.y0; return (x >= 15 && y >= 7) || y >= room.h - 3; };
+  J.routine = function (g, pl, j, room) {
+    if (this.rioting) return; // the riot opened everything; nobody's locking anything now
+    const open = yardTime() && j.lockdown !== g.pop.day;
+    if (open === !!j.yardOpen) return;
+    j.yardOpen = open;
+    if (!room.jailCell) return;
+    if (open) {
+      g.world.setO(room.jailCell.x, room.jailCell.y, 0);
+      g.audio.sfx('door');
+      g.ui.toast('Yard time. The cell doors buzz open until 8 PM. Stay away from the guard desk and the gate.', 'good');
+    } else {
+      // lights out: anyone out of their cell gets walked back, no harm done
+      if (!inCell(pl, room)) { const c = { x: (room.x0 + 2) * TS + 8, y: (room.y0 + 3) * TS + 8 }; pl.place(c.x, c.y); }
+      g.world.setO(room.jailCell.x, room.jailCell.y, O.BARS);
+      g.audio.sfx('door');
+      const gd = (this.guards || []).find((x) => !x.dead);
+      if (gd) g.actors.say(gd, 'LIGHTS OUT! Everybody in their cells!');
+      g.ui.toast('Lights out. Your cell is locked until morning. Out of it now and the guards come running.', 'warn');
+    }
+  };
   J.update = function (dt) {
     const g = G(), pl = g.player, j = pl.jail, room = pl.room;
     if (!j || !room || room.b.type !== 'jail' || this.rioting && !j) return;
+    this.routine(g, pl, j, room);
     for (const gd of this.guards || []) {
       if (gd.dead || gd.down > 0 || !gd.route || this.rioting) continue;
       const tgt = gd.route[gd.ri], d = Math.hypot(tgt.x - gd.x, tgt.y - gd.y);
@@ -23311,6 +23337,8 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       // can he see you out of your cell?
       const dp = Math.hypot(pl.x - gd.x, pl.y - gd.y);
       if (inCell(pl, room) || gd.bribed || dp > TS * 6 || !g.world.los(gd.x, gd.y - 8, pl.x, pl.y - 8)) continue;
+      // during yard time you can be out, just not where the guards work (or with a weapon in your hand)
+      if (j.yardOpen && !restricted(pl, room) && !pl.weaponOut) { j.warned = 0; continue; }
       if (j.uniform && dp > TS * 1.4) continue;
       if (pl.sneak && !(pl.walk > 0) && dp > TS * 2) continue;
       j.warned += dt;
@@ -23322,6 +23350,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     const g = G(), pl = g.player, j = pl.jail, room = pl.room;
     for (const x of this.guards) x.chase = false;
     j.warned = 0; j.caught++; j.days += 1;
+    j.lockdown = g.pop.day; j.yardOpen = false; // confined to your cell for the rest of the day
     if (j.uniform) { j.uniform = false; pl.buildLook(); this.setupLook(); }
     pl.inv.tools.lockpick = 0;
     g.actors.say(gd, 'Nice try.');
@@ -23329,7 +23358,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     const c = { x: (room.x0 + 2) * TS + 8, y: (room.y0 + 3) * TS + 8 };
     pl.place(c.x, c.y);
     if (room.jailCell) g.world.setO(room.jailCell.x, room.jailCell.y, O.BARS);
-    g.ui.story('CAUGHT', `A baton to the ribs and a long walk back to your cell. They took your lockpicks. One more day added. (${j.days} to go.)`);
+    g.ui.story('CAUGHT', `A baton to the ribs and a long walk back to your cell. They took your lockpicks. One more day added, and you're locked in until tomorrow. (${j.days} to go.)`);
   };
   J.setupLook = function () { const pl = G().player; pl.look = Object.assign({}, pl.look, { oldOverride: Object.assign({}, pl.look.oldOverride || {}, { shirt: ['#8a3a08', '#c85a10', '#f08020', '#ffb050'], pants: ['#8a3a08', '#c85a10', '#f08020', '#ffb050'], jacket: null }), old: null }); };
 
