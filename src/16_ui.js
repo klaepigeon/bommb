@@ -1035,7 +1035,7 @@
   };
   U.openMenu = function (tab) {
     if (this.sheetOpen && this.sheetOpen !== 'menu') return;
-    const tabs = [['map', 'Map'], ['jobs', 'Jobs'], ['people', 'People'], ['files', 'Files'], ['status', 'Status'], ['items', 'Pockets'], ['news', 'Paper'], ['settings', 'Settings'], ['help', 'Help'], ['debug', 'Debug']];
+    const tabs = [['map', 'Map'], ['jobs', 'Jobs'], ['people', 'People'], ['files', 'Files'], ['heat', 'Heat'], ['status', 'Status'], ['items', 'Pockets'], ['news', 'Paper'], ['settings', 'Settings'], ['help', 'Help'], ['debug', 'Debug']];
     const s = this.openSheet('menu', `<div class="tabs">${tabs.map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'sel' : ''}">${l}</button>`).join('')}<button data-tab="close" aria-label="Close">✕</button></div><div class="body" id="mbody"></div>`, true);
     s.style.maxHeight = '92%';
     s.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => (b.dataset.tab === 'close' ? this.closeSheet() : this.openMenuTab(b.dataset.tab, s))));
@@ -1070,6 +1070,9 @@
       const pop = g.pop.people.filter((p) => p.alive).length;
       body.innerHTML = `<p style="font-size:14px;color:var(--brown)">${pop} people live on the Brass Coast. You know ${met.length}.</p><div class="people">${met.map((p) => `<div class="person"><canvas class="portrait" width="28" height="36" style="width:28px;height:36px" data-p="${p.id}"></canvas><div class="n">${esc(g.pop.name(p))}${p.alive ? '' : ' †'}<small>${esc(g.pop.title(p))} · ${p.age} · ${esc((g.pop.cityObj(p.city) || {}).name || 'County')}${p.id === pl.sweetheart ? ' · sweetheart' : ''}</small></div><div class="meter"><i style="width:${50 + p.opinion / 2}%;background:${p.opinion > 20 ? 'var(--good)' : p.opinion < -20 ? 'var(--red)' : 'var(--mustard)'}"></i></div></div>`).join('') || '<p>Nobody yet. Greet people twice to learn their names.</p>'}</div>`;
       body.querySelectorAll('canvas[data-p]').forEach((cv) => this.drawPortrait(cv, g.pop.people[+cv.dataset.p].look));
+    } else if (tab === 'heat') {
+      body.innerHTML = R.cases.html();
+      R.cases.drawSketches(body);
     } else if (tab === 'files') {
       body.innerHTML = R.vice.filesHtml();
       R.vice.bindFiles(body);
