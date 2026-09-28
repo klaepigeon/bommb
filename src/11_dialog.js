@@ -47,9 +47,44 @@
     preach: ['Repent! The end is near!', 'The Lord sees your sideburns, sinner!', 'Disco is the devil\'s music!'],
   };
 
+  // the same moments with the gloves off: violent people talk like it
+  const SALTY = {
+    woken: ['Who the hell is in my house?!', 'Get the fuck out of my house!', 'I got a shotgun, you son of a bitch!'],
+    getup: ['Son of a bitch...', 'Goddamn, my head.', 'Who the fuck hit me?'],
+    fleeing: ['Holy shit, run!', 'He\'s fucking crazy!', 'Get the hell outta here!', 'Jesus Christ!'],
+    cower: ['Don\'t shoot, for Christ\'s sake!', 'Please, I didn\'t see shit!', 'Take it, take the goddamn money!'],
+    seeGun: ['Oh shit, he\'s got a piece!', 'Put that fucking thing away!', 'Holy shit, gun!'],
+    standoff: ['You don\'t scare me, asshole.', 'Go ahead, do it. I fucking dare you.', 'Try it, tough guy. See what happens.'],
+    seeMask: ['What the hell\'s with the mask?', 'Oh, this is some bullshit.'],
+    rivalSpot: ['That\'s one of Vane\'s bastards!', 'Wrong side of town, shithead.', 'Waste that son of a bitch!', 'Look who wandered in. Get him!'],
+    grudge: ['You murdering bastard!', 'I\'m gonna fucking kill you!', 'You killed my family, you piece of shit!'],
+    copSaw: ['Police! Freeze, dirtbag!', 'Hold it right there, asshole!', 'On the ground, now, goddammit!'],
+    arrest: ['Hands up, shithead!', 'Face down, now! Don\'t fucking move!'],
+    witness: ['I saw that, you sick bastard!', 'You\'re going down for that, asshole!', 'Holy shit! Police!'],
+    hero: ['Not on my street, you son of a bitch!', 'Come here, you bastard!', 'I got you now, asshole!'],
+    tut: ['Asshole.', 'Jackass.', 'What a prick.', 'Real classy, dipshit.'],
+    fightBack: ['You\'re fucking dead!', 'Oh, you want some, asshole?', 'That\'s it, you son of a bitch!', 'Big fucking mistake, pal.', 'I\'ll break your goddamn neck!'],
+    beg: ['Okay! Okay! Jesus Christ, I give!', 'Enough, goddammit, enough!', 'Don\'t kill me, man, please!'],
+    hurt: ['Ow! What the fuck?!', 'Son of a bitch!', 'Are you fucking nuts?!', 'Goddammit!'],
+    hitByCar: ['Watch where you\'re driving, asshole!', 'My fucking leg!', 'You goddamn maniac!'],
+    driverYell: ['Move it, shithead!', 'Get the hell outta the road!', 'You fucking deaf?!', 'Outta the way, jackass!'],
+    roadRage: ['You got a fucking problem?!', 'Get outta the car, asshole!', 'You scratched my paint, you son of a bitch!'],
+    crashSmall: ['My fender, you prick!', 'Watch it, asshole!', 'Aw, shit!'],
+    crashBig: ['You wrecked my goddamn car!', 'I\'m gonna fucking kill you!', 'Son of a bitch, my car!'],
+    honkedAt: ['Alright, alright, Jesus!', 'Keep your goddamn shirt on!', 'Blow it out your ass!'],
+    fire: ['Holy shit, fire!', 'The whole goddamn place is going up!'],
+    cheer: ['Kick his ass!', 'Hit that bastard!', 'Oh, shit, he felt that!', 'Fuck him up!'],
+    copWarnGun: ['Holster that, dumbass. Now.', 'Put the goddamn gun away.'],
+    copWarnMinor: ['Knock that shit off.', 'Pull that crap again and you\'re coming downtown.'],
+  };
+  const SWEARY = { tough: 0.75, grumpy: 0.7, hustler: 0.7, flirt: 0.45, eccentric: 0.45, gossip: 0.4, friendly: 0.3, square: 0.2, timid: 0.35, pious: 0.05 };
   const D2 = (R.dialog = {});
   D2.line = function (kind, h) {
-    const arr = L[kind] || ['...'];
+    const g0 = G();
+    const clean = g0 && g0.settings && g0.settings.clean;
+    const kid = h && h.look && h.look.kid;
+    const odds = h ? (SWEARY[h.arch] != null ? SWEARY[h.arch] : 0.45) + (h.faction && h.faction !== 'law' ? 0.2 : 0) + (h.drunk > 0.3 ? 0.2 : 0) : 0.4;
+    const arr = !clean && !kid && SALTY[kind] && R.rng() < odds ? SALTY[kind] : L[kind] || ['...'];
     let s = pick(arr);
     const fam = G() && G().player && G().player.family;
     if (kind === 'rivalSpot') s = s.replace('Vane', fam || 'Vane');

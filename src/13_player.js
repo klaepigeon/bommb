@@ -298,6 +298,7 @@
   // Returns the best contextual action {label, fn}
   P.contextAction = function () {
     const g = this.game, w = g.world;
+    if (!this.inCar) { const cq = R.campaign.context(this); if (cq) return cq; }
     if (this.inCar) {
       const v = this.inCar;
       const hitch = g.actors.near(v.x, v.y, 36, (a) => a.tag === 'hitch' && !a.dead && !a.inCar)[0];

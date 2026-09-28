@@ -77,6 +77,7 @@
     R.props.init(this);
     R.ring.init(this);
     R.fearQuest.init(this);
+    R.campaign.init(this);
     R.legends.init(this);
     R.poi.init(this);
     R.art.chunkCache.clear();
@@ -224,6 +225,7 @@
       R.props.update(sdt);
       R.ring.update(sdt);
       R.fearQuest.update(sdt);
+      R.campaign.update(sdt);
       R.legends.update(sdt);
       R.goods.update(sdt);
       R.poi.update(sdt);
@@ -314,7 +316,7 @@
       v: 2, seed: this.seed, t: this.clock.t, log: this.worldLog, weather: this.env.weather.kind,
       player: {
         x: pl.room ? this.interiors.outside(pl.x, pl.y).x : pl.x, y: pl.room ? this.interiors.outside(pl.x, pl.y).y : pl.y, hp: pl.hp, cool: pl.cool, cash: pl.cash, inv: pl.inv, clip: pl.clip, outfit: pl.outfit, outfits: pl.outfits || {}, style: pl.style, wardrobe: pl.wardrobe,
-        will: pl.will, willMax: pl.willMax || 100, fearQ: pl.fearQ || null, ringColor: pl.ringColor || null, errands: pl.errands || [], poi: R.poi.serialize(), rep: pl.rep, standing: pl.standing, stats: pl.stats, sweetheart: pl.sweetheart, properties: pl.properties, masked: pl.masked,
+        will: pl.will, willMax: pl.willMax || 100, fearQ: pl.fearQ || null, campaign: pl.campaign || null, ringColor: pl.ringColor || null, errands: pl.errands || [], poi: R.poi.serialize(), rep: pl.rep, standing: pl.standing, stats: pl.stats, sweetheart: pl.sweetheart, properties: pl.properties, masked: pl.masked,
         cars: pl.ownedCars.filter((c) => !c.removed && !c.wrecked).map((c) => [c.modelId, c.x, c.y, c.angle, c.color]),
       },
       pop: this.pop.serialize(), law: this.law.serialize(), jobs: this.jobs.serialize(), hints: this.hints,
@@ -341,6 +343,7 @@
       if (p.will != null) pl.will = p.will;
       if (p.willMax) pl.willMax = p.willMax;
       if (p.fearQ) pl.fearQ = p.fearQ;
+      if (p.campaign) { pl.campaign = p.campaign; R.campaign.run = null; R.campaign.afterLoad(); }
       if (p.ringColor) { pl.ringColor = p.ringColor; R.data.weapons.ring.name = 'Green Ring'; }
       if (p.style) pl.style = Object.assign(R.styleDefault(), p.style);
       pl.wardrobe = p.wardrobe || {};

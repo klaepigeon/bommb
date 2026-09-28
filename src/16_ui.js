@@ -1023,6 +1023,7 @@
       body.innerHTML = `<div class="sect">Current job</div>${j ? `<p style="font-size:16px"><b>${esc(j.title)}</b><br>${esc(j.desc)}</p>` : '<p>No job. Visit a Social Club or call the family from a payphone.</p>'}
         ${R.fearQuest.current() && R.fearQuest.state().active ? `<div class="sect">The Fear Man</div><p style="font-size:15px"><b>${esc(R.fearQuest.current().title)}</b><br>${esc(R.fearQuest.current().goal)} ${esc(R.fearQuest.progressText(R.fearQuest.current()))}</p>` : ''}
         ${R.fearQuest.gcurrent && R.fearQuest.gcurrent() ? `<div class="sect">Hal</div><p style="font-size:15px"><b>${esc(R.fearQuest.gcurrent().title)}</b><br>${esc(R.fearQuest.gcurrent().goal)}${R.fearQuest.gcurrent().id === 'protect' ? ` (${R.fearQuest.state().saved}/5)` : ''}</p>` : ''}
+        ${R.campaign.jobsHtml()}
         <div class="sect">Leads</div>${g.jobs.leads.length ? g.jobs.leads.map((l) => `<p>• ${esc(l.text)}</p>`).join('') : '<p>No leads. Greet people; chatty folks and bartenders talk.</p>'}
         <div class="sect">Rackets</div>${g.world.buildings.filter((b) => b && b.racket && b.racketFamily === pl.family).map((b) => `<p>• ${esc(b.name)} (${esc(b.city.name)}) · ${R.fmtMoney(b.racketDue || 0)} due</p>`).join('') || '<p>No protection clients yet (Soldier rank and up).</p>'}`;
     } else if (tab === 'people') {
@@ -1062,6 +1063,7 @@
       <div class="set"><label for="sEv">Street events</label>${sel('sEv', [[0.5, 'Calm'], [1, 'Normal'], [1.8, 'Wild']], st.events)}</div>
       <div class="set"><label for="sZoom">Zoom</label>${sel('sZoom', [[0.75, 'Far (driving)'], [1, 'GBA (240×160)']], st.zoom)}</div>
       <div class="set"><label for="sGore">Blood & gore</label>${sel('sGore', [['true', 'On'], ['false', 'Off']], st.gore !== false)}</div>
+      <div class="set"><label for="sClean">Street language</label>${sel('sClean', [['false', 'Salty'], ['true', 'Clean']], !!st.clean)}</div>
       <div class="opts"><button class="opt go" id="sSave">Save game</button><button class="opt bad" id="sNew">Start a new game</button></div>`;
       const bindS = (id, key, parse, after) => $('#' + id).addEventListener('change', (e) => { st[key] = parse(e.target); g.saveSettings(); if (after) after(st[key]); });
       bindS('sVol', 'vol', (e) => +e.value, (v) => g.audio.setVolume(v));
@@ -1072,6 +1074,7 @@
       bindS('sEv', 'events', (e) => +e.value);
       bindS('sZoom', 'zoom', (e) => +e.value, () => g.resize());
       bindS('sGore', 'gore', (e) => e.value === 'true');
+      bindS('sClean', 'clean', (e) => e.value === 'true');
       $('#sSave').addEventListener('click', () => { g.save(); this.toast('Game saved.', 'good'); });
       $('#sNew').addEventListener('click', (e) => {
         if (e.target.dataset.confirm) { g.newGame(); return; }
@@ -1106,7 +1109,7 @@
       c.fillStyle = 'rgba(27,20,16,0.8)';
       const tw = c.measureText(city.name).width + 10;
       c.fillRect(city.cx - tw / 2, city.y0 - 22, tw, 18);
-      c.fillStyle = city.def.color;
+      c.fillStyle = R.campaign.rulerColor(city);
       c.fillText(city.name, city.cx, city.y0 - 8);
     }
     c.font = '12px "Barlow Condensed", sans-serif';
