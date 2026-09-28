@@ -13,7 +13,7 @@
     const ui = R.game.ui, g0 = R.game;
     const W = spec.w || 240, H = spec.h || 140;
     const btns = (spec.buttons || []).map(([id, label, cls]) => `<button class="mgb ${cls || ''}" data-b="${id}">${label}</button>`).join('');
-    const s = ui.openSheet('mini', ui.header(spec.title, spec.sub) + `<div class="body mgbody"><canvas class="mg" width="${W}" height="${H}"></canvas><div class="mgmsg" id="mgmsg"></div><div class="mgbtns">${btns}</div></div>`);
+    const s = ui.openSheet('mini', ui.header(spec.title, spec.sub) + `<div class="body mgbody"><canvas class="mg" width="${W}" height="${H}" style="--ar:${(W / H).toFixed(3)}"></canvas><div class="mgmsg" id="mgmsg"></div><div class="mgbtns">${btns}</div></div>`);
     const cv = s.querySelector('canvas.mg'), g = cv.getContext('2d');
     g.imageSmoothingEnabled = false;
     const st = { t: 0, W, H, done: false, msg: (m) => { const el = s.querySelector('#mgmsg'); if (el) el.textContent = m; }, cash: () => g0.player.cash };

@@ -454,7 +454,22 @@
   // trouble finds a would-be hero: more street crime while you're proving yourself
   Q.gupdate = function (dt) {
     const g = this.game, s = this.state(), pl = g.player;
-    if (s.path !== 'green') return;
+    if (s.path !== 'green') {
+      // Hal hears about anyone wearing a yellow ring. Word reaches you a day after you put it on,
+      // and he waits on the Dustwater strip by day from then on, ready to talk you out of it.
+      if (!pl.inv.tools.ring || s.pilotBeaten) return;
+      if (s.halHeard == null) s.halHeard = g.pop.day + 1;
+      if (!s.halHint && g.pop.day >= s.halHeard && !pl.room && !(R.opening && R.opening.active)) {
+        s.halHint = true;
+        const st0 = this.strip;
+        g.pop.addNews('dust', 'Ranchers near Dustwater report a biplane that "lit up green like a traffic light" over the old airstrip. The pilot, a man named Hal, declined to comment.');
+        g.ui.toast('Word on the street: a pilot with a glowing green ring flies out of the Dustwater airstrip. Waypoint set.', 'warn');
+        if (!g.waypoint) g.waypoint = { x: st0.x * TS + 8, y: st0.y * TS + 8 };
+      }
+      const st1 = this.strip, hr = g.clock.hour();
+      if (!this.pilot && Math.hypot(pl.x / TS - st1.x, pl.y / TS - st1.y) < 32 && hr > 7 && hr < 19) this.spawnHal();
+      return;
+    }
     if (s.gstage === 0 && s.gactive && s.saved < 5) {
       this.crimeT = (this.crimeT || 20) - dt;
       if (this.crimeT <= 0 && !pl.room && g.world.cityAt((pl.x / TS) | 0, (pl.y / TS) | 0)) { this.crimeT = 45; const city = g.world.cityAt((pl.x / TS) | 0, (pl.y / TS) | 0); if (R.events.robbery) R.events.robbery(g, city); }
