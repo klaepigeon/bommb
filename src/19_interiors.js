@@ -10,7 +10,7 @@
     house: [14, 10], cabin: [12, 9], apartment: [14, 10], barn: [16, 11], bar: [18, 12], club: [20, 13], diner: [16, 10],
     bank: [20, 12], police: [20, 12], hospital: [20, 12], casino: [22, 13], church: [16, 13], social: [18, 12], garage: [18, 11],
     hotel: [16, 11], motel: [14, 10], arcade: [16, 10], laundry: [14, 9], barber: [12, 9], school: [20, 12], factory: [22, 13],
-    warehouse: [22, 13], office: [18, 11],
+    warehouse: [22, 13], office: [18, 11], jail: [22, 14], suite: [14, 10],
   };
   const FLOOR = {
     bar: T.WOOD, club: T.CARPET, diner: T.TILEF, bank: T.CARPET, police: T.TILEF, hospital: T.TILEF, casino: T.CARPET, church: T.WOOD,
