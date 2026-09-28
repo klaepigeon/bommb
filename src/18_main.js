@@ -145,7 +145,16 @@
     app.classList.toggle('landscape', !portrait);
     app.classList.toggle('touch', 'ontouchstart' in window || navigator.maxTouchPoints > 0);
     this.renderer.resize();
-    requestAnimationFrame(() => this.renderer.resize());
+    requestAnimationFrame(() => { this.renderer.resize(); this.fitPads(); });
+  };
+  // small phones: shrink the button cluster to its column instead of spilling off the edge
+  G.fitPads = function () {
+    const app = document.getElementById('app'), btns = document.querySelector('.btns'), padR = document.getElementById('padR');
+    if (!btns || !padR) return;
+    btns.style.transform = '';
+    if (!app.classList.contains('portrait')) return;
+    const s = Math.min(1, (padR.clientWidth - 4) / btns.offsetWidth);
+    if (s < 1) btns.style.transform = `scale(${s.toFixed(3)})`;
   };
 
   G.start = function (fresh) {
