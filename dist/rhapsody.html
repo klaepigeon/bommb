@@ -5268,8 +5268,10 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   };
 
   // ------------------------------------------------ lane following
+  let UID = 0;
   TP.laneDrive = function (v, dt) {
     const w = this.game.world, ai = v.ai;
+    if (v.ghostT > 0) v.ghostT -= dt;
     const tcx = ai.tx * TS + 8, tcy = ai.ty * TS + 8;
     // Next tile center target
     const [dx, dy] = R.DIRS[ai.dir];
@@ -5285,6 +5287,16 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       want = d < v.model.w * 0.5 + 6 ? 0 : Math.min(want, (d - v.model.w * 0.5) * 2.2);
       if (v.speed < 5) {
         v.wait += dt;
+        const o = obst.o;
+        // standoffs: two stuck cars nose to nose, or a long queue behind a stopped car.
+        // One of them noses through (briefly ignores other cars) so nobody waits forever.
+        if (o.kind === 'v' && o.driver !== this.game.player && Math.abs(o.speed || 0) < 5) {
+          v.uid = v.uid || ++UID; o.uid = o.uid || ++UID;
+          if ((o.wait > 2.5 && v.wait > 2.5 && v.uid < o.uid) || v.wait > 8) { v.ghostT = 2.2; v.wait = 0; }
+        }
+        // someone standing in the road: honk, and they step aside
+        if (o.kind === 'a' && v.wait > 2.5 && !o.dead) { o.state = 'flee'; o.target = v; o.timer = 2; if (v.honkT <= 0) this.honk(v); }
+        if (o.kind === 'h' && !obst.player && v.wait > 2.5 && !o.dead && !o.tied && !(o.down > 0) && o.state !== 'fight') { if (v.honkT <= 0) this.honk(v); this.game.actors.setFlee(o, v, 1.5); }
         if ((obst.player || obst.o.driver === this.game.player) && v.wait > 1.8 && v.honkT <= 0) this.honk(v);
         if (v.wait > 7 && obst.o.kind === 'v' && !obst.o.driver) this.goAround(v);
         if (v.wait > 5 && obst.player && v.driver && v.driver.tr.brave > 0.7 && !v.driver.raged) this.roadRage(v);
@@ -5381,7 +5393,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
         if (!best || d < best.d) best = { d, o, player: isPlayer };
       }
     };
-    for (const o of this.hash.query(v.x, v.y, reach + 30)) if (o !== v && !o.removed) test(o, false);
+    for (const o of this.hash.query(v.x, v.y, reach + 30)) if (o !== v && !o.removed && !(v.ghostT > 0 && o.driver !== this.game.player)) test(o, false);
     for (const h of this.game.actors.near(v.x + fx * reach * 0.5, v.y + fy * reach * 0.5, reach * 0.6 + 8)) {
       if (h.kind === 'h' && !h.inCar && !h.dead) test(h, false);
       if (h.kind === 'a' && !h.dead && !h.flying) test(h, false);
