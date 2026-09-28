@@ -972,6 +972,7 @@
     const g = this.game, pl = g.player;
     const opts = [];
     opts.push({ label: `Call the ${pl.family} family`, small: 'Hear about work', fn: () => { this.closeSheet(); g.jobs.openBoard({ faction: pl.family, x: pl.x, y: pl.y }); } });
+    opts.push({ label: 'Call the realtor', small: 'Houses, cabins and businesses for sale', fn: () => { this.closeSheet(); R.estate.openRealtor(g); } });
     for (const c of g.world.cities) {
       opts.push({ label: `Taxi to ${c.name}`, small: c.def.tag, price: '$25', fn: () => {
         if (g.law.active()) return this.toast('No cab will take you with the cops on your tail.', 'warn');

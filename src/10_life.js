@@ -258,7 +258,7 @@
     g.ui.toast('A drunken brawl broke out nearby.');
   };
   EV.robbery = function (g, city) {
-    const shops = city.buildings.filter((b) => D.btypes[b.type].rob && !b.destroyed && R.dist(b.out.x, b.out.y, g.player.x / TS, g.player.y / TS) < 22 && R.dist(b.out.x, b.out.y, g.player.x / TS, g.player.y / TS) > 6);
+    const shops = city.buildings.filter((b) => D.btypes[b.type].rob && !b.destroyed && !b.sec && R.dist(b.out.x, b.out.y, g.player.x / TS, g.player.y / TS) < 22 && R.dist(b.out.x, b.out.y, g.player.x / TS, g.player.y / TS) > 6);
     if (!shops.length) return;
     const b = R.rng.pick(shops);
     const robber = g.actors.makeHuman(b.out.x * TS + 8, b.out.y * TS + 8, { tag: 'robber', weapon: 'revolver', arch: 'hustler' });
