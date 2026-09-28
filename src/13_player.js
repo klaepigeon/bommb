@@ -91,7 +91,16 @@
       if (this.cool <= 0 || inp.pressed('cool')) this.setCool(false);
     } else if (inp.pressed('cool')) this.setCool(true);
     if (inp.pressed('mask')) this.toggleMask();
-    if (inp.pressed('sneak') && !this.inCar) { this.sneak = !this.sneak; g.ui.toast(this.sneak ? 'Sneaking: quieter, animals spook less.' : 'Walking normally.'); }
+    if (inp.pressed('sneak') && !this.inCar) {
+      this.sneak = !this.sneak;
+      if (this.sneak) this.disguise = R.rng.pick(R.art.DISGUISES.filter((k) => k !== this.disguise));
+      g.ui.toast(this.sneak ? R.rng.pick({ box: ['You duck into a cardboard box. Perfect.', 'A box. Nobody suspects a box.'], bush: ['You are a bush now. A very still bush.', 'Leaves in your hair. Worth it.'], trash: ['You climb into a trash can. Smells like victory.', 'Trash can. Classy.'], barrel: ['You squeeze into a barrel. Just a barrel here.', 'Nothing to see. Barrel business.'], plant: ['A potted fern. Tasteful. Invisible.', 'You hold very still, like a fern would.'] }[this.disguise]) + ' Stand still and nobody sees you.' : 'You shake off the disguise.');
+    }
+    // people notice a box that walks
+    if (this.sneak && this.walk > 0 && R.rng() < dt * 0.25) {
+      const n = g.actors.near(this.x, this.y, TS * 4, (a) => a.kind === 'h' && !a.dead && !a.crew && a.state !== 'fight')[0];
+      if (n) g.actors.say(n, R.rng.pick({ box: ['Did that box just move?', 'Huh. Walking box.'], bush: ['That bush has shoes.', 'Since when do bushes walk?'], trash: ['Garbage day already?', 'That can is following me.'], barrel: ['A barrel with legs. Seen it all now.', 'Rolling out, barrel?'], plant: ['Nice fern. Nice... shoes?', 'That plant was over there.'] }[this.disguise] || ['Huh?']));
+    }
     if (inp.pressed('heal')) g.ui.openMenu('items');
     if (this.inside) return;
     if (this.inCar) return this.updateCar(dt);

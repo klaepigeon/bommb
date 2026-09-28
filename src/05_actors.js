@@ -536,6 +536,7 @@
     const w = this.game.world;
     const tx = (h.x / TS) | 0, ty = (h.y / TS) | 0;
     const cx = tx * TS + 8, cy = ty * TS + 8;
+    if (!R.DIRS[h.wdir]) h.wdir = (R.rng() * 4) | 0;
     const [dx, dy] = R.DIRS[h.wdir];
     const good = (x, y) => {
       if (w.solidPed(x, y)) return false;
@@ -616,7 +617,8 @@
     const game = this.game, pl = game.player;
     if (h.state === 'fight' || h.state === 'report' || h.state === 'surrender' || h.state === 'sleep') return;
     const d = R.dist(h.x, h.y, pl.x, pl.y);
-    const seesPlayer = d < TS * 10 && !pl.inside && (d < TS * 3 || game.world.los(h.x, h.y - 8, pl.x, pl.y - 8));
+    const hidden = pl.sneak && !pl.inCar && !(pl.walk > 0) && d > TS * 1.5 && !(game.law.incident && game.law.incident.state === 'pursuit' && d < TS * 4); // a very still box
+    const seesPlayer = d < TS * 10 && !pl.inside && !hidden && (d < TS * 3 || game.world.los(h.x, h.y - 8, pl.x, pl.y - 8));
     // player with a gun drawn close by
     if (seesPlayer && pl.weaponOut && D.weapons[pl.weapon] && D.weapons[pl.weapon].gun && d < TS * 7 && h.state !== 'flee' && h.state !== 'cower') {
       if (h.cop) {

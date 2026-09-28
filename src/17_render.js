@@ -183,7 +183,14 @@
     }
     if (h.state === 'fight' || h.state === 'travel' || h.state === 'flee' || h.state === 'report') st.ang = h.ang;
     if (h.state === 'cower' || h.state === 'surrender') st.pose = 'h';
-    else if (h.swingT > 0 && h.state === 'fight') { st.pose = h.weapon === 'bat' ? 'b1' : h.swingN % 2 ? 'p2' : 'p1'; st.weapon = null; }
+    else if (h.swingT > 0 && h.state === 'fight') {
+      // wind up, then follow through
+      const sw = 1 - h.swingT / 0.22;
+      if (h.weapon === 'bat') { st.pose = sw < 0.45 ? 'b1' : 'b2'; st.weapon = null; }
+      else if (h.weapon === 'knife') { st.pose = sw < 0.45 ? 'w1' : 'w2'; st.weapon = null; st.held = 'knife'; }
+      else { st.pose = h.swingN % 2 ? 'p2' : 'p1'; st.weapon = null; }
+    }
+    if (st.down) { st.weapon = null; st.pose = null; }
     let walk = h.walk;
     if (h.state === 'perform') walk = Math.sin(h.walk * 3) * 2 + h.walk;
     A.drawPerson(g, h.x, h.y, h.dir, walk, h.look, st);
@@ -200,11 +207,12 @@
       if (swing >= 0) st.pose = A.itemArt(pl.held.k) && A.itemArt(pl.held.k).grip ? (swing < 0.45 ? 'w1' : 'w2') : 'h';
     } else if (swing >= 0) {
       if (pl.weapon === 'bat') { st.pose = swing < 0.45 ? 'b1' : 'b2'; st.weapon = null; }
+      else if (pl.weapon === 'knife') { st.pose = swing < 0.45 ? 'w1' : 'w2'; st.weapon = null; st.held = 'knife'; }
       else if (pl.weapon === 'fists' || pl.weapon === 'knuckles' || !D.weapons[pl.weapon] || !D.weapons[pl.weapon].gun) st.pose = (pl.punchN || 0) % 2 ? 'p2' : 'p1';
       if (pl.weapon === 'fists' || pl.weapon === 'knuckles') st.weapon = null;
     }
-    if (pl.sneak && !pl.inCar) st.crouch = true;
     pl._pose = st.pose || (st.held ? 'k' : null);
+    if (pl.sneak && !pl.inCar && !pl.held && !(swing >= 0)) { A.drawDisguise(g, pl, pl.disguise || 'box'); pl._pose = 'hidden'; return; }
     A.drawPerson(g, pl.x, pl.y, pl.dir, pl.walk, pl.look, st);
     R.ring.drawSwing(g, pl);
   };

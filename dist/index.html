@@ -2471,7 +2471,7 @@ function ea(a,e=!1){let t=21+(e?1:0);return{down:[13,t],downright:[12,t],right:[
 var Jr=a=>"#"+(a>>>0).toString(16).padStart(6,"0"),wo=["short","long","shag","afro","cap","shag","ponytail","bob","afro","short","long","shag","bun"],na=[x.blue,["#1c1a24","#2e2c3a","#46445a","#62607a"],["#3a2618","#5a3c26","#7c5838","#a0784c"],["#1e3432","#2c4c48","#406c64","#5c8e84"],["#3c3428","#5e5440","#86785a","#aa9c78"]],ko=[["#1c1c24","#2e2e3a","#46465a","#626278"],["#3a2014","#5c3620","#84522e","#a87040"],["#1a2a1c","#2c4430","#446448","#62866a"],["#4a3a14","#74601e","#a08a34","#c8b050"]],ha=[null,["#3a1c14","#5c2e1e","#84462c"],["#6c6c78","#a0a0ac","#e0e0e8"],["#5a1418","#8c2028","#c03840"]];
 function Qr(a,e,t,s={}){let i=Re(a),o=Re(a+"#"),r=s.style||wo[(i>>>7)%wo.length];return{shirt:s.shirt||e.map(Jr),pants:s.pants||na[i%na.length],skin:s.skin||x.skin[(i>>>3)%x.skin.length],hair:x.hair[t]||x.hair.hair,style:t==="hairGrey"&&o%3===0&&!s.style?"bald":r,cap:s.cap||[x.blue,x.red,x.olive][(i>>>11)%3],jacket:"jacket"in s?s.jacket:o%5===0?ko[(o>>>4)%ko.length]:null,top:["tee","collar","stripe","collar","turtle","tee","collar"][o%7],flare:"flare"in s?s.flare:!s.kid&&(o>>>23)%3!==0,stache:"stache"in s?s.stache:!s.kid&&!["long","bob","ponytail","bun"].includes(r)&&(o>>>26)%4===0,glasses:"glasses"in s?s.glasses:(o>>>9)%8===0,beard:!s.kid&&t!=="hairRed"&&(o>>>13)%9===0&&!["long","bob","ponytail","bun"].includes(r),dress:!s.kid&&["long","bun","bob"].includes(r)&&(o>>>17)%3===0,shoes:s.shoes||ha[(o>>>20)%ha.length],kid:!!s.kid}}
 var kt="#1c1a2c",as="#b8e0f8",Us=x.wood;
-function Ks(a,e,t=0,s=null){let i=s?32:16,o=e==="down",r=e==="up",n=e==="right",h=e==="downright",l=e==="upright",{shirt:d,pants:f,skin:u,hair:p}=a,m=a.jacket||null,y=m||d,g=a.style||"short",k=!!a.kid,b=k?2:0,S=t===1?1:t===2?-1:0,E=Ys(i),M=Ys(i),I=Ys(i),F=Ys(i),B=a.shoes||["#2a2432","#463e52","#6a6078"],q=(T,C,R=0,P=!1,ge=0)=>{for(let Le=21;Le<24-R;Le++)for(let Qt=0;Qt<C;Qt++)M.set(T+Qt,Le,P||Qt===C-1?f[1]:Qt===0?f[3]:f[2]);let ye=24-R,Se=Math.min(0,ge),ht=C-1+Math.max(0,ge);for(let Le=Se;Le<=ht;Le++)M.set(T+Le,ye,P?B[0]:Le===Se?B[2]:B[1])};o||r?(q(5,3,S>0?1:0),q(8,3,S<0?1:0),M.set(7,22,f[1]),a.flare&&(M.set(4,23-(S>0?1:0),f[3]),M.set(11,23-(S<0?1:0),f[1]))):n?S===0?(q(6,4,0,!1,1),M.set(8,23,f[1])):S>0?(q(5,3,1,!0,-1),q(8,3,0,!1,1)):(q(8,3,0,!0,1),q(5,3,1,!1,-1)):h?(q(5,3,S<0?1:0,!0),q(S>0?9:8,3,S>0?1:0,!1,1),a.flare&&M.set(S>0?12:11,23-(S>0?1:0),f[1])):(q(8,3,S<0?1:0,!0),q(S>0?4:5,3,S>0?1:0),a.flare&&M.set(S>0?3:4,23-(S>0?1:0),f[3]));let W=n?5:4,_=n?6:h||l?7:8,$=15+b,Ve=6-b;if(a.dress){for(let T=$;T<=22;T++){let C=Math.floor((T-$)/3);for(let R=W-C;R<W+_+C;R++)M.set(R,T,R===W-C?d[3]:R===W+_+C-1?d[1]:d[2])}M.hline(W-2,W+_+1,22,d[1])}else M.shaded(W,$,_,Ve,d),a.top==="stripe"&&M.hline(W,W+_-1,$+2,d[3]),m&&(o||h?(M.shaded(W,$,3,Ve,m),M.shaded(W+_-(h?2:3),$,h?2:3,Ve,m,{hi:!1})):M.shaded(W,$,_,Ve,m)),M.hline(W,W+_-1,20,a.belt||f[0]);let Kt=a.top==="turtle"&&!m;o&&(Kt?(M.hline(6,9,$,d[3]),M.hline(6,9,$+1,d[2])):(M.set(7,$,u[2]),M.set(8,$,u[2]),M.set(7,$+1,d[1]),M.set(8,$+1,d[1])),(a.top==="collar"||m)&&(M.set(5,$,d[3]),M.set(6,$,d[3]),M.set(6,$+1,d[3]),M.set(9,$,d[3]),M.set(10,$,d[3]),M.set(9,$+1,d[3]),M.set(7,$+2,u[1]))),h&&(Kt?M.hline(7,10,$,d[3]):(M.set(8,$,u[2]),M.set(9,$,u[2])),(a.top==="collar"||m)&&(M.set(7,$,d[3]),M.set(10,$,d[3]),M.set(10,$+1,d[3]))),(r||l)&&(a.top==="collar"||m)&&M.hline(W+1,W+_-2,$,d[3]);let gt=k?4:5,L=16+b,rt=(T,C,R,P=gt,ge=!1)=>{for(let ye=0;ye<P;ye++)for(let Se=0;Se<2;Se++){let ht=ye>=P-2,Le=ht?u:y;T.set(C+Se,R+ye,ge?Le[1]:Se===0?Le[ht?3:2]:Le[ht?2:1])}},Ss=s==="k",Fi=S>0&&!(Ss&&l)?1:0,ji=S<0&&!Ss?1:0,Is=!!s&&!Ss,Gi=s==="h";o||r?(Gi||rt(M,2,L+Fi),Is?s==="p1"&&r&&rt(M,12,L+1):rt(M,12,L+ji)):n?Is||rt(F,7+S,L):h?(Gi||rt(E,2,L+Fi,gt,!0),Is||rt(M,11,L+ji)):(Gi||rt(M,2,L+Fi),Is||rt(E,11,L+ji,gt,!0));let nt=o||r?8:n||h?8.5:7.5,j=9.5+b,zt=n?6:6.5,Xt=6,kr=T=>(T*5+1)%3===0?.16:0,Ot=g==="long"||g==="bob"||g==="ponytail",qi=g==="shag",br=(T,C,R,P)=>{if(g==="cap"||a.mask)return r;if(qi){if(r||l&&R<.4)return!(l&&R>.55&&P>-.35);let ye=-.12-R*.22+((T*3+1)%4===0?.12:0);return o?P<ye||Math.abs(R)>.66&&P<.62:h?P<ye-.05||R<-.42&&P<.7||R>.8&&P<.5:P<(R>.25?-.22:-.1)||R<.02&&P<.75||R<.25&&P<.3}if(g==="bald")return Math.abs(R)>.78&&P>-.25&&P<.35&&!(h&&R>0)&&!(n&&R>0);if(r)return!(!Ot&&P>.72&&Math.abs(R)<.55);if(l)return!(R>.55&&P>-.3&&P<.75);let ge=-.3+kr(T)+(g==="bob"?.08:0);return o?P<ge||Math.abs(R)>.8&&P<.42||Ot&&Math.abs(R)>.7&&P<.8:h?P<ge||R<-.5&&P<.45||R>.86&&P<.1||Ot&&R<-.35&&P<.85:P<(R>.2?ge:-.3)||R<-.12&&P<.5||Ot&&R<.05&&P<.85},Ts=(T,C,R=0,P=0)=>{if(qi){if(C>-.9&&C<-.6&&T>-.7&&T<-.05||C>-.5&&C<-.3&&T<-.6)return p[3];if((R+P)%3===0&&C>.15&&!r)return p[1]}else if(C>-.88&&C<-.52&&T>-.62&&T<.08)return p[3];let ge=-T*.55-C*.6;return ge<-.72?p[0]:ge<-.25?p[1]:p[2]},xr=(T,C)=>{let R=-T*.6-C*.5;return R>.55?u[3]:R<-.45?u[1]:u[2]},Oe=(T,C,R,P,ge)=>{for(let ye=0;ye<ge;ye++)for(let Se=0;Se<P;Se++)T.set(C+Se,R+ye,Se===0?p[2]:Se===P-1?p[0]:p[1])};if(g==="long"&&(o?(Oe(E,1,j-1,3,9),Oe(E,12,j-1,3,9)):h?Oe(E,1,j-1,4,9):n&&Oe(E,2,j-2,5,10)),g==="ponytail"&&((n||h)&&Oe(E,0,j-2,3,7),o&&Oe(E,13,j-1,2,5)),qi&&!a.mask&&(I.ellipse(nt-(n?.5:l?-.3:0),j-.6,zt+.8,Xt+.4,(T,C,R,P)=>Ts(R,P,T,C)),r||l?Oe(I,r?4:3,j+4,r?8:7,2):n?Oe(E,2,j+1,5,5):h?Oe(E,1,j+1,4,4):(Oe(E,1,j+2,2,3),Oe(E,13,j+2,2,3))),g==="afro"&&I.ellipse(nt,j-1.5,zt+1.2,Xt+.8,(T,C,R,P)=>Ts(R,P)),g==="bun"&&I.ellipse(nt-(n?3:0),3.4+b,2.6,2.2,(T,C,R,P)=>Ts(R,P)),g==="spiky")for(let T of r||l?[-5,-1,3]:[-6,-2,2]){let C=Math.round(nt)+T;I.rect(C,2+b,2,2,p[2]),I.set(C+1,3+b,p[1]),I.set(C+(n||h?1:0),1+b,p[3])}if(I.ellipse(nt,j,zt,Xt,(T,C,R,P)=>br(T,C,R,P)?Ts(R,P,T,C):xr(R,P)),o||h)for(let T=2;T<15;T++)for(let C=5;C<13;C++){let R=I.get(T,C),P=I.get(T,C-1);(R===u[2]||R===u[3])&&P&&p.includes(P)&&I.set(T,C,u[1])}if(r&&Ot&&Oe(I,3,j+2,10,g==="long"?7:g==="ponytail"?0:3),r&&g==="ponytail"&&Oe(I,7,j+3,2,6),l&&Ot&&Oe(I,2,j+2,8,g==="long"?6:2),g==="bald"&&I.set(Math.round(nt)-3,Math.round(j)-4,"#fff8f0"),g==="cap"){let T=a.cap||x.red;I.ellipse(nt,j,zt,Xt,(R,P,ge,ye)=>ye<-.12?ye<-.62&&ge<.1?T[3]:ge>.5?T[1]:T[2]:I.get(R,P));let C=Math.round(j-1);o?(I.hline(2,13,C,T[1]),I.hline(3,12,C+1,u[1]),I.set(7,C-3,"#f8f8f8"),I.set(8,C-3,"#f8f8f8")):h?(I.hline(4,15,C,T[1]),I.hline(5,14,C+1,u[1]),I.set(10,C-3,"#f8f8f8")):n?(I.hline(10,15,C-1,T[1]),I.hline(11,15,C-2,T[2])):r?(I.hline(6,9,C+1,T[0]),I.set(7,C,u[1]),I.set(8,C,u[1])):I.hline(9,13,C,T[1])}if(a.mask){let T=a.maskCol||["#141418","#24242e","#383846","#50505e"];I.ellipse(nt,j,zt,Xt,(R,P,ge,ye)=>{let Se=-ge*.5-ye*.6,ht=Se>.5?T[3]:Se<-.4?T[1]:T[2];return P%2===0&&ht===T[2]?T[1]:ht});let C=Math.round(j);o?(I.hline(4,11,C,u[2]),I.hline(4,11,C+1,u[1]),I.set(5,C+1,kt),I.set(10,C+1,kt)):h?(I.hline(7,13,C,u[2]),I.hline(7,13,C+1,u[1]),I.set(8,C+1,kt),I.set(12,C+1,kt)):n&&(I.hline(11,14,C,u[2]),I.hline(11,14,C+1,u[1]),I.set(12,C+1,kt))}let vr=s==="p2"||s==="b2",Jt=T=>{let C=Math.round(j)+1;vr||I.set(T,C-1,kt),I.set(T,C,kt)};if(!a.mask){if(o){if(Jt(5),Jt(10),a.glasses){let T=Math.round(j);for(let C of[4,6,9,11])I.set(C,T,"#2c2838");I.hline(7,8,T,"#2c2838"),I.set(5,T,as),I.set(10,T,as)}a.beard?(I.hline(5,10,Math.round(j)+4,p[1]),I.hline(6,9,Math.round(j)+5,p[1])):a.stache&&(I.hline(6,9,Math.round(j)+3,p[1]),I.set(5,Math.round(j)+4,p[1]),I.set(10,Math.round(j)+4,p[1]))}else if(h){if(Jt(8),Jt(12),a.glasses){let T=Math.round(j);I.hline(7,13,T,"#2c2838"),I.set(8,T,as),I.set(12,T,as)}a.beard?I.hline(8,13,Math.round(j)+4,p[1]):a.stache&&(I.hline(9,12,Math.round(j)+3,p[1]),I.set(12,Math.round(j)+4,p[1]))}else if(n){if(Jt(12),I.set(8,Math.round(j)+1,u[3]),I.set(8,Math.round(j)+2,u[1]),a.glasses){let T=Math.round(j);I.hline(9,13,T,"#2c2838"),I.set(12,T,as)}a.beard?I.hline(10,14,Math.round(j)+4,p[1]):a.stache&&(I.hline(12,14,Math.round(j)+3,p[1]),I.set(13,Math.round(j)+4,p[1]))}}let fe=F,te=(T,C,R=3)=>{fe.shaded(T,C,R,R,u),fe.set(T+R-1,C+R-1,u[0])},he=(T,C,R,P)=>fe.shaded(T,C,R,P,y),Ye=s&&(s[0]==="b"||s[0]==="w")?+s[1]:0,Mr=(T,C,R,P)=>{s[0]==="b"&&(fe.line(T,C,R,P,Us[3]),fe.line(T+1,C,R+1,P,Us[2]),fe.set(R,P,Us[4]),fe.set(R+1,P,Us[3]))},ze=()=>Mr(...Zi(e,Ye,k));if(s==="h")fe=E,he(0,4+b,2,12),he(14,4+b,2,12),te(-1,1+b),te(14,1+b);else if(Ss){let[T,C]=ea(e,k);fe=r?M:F,te(T-1,C-1,2)}else o?(s==="p1"&&(he(12,L-1,2,3),te(12,L-4)),s==="p2"&&(he(10,L+1,3,2),F.shaded(6,17+b,5,5,u),F.hline(7,9,18+b,u[1]),F.set(10,21+b,u[0])),Ye===1&&(ze(),fe=E,he(12,L-1,2,2),fe=F,te(11,L-2)),Ye===2&&(ze(),he(7,L+2,3,2),te(4,L+3)),s==="g"&&(he(11,L,2,3),te(10,L+3))):r?(s==="p2"&&(fe=E,he(11,5+b,2,10),te(10,2+b)),Ye===1&&(ze(),te(11,L+1)),Ye===2&&(fe=E,ze(),he(11,9+b,2,6),te(9,8+b)),s==="g"&&(fe=E,he(11,8+b,2,7),te(10,5+b))):n?(s==="p1"&&(he(4,L,3,2),te(2,L-1)),s==="p2"&&(he(8,L,5,2),te(13,L-1,4)),Ye===1&&(fe=E,ze(),fe=F,te(4,L-1)),Ye===2&&(ze(),he(8,L,3,2),te(11,L-1)),s==="g"&&(he(8,L,5,2),te(13,L-1))):h?(s==="p1"&&(he(11,L-2,2,3),te(12,L-5)),s==="p2"&&(he(10,L+1,3,2),he(12,L+3,2,1),te(13,L+3,4)),Ye===1&&(fe=E,ze(),fe=F,te(11,L-3)),Ye===2&&(ze(),he(9,L+2,2,2),te(9,L+3)),s==="g"&&(he(10,L+1,3,2),te(13,L+2))):l&&(s==="p1"&&te(12,L+3),s==="p2"&&(fe=E,he(11,L-3,2,3),he(12,L-6,2,3),te(13,L-10,4)),Ye===1&&(ze(),te(11,L+2)),Ye===2&&(fe=E,ze(),he(11,L-5,2,5),te(10,L-7)),s==="g"&&(fe=E,he(11,L-4,2,4),te(12,L-7)));let qa=new O(i,32);for(let T of[E,M,I,F])qa.blit(T.P.outlineBy(Ue),0,0);return qa}
+function Ks(a,e,t=0,s=null){let i=s?32:16,o=e==="down",r=e==="up",n=e==="right",h=e==="downright",l=e==="upright",{shirt:d,pants:f,skin:u,hair:p}=a,m=a.jacket||null,y=m||d,g=a.style||"short",k=!!a.kid,b=k?2:0,S=t===1?1:t===2?-1:0,E=Ys(i),M=Ys(i),I=Ys(i),F=Ys(i),B=a.shoes||["#2a2432","#463e52","#6a6078"],q=(T,C,R=0,P=!1,ge=0)=>{for(let Le=21;Le<24-R;Le++)for(let Qt=0;Qt<C;Qt++)M.set(T+Qt,Le,P||Qt===C-1?f[1]:Qt===0?f[3]:f[2]);let ye=24-R,Se=Math.min(0,ge),ht=C-1+Math.max(0,ge);for(let Le=Se;Le<=ht;Le++)M.set(T+Le,ye,P?B[0]:Le===Se?B[2]:B[1])};o||r?(q(5,3,S>0?1:0),q(8,3,S<0?1:0),M.set(7,22,f[1]),a.flare&&(M.set(4,23-(S>0?1:0),f[3]),M.set(11,23-(S<0?1:0),f[1]))):n?S===0?(q(6,4,0,!1,1),M.set(8,23,f[1])):S>0?(q(5,3,1,!0,-1),q(8,3,0,!1,1)):(q(8,3,0,!0,1),q(5,3,1,!1,-1)):h?(q(5,3,S<0?1:0,!0),q(S>0?9:8,3,S>0?1:0,!1,1),a.flare&&M.set(S>0?12:11,23-(S>0?1:0),f[1])):(q(8,3,S<0?1:0,!0),q(S>0?4:5,3,S>0?1:0),a.flare&&M.set(S>0?3:4,23-(S>0?1:0),f[3]));let W=n?5:4,_=n?6:h||l?7:8,$=15+b,Ve=6-b;if(a.dress){for(let T=$;T<=22;T++){let C=Math.floor((T-$)/3);for(let R=W-C;R<W+_+C;R++)M.set(R,T,R===W-C?d[3]:R===W+_+C-1?d[1]:d[2])}M.hline(W-2,W+_+1,22,d[1])}else M.shaded(W,$,_,Ve,d),a.top==="stripe"&&M.hline(W,W+_-1,$+2,d[3]),m&&(o||h?(M.shaded(W,$,3,Ve,m),M.shaded(W+_-(h?2:3),$,h?2:3,Ve,m,{hi:!1})):M.shaded(W,$,_,Ve,m)),M.hline(W,W+_-1,20,a.belt||f[0]);let Kt=a.top==="turtle"&&!m;o&&(Kt?(M.hline(6,9,$,d[3]),M.hline(6,9,$+1,d[2])):(M.set(7,$,u[2]),M.set(8,$,u[2]),M.set(7,$+1,d[1]),M.set(8,$+1,d[1])),(a.top==="collar"||m)&&(M.set(5,$,d[3]),M.set(6,$,d[3]),M.set(6,$+1,d[3]),M.set(9,$,d[3]),M.set(10,$,d[3]),M.set(9,$+1,d[3]),M.set(7,$+2,u[1]))),h&&(Kt?M.hline(7,10,$,d[3]):(M.set(8,$,u[2]),M.set(9,$,u[2])),(a.top==="collar"||m)&&(M.set(7,$,d[3]),M.set(10,$,d[3]),M.set(10,$+1,d[3]))),(r||l)&&(a.top==="collar"||m)&&M.hline(W+1,W+_-2,$,d[3]);let gt=k?4:5,L=16+b,rt=(T,C,R,P=gt,ge=!1)=>{for(let ye=0;ye<P;ye++)for(let Se=0;Se<2;Se++){let ht=ye>=P-2,Le=ht?u:y;T.set(C+Se,R+ye,ge?Le[1]:Se===0?Le[ht?3:2]:Le[ht?2:1])}},Ss=s==="k",Fi=S>0&&!(Ss&&l)?1:0,ji=S<0&&!Ss?1:0,Is=!!s&&!Ss,Gi=s==="h";o||r?(Gi||rt(M,2,L+Fi),Is?s==="p1"&&r&&rt(M,12,L+1):rt(M,12,L+ji)):n?Is||rt(F,7+S,L):h?(Gi||rt(E,2,L+Fi,gt,!0),Is||rt(M,11,L+ji)):(Gi||rt(M,2,L+Fi),Is||rt(E,11,L+ji,gt,!0));let nt=o||r?8:n||h?8.5:7.5,j=9.5+b,zt=n?6:6.5,Xt=6,kr=T=>(T*5+1)%3===0?.16:0,Ot=g==="long"||g==="bob"||g==="ponytail",qi=g==="shag",br=(T,C,R,P)=>{if(g==="cap"||a.mask)return r;if(qi){if(r||l&&R<.4)return!(l&&R>.55&&P>-.35);let ye=-.12-R*.22+((T*3+1)%4===0?.12:0);return o?P<ye||Math.abs(R)>.66&&P<.62:h?P<ye-.05||R<-.42&&P<.7||R>.8&&P<.5:P<(R>.25?-.22:-.1)||R<.02&&P<.75||R<.25&&P<.3}if(g==="bald")return Math.abs(R)>.78&&P>-.25&&P<.35&&!(h&&R>0)&&!(n&&R>0);if(r)return!(!Ot&&P>.72&&Math.abs(R)<.55);if(l)return!(R>.55&&P>-.3&&P<.75);let ge=-.3+kr(T)+(g==="bob"?.08:0);return o?P<ge||Math.abs(R)>.8&&P<.42||Ot&&Math.abs(R)>.7&&P<.8:h?P<ge||R<-.5&&P<.45||R>.86&&P<.1||Ot&&R<-.35&&P<.85:P<(R>.2?ge:-.3)||R<-.12&&P<.5||Ot&&R<.05&&P<.85},Ts=(T,C,R=0,P=0)=>{if(qi){if(C>-.9&&C<-.6&&T>-.7&&T<-.05||C>-.5&&C<-.3&&T<-.6)return p[3];if((R+P)%3===0&&C>.15&&!r)return p[1]}else if(C>-.88&&C<-.52&&T>-.62&&T<.08)return p[3];let ge=-T*.55-C*.6;return ge<-.72?p[0]:ge<-.25?p[1]:p[2]},xr=(T,C)=>{let R=-T*.6-C*.5;return R>.55?u[3]:R<-.45?u[1]:u[2]},Oe=(T,C,R,P,ge)=>{for(let ye=0;ye<ge;ye++)for(let Se=0;Se<P;Se++)T.set(C+Se,R+ye,Se===0?p[2]:Se===P-1?p[0]:p[1])};if(g==="long"&&(o?(Oe(E,1,j-1,3,9),Oe(E,12,j-1,3,9)):h?Oe(E,1,j-1,4,9):n&&Oe(E,2,j-2,5,10)),g==="ponytail"&&((n||h)&&Oe(E,0,j-2,3,7),o&&Oe(E,13,j-1,2,5)),qi&&!a.mask&&(I.ellipse(nt-(n?.5:l?-.3:0),j-.6,zt+.8,Xt+.4,(T,C,R,P)=>Ts(R,P,T,C)),r||l?Oe(I,r?4:3,j+4,r?8:7,2):n?Oe(E,2,j+1,5,5):h?Oe(E,1,j+1,4,4):(Oe(E,1,j+2,2,3),Oe(E,13,j+2,2,3))),g==="afro"&&I.ellipse(nt,j-1.5,zt+1.2,Xt+.8,(T,C,R,P)=>Ts(R,P)),g==="bun"&&I.ellipse(nt-(n?3:0),3.4+b,2.6,2.2,(T,C,R,P)=>Ts(R,P)),g==="spiky")for(let T of r||l?[-5,-1,3]:[-6,-2,2]){let C=Math.round(nt)+T;I.rect(C,2+b,2,2,p[2]),I.set(C+1,3+b,p[1]),I.set(C+(n||h?1:0),1+b,p[3])}if(I.ellipse(nt,j,zt,Xt,(T,C,R,P)=>br(T,C,R,P)?Ts(R,P,T,C):xr(R,P)),o||h)for(let T=2;T<15;T++)for(let C=5;C<13;C++){let R=I.get(T,C),P=I.get(T,C-1);(R===u[2]||R===u[3])&&P&&p.includes(P)&&I.set(T,C,u[1])}if(r&&Ot&&Oe(I,3,j+2,10,g==="long"?7:g==="ponytail"?0:3),r&&g==="ponytail"&&Oe(I,7,j+3,2,6),l&&Ot&&Oe(I,2,j+2,8,g==="long"?6:2),g==="bald"&&I.set(Math.round(nt)-3,Math.round(j)-4,"#fff8f0"),g==="cap"){let T=a.cap||x.red;I.ellipse(nt,j,zt,Xt,(R,P,ge,ye)=>ye<-.12?ye<-.62&&ge<.1?T[3]:ge>.5?T[1]:T[2]:I.get(R,P));let C=Math.round(j-1);o?(I.hline(2,13,C,T[1]),I.hline(3,12,C+1,u[1]),I.set(7,C-3,"#f8f8f8"),I.set(8,C-3,"#f8f8f8")):h?(I.hline(4,15,C,T[1]),I.hline(5,14,C+1,u[1]),I.set(10,C-3,"#f8f8f8")):n?(I.hline(10,15,C-1,T[1]),I.hline(11,15,C-2,T[2])):r?(I.hline(6,9,C+1,T[0]),I.set(7,C,u[1]),I.set(8,C,u[1])):I.hline(9,13,C,T[1])}if(a.mask){let T=a.maskCol||["#141418","#24242e","#383846","#50505e"];I.ellipse(nt,j,zt,Xt,(R,P,ge,ye)=>{let Se=-ge*.5-ye*.6,ht=Se>.5?T[3]:Se<-.4?T[1]:T[2];return P%2===0&&ht===T[2]?T[1]:ht});let C=Math.round(j);o?(I.hline(4,11,C,u[2]),I.hline(4,11,C+1,u[1]),I.set(5,C+1,kt),I.set(10,C+1,kt)):h?(I.hline(7,13,C,u[2]),I.hline(7,13,C+1,u[1]),I.set(8,C+1,kt),I.set(12,C+1,kt)):n&&(I.hline(11,14,C,u[2]),I.hline(11,14,C+1,u[1]),I.set(12,C+1,kt))}let vr=s==="p2"||s==="b2",Jt=T=>{let C=Math.round(j)+1;vr||I.set(T,C-1,kt),I.set(T,C,kt)};if(!a.mask){if(o){if(Jt(5),Jt(10),a.glasses){let T=Math.round(j);for(let C of[4,6,9,11])I.set(C,T,"#2c2838");I.hline(7,8,T,"#2c2838"),I.set(5,T,as),I.set(10,T,as)}a.beard?(I.hline(5,10,Math.round(j)+4,p[1]),I.hline(6,9,Math.round(j)+5,p[1])):a.stache&&(I.hline(6,9,Math.round(j)+3,p[1]),I.set(5,Math.round(j)+4,p[1]),I.set(10,Math.round(j)+4,p[1]))}else if(h){if(Jt(8),Jt(12),a.glasses){let T=Math.round(j);I.hline(7,13,T,"#2c2838"),I.set(8,T,as),I.set(12,T,as)}a.beard?I.hline(8,13,Math.round(j)+4,p[1]):a.stache&&(I.hline(9,12,Math.round(j)+3,p[1]),I.set(12,Math.round(j)+4,p[1]))}else if(n){if(Jt(12),I.set(8,Math.round(j)+1,u[3]),I.set(8,Math.round(j)+2,u[1]),a.glasses){let T=Math.round(j);I.hline(9,13,T,"#2c2838"),I.set(12,T,as)}a.beard?I.hline(10,14,Math.round(j)+4,p[1]):a.stache&&(I.hline(12,14,Math.round(j)+3,p[1]),I.set(13,Math.round(j)+4,p[1]))}}let fe=F,te=(T,C,R=3)=>{fe.shaded(T,C,R,R,u),fe.set(T+R-1,C+R-1,u[0])},he=(T,C,R,P)=>fe.shaded(T,C,R,P,y),Ye=s&&(s[0]==="b"||s[0]==="w")?+s[1]:0,Mr=(T,C,R,P)=>{s[0]==="b"&&(fe.line(T,C,R,P,Us[3]),fe.line(T+1,C,R+1,P,Us[2]),fe.set(R,P,Us[4]),fe.set(R+1,P,Us[3]))},ze=()=>Mr(...Zi(e,Ye,k));if(s==="h")fe=E,he(1,5+b,2,11),he(13,5+b,2,11),te(0,2+b),te(13,2+b);else if(Ss){let[T,C]=ea(e,k);fe=r?M:F,te(T-1,C-1,2)}else o?(s==="p1"&&(he(12,L-1,2,3),te(12,L-4)),s==="p2"&&(he(10,L+1,3,2),F.shaded(6,17+b,5,5,u),F.hline(7,9,18+b,u[1]),F.set(10,21+b,u[0])),Ye===1&&(ze(),fe=E,he(12,L-1,2,2),fe=F,te(11,L-2)),Ye===2&&(ze(),he(7,L+2,3,2),te(4,L+3)),s==="g"&&(he(11,L,2,3),te(10,L+3))):r?(s==="p2"&&(fe=E,he(11,5+b,2,10),te(10,2+b)),Ye===1&&(ze(),te(11,L+1)),Ye===2&&(fe=E,ze(),he(11,9+b,2,6),te(9,8+b)),s==="g"&&(fe=E,he(11,8+b,2,7),te(10,5+b))):n?(s==="p1"&&(he(4,L,3,2),te(2,L-1)),s==="p2"&&(he(8,L,5,2),te(13,L-1,4)),Ye===1&&(fe=E,ze(),fe=F,te(4,L-1)),Ye===2&&(ze(),he(8,L,3,2),te(11,L-1)),s==="g"&&(he(8,L,5,2),te(13,L-1))):h?(s==="p1"&&(he(11,L-2,2,3),te(12,L-5)),s==="p2"&&(he(10,L+1,3,2),he(12,L+3,2,1),te(13,L+3,4)),Ye===1&&(fe=E,ze(),fe=F,te(11,L-3)),Ye===2&&(ze(),he(9,L+2,2,2),te(9,L+3)),s==="g"&&(he(10,L+1,3,2),te(13,L+2))):l&&(s==="p1"&&te(12,L+3),s==="p2"&&(fe=E,he(11,L-3,2,3),he(12,L-6,2,3),te(13,L-10,4)),Ye===1&&(ze(),te(11,L+2)),Ye===2&&(fe=E,ze(),he(11,L-5,2,5),te(10,L-7)),s==="g"&&(fe=E,he(11,L-4,2,4),te(12,L-7)));let qa=new O(i,32);for(let T of[E,M,I,F])qa.blit(T.P.outlineBy(Ue),0,0);return qa}
 var ls=[{name:"Denim and a wide collar",shirt:["#5a3a14","#8c5c20","#c08430","#e8b060"]},{name:"Leather jacket",shirt:["#6a1c1c","#a02c2c","#d04848","#f07878"],jacket:["#2a1a12","#44281a","#624028","#86583a"]},{name:"Hawaiian shirt",shirt:["#1c5a3c","#2c8a58","#48b878","#88e0a8"],pants:["#3c3428","#5e5440","#86785a","#aa9c78"]},{name:"Track suit",shirt:["#5a2408","#8c3c10","#c85c1c","#f08c40"],pants:["#5a2408","#8c3c10","#c85c1c","#f08c40"],top:"stripe"},{name:"Leisure suit",shirt:["#8a8068","#b8ae90","#dcd4b8","#f0ead4"],jacket:["#1c3c5c","#2c5c88","#4880b0","#78a8d8"],pants:["#1c3c5c","#2c5c88","#4880b0","#78a8d8"]},{name:"Disco night",shirt:["#141418","#24242c","#383844","#50505e"],jacket:["#401830","#602444","#86345e","#a8507a"],top:"turtle"}];
 var npcShirts=[[5907472,9189912,12605988,14712896],[5915664,9202716,12884528,15254624],[3029528,4873254,6979638,9742420],[3810328,6044198,8410682,11041368],[9076322,11839624,14208172,15787724],[1588292,2381918,3832444,6464672],[3936288,6298672,9055300,11816546]];
 // the original's 16x16 prop painters (improvised weapons, street furniture)
@@ -2848,7 +2848,8 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     const phase = moving ? Math.floor(walk * 0.5) % 4 : 0; // ~8 frames a second at a walk
     const frame = phase === 1 ? 1 : phase === 3 ? 2 : 0;
     const d8 = A.dir8(dir, st.ang);
-    let X = Math.round(x), Y = Math.round(y);
+    const bob = moving && (phase === 1 || phase === 3) && !st.down ? 1 : 0; // a step lifts the body a pixel
+    let X = Math.round(x), Y = Math.round(y) - bob;
     const fx = st.scale || st.alpha != null || st.crouch;
     if (fx) {
       g.save();
@@ -2860,14 +2861,14 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     }
     // the original's soft shadow
     g.fillStyle = 'rgba(16,12,36,0.45)';
-    g.fillRect(X - 4, Y - 1, 8, 2);
-    g.fillRect(X - 3, Y - 2, 6, 4);
+    g.fillRect(X - 4, Y - 1 + bob, 8, 2);
+    g.fillRect(X - 3, Y - 2 + bob, 6, 4);
     let pose = st.pose || null;
     const wdef = st.weapon && st.weapon !== 'fists' ? D.weapons[st.weapon] : null;
     if (!pose && wdef) pose = wdef.gun || wdef.ring ? 'g' : st.weapon === 'knuckles' ? null : 'k';
     if (!pose && st.held) pose = A.heldPose(st.held, 0, 1);
     // legs keep walking whatever the arms are doing
-    const spr = A.oldSprite(look, d8, frame, pose);
+    const spr = A.oldSprite(look, d8, st.down ? 0 : frame, st.down ? null : pose);
     if (st.down) {
       g.save();
       g.translate(X, Y - 3);
@@ -2986,6 +2987,23 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       return;
     }
     let hx, hy, h;
+    const carry = CARRY[k];
+    if (carry && pose === 'k') {
+      // knives point ahead of you, bats rest on the shoulder
+      [hx, hy] = OLD.ea(dirName, kid);
+      const side = dirName !== 'down' && dirName !== 'up';
+      if (carry.fwd) h = side ? (sgn > 0 ? 0.45 : Math.PI - 0.45) : dirName === 'down' ? 1.25 : -1.9;
+      else h = side ? -Math.PI / 2 + 0.35 * sgn : dirName === 'down' ? -Math.PI / 2 + 0.4 : -Math.PI / 2 - 0.4;
+      const u = X + (hx + 0.5 - 8) * sgn, p = Y - 25 + hy + 0.5;
+      const vx = 7.5 - art.grip[0], vy = 7.5 - art.grip[1], flipIt = Math.cos(h) < -0.01;
+      g.save();
+      g.translate(Math.round(u), Math.round(p));
+      g.rotate(h - Math.atan2(flipIt ? -vy : vy, vx));
+      g.scale(carry.sc || 1, (carry.sc || 1) * (flipIt ? -1 : 1));
+      g.drawImage(art.cv, -art.grip[0] - 0.5, -art.grip[1] - 0.5);
+      g.restore();
+      return;
+    }
     if (pose === 'w1' || pose === 'w2') {
       const [x0, y0, x1, y1] = OLD.Zi(dirName, pose === 'w1' ? 1 : 2, kid);
       hx = x0; hy = y0; h = Math.atan2(y1 - y0, (x1 - x0) * sgn);
@@ -3004,6 +3022,37 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     g.drawImage(art.cv, -8, -8);
     g.restore();
   };
+  const CARRY = { knife: { fwd: 1, sc: 0.7 }, bat: { sc: 0.9 } };
+  // ---------------------------------------------------------------- sneaking in plain sight
+  // Sneak and you duck into something: a cardboard box, a bush, a trash can, a barrel or a
+  // potted fern. Your shoes stick out of the bottom and shuffle along when you move.
+  const DISG = {
+    box(o) { const c = ['#4a2e12', '#7a5424', '#a87c40', '#d0a468']; o.shadedRect(1, 3, 14, 12, c); o.hline(1, 14, 3, c[3]); o.line(3, 3, 5, 1, c[2]); o.line(12, 3, 10, 1, c[1]); o.hline(6, 9, 3, '#e0d0a0'); o.rect(10, 11, 3, 2, '#b02a20'); o.rect(5, 7, 6, 2, '#1a1008'); o.set(6, 7, '#ffffff'); o.set(9, 7, '#ffffff'); o.set(7, 8, '#101010'); o.set(10, 8, '#101010'); },
+    bush(o) { const l = OLD.x.leaf; o.ellipse(8, 9, 7.5, 6.5, (x, y, h, v) => (h * -0.6 - v * 0.7 > 0.35 ? l[3] : h * -0.6 - v * 0.7 < -0.4 ? l[1] : l[2])); for (const [x, y] of [[4, 6], [10, 5], [6, 11], [12, 10], [3, 10]]) o.set(x, y, l[4] || l[3]); o.set(7, 8, '#ffffff'); o.set(9, 8, '#ffffff'); o.set(7, 9, '#101010'); o.set(9, 9, '#101010'); o.set(12, 4, '#e84a6a'); o.set(4, 12, '#e84a6a'); },
+    trash(o) { const m = OLD.x.metal; o.shadedRect(3, 5, 10, 10, m); for (const x of [5, 8, 11]) o.line(x, 6, x, 14, m[1]); o.shadedRect(2, 3, 12, 2, m); o.rect(7, 2, 2, 1, m[1]); o.set(9, 4, '#7a9a3a'); o.set(10, 3, '#e8e0c8'); },
+    barrel(o) { const w = OLD.x.wood, m = OLD.x.metal; o.shadedRect(3, 2, 10, 13, w); o.hline(3, 12, 4, m[1]); o.hline(3, 12, 12, m[1]); for (const x of [6, 9]) o.line(x, 2, x, 14, w[1]); o.hline(4, 11, 2, w[3]); o.set(5, 7, '#ffffff'); o.set(10, 7, '#ffffff'); },
+    plant(o) { const l = OLD.x.leaf, t = ['#6a2a14', '#9a4424', '#c86434', '#e8905a']; o.shadedRect(4, 10, 8, 5, t); o.hline(3, 12, 10, t[3]); for (let i = 0; i < 7; i++) { const a = -Math.PI / 2 + (i - 3) * 0.42; o.line(8, 10, Math.round(8 + Math.cos(a) * 7), Math.round(9 + Math.sin(a) * 8), l[1 + (i % 3)]); } o.set(8, 6, '#ffffff'); o.set(8, 7, '#101010'); },
+  };
+  A.DISGUISES = Object.keys(DISG);
+  const disgCache = {};
+  A.drawDisguise = function (g, pl, kind) {
+    if (!disgCache[kind]) { const o = new OLD.O(16, 16); (DISG[kind] || DISG.box)(o); disgCache[kind] = o.outlineBy(OLD.Ue).toCanvas(); }
+    const X = Math.round(pl.x), Y = Math.round(pl.y);
+    const moving = pl.walk && Math.abs(pl.walk) > 0.01;
+    const phase = moving ? Math.floor(pl.walk * 0.5) % 4 : 0;
+    // shoes peeking out underneath, still doing their little walk
+    g.save();
+    g.beginPath(); g.rect(X - 8, Y - 4, 16, 6); g.clip();
+    A.drawPerson(g, pl.x, pl.y, pl.dir, pl.walk, pl.look, { ang: pl.ang });
+    g.restore();
+    g.save();
+    g.translate(X, Y - 3 - (phase === 1 || phase === 3 ? 1 : 0));
+    if (moving) g.rotate((phase === 1 ? 0.07 : phase === 3 ? -0.07 : 0));
+    g.scale(1.3, 1.3);
+    g.drawImage(disgCache[kind], -8, -16);
+    g.restore();
+  };
+
   A.itemBehind = function (d8, pose) {
     const n = DIR8[d8];
     if (pose === 'w2') return n === 'up' || n === 'upright';
@@ -4524,6 +4573,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     const w = this.game.world;
     const tx = (h.x / TS) | 0, ty = (h.y / TS) | 0;
     const cx = tx * TS + 8, cy = ty * TS + 8;
+    if (!R.DIRS[h.wdir]) h.wdir = (R.rng() * 4) | 0;
     const [dx, dy] = R.DIRS[h.wdir];
     const good = (x, y) => {
       if (w.solidPed(x, y)) return false;
@@ -4604,7 +4654,8 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     const game = this.game, pl = game.player;
     if (h.state === 'fight' || h.state === 'report' || h.state === 'surrender' || h.state === 'sleep') return;
     const d = R.dist(h.x, h.y, pl.x, pl.y);
-    const seesPlayer = d < TS * 10 && !pl.inside && (d < TS * 3 || game.world.los(h.x, h.y - 8, pl.x, pl.y - 8));
+    const hidden = pl.sneak && !pl.inCar && !(pl.walk > 0) && d > TS * 1.5 && !(game.law.incident && game.law.incident.state === 'pursuit' && d < TS * 4); // a very still box
+    const seesPlayer = d < TS * 10 && !pl.inside && !hidden && (d < TS * 3 || game.world.los(h.x, h.y - 8, pl.x, pl.y - 8));
     // player with a gun drawn close by
     if (seesPlayer && pl.weaponOut && D.weapons[pl.weapon] && D.weapons[pl.weapon].gun && d < TS * 7 && h.state !== 'flee' && h.state !== 'cower') {
       if (h.cop) {
@@ -8806,7 +8857,16 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       if (this.cool <= 0 || inp.pressed('cool')) this.setCool(false);
     } else if (inp.pressed('cool')) this.setCool(true);
     if (inp.pressed('mask')) this.toggleMask();
-    if (inp.pressed('sneak') && !this.inCar) { this.sneak = !this.sneak; g.ui.toast(this.sneak ? 'Sneaking: quieter, animals spook less.' : 'Walking normally.'); }
+    if (inp.pressed('sneak') && !this.inCar) {
+      this.sneak = !this.sneak;
+      if (this.sneak) this.disguise = R.rng.pick(R.art.DISGUISES.filter((k) => k !== this.disguise));
+      g.ui.toast(this.sneak ? R.rng.pick({ box: ['You duck into a cardboard box. Perfect.', 'A box. Nobody suspects a box.'], bush: ['You are a bush now. A very still bush.', 'Leaves in your hair. Worth it.'], trash: ['You climb into a trash can. Smells like victory.', 'Trash can. Classy.'], barrel: ['You squeeze into a barrel. Just a barrel here.', 'Nothing to see. Barrel business.'], plant: ['A potted fern. Tasteful. Invisible.', 'You hold very still, like a fern would.'] }[this.disguise]) + ' Stand still and nobody sees you.' : 'You shake off the disguise.');
+    }
+    // people notice a box that walks
+    if (this.sneak && this.walk > 0 && R.rng() < dt * 0.25) {
+      const n = g.actors.near(this.x, this.y, TS * 4, (a) => a.kind === 'h' && !a.dead && !a.crew && a.state !== 'fight')[0];
+      if (n) g.actors.say(n, R.rng.pick({ box: ['Did that box just move?', 'Huh. Walking box.'], bush: ['That bush has shoes.', 'Since when do bushes walk?'], trash: ['Garbage day already?', 'That can is following me.'], barrel: ['A barrel with legs. Seen it all now.', 'Rolling out, barrel?'], plant: ['Nice fern. Nice... shoes?', 'That plant was over there.'] }[this.disguise] || ['Huh?']));
+    }
     if (inp.pressed('heal')) g.ui.openMenu('items');
     if (this.inside) return;
     if (this.inCar) return this.updateCar(dt);
@@ -13874,7 +13934,14 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     }
     if (h.state === 'fight' || h.state === 'travel' || h.state === 'flee' || h.state === 'report') st.ang = h.ang;
     if (h.state === 'cower' || h.state === 'surrender') st.pose = 'h';
-    else if (h.swingT > 0 && h.state === 'fight') { st.pose = h.weapon === 'bat' ? 'b1' : h.swingN % 2 ? 'p2' : 'p1'; st.weapon = null; }
+    else if (h.swingT > 0 && h.state === 'fight') {
+      // wind up, then follow through
+      const sw = 1 - h.swingT / 0.22;
+      if (h.weapon === 'bat') { st.pose = sw < 0.45 ? 'b1' : 'b2'; st.weapon = null; }
+      else if (h.weapon === 'knife') { st.pose = sw < 0.45 ? 'w1' : 'w2'; st.weapon = null; st.held = 'knife'; }
+      else { st.pose = h.swingN % 2 ? 'p2' : 'p1'; st.weapon = null; }
+    }
+    if (st.down) { st.weapon = null; st.pose = null; }
     let walk = h.walk;
     if (h.state === 'perform') walk = Math.sin(h.walk * 3) * 2 + h.walk;
     A.drawPerson(g, h.x, h.y, h.dir, walk, h.look, st);
@@ -13891,11 +13958,12 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       if (swing >= 0) st.pose = A.itemArt(pl.held.k) && A.itemArt(pl.held.k).grip ? (swing < 0.45 ? 'w1' : 'w2') : 'h';
     } else if (swing >= 0) {
       if (pl.weapon === 'bat') { st.pose = swing < 0.45 ? 'b1' : 'b2'; st.weapon = null; }
+      else if (pl.weapon === 'knife') { st.pose = swing < 0.45 ? 'w1' : 'w2'; st.weapon = null; st.held = 'knife'; }
       else if (pl.weapon === 'fists' || pl.weapon === 'knuckles' || !D.weapons[pl.weapon] || !D.weapons[pl.weapon].gun) st.pose = (pl.punchN || 0) % 2 ? 'p2' : 'p1';
       if (pl.weapon === 'fists' || pl.weapon === 'knuckles') st.weapon = null;
     }
-    if (pl.sneak && !pl.inCar) st.crouch = true;
     pl._pose = st.pose || (st.held ? 'k' : null);
+    if (pl.sneak && !pl.inCar && !pl.held && !(swing >= 0)) { A.drawDisguise(g, pl, pl.disguise || 'box'); pl._pose = 'hidden'; return; }
     A.drawPerson(g, pl.x, pl.y, pl.dir, pl.walk, pl.look, st);
     R.ring.drawSwing(g, pl);
   };

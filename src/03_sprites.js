@@ -332,7 +332,8 @@
     const phase = moving ? Math.floor(walk * 0.5) % 4 : 0; // ~8 frames a second at a walk
     const frame = phase === 1 ? 1 : phase === 3 ? 2 : 0;
     const d8 = A.dir8(dir, st.ang);
-    let X = Math.round(x), Y = Math.round(y);
+    const bob = moving && (phase === 1 || phase === 3) && !st.down ? 1 : 0; // a step lifts the body a pixel
+    let X = Math.round(x), Y = Math.round(y) - bob;
     const fx = st.scale || st.alpha != null || st.crouch;
     if (fx) {
       g.save();
@@ -344,14 +345,14 @@
     }
     // the original's soft shadow
     g.fillStyle = 'rgba(16,12,36,0.45)';
-    g.fillRect(X - 4, Y - 1, 8, 2);
-    g.fillRect(X - 3, Y - 2, 6, 4);
+    g.fillRect(X - 4, Y - 1 + bob, 8, 2);
+    g.fillRect(X - 3, Y - 2 + bob, 6, 4);
     let pose = st.pose || null;
     const wdef = st.weapon && st.weapon !== 'fists' ? D.weapons[st.weapon] : null;
     if (!pose && wdef) pose = wdef.gun || wdef.ring ? 'g' : st.weapon === 'knuckles' ? null : 'k';
     if (!pose && st.held) pose = A.heldPose(st.held, 0, 1);
     // legs keep walking whatever the arms are doing
-    const spr = A.oldSprite(look, d8, frame, pose);
+    const spr = A.oldSprite(look, d8, st.down ? 0 : frame, st.down ? null : pose);
     if (st.down) {
       g.save();
       g.translate(X, Y - 3);
@@ -470,6 +471,23 @@
       return;
     }
     let hx, hy, h;
+    const carry = CARRY[k];
+    if (carry && pose === 'k') {
+      // knives point ahead of you, bats rest on the shoulder
+      [hx, hy] = OLD.ea(dirName, kid);
+      const side = dirName !== 'down' && dirName !== 'up';
+      if (carry.fwd) h = side ? (sgn > 0 ? 0.45 : Math.PI - 0.45) : dirName === 'down' ? 1.25 : -1.9;
+      else h = side ? -Math.PI / 2 + 0.35 * sgn : dirName === 'down' ? -Math.PI / 2 + 0.4 : -Math.PI / 2 - 0.4;
+      const u = X + (hx + 0.5 - 8) * sgn, p = Y - 25 + hy + 0.5;
+      const vx = 7.5 - art.grip[0], vy = 7.5 - art.grip[1], flipIt = Math.cos(h) < -0.01;
+      g.save();
+      g.translate(Math.round(u), Math.round(p));
+      g.rotate(h - Math.atan2(flipIt ? -vy : vy, vx));
+      g.scale(carry.sc || 1, (carry.sc || 1) * (flipIt ? -1 : 1));
+      g.drawImage(art.cv, -art.grip[0] - 0.5, -art.grip[1] - 0.5);
+      g.restore();
+      return;
+    }
     if (pose === 'w1' || pose === 'w2') {
       const [x0, y0, x1, y1] = OLD.Zi(dirName, pose === 'w1' ? 1 : 2, kid);
       hx = x0; hy = y0; h = Math.atan2(y1 - y0, (x1 - x0) * sgn);
@@ -488,6 +506,37 @@
     g.drawImage(art.cv, -8, -8);
     g.restore();
   };
+  const CARRY = { knife: { fwd: 1, sc: 0.7 }, bat: { sc: 0.9 } };
+  // ---------------------------------------------------------------- sneaking in plain sight
+  // Sneak and you duck into something: a cardboard box, a bush, a trash can, a barrel or a
+  // potted fern. Your shoes stick out of the bottom and shuffle along when you move.
+  const DISG = {
+    box(o) { const c = ['#4a2e12', '#7a5424', '#a87c40', '#d0a468']; o.shadedRect(1, 3, 14, 12, c); o.hline(1, 14, 3, c[3]); o.line(3, 3, 5, 1, c[2]); o.line(12, 3, 10, 1, c[1]); o.hline(6, 9, 3, '#e0d0a0'); o.rect(10, 11, 3, 2, '#b02a20'); o.rect(5, 7, 6, 2, '#1a1008'); o.set(6, 7, '#ffffff'); o.set(9, 7, '#ffffff'); o.set(7, 8, '#101010'); o.set(10, 8, '#101010'); },
+    bush(o) { const l = OLD.x.leaf; o.ellipse(8, 9, 7.5, 6.5, (x, y, h, v) => (h * -0.6 - v * 0.7 > 0.35 ? l[3] : h * -0.6 - v * 0.7 < -0.4 ? l[1] : l[2])); for (const [x, y] of [[4, 6], [10, 5], [6, 11], [12, 10], [3, 10]]) o.set(x, y, l[4] || l[3]); o.set(7, 8, '#ffffff'); o.set(9, 8, '#ffffff'); o.set(7, 9, '#101010'); o.set(9, 9, '#101010'); o.set(12, 4, '#e84a6a'); o.set(4, 12, '#e84a6a'); },
+    trash(o) { const m = OLD.x.metal; o.shadedRect(3, 5, 10, 10, m); for (const x of [5, 8, 11]) o.line(x, 6, x, 14, m[1]); o.shadedRect(2, 3, 12, 2, m); o.rect(7, 2, 2, 1, m[1]); o.set(9, 4, '#7a9a3a'); o.set(10, 3, '#e8e0c8'); },
+    barrel(o) { const w = OLD.x.wood, m = OLD.x.metal; o.shadedRect(3, 2, 10, 13, w); o.hline(3, 12, 4, m[1]); o.hline(3, 12, 12, m[1]); for (const x of [6, 9]) o.line(x, 2, x, 14, w[1]); o.hline(4, 11, 2, w[3]); o.set(5, 7, '#ffffff'); o.set(10, 7, '#ffffff'); },
+    plant(o) { const l = OLD.x.leaf, t = ['#6a2a14', '#9a4424', '#c86434', '#e8905a']; o.shadedRect(4, 10, 8, 5, t); o.hline(3, 12, 10, t[3]); for (let i = 0; i < 7; i++) { const a = -Math.PI / 2 + (i - 3) * 0.42; o.line(8, 10, Math.round(8 + Math.cos(a) * 7), Math.round(9 + Math.sin(a) * 8), l[1 + (i % 3)]); } o.set(8, 6, '#ffffff'); o.set(8, 7, '#101010'); },
+  };
+  A.DISGUISES = Object.keys(DISG);
+  const disgCache = {};
+  A.drawDisguise = function (g, pl, kind) {
+    if (!disgCache[kind]) { const o = new OLD.O(16, 16); (DISG[kind] || DISG.box)(o); disgCache[kind] = o.outlineBy(OLD.Ue).toCanvas(); }
+    const X = Math.round(pl.x), Y = Math.round(pl.y);
+    const moving = pl.walk && Math.abs(pl.walk) > 0.01;
+    const phase = moving ? Math.floor(pl.walk * 0.5) % 4 : 0;
+    // shoes peeking out underneath, still doing their little walk
+    g.save();
+    g.beginPath(); g.rect(X - 8, Y - 4, 16, 6); g.clip();
+    A.drawPerson(g, pl.x, pl.y, pl.dir, pl.walk, pl.look, { ang: pl.ang });
+    g.restore();
+    g.save();
+    g.translate(X, Y - 3 - (phase === 1 || phase === 3 ? 1 : 0));
+    if (moving) g.rotate((phase === 1 ? 0.07 : phase === 3 ? -0.07 : 0));
+    g.scale(1.3, 1.3);
+    g.drawImage(disgCache[kind], -8, -16);
+    g.restore();
+  };
+
   A.itemBehind = function (d8, pose) {
     const n = DIR8[d8];
     if (pose === 'w2') return n === 'up' || n === 'upright';
