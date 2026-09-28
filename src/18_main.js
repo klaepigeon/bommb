@@ -33,6 +33,7 @@
     title.style.display = 'flex';
     this.resize();
     R.gl.init(this);
+    R.sim.start();
     const save = R.store.get(SAVE);
     this.loop();
     // wait (briefly) for the pixel fonts, then build the world
@@ -215,12 +216,13 @@
     let last = performance.now();
     const frame = (now) => {
       requestAnimationFrame(frame);
-      let dt = Math.min(0.05, (now - last) / 1000);
+      const real = Math.min(0.25, Math.max(0, (now - last) / 1000));
       this.fps = this.fps ? this.fps * 0.95 + (1 / Math.max(0.001, (now - last) / 1000)) * 0.05 : 60;
       last = now;
       try {
         if (!this.started) { this.renderer.renderTitle(now / 1000); return; }
-        this.tick(dt);
+        // the simulation advances in fixed 1/60 s steps whatever the display rate (12_sim)
+        R.sim.advance(real, (step) => this.tick(step));
         this.renderer.render();
       } catch (e) {
         console.error(e);
@@ -240,7 +242,7 @@
       this.clock.update(sdt);
       // windows light up at dusk: repaint the cached city
       const nightNow = this.clock.isNight();
-      if (nightNow !== this.wasNight) { this.wasNight = nightNow; R.art.chunkCache.clear(); }
+      if (nightNow !== this.wasNight) { this.wasNight = nightNow; R.art.staleAll ? R.art.staleAll() : R.art.chunkCache.clear(); }
       this.env.update(sdt);
       pl.update(dt * (this.timeScale < 1 ? 0.8 : 1));
       this.actors.update(sdt);

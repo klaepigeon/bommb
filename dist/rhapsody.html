@@ -266,177 +266,190 @@ canvas.portrait { width: 56px; height: 74px; flex: none; background: #d8c8a0; bo
 </div>
 
 <script>
-// ---- 00_core.js
+// ---- 00_core.ts
 // RHAPSODY — core utilities. Every module hangs off the global `R` namespace so the
-// game can ship as one inlined HTML file without a bundler.
+// game can ship as one inlined HTML file without a bundler. (TypeScript: the shapes live
+// in types/rhapsody.d.ts.)
 'use strict';
-const R = (window.R = window.R || {});
-
+var R = (window.R = window.R || {});
 R.TILE = 16;
-R.DIRS = [ [0, -1], [1, 0], [0, 1], [-1, 0] ]; // N E S W
+R.DIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]]; // N E S W
 R.FLOW = { N: 1, E: 2, S: 4, W: 8, X: 16 }; // X = intersection tile
 R.DIRBIT = [1, 2, 4, 8];
-
 // ---------- random ----------
 R.mulberry = function (seed) {
-  let a = seed >>> 0;
-  const f = function () {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-  f.int = (lo, hi) => lo + Math.floor(f() * (hi - lo + 1));
-  f.pick = (arr) => arr[Math.floor(f() * arr.length)];
-  f.chance = (p) => f() < p;
-  f.range = (lo, hi) => lo + f() * (hi - lo);
-  f.weighted = (pairs) => {
-    if (!pairs || !pairs.length) return undefined;
-    let tot = 0;
-    for (const p of pairs) tot += p[1];
-    let r = f() * tot;
-    for (const p of pairs) if ((r -= p[1]) <= 0) return p[0];
-    return pairs[pairs.length - 1][0];
-  };
-  f.shuffle = (arr) => {
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(f() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-  };
-  return f;
+    let a = seed >>> 0;
+    const f = function () {
+        a = (a + 0x6d2b79f5) >>> 0;
+        let t = a;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    f.int = (lo, hi) => lo + Math.floor(f() * (hi - lo + 1));
+    f.pick = (arr) => arr[Math.floor(f() * arr.length)];
+    f.chance = (p) => f() < p;
+    f.range = (lo, hi) => lo + f() * (hi - lo);
+    f.weighted = (pairs) => {
+        if (!pairs || !pairs.length)
+            return undefined;
+        let tot = 0;
+        for (const p of pairs)
+            tot += p[1];
+        let r = f() * tot;
+        for (const p of pairs)
+            if ((r -= p[1]) <= 0)
+                return p[0];
+        return pairs[pairs.length - 1][0];
+    };
+    f.shuffle = (arr) => {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(f() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    };
+    return f;
 };
 R.rng = R.mulberry(Date.now() & 0xffffffff); // runtime randomness (non-deterministic)
-
 R.hash2 = function (x, y, s) {
-  let h = (x * 374761393 + y * 668265263 + (s | 0) * 982451653) | 0;
-  h = Math.imul(h ^ (h >>> 13), 1274126177);
-  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+    let h = (x * 374761393 + y * 668265263 + ((s ?? 0) | 0) * 982451653) | 0;
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 };
 R.strHash = function (s) {
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
-  return h >>> 0;
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i++)
+        h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+    return h >>> 0;
 };
-
 // ---------- value noise ----------
 R.makeNoise = function (seed) {
-  const smooth = (t) => t * t * (3 - 2 * t);
-  const n = function (x, y) {
-    const xi = Math.floor(x), yi = Math.floor(y);
-    const xf = x - xi, yf = y - yi;
-    const a = R.hash2(xi, yi, seed), b = R.hash2(xi + 1, yi, seed);
-    const c = R.hash2(xi, yi + 1, seed), d = R.hash2(xi + 1, yi + 1, seed);
-    const u = smooth(xf), v = smooth(yf);
-    return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
-  };
-  n.fbm = function (x, y, oct) {
-    let amp = 1, freq = 1, sum = 0, norm = 0;
-    for (let i = 0; i < (oct || 4); i++) {
-      sum += amp * n(x * freq, y * freq);
-      norm += amp;
-      amp *= 0.5;
-      freq *= 2.03;
-    }
-    return sum / norm;
-  };
-  return n;
+    const smooth = (t) => t * t * (3 - 2 * t);
+    const n = function (x, y) {
+        const xi = Math.floor(x), yi = Math.floor(y);
+        const xf = x - xi, yf = y - yi;
+        const a = R.hash2(xi, yi, seed), b = R.hash2(xi + 1, yi, seed);
+        const c = R.hash2(xi, yi + 1, seed), d = R.hash2(xi + 1, yi + 1, seed);
+        const u = smooth(xf), v = smooth(yf);
+        return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+    };
+    n.fbm = function (x, y, oct) {
+        let amp = 1, freq = 1, sum = 0, norm = 0;
+        for (let i = 0; i < (oct || 4); i++) {
+            sum += amp * n(x * freq, y * freq);
+            norm += amp;
+            amp *= 0.5;
+            freq *= 2.03;
+        }
+        return sum / norm;
+    };
+    return n;
 };
-
 // ---------- math ----------
 R.clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 R.lerp = (a, b, t) => a + (b - a) * t;
 R.dist = (ax, ay, bx, by) => Math.hypot(bx - ax, by - ay);
 R.dist2 = (ax, ay, bx, by) => (bx - ax) * (bx - ax) + (by - ay) * (by - ay);
 R.angDiff = function (a, b) {
-  let d = b - a;
-  while (d > Math.PI) d -= Math.PI * 2;
-  while (d < -Math.PI) d += Math.PI * 2;
-  return d;
+    let d = b - a;
+    while (d > Math.PI)
+        d -= Math.PI * 2;
+    while (d < -Math.PI)
+        d += Math.PI * 2;
+    return d;
 };
 R.approach = (v, target, step) => (v < target ? Math.min(target, v + step) : Math.max(target, v - step));
 R.compass = function (dx, dy) {
-  const a = Math.atan2(dy, dx);
-  return ['east', 'southeast', 'south', 'southwest', 'west', 'northwest', 'north', 'northeast'][((Math.round(a / (Math.PI / 4)) % 8) + 8) % 8];
+    const a = Math.atan2(dy, dx);
+    return ['east', 'southeast', 'south', 'southwest', 'west', 'northwest', 'north', 'northeast'][((Math.round(a / (Math.PI / 4)) % 8) + 8) % 8];
 };
 R.dir4 = function (dx, dy) {
-  if (Math.abs(dx) > Math.abs(dy)) return dx > 0 ? 1 : 3;
-  return dy > 0 ? 2 : 0;
+    if (Math.abs(dx) > Math.abs(dy))
+        return dx > 0 ? 1 : 3;
+    return dy > 0 ? 2 : 0;
 };
 R.fmtMoney = (n) => '$' + Math.floor(n).toLocaleString('en-US');
-
 // ---------- events ----------
 R.bus = {
-  map: new Map(),
-  on(ev, fn) {
-    if (!this.map.has(ev)) this.map.set(ev, []);
-    this.map.get(ev).push(fn);
-  },
-  emit(ev, ...args) {
-    const l = this.map.get(ev);
-    if (l) for (const fn of l.slice()) fn(...args);
-  },
+    map: new Map(),
+    on(ev, fn) {
+        let l = this.map.get(ev);
+        if (!l)
+            this.map.set(ev, (l = []));
+        l.push(fn);
+    },
+    emit(ev, ...args) {
+        const l = this.map.get(ev);
+        if (l)
+            for (const fn of l.slice())
+                fn(...args);
+    },
 };
-
 // ---------- spatial hash for actors ----------
-R.SpatialHash = class {
-  constructor(cell) {
-    this.cell = cell;
-    this.map = new Map();
-  }
-  clear() {
-    this.map.clear();
-  }
-  key(cx, cy) {
-    return cx * 73856093 ^ cy * 19349663;
-  }
-  insert(o) {
-    const k = this.key(Math.floor(o.x / this.cell), Math.floor(o.y / this.cell));
-    let b = this.map.get(k);
-    if (!b) this.map.set(k, (b = []));
-    b.push(o);
-  }
-  query(x, y, r, out) {
-    out = out || [];
-    const c = this.cell;
-    const x0 = Math.floor((x - r) / c), x1 = Math.floor((x + r) / c);
-    const y0 = Math.floor((y - r) / c), y1 = Math.floor((y + r) / c);
-    const r2 = r * r;
-    for (let cx = x0; cx <= x1; cx++)
-      for (let cy = y0; cy <= y1; cy++) {
-        const b = this.map.get(this.key(cx, cy));
-        if (!b) continue;
-        for (const o of b) if (R.dist2(x, y, o.x, o.y) <= r2) out.push(o);
-      }
-    return out;
-  }
-};
-
+class SpatialHash {
+    constructor(cell) {
+        this.map = new Map();
+        this.cell = cell;
+    }
+    clear() {
+        this.map.clear();
+    }
+    key(cx, cy) {
+        return (cx * 73856093) ^ (cy * 19349663);
+    }
+    insert(o) {
+        const k = this.key(Math.floor(o.x / this.cell), Math.floor(o.y / this.cell));
+        let b = this.map.get(k);
+        if (!b)
+            this.map.set(k, (b = []));
+        b.push(o);
+    }
+    query(x, y, r, out) {
+        const res = out || [];
+        const c = this.cell;
+        const x0 = Math.floor((x - r) / c), x1 = Math.floor((x + r) / c);
+        const y0 = Math.floor((y - r) / c), y1 = Math.floor((y + r) / c);
+        const r2 = r * r;
+        for (let cx = x0; cx <= x1; cx++)
+            for (let cy = y0; cy <= y1; cy++) {
+                const b = this.map.get(this.key(cx, cy));
+                if (!b)
+                    continue;
+                for (const o of b)
+                    if (R.dist2(x, y, o.x, o.y) <= r2)
+                        res.push(o);
+            }
+        return res;
+    }
+}
+R.SpatialHash = SpatialHash;
 // ---------- safe storage ----------
 R.store = {
-  get(k) {
-    try {
-      const v = localStorage.getItem(k);
-      return v ? JSON.parse(v) : null;
-    } catch (e) {
-      return null;
-    }
-  },
-  set(k, v) {
-    try {
-      localStorage.setItem(k, JSON.stringify(v));
-      return true;
-    } catch (e) {
-      return false;
-    }
-  },
-  del(k) {
-    try {
-      localStorage.removeItem(k);
-    } catch (e) {}
-  },
+    get(k) {
+        try {
+            const v = localStorage.getItem(k);
+            return v ? JSON.parse(v) : null;
+        }
+        catch (e) {
+            return null;
+        }
+    },
+    set(k, v) {
+        try {
+            localStorage.setItem(k, JSON.stringify(v));
+            return true;
+        }
+        catch (e) {
+            return false;
+        }
+    },
+    del(k) {
+        try {
+            localStorage.removeItem(k);
+        }
+        catch (e) { /* storage blocked */ }
+    },
 };
 
 // ---- 01_data.js
@@ -9403,6 +9416,264 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   };
 })();
 
+// ---- 12_sim.ts
+// RHAPSODY — the simulation thread. Two jobs:
+//  1. A fixed-timestep driver: the simulation always advances in 1/60 s steps, however
+//     fast or slow the screen refreshes (a 120 Hz phone, a 30 fps laptop). The render runs
+//     every frame; the sim catches up in whole steps (at most four per frame, then it
+//     lets time go rather than spiral).
+//  2. A Web Worker for route planning, the heaviest job that doesn't touch the scene:
+//     the road-loving coarse grid (rebuilt every 30 s as the world changes) and the A*
+//     across it run off the main thread. The same planning code runs synchronously as a
+//     fallback if workers aren't allowed (some sandboxes) or the worker goes quiet.
+'use strict';
+// The planning code, self-contained so it can be stringified into the worker.
+function routeCore() {
+    const C4 = 4;
+    return {
+        // per 4x4 cell: a cost, and a representative tile to draw through (a road tile if there is one)
+        build(W, TH, tile, tabs) {
+            const CW = Math.ceil(W / C4), CH = Math.ceil(TH / C4);
+            const cost = new Float32Array(CW * CH), px = new Int16Array(CW * CH), py = new Int16Array(CW * CH);
+            for (let cy = 0; cy < CH; cy++)
+                for (let cx = 0; cx < CW; cx++) {
+                    let road = 0, walk = 0, open = 0, water = 0, bridge = 0, bx = -1, by = -1, bd = 1e9;
+                    for (let y = cy * C4; y < cy * C4 + C4; y++)
+                        for (let x = cx * C4; x < cx * C4 + C4; x++) {
+                            if (x < 0 || y < 0 || x >= W || y >= TH)
+                                continue;
+                            const t = tile[y * W + x];
+                            if (t === tabs.bridge)
+                                bridge++;
+                            if (tabs.road[t]) {
+                                road++;
+                                const d = Math.abs(x - cx * C4 - 1.5) + Math.abs(y - cy * C4 - 1.5);
+                                if (d < bd) {
+                                    bd = d;
+                                    bx = x;
+                                    by = y;
+                                }
+                            }
+                            else if (tabs.walk[t])
+                                walk++;
+                            else if (tabs.water[t])
+                                water++;
+                            else if (!tabs.solid[t])
+                                open++;
+                        }
+                    const i = cy * CW + cx;
+                    cost[i] = bridge ? 1 : road ? 1 : walk ? 1.6 : water > 10 ? -1 : open > 4 ? 3 : -1;
+                    if (bx < 0) {
+                        bx = cx * C4 + 2;
+                        by = cy * C4 + 2;
+                    }
+                    px[i] = bx;
+                    py[i] = by;
+                }
+            return { CW, CH, cost, px, py };
+        },
+        find(G, sx, sy, gx, gy) {
+            const CW = G.CW, CH = G.CH;
+            const c = (x, y) => Math.max(0, Math.min(CW - 1, x)) + Math.max(0, Math.min(CH - 1, y)) * CW;
+            const start = c((sx / C4) | 0, (sy / C4) | 0), goal = c((gx / C4) | 0, (gy / C4) | 0);
+            const n = CW * CH;
+            const gs = new Float32Array(n).fill(1e9), from = new Int32Array(n).fill(-1), closed = new Uint8Array(n);
+            const heap = [start], hf = [0];
+            gs[start] = 0;
+            const hx = goal % CW, hy = (goal / CW) | 0;
+            const push = (i, f) => { heap.push(i); hf.push(f); let k = heap.length - 1; while (k > 0) {
+                const p = (k - 1) >> 1;
+                if (hf[p] <= hf[k])
+                    break;
+                [heap[p], heap[k]] = [heap[k], heap[p]];
+                [hf[p], hf[k]] = [hf[k], hf[p]];
+                k = p;
+            } };
+            const pop = () => { const top = heap[0], li = heap.pop(), lf = hf.pop(); if (heap.length) {
+                heap[0] = li;
+                hf[0] = lf;
+                let k = 0;
+                for (;;) {
+                    const l = k * 2 + 1, r = l + 1;
+                    let m = k;
+                    if (l < heap.length && hf[l] < hf[m])
+                        m = l;
+                    if (r < heap.length && hf[r] < hf[m])
+                        m = r;
+                    if (m === k)
+                        break;
+                    [heap[m], heap[k]] = [heap[k], heap[m]];
+                    [hf[m], hf[k]] = [hf[k], hf[m]];
+                    k = m;
+                }
+            } return top; };
+            const DX = [1, -1, 0, 0, 1, 1, -1, -1], DY = [0, 0, 1, -1, 1, -1, 1, -1];
+            let steps = 0;
+            while (heap.length && steps++ < 60000) {
+                const cur = pop();
+                if (cur === goal)
+                    break;
+                if (closed[cur])
+                    continue;
+                closed[cur] = 1;
+                const x = cur % CW, y = (cur / CW) | 0;
+                for (let d = 0; d < 8; d++) {
+                    const dx = DX[d], dy = DY[d], nx = x + dx, ny = y + dy;
+                    if (nx < 0 || ny < 0 || nx >= CW || ny >= CH)
+                        continue;
+                    const ni = ny * CW + nx;
+                    const k = G.cost[ni];
+                    if (k < 0 && ni !== goal)
+                        continue;
+                    const ng = gs[cur] + Math.max(0.5, k) * (dx && dy ? 1.41 : 1);
+                    if (ng < gs[ni]) {
+                        gs[ni] = ng;
+                        from[ni] = cur;
+                        push(ni, ng + Math.hypot(nx - hx, ny - hy) * 0.95);
+                    }
+                }
+            }
+            if (from[goal] === -1 && goal !== start)
+                return null;
+            const out = [];
+            for (let k = goal; k !== -1; k = from[k])
+                out.push([G.px[k], G.py[k]]);
+            out.reverse();
+            out[out.length - 1] = [gx, gy];
+            return out;
+        },
+    };
+}
+(function () {
+    const D = R.data;
+    const SIM = (R.sim = {
+        core: routeCore(),
+        worker: null,
+        ready: false,
+        grid: null,
+        gridW: null,
+        builtAt: -1e9,
+        nextId: 1,
+        pending: new Map(),
+        sentAt: new Map(),
+        stats: { routes: 0, worker: 0, sync: 0, maxWait: 0 },
+        STEP: 1 / 60,
+        acc: 0,
+    });
+    SIM.tables = function () {
+        const T = D.T;
+        const walk = new Uint8Array(256);
+        for (const t of [T.WALK, T.PLAZA, T.PARKING, T.DOCK])
+            walk[t] = 1;
+        const u8 = (a) => { const o = new Uint8Array(256); for (let i = 0; i < a.length && i < 256; i++)
+            o[i] = a[i] ? 1 : 0; return o; };
+        return { road: u8(D.roadTile), water: u8(D.waterTile), solid: u8(D.solidTile), walk, bridge: T.BRIDGE };
+    };
+    // the worker: the planning core plus a tiny message loop
+    SIM.start = function () {
+        if (this.worker || typeof Worker === 'undefined' || typeof Blob === 'undefined')
+            return;
+        try {
+            const src = `'use strict';const core=(${routeCore.toString()})();let grid=null;
+onmessage=(e)=>{const m=e.data;
+if(m.type==='grid'){grid=core.build(m.W,m.TH,m.tile,m.tabs);postMessage({type:'grid'});}
+else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;postMessage({type:'route',id:m.id,path:p});}};`;
+            const url = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
+            const wk = new Worker(url);
+            URL.revokeObjectURL(url);
+            wk.onmessage = (e) => {
+                const m = e.data;
+                if (m.type === 'grid') {
+                    this.ready = true;
+                    return;
+                }
+                if (m.type === 'route') {
+                    const cb = this.pending.get(m.id);
+                    this.pending.delete(m.id);
+                    const t0 = this.sentAt.get(m.id);
+                    this.sentAt.delete(m.id);
+                    if (t0 != null)
+                        this.stats.maxWait = Math.max(this.stats.maxWait, performance.now() - t0);
+                    this.stats.worker++;
+                    if (cb)
+                        cb(m.path);
+                }
+            };
+            wk.onerror = (e) => { e.preventDefault(); this.fail(e.message || 'worker error'); };
+            this.worker = wk;
+        }
+        catch (e) {
+            this.fail(String(e && e.message || e));
+        }
+    };
+    SIM.fail = function (why) {
+        if (this.worker) {
+            try {
+                this.worker.terminate();
+            }
+            catch (e) { /* already gone */ }
+        }
+        this.worker = null;
+        this.ready = false;
+        console.warn('Sim worker off, planning on the main thread:', why);
+        // answer anything still waiting, synchronously
+        const w = this.gridW;
+        for (const [id, cb] of this.pending) {
+            this.pending.delete(id);
+            cb(null);
+        }
+        if (w)
+            this.grid = null;
+    };
+    SIM.sendGrid = function (w) {
+        this.gridW = w;
+        this.builtAt = performance.now();
+        if (this.worker) {
+            const tile = w.tile.slice(); // a copy the worker owns
+            this.worker.postMessage({ type: 'grid', W: w.W, TH: w.TH, tile, tabs: this.tables() }, [tile.buffer]);
+        }
+        else
+            this.grid = this.core.build(w.W, w.TH, w.tile, this.tables());
+    };
+    // plan a route; the answer comes back through cb (asynchronously from the worker)
+    SIM.route = function (w, sx, sy, gx, gy, cb) {
+        this.stats.routes++;
+        if (this.gridW !== w || performance.now() - this.builtAt > 30000)
+            this.sendGrid(w);
+        if (this.worker) {
+            const id = this.nextId++;
+            this.pending.set(id, cb);
+            this.sentAt.set(id, performance.now());
+            this.worker.postMessage({ type: 'route', id, sx, sy, gx, gy });
+            // a worker that never answers (a strict sandbox): fall back
+            const probe = id;
+            setTimeout(() => { if (this.pending.has(probe) && !this.ready)
+                this.fail('no answer'); }, 3000);
+            return;
+        }
+        if (!this.grid)
+            this.grid = this.core.build(w.W, w.TH, w.tile, this.tables());
+        this.stats.sync++;
+        cb(this.core.find(this.grid, sx, sy, gx, gy));
+    };
+    // ---------------------------------------------------------------- fixed-step driver
+    // Real frame time goes into an accumulator; the sim advances in whole 1/60 s steps.
+    // Returns how many steps ran (0 on a fast display's in-between frames).
+    SIM.advance = function (realDt, tick) {
+        this.acc = Math.min(this.acc + Math.max(0, realDt), this.STEP * 8);
+        let n = 0;
+        while (this.acc >= this.STEP && n < 4) {
+            tick(this.STEP);
+            this.acc -= this.STEP;
+            n++;
+        }
+        if (n === 4)
+            this.acc = 0; // too far behind: let the time go instead of spiralling
+        this.stats.steps = (this.stats.steps || 0) + n;
+        return n;
+    };
+})();
+
 // ---- 12_stories.js
 // RHAPSODY — people worth knowing. Five memorable townsfolk, one per city, each with a
 // three-act story told through the saga mission engine and a reward that changes how
@@ -12888,153 +13159,156 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   R.bus.on('player:ko', (h) => R.fearQuest.onDefeat && R.fearQuest.onDefeat(h, true));
 })();
 
-// ---- 13_route.js
+// ---- 13_route.ts
 // RHAPSODY — the route to your waypoint (or the current job). A coarse road-loving A*
-// over 4x4-tile cells plans the way; it draws as a line on the minimap and the full map,
-// and as flowing gold chevrons painted on the ground ahead of you.
+// over 4x4-tile cells plans the way (on the simulation worker, see 12_sim); it draws as
+// a line on the minimap and the full map, and as flowing gold chevrons on the ground.
 'use strict';
 (function () {
-  const D = R.data, T = D.T, TS = R.TILE;
-  const C4 = 4;
-  const RT = (R.route = { path: null, t: 0 });
-
-  // per-cell cost and a representative tile to draw through (a road tile if there is one)
-  RT.build = function (w) {
-    const CW = Math.ceil(w.W / C4), CH = Math.ceil(w.TH / C4);
-    const cost = new Float32Array(CW * CH), px = new Int16Array(CW * CH), py = new Int16Array(CW * CH);
-    for (let cy = 0; cy < CH; cy++) for (let cx = 0; cx < CW; cx++) {
-      let road = 0, walk = 0, open = 0, water = 0, bridge = 0, best = null, bd = 1e9;
-      for (let y = cy * C4; y < cy * C4 + C4; y++) for (let x = cx * C4; x < cx * C4 + C4; x++) {
-        if (!w.inb(x, y)) continue;
-        const t = w.t(x, y);
-        if (t === T.BRIDGE) bridge++;
-        if (D.roadTile[t]) { road++; const d = Math.abs(x - cx * C4 - 1.5) + Math.abs(y - cy * C4 - 1.5); if (d < bd) { bd = d; best = [x, y]; } }
-        else if (t === T.WALK || t === T.PLAZA || t === T.PARKING || t === T.DOCK) walk++;
-        else if (D.waterTile[t]) water++;
-        else if (!D.solidTile[t]) open++;
-      }
-      const i = cy * CW + cx;
-      cost[i] = bridge ? 1 : road ? 1 : walk ? 1.6 : water > 10 ? -1 : open > 4 ? 3 : -1;
-      if (!best) best = [cx * C4 + 2, cy * C4 + 2];
-      px[i] = best[0]; py[i] = best[1];
-    }
-    this.grid = { w, CW, CH, cost, px, py };
-  };
-  RT.find = function (sx, sy, gx, gy) {
-    const G = this.grid, CW = G.CW, CH = G.CH;
-    const c = (x, y) => Math.max(0, Math.min(CW - 1, x)) + Math.max(0, Math.min(CH - 1, y)) * CW;
-    const start = c((sx / C4) | 0, (sy / C4) | 0), goal = c((gx / C4) | 0, (gy / C4) | 0);
-    const n = CW * CH;
-    const gs = new Float32Array(n).fill(1e9), from = new Int32Array(n).fill(-1), closed = new Uint8Array(n);
-    const heap = [start], hf = [0];
-    gs[start] = 0;
-    const hx = goal % CW, hy = (goal / CW) | 0;
-    const push = (i, f) => { heap.push(i); hf.push(f); let k = heap.length - 1; while (k > 0) { const p = (k - 1) >> 1; if (hf[p] <= hf[k]) break; [heap[p], heap[k]] = [heap[k], heap[p]]; [hf[p], hf[k]] = [hf[k], hf[p]]; k = p; } };
-    const pop = () => { const top = heap[0], li = heap.pop(), lf = hf.pop(); if (heap.length) { heap[0] = li; hf[0] = lf; let k = 0; for (;;) { const l = k * 2 + 1, r = l + 1; let m = k; if (l < heap.length && hf[l] < hf[m]) m = l; if (r < heap.length && hf[r] < hf[m]) m = r; if (m === k) break; [heap[m], heap[k]] = [heap[k], heap[m]]; [hf[m], hf[k]] = [hf[k], hf[m]]; k = m; } } return top; };
-    let steps = 0;
-    while (heap.length && steps++ < 60000) {
-      const cur = pop();
-      if (cur === goal) break;
-      if (closed[cur]) continue;
-      closed[cur] = 1;
-      const x = cur % CW, y = (cur / CW) | 0;
-      for (let d = 0; d < 8; d++) {
-        const dx = [1, -1, 0, 0, 1, 1, -1, -1][d], dy = [0, 0, 1, -1, 1, -1, 1, -1][d];
-        const nx = x + dx, ny = y + dy;
-        if (nx < 0 || ny < 0 || nx >= CW || ny >= CH) continue;
-        const ni = ny * CW + nx;
-        const k = G.cost[ni];
-        if (k < 0 && ni !== goal) continue;
-        const ng = gs[cur] + Math.max(0.5, k) * (dx && dy ? 1.41 : 1);
-        if (ng < gs[ni]) { gs[ni] = ng; from[ni] = cur; push(ni, ng + Math.hypot(nx - hx, ny - hy) * 0.95); }
-      }
-    }
-    if (from[goal] === -1 && goal !== start) return null;
-    const out = [];
-    for (let k = goal; k !== -1; k = from[k]) out.push([G.px[k], G.py[k]]);
-    out.reverse();
-    out[out.length - 1] = [gx, gy];
-    return out;
-  };
-  RT.target = function (g) {
-    if (g.waypoint) return { x: g.waypoint.x / TS, y: g.waypoint.y / TS, wp: true };
-    const m = g.jobs.marker();
-    return m ? { x: m.x / TS, y: m.y / TS } : null;
-  };
-  RT.update = function (g, dt) {
-    const pl = g.player;
-    if (pl.room) { this.path = null; return; }
-    this.t -= dt;
-    const tg = this.target(g);
-    if (!tg) { this.path = null; return; }
-    const px = (pl.inCar || pl).x / TS, py = (pl.inCar || pl).y / TS;
-    // arrived
-    if (tg.wp && Math.hypot(tg.x - px, tg.y - py) < 4) { g.waypoint = null; this.path = null; g.ui.toast('You\'ve arrived.', 'good'); return; }
-    if (this.t > 0 && this.path) {
-      // stay on it unless the target moved or you wandered well off
-      const moved = !this.goal || Math.hypot(this.goal.x - tg.x, this.goal.y - tg.y) > 6;
-      const off = this.nearest(px, py).d > 10;
-      if (!moved && !off) return;
-    }
-    this.t = 1.2;
-    if (!this.grid || this.grid.w !== g.world || g.clock.real - (this.builtAt || 0) > 30) { this.build(g.world); this.builtAt = g.clock.real; }
-    this.goal = { x: tg.x, y: tg.y };
-    this.path = Math.hypot(tg.x - px, tg.y - py) < 6 ? null : this.find(px | 0, py | 0, tg.x | 0, tg.y | 0);
-  };
-  RT.nearest = function (x, y) {
-    let bi = 0, bd = 1e9;
-    const p = this.path || [];
-    for (let i = 0; i < p.length; i++) { const d = Math.hypot(p[i][0] - x, p[i][1] - y); if (d < bd) { bd = d; bi = i; } }
-    return { i: bi, d: bd };
-  };
-  // gold chevrons on the ground, flowing toward the target, for the next stretch of road
-  RT.drawWorld = function (g, game, left, top, vw, vh) {
-    const p = this.path;
-    if (!p || p.length < 2) return;
-    const pl = game.player, src = pl.inCar || pl;
-    const start = this.nearest(src.x / TS, src.y / TS).i;
-    const t = game.clock.real;
-    let dist = 0;
-    const spacing = 1.6, flow = (t * 2.4) % spacing;
-    for (let i = Math.max(0, start - 1); i < Math.min(p.length - 1, start + 30); i++) {
-      const [ax, ay] = p[i], [bx, by] = p[i + 1];
-      const seg = Math.hypot(bx - ax, by - ay);
-      if (!seg) continue;
-      const ang = Math.atan2(by - ay, bx - ax);
-      for (let s = (spacing - ((dist - flow) % spacing + spacing) % spacing); s < seg; s += spacing) {
-        const x = (ax + (bx - ax) * s / seg) * TS + 8, y = (ay + (by - ay) * s / seg) * TS + 8;
-        if (x < left - 16 || y < top - 16 || x > left + vw + 16 || y > top + vh + 16) continue;
-        if (Math.hypot(x - src.x, y - src.y) < 18) continue;
-        g.save(); g.translate(Math.round(x), Math.round(y)); g.rotate(ang);
-        g.fillStyle = 'rgba(20,12,8,0.55)';
-        g.beginPath(); g.moveTo(-3, -4); g.lineTo(2, 0); g.lineTo(-3, 4); g.lineTo(-1, 0); g.closePath(); g.fill();
-        g.translate(0, -1);
-        g.fillStyle = 'rgba(240,192,64,0.9)';
-        g.beginPath(); g.moveTo(-3, -4); g.lineTo(2, 0); g.lineTo(-3, 4); g.lineTo(-1, 0); g.closePath(); g.fill();
-        g.restore();
-      }
-      dist += seg;
-    }
-  };
-  RT.drawMini = function (c, toM) {
-    const p = this.path;
-    if (!p || p.length < 2) return;
-    c.save();
-    c.lineJoin = 'round'; c.lineCap = 'round';
-    for (const [col, lw] of [['#1b1410', 5], ['#f0c040', 3]]) {
-      c.strokeStyle = col; c.lineWidth = lw; c.beginPath();
-      p.forEach(([x, y], i) => { const [mx, my] = toM(x * TS + 8, y * TS + 8); if (i) c.lineTo(mx, my); else c.moveTo(mx, my); });
-      c.stroke();
-    }
-    c.restore();
-  };
-  RT.drawFull = function (c) {
-    const p = this.path;
-    if (!p || p.length < 2) return;
-    c.save(); c.lineJoin = 'round'; c.lineCap = 'round';
-    for (const [col, lw] of [['#1b1410', 6], ['#f0c040', 3.5]]) { c.strokeStyle = col; c.lineWidth = lw; c.beginPath(); p.forEach(([x, y], i) => (i ? c.lineTo(x + 0.5, y + 0.5) : c.moveTo(x + 0.5, y + 0.5))); c.stroke(); }
-    c.restore();
-  };
+    const TS = R.TILE;
+    const RT = (R.route = { path: null, t: 0, goal: null, asked: 0 });
+    RT.target = function (g) {
+        if (g.waypoint)
+            return { x: g.waypoint.x / TS, y: g.waypoint.y / TS, wp: true };
+        const m = g.jobs.marker();
+        return m ? { x: m.x / TS, y: m.y / TS } : null;
+    };
+    RT.update = function (g, dt) {
+        const pl = g.player;
+        if (pl.room) {
+            this.path = null;
+            return;
+        }
+        this.t -= dt;
+        const tg = this.target(g);
+        if (!tg) {
+            this.path = null;
+            this.goal = null;
+            return;
+        }
+        const src = pl.inCar || pl;
+        const px = src.x / TS, py = src.y / TS;
+        // arrived
+        if (tg.wp && Math.hypot(tg.x - px, tg.y - py) < 4) {
+            g.waypoint = null;
+            this.path = null;
+            g.ui.toast('You\'ve arrived.', 'good');
+            return;
+        }
+        // stay on the plan unless the target moved or you wandered well off; an unreachable
+        // target (no path) is only re-asked on the timer, not every tick
+        const moved = !this.goal || Math.hypot(this.goal.x - tg.x, this.goal.y - tg.y) > 6;
+        if (this.t > 0 && !moved && (!this.path || this.nearest(px, py).d <= 10))
+            return;
+        this.t = 1.2;
+        const goal = { x: tg.x, y: tg.y };
+        this.goal = goal;
+        if (Math.hypot(tg.x - px, tg.y - py) < 6) {
+            this.path = null;
+            return;
+        }
+        // ask the planner; keep drawing the old route until the new one arrives
+        const ask = ++this.asked;
+        R.sim.route(g.world, px | 0, py | 0, tg.x | 0, tg.y | 0, (p) => {
+            if (ask !== this.asked || this.goal !== goal)
+                return; // a newer question is out
+            this.path = p;
+        });
+    };
+    RT.nearest = function (x, y) {
+        let bi = 0, bd = 1e9;
+        const p = this.path || [];
+        for (let i = 0; i < p.length; i++) {
+            const d = Math.hypot(p[i][0] - x, p[i][1] - y);
+            if (d < bd) {
+                bd = d;
+                bi = i;
+            }
+        }
+        return { i: bi, d: bd };
+    };
+    // gold chevrons on the ground, flowing toward the target, for the next stretch of road
+    RT.drawWorld = function (g, game, left, top, vw, vh) {
+        const p = this.path;
+        if (!p || p.length < 2)
+            return;
+        const pl = game.player, src = pl.inCar || pl;
+        const start = this.nearest(src.x / TS, src.y / TS).i;
+        const t = game.clock.real;
+        let dist = 0;
+        const spacing = 1.6, flow = (t * 2.4) % spacing;
+        for (let i = Math.max(0, start - 1); i < Math.min(p.length - 1, start + 30); i++) {
+            const [ax, ay] = p[i], [bx, by] = p[i + 1];
+            const seg = Math.hypot(bx - ax, by - ay);
+            if (!seg)
+                continue;
+            const ang = Math.atan2(by - ay, bx - ax);
+            for (let s = (spacing - ((dist - flow) % spacing + spacing) % spacing); s < seg; s += spacing) {
+                const x = (ax + (bx - ax) * s / seg) * TS + 8, y = (ay + (by - ay) * s / seg) * TS + 8;
+                if (x < left - 16 || y < top - 16 || x > left + vw + 16 || y > top + vh + 16)
+                    continue;
+                if (Math.hypot(x - src.x, y - src.y) < 18)
+                    continue;
+                g.save();
+                g.translate(Math.round(x), Math.round(y));
+                g.rotate(ang);
+                g.fillStyle = 'rgba(20,12,8,0.55)';
+                g.beginPath();
+                g.moveTo(-3, -4);
+                g.lineTo(2, 0);
+                g.lineTo(-3, 4);
+                g.lineTo(-1, 0);
+                g.closePath();
+                g.fill();
+                g.translate(0, -1);
+                g.fillStyle = 'rgba(240,192,64,0.9)';
+                g.beginPath();
+                g.moveTo(-3, -4);
+                g.lineTo(2, 0);
+                g.lineTo(-3, 4);
+                g.lineTo(-1, 0);
+                g.closePath();
+                g.fill();
+                g.restore();
+            }
+            dist += seg;
+        }
+    };
+    RT.drawMini = function (c, toM) {
+        const p = this.path;
+        if (!p || p.length < 2)
+            return;
+        c.save();
+        c.lineJoin = 'round';
+        c.lineCap = 'round';
+        for (const [col, lw] of [['#1b1410', 5], ['#f0c040', 3]]) {
+            c.strokeStyle = col;
+            c.lineWidth = lw;
+            c.beginPath();
+            p.forEach(([x, y], i) => { const [mx, my] = toM(x * TS + 8, y * TS + 8); if (i)
+                c.lineTo(mx, my);
+            else
+                c.moveTo(mx, my); });
+            c.stroke();
+        }
+        c.restore();
+    };
+    RT.drawFull = function (c) {
+        const p = this.path;
+        if (!p || p.length < 2)
+            return;
+        c.save();
+        c.lineJoin = 'round';
+        c.lineCap = 'round';
+        for (const [col, lw] of [['#1b1410', 6], ['#f0c040', 3.5]]) {
+            c.strokeStyle = col;
+            c.lineWidth = lw;
+            c.beginPath();
+            p.forEach(([x, y], i) => (i ? c.lineTo(x + 0.5, y + 0.5) : c.moveTo(x + 0.5, y + 0.5)));
+            c.stroke();
+        }
+        c.restore();
+    };
 })();
 
 // ---- 13_salvage.js
@@ -24303,6 +24577,94 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   };
 })();
 
+// ---- 17_render_chunks.ts
+// RHAPSODY — chunk scheduling. The world is painted in cached chunks; two things used to
+// stall a frame: the dusk/dawn switch (every lit window changes, so the whole cache was
+// thrown away and repainted at once, ~45 ms) and walking into unpainted ground. Now:
+//  - dusk/dawn marks chunks stale; stale chunks keep drawing while at most two a frame are
+//    repainted, so the lights come on across the city over a few frames instead of a hitch
+//  - between frames (idle callback, or leftover frame time) the chunks just ahead of the
+//    camera are painted before you get there
+'use strict';
+(function () {
+    const A = R.art;
+    const TS = R.TILE;
+    const cache = A.chunkCache;
+    const CH = A.CH;
+    const baseGet = A.getChunk;
+    let budget = 2;
+    A.getChunk = function (world, cx, cy) {
+        const key = (cx << 16) | cy;
+        const c = cache.get(key);
+        if (c && c.stale && !world.dirty.has(key)) {
+            if (budget <= 0) {
+                c.used = performance.now();
+                return c.canvas;
+            } // repaint later
+            budget--;
+            c.stale = false;
+            world.dirty.add(key); // let the base painter redo it in place
+        }
+        return baseGet.call(this, world, cx, cy);
+    };
+    // dusk and dawn: everything needs repainting, but not all at once
+    A.staleAll = function () { for (const c of cache.values())
+        c.stale = true; };
+    // prefetch: the ring of chunks ahead of where the camera is heading
+    let lastX = 0, lastY = 0;
+    // paints at most `max` chunks (a chunk is 32x32 tiles, 3-20 ms to paint: one per idle slot)
+    const prefetch = (max) => {
+        const g = R.game;
+        if (!g || !g.started || g.player.room || !g.world)
+            return;
+        const cam = g.cam, z = cam.zoom || 2, cpx = CH * TS;
+        const vx = cam.x - lastX, vy = cam.y - lastY;
+        lastX = cam.x;
+        lastY = cam.y;
+        const left = cam.left(), top = cam.top(), vw = cam.vw / z, vh = cam.vh / z;
+        const lead = 1.5;
+        const x0 = Math.floor((left - cpx * (vx < 0 ? lead : 0.5)) / cpx), x1 = Math.floor((left + vw + cpx * (vx > 0 ? lead : 0.5)) / cpx);
+        const y0 = Math.floor((top - cpx * (vy < 0 ? lead : 0.5)) / cpx), y1 = Math.floor((top + vh + cpx * (vy > 0 ? lead : 0.5)) / cpx);
+        const w = g.world, maxX = Math.floor(w.W / CH) - 1, maxY = Math.floor(w.TH / CH) - 1;
+        for (let cy = Math.max(0, y0); cy <= Math.min(maxY, y1); cy++)
+            for (let cx = Math.max(0, x0); cx <= Math.min(maxX, x1); cx++) {
+                if (max <= 0)
+                    return;
+                const key = (cx << 16) | cy, c = cache.get(key);
+                if (c && !c.stale && !w.dirty.has(key))
+                    continue;
+                if (c && c.stale) {
+                    c.stale = false;
+                    w.dirty.add(key);
+                }
+                baseGet.call(A, w, cx, cy);
+                PF.prefetched++;
+                max--;
+            }
+    };
+    const PF = (R.chunks = { prefetched: 0, prefetch });
+    const idle = (cb) => {
+        const ric = window.requestIdleCallback;
+        if (ric)
+            ric(cb, { timeout: 250 });
+        else
+            setTimeout(() => cb({ timeRemaining: () => 8 }), 50);
+    };
+    const tick = (d) => {
+        // one chunk per idle slot: better painted between frames than in the middle of one
+        try {
+            if (d.didTimeout || d.timeRemaining() > 1)
+                prefetch(1);
+        }
+        catch (e) { /* the world may be rebuilding */ }
+        idle(tick);
+    };
+    idle(tick);
+    // a fresh repaint budget every frame
+    const RP = R.Renderer.prototype, bRender = RP.render;
+    RP.render = function () { budget = 2; return bRender.apply(this, arguments); };
+})();
+
 // ---- 17_render_gl.js
 // RHAPSODY — the WebGL renderer. The world is still composed with Canvas2D into the
 // 480x320 buffer (every sprite routine and every module that draws keeps working), but the
@@ -24713,6 +25075,7 @@ void main(){
     title.style.display = 'flex';
     this.resize();
     R.gl.init(this);
+    R.sim.start();
     const save = R.store.get(SAVE);
     this.loop();
     // wait (briefly) for the pixel fonts, then build the world
@@ -24895,12 +25258,13 @@ void main(){
     let last = performance.now();
     const frame = (now) => {
       requestAnimationFrame(frame);
-      let dt = Math.min(0.05, (now - last) / 1000);
+      const real = Math.min(0.25, Math.max(0, (now - last) / 1000));
       this.fps = this.fps ? this.fps * 0.95 + (1 / Math.max(0.001, (now - last) / 1000)) * 0.05 : 60;
       last = now;
       try {
         if (!this.started) { this.renderer.renderTitle(now / 1000); return; }
-        this.tick(dt);
+        // the simulation advances in fixed 1/60 s steps whatever the display rate (12_sim)
+        R.sim.advance(real, (step) => this.tick(step));
         this.renderer.render();
       } catch (e) {
         console.error(e);
@@ -24920,7 +25284,7 @@ void main(){
       this.clock.update(sdt);
       // windows light up at dusk: repaint the cached city
       const nightNow = this.clock.isNight();
-      if (nightNow !== this.wasNight) { this.wasNight = nightNow; R.art.chunkCache.clear(); }
+      if (nightNow !== this.wasNight) { this.wasNight = nightNow; R.art.staleAll ? R.art.staleAll() : R.art.chunkCache.clear(); }
       this.env.update(sdt);
       pl.update(dt * (this.timeScale < 1 ? 0.8 : 1));
       this.actors.update(sdt);
