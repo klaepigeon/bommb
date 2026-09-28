@@ -215,6 +215,7 @@
       const [x, y] = toM(v.x, v.y);
       c.fillStyle = '#3050ff'; c.fillRect(x - 3, y - 3, 7, 7);
     }
+    R.route.drawMini(c, toM);
     // job marker / leads
     const m = g.jobs.marker();
     const drawPin = (mx, my, col) => {
@@ -1157,6 +1158,7 @@
       if (b.type === 'social') { c.fillStyle = '#e4a92a'; c.fillRect(b.x, b.y, 6, 6); }
       if (b.playerOwned) { c.fillStyle = '#8ab04a'; c.fillRect(b.x, b.y, 6, 6); }
     }
+    R.route.drawFull(c);
     R.poi.drawFull(c, 1);
     for (const l of g.jobs.leads) { c.fillStyle = '#7a8a2e'; c.beginPath(); c.arc(l.x, l.y, 6, 0, 7); c.fill(); }
     const m = g.jobs.marker();

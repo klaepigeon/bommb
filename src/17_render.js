@@ -92,6 +92,7 @@
       g.beginPath(); g.ellipse(x * TS + 8, y * TS + 8, 7, 4, 0, 0, 7); g.fill();
     }
     game.fx.drawDecals(g);
+    R.route.drawWorld(g, game, left, top, vw, vh);
     R.poi.drawSigns(g, left, top, vw, vh, t);
     R.props.drawGround(g, (x, y) => x > left - 40 && x < left + vw + 40 && y > top - 40 && y < top + vh + 40);
     // entities
