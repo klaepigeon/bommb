@@ -351,6 +351,8 @@
     const wdef = st.weapon && st.weapon !== 'fists' ? D.weapons[st.weapon] : null;
     if (!pose && wdef) pose = wdef.gun || wdef.ring ? 'g' : st.weapon === 'knuckles' ? null : 'k';
     if (!pose && st.held) pose = A.heldPose(st.held, 0, 1);
+    // seen from behind, a windup is the raised frame and the follow-through the low one
+    if (DIR8[d8] === 'up' || DIR8[d8] === 'upright') { if (pose === 'b1') pose = 'b2'; else if (pose === 'b2') pose = 'b1'; else if (pose === 'w1') pose = 'w2'; }
     // legs keep walking whatever the arms are doing
     const spr = A.oldSprite(look, d8, st.down ? 0 : frame, st.down ? null : pose);
     if (st.down) {
@@ -471,7 +473,8 @@
       return;
     }
     let hx, hy, h;
-    const carry = CARRY[k];
+    // long things (pipes, planks, shovels) ride on the shoulder instead of dragging on the ground
+    const carry = CARRY[k] || (Math.hypot(art.grip[0] - 7.5, art.grip[1] - 7.5) > 5.5 ? CARRY.bat : null);
     if (carry && pose === 'k') {
       // knives point ahead of you, bats rest on the shoulder
       [hx, hy] = OLD.ea(dirName, kid);
@@ -561,6 +564,9 @@
     g.translate(Math.round(hx), Math.round(hy));
     g.rotate(a);
     if (Math.cos(a) < 0) g.scale(1, -1);
+    // aimed at the camera (or away) the barrel is foreshortened instead of hanging off the hand
+    const vert = Math.abs(Math.sin(a));
+    if (vert > 0.92) g.scale(Math.sin(a) > 0 ? 0.5 : 0.65, 1);
     g.drawImage(art.cv, -art.grip[0], -art.grip[1]);
     g.restore();
   };
