@@ -151,6 +151,18 @@
       // face down in the sand, dragging yourself along
       const t = R.game.clock.real, moving = pl.walk && Math.abs(pl.walk) > 0.01;
       R.art.drawPerson(g, pl.x - 8 + (moving ? Math.round(Math.sin(t * 6)) : 0), pl.y + 4, 2, 0, pl.look, { down: true });
+      // vultures circling overhead: only their shadows sweep across the sand
+      g.save(); g.fillStyle = '#000';
+      for (let i = 0; i < 3; i++) {
+        const a = t * (0.5 + i * 0.13) + i * 2.1, r = 26 + i * 11 + Math.sin(t * 0.7 + i) * 5;
+        const x = Math.round(pl.x + Math.cos(a) * r), y = Math.round(pl.y + Math.sin(a) * r * 0.6);
+        const flap = Math.sin(t * 3 + i * 1.7) > 0.6 ? 1 : 0;
+        g.globalAlpha = 0.16;
+        g.fillRect(x - 1, y - 1, 3, 2);
+        g.fillRect(x - 5, y - 1 + flap, 4, 1); g.fillRect(x + 2, y - 1 + flap, 4, 1);
+        g.fillRect(x - 7, y - flap, 2, 1); g.fillRect(x + 6, y - flap, 2, 1);
+      }
+      g.restore();
     };
   };
 })();

@@ -208,6 +208,6 @@ Three passes over the newer systems:
 
 ### Still on the list
 
-- Night lighting in the outer streets could use lit windows and more neon spill.
-- The desert crawl could use a heat-shimmer or vulture shadow for mood.
-- A proper bot routine for laundering and for flirting, so the long runs exercise those loops too.
+- ~~Night lighting in the outer streets could use lit windows and more neon spill.~~ Done: homes keep lamps on in the evening (amber, or TV blue), with a few night owls after midnight. Window light spills onto the walk. Neon signs now come in five colours, pool on the sidewalk, and a few flicker on the fritz.
+- ~~The desert crawl could use a vulture shadow for mood.~~ Done: three vulture shadows circle you while you crawl. Heat shimmer is still open.
+- ~~A bot routine for laundering and flirting.~~ Done: `tools/playtest.mjs` now flirts at bars and washes chips on casino nights. In the 30-day run it flirted twice (0 errors). No casino night was rolled, so laundering is still unexercised by the bot.
