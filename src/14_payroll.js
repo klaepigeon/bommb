@@ -161,6 +161,28 @@
     }
   };
 
+  // ---------------------------------------------------------------- walking the beat
+  // A cop or two walks the sidewalks downtown by day: the ones you can buy a coffee.
+  PR.update = function (dt) {
+    const g = G(), pl = g.player, TS = R.TILE, w = g.world;
+    this.t = (this.t == null ? 5 : this.t) - dt;
+    if (this.t > 0) return;
+    this.t = 15;
+    if (pl.room || pl.inCar || (R.opening && R.opening.active) || g.law.incident) return;
+    const hr = g.clock.hour(), city = w.cityAt((pl.x / TS) | 0, (pl.y / TS) | 0);
+    if (!city || hr < 7 || hr > 21) return;
+    const want = city.id === 'avalon' ? 2 : 1;
+    const have = g.actors.list.filter((a) => a.footBeat && !a.dead && !a.removed && R.dist(a.x, a.y, pl.x, pl.y) < TS * 34).length;
+    if (have >= want) return;
+    const sp = w.findNear((pl.x / TS) | 0, (pl.y / TS) | 0, 16, 26, (x, y) => w.t(x, y) === R.data.T.WALK && !w.solidPed(x, y));
+    if (!sp || g.cam.onScreen(sp.x * TS + 8, sp.y * TS + 8, 30)) return;
+    const h = g.actors.makeHuman(sp.x * TS + 8, sp.y * TS + 8, { cop: true, role: 'cop', city: city.id });
+    h.look = g.pop.makeLook(R.mulberry(R.rng.int(0, 1e9)), { fem: R.rng.chance(0.3), age: 30 + R.rng.int(0, 20), role: 'cop', city: city.id });
+    g.actors.arm(h, 'revolver'); h.weaponOut = false;
+    h.footBeat = true;
+    g.actors.startWander(h);
+  };
+
   PR.html = function () {
     const g = G(), s = this.state(), rows = Object.keys(s.jur).filter((j) => s.jur[j].beats.length || s.jur[j].captain != null);
     if (!rows.length) return '';

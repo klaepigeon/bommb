@@ -289,6 +289,8 @@ const routine = async (day) => p.evaluate(({ day, style }) => {
   const want = (s) => style === 'all' || style === s;
   const autopick = (re) => { const ch = g.ui.choice; g.ui.choice = function (t, o) { g.ui.choice = ch; const x = o.find((q) => re.test(q.label)); if (x) { if (x.fn) x.fn(); return; } return ch.call(this, t, o); }; };
   const optOf = (h, re) => { const t = R.dialog.tree(h); return t && t.options ? t.options.find((o) => re.test(o.label)) : null; };
+  // working capital for the late-game trades (the report notes it)
+  if (style !== 'all' && style !== 'none' && pl.cash < 700) { pl.cash = 700; note('style bankroll: topped up to $700'); }
   if (want('shark') && R.shark) {
     setTime(14);
     // collect from anyone late: go to their door
@@ -309,7 +311,8 @@ const routine = async (day) => p.evaluate(({ day, style }) => {
   }
   if (want('fixer') && R.payroll) {
     setTime(15);
-    const cop = g.actors.near(pl.x, pl.y, TS * 20).find((a) => a.cop && !a.hostile && !a.detectiveFor && !a.onPayroll);
+    B.tick(60 * 16); // walk the block for a bit: foot patrols come round
+    const cop = g.actors.near(pl.x, pl.y, TS * 30).find((a) => a.cop && !a.inCar && !a.hostile && !a.detectiveFor && !a.onPayroll);
     if (cop && !g.law.incident) { B.approach(cop); const o = optOf(cop, /coffee/); if (o) { o.fn(); B.act(cop.onPayroll ? 'fixer:beat' : 'fixer:refused'); } }
     const j = g.law.jurAt(pl.x, pl.y), r0 = R.payroll.jur(j);
     if (r0.beats.length >= 2 && r0.captain == null && pl.cash > 400) { const ps = w.buildings.find((b) => b && b.type === 'police' && b.cityId === j); const o = ps && g.ui.interiorOptions(ps).find((x) => /captain/.test(x.label)); if (o) { autopick(/envelope/); o.fn(); B.act(r0.captain != null ? 'fixer:captain' : 'fixer:captainFailed'); } }

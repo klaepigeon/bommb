@@ -252,6 +252,7 @@
       R.hijack.update(sdt);
       R.desert.update(sdt);
       R.dust.update(sdt);
+      R.payroll.update(sdt);
       R.profile.update(sdt);
       R.carry.update(sdt);
       R.night.update(sdt);

@@ -16188,12 +16188,12 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     ['tvs', '30 color TVs', 1300], ['steaks', 'frozen steaks', 450], ['suits', 'Italian suits, still in plastic', 800],
     ['hifi', 'hi-fi stereos and eight-tracks', 1000], ['razors', 'crates of razor blades', 350], ['perfume', 'French perfume', 1100], ['tires', 'whitewall tires', 500],
   ];
-  const FENCE = { pawn: 0.55, garage: 0.45, butcher: 0.5 };
+  const FENCE = { pawn: 0.45, garage: 0.35, butcher: 0.4 };
 
   HJ.state = function () { const st = R.shark.street(); return (st.swag = st.swag || { trucks: 0, earned: 0, tip: null }); };
   HJ.load = function (v, rich) {
     const c = R.rng.pick(rich ? CARGO.filter((c) => c[2] >= 900) : CARGO);
-    v.cargo = { id: c[0], name: c[1], value: Math.round(c[2] * (rich ? 1.5 : 0.6 + R.rng() * 0.6)) };
+    v.cargo = { id: c[0], name: c[1], value: Math.round(c[2] * (rich ? 1.1 : 0.5 + R.rng() * 0.5)) };
   };
 
   // a tip: a truck parked at a truck stop outside town, a guard on it
@@ -16210,7 +16210,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     const g = G(), pl = g.player, s = this.state();
     if (b.type !== 'bar' && b.type !== 'diner' && b.type !== 'gas') return;
     if (s.tip && g.pop.day <= s.tip.until) return;
-    opts.push({ label: 'Ask the regulars about trucks', small: '$60 for a tip on a good load', fn: () => { if (!pl.pay(60)) return g.ui.toast('Tips cost money.'); this.tip(null); } });
+    opts.push({ label: 'Ask the regulars about trucks', small: '$120 for a tip on a good load', fn: () => { if (!pl.pay(120)) return g.ui.toast('Tips cost money.'); this.tip(null); } });
   };
   // stage the tipped truck when you get close
   HJ.stage = function () {
@@ -16247,7 +16247,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     if (!v || !v.cargo) return;
     if (!v.cargoSeen) {
       v.cargoSeen = true;
-      g.ui.toast(`The truck's full of ${v.cargo.name}. A fence would pay about ${R.fmtMoney(v.cargo.value * 0.5)}. Park by a pawn shop or garage and get out.`, 'good');
+      g.ui.toast(`The truck's full of ${v.cargo.name}. A fence would pay about ${R.fmtMoney(v.cargo.value * 0.45)}. Park by a pawn shop or garage and get out.`, 'good');
       if (!v.cargoCrime) { v.cargoCrime = true; g.law.crime('hijack', v.x, v.y, {}); g.pop.addNews((g.world.cityAt((v.x / TS) | 0, (v.y / TS) | 0) || { id: 'port' }).id, `HIJACKERS STRIKE AGAIN. A truckload of ${v.cargo.name} vanished off the road yesterday. The Teamsters are "very upset."`); }
     }
   };
@@ -17450,6 +17450,28 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
         r.beats = []; r.captain = null;
       }
     }
+  };
+
+  // ---------------------------------------------------------------- walking the beat
+  // A cop or two walks the sidewalks downtown by day: the ones you can buy a coffee.
+  PR.update = function (dt) {
+    const g = G(), pl = g.player, TS = R.TILE, w = g.world;
+    this.t = (this.t == null ? 5 : this.t) - dt;
+    if (this.t > 0) return;
+    this.t = 15;
+    if (pl.room || pl.inCar || (R.opening && R.opening.active) || g.law.incident) return;
+    const hr = g.clock.hour(), city = w.cityAt((pl.x / TS) | 0, (pl.y / TS) | 0);
+    if (!city || hr < 7 || hr > 21) return;
+    const want = city.id === 'avalon' ? 2 : 1;
+    const have = g.actors.list.filter((a) => a.footBeat && !a.dead && !a.removed && R.dist(a.x, a.y, pl.x, pl.y) < TS * 34).length;
+    if (have >= want) return;
+    const sp = w.findNear((pl.x / TS) | 0, (pl.y / TS) | 0, 16, 26, (x, y) => w.t(x, y) === R.data.T.WALK && !w.solidPed(x, y));
+    if (!sp || g.cam.onScreen(sp.x * TS + 8, sp.y * TS + 8, 30)) return;
+    const h = g.actors.makeHuman(sp.x * TS + 8, sp.y * TS + 8, { cop: true, role: 'cop', city: city.id });
+    h.look = g.pop.makeLook(R.mulberry(R.rng.int(0, 1e9)), { fem: R.rng.chance(0.3), age: 30 + R.rng.int(0, 20), role: 'cop', city: city.id });
+    g.actors.arm(h, 'revolver'); h.weaponOut = false;
+    h.footBeat = true;
+    g.actors.startWander(h);
   };
 
   PR.html = function () {
@@ -21781,6 +21803,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       R.hijack.update(sdt);
       R.desert.update(sdt);
       R.dust.update(sdt);
+      R.payroll.update(sdt);
       R.profile.update(sdt);
       R.carry.update(sdt);
       R.night.update(sdt);

@@ -13,12 +13,12 @@
     ['tvs', '30 color TVs', 1300], ['steaks', 'frozen steaks', 450], ['suits', 'Italian suits, still in plastic', 800],
     ['hifi', 'hi-fi stereos and eight-tracks', 1000], ['razors', 'crates of razor blades', 350], ['perfume', 'French perfume', 1100], ['tires', 'whitewall tires', 500],
   ];
-  const FENCE = { pawn: 0.55, garage: 0.45, butcher: 0.5 };
+  const FENCE = { pawn: 0.45, garage: 0.35, butcher: 0.4 };
 
   HJ.state = function () { const st = R.shark.street(); return (st.swag = st.swag || { trucks: 0, earned: 0, tip: null }); };
   HJ.load = function (v, rich) {
     const c = R.rng.pick(rich ? CARGO.filter((c) => c[2] >= 900) : CARGO);
-    v.cargo = { id: c[0], name: c[1], value: Math.round(c[2] * (rich ? 1.5 : 0.6 + R.rng() * 0.6)) };
+    v.cargo = { id: c[0], name: c[1], value: Math.round(c[2] * (rich ? 1.1 : 0.5 + R.rng() * 0.5)) };
   };
 
   // a tip: a truck parked at a truck stop outside town, a guard on it
@@ -35,7 +35,7 @@
     const g = G(), pl = g.player, s = this.state();
     if (b.type !== 'bar' && b.type !== 'diner' && b.type !== 'gas') return;
     if (s.tip && g.pop.day <= s.tip.until) return;
-    opts.push({ label: 'Ask the regulars about trucks', small: '$60 for a tip on a good load', fn: () => { if (!pl.pay(60)) return g.ui.toast('Tips cost money.'); this.tip(null); } });
+    opts.push({ label: 'Ask the regulars about trucks', small: '$120 for a tip on a good load', fn: () => { if (!pl.pay(120)) return g.ui.toast('Tips cost money.'); this.tip(null); } });
   };
   // stage the tipped truck when you get close
   HJ.stage = function () {
@@ -72,7 +72,7 @@
     if (!v || !v.cargo) return;
     if (!v.cargoSeen) {
       v.cargoSeen = true;
-      g.ui.toast(`The truck's full of ${v.cargo.name}. A fence would pay about ${R.fmtMoney(v.cargo.value * 0.5)}. Park by a pawn shop or garage and get out.`, 'good');
+      g.ui.toast(`The truck's full of ${v.cargo.name}. A fence would pay about ${R.fmtMoney(v.cargo.value * 0.45)}. Park by a pawn shop or garage and get out.`, 'good');
       if (!v.cargoCrime) { v.cargoCrime = true; g.law.crime('hijack', v.x, v.y, {}); g.pop.addNews((g.world.cityAt((v.x / TS) | 0, (v.y / TS) | 0) || { id: 'port' }).id, `HIJACKERS STRIKE AGAIN. A truckload of ${v.cargo.name} vanished off the road yesterday. The Teamsters are "very upset."`); }
     }
   };

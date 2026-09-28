@@ -211,3 +211,34 @@ Three passes over the newer systems:
 - ~~Night lighting in the outer streets could use lit windows and more neon spill.~~ Done: homes keep lamps on in the evening (amber, or TV blue), with a few night owls after midnight. Window light spills onto the walk. Neon signs now come in five colours, pool on the sidewalk, and a few flicker on the fritz.
 - ~~The desert crawl could use a vulture shadow for mood.~~ Done: three vulture shadows circle you while you crawl. Heat shimmer is still open.
 - ~~A bot routine for laundering and flirting.~~ Done: `tools/playtest.mjs` now flirts at bars and washes chips on casino nights. In the 30-day run it flirted twice (0 errors). No casino night was rolled, so laundering is still unexercised by the bot.
+
+
+---
+
+## Playtest 4: new systems and playstyles (XX7X build)
+
+Three 30-day bot runs, one per trade (`node tools/playtest.mjs 30 out/ shark|fixer|hijacker`), plus scripted passes through every new menu. All runs had 0 errors.
+
+### What the runs showed
+
+| Style | Result | Change made |
+|---|---|---|
+| Hijacker | 3–4 truckloads fenced in 12 days for about $3,000, far more than family jobs pay | Tips now cost $120. Loads are worth about 30% less, and fences pay 45% (pawn) or 35% (garage). Now about $600 a load |
+| Shark | Collections, broken fingers, seized TVs and favours all work. Few loans, because the bot is usually under $400 and loan sharking needs capital | No change. It's a mid-game business by design. The bot gets a $700 bankroll so the loop is exercised |
+| Fixer | No cops bribed in 30 days: beat cops only existed in patrol cars and the station | **Foot patrols:** one or two cops walk the sidewalks downtown by day. The rerun had a beat cop by day 3, a captain by day 12 and five on the payroll by day 20, and they looked away four times |
+| Rat | The debug run found the rat in nine days: four clues left one suspect | Clues come every 3–4 days, and the first one is always which part of your life (debtor, crew, cop) |
+
+### Other checks this round
+
+- **Opening:** replayed end to end on a phone-sized touch screen. You were being run over by highway traffic while crawling, so now there's no traffic and no damage during the whole opening. The don's car stops beside you (by distance along the road), the HUD and pads hide during scenes, and extras stay quiet.
+- **Traffic:** in two minutes of rush hour the old build had 13 to 508 crashes and one run with a 26-car pile-up. The new build has 7–8 crashes and no wrecks, and sway fell from 3.5° to 0.3° per frame.
+- **Reputation:** a $100 shop item costs $90 when respected and $85 when feared. The perks are listed in the Jobs tab.
+- **Dust storm:** reaches full strength in a few seconds out in the desert, with fog at about 0.8 for witnesses.
+- **Debug:** 12 new shortcuts (street business, reputation, weather, car damage) all work.
+
+### Still on the list
+
+- Rival families should run their own loans and hijackings on the same systems (a collector roughing up a debtor in the street, trucks with rival escorts).
+- Drivers who wave you through, argue at lights or rubberneck at a wreck.
+- Heat shimmer over the desert road at midday.
+- Stop-start jerk at intersections rose as cars now wait for room on the far side. Re-measure with the gridlock timeout in place.
