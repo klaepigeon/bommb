@@ -84,6 +84,7 @@
     R.money.init(this);
     R.turf.init(this);
     R.vendetta.init(this);
+    R.butcher.init(this);
     R.vice.init(this);
     R.gore.init(this);
     R.relics.init(this);

@@ -72,6 +72,8 @@
       if (!q || !q.alive) { v.done = true; continue; }
       if (!v.knows) {
         // the neighbourhood talks; the paper prints the sketch
+        const vic = pop.people[v.vid];
+        if (vic && vic.unidentified && !this.identified(vic)) { if (pop.day - v.day > 30) v.done = true; continue; } // no face, no name, no suspect
         const c = R.cases && R.cases.state().list.find((k) => k.body && k.body.pid === v.vid);
         const p = 0.04 + pl.rep.infamy / 900 + (c && c.sketch ? 0.12 : 0) + (this.identified(pop.people[v.vid]) ? 0.3 : 0);
         if (R.rng() < p) { v.knows = true; this.decide(v); if (!v.done && v.mode !== 'wait') g.ui.toast(`Somebody told ${pop.name(q)} who killed their ${relName(v.rel, pop.people[v.vid])}.`, 'warn'); }
