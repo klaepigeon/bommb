@@ -226,6 +226,7 @@
       R.ring.update(sdt);
       R.fearQuest.update(sdt);
       R.campaign.update(sdt);
+      if (R.testRooms.active) R.testRooms.update(this, sdt);
       R.legends.update(sdt);
       R.goods.update(sdt);
       R.poi.update(sdt);

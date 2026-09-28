@@ -15,6 +15,7 @@
       <div class="sect">Time & weather</div><div class="dbgrow">${btn('time:6', '6 AM')}${btn('time:12', 'Noon')}${btn('time:19', '7 PM')}${btn('time:0', 'Midnight')}${btn('time:2', '2 AM')}${btn('day', 'Skip a day')}${['clear', 'cloudy', 'rain', 'storm', 'fog', 'heat'].map((k) => btn('wx:' + k, k)).join('')}</div>
       <div class="sect">Teleport</div><div class="dbgrow">${w.cities.map((c) => btn('tp:' + c.id, c.name)).join('')}${btn('tp:fear', 'Fear Man\'s tree')}${btn('tp:pier', 'The piers')}${btn('tp:forest', 'Deep woods')}${btn('tp:marsh', 'The marsh')}${btn('tp:cross', 'A crossroads')}</div>
       <div class="sect">Spawn</div><div class="dbgrow">${btn('sp:mugger', 'Mugger')}${btn('sp:thug', 'Armed thug')}${btn('sp:cop', 'Cop')}${btn('sp:wolf', 'Wolf')}${btn('sp:bear', 'Bear')}${btn('sp:car', 'Muscle car')}${btn('sp:ghost', 'Ghost')}${btn('sp:squatch', 'Sasquatch')}${btn('sp:ufo', 'UFO')}${btn('sp:cross', 'Crossroads man')}${btn('sp:scratch', 'Old Scratch')}${btn('sp:fear', 'Fear Man (here)')}${btn('sp:props', 'Pile of junk')}</div>
+      <div class="sect">Test rooms</div><div class="dbgrow">${btn('tr:gallery', 'Art gallery')}${btn('tr:arena', 'Combat arena')}${btn('tr:yard', 'Vehicle yard')}${btn('tr:fire', 'Fire lab')}${btn('tr:stealth', 'Stealth range')}${btn('tr:water', 'Water')}</div>
       <div class="sect">World</div><div class="dbgrow">${btn('ev', 'Street event now')}${btn('calm', 'Kill all hostiles')}${btn('law', 'Call the cops on me')}${btn('fire', 'Start a fire here')}${btn('save', 'Save now')}</div>`;
     const near = (pred, r) => w.findNear(pl.x / TS, pl.y / TS, 3, r || 8, pred || ((x, y) => !w.solidPed(x, y) && !w.isWater(x, y)));
     const tp = (x, y) => { if (pl.room) g.interiors.exit(); if (pl.inCar) pl.exitCar(); pl.place(x * TS + 8, y * TS + 8); g.cam.x = pl.x; g.cam.y = pl.y; ui.closeSheet(); };
@@ -25,6 +26,7 @@
       switch (k) {
         case 't': ch[v] = !ch[v]; ui.toast(`${v}: ${ch[v] ? 'on' : 'off'}`); break;
         case 'cash': pl.addCash(1000); break;
+        case 'tr': R.testRooms.go(g, v); break;
         case 'heal': pl.hp = pl.maxHp; pl.bloody = 0; break;
         case 'arsenal': for (const id of ['knuckles', 'bat', 'knife', 'revolver', 'magnum', 'shotgun', 'chopper', 'rifle']) pl.giveWeapon(id); Object.assign(pl.inv.ammo, { pistol: 200, shells: 80, smg: 300, rifle: 60, molotov: 10, dynamite: 10 }); pl.inv.tools.gascan = 3; break;
         case 'ring': pl.inv.tools.ring = 1; pl.will = 100; ui.setRingButtons(); break;

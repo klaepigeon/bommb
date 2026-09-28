@@ -218,7 +218,9 @@
       // damage what's here
       const b = w.bid[i] ? w.buildings[w.bid[i]] : null;
       if (b) {
-        b.hp -= dt * 2.2 * f.i;
+        // scaled to the footprint so a big store blazes for a good half-minute instead of
+        // collapsing before the flames even show
+        b.hp -= dt * 2.2 * f.i * Math.min(1, 10 / (b.w * b.h));
         if (b.hp <= 0 && !b.destroyed) {
           w.destroyBuilding(b);
           g.pop.addNews(b.cityId, `${b.name} burned to the ground.`);

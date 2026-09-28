@@ -7004,7 +7004,9 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       // damage what's here
       const b = w.bid[i] ? w.buildings[w.bid[i]] : null;
       if (b) {
-        b.hp -= dt * 2.2 * f.i;
+        // scaled to the footprint so a big store blazes for a good half-minute instead of
+        // collapsing before the flames even show
+        b.hp -= dt * 2.2 * f.i * Math.min(1, 10 / (b.w * b.h));
         if (b.hp <= 0 && !b.destroyed) {
           w.destroyBuilding(b);
           g.pop.addNews(b.cityId, `${b.name} burned to the ground.`);
@@ -12875,6 +12877,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       <div class="sect">Time & weather</div><div class="dbgrow">${btn('time:6', '6 AM')}${btn('time:12', 'Noon')}${btn('time:19', '7 PM')}${btn('time:0', 'Midnight')}${btn('time:2', '2 AM')}${btn('day', 'Skip a day')}${['clear', 'cloudy', 'rain', 'storm', 'fog', 'heat'].map((k) => btn('wx:' + k, k)).join('')}</div>
       <div class="sect">Teleport</div><div class="dbgrow">${w.cities.map((c) => btn('tp:' + c.id, c.name)).join('')}${btn('tp:fear', 'Fear Man\'s tree')}${btn('tp:pier', 'The piers')}${btn('tp:forest', 'Deep woods')}${btn('tp:marsh', 'The marsh')}${btn('tp:cross', 'A crossroads')}</div>
       <div class="sect">Spawn</div><div class="dbgrow">${btn('sp:mugger', 'Mugger')}${btn('sp:thug', 'Armed thug')}${btn('sp:cop', 'Cop')}${btn('sp:wolf', 'Wolf')}${btn('sp:bear', 'Bear')}${btn('sp:car', 'Muscle car')}${btn('sp:ghost', 'Ghost')}${btn('sp:squatch', 'Sasquatch')}${btn('sp:ufo', 'UFO')}${btn('sp:cross', 'Crossroads man')}${btn('sp:scratch', 'Old Scratch')}${btn('sp:fear', 'Fear Man (here)')}${btn('sp:props', 'Pile of junk')}</div>
+      <div class="sect">Test rooms</div><div class="dbgrow">${btn('tr:gallery', 'Art gallery')}${btn('tr:arena', 'Combat arena')}${btn('tr:yard', 'Vehicle yard')}${btn('tr:fire', 'Fire lab')}${btn('tr:stealth', 'Stealth range')}${btn('tr:water', 'Water')}</div>
       <div class="sect">World</div><div class="dbgrow">${btn('ev', 'Street event now')}${btn('calm', 'Kill all hostiles')}${btn('law', 'Call the cops on me')}${btn('fire', 'Start a fire here')}${btn('save', 'Save now')}</div>`;
     const near = (pred, r) => w.findNear(pl.x / TS, pl.y / TS, 3, r || 8, pred || ((x, y) => !w.solidPed(x, y) && !w.isWater(x, y)));
     const tp = (x, y) => { if (pl.room) g.interiors.exit(); if (pl.inCar) pl.exitCar(); pl.place(x * TS + 8, y * TS + 8); g.cam.x = pl.x; g.cam.y = pl.y; ui.closeSheet(); };
@@ -12885,6 +12888,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       switch (k) {
         case 't': ch[v] = !ch[v]; ui.toast(`${v}: ${ch[v] ? 'on' : 'off'}`); break;
         case 'cash': pl.addCash(1000); break;
+        case 'tr': R.testRooms.go(g, v); break;
         case 'heal': pl.hp = pl.maxHp; pl.bloody = 0; break;
         case 'arsenal': for (const id of ['knuckles', 'bat', 'knife', 'revolver', 'magnum', 'shotgun', 'chopper', 'rifle']) pl.giveWeapon(id); Object.assign(pl.inv.ammo, { pistol: 200, shells: 80, smg: 300, rifle: 60, molotov: 10, dynamite: 10 }); pl.inv.tools.gascan = 3; break;
         case 'ring': pl.inv.tools.ring = 1; pl.will = 100; ui.setRingButtons(); break;
@@ -13485,6 +13489,171 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
         txt(g, `NET ${net >= 0 ? '+' : ''}${net}`, 234, 96, { align: 'right', color: net >= 0 ? '#a8f0a8' : '#f0a0a0' });
       },
     }, () => done && done(net));
+  };
+})();
+
+// ---- 16_testrooms.js
+// RHAPSODY — test rooms (Menu > Debug > Test rooms). Purpose-built areas carved into an
+// empty corner of the countryside for repeatable visual and systems playtests:
+//   gallery — every weapon and pose in eight directions, every car, every junk prop
+//   arena   — waves of fists, blades, bats and guns around crates for cover
+//   yard    — every car model on open tarmac, cones, a pond to drive into
+//   fire    — a grass field with wooden cabins, trees and a pile of gas and molotovs
+//   stealth — a lamplit night yard with patrolling guards, bushes and crates
+//   water   — a pond with a pier, reeds and a rowboat's worth of shoreline
+'use strict';
+(function () {
+  const D = R.data, T = D.T, O = D.O, TS = R.TILE;
+  const TR = (R.testRooms = { spots: {} });
+  const RW = 40, RH = 28; // room size in tiles
+
+  // somewhere open and far from any town
+  TR.site = function (g) {
+    if (this.base && this.baseWorld === g.world) return this.base;
+    const w = g.world;
+    const ok = (x, y) => { for (let yy = y - 2; yy < y + RH * 2 + 6; yy += 2) for (let xx = x - 2; xx < x + RW * 3 + 10; xx += 2) { if (!w.inb(xx, yy) || w.cityAt(xx, yy) || D.waterTile[w.t(xx, yy)] || D.roadTile[w.t(xx, yy)] || w.t(xx, yy) === T.BLDG) return false; } return true; };
+    for (let tries = 0; tries < 4000; tries++) {
+      const x = 10 + ((R.rng() * (w.W - RW * 3 - 30)) | 0), y = 10 + ((R.rng() * (w.TH - RH * 2 - 30)) | 0);
+      if (ok(x, y)) { this.base = { x, y }; this.baseWorld = w; return this.base; }
+    }
+    this.base = { x: 20, y: 20 }; this.baseWorld = w;
+    return this.base;
+  };
+  const ROOMS = ['gallery', 'arena', 'yard', 'fire', 'stealth', 'water'];
+  TR.origin = function (g, room) {
+    const b = this.site(g), i = ROOMS.indexOf(room);
+    return { x: b.x + (i % 3) * (RW + 4), y: b.y + Math.floor(i / 3) * (RH + 4) };
+  };
+  // clear a room: flat floor, fence around, nobody inside
+  TR.carve = function (g, o, floor, fence) {
+    const w = g.world;
+    for (let y = o.y - 1; y <= o.y + RH; y++) for (let x = o.x - 1; x <= o.x + RW; x++) {
+      const edge = x === o.x - 1 || y === o.y - 1 || x === o.x + RW || y === o.y + RH;
+      w.setT(x, y, edge ? T.GRASS : floor);
+      w.setO(x, y, edge && fence && !(y === o.y + RH && Math.abs(x - (o.x + RW / 2)) < 2) ? O.FENCE : 0);
+    }
+    for (const a of g.actors.list.slice()) if (a !== g.player && a.x > (o.x - 2) * TS && a.x < (o.x + RW + 2) * TS && a.y > (o.y - 2) * TS && a.y < (o.y + RH + 2) * TS) g.actors.remove(a);
+    for (const v of g.traffic.list.slice()) if (v !== g.player.inCar && v.x > (o.x - 2) * TS && v.x < (o.x + RW + 2) * TS && v.y > (o.y - 2) * TS && v.y < (o.y + RH + 2) * TS) g.traffic.remove(v);
+    if (R.art.chunkCache) R.art.chunkCache.clear();
+    g.miniDirty = true;
+  };
+  const place = (g, x, y) => { const pl = g.player; if (pl.room) g.interiors.exit(); if (pl.inCar) pl.exitCar(); pl.place(x * TS + 8, y * TS + 8); g.cam.x = pl.x; g.cam.y = pl.y; };
+  const mannequin = (g, x, y, pose) => {
+    const h = g.actors.makeHuman(x * TS + 8, y * TS + 8, { arch: 'friendly', cash: 0, weapon: pose.weapon && R.data.weapons[pose.weapon] ? pose.weapon : undefined });
+    h.keep = true; h.stay = true; h.state = 'idle'; h.timer = 1e9; h.testPose = pose; h.strangerName = pose.label || 'Mannequin';
+    return h;
+  };
+
+  TR.go = function (g, room) {
+    const o = this.origin(g, room);
+    const cx = o.x + (RW >> 1), cy = o.y + (RH >> 1);
+    const pl = g.player, w = g.world;
+    g.ui.closeSheet();
+    this.active = room;
+    if (room === 'gallery') {
+      this.carve(g, o, T.PLAZA, true);
+      // weapons and poses: one row each, eight facings
+      const rows = [
+        { weapon: 'revolver' }, { weapon: 'shotgun' }, { weapon: 'rifle' }, { weapon: 'chopper' },
+        { weapon: 'bat' }, { weapon: 'knife' }, { held: 'bottle' }, { held: 'pipe' }, { held: 'tv' },
+        { pose: 'h', label: 'Hands up' }, { pose: 'p1', label: 'Punch' }, { pose: 'b2', label: 'Swing' },
+      ];
+      rows.forEach((r, i) => { for (let d = 0; d < 8; d++) mannequin(g, o.x + 2 + (i % 2) * 18 + d * 2, o.y + 2 + Math.floor(i / 2) * 2, Object.assign({ ang: d * Math.PI / 4 }, r)); });
+      // every car
+      Object.keys(D.vehicles).forEach((k, i) => { const m = D.vehicles[k]; g.traffic.make(k, (o.x + 4 + (i % 4) * 9) * TS, (o.y + 16 + Math.floor(i / 4) * 3) * TS, 0, { parked: true, keep: true, color: m.colors[0] }); });
+      // junk props
+      const props = Object.keys(R.old.props || {}).slice(0, 32);
+      props.forEach((k, i) => { try { R.props.drop(k, (o.x + 2 + (i % 16) * 2.2) * TS, (o.y + RH - 2 - Math.floor(i / 16) * 1.5) * TS); } catch (e) { /* not a droppable prop */ } });
+      for (let x = o.x + 4; x < o.x + RW - 2; x += 8) w.setO(x, o.y + 14, O.LAMP);
+      place(g, cx, o.y + 14);
+      g.ui.toast('Gallery: every weapon, pose, car and prop. Try Noon / Midnight in the debug menu.', 'good');
+    }
+    if (room === 'arena') {
+      this.carve(g, o, T.DIRT, true);
+      for (let i = 0; i < 14; i++) w.setO(o.x + 3 + ((R.rng() * (RW - 6)) | 0), o.y + 3 + ((R.rng() * (RH - 6)) | 0), R.rng() < 0.5 ? O.CRATE : O.BARREL);
+      for (const id of ['knuckles', 'bat', 'knife', 'revolver', 'magnum', 'shotgun', 'chopper', 'rifle']) pl.giveWeapon(id);
+      Object.assign(pl.inv.ammo, { pistol: 200, shells: 80, smg: 300, rifle: 60 });
+      pl.hp = pl.maxHp;
+      place(g, cx, o.y + RH - 3);
+      this.waves = [{ n: 4, w: [null] }, { n: 4, w: ['knife', 'bat'] }, { n: 4, w: ['revolver', 'shotgun'] }, { n: 3, w: ['chopper', 'magnum'] }];
+      this.waveT = 2; this.wave = 0; this.arena = o; this.foes = []; this.cleared = false;
+      g.ui.toast('Arena: four waves. Fists, then blades and bats, then guns.', 'warn');
+    }
+    if (room === 'yard') {
+      this.carve(g, o, T.ROAD, true);
+      for (let y = o.y + RH - 9; y < o.y + RH - 2; y++) for (let x = o.x + RW - 12; x < o.x + RW - 2; x++) if ((x - (o.x + RW - 7)) ** 2 / 25 + (y - (o.y + RH - 5.5)) ** 2 / 12 < 1) w.setT(x, y, T.WATER);
+      for (let k = 0; k < 10; k++) w.setO(o.x + 6 + k * 3, o.y + RH - 12, O.CONE);
+      Object.keys(D.vehicles).forEach((k, i) => g.traffic.make(k, (o.x + 5 + (i % 4) * 9) * TS, (o.y + 3 + Math.floor(i / 4) * 4) * TS, 0, { parked: true, keep: true }));
+      place(g, o.x + 14, o.y + 9);
+      g.ui.toast('Vehicle yard: every model, cones and a pond.', 'good');
+    }
+    if (room === 'fire') {
+      this.carve(g, o, T.GRASS, true);
+      const c = w.countyCity ? w.countyCity() : w.cities[0];
+      const rnd = R.mulberry(7);
+      for (let i = 0; i < 3; i++) { const b = w.addBuilding(c, 'cabin', o.x + 4 + i * 12, o.y + 4, 4, 3, 'S', rnd); b.name = `Test Cabin ${i + 1}`; }
+      for (let i = 0; i < 30; i++) w.setO(o.x + 2 + ((R.rng() * (RW - 4)) | 0), o.y + 11 + ((R.rng() * (RH - 14)) | 0), R.rng() < 0.6 ? O.TREE : O.BUSH);
+      for (let y = o.y + 11; y < o.y + RH - 1; y++) for (let x = o.x + RW - 10; x < o.x + RW - 1; x++) w.setT(x, y, T.FIELD);
+      pl.inv.tools.gascan = (pl.inv.tools.gascan || 0) + 3;
+      pl.inv.ammo.molotov = (pl.inv.ammo.molotov || 0) + 10;
+      pl.giveWeapon && pl.giveWeapon('molotov');
+      place(g, o.x + 6, o.y + 9);
+      g.ui.toast('Fire lab: three cabins, trees and a wheat field. You have 10 molotovs and 3 gas cans.', 'good');
+    }
+    if (room === 'stealth') {
+      this.carve(g, o, T.LOT, true);
+      for (let x = o.x + 4; x < o.x + RW - 2; x += 9) for (let y = o.y + 5; y < o.y + RH - 2; y += 9) w.setO(x, y, O.LAMP);
+      for (let i = 0; i < 24; i++) w.setO(o.x + 2 + ((R.rng() * (RW - 4)) | 0), o.y + 2 + ((R.rng() * (RH - 4)) | 0), [O.BUSH, O.CRATE, O.BARREL, O.BUSH][i % 4]);
+      g.clock.t = Math.floor(g.clock.t / 1440) * 1440 + 1440 + 23 * 60;
+      this.guards = [];
+      for (let i = 0; i < 4; i++) {
+        const gd = g.actors.makeHuman((o.x + 8 + i * 8) * TS, (o.y + 6 + (i % 2) * 12) * TS, { faction: 'Castellano', weapon: 'revolver', arch: 'tough' });
+        gd.keep = true; gd.strangerName = 'Guard'; gd.patrol = [{ x: gd.x, y: gd.y }, { x: gd.x + TS * 6 * (i % 2 ? -1 : 1), y: gd.y + TS * 5 }]; gd.patrolI = 0; gd.testGuard = true;
+        this.guards.push(gd);
+      }
+      g.jobs.standing.Castellano = -60; // they shoot on sight
+      pl.sneak = false;
+      place(g, o.x + 3, o.y + 8);
+      g.ui.toast('Stealth range: four guards shoot on sight. SNEAK and stand still to vanish.', 'warn');
+    }
+    if (room === 'water') {
+      this.carve(g, o, T.GRASS, true);
+      for (let y = o.y + 3; y < o.y + RH - 3; y++) for (let x = o.x + 6; x < o.x + RW - 6; x++) { const e = (x - cx) ** 2 / 170 + (y - cy) ** 2 / 60; if (e < 1) w.setT(x, y, e < 0.45 ? T.DEEP : T.WATER); else if (e < 1.2) w.setT(x, y, T.SAND); }
+      for (let x = o.x + 4; x < cx; x++) w.setT(x, cy, T.DOCK);
+      for (let i = 0; i < 16; i++) { const a = R.rng() * 6.28; w.setO(Math.round(cx + Math.cos(a) * 14), Math.round(cy + Math.sin(a) * 8.5), O.REED); }
+      g.traffic.make('pickup', (o.x + 3) * TS, (cy - 3) * TS, 0, { parked: true, keep: true });
+      place(g, o.x + 4, cy + 2);
+      g.ui.toast('Water: a pond, a pier and a pickup to drive in.', 'good');
+    }
+  };
+
+  // live behaviour: arena waves and patrolling guards
+  TR.update = function (g, dt) {
+    if (this.active === 'arena' && this.waves && this.arena) {
+      const alive = this.foes.filter((f) => !f.dead && !(f.down > 0));
+      if (!alive.length) {
+        this.waveT -= dt;
+        if (this.waveT <= 0 && this.wave < this.waves.length) {
+          const wv = this.waves[this.wave++], o = this.arena;
+          for (let i = 0; i < wv.n; i++) {
+            const a = R.rng() * 6.28, pl = g.player;
+            const h = g.actors.makeHuman(R.clamp(pl.x + Math.cos(a) * TS * 9, (o.x + 1) * TS, (o.x + RW - 1) * TS), R.clamp(pl.y + Math.sin(a) * TS * 6, (o.y + 1) * TS, (o.y + RH - 1) * TS), { weapon: R.rng.pick(wv.w) || undefined, arch: 'tough' });
+            h.keep = true; h.hostile = true; h.tr.brave = 1; g.actors.setFight(h, g.player); this.foes.push(h);
+          }
+          g.ui.toast(`Wave ${this.wave} of ${this.waves.length}`, 'bad');
+          this.waveT = 4;
+        } else if (this.wave >= this.waves.length && this.waveT <= 0 && !this.cleared) { this.cleared = true; g.ui.toast('Arena cleared.', 'good'); }
+      }
+    }
+    if (this.active === 'stealth' && this.guards) for (const gd of this.guards) {
+      if (gd.dead || gd.state === 'fight' || !gd.patrol) continue;
+      const tgt = gd.patrol[gd.patrolI];
+      const dx = tgt.x - gd.x, dy = tgt.y - gd.y, d = Math.hypot(dx, dy);
+      if (d < 4) { gd.patrolI = 1 - gd.patrolI; continue; }
+      gd.state = 'idle'; gd.timer = 1;
+      g.actors.moveActor(gd, dx / d * 24, dy / d * 24, dt);
+      gd.walk += dt * 8; gd.dir = R.dir4(dx, dy); gd.ang = Math.atan2(dy, dx);
+    }
   };
 })();
 
@@ -14754,7 +14923,18 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       if (p.id === 'molotov' || p.landed) { g.fillStyle = '#ffd040'; g.fillRect(p.x - 1, p.y - 4, 2, 2); }
     }
     R.props.drawFlying(g);
-    // fire
+    // fire: char burning buildings, flames out of the front windows as it takes hold
+    for (const b of w.buildings) {
+      if (!b || !b.burning || b.destroyed) continue;
+      if (b.x + b.w < tx0 - 1 || b.x > tx1 + 1 || b.y + b.h < ty0 - 1 || b.y > ty1 + 2) continue;
+      const lvl = 1 - b.hp / 100;
+      const a = Math.min(0.62, lvl * 0.7 + 0.12);
+      g.fillStyle = `rgba(22,10,6,${a})`;
+      g.fillRect(b.x * TS - 2, b.y * TS - 6, b.w * TS + 4, b.h * TS + 6);
+      g.fillStyle = `rgba(10,6,4,${a * 0.8})`;
+      for (let k = 0; k < b.w; k++) if (R.hash2(b.id, k, 9) < 0.5) g.fillRect(b.x * TS + k * TS + 5, (b.y + b.h) * TS - 24, 3, 20);
+      for (let k = 0; k < b.w; k++) if (R.hash2(b.id, k, 11) < 0.25 + lvl * 1.2) this.drawFire(g, { x: b.x + k, y: b.y + b.h - 1, i: 0.6 + lvl * 0.4, facade: true }, t);
+    }
     for (const fr of game.env.fires.values()) {
       if (fr.x < tx0 - 1 || fr.x > tx1 + 1 || fr.y < ty0 - 1 || fr.y > ty1 + 1) continue;
       this.drawFire(g, fr, t);
@@ -14802,6 +14982,11 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   };
 
   P.drawHuman = function (g, h) {
+    // test-room mannequins hold a fixed pose
+    if (h.testPose && !h.dead && h.state !== 'fight') {
+      const tp = h.testPose, isW = tp.weapon && D.weapons[tp.weapon];
+      return A.drawPerson(g, h.x, h.y, h.dir, 0, h.look, { weapon: isW ? tp.weapon : null, held: tp.held || null, pose: tp.pose || null, ang: tp.ang });
+    }
     // made men favour a fedora
     if (h.look.hatKind === undefined) h.look.hatKind = h.faction && h.faction !== 'law' && (R.hash2(h.x | 0, h.y | 0, 3) < 0.55) ? R.rng.pick(['fedora', 'fedora', 'trilby', 'porkpie']) : null;
     const st = { weapon: h.drawn || h.state === 'fight' ? h.weapon : null, down: h.down > 0 || h.state === 'sleep', scale: h.scale, alpha: h.ghost ? 0.4 + Math.sin(this.game.clock.real * 3) * 0.15 : null };
@@ -14846,21 +15031,29 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     R.ring.drawSwing(g, pl);
   };
 
+  // pixel flames: tongues built from one-pixel rows in a five-tone ramp, swaying and
+  // licking upward; buildings burn taller and smoke black, and embers drift off
+  const FLAME = ['#fff6c0', '#ffc838', '#f87818', '#c82c0c', '#5a140a'];
   P.drawFire = function (g, fr, t) {
-    const x = fr.x * TS + 8, y = fr.y * TS + 12;
-    const n = 3;
+    const w = this.game.world;
+    const onB = !!w.bid[w.idx(fr.x, fr.y)];
+    const x = fr.x * TS + 8, y = fr.y * TS + (fr.facade ? 4 : onB ? 10 : 13);
+    const n = onB ? 4 : 3, big = onB ? 1.9 : 1;
     for (let k = 0; k < n; k++) {
-      const ph = t * 9 + k * 2.1 + fr.x * 3.3 + fr.y;
-      const hgt = (6 + Math.sin(ph) * 3 + k * 2) * (0.5 + fr.i * 0.6);
-      const ox = (k - 1) * 4 + Math.sin(ph * 1.3) * 1.5;
-      g.fillStyle = k === 1 ? '#ffd040' : '#ff7a20';
-      g.beginPath();
-      g.moveTo(x + ox - 3, y);
-      g.lineTo(x + ox, y - hgt);
-      g.lineTo(x + ox + 3, y);
-      g.fill();
+      const ph = t * 8 + k * 2.3 + fr.x * 3.3 + fr.y * 1.7;
+      const hgt = Math.max(3, Math.round((7 + Math.sin(ph) * 3 + (k % 2) * 3) * (0.45 + fr.i * 0.65) * big));
+      const bx = x + Math.round((k - (n - 1) / 2) * 4);
+      for (let yy = 0; yy < hgt; yy++) {
+        const f = yy / hgt;
+        const wd = f < 0.3 ? 4 : f < 0.6 ? 3 : f < 0.85 ? 2 : 1;
+        const sway = Math.round(Math.sin(ph * 1.4 + yy * 0.35) * f * 2);
+        g.fillStyle = f < 0.18 ? FLAME[0] : f < 0.42 ? FLAME[1] : f < 0.68 ? FLAME[2] : f < 0.88 ? FLAME[3] : FLAME[4];
+        g.fillRect(bx - (wd >> 1) + sway, y - yy, wd, 1);
+      }
     }
-    if (R.rng() < 0.04) this.game.fx.smoke(x, y - 10, true);
+    const fx = this.game.fx;
+    if (R.rng() < (onB ? 0.12 : 0.04)) fx.smoke(x + (R.rng() - 0.5) * 8, y - 12 * big, true);
+    if (R.rng() < 0.08) fx.add({ x: x + (R.rng() - 0.5) * 10, y: y - 6 * big, vx: (R.rng() - 0.5) * 16, vy: -28 - R.rng() * 30, life: 0.9, max: 0.9, c: R.rng() < 0.5 ? '#ffc838' : '#f87818', s: 1, glow: 1 });
   };
 
   // ------------------------------------------------ lighting
@@ -15401,6 +15594,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       R.ring.update(sdt);
       R.fearQuest.update(sdt);
       R.campaign.update(sdt);
+      if (R.testRooms.active) R.testRooms.update(this, sdt);
       R.legends.update(sdt);
       R.goods.update(sdt);
       R.poi.update(sdt);

@@ -126,7 +126,18 @@
       if (p.id === 'molotov' || p.landed) { g.fillStyle = '#ffd040'; g.fillRect(p.x - 1, p.y - 4, 2, 2); }
     }
     R.props.drawFlying(g);
-    // fire
+    // fire: char burning buildings, flames out of the front windows as it takes hold
+    for (const b of w.buildings) {
+      if (!b || !b.burning || b.destroyed) continue;
+      if (b.x + b.w < tx0 - 1 || b.x > tx1 + 1 || b.y + b.h < ty0 - 1 || b.y > ty1 + 2) continue;
+      const lvl = 1 - b.hp / 100;
+      const a = Math.min(0.62, lvl * 0.7 + 0.12);
+      g.fillStyle = `rgba(22,10,6,${a})`;
+      g.fillRect(b.x * TS - 2, b.y * TS - 6, b.w * TS + 4, b.h * TS + 6);
+      g.fillStyle = `rgba(10,6,4,${a * 0.8})`;
+      for (let k = 0; k < b.w; k++) if (R.hash2(b.id, k, 9) < 0.5) g.fillRect(b.x * TS + k * TS + 5, (b.y + b.h) * TS - 24, 3, 20);
+      for (let k = 0; k < b.w; k++) if (R.hash2(b.id, k, 11) < 0.25 + lvl * 1.2) this.drawFire(g, { x: b.x + k, y: b.y + b.h - 1, i: 0.6 + lvl * 0.4, facade: true }, t);
+    }
     for (const fr of game.env.fires.values()) {
       if (fr.x < tx0 - 1 || fr.x > tx1 + 1 || fr.y < ty0 - 1 || fr.y > ty1 + 1) continue;
       this.drawFire(g, fr, t);
@@ -174,6 +185,11 @@
   };
 
   P.drawHuman = function (g, h) {
+    // test-room mannequins hold a fixed pose
+    if (h.testPose && !h.dead && h.state !== 'fight') {
+      const tp = h.testPose, isW = tp.weapon && D.weapons[tp.weapon];
+      return A.drawPerson(g, h.x, h.y, h.dir, 0, h.look, { weapon: isW ? tp.weapon : null, held: tp.held || null, pose: tp.pose || null, ang: tp.ang });
+    }
     // made men favour a fedora
     if (h.look.hatKind === undefined) h.look.hatKind = h.faction && h.faction !== 'law' && (R.hash2(h.x | 0, h.y | 0, 3) < 0.55) ? R.rng.pick(['fedora', 'fedora', 'trilby', 'porkpie']) : null;
     const st = { weapon: h.drawn || h.state === 'fight' ? h.weapon : null, down: h.down > 0 || h.state === 'sleep', scale: h.scale, alpha: h.ghost ? 0.4 + Math.sin(this.game.clock.real * 3) * 0.15 : null };
@@ -218,21 +234,29 @@
     R.ring.drawSwing(g, pl);
   };
 
+  // pixel flames: tongues built from one-pixel rows in a five-tone ramp, swaying and
+  // licking upward; buildings burn taller and smoke black, and embers drift off
+  const FLAME = ['#fff6c0', '#ffc838', '#f87818', '#c82c0c', '#5a140a'];
   P.drawFire = function (g, fr, t) {
-    const x = fr.x * TS + 8, y = fr.y * TS + 12;
-    const n = 3;
+    const w = this.game.world;
+    const onB = !!w.bid[w.idx(fr.x, fr.y)];
+    const x = fr.x * TS + 8, y = fr.y * TS + (fr.facade ? 4 : onB ? 10 : 13);
+    const n = onB ? 4 : 3, big = onB ? 1.9 : 1;
     for (let k = 0; k < n; k++) {
-      const ph = t * 9 + k * 2.1 + fr.x * 3.3 + fr.y;
-      const hgt = (6 + Math.sin(ph) * 3 + k * 2) * (0.5 + fr.i * 0.6);
-      const ox = (k - 1) * 4 + Math.sin(ph * 1.3) * 1.5;
-      g.fillStyle = k === 1 ? '#ffd040' : '#ff7a20';
-      g.beginPath();
-      g.moveTo(x + ox - 3, y);
-      g.lineTo(x + ox, y - hgt);
-      g.lineTo(x + ox + 3, y);
-      g.fill();
+      const ph = t * 8 + k * 2.3 + fr.x * 3.3 + fr.y * 1.7;
+      const hgt = Math.max(3, Math.round((7 + Math.sin(ph) * 3 + (k % 2) * 3) * (0.45 + fr.i * 0.65) * big));
+      const bx = x + Math.round((k - (n - 1) / 2) * 4);
+      for (let yy = 0; yy < hgt; yy++) {
+        const f = yy / hgt;
+        const wd = f < 0.3 ? 4 : f < 0.6 ? 3 : f < 0.85 ? 2 : 1;
+        const sway = Math.round(Math.sin(ph * 1.4 + yy * 0.35) * f * 2);
+        g.fillStyle = f < 0.18 ? FLAME[0] : f < 0.42 ? FLAME[1] : f < 0.68 ? FLAME[2] : f < 0.88 ? FLAME[3] : FLAME[4];
+        g.fillRect(bx - (wd >> 1) + sway, y - yy, wd, 1);
+      }
     }
-    if (R.rng() < 0.04) this.game.fx.smoke(x, y - 10, true);
+    const fx = this.game.fx;
+    if (R.rng() < (onB ? 0.12 : 0.04)) fx.smoke(x + (R.rng() - 0.5) * 8, y - 12 * big, true);
+    if (R.rng() < 0.08) fx.add({ x: x + (R.rng() - 0.5) * 10, y: y - 6 * big, vx: (R.rng() - 0.5) * 16, vy: -28 - R.rng() * 30, life: 0.9, max: 0.9, c: R.rng() < 0.5 ? '#ffc838' : '#f87818', s: 1, glow: 1 });
   };
 
   // ------------------------------------------------ lighting
