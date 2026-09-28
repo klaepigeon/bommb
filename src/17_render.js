@@ -420,10 +420,12 @@
       for (let x = 0; x < W; x++) {
         const i = (y * W + x) * 4 + 3;
         const a = d[i] / top;
-        const lv = a * 4;
+        // eight bands: still reads as retro banding, but neighbouring pixels only
+        // differ by an eighth, so the pattern stops looking like a checkerboard
+        const lv = a * 8;
         const base = Math.floor(lv);
         const frac = lv - base;
-        d[i] = (Math.min(4, base + (frac > BAYER[(y & 3) * 4 + (x & 3)] / 16 ? 1 : 0)) / 4) * top;
+        d[i] = (Math.min(8, base + (frac > BAYER[(y & 3) * 4 + (x & 3)] / 16 ? 1 : 0)) / 8) * top;
       }
     lg.putImageData(img, 0, 0);
   };

@@ -196,7 +196,7 @@
     }
   };
 
-  A.drawRoad = function (g, w, x, y, px, py, t) {
+  A.drawRoad = function (g, w, x, y, px, py, t, textured) {
     const f = w.flow[w.idx(x, y)];
     if (t === T.BRIDGE) {
       g.fillStyle = '#54504a';
@@ -209,8 +209,10 @@
       if (!(w.flow[w.idx(x + 1, y)])) g.fillRect(px + TS - 2, py, 2, TS);
     }
     // asphalt grain
-    speck(g, px, py, '#3c3835', 4, x * 31 + y, 1);
-    speck(g, px, py, '#5a544e', 2, x * 17 + y * 3, 1);
+    if (!textured) {
+      speck(g, px, py, '#3c3835', 4, x * 31 + y, 1);
+      speck(g, px, py, '#5a544e', 2, x * 17 + y * 3, 1);
+    }
     if (f & F.X) {
       return;
     }

@@ -769,6 +769,11 @@
   A.drawTile = function (g, w, x, y, px, py) {
     const t = w.t(x, y);
     if (t >= T.VOID) return A.drawInteriorTile(g, w, x, y, px, py, t);
+    // asphalt: the original's seamless road texture, then our lane paint on top
+    if (t === T.ROAD || t === T.HWY) {
+      g.drawImage(otex('road', Math.floor(R.hash2(x, y, 21) * 1e6) % 8), px, py);
+      return A.drawRoad(g, w, x, y, px, py, t, true);
+    }
     const og = OLDGROUND[t];
     if (!og) return baseTile(g, w, x, y, px, py);
     const v = Math.floor(R.hash2(x, y, 20) * 1e6) % og[1];
@@ -814,10 +819,88 @@
       const a = { id: b.id + 1, w: b.w, h: b.h, kind: KIND[b.type] || 'shop', wall: WALLS[b.seedArt % 5], doorOffset: b.face === 'S' ? b.door.x - b.x : -99, roof: ROOFS[b.seedArt % 3] };
       const r = OLD.paintBuilding(a, lit);
       c = { cv: r.P.toCanvas(), facadeTop: r.facadeTop, neon: r.neon };
+      if (r.flat) A.roofPass(c.cv, b, r.facadeTop, lit);
       if (bcache.size > 700) bcache.clear();
       bcache.set(key, c);
     }
     return c;
+  };
+  // Flat roofs: the original sprinkled grey gravel noise over the whole slab. Repaint the
+  // inside of the parapet as tar-paper membrane with seams, the parapet's cast shadow,
+  // and rooftop furniture (bulkhead, skylights, AC units, vents, a water tank on tall
+  // buildings, puddles), all in the same four-tone shaded, outlined style.
+  const ROOFPAL = [
+    ['#2e2c30', '#3a383c', '#46444a', '#56545a', '#6a686e'], // charcoal tar
+    ['#2c3034', '#363c42', '#424a50', '#525c62', '#687278'], // blue slate
+    ['#34302a', '#403a32', '#4e463c', '#5e554a', '#72685a'], // warm gravel
+    ['#2e322c', '#383e36', '#444c42', '#545e50', '#687264'], // green-grey
+  ];
+  const INKR = '#140e10';
+  A.roofPass = function (cv, b, facadeTop, lit) {
+    const g = cv.getContext('2d');
+    const W = cv.width, x0 = 3, y0 = 3, x1 = W - 3, y1 = facadeTop - 4;
+    if (x1 - x0 < 12 || y1 - y0 < 10) return;
+    const rnd = R.mulberry(b.id * 977 + 13);
+    const pal = ROOFPAL[(b.seedArt || b.id) % ROOFPAL.length];
+    const px = (x, y, c) => { g.fillStyle = c; g.fillRect(x, y, 1, 1); };
+    const rect = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+    // membrane: lit from the top-left, darker towards the bottom
+    for (let y = y0; y < y1; y++) {
+      const band = (y - y0) / (y1 - y0);
+      rect(x0, y, x1 - x0, 1, pal[band < 0.25 ? 3 : band < 0.7 ? 2 : 1]);
+    }
+    // sheet seams every 16px, with a soft highlight on the upper lip
+    for (let y = y0 + 12; y < y1 - 2; y += 16) { rect(x0, y, x1 - x0, 1, pal[0]); rect(x0, y + 1, x1 - x0, 1, pal[3]); }
+    for (let x = x0 + 20 + ((rnd() * 8) | 0); x < x1 - 4; x += 24 + ((rnd() * 10) | 0)) for (let y = y0; y < y1; y++) if ((y - y0) % 16 < 12) px(x, y, pal[1]);
+    // grain, sparse and in-palette
+    for (let k = 0; k < (x1 - x0) * (y1 - y0) / 28; k++) px(x0 + ((rnd() * (x1 - x0)) | 0), y0 + ((rnd() * (y1 - y0)) | 0), pal[rnd() < 0.5 ? 1 : 3]);
+    // the parapet casts a shadow onto the roof (light from the top-left)
+    rect(x0, y0, x1 - x0, 2, 'rgba(10,6,10,0.35)');
+    rect(x0, y0, 2, y1 - y0, 'rgba(10,6,10,0.28)');
+    const shadow = (x, y, w, h) => { g.fillStyle = 'rgba(10,6,10,0.35)'; g.fillRect(x + 2, y + 2, w, h); };
+    const boxS = (x, y, w, h, ramp) => {
+      shadow(x, y, w, h);
+      rect(x - 1, y - 1, w + 2, h + 2, INKR);
+      rect(x, y, w, h, ramp[2]); rect(x, y, w, 1, ramp[4]); rect(x, y + 1, 1, h - 1, ramp[3]);
+      rect(x + w - 1, y + 1, 1, h - 1, ramp[1]); rect(x, y + h - 1, w, 1, ramp[0]);
+    };
+    const metal = ['#3a3e46', '#565c66', '#7a808a', '#a4aab2', '#d0d4d8'];
+    const brick = ['#4a1e14', '#6e2e1e', '#8e4028', '#b05a38', '#cc7a52'];
+    const used = [];
+    const free = (x, y, w, h) => x >= x0 + 2 && y >= y0 + 2 && x + w <= x1 - 2 && y + h <= y1 - 2 && !used.some((u) => x < u[0] + u[2] + 3 && x + w + 3 > u[0] && y < u[1] + u[3] + 3 && y + h + 3 > u[1]);
+    const place = (w, h, tries, fn) => { for (let i = 0; i < (tries || 30); i++) { const x = x0 + 2 + ((rnd() * (x1 - x0 - w - 4)) | 0), y = y0 + 2 + ((rnd() * (y1 - y0 - h - 4)) | 0); if (free(x, y, w, h)) { used.push([x, y, w, h]); fn(x, y); return true; } } return false; };
+    // stair bulkhead with a door on its south face
+    place(14, 11, 40, (x, y) => { boxS(x, y, 14, 11, brick); rect(x - 1, y - 2, 16, 3, INKR); rect(x, y - 1, 14, 2, pal[4]); rect(x + 4, y + 4, 6, 7, '#3a2418'); rect(x + 5, y + 5, 4, 5, '#5a3a24'); px(x + 8, y + 8, '#e0c060'); });
+    // water tank on tall buildings
+    if (b.type === 'apartment' || b.type === 'hotel' || b.type === 'office' || b.h >= 4) place(16, 18, 40, (x, y) => {
+      g.fillStyle = 'rgba(10,6,10,0.35)'; g.beginPath(); g.ellipse(x + 11, y + 15, 8, 4, 0, 0, 7); g.fill();
+      rect(x + 3, y + 10, 1, 8, INKR); rect(x + 12, y + 10, 1, 8, INKR);
+      const wood = ['#4a2c16', '#6a4222', '#8a5a30', '#a8743e', '#c89056'];
+      rect(x + 1, y + 2, 14, 11, INKR); rect(x + 2, y + 3, 12, 9, wood[2]); rect(x + 2, y + 3, 3, 9, wood[3]); rect(x + 11, y + 3, 3, 9, wood[1]);
+      rect(x + 2, y + 5, 12, 1, metal[1]); rect(x + 2, y + 9, 12, 1, metal[1]);
+      rect(x + 1, y, 14, 3, INKR); rect(x + 2, y, 12, 2, wood[4]); rect(x + 7, y - 2, 2, 2, wood[1]);
+    });
+    // skylights
+    const nSky = Math.min(3, Math.floor((x1 - x0) / 36));
+    for (let i = 0; i < nSky; i++) place(10, 7, 20, (x, y) => {
+      shadow(x, y, 10, 7); rect(x - 1, y - 1, 12, 9, INKR); rect(x, y, 10, 7, metal[2]);
+      const glass = lit ? ['#f8e8a0', '#e8c060'] : ['#8ab8c8', '#3e6474'];
+      rect(x + 1, y + 1, 8, 5, glass[1]); rect(x + 1, y + 1, 8, 2, glass[0]); rect(x + 5, y + 1, 1, 5, metal[1]);
+      if (!lit) { px(x + 2, y + 4, '#c8e8f0'); px(x + 3, y + 3, '#c8e8f0'); }
+    });
+    // AC units with a fan grille
+    const nAC = 1 + Math.floor((x1 - x0) / 60);
+    for (let i = 0; i < nAC; i++) place(11, 9, 25, (x, y) => {
+      boxS(x, y, 11, 9, metal);
+      g.fillStyle = metal[0]; g.beginPath(); g.arc(x + 5.5, y + 4.5, 3, 0, 7); g.fill();
+      rect(x + 5, y + 2, 1, 5, metal[3]); rect(x + 3, y + 4, 5, 1, metal[3]);
+    });
+    // vent pipes
+    for (let i = 0; i < 3; i++) place(3, 3, 15, (x, y) => { shadow(x, y, 3, 3); rect(x - 1, y - 1, 5, 5, INKR); rect(x, y, 3, 3, metal[3]); px(x + 1, y + 1, metal[0]); });
+    // a puddle or two in the low spots
+    for (let i = 0; i < 2; i++) place(9, 4, 10, (x, y) => { g.fillStyle = pal[0]; g.beginPath(); g.ellipse(x + 4.5, y + 2, 4.5, 2, 0, 0, 7); g.fill(); px(x + 3, y + 1, pal[4]); });
+    // police get a light bar, banks a flagpole
+    if (b.type === 'police') { rect(((x0 + x1) / 2 | 0) - 7, y0 + 4, 14, 4, INKR); rect(((x0 + x1) / 2 | 0) - 6, y0 + 5, 6, 2, '#d83a2a'); rect(((x0 + x1) / 2 | 0), y0 + 5, 6, 2, '#3a6ad8'); }
   };
   A.drawBuilding = function (g, b, px, py) {
     const bw = b.w * TS;
@@ -882,16 +965,103 @@
     return [words.join(' ')];
   };
 
-  // cars get an ink outline too
-  const baseCar = A.drawCar;
+  // ---------------------------------------------------------------- vehicles
+  // Cars are painted once per model and colour, top-down and facing +x, in the same
+  // shaded, ink-outlined style as the people and buildings: a five-tone body lit from
+  // the top-left, glass with a sky glint, chrome bumpers, tyres, lamps and each model's
+  // trim (stripes, woodgrain, vinyl roof, checker band, light bar, ladder...).
+  const carCache = new Map();
+  const ramp5 = (c) => [shade(c, -52), shade(c, -30), c, shade(c, 22), shade(c, 44)];
+  const GLASS = ['#16202c', '#22364a', '#34546c', '#6a92a8', '#b8d8e4'];
+  const CHROME = ['#4a4e56', '#7a808a', '#aab0b8', '#d8dce0', '#ffffff'];
+  A.carArt = function (m, color, wrecked) {
+    const key = m.name + color + (wrecked ? 'W' : '');
+    let c = carCache.get(key);
+    if (c) return c;
+    const L = m.w, H = m.h, o = new OLD.O(L + 2, H + 4);
+    const B = ramp5(wrecked ? '#3a3230' : color);
+    const X = 1, Y = 2; // body origin inside the canvas (room for tyres)
+    const set = (x, y, col) => o.set(X + x, Y + y, col);
+    const rect = (x, y, w, h, col) => { for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) set(x + i, y + j, col); };
+    // tyres peeking out past the body
+    const tw = Math.max(5, Math.round(L * 0.14));
+    for (const tx of [Math.round(L * 0.14), Math.round(L * 0.72)]) { rect(tx, -1, tw, 2, '#101014'); rect(tx, H - 1, tw, 2, '#101014'); rect(tx + 1, -1, tw - 2, 1, '#2a2a30'); rect(tx + 1, H, tw - 2, 1, '#2a2a30'); }
+    // body, lit from the top-left: highlight along the top edge, shade along the bottom
+    for (let y = 0; y < H; y++) for (let x = 0; x < L; x++) {
+      if ((x === 0 || x === L - 1) && (y === 0 || y === H - 1)) continue; // rounded corners
+      const t = y / (H - 1);
+      set(x, y, t < 0.12 ? B[4] : t < 0.3 ? B[3] : t > 0.88 ? B[0] : t > 0.7 ? B[1] : B[2]);
+    }
+    const heavy = m.bus || m.box || m.fire;
+    if (heavy) {
+      // cab at the front, long body behind
+      const cab = 12;
+      rect(L - cab, 1, 1, H - 2, B[0]);
+      rect(L - cab + 2, 2, 5, H - 4, GLASS[1]); rect(L - cab + 2, 2, 5, 2, GLASS[3]); set(L - cab + 3, 4, GLASS[4]);
+      rect(2, 2, L - cab - 4, H - 4, B[3]); rect(2, 2, L - cab - 4, 1, B[4]); rect(2, H - 3, L - cab - 4, 1, B[1]);
+      if (m.bus) { for (let k = 4; k < L - cab - 4; k += 7) { rect(k, 0, 5, 2, GLASS[2]); set(k, 0, GLASS[4]); rect(k, H - 2, 5, 2, GLASS[1]); } rect(6, H / 2 - 1 | 0, 4, 2, CHROME[2]); rect(L - cab - 12, H / 2 - 1 | 0, 4, 2, CHROME[2]); }
+      if (m.box) { for (let k = 6; k < L - cab - 4; k += 8) rect(k, 2, 1, H - 4, B[2]); }
+      if (m.fire) { rect(4, H / 2 - 2 | 0, L - cab - 8, 4, CHROME[3]); for (let k = 5; k < L - cab - 5; k += 3) rect(k, H / 2 - 2 | 0, 1, 4, CHROME[1]); rect(L - cab - 3, 2, 2, H - 4, '#f0c020'); }
+    } else {
+      // hood crease, windshield, roof, rear glass, side windows
+      const fg = Math.round(L * 0.62), rg = Math.round(L * 0.26), roofL = fg - rg - 5;
+      rect(fg + 3, (H / 2 | 0), L - fg - 6, 1, B[3]);
+      rect(fg + 3, (H / 2 | 0) + 1, L - fg - 6, 1, B[1]);
+      // windshield (towards +x), a trapezoid with a glint
+      for (let j = 2; j < H - 2; j++) { const inset = j === 2 || j === H - 3 ? 1 : 0; rect(fg - inset, j, 4, 1, j < H / 2 ? GLASS[2] : GLASS[1]); }
+      set(fg + 1, 3, GLASS[4]); set(fg + 2, 4, GLASS[3]);
+      // roof
+      const roofC = m.vinyl ? ['#c8bca8', '#e4dac8', '#f4ecdc'] : [B[2], B[3], B[4]];
+      rect(rg + 3, 2, roofL, H - 4, roofC[1]); rect(rg + 3, 2, roofL, 1, roofC[2]); rect(rg + 3, H - 3, roofL, 1, m.vinyl ? '#a89c88' : B[1]);
+      // rear glass
+      rect(rg, 2, 3, H - 4, GLASS[1]); rect(rg, 2, 3, 1, GLASS[3]);
+      // side windows along both edges of the cabin
+      rect(rg + 3, 1, roofL, 1, GLASS[3]); rect(rg + 3, H - 2, roofL, 1, GLASS[0]);
+      rect(rg + 3 + (roofL / 2 | 0), 1, 1, 1, B[1]); rect(rg + 3 + (roofL / 2 | 0), H - 2, 1, 1, B[0]);
+      // mirrors
+      set(fg + 1, -1, B[1]); set(fg + 1, H, B[0]);
+      if (m.stripes && !wrecked) { rect(1, (H / 2 | 0) - 2, L - 2, 1, '#f4f0e8'); rect(1, (H / 2 | 0) + 1, L - 2, 1, '#f4f0e8'); rect(rg + 3, (H / 2 | 0) - 2, roofL, 1, '#fffaf0'); }
+      if (m.wood && !wrecked) { const wd = ['#5a3418', '#7a4a22', '#9a6430']; rect(2, 1, rg - 1, 2, wd[1]); rect(2, H - 3, rg - 1, 2, wd[0]); for (let k = 3; k < rg; k += 4) { set(k, 1, wd[2]); set(k, H - 3, wd[1]); } }
+      if (m.bed) { rect(1, 2, rg - 2, H - 4, B[0]); rect(2, 3, rg - 4, H - 6, '#2a241e'); for (let k = 3; k < rg - 2; k += 3) rect(k, 3, 1, H - 6, '#3a3228'); }
+      if (m.mural && !wrecked) { rect(rg + 3, 2, roofL, H - 4, B[3]); for (let k = 0; k < roofL; k++) set(rg + 3 + k, 3 + Math.round(Math.sin(k * 0.5) * 1.5 + 2), '#e4a92a'); for (let k = 0; k < roofL; k += 2) set(rg + 3 + k, H - 5, '#f06a2a'); }
+      if (m.checker) { for (let k = 2; k < L - 2; k++) { set(k, 1, ((k >> 1) % 2) ? '#141414' : '#f0e8c0'); set(k, H - 2, ((k >> 1) % 2) ? '#f0e8c0' : '#141414'); } rect(rg + 3 + (roofL / 2 | 0) - 2, (H / 2 | 0) - 2, 5, 4, '#141414'); rect(rg + 4 + (roofL / 2 | 0) - 2, (H / 2 | 0) - 1, 3, 2, '#f0e0a0'); }
+      if (m.police) { rect(1, 1, rg - 1, H - 2, '#e8e8ec'); rect(fg + 4, 1, L - fg - 5, H - 2, '#e8e8ec'); rect(1, H - 2, rg - 1, 1, '#b8b8c0'); rect(fg + 4, H - 2, L - fg - 5, 1, '#b8b8c0'); }
+      if (m.medic) { rect(rg + 3, 2, roofL, H - 4, '#f4f4f4'); const cx = rg + 3 + (roofL / 2 | 0); rect(cx - 3, (H / 2 | 0) - 1, 7, 2, '#c02020'); rect(cx - 1, (H / 2 | 0) - 3, 2, 6, '#c02020'); }
+    }
+    // chrome bumpers, headlights, taillights
+    rect(L - 1, 1, 1, H - 2, CHROME[2]); set(L - 1, 1, CHROME[4]);
+    rect(0, 1, 1, H - 2, CHROME[1]);
+    rect(L - 2, 1, 1, 2, '#fff4c0'); rect(L - 2, H - 3, 1, 2, '#fff4c0');
+    rect(1, 1, 1, 2, '#b02018'); rect(1, H - 3, 1, 2, '#b02018');
+    if (wrecked) for (let k = 0; k < L * H / 6; k++) set((Math.random() * L) | 0, (Math.random() * H) | 0, Math.random() < 0.5 ? '#1a1412' : '#4a3a30');
+    const cv = o.outlineBy(OLD.Ue).toCanvas();
+    c = { cv, ox: -X - L / 2, oy: -Y - H / 2 };
+    if (carCache.size > 300) carCache.clear();
+    carCache.set(key, c);
+    return c;
+  };
   A.drawCar = function (g, v) {
+    const m = v.model, L = m.w, H = m.h;
+    const art = A.carArt(m, v.color, v.wrecked);
     g.save();
     g.translate(Math.round(v.x), Math.round(v.y));
+    // shadow falls down-right, whatever way the car points
+    g.fillStyle = 'rgba(15,10,5,0.35)';
+    g.save(); g.translate(2, 3); g.rotate(v.angle); g.fillRect(-L / 2, -H / 2, L, H); g.restore();
     g.rotate(v.angle);
-    g.strokeStyle = INK;
-    g.lineWidth = 1;
-    g.strokeRect(-v.model.w / 2 - 0.5, -v.model.h / 2 - 0.5, v.model.w + 1, v.model.h + 1);
+    g.imageSmoothingEnabled = false;
+    g.drawImage(art.cv, art.ox, art.oy);
+    // live bits: headlights, brake lights, sirens, engine smoke
+    if (v.lights) { g.fillStyle = '#fffbe0'; g.fillRect(L / 2 - 2, -H / 2 + 1, 2, 2); g.fillRect(L / 2 - 2, H / 2 - 3, 2, 2); }
+    if (v.braking) { g.fillStyle = '#ff3a20'; g.fillRect(-L / 2, -H / 2 + 1, 2, 2); g.fillRect(-L / 2, H / 2 - 3, 2, 2); }
+    if (m.police) {
+      const on = v.siren && (performance.now() / 150) % 2 < 1;
+      g.fillStyle = INK; g.fillRect(-3, -H / 2 + 2, 5, H - 4);
+      g.fillStyle = on ? '#ff3030' : '#7a1818'; g.fillRect(-2, -H / 2 + 3, 3, (H - 6) / 2);
+      g.fillStyle = on ? '#3050ff' : '#18286a'; g.fillRect(-2, 0, 3, (H - 6) / 2);
+    }
+    if ((m.medic || m.fire) && v.siren) { const on = (performance.now() / 150) % 2 < 1; g.fillStyle = on ? '#ff3030' : '#ffffff'; g.fillRect(L / 2 - 14, -H / 2 + 2, 2, H - 4); }
+    if (v.hp < 35 && !v.wrecked) { g.fillStyle = 'rgba(40,40,40,0.45)'; g.fillRect(L / 2 - 9, -3, 5, 6); }
     g.restore();
-    baseCar(g, v);
   };
 })();
