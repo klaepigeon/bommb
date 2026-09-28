@@ -96,6 +96,10 @@ This is a ground-up rebuild of the original single-file *Rhapsody* (Port Hollow)
 | Tracking | TRACK beside the minimap (T on a keyboard) cycles your waypoint through the current job, quest errands, leads and map tips, following moving targets. The Jobs tab lists them with a Track button each |
 | Places & people | Five story characters with chaptered quests, landmarks and hidden tins, destructible street furniture, dust storms in the desert |
 
+## TypeScript
+
+Modules are `.js` or `.ts`. The build transpiles TypeScript per file, and `npm run typecheck` runs the strict type check over every `.ts` module against `types/rhapsody.d.ts`, which types the global `R` namespace and the main game objects. Typed so far: the core utilities, the simulation worker, the route planner, the chunk scheduler, the WebGL renderer, the tracker and the new art. `npm run check` runs typecheck, build and smoke in one go. New modules are written in TypeScript; older ones are converted as they're touched.
+
 ## Tools
 
 - `node tools/smoke.mjs`: boot and tick check.

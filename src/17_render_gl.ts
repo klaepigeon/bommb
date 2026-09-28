@@ -11,9 +11,42 @@
 //             noon, a colour split when you're hit, film grain and optional CRT lines.
 // If WebGL isn't there, or the context is lost, the classic Canvas2D path takes over.
 'use strict';
+type Uniforms = Record<string, WebGLUniformLocation | null>;
+interface Prog { p: WebGLProgram; u: Uniforms }
+interface FB { t: WebGLTexture; f: WebGLFramebuffer; w: number; h: number }
+// the parts of the Canvas2D renderer (17_render.js) the GPU path reads and extends
+interface Renderer2D {
+  game: Game;
+  display: HTMLCanvasElement;
+  cv: HTMLCanvasElement;
+  light: HTMLCanvasElement;
+  lg: CanvasRenderingContext2D;
+  dpr: number;
+  ov?: HTMLCanvasElement;
+  ovg?: CanvasRenderingContext2D;
+  glOn?: boolean;
+  glFrame?: boolean;
+  glDark?: number;
+}
+interface GpuRenderer {
+  on: boolean; hurt: number; t0: number; wired?: boolean;
+  r?: Renderer2D; cv?: HTMLCanvasElement; gl: WebGLRenderingContext | null;
+  P: { lit: Prog; bright: Prog; blur: Prog; final: Prog };
+  T: { base: WebGLTexture; over: WebGLTexture; light: WebGLTexture };
+  F: { lit: FB; b1: FB; b2: FB };
+  supported(): boolean;
+  wanted(game: Game): boolean;
+  setup(r: Renderer2D): boolean;
+  fail(why: string): void;
+  apply(game: Game): void;
+  size(): void;
+  present(r: Renderer2D): boolean;
+  init(game: Game): void;
+}
 (function () {
   const BW = 480, BH = 320;
-  const GL = (R.gl = { on: false, hurt: 0, t0: performance.now() });
+  const GL: GpuRenderer = (R.gl = { on: false, hurt: 0, t0: performance.now(), gl: null } as unknown as GpuRenderer);
+  const must = <T>(v: T | null | undefined, what: string): T => { if (v == null) throw new Error('WebGL: no ' + what); return v; };
 
   const VS = 'attribute vec2 p;varying vec2 v;void main(){v=p*0.5+0.5;gl_Position=vec4(p,0.0,1.0);}';
   const LUM = 'float lum(vec3 c){return dot(c,vec3(0.299,0.587,0.114));}';
@@ -71,7 +104,7 @@ void main(){
   GL.setup = function (r) {
     if (this.r === r && this.gl) return true;
     const disp = r.display;
-    let cv = document.getElementById('glview');
+    let cv = document.getElementById('glview') as HTMLCanvasElement | null;
     if (!cv) {
       cv = document.createElement('canvas');
       cv.id = 'glview';
@@ -79,18 +112,18 @@ void main(){
       Object.assign(cv.style, { position: 'absolute', left: '0', top: '0', width: '100%', height: '100%', pointerEvents: 'none', imageRendering: 'pixelated', display: 'block' });
       disp.insertAdjacentElement('afterend', cv);
     }
-    const gl = cv.getContext('webgl', { alpha: false, antialias: false, depth: false, stencil: false, premultipliedAlpha: false, preserveDrawingBuffer: false, powerPreference: 'high-performance' }) || cv.getContext('experimental-webgl');
+    const gl = (cv.getContext('webgl', { alpha: false, antialias: false, depth: false, stencil: false, premultipliedAlpha: false, preserveDrawingBuffer: false, powerPreference: 'high-performance' }) || cv.getContext('experimental-webgl')) as WebGLRenderingContext | null;
     if (!gl) return false;
     this.cv = cv; this.gl = gl; this.r = r;
     cv.addEventListener('webglcontextlost', (e) => { e.preventDefault(); this.fail('context lost'); }, { once: true });
-    const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
-    const prog = (fs) => {
-      const p = gl.createProgram();
+    const sh = (type: number, src: string): WebGLShader => { const s = must(gl.createShader(type), 'shader'); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s) || 'shader compile'); return s; };
+    const prog = (fs: string): Prog => {
+      const p = must(gl.createProgram(), 'program');
       gl.attachShader(p, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs));
       gl.bindAttribLocation(p, 0, 'p'); gl.linkProgram(p);
-      if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
-      const u = {}; const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
-      for (let i = 0; i < n; i++) { const a = gl.getActiveUniform(p, i); u[a.name] = gl.getUniformLocation(p, a.name); }
+      if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p) || 'link');
+      const u: Uniforms = {}; const n: number = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+      for (let i = 0; i < n; i++) { const a = gl.getActiveUniform(p, i); if (a) u[a.name] = gl.getUniformLocation(p, a.name); }
       return { p, u };
     };
     this.P = { lit: prog(FS_LIT), bright: prog(FS_BRIGHT), blur: prog(FS_BLUR), final: prog(FS_FINAL) };
@@ -99,8 +132,8 @@ void main(){
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
     gl.enableVertexAttribArray(0);
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-    const tex = (w, h, filter) => {
-      const t = gl.createTexture();
+    const tex = (w: number, h: number, filter: number): WebGLTexture => {
+      const t = must(gl.createTexture(), 'texture');
       gl.bindTexture(gl.TEXTURE_2D, t);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
@@ -109,14 +142,14 @@ void main(){
       if (w) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
       return t;
     };
-    const fbo = (w, h, filter) => { const t = tex(w, h, filter), f = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0); return { t, f, w, h }; };
+    const fbo = (w: number, h: number, filter: number): FB => { const t = tex(w, h, filter), f = must(gl.createFramebuffer(), 'framebuffer'); gl.bindFramebuffer(gl.FRAMEBUFFER, f); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0); return { t, f, w, h }; };
     this.T = { base: tex(0, 0, gl.NEAREST), over: tex(0, 0, gl.NEAREST), light: tex(0, 0, gl.LINEAR) };
     this.F = { lit: fbo(BW, BH, gl.NEAREST), b1: fbo(BW / 2, BH / 2, gl.LINEAR), b2: fbo(BW / 2, BH / 2, gl.LINEAR) };
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     // the layer drawn after lighting
     r.ov = document.createElement('canvas'); r.ov.width = BW; r.ov.height = BH;
-    r.ovg = r.ov.getContext('2d');
+    r.ovg = must(r.ov.getContext('2d'), '2d overlay');
     return true;
   };
   GL.fail = function (why) {
@@ -134,7 +167,7 @@ void main(){
     const want = this.wanted(game) && this.supported();
     if (want) {
       try { if (!this.setup(r)) throw new Error('no context'); } catch (e) { this.fail(e.message); return; }
-      this.on = true; r.glOn = true; this.cv.style.display = 'block';
+      this.on = true; r.glOn = true; if (this.cv) this.cv.style.display = 'block';
       this.size();
     } else { this.on = false; r.glOn = false; if (this.cv) this.cv.style.display = 'none'; }
   };
@@ -143,7 +176,7 @@ void main(){
     const d = this.r.display;
     if (this.cv.width !== d.width || this.cv.height !== d.height) { this.cv.width = d.width; this.cv.height = d.height; }
   };
-  const upload = (gl, t, src, premul) => {
+  const upload = (gl: WebGLRenderingContext, t: WebGLTexture, src: TexImageSource, premul: boolean) => {
     gl.bindTexture(gl.TEXTURE_2D, t);
     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, !!premul);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
@@ -151,8 +184,8 @@ void main(){
 
   // the whole frame on the GPU
   GL.present = function (r) {
-    const gl = this.gl;
-    if (!gl || gl.isContextLost()) { this.fail('lost'); return false; }
+    const gl = this.gl, cv = this.cv;
+    if (!gl || !cv || gl.isContextLost() || !r.ov) { this.fail('lost'); return false; }
     const game = r.game, pl = game.player;
     try {
       this.size();
@@ -163,7 +196,7 @@ void main(){
       upload(gl, this.T.light, r.light, false);
       const dark = lit ? (r.glDark || 0) : 0;
       const t = (performance.now() - this.t0) / 1000;
-      const draw = (P, fb, w, h, texs, set) => {
+      const draw = (P: Prog, fb: FB | null, w: number, h: number, texs: [string, WebGLTexture][], set?: (u: Uniforms) => void) => {
         gl.bindFramebuffer(gl.FRAMEBUFFER, fb ? fb.f : null);
         gl.viewport(0, 0, w, h);
         gl.useProgram(P.p);
@@ -189,9 +222,9 @@ void main(){
       this.hurt = Math.max(0, this.hurt - 0.04);
       const heat = R.dust && R.dust.heatOn ? 1 : 0;
       const crt = game.settings.crt ? 1 : 0;
-      draw(this.P.final, null, this.cv.width, this.cv.height, [['uLit', F.lit.t], ['uBloom', F.b1.t], ['uOver', T.over]], (u) => {
+      draw(this.P.final, null, cv.width, cv.height, [['uLit', F.lit.t], ['uBloom', F.b1.t], ['uOver', T.over]], (u) => {
         gl.uniform1f(u.uTime, t); gl.uniform1f(u.uHeat, heat); gl.uniform1f(u.uHurt, this.hurt);
-        gl.uniform1f(u.uGrain, 0.035); gl.uniform1f(u.uScan, crt); gl.uniform1f(u.uScanPx, this.cv.height / BH); gl.uniform1f(u.uBloomK, bloomK);
+        gl.uniform1f(u.uGrain, 0.035); gl.uniform1f(u.uScan, crt); gl.uniform1f(u.uScanPx, cv.height / BH); gl.uniform1f(u.uBloomK, bloomK);
       });
       r.glFrame = false;
       return true;
@@ -201,7 +234,7 @@ void main(){
   // ---------------------------------------------------------------- hooks
   const RP = R.Renderer.prototype;
   // after the lighting pass, everything else is drawn into the overlay layer
-  RP.afterLighting = function (g) {
+  RP.afterLighting = function (this: Renderer2D, g: CanvasRenderingContext2D) {
     if (!this.glOn || !this.ovg) return g;
     const o = this.ovg;
     o.setTransform(1, 0, 0, 1, 0, 0);
@@ -212,25 +245,25 @@ void main(){
     return o;
   };
   const bResize = RP.resize;
-  RP.resize = function () { const r = bResize.apply(this, arguments); if (GL.on) GL.size(); return r; };
+  RP.resize = function (this: Renderer2D) { const r = bResize.apply(this, arguments as unknown as []); if (GL.on) GL.size(); return r; };
   GL.init = function (game) {
     this.apply(game);
     if (this.wired) return;
     this.wired = true;
     // a hit splits the colours for a moment
     const U = R.UI.prototype, bHurt = U.hurtFlash;
-    if (bHurt) U.hurtFlash = function (amt) { GL.hurt = Math.min(1, GL.hurt + (amt || 10) / 25); return bHurt.apply(this, arguments); };
+    if (bHurt) U.hurtFlash = function (this: unknown, amt?: number) { GL.hurt = Math.min(1, GL.hurt + (amt || 10) / 25); return bHurt.apply(this, arguments); };
     // settings: renderer and CRT lines
     const bTab = U.openMenuTab;
-    U.openMenuTab = function (tab) {
+    U.openMenuTab = function (this: { game: Game }, tab: string) {
       const r = bTab.apply(this, arguments);
       if (tab !== 'settings') return r;
       const body = document.getElementById('mbody'), st = this.game.settings;
       if (!body || body.querySelector('#sRend')) return r;
       const cur = st.renderer || (GL.supported() ? 'gl' : 'classic');
       body.insertAdjacentHTML('afterbegin', `<div class="set"><label for="sRend">Graphics</label><select id="sRend"><option value="gl" ${cur === 'gl' ? 'selected' : ''} ${GL.supported() ? '' : 'disabled'}>Modern (WebGL lighting, bloom)</option><option value="classic" ${cur === 'classic' ? 'selected' : ''}>Classic</option></select></div><div class="set"><label for="sCrt">CRT scanlines</label><input id="sCrt" type="checkbox" ${st.crt ? 'checked' : ''}></div>`);
-      body.querySelector('#sRend').addEventListener('change', (e) => { st.renderer = e.target.value; this.game.saveSettings(); GL.apply(this.game); });
-      body.querySelector('#sCrt').addEventListener('change', (e) => { st.crt = e.target.checked; this.game.saveSettings(); });
+      body.querySelector('#sRend')?.addEventListener('change', (e) => { st.renderer = (e.target as HTMLSelectElement).value as 'gl' | 'classic'; this.game.saveSettings(); GL.apply(this.game); });
+      body.querySelector('#sCrt')?.addEventListener('change', (e) => { st.crt = (e.target as HTMLInputElement).checked; this.game.saveSettings(); });
       return r;
     };
   };

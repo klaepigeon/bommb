@@ -20760,113 +20760,159 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
   };
 })();
 
-// ---- 14_track.js
+// ---- 14_track.ts
 // RHAPSODY — one-tap tracking. The TRACK button beside the minimap (T on a keyboard) cycles
 // your waypoint through everything you're working on: the current job, the Fear Man's or
 // Hal's errand, the spectrum's leads, story leads and map tips. Moving targets (a mark, a
 // van) are followed live. The Jobs tab lists the same objectives with a Track button each.
 'use strict';
 (function () {
-  const TS = R.TILE;
-  const G = () => R.game;
-  const TR = (R.track = { sel: null, t: 0 });
-
-  // everything worth walking to, right now: [{ key, label, x, y }] in pixels
-  TR.list = function () {
-    const g = G(), out = [], pl = g.player;
-    const add = (key, label, x, y) => { if (x != null && y != null && isFinite(x) && isFinite(y)) out.push({ key, label, x, y }); };
-    const m = g.jobs.marker();
-    const j = g.jobs.active;
-    if (m) add('job', `${j ? j.title : 'Job'}${m.label ? ' · ' + m.label : ''}`, m.x, m.y);
-    const Q = R.fearQuest, s = pl.fearQ;
-    if (Q && s) {
-      const q = Q.current();
-      if (q && s.active && s.path !== 'green') {
-        const at = q.id === 'lantern' ? Q.wreck : q.id === 'pilot' ? Q.strip : q.id === 'moth' ? g.world.cities[0] && { x: g.world.cities[0].cx, y: g.world.cities[0].cy } : null;
-        if (at) add('fear', `The Fear Man: ${q.title}`, at.x * TS + 8, at.y * TS + 8);
-      }
-      if (q && !s.active && s.path !== 'green' && R.ring.fearSpot && R.ring.owned()) add('fearman', 'The Fear Man (1 to 4 AM)', R.ring.fearSpot.x * TS + 8, R.ring.fearSpot.y * TS + 8);
-      const gq = Q.gcurrent && Q.gcurrent();
-      if (gq) {
-        const b = gq.id === 'gardner' ? Q.school() : null;
-        const done = (gq.id === 'carol' && s.carolFreed) || (gq.id === 'gardner' && s.guyRing);
-        const at = done ? Q.strip : gq.id === 'carol' ? Q.glade : gq.id === 'gardner' ? b && b.out : gq.id === 'showdown' ? R.ring.fearSpot : null;
-        if (at) add('hal', done ? 'Hal: report back (airstrip, by day)' : `Hal: ${gq.title}`, at.x * TS + 8, at.y * TS + 8);
-      }
-    }
-    const C = R.campaign && R.campaign.marker && R.campaign.marker();
-    if (C && !(m && Math.abs(m.x - C.x) < 2 && Math.abs(m.y - C.y) < 2)) add('saga', `Story: ${C.label || 'next step'}`, C.x, C.y);
-    for (const l of g.jobs.leads || []) add('lead:' + l.x + ',' + l.y, `Lead: ${l.text.slice(0, 48)}`, l.x * TS + 8, l.y * TS + 8);
-    for (const p of R.poi.pins || []) if (p.kind === 'tip') add('pin:' + p.x + ',' + p.y + p.label, `${p.label}${p.sub ? ' · ' + p.sub : ''}`, p.x * TS + 8, p.y * TS + 8);
-    // dedupe by position
-    const seen = new Set();
-    return out.filter((o) => { const k = Math.round(o.x / TS / 3) + ',' + Math.round(o.y / TS / 3); if (seen.has(k)) return false; seen.add(k); return true; });
-  };
-  TR.pick = function (key, quiet) {
-    const g = G(), o = this.list().find((e) => e.key === key);
-    if (!o) return;
-    this.sel = key;
-    g.waypoint = this.wp = { x: o.x, y: o.y };
-    this.t = 1;
-    if (R.route) R.route.t = 0;
-    if (!quiet) { g.audio.sfx('click'); g.ui.toast(`Tracking: ${o.label}`, 'good'); }
-    this.paint();
-  };
-  TR.cycle = function () {
-    const g = G(), L = this.list();
-    if (!L.length) { this.sel = null; g.waypoint = null; g.ui.toast('Nothing to track. Find work at a Social Club, or a payphone.', 'warn'); return this.paint(); }
-    let i = L.findIndex((e) => e.key === this.sel);
-    i++;
-    if (i >= L.length) { this.sel = null; g.waypoint = null; g.audio.sfx('click'); g.ui.toast('Tracking off.'); return this.paint(); }
-    this.pick(L[i].key, true);
-    g.audio.sfx('click');
-    g.ui.toast(`Tracking ${i + 1}/${L.length}: ${L[i].label}`, 'good');
-  };
-  TR.update = function (dt) {
-    const g = G();
-    if (!this.sel) return;
-    this.t -= dt;
-    if (this.t > 0) return;
-    this.t = 1;
-    // arrived (the route clears the waypoint) or you set one yourself: let go
-    if (g.waypoint !== this.wp) { this.sel = null; this.wp = null; return this.paint(); }
-    const o = this.list().find((e) => e.key === this.sel);
-    if (!o) { this.sel = null; this.wp = null; g.waypoint = null; this.paint(); g.ui.toast('That objective is done. Tap TRACK for the next one.'); return; }
-    g.waypoint = this.wp = { x: o.x, y: o.y };
-  };
-  TR.paint = function () {
-    const b = document.getElementById('trackbtn');
-    if (b) b.classList.toggle('on', !!this.sel);
-  };
-  TR.init = function (game) {
-    this.sel = null; this.wp = null;
-    if (this.wired) return this.paint();
-    this.wired = true;
-    // the button, beside MENU
-    const menu = document.getElementById('menubtn');
-    if (menu && !document.getElementById('trackbtn')) {
-      menu.insertAdjacentHTML('beforebegin', '<button id="trackbtn" aria-label="Track the next objective">TRACK</button>');
-      const st = document.createElement('style');
-      st.textContent = '#trackbtn{border:3px solid var(--ink);background:var(--paper2);color:var(--ink);border-radius:10px;font-size:10px;padding:6px 8px;box-shadow:0 3px 0 var(--ink);margin-right:4px}#trackbtn.on{background:#e4a92a}.maprow{display:flex;align-items:flex-start;gap:0}body.cine #trackbtn{display:none}';
-      document.head.appendChild(st);
-      document.getElementById('trackbtn').addEventListener('click', (e) => { e.stopPropagation(); if (G() && G().started) TR.cycle(); });
-    }
-    window.addEventListener('keydown', (e) => { if (e.code === 'KeyT' && !e.repeat && G() && G().started && !G().ui.sheetOpen) TR.cycle(); });
-    // the Jobs tab: a Track button per objective
-    const cj = R.campaign.jobsHtml;
-    R.campaign.jobsHtml = function () {
-      const L = TR.list();
-      const esc = (t) => String(t).replace(/[&<>"]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
-      const h = L.length ? `<div class="sect">Track on the map</div><div class="opts">${L.map((o) => `<button class="opt ${o.key === TR.sel ? 'go' : ''}" data-trk="${esc(o.key)}">${esc(o.label)}<small>${o.key === TR.sel ? 'Tracking now' : 'Tap to track'}</small></button>`).join('')}</div>` : '';
-      return h + cj.call(this);
+    const TS = R.TILE;
+    const G = () => R.game;
+    const TR = (R.track = { sel: null, t: 0, wp: null });
+    // everything worth walking to, right now: [{ key, label, x, y }] in pixels
+    TR.list = function () {
+        const g = G(), out = [], pl = g.player;
+        const add = (key, label, x, y) => { if (x != null && y != null && isFinite(x) && isFinite(y))
+            out.push({ key, label, x, y }); };
+        const m = g.jobs.marker();
+        const j = g.jobs.active;
+        if (m)
+            add('job', `${j ? j.title : 'Job'}${m.label ? ' · ' + m.label : ''}`, m.x, m.y);
+        const Q = R.fearQuest, s = pl.fearQ;
+        if (Q && s) {
+            const q = Q.current();
+            if (q && s.active && s.path !== 'green') {
+                const at = q.id === 'lantern' ? Q.wreck : q.id === 'pilot' ? Q.strip : q.id === 'moth' ? g.world.cities[0] && { x: g.world.cities[0].cx, y: g.world.cities[0].cy } : null;
+                if (at)
+                    add('fear', `The Fear Man: ${q.title}`, at.x * TS + 8, at.y * TS + 8);
+            }
+            if (q && !s.active && s.path !== 'green' && R.ring.fearSpot && R.ring.owned())
+                add('fearman', 'The Fear Man (1 to 4 AM)', R.ring.fearSpot.x * TS + 8, R.ring.fearSpot.y * TS + 8);
+            const gq = Q.gcurrent && Q.gcurrent();
+            if (gq) {
+                const b = gq.id === 'gardner' ? Q.school() : null;
+                const done = (gq.id === 'carol' && s.carolFreed) || (gq.id === 'gardner' && s.guyRing);
+                const at = done ? Q.strip : gq.id === 'carol' ? Q.glade : gq.id === 'gardner' ? b && b.out : gq.id === 'showdown' ? R.ring.fearSpot : null;
+                if (at)
+                    add('hal', done ? 'Hal: report back (airstrip, by day)' : `Hal: ${gq.title}`, at.x * TS + 8, at.y * TS + 8);
+            }
+        }
+        const C = R.campaign && R.campaign.marker && R.campaign.marker();
+        if (C && !(m && Math.abs(m.x - C.x) < 2 && Math.abs(m.y - C.y) < 2))
+            add('saga', `Story: ${C.label || 'next step'}`, C.x, C.y);
+        for (const l of g.jobs.leads || [])
+            add('lead:' + l.x + ',' + l.y, `Lead: ${l.text.slice(0, 48)}`, l.x * TS + 8, l.y * TS + 8);
+        for (const p of R.poi.pins || [])
+            if (p.kind === 'tip')
+                add('pin:' + p.x + ',' + p.y + p.label, `${p.label}${p.sub ? ' · ' + p.sub : ''}`, p.x * TS + 8, p.y * TS + 8);
+        // dedupe by position
+        const seen = new Set();
+        return out.filter((o) => { const k = Math.round(o.x / TS / 3) + ',' + Math.round(o.y / TS / 3); if (seen.has(k))
+            return false; seen.add(k); return true; });
     };
-    document.addEventListener('click', (e) => {
-      const b = e.target.closest && e.target.closest('[data-trk]');
-      if (!b || !G()) return;
-      TR.pick(b.dataset.trk);
-      G().ui.closeSheet();
-    });
-  };
+    TR.pick = function (key, quiet) {
+        const g = G(), o = this.list().find((e) => e.key === key);
+        if (!o)
+            return;
+        this.sel = key;
+        g.waypoint = this.wp = { x: o.x, y: o.y };
+        this.t = 1;
+        if (R.route)
+            R.route.t = 0;
+        if (!quiet) {
+            g.audio.sfx('click');
+            g.ui.toast(`Tracking: ${o.label}`, 'good');
+        }
+        this.paint();
+    };
+    TR.cycle = function () {
+        const g = G(), L = this.list();
+        if (!L.length) {
+            this.sel = null;
+            g.waypoint = null;
+            g.ui.toast('Nothing to track. Find work at a Social Club, or a payphone.', 'warn');
+            return this.paint();
+        }
+        let i = L.findIndex((e) => e.key === this.sel);
+        i++;
+        if (i >= L.length) {
+            this.sel = null;
+            g.waypoint = null;
+            g.audio.sfx('click');
+            g.ui.toast('Tracking off.');
+            return this.paint();
+        }
+        this.pick(L[i].key, true);
+        g.audio.sfx('click');
+        g.ui.toast(`Tracking ${i + 1}/${L.length}: ${L[i].label}`, 'good');
+    };
+    TR.update = function (dt) {
+        const g = G();
+        if (!this.sel)
+            return;
+        this.t -= dt;
+        if (this.t > 0)
+            return;
+        this.t = 1;
+        // arrived (the route clears the waypoint) or you set one yourself: let go
+        if (g.waypoint !== this.wp) {
+            this.sel = null;
+            this.wp = null;
+            return this.paint();
+        }
+        const o = this.list().find((e) => e.key === this.sel);
+        if (!o) {
+            this.sel = null;
+            this.wp = null;
+            g.waypoint = null;
+            this.paint();
+            g.ui.toast('That objective is done. Tap TRACK for the next one.');
+            return;
+        }
+        g.waypoint = this.wp = { x: o.x, y: o.y };
+    };
+    TR.paint = function () {
+        const b = document.getElementById('trackbtn');
+        if (b)
+            b.classList.toggle('on', !!this.sel);
+    };
+    TR.init = function (game) {
+        this.sel = null;
+        this.wp = null;
+        if (this.wired)
+            return this.paint();
+        this.wired = true;
+        // the button, beside MENU
+        const menu = document.getElementById('menubtn');
+        const esc = (t) => String(t).replace(/[&<>"]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
+        if (menu && !document.getElementById('trackbtn')) {
+            menu.insertAdjacentHTML('beforebegin', '<button id="trackbtn" aria-label="Track the next objective">TRACK</button>');
+            const st = document.createElement('style');
+            st.textContent = '#trackbtn{border:3px solid var(--ink);background:var(--paper2);color:var(--ink);border-radius:10px;font-size:10px;padding:6px 8px;box-shadow:0 3px 0 var(--ink);margin-right:4px}#trackbtn.on{background:#e4a92a}.maprow{display:flex;align-items:flex-start;gap:0}body.cine #trackbtn{display:none}';
+            document.head.appendChild(st);
+            const btn = document.getElementById('trackbtn');
+            if (btn)
+                btn.addEventListener('click', (e) => { e.stopPropagation(); if (G() && G().started)
+                    TR.cycle(); });
+        }
+        window.addEventListener('keydown', (e) => { if (e.code === 'KeyT' && !e.repeat && G() && G().started && !G().ui.sheetOpen)
+            TR.cycle(); });
+        // the Jobs tab: a Track button per objective
+        const cj = R.campaign.jobsHtml;
+        R.campaign.jobsHtml = function () {
+            const L = TR.list();
+            const h = L.length ? `<div class="sect">Track on the map</div><div class="opts">${L.map((o) => `<button class="opt ${o.key === TR.sel ? 'go' : ''}" data-trk="${esc(o.key)}">${esc(o.label)}<small>${o.key === TR.sel ? 'Tracking now' : 'Tap to track'}</small></button>`).join('')}</div>` : '';
+            return h + cj.call(this);
+        };
+        document.addEventListener('click', (e) => {
+            const el = e.target instanceof Element ? e.target.closest('[data-trk]') : null;
+            if (!el || !G() || !el.dataset.trk)
+                return;
+            TR.pick(el.dataset.trk);
+            G().ui.closeSheet();
+        });
+    };
 })();
 
 // ---- 14_turf.js
@@ -24672,7 +24718,7 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
     RP.render = function () { budget = 2; return bRender.apply(this, arguments); };
 })();
 
-// ---- 17_render_gl.js
+// ---- 17_render_gl.ts
 // RHAPSODY — the WebGL renderer. The world is still composed with Canvas2D into the
 // 480x320 buffer (every sprite routine and every module that draws keeps working), but the
 // frame is finished on the GPU:
@@ -24687,12 +24733,13 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
 // If WebGL isn't there, or the context is lost, the classic Canvas2D path takes over.
 'use strict';
 (function () {
-  const BW = 480, BH = 320;
-  const GL = (R.gl = { on: false, hurt: 0, t0: performance.now() });
-
-  const VS = 'attribute vec2 p;varying vec2 v;void main(){v=p*0.5+0.5;gl_Position=vec4(p,0.0,1.0);}';
-  const LUM = 'float lum(vec3 c){return dot(c,vec3(0.299,0.587,0.114));}';
-  const FS_LIT = `precision mediump float;varying vec2 v;
+    const BW = 480, BH = 320;
+    const GL = (R.gl = { on: false, hurt: 0, t0: performance.now(), gl: null });
+    const must = (v, what) => { if (v == null)
+        throw new Error('WebGL: no ' + what); return v; };
+    const VS = 'attribute vec2 p;varying vec2 v;void main(){v=p*0.5+0.5;gl_Position=vec4(p,0.0,1.0);}';
+    const LUM = 'float lum(vec3 c){return dot(c,vec3(0.299,0.587,0.114));}';
+    const FS_LIT = `precision mediump float;varying vec2 v;
 uniform sampler2D uBase;uniform sampler2D uLight;uniform vec2 uTexel;uniform float uDark;uniform vec3 uNight;uniform float uNormal;uniform float uGain;
 ${LUM}
 void main(){
@@ -24714,14 +24761,14 @@ void main(){
   lit+=L*L*0.06*uDark;
   gl_FragColor=vec4(lit,1.0);
 }`;
-  const FS_BRIGHT = `precision mediump float;varying vec2 v;uniform sampler2D uTex;uniform float uThr;${LUM}
+    const FS_BRIGHT = `precision mediump float;varying vec2 v;uniform sampler2D uTex;uniform float uThr;${LUM}
 void main(){vec3 c=texture2D(uTex,v).rgb;gl_FragColor=vec4(c*smoothstep(uThr,uThr+0.3,lum(c)),1.0);}`;
-  const FS_BLUR = `precision mediump float;varying vec2 v;uniform sampler2D uTex;uniform vec2 uDir;
+    const FS_BLUR = `precision mediump float;varying vec2 v;uniform sampler2D uTex;uniform vec2 uDir;
 void main(){vec3 c=texture2D(uTex,v).rgb*0.227;
 c+=(texture2D(uTex,v+uDir*1.385).rgb+texture2D(uTex,v-uDir*1.385).rgb)*0.316;
 c+=(texture2D(uTex,v+uDir*3.231).rgb+texture2D(uTex,v-uDir*3.231).rgb)*0.070;
 gl_FragColor=vec4(c,1.0);}`;
-  const FS_FINAL = `precision mediump float;varying vec2 v;
+    const FS_FINAL = `precision mediump float;varying vec2 v;
 uniform sampler2D uLit;uniform sampler2D uBloom;uniform sampler2D uOver;uniform float uTime;uniform float uHeat;uniform float uHurt;uniform float uGrain;uniform float uScan;uniform float uScanPx;uniform float uBloomK;
 void main(){
   vec2 uv=v;
@@ -24737,178 +24784,249 @@ void main(){
   if(uScan>0.0){float s=abs(sin(gl_FragCoord.y*3.14159/uScanPx));c*=1.0-uScan*(1.0-s)*0.45;}
   gl_FragColor=vec4(c,1.0);
 }`;
-
-  GL.supported = function () {
-    try { const c = document.createElement('canvas'); return !!(c.getContext('webgl') || c.getContext('experimental-webgl')); } catch (e) { return false; }
-  };
-  GL.wanted = function (game) { const s = game.settings.renderer; return s ? s === 'gl' : true; };
-
-  GL.setup = function (r) {
-    if (this.r === r && this.gl) return true;
-    const disp = r.display;
-    let cv = document.getElementById('glview');
-    if (!cv) {
-      cv = document.createElement('canvas');
-      cv.id = 'glview';
-      cv.setAttribute('aria-hidden', 'true');
-      Object.assign(cv.style, { position: 'absolute', left: '0', top: '0', width: '100%', height: '100%', pointerEvents: 'none', imageRendering: 'pixelated', display: 'block' });
-      disp.insertAdjacentElement('afterend', cv);
-    }
-    const gl = cv.getContext('webgl', { alpha: false, antialias: false, depth: false, stencil: false, premultipliedAlpha: false, preserveDrawingBuffer: false, powerPreference: 'high-performance' }) || cv.getContext('experimental-webgl');
-    if (!gl) return false;
-    this.cv = cv; this.gl = gl; this.r = r;
-    cv.addEventListener('webglcontextlost', (e) => { e.preventDefault(); this.fail('context lost'); }, { once: true });
-    const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
-    const prog = (fs) => {
-      const p = gl.createProgram();
-      gl.attachShader(p, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs));
-      gl.bindAttribLocation(p, 0, 'p'); gl.linkProgram(p);
-      if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
-      const u = {}; const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
-      for (let i = 0; i < n; i++) { const a = gl.getActiveUniform(p, i); u[a.name] = gl.getUniformLocation(p, a.name); }
-      return { p, u };
+    GL.supported = function () {
+        try {
+            const c = document.createElement('canvas');
+            return !!(c.getContext('webgl') || c.getContext('experimental-webgl'));
+        }
+        catch (e) {
+            return false;
+        }
     };
-    this.P = { lit: prog(FS_LIT), bright: prog(FS_BRIGHT), blur: prog(FS_BLUR), final: prog(FS_FINAL) };
-    const buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(0);
-    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-    const tex = (w, h, filter) => {
-      const t = gl.createTexture();
-      gl.bindTexture(gl.TEXTURE_2D, t);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      if (w) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-      return t;
+    GL.wanted = function (game) { const s = game.settings.renderer; return s ? s === 'gl' : true; };
+    GL.setup = function (r) {
+        if (this.r === r && this.gl)
+            return true;
+        const disp = r.display;
+        let cv = document.getElementById('glview');
+        if (!cv) {
+            cv = document.createElement('canvas');
+            cv.id = 'glview';
+            cv.setAttribute('aria-hidden', 'true');
+            Object.assign(cv.style, { position: 'absolute', left: '0', top: '0', width: '100%', height: '100%', pointerEvents: 'none', imageRendering: 'pixelated', display: 'block' });
+            disp.insertAdjacentElement('afterend', cv);
+        }
+        const gl = (cv.getContext('webgl', { alpha: false, antialias: false, depth: false, stencil: false, premultipliedAlpha: false, preserveDrawingBuffer: false, powerPreference: 'high-performance' }) || cv.getContext('experimental-webgl'));
+        if (!gl)
+            return false;
+        this.cv = cv;
+        this.gl = gl;
+        this.r = r;
+        cv.addEventListener('webglcontextlost', (e) => { e.preventDefault(); this.fail('context lost'); }, { once: true });
+        const sh = (type, src) => { const s = must(gl.createShader(type), 'shader'); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS))
+            throw new Error(gl.getShaderInfoLog(s) || 'shader compile'); return s; };
+        const prog = (fs) => {
+            const p = must(gl.createProgram(), 'program');
+            gl.attachShader(p, sh(gl.VERTEX_SHADER, VS));
+            gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs));
+            gl.bindAttribLocation(p, 0, 'p');
+            gl.linkProgram(p);
+            if (!gl.getProgramParameter(p, gl.LINK_STATUS))
+                throw new Error(gl.getProgramInfoLog(p) || 'link');
+            const u = {};
+            const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+            for (let i = 0; i < n; i++) {
+                const a = gl.getActiveUniform(p, i);
+                if (a)
+                    u[a.name] = gl.getUniformLocation(p, a.name);
+            }
+            return { p, u };
+        };
+        this.P = { lit: prog(FS_LIT), bright: prog(FS_BRIGHT), blur: prog(FS_BLUR), final: prog(FS_FINAL) };
+        const buf = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(0);
+        gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+        const tex = (w, h, filter) => {
+            const t = must(gl.createTexture(), 'texture');
+            gl.bindTexture(gl.TEXTURE_2D, t);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            if (w)
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            return t;
+        };
+        const fbo = (w, h, filter) => { const t = tex(w, h, filter), f = must(gl.createFramebuffer(), 'framebuffer'); gl.bindFramebuffer(gl.FRAMEBUFFER, f); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0); return { t, f, w, h }; };
+        this.T = { base: tex(0, 0, gl.NEAREST), over: tex(0, 0, gl.NEAREST), light: tex(0, 0, gl.LINEAR) };
+        this.F = { lit: fbo(BW, BH, gl.NEAREST), b1: fbo(BW / 2, BH / 2, gl.LINEAR), b2: fbo(BW / 2, BH / 2, gl.LINEAR) };
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        // the layer drawn after lighting
+        r.ov = document.createElement('canvas');
+        r.ov.width = BW;
+        r.ov.height = BH;
+        r.ovg = must(r.ov.getContext('2d'), '2d overlay');
+        return true;
     };
-    const fbo = (w, h, filter) => { const t = tex(w, h, filter), f = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0); return { t, f, w, h }; };
-    this.T = { base: tex(0, 0, gl.NEAREST), over: tex(0, 0, gl.NEAREST), light: tex(0, 0, gl.LINEAR) };
-    this.F = { lit: fbo(BW, BH, gl.NEAREST), b1: fbo(BW / 2, BH / 2, gl.LINEAR), b2: fbo(BW / 2, BH / 2, gl.LINEAR) };
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    // the layer drawn after lighting
-    r.ov = document.createElement('canvas'); r.ov.width = BW; r.ov.height = BH;
-    r.ovg = r.ov.getContext('2d');
-    return true;
-  };
-  GL.fail = function (why) {
-    console.warn('WebGL renderer off:', why);
-    this.on = false;
-    if (this.r) this.r.glOn = false;
-    if (this.cv) this.cv.style.display = 'none';
-    this.gl = null;
-    const g = R.game;
-    if (g && g.ui && g.started) g.ui.toast('Graphics fell back to the classic renderer.', 'warn');
-  };
-  GL.apply = function (game) {
-    const r = game.renderer;
-    if (!r) return;
-    const want = this.wanted(game) && this.supported();
-    if (want) {
-      try { if (!this.setup(r)) throw new Error('no context'); } catch (e) { this.fail(e.message); return; }
-      this.on = true; r.glOn = true; this.cv.style.display = 'block';
-      this.size();
-    } else { this.on = false; r.glOn = false; if (this.cv) this.cv.style.display = 'none'; }
-  };
-  GL.size = function () {
-    if (!this.cv || !this.r) return;
-    const d = this.r.display;
-    if (this.cv.width !== d.width || this.cv.height !== d.height) { this.cv.width = d.width; this.cv.height = d.height; }
-  };
-  const upload = (gl, t, src, premul) => {
-    gl.bindTexture(gl.TEXTURE_2D, t);
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, !!premul);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
-  };
-
-  // the whole frame on the GPU
-  GL.present = function (r) {
-    const gl = this.gl;
-    if (!gl || gl.isContextLost()) { this.fail('lost'); return false; }
-    const game = r.game, pl = game.player;
-    try {
-      this.size();
-      const lit = !!r.glFrame; // a world frame (the title screen has no lighting pass)
-      if (!lit) { r.ovg && r.ovg.clearRect(0, 0, BW, BH); r.lg.clearRect(0, 0, r.light.width, r.light.height); }
-      upload(gl, this.T.base, r.cv, false);
-      upload(gl, this.T.over, r.ov, true);
-      upload(gl, this.T.light, r.light, false);
-      const dark = lit ? (r.glDark || 0) : 0;
-      const t = (performance.now() - this.t0) / 1000;
-      const draw = (P, fb, w, h, texs, set) => {
-        gl.bindFramebuffer(gl.FRAMEBUFFER, fb ? fb.f : null);
-        gl.viewport(0, 0, w, h);
-        gl.useProgram(P.p);
-        let i = 0;
-        for (const [name, tx] of texs) { gl.activeTexture(gl.TEXTURE0 + i); gl.bindTexture(gl.TEXTURE_2D, tx); gl.uniform1i(P.u[name], i); i++; }
-        set && set(P.u);
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-      };
-      const F = this.F, T = this.T;
-      // 1. light the world
-      draw(this.P.lit, F.lit, BW, BH, [['uBase', T.base], ['uLight', T.light]], (u) => {
-        gl.uniform2f(u.uTexel, 1 / BW, 1 / BH); gl.uniform1f(u.uDark, dark);
-        gl.uniform3f(u.uNight, 0.035, 0.04, 0.12); gl.uniform1f(u.uNormal, 3.2); gl.uniform1f(u.uGain, pl && pl.room ? 1.3 : 1.75);
-      });
-      // 2. bloom at half size
-      const bloomK = dark > 0.05 ? 0.55 + dark * 0.6 : 0.22;
-      draw(this.P.bright, F.b1, BW / 2, BH / 2, [['uTex', F.lit.t]], (u) => gl.uniform1f(u.uThr, dark > 0.05 ? 0.62 : 0.85));
-      for (let k = 0; k < 2; k++) {
-        draw(this.P.blur, F.b2, BW / 2, BH / 2, [['uTex', F.b1.t]], (u) => gl.uniform2f(u.uDir, (k + 1) * 2 / BW, 0));
-        draw(this.P.blur, F.b1, BW / 2, BH / 2, [['uTex', F.b2.t]], (u) => gl.uniform2f(u.uDir, 0, (k + 1) * 2 / BH));
-      }
-      // 3. to the screen
-      this.hurt = Math.max(0, this.hurt - 0.04);
-      const heat = R.dust && R.dust.heatOn ? 1 : 0;
-      const crt = game.settings.crt ? 1 : 0;
-      draw(this.P.final, null, this.cv.width, this.cv.height, [['uLit', F.lit.t], ['uBloom', F.b1.t], ['uOver', T.over]], (u) => {
-        gl.uniform1f(u.uTime, t); gl.uniform1f(u.uHeat, heat); gl.uniform1f(u.uHurt, this.hurt);
-        gl.uniform1f(u.uGrain, 0.035); gl.uniform1f(u.uScan, crt); gl.uniform1f(u.uScanPx, this.cv.height / BH); gl.uniform1f(u.uBloomK, bloomK);
-      });
-      r.glFrame = false;
-      return true;
-    } catch (e) { this.fail(e.message); return false; }
-  };
-
-  // ---------------------------------------------------------------- hooks
-  const RP = R.Renderer.prototype;
-  // after the lighting pass, everything else is drawn into the overlay layer
-  RP.afterLighting = function (g) {
-    if (!this.glOn || !this.ovg) return g;
-    const o = this.ovg;
-    o.setTransform(1, 0, 0, 1, 0, 0);
-    o.clearRect(0, 0, BW, BH);
-    o.imageSmoothingEnabled = false;
-    o.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-    this.glFrame = true;
-    return o;
-  };
-  const bResize = RP.resize;
-  RP.resize = function () { const r = bResize.apply(this, arguments); if (GL.on) GL.size(); return r; };
-  GL.init = function (game) {
-    this.apply(game);
-    if (this.wired) return;
-    this.wired = true;
-    // a hit splits the colours for a moment
-    const U = R.UI.prototype, bHurt = U.hurtFlash;
-    if (bHurt) U.hurtFlash = function (amt) { GL.hurt = Math.min(1, GL.hurt + (amt || 10) / 25); return bHurt.apply(this, arguments); };
-    // settings: renderer and CRT lines
-    const bTab = U.openMenuTab;
-    U.openMenuTab = function (tab) {
-      const r = bTab.apply(this, arguments);
-      if (tab !== 'settings') return r;
-      const body = document.getElementById('mbody'), st = this.game.settings;
-      if (!body || body.querySelector('#sRend')) return r;
-      const cur = st.renderer || (GL.supported() ? 'gl' : 'classic');
-      body.insertAdjacentHTML('afterbegin', `<div class="set"><label for="sRend">Graphics</label><select id="sRend"><option value="gl" ${cur === 'gl' ? 'selected' : ''} ${GL.supported() ? '' : 'disabled'}>Modern (WebGL lighting, bloom)</option><option value="classic" ${cur === 'classic' ? 'selected' : ''}>Classic</option></select></div><div class="set"><label for="sCrt">CRT scanlines</label><input id="sCrt" type="checkbox" ${st.crt ? 'checked' : ''}></div>`);
-      body.querySelector('#sRend').addEventListener('change', (e) => { st.renderer = e.target.value; this.game.saveSettings(); GL.apply(this.game); });
-      body.querySelector('#sCrt').addEventListener('change', (e) => { st.crt = e.target.checked; this.game.saveSettings(); });
-      return r;
+    GL.fail = function (why) {
+        console.warn('WebGL renderer off:', why);
+        this.on = false;
+        if (this.r)
+            this.r.glOn = false;
+        if (this.cv)
+            this.cv.style.display = 'none';
+        this.gl = null;
+        const g = R.game;
+        if (g && g.ui && g.started)
+            g.ui.toast('Graphics fell back to the classic renderer.', 'warn');
     };
-  };
+    GL.apply = function (game) {
+        const r = game.renderer;
+        if (!r)
+            return;
+        const want = this.wanted(game) && this.supported();
+        if (want) {
+            try {
+                if (!this.setup(r))
+                    throw new Error('no context');
+            }
+            catch (e) {
+                this.fail(e.message);
+                return;
+            }
+            this.on = true;
+            r.glOn = true;
+            if (this.cv)
+                this.cv.style.display = 'block';
+            this.size();
+        }
+        else {
+            this.on = false;
+            r.glOn = false;
+            if (this.cv)
+                this.cv.style.display = 'none';
+        }
+    };
+    GL.size = function () {
+        if (!this.cv || !this.r)
+            return;
+        const d = this.r.display;
+        if (this.cv.width !== d.width || this.cv.height !== d.height) {
+            this.cv.width = d.width;
+            this.cv.height = d.height;
+        }
+    };
+    const upload = (gl, t, src, premul) => {
+        gl.bindTexture(gl.TEXTURE_2D, t);
+        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, !!premul);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+    };
+    // the whole frame on the GPU
+    GL.present = function (r) {
+        const gl = this.gl, cv = this.cv;
+        if (!gl || !cv || gl.isContextLost() || !r.ov) {
+            this.fail('lost');
+            return false;
+        }
+        const game = r.game, pl = game.player;
+        try {
+            this.size();
+            const lit = !!r.glFrame; // a world frame (the title screen has no lighting pass)
+            if (!lit) {
+                r.ovg && r.ovg.clearRect(0, 0, BW, BH);
+                r.lg.clearRect(0, 0, r.light.width, r.light.height);
+            }
+            upload(gl, this.T.base, r.cv, false);
+            upload(gl, this.T.over, r.ov, true);
+            upload(gl, this.T.light, r.light, false);
+            const dark = lit ? (r.glDark || 0) : 0;
+            const t = (performance.now() - this.t0) / 1000;
+            const draw = (P, fb, w, h, texs, set) => {
+                gl.bindFramebuffer(gl.FRAMEBUFFER, fb ? fb.f : null);
+                gl.viewport(0, 0, w, h);
+                gl.useProgram(P.p);
+                let i = 0;
+                for (const [name, tx] of texs) {
+                    gl.activeTexture(gl.TEXTURE0 + i);
+                    gl.bindTexture(gl.TEXTURE_2D, tx);
+                    gl.uniform1i(P.u[name], i);
+                    i++;
+                }
+                set && set(P.u);
+                gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+            };
+            const F = this.F, T = this.T;
+            // 1. light the world
+            draw(this.P.lit, F.lit, BW, BH, [['uBase', T.base], ['uLight', T.light]], (u) => {
+                gl.uniform2f(u.uTexel, 1 / BW, 1 / BH);
+                gl.uniform1f(u.uDark, dark);
+                gl.uniform3f(u.uNight, 0.035, 0.04, 0.12);
+                gl.uniform1f(u.uNormal, 3.2);
+                gl.uniform1f(u.uGain, pl && pl.room ? 1.3 : 1.75);
+            });
+            // 2. bloom at half size
+            const bloomK = dark > 0.05 ? 0.55 + dark * 0.6 : 0.22;
+            draw(this.P.bright, F.b1, BW / 2, BH / 2, [['uTex', F.lit.t]], (u) => gl.uniform1f(u.uThr, dark > 0.05 ? 0.62 : 0.85));
+            for (let k = 0; k < 2; k++) {
+                draw(this.P.blur, F.b2, BW / 2, BH / 2, [['uTex', F.b1.t]], (u) => gl.uniform2f(u.uDir, (k + 1) * 2 / BW, 0));
+                draw(this.P.blur, F.b1, BW / 2, BH / 2, [['uTex', F.b2.t]], (u) => gl.uniform2f(u.uDir, 0, (k + 1) * 2 / BH));
+            }
+            // 3. to the screen
+            this.hurt = Math.max(0, this.hurt - 0.04);
+            const heat = R.dust && R.dust.heatOn ? 1 : 0;
+            const crt = game.settings.crt ? 1 : 0;
+            draw(this.P.final, null, cv.width, cv.height, [['uLit', F.lit.t], ['uBloom', F.b1.t], ['uOver', T.over]], (u) => {
+                gl.uniform1f(u.uTime, t);
+                gl.uniform1f(u.uHeat, heat);
+                gl.uniform1f(u.uHurt, this.hurt);
+                gl.uniform1f(u.uGrain, 0.035);
+                gl.uniform1f(u.uScan, crt);
+                gl.uniform1f(u.uScanPx, cv.height / BH);
+                gl.uniform1f(u.uBloomK, bloomK);
+            });
+            r.glFrame = false;
+            return true;
+        }
+        catch (e) {
+            this.fail(e.message);
+            return false;
+        }
+    };
+    // ---------------------------------------------------------------- hooks
+    const RP = R.Renderer.prototype;
+    // after the lighting pass, everything else is drawn into the overlay layer
+    RP.afterLighting = function (g) {
+        if (!this.glOn || !this.ovg)
+            return g;
+        const o = this.ovg;
+        o.setTransform(1, 0, 0, 1, 0, 0);
+        o.clearRect(0, 0, BW, BH);
+        o.imageSmoothingEnabled = false;
+        o.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+        this.glFrame = true;
+        return o;
+    };
+    const bResize = RP.resize;
+    RP.resize = function () { const r = bResize.apply(this, arguments); if (GL.on)
+        GL.size(); return r; };
+    GL.init = function (game) {
+        this.apply(game);
+        if (this.wired)
+            return;
+        this.wired = true;
+        // a hit splits the colours for a moment
+        const U = R.UI.prototype, bHurt = U.hurtFlash;
+        if (bHurt)
+            U.hurtFlash = function (amt) { GL.hurt = Math.min(1, GL.hurt + (amt || 10) / 25); return bHurt.apply(this, arguments); };
+        // settings: renderer and CRT lines
+        const bTab = U.openMenuTab;
+        U.openMenuTab = function (tab) {
+            const r = bTab.apply(this, arguments);
+            if (tab !== 'settings')
+                return r;
+            const body = document.getElementById('mbody'), st = this.game.settings;
+            if (!body || body.querySelector('#sRend'))
+                return r;
+            const cur = st.renderer || (GL.supported() ? 'gl' : 'classic');
+            body.insertAdjacentHTML('afterbegin', `<div class="set"><label for="sRend">Graphics</label><select id="sRend"><option value="gl" ${cur === 'gl' ? 'selected' : ''} ${GL.supported() ? '' : 'disabled'}>Modern (WebGL lighting, bloom)</option><option value="classic" ${cur === 'classic' ? 'selected' : ''}>Classic</option></select></div><div class="set"><label for="sCrt">CRT scanlines</label><input id="sCrt" type="checkbox" ${st.crt ? 'checked' : ''}></div>`);
+            body.querySelector('#sRend')?.addEventListener('change', (e) => { st.renderer = e.target.value; this.game.saveSettings(); GL.apply(this.game); });
+            body.querySelector('#sCrt')?.addEventListener('change', (e) => { st.crt = e.target.checked; this.game.saveSettings(); });
+            return r;
+        };
+    };
 })();
 
 // ---- 17_rim.js

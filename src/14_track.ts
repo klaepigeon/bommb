@@ -3,15 +3,28 @@
 // Hal's errand, the spectrum's leads, story leads and map tips. Moving targets (a mark, a
 // van) are followed live. The Jobs tab lists the same objectives with a Track button each.
 'use strict';
+interface Objective { key: string; label: string; x: number; y: number }
+interface Tracker {
+  sel: string | null;
+  t: number;
+  wp: { x: number; y: number } | null;
+  wired?: boolean;
+  list(): Objective[];
+  pick(key: string, quiet?: boolean): void;
+  cycle(): void;
+  update(dt: number): void;
+  paint(): void;
+  init(game: Game): void;
+}
 (function () {
   const TS = R.TILE;
-  const G = () => R.game;
-  const TR = (R.track = { sel: null, t: 0 });
+  const G = (): Game => R.game;
+  const TR: Tracker = (R.track = { sel: null, t: 0, wp: null } as unknown as Tracker);
 
   // everything worth walking to, right now: [{ key, label, x, y }] in pixels
   TR.list = function () {
-    const g = G(), out = [], pl = g.player;
-    const add = (key, label, x, y) => { if (x != null && y != null && isFinite(x) && isFinite(y)) out.push({ key, label, x, y }); };
+    const g = G(), out: Objective[] = [], pl = g.player;
+    const add = (key: string, label: string, x: number | null | undefined, y: number | null | undefined) => { if (x != null && y != null && isFinite(x) && isFinite(y)) out.push({ key, label, x, y }); };
     const m = g.jobs.marker();
     const j = g.jobs.active;
     if (m) add('job', `${j ? j.title : 'Job'}${m.label ? ' · ' + m.label : ''}`, m.x, m.y);
@@ -36,7 +49,7 @@
     for (const l of g.jobs.leads || []) add('lead:' + l.x + ',' + l.y, `Lead: ${l.text.slice(0, 48)}`, l.x * TS + 8, l.y * TS + 8);
     for (const p of R.poi.pins || []) if (p.kind === 'tip') add('pin:' + p.x + ',' + p.y + p.label, `${p.label}${p.sub ? ' · ' + p.sub : ''}`, p.x * TS + 8, p.y * TS + 8);
     // dedupe by position
-    const seen = new Set();
+    const seen = new Set<string>();
     return out.filter((o) => { const k = Math.round(o.x / TS / 3) + ',' + Math.round(o.y / TS / 3); if (seen.has(k)) return false; seen.add(k); return true; });
   };
   TR.pick = function (key, quiet) {
@@ -81,26 +94,27 @@
     this.wired = true;
     // the button, beside MENU
     const menu = document.getElementById('menubtn');
+    const esc = (t: unknown) => String(t).replace(/[&<>"]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' } as Record<string, string>)[m]);
     if (menu && !document.getElementById('trackbtn')) {
       menu.insertAdjacentHTML('beforebegin', '<button id="trackbtn" aria-label="Track the next objective">TRACK</button>');
       const st = document.createElement('style');
       st.textContent = '#trackbtn{border:3px solid var(--ink);background:var(--paper2);color:var(--ink);border-radius:10px;font-size:10px;padding:6px 8px;box-shadow:0 3px 0 var(--ink);margin-right:4px}#trackbtn.on{background:#e4a92a}.maprow{display:flex;align-items:flex-start;gap:0}body.cine #trackbtn{display:none}';
       document.head.appendChild(st);
-      document.getElementById('trackbtn').addEventListener('click', (e) => { e.stopPropagation(); if (G() && G().started) TR.cycle(); });
+      const btn = document.getElementById('trackbtn');
+      if (btn) btn.addEventListener('click', (e) => { e.stopPropagation(); if (G() && G().started) TR.cycle(); });
     }
     window.addEventListener('keydown', (e) => { if (e.code === 'KeyT' && !e.repeat && G() && G().started && !G().ui.sheetOpen) TR.cycle(); });
     // the Jobs tab: a Track button per objective
     const cj = R.campaign.jobsHtml;
-    R.campaign.jobsHtml = function () {
+    R.campaign.jobsHtml = function (this: unknown) {
       const L = TR.list();
-      const esc = (t) => String(t).replace(/[&<>"]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
       const h = L.length ? `<div class="sect">Track on the map</div><div class="opts">${L.map((o) => `<button class="opt ${o.key === TR.sel ? 'go' : ''}" data-trk="${esc(o.key)}">${esc(o.label)}<small>${o.key === TR.sel ? 'Tracking now' : 'Tap to track'}</small></button>`).join('')}</div>` : '';
       return h + cj.call(this);
     };
     document.addEventListener('click', (e) => {
-      const b = e.target.closest && e.target.closest('[data-trk]');
-      if (!b || !G()) return;
-      TR.pick(b.dataset.trk);
+      const el = e.target instanceof Element ? e.target.closest<HTMLElement>('[data-trk]') : null;
+      if (!el || !G() || !el.dataset.trk) return;
+      TR.pick(el.dataset.trk);
       G().ui.closeSheet();
     });
   };
