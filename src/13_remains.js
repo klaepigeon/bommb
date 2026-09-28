@@ -33,6 +33,8 @@
     pl.carrying = null;
     a.carried = false;
     a.x = x != null ? x : pl.x + Math.cos(pl.ang) * 10; a.y = y != null ? y : pl.y + Math.sin(pl.ang) * 6 + 4;
+    a.removed = false; // picking it up took it out of the world; putting it down puts it back
+    if (a.person && !a.dead) a.person.actor = a;
     g.actors.add(a);
     return a;
   };

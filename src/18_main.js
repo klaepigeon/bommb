@@ -87,6 +87,7 @@
     R.butcher.init(this);
     R.arms.init(this);
     R.profile.init(this);
+    R.carry.init(this);
     R.vice.init(this);
     R.gore.init(this);
     R.relics.init(this);
@@ -244,6 +245,7 @@
       R.turf.update(sdt);
       R.vendetta.update(sdt);
       R.profile.update(sdt);
+      R.carry.update(sdt);
       R.route.update(this, sdt);
       R.vice.update(sdt);
       R.water.update(sdt);
