@@ -85,9 +85,41 @@
     g.actors.say(seer, c.dead ? R.rng.pick(['Is that... a BODY?!', 'Oh God, he\'s carrying a dead man!', 'Somebody call the cops! He\'s got a corpse!']) : R.rng.pick(['Hey! Put them down!', 'Where are you taking her?!', 'Help! He\'s kidnapping somebody!']));
     g.law.crime(c.dead ? 'corpse' : 'kidnap', pl.x, pl.y, {});
   };
+  // bodies and big game ride in a little red wagon, towed on its handle
+  CY.wagonFor = (a) => a && (a.kind === 'h' || (a.kind === 'a' && a.def.size > 8));
+  CY.moveWagon = function (pl) {
+    const w = (pl.wagon = pl.wagon || { x: pl.x - 14, y: pl.y + 2, roll: 0 });
+    const dx = w.x - pl.x, dy = w.y - (pl.y + 2), d = Math.hypot(dx, dy) || 1, L = 15;
+    // a rigid handle: the wagon stays exactly a handle's length behind
+    if (Math.abs(d - L) > 0.2) { const k = (d - L) / d; w.x -= dx * k; w.y -= dy * k; w.roll += Math.abs(d - L) * 0.35; }
+    return w;
+  };
+  CY.drawWagon = function (g, pl, w) {
+    const a = pl.carrying, X = Math.round(w.x), Y = Math.round(w.y);
+    const ang = Math.atan2(pl.y + 2 - w.y, pl.x - w.x);
+    // the handle: a black bar from the hitch to his fist, with a T-grip
+    const hx0 = X + Math.cos(ang) * 9, hy0 = Y - 4 + Math.sin(ang) * 3, hx1 = pl.x - Math.cos(ang) * 2, hy1 = pl.y - 9;
+    g.strokeStyle = '#0c0a0c'; g.lineWidth = 2; g.lineCap = 'square'; g.beginPath(); g.moveTo(Math.round(hx0), Math.round(hy0)); g.lineTo(Math.round(hx1), Math.round(hy1)); g.stroke();
+    g.strokeStyle = '#3a3a40'; g.lineWidth = 0.8; g.beginPath(); g.moveTo(Math.round(hx0), Math.round(hy0) - 0.5); g.lineTo(Math.round(hx1), Math.round(hy1) - 0.5); g.stroke();
+    const px = -Math.sin(ang), py = Math.cos(ang);
+    g.fillStyle = '#0c0a0c'; g.fillRect(Math.round(hx1 - px * 2) - 1, Math.round(hy1 - py * 2) - 1, 2, 2); g.fillRect(Math.round(hx1 + px * 2) - 1, Math.round(hy1 + py * 2) - 1, 2, 2); g.fillRect(Math.round(hx1) - 1, Math.round(hy1) - 1, 2, 2);
+    // shadow, wheels, bed
+    g.fillStyle = 'rgba(16,12,36,0.4)'; g.fillRect(X - 10, Y + 1, 20, 3);
+    const spin = Math.floor(w.roll) % 2;
+    for (const wx of [X - 7, X + 5]) { g.fillStyle = '#141014'; g.fillRect(wx - 1, Y - 2, 5, 5); g.fillStyle = '#2a2a2e'; g.fillRect(wx, Y - 1, 3, 3); g.fillStyle = spin ? '#8a8a90' : '#5a5a60'; g.fillRect(wx + (spin ? 1 : 0), Y, 1 + (spin ? 0 : 1), 1); }
+    g.fillStyle = '#141014'; g.fillRect(X - 10, Y - 9, 21, 8);
+    g.fillStyle = '#9a1a14'; g.fillRect(X - 9, Y - 8, 19, 6);
+    g.fillStyle = '#d8302a'; g.fillRect(X - 9, Y - 8, 19, 2);
+    g.fillStyle = '#ff6a58'; g.fillRect(X - 8, Y - 8, 6, 1);
+    g.fillStyle = '#f0e8d8'; g.fillRect(X - 5, Y - 5, 11, 1); // the little white stripe on the side
+    // cargo
+    if (a.kind === 'h') { g.save(); g.translate(X - 7, Y - 8); g.scale(0.72, 0.72); R.art.drawPerson(g, 0, 0, 2, 0, a.look, { down: true }); g.restore(); }
+    else { const proxy = Object.assign(Object.create(Object.getPrototypeOf(a)), a, { x: X, y: Y - 7, dead: true }); g.save(); g.translate(X, Y - 7); g.scale(0.7, 0.7); g.translate(-X, -(Y - 7)); R.art.drawAnimal(g, proxy); g.restore(); }
+  };
   // a carcass on your shoulder
   CY.drawCarried = function (g, pl) {
     const a = pl.carrying;
+    if (a && this.wagonFor(a)) { if (!pl._wagonDrawn) this.drawWagon(g, pl, this.moveWagon(pl)); pl._wagonDrawn = false; return true; }
     if (!a || a.kind !== 'a') return false;
     const proxy = Object.assign(Object.create(Object.getPrototypeOf(a)), a, { x: pl.x + 1, y: pl.y - 13, dead: true });
     g.save();
@@ -125,6 +157,13 @@
     };
     PP.fire = function () { if (this.carrying) return CY.throw(this); return fire.apply(this, arguments); };
     // whatever the carry drew before, animals get their own
+    const RP = R.Renderer.prototype, dp = RP.drawPlayer;
+    RP.drawPlayer = function (g, pl) {
+      pl._wagonDrawn = false;
+      if (pl.carrying && CY.wagonFor(pl.carrying) && !pl.inCar) { const w = CY.moveWagon(pl); if (w.y < pl.y) { CY.drawWagon(g, pl, w); pl._wagonDrawn = true; } }
+      else pl.wagon = null;
+      return dp.call(this, g, pl);
+    };
     const B = R.bodies, dc = B.drawCarried;
     B.drawCarried = function (g, pl) { if (CY.drawCarried(g, pl)) return; return dc.call(this, g, pl); };
     // the pick-up toast knows what it picked up

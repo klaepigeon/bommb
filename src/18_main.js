@@ -88,6 +88,7 @@
     R.arms.init(this);
     R.profile.init(this);
     R.carry.init(this);
+    R.charm.init(this); R.charm.reinit();
     R.vice.init(this);
     R.gore.init(this);
     R.relics.init(this);
