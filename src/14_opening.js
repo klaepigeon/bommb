@@ -100,6 +100,14 @@
     pl.place(club.out.x * TS + 8, club.out.y * TS + 12);
     g.interiors.enter(club, 'guest');
     g.cutscene = true;
+    // the don himself, across the table
+    setTimeout(() => {
+      const dp = R.campaign.donOf(fam);
+      if (!dp || !dp.alive || !pl.room) return;
+      if (dp.actor && !dp.actor.dead) g.actors.remove(dp.actor);
+      const h = g.life.spawnPerson(dp, pl.x + 20, pl.y - 6);
+      if (h) { h.keep = true; h.stay = true; h.state = 'idle'; h.timer = 1e9; h.room = pl.room; h.dir = 3; h.ang = Math.PI; dp.met = true; dp.fam = Math.max(dp.fam || 0, 3); dp.opinion = Math.max(dp.opinion || 0, 20); }
+    }, 50);
     const J = g.jobs, st = (d) => { J.standing[fam] = R.clamp((J.standing[fam] || 0) + d, -100, 100); };
     const ask = (title, line, opts) => new Promise((res) => g.ui.story(title, line, () => setTimeout(() => g.ui.choice(`Don ${dn}`, opts.map((o) => ({ label: o[0], small: o[1], fn: () => { o[2](); res(o[3]); } }))), 150)));
     (async () => {

@@ -250,7 +250,7 @@ const routine = async (day) => p.evaluate((day) => {
 
   // ---- night: bar, club or casino; minigames, dealers; burglary; legends
   setTime(22);
-  const night = pick(['bar', 'club', 'casino', 'burgle', 'legend', 'bar']);
+  const night = pick(['bar', 'club', 'casino', 'burgle', 'legend', 'bar', 'casino']);
   const venues = B.city().buildings.filter((b) => b && !b.destroyed && b.type === (night === 'casino' ? 'casino' : night === 'club' ? 'club' : 'bar'));
   if ((night === 'bar' || night === 'club' || night === 'casino') && venues.length) {
     const b = pick(venues);
@@ -260,6 +260,11 @@ const routine = async (day) => p.evaluate((day) => {
       if (dealer && r() < 0.6) { B.keepSheet = true; R.goods.openDealer(dealer); const o = [...document.querySelectorAll('.opt')].filter((x) => /\$/.test(x.textContent) && !/Sell/.test(x.textContent)); if (o.length) { o[Math.floor(r() * o.length)].click(); B.act('drugs:buy'); } B.keepSheet = false; g.ui.closeSheet(); const k = Object.keys(pl.inv.drugs || {}).find((q) => pl.inv.drugs[q] > 0); if (k && r() < 0.6) { R.goods.take(k); B.act('drugs:take:' + k); B.tick(90); } }
       if (r() < 0.5) { R.mini.darts({ stake: 10 }); B.act('mini:darts'); g.ui.closeSheet(); }
       if (b.type === 'casino' && r() < 0.8) { R.mini.blackjack({}); B.act('mini:blackjack'); g.ui.closeSheet(); }
+      // wash dirty cash through the chips
+      if (b.type === 'casino' && R.money && R.money.dirty() > 150) { const o = g.ui.interiorOptions(b).find((x) => /chips/.test(x.label)); if (o) { o.fn(); B.act('launder'); } }
+      // and flirt with somebody at the bar
+      const date = g.actors.list.find((a) => a.room === pl.room && a.kind === 'h' && !a.dead && !a.staff && R.charm && R.charm.canFlirt(a));
+      if (date && r() < 0.5) { for (let k = 0; k < 3; k++) { R.charm.flirt(date); B.tick(40); } B.act(date.flirted >= 2 ? 'flirt:won' : 'flirt:tried'); }
       B.tick(120);
       g.interiors.exit();
     }

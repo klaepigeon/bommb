@@ -61,7 +61,7 @@
     return want === 'both' || want === !!pl.look.fem;
   };
   CH.canFlirt = function (h) {
-    return h && !h.dead && h.kind === 'h' && !h.cop && !h.look.kid && !(h.person && h.person.age < 18) && !(h.person && h.person.playerChild) && h.state !== 'fight' && !(h.witness && !h.witness.done && !h.witness.silenced);
+    return h && !h.dead && h.kind === 'h' && !h.cop && !h.look.kid && !(h.person && h.person.isDon) && !h.storyNpc && !h.detectiveFor && !(h.person && h.person.age < 18) && !(h.person && h.person.playerChild) && h.state !== 'fight' && !(h.witness && !h.witness.done && !h.witness.silenced);
   };
   CH.chipLabel = function (h) { return (h.flirted || 0) >= 2 || (h.person && h.person.opinion > 55) ? 'Seduce' : 'Flirt'; };
   const ARCH = { flirt: 0.35, friendly: 0.1, eccentric: 0.05, gossip: 0.05, hustler: 0.05, tough: 0, square: -0.05, timid: -0.12, grumpy: -0.2, pious: -0.3 };

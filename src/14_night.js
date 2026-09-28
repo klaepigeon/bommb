@@ -205,6 +205,12 @@
       }
       return r;
     };
+    // dancers don't busk
+    const line = R.dialog.line;
+    R.dialog.line = function (kind, h) {
+      if (kind === 'perform' && h && h.dancer) return R.rng.pick(['Tips go in the garter, sugar.', 'This one\'s for the big spender in the front.', 'Look, don\'t touch.', 'Disco inferno, baby!', 'Make it rain, handsome.']);
+      return line.call(this, kind, h);
+    };
     const tree = R.dialog.tree;
     R.dialog.tree = function (h) { return h.worker && !h.cop ? NT.workerTree(h) : tree.call(this, h); };
   };

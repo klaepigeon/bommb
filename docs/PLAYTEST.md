@@ -154,3 +154,60 @@ Hands-on passes through the screenshots at every tenth day, plus targeted captur
 - **Home-city prosperity:** a crime-heavy player can drag their home town's prosperity very low. Consider a family "clean-up" job that restores it.
 - **Old Scratch discoverability:** give the marsh rumour a pin further from Bayou Clair's limits.
 - **Hunting:** animals often flee before you're in range with a rifle. A crouch-stalk bonus or a hunting call would help.
+
+---
+
+## Playtest 3: systems, mechanics and visual fidelity (XX7X build)
+
+Three passes over the newer systems:
+
+- `tools/playtest.mjs` for **20 and then 40 in-game days**, now logging the state of every new system each day: detective cases, dirty money, family wars, grudges and the serial-killer profile.
+- `tools/scenarios.mjs`, a new scripted run through the **real controls** (WASD, SPACE, E, M, the interaction chips and the menus). It screenshots 20 moments at 2× and times frames in a busy scene.
+- Close-up render sheets of masks, wardrobe, corpses, weapons and overhead props.
+
+**Result:** 0 page errors across all runs. The 40-day bot run took 28 s of wall time (tick p95 0.3–0.6 ms). Downtown New Avalon at 10 PM holds 16.7 ms frames (vsync-bound) with 46 actors and 12 cars.
+
+### Bugs found and fixed
+
+| Found | Symptom | Fix |
+|---|---|---|
+| NPCs could close the name entry | A passer-by's greeting or talk sheet replaced "Who are you?", so the new opening never started | Name entry is modal: no other sheet can open over it, background taps are ignored, and the world is paused while it's up |
+| The don's dialogue could be dismissed | Tapping the dimmed background mid-conversation left the opening hanging | The back-room scene is a cutscene: the world is paused and other sheets and background taps are blocked until the first job is given |
+| Reloading during the desert crawl | Autosave during the crawl reloaded you in the sand with no car coming | The crawl state and the highway point are saved |
+| Point-blank shotgun didn't kill | 7 pellets × 13 = 91 damage against 100 HP; the target shrugged it off and no head burst | Shotgun 16 per pellet, sawed-off 19. Point blank now kills, and the head bursts |
+| "Out of ammo" spam | 34 toasts in 20 days | A dry-fire click, an automatic swap to your best melee weapon, and the warning at most every 20 s |
+| Your family at war in week one | "Your family is at war" by day 5 made the calm opening hostile | Families at war with yours only start after day 7 and once you're a Soldier |
+| Warrants for family work | 4 warrants in 40 days, mostly from contract hits the family ordered | Contract hits are marked, and the family leans on the file (×0.45 case progress). Rank shields you too (−12% per rank). The Heat tab says so |
+| Hired guns every other day | Six hired-gun attacks in ten days from two grudges | Hiring now builds up slower (+12 a day, attacks at 60) than a relative hunting you in person (+20, attacks at 40) |
+| Body menu listed "Cut up" twice | The knife action came from both the butcher and carry menus | De-duplicated |
+| Strip club and costume shop looked unlit | They used the pale default shop palette | Strip club uses the club palette; costume shop uses the arcade's purple and pink |
+| Name sheet cut off on phones | "That's me" fell below the fold at 390 px tall | Labels sit inline with their fields; the sheet fits with room to spare |
+| Dancers busked | Strip club dancers said "Spare a dime for the music?" | Dancers have their own lines |
+| The don wasn't in the back room | The conversation happened with an empty chair | The don is seated beside you for the talk |
+| Serious arrests only fined you (previous report) | Cash in your pocket meant you always paid a fine, and jailbreaks never came up | A bounty of $150+ means a cell; smaller bounties let you choose between the fine and the cell |
+
+### What the 40-day run says about balance
+
+| System | Seen over 40 days | Read |
+|---|---|---|
+| Detective cases | 11 cases: most burglaries went **cold**, and 2 murders reached **warrant** | Burglary evidence decays well. With the contract shield, murders done for the family should now go cold more often, while freelance ones still get you a warrant |
+| Dirty money | The bot never laundered: about 95% of its cash was dirty, but it never made a big purchase, so suspicion stayed at 0 | Correct: spending in small amounts is safe. The audit only comes after a big dirty purchase, as intended |
+| Family wars | A war was running most days, ending in 3–8 day sit-downs; shootouts showed up in the war cities | Lively without flooding the streets |
+| Grudges | 5 relatives were created by the first murder; 2 were children who wait; later the hired guns | After the tuning, about one attack every 5 days per rich relative |
+| Serial killer | 1–2 unsolved bodies, no task force | Correct: the bot doesn't kill in a pattern. Tested separately with 4 matching killings: the task force forms and escalates, and frisking you with a bag of remains names you |
+
+### Visual notes (screenshots in `playtest-out/scenarios` when run locally)
+
+- **Opening:** the desert now spawns on real sand. Crawling reads as a man face-down dragging himself, at 0.7–0.9 tiles/s, leaving a blood trail. The highway is 19–27 tiles off, so about 25–35 s of crawling. That feels right: long enough to feel it, short enough not to drag.
+- **Night downtown:** lamp pools and neon read well. The fringes of the cities are dark by design; the cores are lit.
+- **Interiors:** the bar fills to 11–13 people at night, the strip club to 17–19, with dancers on the runway.
+- **Gore:** a point-blank shotgun head burst sprays bone and brain flecks in the direction of the shot. Knife work leaves arms and legs scattered with blood trails, which can be bagged and sunk.
+- **Masks:** all twelve read distinctly from the front, and horns, ears and snouts show from the side.
+- **Wardrobe:** the new jackets, shirts and trousers render cleanly. Pompadour, mohawk, Jheri curl and locs read well; the mullet is subtle from the front and clearer from behind.
+- **Wagon:** the red wagon with its black handle reads at 1×; the body lies in it with legs over the edge.
+
+### Still on the list
+
+- Night lighting in the outer streets could use lit windows and more neon spill.
+- The desert crawl could use a heat-shimmer or vulture shadow for mood.
+- A proper bot routine for laundering and for flirting, so the long runs exercise those loops too.

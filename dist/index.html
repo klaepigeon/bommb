@@ -15552,7 +15552,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     return want === 'both' || want === !!pl.look.fem;
   };
   CH.canFlirt = function (h) {
-    return h && !h.dead && h.kind === 'h' && !h.cop && !h.look.kid && !(h.person && h.person.age < 18) && !(h.person && h.person.playerChild) && h.state !== 'fight' && !(h.witness && !h.witness.done && !h.witness.silenced);
+    return h && !h.dead && h.kind === 'h' && !h.cop && !h.look.kid && !(h.person && h.person.isDon) && !h.storyNpc && !h.detectiveFor && !(h.person && h.person.age < 18) && !(h.person && h.person.playerChild) && h.state !== 'fight' && !(h.witness && !h.witness.done && !h.witness.silenced);
   };
   CH.chipLabel = function (h) { return (h.flirted || 0) >= 2 || (h.person && h.person.opinion > 55) ? 'Seduce' : 'Flirt'; };
   const ARCH = { flirt: 0.35, friendly: 0.1, eccentric: 0.05, gossip: 0.05, hustler: 0.05, tough: 0, square: -0.05, timid: -0.12, grumpy: -0.2, pious: -0.3 };
@@ -16207,6 +16207,12 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       }
       return r;
     };
+    // dancers don't busk
+    const line = R.dialog.line;
+    R.dialog.line = function (kind, h) {
+      if (kind === 'perform' && h && h.dancer) return R.rng.pick(['Tips go in the garter, sugar.', 'This one\'s for the big spender in the front.', 'Look, don\'t touch.', 'Disco inferno, baby!', 'Make it rain, handsome.']);
+      return line.call(this, kind, h);
+    };
     const tree = R.dialog.tree;
     R.dialog.tree = function (h) { return h.worker && !h.cop ? NT.workerTree(h) : tree.call(this, h); };
   };
@@ -16315,6 +16321,14 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     pl.place(club.out.x * TS + 8, club.out.y * TS + 12);
     g.interiors.enter(club, 'guest');
     g.cutscene = true;
+    // the don himself, across the table
+    setTimeout(() => {
+      const dp = R.campaign.donOf(fam);
+      if (!dp || !dp.alive || !pl.room) return;
+      if (dp.actor && !dp.actor.dead) g.actors.remove(dp.actor);
+      const h = g.life.spawnPerson(dp, pl.x + 20, pl.y - 6);
+      if (h) { h.keep = true; h.stay = true; h.state = 'idle'; h.timer = 1e9; h.room = pl.room; h.dir = 3; h.ang = Math.PI; dp.met = true; dp.fam = Math.max(dp.fam || 0, 3); dp.opinion = Math.max(dp.opinion || 0, 20); }
+    }, 50);
     const J = g.jobs, st = (d) => { J.standing[fam] = R.clamp((J.standing[fam] || 0) + d, -100, 100); };
     const ask = (title, line, opts) => new Promise((res) => g.ui.story(title, line, () => setTimeout(() => g.ui.choice(`Don ${dn}`, opts.map((o) => ({ label: o[0], small: o[1], fn: () => { o[2](); res(o[3]); } }))), 150)));
     (async () => {
