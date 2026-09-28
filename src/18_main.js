@@ -84,7 +84,7 @@
     R.money.init(this);
     R.turf.init(this);
     R.vendetta.init(this);
-    R.shark.init(this); R.payroll.init(this); R.rat.init(this); R.hijack.init(this);
+    R.shark.init(this); R.payroll.init(this); R.rat.init(this); R.hijack.init(this); R.desert.init(this);
     R.butcher.init(this);
     R.arms.init(this);
     R.profile.init(this);
@@ -250,6 +250,7 @@
       R.turf.update(sdt);
       R.vendetta.update(sdt);
       R.hijack.update(sdt);
+      R.desert.update(sdt);
       R.profile.update(sdt);
       R.carry.update(sdt);
       R.night.update(sdt);

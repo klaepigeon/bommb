@@ -61,7 +61,7 @@
     const g = G(), p = g.pop.people[r.pid], CS = R.cases;
     if (!p || !p.alive) return this.silenced(r, false);
     r.progress = Math.min(100, r.progress + 6 + (r.kind === 'crew' ? 3 : 0) + (r.kind === 'cop' ? 2 : 0));
-    if (g.pop.day >= r.nextClue) { this.clue(r); r.nextClue = g.pop.day + 2 + R.rng.int(0, 1); }
+    if (g.pop.day >= r.nextClue) { this.clue(r); r.nextClue = g.pop.day + 3 + R.rng.int(0, 1); }
     const c = this.caseOf(r);
     if (c) {
       c.progress = r.progress;
@@ -81,7 +81,7 @@
       g.ui.story('A WHISPER', `The bartender leans in close. "Friend of mine at the courthouse says the FBI has a new pal. Somebody close to you. Somebody who knows things."\n\nThere's a federal case open. Find the rat before the grand jury hears from them.`);
     }
     if (!pool.length) return;
-    const k = R.rng.pick(pool);
+    const k = pool.includes('kind') ? 'kind' : R.rng.pick(pool); // what sort of person first, the details later
     const text = { kind: `It's ${KIND[r.kind]}.`, fem: `It's a ${p.fem ? 'woman' : 'man'}.`, city: `They live in ${(g.pop.cityObj(p.city) || {}).name || 'the county'}.`, work: p.work != null && g.world.buildings[p.work] ? `They work at ${g.world.buildings[p.work].name}.` : `They're out of work.`, age: `They're ${p.age < 30 ? 'young, under thirty' : p.age < 50 ? 'somewhere between thirty and fifty' : 'over fifty'}.` }[k];
     r.clues.push({ k, text });
     if (r.clues.length > 1) g.ui.toast(`A whisper about the rat: "${text}"`, 'warn');
