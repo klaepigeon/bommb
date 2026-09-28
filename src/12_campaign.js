@@ -83,6 +83,7 @@
   };
   const ACT_NEED = [0, 25, 45]; // standing with the family to start each act
   C.SAGAS = SAGAS;
+  C.atB = atB; C.outskirts = outskirts; C.clubOf = clubOf;
 
   // ---------------------------------------------------------------- state
   C.state = function () {
@@ -186,6 +187,7 @@
     }
     g.audio.sfx('promote');
     const last = s.saga[a.fam] >= SAGAS[a.fam].acts.length;
+    if (SAGAS[a.fam].story) { g.ui.story(last ? `${SAGAS[a.fam].title}: COMPLETE` : SAGAS[a.fam].title, `${act.title}.\n\n+${R.fmtMoney(act.cash)}${extra}${last ? '' : `\n\nTalk to ${SAGAS[a.fam].who} again when you're ready.`}`); return; }
     g.ui.story(last ? `${SAGAS[a.fam].title}: COMPLETE` : 'FAMILY BUSINESS', `${act.title}.\n\n+${R.fmtMoney(act.cash)}  ·  +${act.rep} respect with the ${PLF(a.fam)}.${extra}${last ? '' : `\n\nThe next chapter needs ${ACT_NEED[a.act + 1]} standing with the ${PLF(a.fam)}.`}`);
     g.pop.addNews(cityOf(a.fam) ? cityOf(a.fam).id : 'port', R.rng.pick(['Police baffled by another night of gunfire.', 'Neighbours report "fireworks" near a local social club.', 'A quiet week, say the families. Nobody believes them.']));
   };
@@ -253,7 +255,7 @@
           const b = this.spawnFoe(r.at.x, r.at.y, st.enemy, st.weapon || 'magnum');
           if (b) { b.hp = b.maxHp = st.hp; b.strangerName = st.name; b.boss = true; b.hostile = false; b.stay = true; b.state = 'idle'; b.timer = 1e9; r.boss = b; }
           for (let i = 0; i < st.guards; i++) { const f = this.spawnFoe(r.at.x + R.rng.int(-3, 3), r.at.y + R.rng.int(-3, 3), st.enemy); if (f) { f.hostile = false; r.foes.push(f); } }
-          g.ui.toast(`${st.name} is here, with ${st.guards} guards.`, 'warn');
+          g.ui.toast(st.guards ? `${st.name} is here, with ${st.guards} guards.` : `${st.name} is here.`, 'warn');
         }
         if (r.spawned) {
           const b = r.boss;
@@ -288,7 +290,7 @@
           const a = R.rng() * Math.PI * 2;
           const cx = r.at.x + Math.cos(a) * 13, cy = r.at.y + Math.sin(a) * 13;
           for (let i = 0; i < st.n + (r.wave === st.waves ? 1 : 0); i++) { const f = this.spawnFoe(cx + R.rng.int(-2, 2), cy + R.rng.int(-2, 2), st.enemy); if (f) { r.foes.push(f); g.actors.setFight(f, R.rng() < 0.55 ? r.vip : pl); } }
-          g.ui.toast(`Wave ${r.wave} of ${st.waves}: ${st.enemy} gunmen!`, 'bad');
+          g.ui.toast(`Wave ${r.wave} of ${st.waves}: ${st.enemy || 'hired'} gunmen!`, 'bad');
         }
         for (const f of r.foes) if (alive(f) && f.state !== 'fight') g.actors.setFight(f, R.rng() < 0.5 ? r.vip : pl);
         if (r.wave >= st.waves && r.left <= 0 && !r.foes.some(alive)) { r.keepVip = false; this.nextStep(); }
@@ -650,10 +652,11 @@
     if (cur) {
       const r = this.run;
       const extra = cur.step.k === 'defend' && r && r.left != null ? ` (${Math.max(0, Math.ceil(r.left))}s, wave ${r.wave || 0}/${cur.step.waves})` : cur.step.k === 'drive' && r && r.leftMin != null ? ` (${Math.max(0, Math.round(r.leftMin))} min)` : '';
-      h += `<div class="sect">Family business</div><p style="font-size:15px"><b>${esc(cur.act.title)}</b><br>${esc(cur.step.text)}${extra}</p>`;
+      h += `<div class="sect">${SAGAS[cur.fam].story ? esc(SAGAS[cur.fam].who) : 'Family business'}</div><p style="font-size:15px"><b>${esc(cur.act.title)}</b><br>${esc(cur.step.text)}${extra}</p>`;
     }
     h += '<div class="sect">The family sagas</div>';
     for (const f of FAMS) { const i = this.sagaAct(f), sg = SAGAS[f]; h += `<p>• <span style="color:${FAMCOLOR[f]}">■</span> <b>${esc(sg.title)}</b> (${esc(f)}): ${i >= 3 ? 'complete ✓' : `act ${i + 1}/3, ${esc(sg.acts[i].title)}`}${s.perks[f === "O'Malley" ? 'omalley' : f.toLowerCase()] ? ' · perk earned' : ''}</p>`; }
+    if (R.stories) h += R.stories.jobsHtml(esc);
     h += '<div class="sect">Roads to the top</div>';
     h += `<p><b>BLOOD:</b> kill every don. ${FAMS.map((f) => `${esc(f)} ${s.dons[f] ? '✗' : this.donGone(f) ? '—' : '●'}`).join(' · ')}${s.endings.blood ? ' · <b>done</b>' : ''}</p>`;
     h += `<p><b>CROWN:</b> take each city. ${FAMS.map((f) => { const c = cityOf(f); return `${esc(c ? c.name : f)} ${s.ruled[c && c.id] ? '♛' : this.control(f) + '%'}`; }).join(' · ')}<br><small>Control rises with your rackets there, soldiers you put down, a dead don and your rank. At 70% take it at their social club.</small></p>`;
