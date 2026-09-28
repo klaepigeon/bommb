@@ -84,7 +84,7 @@
     R.money.init(this);
     R.turf.init(this);
     R.vendetta.init(this);
-    R.shark.init(this); R.payroll.init(this); R.rat.init(this); R.hijack.init(this); R.desert.init(this); R.cars.init(this); R.honor.init(this); R.dust.init(this); R.rivals.init(this); R.sky.init(this); R.monte.init(this); R.corps.init(this); R.track.init(this);
+    R.shark.init(this); R.payroll.init(this); R.rat.init(this); R.hijack.init(this); R.desert.init(this); R.cars.init(this); R.honor.init(this); R.dust.init(this); R.rivals.init(this); R.sky.init(this); R.monte.init(this); R.corps.init(this); R.track.init(this); R.memory.init(this);
     R.butcher.init(this);
     R.arms.init(this);
     R.profile.init(this);
@@ -267,6 +267,7 @@
       R.monte.update(sdt);
       R.corps.update(sdt);
       R.track.update(sdt);
+      R.memory.update(sdt);
       R.profile.update(sdt);
       R.carry.update(sdt);
       R.night.update(sdt);
