@@ -919,7 +919,8 @@
       target = dc < 0.4 ? 26 : dc < 0.8 ? 18 : 11;
       if (city.id === 'avalon') target += 6;
     } else if (w.inCityRect(ptx | 0, pty | 0, 4)) target = 7;
-    target = Math.round(target * tod * weather * game.settings.density);
+    const curfew = city && city.curfew && (hour >= 21 || hour < 5) ? 0.3 : 1; // a killer's loose: folks stay in
+    target = Math.round(target * tod * weather * curfew * game.settings.density);
     if (humans < target) {
       for (let k = 0; k < 3 && humans < target; k++) {
         const s = w.findNear(ptx, pty, 16, 30, (x, y) => {
