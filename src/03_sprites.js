@@ -267,9 +267,9 @@
   // Ks routine (see 03_oldsprites.js). Canvases are 16x32 (32x32 for poses); feet at row 25.
   const OLD = R.old;
   const oldCache = new Map();
-  const lum = (hex) => { const n = parseInt(hex.slice(1), 16); return ((n >> 16) * 0.3 + ((n >> 8) & 255) * 0.59 + (n & 255) * 0.11) / 255; };
+  const lum = (hex) => { const n = parseInt(String(hex || '#c89070').slice(1), 16); return ((n >> 16) * 0.3 + ((n >> 8) & 255) * 0.59 + (n & 255) * 0.11) / 255; };
   const hairKey = (hex) => {
-    const n = parseInt(hex.slice(1), 16), r = n >> 16, gg = (n >> 8) & 255, b = n & 255;
+    const n = parseInt(String(hex || '#3a2a1a').slice(1), 16), r = n >> 16, gg = (n >> 8) & 255, b = n & 255;
     if (Math.abs(r - gg) < 18 && Math.abs(gg - b) < 18 && r > 110) return 'hairGrey';
     if (r > gg * 1.6 && r > 80) return 'hairRed';
     if (r + gg + b < 110) return 'hairBlack';

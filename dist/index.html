@@ -2800,9 +2800,9 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   // Ks routine (see 03_oldsprites.js). Canvases are 16x32 (32x32 for poses); feet at row 25.
   const OLD = R.old;
   const oldCache = new Map();
-  const lum = (hex) => { const n = parseInt(hex.slice(1), 16); return ((n >> 16) * 0.3 + ((n >> 8) & 255) * 0.59 + (n & 255) * 0.11) / 255; };
+  const lum = (hex) => { const n = parseInt(String(hex || '#c89070').slice(1), 16); return ((n >> 16) * 0.3 + ((n >> 8) & 255) * 0.59 + (n & 255) * 0.11) / 255; };
   const hairKey = (hex) => {
-    const n = parseInt(hex.slice(1), 16), r = n >> 16, gg = (n >> 8) & 255, b = n & 255;
+    const n = parseInt(String(hex || '#3a2a1a').slice(1), 16), r = n >> 16, gg = (n >> 8) & 255, b = n & 255;
     if (Math.abs(r - gg) < 18 && Math.abs(gg - b) < 18 && r > 110) return 'hairGrey';
     if (r > gg * 1.6 && r > 80) return 'hairRed';
     if (r + gg + b < 110) return 'hairBlack';
@@ -16883,7 +16883,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     el = document.createElement('div'); el.id = 'cine';
     el.innerHTML = '<div class="cb t"></div><div class="cb b"><span class="cap"></span></div><div class="cf"></div>';
     const st = document.createElement('style');
-    st.textContent = '#cine{position:fixed;pointer-events:none;z-index:40}#cine .cb{position:absolute;left:0;right:0;height:0;background:#000;transition:height .7s ease}#cine .t{top:0}#cine .b{bottom:0;display:flex;align-items:center;justify-content:center}#cine.on .cb{height:13%}#cine .cap{font:inherit;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#f0e0b0;opacity:0;transition:opacity .6s;text-align:center;padding:0 12px}#cine .cap.show{opacity:1}#cine .cf{position:absolute;inset:0;background:#000;opacity:0;transition:opacity 1s}#cine .cf.black{opacity:1}body.cine #hudL,body.cine #hudR,body.cine #toasts,body.cine #wanted,body.cine #mapwrap,body.cine #menubtn,body.cine #padL,body.cine #padR,body.cine #ctx{visibility:hidden}';
+    st.textContent = '#cine{position:fixed;pointer-events:none;z-index:3}#cine .cb{position:absolute;left:0;right:0;height:0;background:#000;transition:height .7s ease}#cine .t{top:0}#cine .b{bottom:0;display:flex;align-items:center;justify-content:center}#cine.on .cb{height:13%}#cine .cap{font:inherit;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#f0e0b0;opacity:0;transition:opacity .6s;text-align:center;padding:0 12px}#cine .cap.show{opacity:1}#cine .cf{position:absolute;inset:0;background:#000;opacity:0;transition:opacity 1s}#cine .cf.black{opacity:1}body.cine #hudL,body.cine #hudR,body.cine #toasts,body.cine #wanted,body.cine #mapwrap,body.cine #menubtn,body.cine #padL,body.cine #padR,body.cine #ctx{visibility:hidden}';
     document.head.appendChild(st);
     document.body.appendChild(el);
     const fit = () => { const v = document.querySelector('#view canvas') || document.querySelector('#view') || document.querySelector('canvas'); if (!v) return; const r = v.getBoundingClientRect(); Object.assign(el.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' }); };
@@ -17100,6 +17100,8 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   // ---------------------------------------------------------------- 3. crawling, and headlights
   OP.update = function (dt) {
     const g = R.game, pl = g.player;
+    // the bars step aside while you're choosing what to say
+    if (this.cineOn) { const el = document.getElementById('cine'); if (el) el.classList.toggle('on', !g.ui.sheetOpen); }
     for (const wt of this.waits.slice()) { wt.t -= dt; if (wt.t <= 0) { this.waits.splice(this.waits.indexOf(wt), 1); wt.r(); } }
     if (this.asking) { this.asking.t += dt; if (this.asking.t > 0.6 && !g.ui.sheetOpen) this.asking.pick(0); }
     this.stepCars(dt);
@@ -17155,14 +17157,14 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     await this.wait(1.4);
     g.audio.sfx('bump');
     const dp = R.campaign.donOf(fam);
-    const drv = g.actors.makeHuman(car.x + 10, car.y - 10, { arch: 'tough', tag: 'driver', look: { fem: false, age: 40 } });
+    const drv = g.actors.makeHuman(car.x + 10, car.y - 10, { arch: 'tough', tag: 'driver' });
     drv.keep = true; drv.strangerName = 'Driver'; drv.look.hatKind = 'fedora'; drv.look.hatCol = '#1a1a1a'; drv.scripted = true;
     const walkTo = async (h, x, y, t) => { for (let k = 0; k < t * 20 && h && R.dist(h.x, h.y, x, y) > 12; k++) { const d = R.dist(h.x, h.y, x, y); g.actors.moveActor(h, (x - h.x) / d * 40, (y - h.y) / d * 40, 0.05); h.state = 'idle'; h.timer = 1e9; await this.wait(0.05); } };
     await walkTo(drv, pl.x + 14, pl.y - 4, 3);
     await this.say(drv, 'This one\'s still breathing, boss.');
     let don = null;
     if (dp && dp.alive) { if (dp.actor && !dp.actor.dead) g.actors.remove(dp.actor); don = g.life.spawnPerson(dp, car.x - 10, car.y - 10); if (don) { don.keep = true; don.scripted = true; don.state = 'idle'; don.timer = 1e9; } }
-    if (don) { await walkTo(don, pl.x - 12, pl.y - 6, 4); await this.say(don, 'Well. Look at this.'); await this.say(don, 'Two in him and he\'s still going. That\'s a kind of talent.'); await this.say(don, 'Put him in the back. Careful with the upholstery.'); }
+    if (don) { await walkTo(don, pl.x - 26, pl.y - 14, 4); await this.say(don, 'Well. Look at this.'); await this.say(don, 'Two in him and he\'s still going. That\'s a kind of talent.'); await this.say(don, 'Put him in the back. Careful with the upholstery.'); }
     await this.fade(true);
     for (const h of [drv, don]) if (h) g.actors.remove(h);
     g.traffic.remove(car);
@@ -17257,6 +17259,9 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       if (L) { this.stick.x = L.x; this.stick.y = L.y; for (const k in this.pressedA) this.pressedA[k] = false; for (const k in this.heldA) this.heldA[k] = false; }
     };
     const U0 = R.UI.prototype;
+    // no "A: LEAVE" prompts while a scene has the controls
+    const PPc = R.Player.prototype, pca = PPc.contextAction;
+    PPc.contextAction = function () { if (OP.lock) return null; return pca.apply(this, arguments); };
     // while a scene has the controls, the script decides what hurts you
     const PP = R.Player.prototype, ph = PP.hurt, pk = PP.knock;
     PP.hurt = function () { if (OP.lock || OP.riding || OP.active) return; return ph.apply(this, arguments); };

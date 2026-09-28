@@ -41,35 +41,48 @@ const clearStory = async () => { for (let i = 0; i < 6; i++) { const vis = await
 // ---------------------------------------------------------------- 1. the opening, played
 await p.goto(root);
 await p.waitForSelector('#btnNew:not([hidden])', { timeout: 60000 });
-await p.click('#btnNew'); await wait(700);
-await shot('01_name');
+await p.click('#btnNew');
+// the ride: the gunmen ask your name in the car
+await wait(1500); await shot('01_the_ride');
+await p.waitForSelector('#nameGo', { timeout: 30000 });
+await shot('02_name_in_car');
 // an NPC tries to talk to you while you're naming yourself: the sheet must survive
 const held = await ev(() => { const ui = R.game.ui; ui.openSheet('talk', '<p>hi</p>'); ui.closeSheet(); return ui.sheetOpen === 'name' && !!document.querySelector('#nameGo'); });
 note(`Name entry survives NPC talk attempts: ${held}.`);
 await p.fill('input[data-k="first"]', 'Vito'); await p.fill('input[data-k="last"]', 'Scalise'); await p.fill('input[data-k="nick"]', 'Sideburns');
-await p.click('#nameGo'); await wait(800);
-await shot('02_desert_card');
-await clearStory(); await wait(600);
-await shot('03_desert_crawl');
+await p.click('#nameGo');
+// the walk, the last words, the shots
+const visOpts = async () => { const o = await p.$$('.opt'); const v = []; for (const e of o) if (await e.isVisible()) v.push(e); return v; };
+for (let i = 0; i < 60; i++) {
+  const s = await ev(() => ({ stage: R.opening.scene && R.opening.scene.stage, crawl: !!R.game.player.crawling, lock: !!R.opening.lock, dead: R.game.player.dead }));
+  if (s.dead) { note('Opening: the player DIED during the scene.'); break; }
+  if (s.stage === 1 && !this_walk) { var this_walk = 1; await shot('03_the_walk'); }
+  const o = await visOpts();
+  if (o.length) { await shot('04_last_words'); const eye = []; for (const e of o) if (/eye/.test(await e.textContent())) eye.push(e); await (eye[0] || o[0]).click(); await wait(2600); await shot('05_shots'); continue; }
+  if (s.crawl && !s.lock) break;
+  await wait(500);
+}
+await shot('06_desert_crawl');
 const road = await ev(() => R.opening.road && { x: R.opening.road.x * 16 + 8, y: R.opening.road.y * 16 + 8 });
 const start = await ev(() => ({ x: R.game.player.x, y: R.game.player.y }));
 if (road) {
   const d0 = Math.hypot(road.x - start.x, road.y - start.y);
-  const t0 = Date.now(); await walkTo(road.x, road.y, 9000);
+  const t0 = Date.now(); await walkTo(road.x, road.y, 12000);
   const d1 = await ev(([x, y]) => Math.hypot(x - R.game.player.x, y - R.game.player.y), [road.x, road.y]);
-  note(`Opening crawl: ${Math.round(d0 / 16)} tiles to the highway; after 9s of crawling ${Math.round(d1 / 16)} tiles left (${((d0 - d1) / 16 / ((Date.now() - t0) / 1000)).toFixed(1)} tiles/s).`);
-  if (d1 > 20) { await ev(([x, y]) => R.game.player.place(x, y + 20), [road.x, road.y]); await walkTo(road.x, road.y, 3000); }
-  await wait(600); await shot('04_headlights');
+  note(`Opening crawl: ${Math.round(d0 / 16)} tiles back to the highway; after 12s of crawling ${Math.round(d1 / 16)} tiles left (${((d0 - d1) / 16 / ((Date.now() - t0) / 1000)).toFixed(2)} tiles/s).`);
+  if (!(await ev(() => R.opening.pickedUp))) { await ev(([x, y]) => R.game.player.place(x, y), [road.x, road.y]); }
+  await wait(3500); await shot('07_headlights');
 }
-for (let i = 0; i < 30; i++) {
-  const st = await ev(() => ({ cut: !!R.game.cutscene, job: !!R.game.jobs.active, story: (() => { const s = document.querySelector('#story'); return s && s.offsetParent !== null; })() }));
-  if (process.env.TRACE) console.log('loop', i, JSON.stringify(st), await ev(() => R.game.ui.sheetOpen));
-  if (!st.cut && st.job && !st.story) break;
-  if (st.story) { await p.click('#story button').catch(() => {}); await wait(300); continue; }
-  const o = await p.$$('#sheet .opt, .sheet .opt'); if (o.length) { await o[i % o.length].click().catch(() => {}); }
-  await wait(350);
+// the don's car, then the back room conversation
+for (let i = 0; i < 120; i++) {
+  const st = await ev(() => ({ cine: !!R.opening.cineOn, job: !!R.game.jobs.active, dead: R.game.player.dead, room: !!R.game.player.room }));
+  if (st.dead) { note('Opening: the player DIED before the back room.'); break; }
+  if (!st.cine && st.job) break;
+  if (st.room && !this_room) { var this_room = 1; await wait(1500); await shot('08_backroom'); }
+  const o = await visOpts(); if (o.length) { await o[i % o.length].click().catch(() => {}); }
+  await wait(500);
 }
-await wait(500); await shot('05_backroom');
+await wait(500); await shot('09_first_job');
 const opening = await ev(() => ({ fam: R.game.player.family, room: R.game.player.room && R.game.player.room.b.name, job: R.game.jobs.active && R.game.jobs.active.title }));
 note(`Opening result: taken in by the ${opening.fam}s, in ${opening.room}, first job "${opening.job}".`);
 
