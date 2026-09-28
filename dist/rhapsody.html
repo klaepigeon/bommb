@@ -10107,8 +10107,9 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     baseDraw.call(this, g, x, y, dir, walk, look, st);
     if (st.down || st.scale || st.crouch || st.alpha != null) return;
     const seed = (look.seedStr || '').length * 7 + 3;
-    // bruises on the face
-    if (w.bruise > 0.05) {
+    const d8 = A.dir8(dir, st.ang), backTurned = d8 === 5 || d8 === 6 || d8 === 7;
+    // bruises on the face, when you can see the face
+    if (w.bruise > 0.05 && !backTurned) {
       g.globalAlpha = Math.min(0.85, w.bruise);
       g.fillStyle = '#5a2a5e';
       g.fillRect(X - 3 + (seed % 3), Y - 17, 2, 1);
@@ -14812,14 +14813,29 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     if (!k) return;
     w.marks = w.marks || [];
     const face = k === 'bruise' ? R.rng() < 0.6 : R.rng() < 0.15;
-    w.marks.push({ k, x: R.rng.int(-3, 2), y: face ? R.rng.int(-18, -13) : R.rng.int(-10, -5), t: g.clock.t, n: amt > 30 ? 2 : 1 });
+    // which side of them it landed on: shot in the back, cut across the chest
+    const side = face ? 'front' : (source && source.x != null && a.ang != null ? (Math.cos(Math.atan2(source.y - a.y, source.x - a.x) - a.ang) > -0.2 ? 'front' : 'back') : R.rng() < 0.65 ? 'front' : 'back');
+    w.marks.push({ k, x: R.rng.int(-3, 2), y: face ? R.rng.int(-18, -13) : R.rng.int(-10, -5), t: g.clock.t, n: amt > 30 ? 2 : 1, side });
     if (w.marks.length > 9) w.marks.shift();
   };
   const PAL = { hole: ['#2a0604', '#6a1410'], cut: ['#a8201a', '#e05048'], burn: ['#1a1410', '#3a2a20'] };
-  BU.drawMarks = function (g, X, Y, w) {
+  // d8: 0 right, 1 down-right, 2 down (facing us), 3 down-left, 4 left, 5 up-left, 6 up (back to us), 7 up-right
+  BU.drawMarks = function (g, X, Y, w, d8) {
     const now = G().clock.t;
+    const front = d8 == null || d8 === 1 || d8 === 2 || d8 === 3, back = d8 === 5 || d8 === 6 || d8 === 7, side = d8 === 0 || d8 === 4;
+    const toward = d8 === 0 || d8 === 1 || d8 === 7 ? 1 : -1; // which way a side view faces
     for (const m of w.marks) {
-      const x = X + m.x, y = Y + m.y, age = now - m.t;
+      const age = now - m.t, ms = m.side || 'front';
+      // stitched up and scarring over: open wounds close in two days
+      if (m.k !== 'bruise' && age > 2880) continue;
+      // only the side of the body you can see
+      if (ms === 'front' && !(front || side)) continue;
+      if (ms === 'back' && !(back || side)) continue;
+      if (ms === 'back' && m.y < -12) continue;
+      let mx = m.x;
+      if (side) mx = Math.max(-1, Math.min(1, Math.round(m.x / 3))) + (ms === 'front' ? toward : -toward) * 2; // squeezed onto the profile
+      else if (back) mx = -m.x; // the mirror of where it went in
+      const x = X + mx, y = Y + m.y;
       if (m.k === 'hole') {
         // a hole, and a stain that runs down the shirt while they bleed
         const run = Math.min(5, 1 + Math.floor(age / 8) + (w.bleed > 0.2 ? 2 : 0));
@@ -14842,7 +14858,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       }
     }
     // a black eye and a split lip for the badly beaten
-    if (w.bruise > 0.5) { g.fillStyle = '#3a1a4a'; g.fillRect(X - 3, Y - 17, 2, 1); g.fillStyle = '#a8201a'; g.fillRect(X, Y - 14, 1, 1); }
+    if (w.bruise > 0.5 && (front || side)) { const ex = side ? X + toward * 2 : X - 3; g.fillStyle = '#3a1a4a'; g.fillRect(ex, Y - 17, 2, 1); g.fillStyle = '#a8201a'; g.fillRect(side ? X + toward * 3 : X, Y - 14, 1, 1); }
   };
 
   // ---------------------------------------------------------------- corpses, rebuilt pixel by pixel
@@ -14980,6 +14996,13 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     // record every wound
     const GO = R.gore, hurt = GO.hurt;
     GO.hurt = function (a, amt, source, kind) { hurt.call(this, a, amt, source, kind); if (on()) BU.mark(a, amt, source, kind); };
+    // once you're patched up (a hospital, a doctor, a bandage and time) the wounds close
+    const PU = R.Player.prototype.update;
+    R.Player.prototype.update = function (dt) {
+      const r = PU.apply(this, arguments), w = this.wnd;
+      if (w && w.marks && w.marks.length && this.hp >= this.maxHp && !(w.bleed > 0.02)) { w.marks = w.marks.filter((m) => m.k === 'bruise'); w.bruise = Math.min(w.bruise || 0, 0.3); }
+      return r;
+    };
     const PP = R.Player.prototype, pHurt = PP.hurt;
     PP.hurt = function (amt, src, kind) { const hp0 = this.hp; const r = pHurt.call(this, amt, src, kind); if (this.hp < hp0 && on()) BU.mark(this, amt, src, kind); return r; };
     // point-blank shotgun: the head goes
@@ -15014,7 +15037,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       look._w = w.marks && w.marks.length ? null : w;
       draw.call(this, g, x, y, dir, walk, look, st);
       look._w = w;
-      if (!st.down && !st.scale && !st.crouch && st.alpha == null && w.marks && w.marks.length) BU.drawMarks(g, X, Y, w);
+      if (!st.down && !st.scale && !st.crouch && st.alpha == null && w.marks && w.marks.length) BU.drawMarks(g, X, Y, w, A.dir8(dir, st.ang));
     };
     // bodies over a shoulder look like themselves
     R.bodies.drawCarried = function (g, pl) { const a = pl.carrying; if (a) A.drawPerson(g, pl.x + 1, pl.y - 12, 2, 0, a.look, { down: true }); };
@@ -16344,10 +16367,10 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   const NICK = ['The Mook', 'Knuckles', 'Two-Tone', 'Lucky', 'The Kid', 'Slick', 'Spats', 'Ice', 'Doc', 'Cadillac', 'Sugar', 'The Ghost', 'Lefty', 'Sideburns'];
 
   // ---------------------------------------------------------------- 1. who are you
-  OP.nameSheet = function (g, done) {
+  OP.nameSheet = function (g, done, title) {
     const pl = g.player, ui = g.ui, pick = (a) => a[(Math.random() * a.length) | 0];
     const vals = { first: pick(FIRST), last: pick(LAST), nick: pick(NICK) };
-    const html = `${ui.header('Who are you?')}<div class="body"><p style="font-size:13px;color:var(--brown);margin:0 0 4px">A name the papers will spell wrong for years.</p>
+    const html = `${ui.header(title || 'Who are you?')}<div class="body"><p style="font-size:13px;color:var(--brown);margin:0 0 4px">A name the papers will spell wrong for years.</p>
       ${[['first', 'First name'], ['last', 'Last name'], ['nick', 'They call you']].map(([k, l]) => `<div style="display:flex;gap:6px;align-items:center;margin:5px 0"><label style="width:6.5em;font-size:13px">${l}</label><input data-k="${k}" maxlength="18" value="${esc(vals[k])}" style="flex:1;min-width:0;font:inherit;font-size:16px;padding:4px 8px;border:3px solid var(--ink);background:#fffaf0;color:var(--ink)"><button class="chip c-talk" data-roll="${k}">🎲</button></div>`).join('')}
       <div class="opts" style="margin-top:8px"><button class="opt go" id="nameGo">That's me</button></div></div>`;
     const s = ui.openSheet('name', html, true);
@@ -16362,106 +16385,193 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     });
   };
 
-  // ---------------------------------------------------------------- 2. the desert
+  // ---------------------------------------------------------------- cinema: letterbox, captions, fades
+  // Everything in the opening happens in the game world. These are the tools: black bars,
+  // a caption in the lower bar, a fade, dialogue in the usual subtitle bar and speech
+  // bubbles, and waits that run on game time (they freeze while a menu is open).
+  OP.waits = [];
+  OP.wait = function (s) { return new Promise((r) => this.waits.push({ t: s, r })); };
+  OP.cineEl = function () {
+    let el = document.getElementById('cine');
+    if (el) return el;
+    el = document.createElement('div'); el.id = 'cine';
+    el.innerHTML = '<div class="cb t"></div><div class="cb b"><span class="cap"></span></div><div class="cf"></div>';
+    const st = document.createElement('style');
+    st.textContent = '#cine{position:fixed;pointer-events:none;z-index:40}#cine .cb{position:absolute;left:0;right:0;height:0;background:#000;transition:height .7s ease}#cine .t{top:0}#cine .b{bottom:0;display:flex;align-items:center;justify-content:center}#cine.on .cb{height:13%}#cine .cap{font:inherit;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#f0e0b0;opacity:0;transition:opacity .6s;text-align:center;padding:0 12px}#cine .cap.show{opacity:1}#cine .cf{position:absolute;inset:0;background:#000;opacity:0;transition:opacity 1s}#cine .cf.black{opacity:1}body.cine #hudL,body.cine #hudR,body.cine #toasts,body.cine #wanted{visibility:hidden}';
+    document.head.appendChild(st);
+    document.body.appendChild(el);
+    const fit = () => { const v = document.querySelector('#view canvas') || document.querySelector('#view') || document.querySelector('canvas'); if (!v) return; const r = v.getBoundingClientRect(); Object.assign(el.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' }); };
+    fit(); window.addEventListener('resize', fit); this.fit = fit;
+    return el;
+  };
+  OP.cine = function (on) { const el = this.cineEl(); this.fit(); el.classList.toggle('on', !!on); document.body.classList.toggle('cine', !!on); this.cineOn = !!on; if (!on) this.caption(''); };
+  OP.caption = function (text) { const c = this.cineEl().querySelector('.cap'); if (!text) { c.classList.remove('show'); return; } c.textContent = text; c.classList.add('show'); };
+  OP.fade = function (black) { this.cineEl().querySelector('.cf').classList.toggle('black', !!black); return new Promise((r) => setTimeout(r, 1000)); };
+  // a line of dialogue: a bubble if we can see them, the subtitle bar either way
+  OP.say = function (who, text, name) {
+    const g = R.game;
+    if (who && !who.inCar && !who.hidden) g.actors.say(who, text, 2 + text.length * 0.05);
+    else g.ui.subtitle(name || (who && g.actors.displayName(who)) || '', text);
+    return this.wait(1.3 + text.length * 0.045);
+  };
+  // a choice in the dialogue sheet; closing it picks the first answer
+  OP.ask = function (title, opts) {
+    const g = R.game;
+    return new Promise((res) => {
+      let done = false;
+      const pick = (i) => { if (done) return; done = true; this.asking = null; if (opts[i].fn) opts[i].fn(); res(i); };
+      g.ui.choice(title, opts.map((o, i) => ({ label: o.label, small: o.small, cls: o.cls, fn: () => pick(i) })));
+      this.asking = { t: 0, pick };
+    });
+  };
+
+  // ---------------------------------------------------------------- roads
+  OP.isRoad = function (x, y) { return !!D.roadTile[R.game.world.t(x, y)]; };
+  // follow the road n tiles from (x,y) heading (dx,dy), turning where it bends
+  OP.followRoad = function (x, y, dx, dy, n) {
+    for (let i = 0; i < n; i++) {
+      if (this.isRoad(x + dx, y + dy)) { x += dx; y += dy; continue; }
+      const l = [dy, -dx], r = [-dy, dx];
+      if (this.isRoad(x + l[0], y + l[1])) { [dx, dy] = l; x += dx; y += dy; continue; }
+      if (this.isRoad(x + r[0], y + r[1])) { [dx, dy] = r; x += dx; y += dy; continue; }
+      break;
+    }
+    return { x, y, dx, dy };
+  };
+  // a car that drives itself along the road: the intro doesn't trust the traffic AI with its actors
+  OP.drive = function (car, tile, dx, dy, speed) { car.cine = { tx: tile.x, ty: tile.y, dx, dy, speed, want: speed }; car.parked = true; car.lights = true; car.speed = 0; };
+  OP.stepCars = function (dt) {
+    for (const v of R.game.traffic.list) {
+      const c = v.cine;
+      if (!c || v.removed) continue;
+      c.speed += Math.sign(c.want - c.speed) * Math.min(Math.abs(c.want - c.speed), 90 * dt);
+      if (c.speed < 0.5) { v.braking = c.want === 0; continue; }
+      const nx = (c.tx + c.dx) * TS + 8, ny = (c.ty + c.dy) * TS + 8, d = Math.hypot(nx - v.x, ny - v.y), step = c.speed * dt;
+      if (d <= step) { const n = this.followRoad(c.tx, c.ty, c.dx, c.dy, 1); if (n.x === c.tx && n.y === c.ty) { c.want = 0; c.speed = 0; continue; } c.tx = n.x - n.dx; c.ty = n.y - n.dy; c.tx += n.dx; c.ty += n.dy; c.dx = n.dx; c.dy = n.dy; v.x = nx; v.y = ny; }
+      else { v.x += (nx - v.x) / d * step; v.y += (ny - v.y) / d * step; }
+      const want = Math.atan2(c.dy, c.dx); let da = want - v.angle; while (da > Math.PI) da -= Math.PI * 2; while (da < -Math.PI) da += Math.PI * 2; v.angle += da * Math.min(1, dt * 6);
+      v.vx = Math.cos(v.angle) * c.speed; v.vy = Math.sin(v.angle) * c.speed;
+    }
+  };
+
+  // ---------------------------------------------------------------- 1. the ride
   OP.run = function (g) {
     const pl = g.player;
     pl.stats.startT = g.clock.t;
     for (const a of g.actors.list.slice()) if (a !== pl && !a.keep) g.actors.remove(a);
-    this.nameSheet(g, () => this.desert(g));
-  };
-  OP.desert = function (g) {
-    const pl = g.player, w = g.world;
     if (pl.room) g.interiors.exit();
-    const dust = w.cities.find((c) => c.id === 'dust') || w.cities[2];
-    // a stretch of highway outside Dustwater, and a spot of sand a way off it
+    const road = this.findRoad(g);
+    if (!road) return this.nameSheet(g, () => this.wake(g)); // a world with no roads at all
+    this.ride(g, road);
+  };
+  OP.findRoad = function (g) {
+    const w = g.world, dust = w.cities.find((c) => c.id === 'dust') || w.cities[2];
     const T = D.T, desert = (x, y) => { let n = 0; for (let k = 0; k < 8; k++) { const t = w.t(x + ((k * 7) % 11) - 5, y + ((k * 5) % 9) - 4); if (t === T.DESERT || t === T.SAND || t === T.DIRT) n++; } return n >= 5; };
-    const open = (x, y) => D.roadTile[w.t(x, y)] && !w.cityAt(x, y) && !w.inCityRect(x, y, 10);
+    // a straight stretch of highway, out of town, with sand either side
+    const open = (x, y) => this.isRoad(x, y) && !w.cityAt(x, y) && !w.inCityRect(x, y, 10) && ((this.isRoad(x + 1, y) && this.isRoad(x - 1, y)) || (this.isRoad(x, y + 1) && this.isRoad(x, y - 1)));
     let road = null;
     for (let r = 14; r < 160 && !road; r += 6) for (let k = 0; k < 6 && !road; k++) road = w.findNear(dust.cx, dust.cy, r, r + 6, (x, y) => open(x, y) && desert(x, y));
     for (let r = 14; r < 160 && !road; r += 12) road = w.findNear(dust.cx, dust.cy, r, r + 12, open);
-    if (!road) for (let i = 0; i < 4000 && !road; i++) { const x = (Math.random() * w.W) | 0, y = (Math.random() * w.H) | 0; if (open(x, y)) road = { x, y }; }
-    // any road out of town will do
-    if (!road) for (let i = 0; i < 20000 && !road; i++) { const x = (Math.random() * w.W) | 0, y = (Math.random() * w.H) | 0; if (D.roadTile[w.t(x, y)] && !w.cityAt(x, y)) road = { x, y }; }
-    const clear = (x, y) => !w.solidPed(x, y) && !w.isWater(x, y) && !D.roadTile[w.t(x, y)] && !w.cityAt(x, y);
-    let spot = null;
-    if (road) for (let r = 10; r <= 22 && !spot; r += 2) for (let k = 0; k < 16 && !spot; k++) { const a = k / 16 * Math.PI * 2, x = Math.round(road.x + Math.cos(a) * r), y = Math.round(road.y + Math.sin(a) * r); if (clear(x, y) && clear(x, y - 1) && clear(x, y - 2)) spot = { x, y }; }
-    if (!road || !spot) return this.wake(g); // a world with no roads at all
-    this.road = road;
-    g.clock.t = Math.floor(g.clock.t / 1440) * 1440 + 4 * 60 + 50; // before dawn
-    pl.cash = 0; pl.inv.weapons = { fists: 1 }; pl.weapon = 'fists'; pl.weaponOut = false;
-    this.stage(g, spot);
+    for (let i = 0; i < 30000 && !road; i++) { const x = (Math.random() * w.W) | 0, y = (Math.random() * w.H) | 0; if (open(x, y)) road = { x, y }; }
+    return road;
   };
-
-  // ---------------------------------------------------------------- 2a. the shooting
-  // Two men, a car with its lights off, a walk into the sand. You get one thing to say.
-  OP.stage = function (g, spot) {
-    const pl = g.player, sx = spot.x * TS + 8, sy = spot.y * TS + 8;
-    const st = this.street(g);
-    // two real people from the Coast, so you can find them again someday
+  OP.ride = async function (g, road) {
+    const pl = g.player, st = this.street(g);
+    this.lock = { x: 0, y: 0 };
+    g.clock.t = Math.floor(g.clock.t / 1440) * 1440 + 4 * 60 + 30; // the dead of night
+    pl.cash = 0; pl.inv.weapons = { fists: 1 }; pl.weapon = 'fists'; pl.weaponOut = false; pl.hp = pl.maxHp;
+    // which way the highway runs here, and a start a way back up it
+    let dx = this.isRoad(road.x + 1, road.y) ? 1 : 0, dy = dx ? 0 : 1;
+    // head out of town: whichever way along the highway leads further from the nearest city
+    const w0 = g.world, far = (p) => Math.min(...w0.cities.map((c) => Math.hypot(c.cx - p.x, c.cy - p.y)));
+    if (far(this.followRoad(road.x, road.y, -dx, -dy, 30)) > far(this.followRoad(road.x, road.y, dx, dy, 30))) { dx = -dx; dy = -dy; }
+    const start = this.followRoad(road.x, road.y, -dx, -dy, 4);
+    const car = g.traffic.make('sedan', start.x * TS + 8, start.y * TS + 8, Math.atan2(dy, dx), { parked: true, keep: true, color: '#1c1c20', locked: true });
+    this.drive(car, start, dx, dy, 44);
+    this.car = car;
+    // two men from the Coast, real people you might meet again
     const pool = g.pop.people.filter((p) => p.alive && !p.fem && p.age >= 22 && p.age <= 52 && p.role !== 'cop' && p.role !== 'don' && !p.isDon && !p.actor && !p.faction);
-    const men = [R.rng.pick(pool), null]; men[1] = R.rng.pick(pool.filter((p) => p !== men[0]));
+    const men = [R.rng.pick(pool)]; men.push(R.rng.pick(pool.filter((p) => p !== men[0])));
     st.shooters = men.filter(Boolean).map((p) => p.id);
-    const toRoad = Math.atan2(this.road.y * TS - sy, this.road.x * TS - sx);
-    const car = g.traffic.make('sedan', sx + Math.cos(toRoad) * 40, sy + 30, toRoad + Math.PI, { parked: true, keep: true, color: '#1c1c20', locked: true });
-    pl.place(sx, sy + 12);
-    g.cam.x = pl.x; g.cam.y = pl.y;
-    pl.hp = pl.maxHp;
+    const nameA = men[0] ? men[0].first : 'Driver', nameB = men[1] ? men[1].first : 'The other one';
+    pl.hidden = true; this.riding = car;
+    this.cine(true);
+    this.cineEl().querySelector('.cf').classList.add('black');
+    await this.wait(0.3);
+    this.fade(false);
+    this.caption('Dustwater flats · 4:30 a.m.');
+    await this.wait(3);
+    this.caption('');
+    await this.say(null, 'Quiet back there.', nameA);
+    await this.say(null, 'So. What do they call you, anyway?', nameB);
+    await new Promise((res) => this.nameSheet(g, res, '"So. What do they call you?"'));
+    await this.say(null, `${pl.first}. Huh.`, nameB);
+    await this.say(null, 'Nobody\'s gonna remember that.', nameA);
+    await this.wait(1.2);
+    // out past the last lights, where nobody looks
+    for (let i = 0; i < 300; i++) { const cx = (car.x / TS) | 0, cy = (car.y / TS) | 0; if (!g.world.cityAt(cx, cy) && !g.world.inCityRect(cx, cy, 8)) break; await this.wait(0.1); }
+    await this.say(null, 'Right here\'s good.', nameA);
+    car.cine.want = 0;
+    await this.wait(1.6);
+    // everybody out
+    const stopT = { x: (car.x / TS) | 0, y: (car.y / TS) | 0 };
+    this.road = stopT;
+    const across = car.cine.dx ? [[0, 1], [0, -1]] : [[1, 0], [-1, 0]];
+    const w = g.world, clear = (x, y) => !w.solidPed(x, y) && !w.isWater(x, y) && !this.isRoad(x, y) && !w.cityAt(x, y);
+    let out = across.find(([ax, ay]) => { for (let k = 2; k <= 8; k++) if (!clear(stopT.x + ax * k, stopT.y + ay * k)) return false; return true; }) || across[0];
+    const sx = car.x + out[0] * 16, sy = car.y + out[1] * 16;
+    pl.hidden = false; this.riding = null;
+    pl.place(sx, sy); g.cam.x = pl.x; g.cam.y = pl.y;
     const thugs = men.filter(Boolean).map((p, i) => {
       if (p.actor && !p.actor.dead) g.actors.remove(p.actor);
-      const h = g.life.spawnPerson(p, sx + (i ? 12 : -12), sy + 28);
+      const h = g.life.spawnPerson(p, car.x + (i ? 1 : -1) * 14 + out[0] * 10, car.y + (i ? 1 : -1) * 6 + out[1] * 10);
       if (!h) return null;
-      h.keep = true; h.stay = true; h.state = 'idle'; h.timer = 1e9; h.hostile = false; h.noTalk = true; h.scripted = true;
+      h.keep = true; h.stay = true; h.state = 'idle'; h.timer = 1e9; h.hostile = false; h.scripted = true;
       g.actors.arm(h, i ? 'shotgun' : 'revolver');
       h.look.hatKind = 'fedora'; h.look.hatCol = '#2a2a2a';
       return h;
     }).filter(Boolean);
-    this.scene = { t: 0, stage: 0, car, thugs, sx, sy, toRoad };
-    this.lock = { x: 0, y: 0 };
-    g.ui.toast('Dustwater flats. 4:50 in the morning.', 'warn');
-    if (thugs[0]) g.actors.say(thugs[0], 'Out. Walk. Into the desert, nice and slow.');
+    this.scene = { t: 0, stage: 0, car, thugs, out, sx, sy };
+    g.audio.sfx('bump');
+    if (thugs[0]) await this.say(thugs[0], 'Out. Walk. Into the desert, nice and slow.');
+    this.scene.stage = 1; this.scene.t = 0;
   };
   OP.street = function (g) { const pl = g.player; pl.street = pl.street || {}; return (pl.street.desert = pl.street.desert || {}); };
+
+  // ---------------------------------------------------------------- 2. the walk, the shots
   OP.runScene = function (g, dt) {
-    const sc = this.scene, pl = g.player, [a, b] = sc.thugs;
+    const sc = this.scene, pl = g.player, [a, b] = sc.thugs, [ox, oy] = sc.out;
     sc.t += dt;
-    const follow = (h, ox, oy, spd) => { if (!h || h.dead) return; const tx = pl.x + ox, ty = pl.y + oy, d = Math.hypot(tx - h.x, ty - h.y); if (d > 3) g.actors.moveActor(h, (tx - h.x) / d * spd, (ty - h.y) / d * spd, dt); h.state = 'idle'; h.timer = 1e9; };
-    const face = (h) => { if (h) { h.ang = Math.atan2(pl.y - h.y, pl.x - h.x); h.dir = pl.y < h.y ? 3 : 0; } };
-    if (sc.stage === 0 && sc.t > 1.6) { sc.stage = 1; sc.t = 0; }
-    if (sc.stage === 1) { // the walk
-      this.lock = { x: 0, y: -0.55 };
-      follow(a, -9, 20, 38); follow(b, 9, 22, 38);
-      if (pl.y <= sc.sy - 22 || sc.t > 6) { sc.stage = 2; sc.t = 0; this.lock = { x: 0, y: 0 }; if (b) g.actors.say(b, 'That\'s far enough. Turn around.'); }
+    const follow = (h, bx, px, spd) => { if (!h || h.dead) return; const tx = pl.x - ox * bx + oy * px, ty = pl.y - oy * bx + ox * px, d = Math.hypot(tx - h.x, ty - h.y); if (d > 3) g.actors.moveActor(h, (tx - h.x) / d * spd, (ty - h.y) / d * spd, dt); h.state = 'idle'; h.timer = 1e9; };
+    const face = (h) => { if (h) { h.ang = Math.atan2(pl.y - h.y, pl.x - h.x); h.dir = Math.abs(pl.y - h.y) > Math.abs(pl.x - h.x) ? (pl.y < h.y ? 3 : 0) : pl.x < h.x ? 2 : 1; } };
+    if (sc.stage === 1) { // the walk out into the sand
+      this.lock = { x: ox * 0.55, y: oy * 0.55 };
+      follow(a, 20, -9, 38); follow(b, 22, 9, 38);
+      if (Math.hypot(pl.x - sc.sx, pl.y - sc.sy) > TS * 6 || sc.t > 7) { sc.stage = 2; sc.t = 0; this.lock = { x: 0, y: 0 }; if (b) g.actors.say(b, 'That\'s far enough. Turn around.'); }
     }
     if (sc.stage === 2) {
       face(a); face(b);
-      if (sc.t > 0.35 && sc.t < 0.5) this.lock = { x: 0, y: 0.05 }; else this.lock = { x: 0, y: 0 };
+      this.lock = sc.t > 0.35 && sc.t < 0.5 ? { x: -ox * 0.05, y: -oy * 0.05 } : { x: 0, y: 0 };
       if (sc.t > 1.5 && !sc.asked) { sc.asked = true; this.lastWords(g); }
-      // closed the question without answering: silence is an answer too
-      if (sc.asked && sc.t > 2.5 && !g.ui.sheetOpen) { sc.stage = 3; sc.t = 0; }
     }
-    if (sc.stage === 3) { // the shots
+    if (sc.stage === 3) {
       face(a); face(b);
       if (a) { a.weaponOut = true; a.aiming = true; }
       if (sc.t > 0.2 && !sc.said) { sc.said = true; if (a) g.actors.say(a, sc.lunged ? 'Hold STILL, you son of a—' : 'Nothing personal, kid.'); }
       if (sc.t > 1.4 && !sc.shot1) { sc.shot1 = true; this.shoot(g, a, true); }
-      if (sc.t > 2.0 && !sc.shot2) { sc.shot2 = true; this.shoot(g, a, !sc.lunged); pl.crawling = true; pl.hp = sc.lunged ? 30 : 22; }
+      if (sc.t > 2.0 && !sc.shot2) { sc.shot2 = true; this.shoot(g, a, !sc.lunged); pl.crawling = true; this.dirX = -ox; this.dirY = -oy; pl.hp = sc.lunged ? 30 : 22; }
       if (sc.t > 3.4) { sc.stage = 4; sc.t = 0; if (b) g.actors.say(b, 'Leave him for the buzzards. Come on.'); }
     }
-    if (sc.stage === 4) { // they leave
-      for (const h of sc.thugs) { if (!h || h.removed) continue; const d = Math.hypot(sc.car.x - h.x, sc.car.y - h.y); if (sc.t > 1 && d > 10) g.actors.moveActor(h, (sc.car.x - h.x) / d * 45, (sc.car.y - h.y) / d * 45, dt); if (d <= 12 || sc.t > 5) { h.weaponOut = false; g.actors.remove(h); h.removed = true; } }
-      if (sc.thugs.every((h) => !h || h.removed)) {
-        if (!sc.driving) { sc.driving = 0; sc.car.lights = true; g.audio.sfx('horn'); }
-        sc.driving += dt;
-        const ang = sc.toRoad; sc.car.angle = ang; sc.car.x += Math.cos(ang) * 70 * dt; sc.car.y += Math.sin(ang) * 70 * dt;
-        if (sc.driving > 3.2) { g.traffic.remove(sc.car); sc.stage = 5; this.afterShots(g); }
-      }
+    if (sc.stage === 4) { // they walk back and drive off
+      for (const h of sc.thugs) { if (!h || h.removed) continue; const d = Math.hypot(sc.car.x - h.x, sc.car.y - h.y); if (sc.t > 1 && d > 10) g.actors.moveActor(h, (sc.car.x - h.x) / d * 45, (sc.car.y - h.y) / d * 45, dt); if (d <= 12 || sc.t > 7) { h.weaponOut = false; g.actors.remove(h); h.removed = true; } }
+      if (sc.thugs.every((h) => !h || h.removed) && !sc.gone) { sc.gone = true; sc.car.cine.want = 80; g.audio.sfx('horn'); setTimeout(() => { if (!sc.car.removed) g.traffic.remove(sc.car); }, 6000); this.afterShots(g); }
     }
   };
   OP.lastWords = function (g) {
     const sc = this.scene, pl = g.player, [a, b] = sc.thugs, st = this.street(g);
     const say = (h, t) => h && g.actors.say(h, t);
     const go = () => { sc.stage = 3; sc.t = 0; };
-    g.ui.choice('"Any last words?"', [
+    this.ask('"Any last words?"', [
       { label: '"Who sent you?"', small: 'Maybe they slip', fn: () => { const fams = D.cities.map((c) => c.family); st.sentBy = R.rng.pick(fams); say(a, `Doesn't matter now. But the ${st.sentBy}s say hello.`); go(); } },
       { label: 'Look them in the eye', small: 'Remember these faces', fn: () => { st.faces = true; say(b, 'Quit staring at me.'); go(); } },
       { label: '"Please. I got money. I can get money—"', small: 'Beg', fn: () => { say(a, 'No you don\'t. We checked.'); go(); } },
@@ -16483,22 +16593,37 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       pl.bloody = 1; if (R.butcher) R.butcher.mark(pl, 20, h, 'bullet');
     } else g.fx.sparks(pl.x + 10, pl.y + 4, 6);
   };
-  OP.afterShots = function (g) {
-    const pl = g.player, road = this.road;
-    this.scene = null; this.lock = null;
+  OP.afterShots = async function (g) {
+    const pl = g.player;
     pl.crawling = true; pl.bloody = 1; pl.gutWound = true;
-    g.waypoint = { x: road.x * TS + 8, y: road.y * TS + 8 };
-    g.ui.story(`${pl.first} "${pl.nick}" ${pl.last}`, 'Two holes in you, one in the gut. The taillights shrink to nothing.\n\nThey think you\'re dead. You\'re not. Not yet.\n\nThere\'s a highway out there somewhere. Crawl.', () => g.ui.toast('Crawl to the highway. Follow the gold line.', 'warn'));
+    await this.wait(2.5);
+    this.caption('Two holes in you. One in the gut.');
+    await this.wait(3);
+    this.caption('They think you\'re dead.');
+    await this.wait(2.6);
+    this.caption('The highway. Crawl.');
+    await this.wait(2.2);
+    this.scene = null; this.lock = null;
+    this.cine(false);
+    const r = this.road;
+    g.waypoint = { x: r.x * TS + 8, y: r.y * TS + 8 };
+    g.ui.toast('Crawl back to the highway. Follow the gold line.', 'warn');
   };
+
+  // ---------------------------------------------------------------- 3. crawling, and headlights
   OP.update = function (dt) {
     const g = R.game, pl = g.player;
+    for (const wt of this.waits.slice()) { wt.t -= dt; if (wt.t <= 0) { this.waits.splice(this.waits.indexOf(wt), 1); wt.r(); } }
+    if (this.asking) { this.asking.t += dt; if (this.asking.t > 0.6 && !g.ui.sheetOpen) this.asking.pick(0); }
+    this.stepCars(dt);
+    if (this.riding) { pl.x = this.riding.x; pl.y = this.riding.y; }
     if (this.scene) return this.runScene(g, dt);
     if (!pl.crawling) return;
     pl.hp = Math.max(8, pl.hp); // you're too stubborn to die out here
     // which way you're dragging yourself
     const dx = pl.x - (this.lastX == null ? pl.x : this.lastX), dy = pl.y - (this.lastY == null ? pl.y : this.lastY);
     this.lastX = pl.x; this.lastY = pl.y;
-    if (Math.abs(dx) > 0.02 || Math.abs(dy) > 0.02) { this.dirX = dx; this.dirY = dy; this.faceL = dx < 0; }
+    if (!this.lock && (Math.abs(dx) > 0.02 || Math.abs(dy) > 0.02)) { this.dirX = dx; this.dirY = dy; }
     const moving = Math.hypot(dx, dy) > 0.02;
     // the gut wound leaves a smear behind you, and a pool when you stop to rest
     if (g.settings.gore !== false) {
@@ -16515,80 +16640,119 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       }
       if (moving) this.pool = 1.5;
     }
-    const r = this.road;
-    if (r && Math.hypot(pl.x / TS - r.x, pl.y / TS - r.y) < 2.2 && !this.pickedUp) { this.pickedUp = true; this.pickup(g); }
+    const tx = (pl.x / TS) | 0, ty = (pl.y / TS) | 0;
+    if (!this.pickedUp && !this.lock && (this.isRoad(tx, ty) || (this.road && Math.hypot(pl.x / TS - this.road.x, pl.y / TS - this.road.y) < 1.6))) { this.pickedUp = true; this.pickup(g); }
   };
-  OP.pickup = function (g) {
+  OP.pickup = async function (g) {
     const pl = g.player;
     const fams = D.cities.map((c) => c.family);
     const fam = fams[(Math.random() * fams.length) | 0];
     const city = g.jobs.cityOfFamily(fam), club = city.buildings.find((b) => b && b.type === 'social');
-    const don = D.cities.find((c) => c.family === fam).don;
     pl.family = fam; g.homeClub = club.id;
     g.waypoint = null;
-    // a long black car pulls over
-    const car = g.traffic.make('sedan', pl.x - 60, pl.y + 4, 0, { parked: false, keep: true, color: '#141418' });
-    if (car) { car.vx = 60; car.driver = null; }
-    g.ui.story('Headlights', `A long black car slows, stops. A door opens. Expensive shoes on the gravel.\n\n"This one's still breathing, boss."\n\nA man in a camel coat crouches over you. ${don}. You know the face from the newspapers.\n\n"Put him in the back. Careful with the upholstery."`, () => {
-      if (car) g.traffic.remove(car);
-      pl.crawling = false;
-      this.wake(g, club, fam, don);
-    });
+    this.lock = { x: 0, y: 0 };
+    this.cine(true);
+    // headlights up the highway
+    const tx = (pl.x / TS) | 0, ty = (pl.y / TS) | 0;
+    const on = this.isRoad(tx, ty) ? { x: tx, y: ty } : this.road;
+    const hdx = this.isRoad(on.x + 1, on.y) || this.isRoad(on.x - 1, on.y) ? 1 : 0, hdy = hdx ? 0 : 1;
+    const from = this.followRoad(on.x, on.y, -hdx, -hdy, 14);
+    const car = g.traffic.make('sedan', from.x * TS + 8, from.y * TS + 8, Math.atan2(-from.dy, -from.dx), { parked: true, keep: true, color: '#141418', locked: true });
+    this.drive(car, from, -from.dx, -from.dy, 70);
+    await this.wait(1.5);
+    this.caption('Headlights.');
+    // it slows when it reaches you
+    for (let i = 0; i < 200 && R.dist(car.x, car.y, pl.x, pl.y) > 34; i++) await this.wait(0.05);
+    car.cine.want = 0;
+    this.caption('');
+    await this.wait(1.4);
+    g.audio.sfx('bump');
+    const dp = R.campaign.donOf(fam);
+    const drv = g.actors.makeHuman(car.x + 10, car.y - 10, { arch: 'tough', tag: 'driver', look: { fem: false, age: 40 } });
+    drv.keep = true; drv.strangerName = 'Driver'; drv.look.hatKind = 'fedora'; drv.look.hatCol = '#1a1a1a'; drv.scripted = true;
+    const walkTo = async (h, x, y, t) => { for (let k = 0; k < t * 20 && h && R.dist(h.x, h.y, x, y) > 12; k++) { const d = R.dist(h.x, h.y, x, y); g.actors.moveActor(h, (x - h.x) / d * 40, (y - h.y) / d * 40, 0.05); h.state = 'idle'; h.timer = 1e9; await this.wait(0.05); } };
+    await walkTo(drv, pl.x + 14, pl.y - 4, 3);
+    await this.say(drv, 'This one\'s still breathing, boss.');
+    let don = null;
+    if (dp && dp.alive) { if (dp.actor && !dp.actor.dead) g.actors.remove(dp.actor); don = g.life.spawnPerson(dp, car.x - 10, car.y - 10); if (don) { don.keep = true; don.scripted = true; don.state = 'idle'; don.timer = 1e9; } }
+    if (don) { await walkTo(don, pl.x - 12, pl.y - 6, 4); await this.say(don, 'Well. Look at this.'); await this.say(don, 'Two in him and he\'s still going. That\'s a kind of talent.'); await this.say(don, 'Put him in the back. Careful with the upholstery.'); }
+    await this.fade(true);
+    for (const h of [drv, don]) if (h) g.actors.remove(h);
+    g.traffic.remove(car);
+    pl.crawling = false;
+    this.wake(g, club, fam);
   };
 
-  // ---------------------------------------------------------------- 3. the back room
-  OP.wake = function (g, club, fam, don) {
+  // ---------------------------------------------------------------- 4. the back room
+  OP.wake = async function (g, club, fam) {
     const pl = g.player;
     fam = fam || pl.family; club = club || g.world.buildings[g.homeClub];
-    don = don || (D.cities.find((c) => c.family === fam) || {}).don || 'the Don';
     const dn = g.jobs.donName(fam);
+    this.lock = { x: 0, y: 0 };
+    this.cine(true);
+    this.cineEl().querySelector('.cf').classList.add('black');
     g.clock.skip(60 * 26);
-    pl.hp = pl.maxHp; pl.bloody = 0; if (pl.wnd) pl.wnd.bleed = 0;
+    pl.hp = pl.maxHp; pl.bloody = 0; if (pl.wnd) { pl.wnd.bleed = 0; pl.wnd.marks = []; }
     pl.inv.weapons = { fists: 1, revolver: 1 }; pl.weapon = 'fists'; pl.cash = 60;
     pl.place(club.out.x * TS + 8, club.out.y * TS + 12);
     g.interiors.enter(club, 'guest');
-    g.cutscene = true;
-    // the don himself, across the table
-    setTimeout(() => {
-      const dp = R.campaign.donOf(fam);
-      if (!dp || !dp.alive || !pl.room) return;
+    await this.wait(0.2);
+    const dp = R.campaign.donOf(fam);
+    let h = null;
+    if (dp && dp.alive && pl.room) {
       if (dp.actor && !dp.actor.dead) g.actors.remove(dp.actor);
-      const h = g.life.spawnPerson(dp, pl.x + 20, pl.y - 6);
-      if (h) { h.keep = true; h.stay = true; h.state = 'idle'; h.timer = 1e9; h.room = pl.room; h.dir = 3; h.ang = Math.PI; dp.met = true; dp.fam = Math.max(dp.fam || 0, 3); dp.opinion = Math.max(dp.opinion || 0, 20); }
-    }, 50);
+      h = g.life.spawnPerson(dp, pl.x + 20, pl.y - 6);
+      if (h) { h.keep = true; h.stay = true; h.scripted = true; h.state = 'idle'; h.timer = 1e9; h.room = pl.room; h.dir = 3; h.ang = Math.PI; dp.met = true; dp.fam = Math.max(dp.fam || 0, 3); dp.opinion = Math.max(dp.opinion || 0, 20); }
+    }
+    this.fade(false);
+    this.caption(`${club.name} · the next day`);
+    await this.wait(3);
+    this.caption('');
     const J = g.jobs, st = (d) => { J.standing[fam] = R.clamp((J.standing[fam] || 0) + d, -100, 100); };
-    const ask = (title, line, opts) => new Promise((res) => g.ui.story(title, line, () => setTimeout(() => g.ui.choice(`Don ${dn}`, opts.map((o) => ({ label: o[0], small: o[1], fn: () => { o[2](); res(o[3]); } }))), 150)));
-    (async () => {
-      await ask(`${club.name}, a day later`, `Stitches in your side, a clean shirt that isn't yours, and a glass of something brown on the table.\n\nDon ${dn} sits across from you, turning a ring on his finger.\n\n"My driver found you on the side of my road with two holes in you. So. Who did you upset?"`, [
-        ['"I don\'t remember."', 'Keep it close', () => {}],
-        ['"Somebody who\'s gonna regret it."', 'Infamy +', () => { pl.rep.infamy += 3; }],
-        ['"Thank you for stopping, Don ' + dn + '."', 'Honor +, he likes manners', () => { pl.rep.honor += 4; st(5); }],
-      ]);
-      await ask('The debt', `"My doctor says you'll live. Doctors cost money. The shirt cost money. The silence of my driver, that cost the most."\n\nHe smiles without his eyes.`, [
-        ['"I\'ll pay you back. Every cent."', 'Honor +, standing +', () => { pl.rep.honor += 3; st(8); }],
-        ['"What\'s it gonna cost me?"', 'Straight to business', () => { st(2); }],
-        ['"I didn\'t ask for your help."', 'Infamy +, standing −', () => { pl.rep.infamy += 3; st(-8); }],
-      ]);
-      await ask('The offer', `"A man with nothing to lose is useful to me. You work for the ${fam} family now, or you walk out that door and take your chances with whoever shot you."`, [
-        ['"When do I start?"', 'Standing +', () => { st(10); }],
-        ['"I\'m my own man. But I\'ll hear you out."', 'Honor +, he respects it, barely', () => { pl.rep.honor += 2; }],
-        ['"What\'s the pay?"', '$100 up front, standing −', () => { pl.addCash(100, true); st(-4); }],
-      ]);
-      const offers = J.offersFor(fam);
-      const first = offers.find((o) => o.kind === 'collect') || offers[0];
-      if (first) { J.accept(first); J.offers[fam] = offers.filter((o) => o !== first); }
-      g.cutscene = false;
-      g.ui.story('Welcome to the family', `"Good. Here's something small, to start."\n\nHe slides a slip of paper across the table. A name, an address, an amount.\n\nSomewhere out there are the men who left you in the desert. For now, you work for Don ${dn}.`, () => {
-        g.ui.toast(`Talk to Don ${dn} for more work. Your first job is marked in gold. Walk out the doormat to leave.`, 'good');
-        setTimeout(() => g.ui.toast('Crimes only count if someone sees them. Watch for gold "!" witnesses.'), 7000);
-        g.save();
-      });
-    })();
+    const me = (t) => { g.ui.subtitle(pl.first, t); return this.wait(1 + t.length * 0.04); };
+    const don = (t) => this.say(h, t, 'Don ' + dn);
+    await don('Stitches, a clean shirt, and you\'re still breathing. You\'re welcome.');
+    await don('My driver found you on the side of my road with two holes in you. So. Who did you upset?');
+    let i = await this.ask(`Don ${dn}`, [
+      { label: '"I don\'t remember."', small: 'Keep it close' },
+      { label: '"Somebody who\'s gonna regret it."', small: 'Infamy +', fn: () => { pl.rep.infamy += 3; } },
+      { label: `"Thank you for stopping, Don ${dn}."`, small: 'Honor +, he likes manners', fn: () => { pl.rep.honor += 4; st(5); } },
+    ]);
+    await me(['I don\'t remember.', 'Somebody who\'s gonna regret it.', `Thank you for stopping, Don ${dn}.`][i]);
+    await don(['Sure you don\'t.', 'I like that. Keep that.', 'Manners. Rare, these days.'][i]);
+    await don('Doctors cost money. The shirt cost money. The silence of my driver, that cost the most.');
+    i = await this.ask(`Don ${dn}`, [
+      { label: '"I\'ll pay you back. Every cent."', small: 'Honor +, standing +', fn: () => { pl.rep.honor += 3; st(8); } },
+      { label: '"What\'s it gonna cost me?"', small: 'Straight to business', fn: () => st(2) },
+      { label: '"I didn\'t ask for your help."', small: 'Infamy +, standing −', fn: () => { pl.rep.infamy += 3; st(-8); } },
+    ]);
+    await me(['I\'ll pay you back. Every cent.', 'What\'s it gonna cost me?', 'I didn\'t ask for your help.'][i]);
+    await don(['Yes. You will.', 'Straight to it. Good.', 'No. You were busy bleeding.'][i]);
+    await don(`A man with nothing to lose is useful to me. You work for the ${fam} family now, or you walk out that door and take your chances.`);
+    i = await this.ask(`Don ${dn}`, [
+      { label: '"When do I start?"', small: 'Standing +', fn: () => st(10) },
+      { label: '"I\'m my own man. But I\'ll hear you out."', small: 'Honor +, he respects it, barely', fn: () => { pl.rep.honor += 2; } },
+      { label: '"What\'s the pay?"', small: '$100 up front, standing −', fn: () => { pl.addCash(100, true); st(-4); } },
+    ]);
+    await me(['When do I start?', 'I\'m my own man. But I\'ll hear you out.', 'What\'s the pay?'][i]);
+    const offers = J.offersFor(fam);
+    const first = offers.find((o) => o.kind === 'collect') || offers[0];
+    if (first) { J.accept(first); J.offers[fam] = offers.filter((o) => o !== first); }
+    await don('Good. Here\'s something small, to start.');
+    await don('Somewhere out there are the men who left you in the desert. For now, you work for me.');
+    this.lock = null;
+    this.cine(false);
+    if (h) h.scripted = false;
+    g.ui.toast(`Talk to Don ${dn} for more work. Your first job is marked in gold. Walk out the doormat to leave.`, 'good');
+    setTimeout(() => g.ui.toast('Crimes only count if someone sees them. Watch for gold "!" witnesses.'), 7000);
+    g.save();
   };
 
   // ---------------------------------------------------------------- crawling
   OP.init = function (g) {
-    this.pickedUp = false; this.road = null;
+    this.pickedUp = false; this.road = null; this.waits = []; this.scene = null; this.lock = null; this.riding = null; this.asking = null; this.car = null;
+    if (document.getElementById('cine')) { this.cine(false); this.cineEl().querySelector('.cf').classList.remove('black'); }
+    if (g.player) g.player.hidden = false;
     if (this.wrapped) return;
     this.wrapped = true;
     const AP = R.Actors.prototype, mv = AP.moveActor;
@@ -16604,11 +16768,22 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       const L = OP.lock;
       if (L) { this.stick.x = L.x; this.stick.y = L.y; for (const k in this.pressedA) this.pressedA[k] = false; for (const k in this.heldA) this.heldA[k] = false; }
     };
+    const U0 = R.UI.prototype;
+    // while a scene has the controls, the script decides what hurts you
+    const PP = R.Player.prototype, ph = PP.hurt, pk = PP.knock;
+    PP.hurt = function () { if (OP.lock || OP.riding) return; return ph.apply(this, arguments); };
+    if (pk) PP.knock = function () { if (OP.lock || OP.riding) return; return pk.apply(this, arguments); };
+    // extras keep quiet during a scene; only the cast speaks
+    const AP2 = R.Actors.prototype, asay = AP2.say;
+    AP2.say = function (h, text, dur, color) { if ((OP.lock || OP.cineOn) && h && !h.scripted) return; return asay.call(this, h, text, dur, color); };
+    const ban = U0.banner; U0.banner = function () { if (OP.cineOn) return; return ban.apply(this, arguments); };
+    const GP = R.Game.prototype, hc = GP.hintCheck; if (hc) GP.hintCheck = function () { if (OP.cineOn || OP.lock) return; return hc.apply(this, arguments); };
     // nobody makes small talk with the men who are about to shoot you
     const U = R.UI.prototype, uc = U.updateCtx;
-    U.updateCtx = function () { if (OP.scene) this.game.player.focus = null; return uc.call(this); };
+    U.updateCtx = function () { if (OP.lock || OP.cineOn) this.game.player.focus = null; return uc.call(this); };
     const RP = R.Renderer.prototype, dp = RP.drawPlayer;
     RP.drawPlayer = function (g, pl) {
+      if (pl.hidden) return;
       if (!pl.crawling) return dp.call(this, g, pl);
       OP.drawCrawl(g, pl);
     };
@@ -16672,12 +16847,13 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       };
       arm(-1, ST[0]); arm(1, ST[1]);
       // neck, then the head: 12 across with its outline, lit like the standing sprite
-      rect(o + 11, -1, 1, 2, P.skin);
-      const hx = o + 16.5, R0 = 5.3;
-      for (let y = -6; y <= 6; y++) for (let x = -6; x <= 6; x++) {
-        if (x * x + y * y > R0 * R0) continue;
-        const shadow = (x + 1.6) * (x + 1.6) + (y + 1.6) * (y + 1.6) > (R0 - 0.1) * (R0 - 0.1);
-        const sheen = (x + 1) * (x + 1) * 0.4 + (y + 3.5) * (y + 3.5) < 1.6;
+      rect(o + 11, -1, 2, 2, P.skin);
+      // the head is wider than the shoulders, like every standing sprite: 12 long, 14 across
+      const hx = o + 17.5, RX = 5.6, RY = 6.6;
+      for (let y = -7; y <= 7; y++) for (let x = -7; x <= 7; x++) {
+        if ((x * x) / (RX * RX) + (y * y) / (RY * RY) > 1) continue;
+        const shadow = ((x + 1.4) * (x + 1.4)) / (RX * RX) + ((y + 1.6) * (y + 1.6)) / (RY * RY) > 0.98;
+        const sheen = (x + 1) * (x + 1) * 0.4 + (y + 4.2) * (y + 4.2) < 1.8;
         put(hx + x, y, shadow ? P.hair[0] : sheen ? P.hair[2] : P.hair[1]);
       }
       // auto outline in the sprite's own outline colour

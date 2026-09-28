@@ -168,8 +168,9 @@
     baseDraw.call(this, g, x, y, dir, walk, look, st);
     if (st.down || st.scale || st.crouch || st.alpha != null) return;
     const seed = (look.seedStr || '').length * 7 + 3;
-    // bruises on the face
-    if (w.bruise > 0.05) {
+    const d8 = A.dir8(dir, st.ang), backTurned = d8 === 5 || d8 === 6 || d8 === 7;
+    // bruises on the face, when you can see the face
+    if (w.bruise > 0.05 && !backTurned) {
       g.globalAlpha = Math.min(0.85, w.bruise);
       g.fillStyle = '#5a2a5e';
       g.fillRect(X - 3 + (seed % 3), Y - 17, 2, 1);

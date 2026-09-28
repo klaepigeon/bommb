@@ -20,14 +20,29 @@
     if (!k) return;
     w.marks = w.marks || [];
     const face = k === 'bruise' ? R.rng() < 0.6 : R.rng() < 0.15;
-    w.marks.push({ k, x: R.rng.int(-3, 2), y: face ? R.rng.int(-18, -13) : R.rng.int(-10, -5), t: g.clock.t, n: amt > 30 ? 2 : 1 });
+    // which side of them it landed on: shot in the back, cut across the chest
+    const side = face ? 'front' : (source && source.x != null && a.ang != null ? (Math.cos(Math.atan2(source.y - a.y, source.x - a.x) - a.ang) > -0.2 ? 'front' : 'back') : R.rng() < 0.65 ? 'front' : 'back');
+    w.marks.push({ k, x: R.rng.int(-3, 2), y: face ? R.rng.int(-18, -13) : R.rng.int(-10, -5), t: g.clock.t, n: amt > 30 ? 2 : 1, side });
     if (w.marks.length > 9) w.marks.shift();
   };
   const PAL = { hole: ['#2a0604', '#6a1410'], cut: ['#a8201a', '#e05048'], burn: ['#1a1410', '#3a2a20'] };
-  BU.drawMarks = function (g, X, Y, w) {
+  // d8: 0 right, 1 down-right, 2 down (facing us), 3 down-left, 4 left, 5 up-left, 6 up (back to us), 7 up-right
+  BU.drawMarks = function (g, X, Y, w, d8) {
     const now = G().clock.t;
+    const front = d8 == null || d8 === 1 || d8 === 2 || d8 === 3, back = d8 === 5 || d8 === 6 || d8 === 7, side = d8 === 0 || d8 === 4;
+    const toward = d8 === 0 || d8 === 1 || d8 === 7 ? 1 : -1; // which way a side view faces
     for (const m of w.marks) {
-      const x = X + m.x, y = Y + m.y, age = now - m.t;
+      const age = now - m.t, ms = m.side || 'front';
+      // stitched up and scarring over: open wounds close in two days
+      if (m.k !== 'bruise' && age > 2880) continue;
+      // only the side of the body you can see
+      if (ms === 'front' && !(front || side)) continue;
+      if (ms === 'back' && !(back || side)) continue;
+      if (ms === 'back' && m.y < -12) continue;
+      let mx = m.x;
+      if (side) mx = Math.max(-1, Math.min(1, Math.round(m.x / 3))) + (ms === 'front' ? toward : -toward) * 2; // squeezed onto the profile
+      else if (back) mx = -m.x; // the mirror of where it went in
+      const x = X + mx, y = Y + m.y;
       if (m.k === 'hole') {
         // a hole, and a stain that runs down the shirt while they bleed
         const run = Math.min(5, 1 + Math.floor(age / 8) + (w.bleed > 0.2 ? 2 : 0));
@@ -50,7 +65,7 @@
       }
     }
     // a black eye and a split lip for the badly beaten
-    if (w.bruise > 0.5) { g.fillStyle = '#3a1a4a'; g.fillRect(X - 3, Y - 17, 2, 1); g.fillStyle = '#a8201a'; g.fillRect(X, Y - 14, 1, 1); }
+    if (w.bruise > 0.5 && (front || side)) { const ex = side ? X + toward * 2 : X - 3; g.fillStyle = '#3a1a4a'; g.fillRect(ex, Y - 17, 2, 1); g.fillStyle = '#a8201a'; g.fillRect(side ? X + toward * 3 : X, Y - 14, 1, 1); }
   };
 
   // ---------------------------------------------------------------- corpses, rebuilt pixel by pixel
@@ -188,6 +203,13 @@
     // record every wound
     const GO = R.gore, hurt = GO.hurt;
     GO.hurt = function (a, amt, source, kind) { hurt.call(this, a, amt, source, kind); if (on()) BU.mark(a, amt, source, kind); };
+    // once you're patched up (a hospital, a doctor, a bandage and time) the wounds close
+    const PU = R.Player.prototype.update;
+    R.Player.prototype.update = function (dt) {
+      const r = PU.apply(this, arguments), w = this.wnd;
+      if (w && w.marks && w.marks.length && this.hp >= this.maxHp && !(w.bleed > 0.02)) { w.marks = w.marks.filter((m) => m.k === 'bruise'); w.bruise = Math.min(w.bruise || 0, 0.3); }
+      return r;
+    };
     const PP = R.Player.prototype, pHurt = PP.hurt;
     PP.hurt = function (amt, src, kind) { const hp0 = this.hp; const r = pHurt.call(this, amt, src, kind); if (this.hp < hp0 && on()) BU.mark(this, amt, src, kind); return r; };
     // point-blank shotgun: the head goes
@@ -222,7 +244,7 @@
       look._w = w.marks && w.marks.length ? null : w;
       draw.call(this, g, x, y, dir, walk, look, st);
       look._w = w;
-      if (!st.down && !st.scale && !st.crouch && st.alpha == null && w.marks && w.marks.length) BU.drawMarks(g, X, Y, w);
+      if (!st.down && !st.scale && !st.crouch && st.alpha == null && w.marks && w.marks.length) BU.drawMarks(g, X, Y, w, A.dir8(dir, st.ang));
     };
     // bodies over a shoulder look like themselves
     R.bodies.drawCarried = function (g, pl) { const a = pl.carrying; if (a) A.drawPerson(g, pl.x + 1, pl.y - 12, 2, 0, a.look, { down: true }); };
