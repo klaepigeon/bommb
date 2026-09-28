@@ -91,6 +91,7 @@ This is a ground-up rebuild of the original single-file *Rhapsody* (Port Hollow)
 | Plan board | In the back room: pick a bank or casino, case it for the 2 to 4 AM shift change, choose quiet, loud or an inside man, pick the vault tool, and put the crew on wireman, lookout, muscle and driver. The take is split |
 | Gunfights | Take cover by standing still armed beside anything solid (walls, trees, furniture, cars); shots from that side mostly hit the cover. Near misses suppress: pinned gunmen crouch, hold and fire slower |
 | Light & seasons | Rim light: people catch the colour of the nearest lamp, sign, headlight, fire or muzzle flash on the side facing it. The calendar turns: winter snow comes south, autumn leaves, holidays (fireworks, jack-o'-lanterns, Christmas lights). Footprints in snow, sand and mud; idle people smoke and fidget; conversations push the camera in |
+| Graphics | A WebGL renderer finishes every frame on the GPU. Coloured light comes from lamps, neon, windows, headlights, sirens, fire and muzzle flashes. Per-pixel normals are derived from the art itself, so sprites and walls catch light directionally. Also bloom, blue night fill, desert heat shimmer, a colour split when you're hit, film grain and optional CRT scanlines. It falls back to the classic Canvas2D renderer automatically (or via Settings > Graphics) |
 | Your legend | A running epilogue written from your honor, infamy, kills, crew, rings, heists and endings, in the Stats tab and after each road to the top |
 | Tracking | TRACK beside the minimap (T on a keyboard) cycles your waypoint through the current job, quest errands, leads and map tips, following moving targets. The Jobs tab lists them with a Track button each |
 | Places & people | Five story characters with chaptered quests, landmarks and hidden tins, destructible street furniture, dust storms in the desert |
@@ -136,6 +137,7 @@ Plain ES2020, no dependencies and no bundler. Every module hangs off a global `R
 | `16_debug.js` | The debug menu |
 | `16_minigames.js` | Lockpicking, hotwiring, safecracking, blackjack, slots, pool, darts, craps |
 | `16_ui.js` | HUD, context chips, sheets, interiors, shops, phone, fishing, burglary, heist, menu, map |
+| `17_render_gl.js` | The WebGL back end: light pass with art-derived normals, half-size bloom, final composite with the overlay layer, heat, hurt split, grain and CRT; fallback on context loss |
 | `17_render.js` | Rendering, lighting, weather, speech bubbles |
 | `19_interiors.js` | Walk-in rooms: layouts per building type, occupants, furniture actions, searching, register robberies |
 | `12_campaign.js`, `12_stories.js` | Family campaigns and endgame routes; the five story characters |

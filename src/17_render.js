@@ -44,13 +44,15 @@
     g.cam.zoom = this.baseZoom;
   };
   P.present = function () {
+    if (this.glOn && R.gl && R.gl.present(this)) return;
     const dg = this.dg;
     dg.imageSmoothingEnabled = false;
     dg.drawImage(this.cv, 0, 0, this.display.width, this.display.height);
   };
 
   P.render = function () {
-    const game = this.game, g = this.g, cam = game.cam, w = game.world, pl = game.player;
+    const game = this.game, cam = game.cam, w = game.world, pl = game.player;
+    let g = this.g;
     const dpr = this.dpr;
     // zoom out with speed
     const sp = pl.inCar ? Math.abs(pl.inCar.speed) : 0;
@@ -157,6 +159,8 @@
     // weather + lighting in screen space
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     this.drawLighting(g, left, top, z);
+    // (the WebGL path lights the frame on the GPU and takes everything after this as an overlay)
+    g = this.afterLighting(g);
     // hard light and alien light glow through the dark
     g.setTransform(sc, 0, 0, sc, Math.round(-left * sc), Math.round(-top * sc));
     R.ring.draw(g);
@@ -188,6 +192,8 @@
     game.ui.drawHud(g);
     this.present();
   };
+
+  P.afterLighting = function (g) { return g; };
 
   const SWUNG = { knife: 1, razor: 1, machete: 1, hatchet: 1, crowbar: 1, sap: 1 };
   P.drawHuman = function (g, h) {
@@ -282,22 +288,23 @@
     const overcast = we.cloud * 0.18 + we.rain * 0.12;
     if (overcast > 0.02) { g.fillStyle = `rgba(40,50,70,${overcast})`; g.fillRect(0, 0, cam.vw, cam.vh); }
     if (we.heat > 0.1) { g.fillStyle = `rgba(255,200,120,${we.heat * 0.08})`; g.fillRect(0, 0, cam.vw, cam.vh); }
-    if (dark < 0.05) return;
+    const glm = this.glOn;
+    this.glDark = dark;
+    if (dark < 0.05) { if (glm) this.lg.clearRect(0, 0, this.light.width, this.light.height); return; }
     const lg = this.lg, LW = this.light.width, LH = this.light.height;
     const k = LW / cam.vw; // light canvas scale
     const toL = (x, y) => [(x - left) * z * k, (y - top) * z * k];
     lg.globalCompositeOperation = 'source-over';
-    lg.fillStyle = `rgba(12,10,32,${dark})`;
     lg.clearRect(0, 0, LW, LH);
-    lg.fillRect(0, 0, LW, LH);
-    lg.globalCompositeOperation = 'destination-out';
-    const hole = (x, y, r, a) => {
+    if (glm) lg.globalCompositeOperation = 'lighter'; // WebGL: a map of coloured light
+    else { lg.fillStyle = `rgba(12,10,32,${dark})`; lg.fillRect(0, 0, LW, LH); lg.globalCompositeOperation = 'destination-out'; }
+    const hole = (x, y, r, a, col) => {
       const [lx, ly] = toL(x, y);
       const rr = r * z * k;
       if (!(rr > 0.5) || !(a > 0)) return;
       if (lx < -rr || ly < -rr || lx > LW + rr || ly > LH + rr) return;
       const gr = lg.createRadialGradient(lx, ly, 0, lx, ly, rr);
-      gr.addColorStop(0, `rgba(0,0,0,${a})`);
+      gr.addColorStop(0, glm ? `rgba(${col || '255,214,160'},${Math.min(1, a)})` : `rgba(0,0,0,${a})`);
       gr.addColorStop(1, 'rgba(0,0,0,0)');
       lg.fillStyle = gr;
       lg.beginPath(); lg.arc(lx, ly, rr, 0, 7); lg.fill();
@@ -311,17 +318,17 @@
         const ob = w.o(tx, ty);
         if (room) {
           if (ob === O.FLOORLAMP || ob === O.JUKEBOX || ob === O.SLOT || ob === O.ARCADE || ob === O.TV) {
-            hole(tx * TS + 8, ty * TS + 6, ob === O.FLOORLAMP ? 60 : 30, 0.85);
+            hole(tx * TS + 8, ty * TS + 6, ob === O.FLOORLAMP ? 60 : 30, 0.85, ob === O.FLOORLAMP ? '255,200,120' : ob === O.JUKEBOX ? '255,90,180' : '130,200,255');
             glows.push([tx * TS + 8, ty * TS + 4, 18, ob === O.FLOORLAMP ? 'rgba(255,200,110,0.22)' : ob === O.JUKEBOX ? 'rgba(255,80,160,0.25)' : 'rgba(110,200,255,0.2)']);
           } else if (w.t(tx, ty) === T.DANCE && (tx + ty + Math.floor(t * 4)) % 3 === 0) {
-            hole(tx * TS + 8, ty * TS + 8, 18, 0.7);
+            hole(tx * TS + 8, ty * TS + 8, 18, 0.7, ['255,70,190', '240,184,56', '90,200,255'][(tx + ty) % 3]);
             glows.push([tx * TS + 8, ty * TS + 8, 12, ['rgba(255,70,190,0.3)', 'rgba(240,184,56,0.3)', 'rgba(90,200,255,0.3)'][(tx + ty) % 3]]);
           }
           continue;
         }
         if (ob !== O.LAMP) continue;
         const flick = R.hash2(tx, ty, 2) < 0.06 ? (Math.sin(t * 20 + tx) > 0.3 ? 1 : 0.3) : 1;
-        hole(tx * TS + 8, ty * TS + 6, 58, 0.9 * flick);
+        hole(tx * TS + 8, ty * TS + 6, 58, 0.9 * flick, '255,196,120');
         glows.push([tx * TS + 8, ty * TS + 3, 22, 'rgba(255,200,110,0.22)']);
       }
     // lit windows & neon
@@ -335,17 +342,17 @@
       const hr = game.clock.hour(), up = !bt.hours && ((hr >= 18 && R.hash2(b.id, day, 5) < 0.6) || (hr < 3 && R.hash2(b.id, day, 6) < 0.18));
       const lit = b.occ > 0 || up || (bt.hours && game.ui.isOpen(b));
       if (lit) {
-        const warm = R.hash2(b.id, 1, 8) < 0.2 ? 'rgba(140,190,255,0.16)' : 'rgba(255,196,110,0.18)'; // TV blue or lamp amber
+        const tv = R.hash2(b.id, 1, 8) < 0.2, warm = tv ? 'rgba(140,190,255,0.16)' : 'rgba(255,196,110,0.18)'; // TV blue or lamp amber
         for (let wx = 3; wx < b.w * TS - 4; wx += 6) if (R.hash2(b.id, wx, 3) < 0.7) {
-          hole(b.x * TS + wx + 1, fy, 10, 0.8);
+          hole(b.x * TS + wx + 1, fy, 10, glm ? 0.38 : 0.8, tv ? '140,190,255' : '255,190,110');
           if (R.hash2(b.id, wx, 4) < 0.5) glows.push([b.x * TS + wx + 1, fy + 3, 7, warm]); // spill onto the walk
         }
-        hole((b.door.x + 0.5) * TS, (b.door.y + (b.face === 'N' ? 0 : 1)) * TS, 26, 0.7);
+        hole((b.door.x + 0.5) * TS, (b.door.y + (b.face === 'N' ? 0 : 1)) * TS, 26, 0.7, '255,200,130');
       }
       if (bt.neon) {
         const pulse = 0.75 + Math.sin(t * 3 + b.id) * 0.25, dead = R.hash2(b.id, 7, 9) < 0.15 && Math.sin(t * 13 + b.id) > 0.55; // the odd sign on the fritz
         const nc = NEON[Math.floor(R.hash2(b.id, 2, 9) * NEON.length)], k = dead ? 0.25 : pulse;
-        hole((b.x + b.w / 2) * TS, b.y * TS + 8, 60, 0.8 * k);
+        hole((b.x + b.w / 2) * TS, b.y * TS + 8, 60, 0.8 * k, nc);
         glows.push([(b.x + b.w / 2) * TS, b.y * TS + 8, 40, `rgba(${nc},${0.22 * k})`]);
         glows.push([(b.x + b.w / 2) * TS, fy + 6, 30, `rgba(${nc},${0.1 * k})`]); // colour pooling on the sidewalk
       }
@@ -354,26 +361,40 @@
     for (const v of game.traffic.list) {
       if (!v.lights || v.wrecked || !cam.onScreen(v.x, v.y, 120)) continue;
       const ca = Math.cos(v.angle), sa = Math.sin(v.angle);
-      for (let d = 18; d <= 70; d += 18) hole(v.x + ca * d, v.y + sa * d, 12 + d * 0.35, 0.55);
+      for (let d = 18; d <= 70; d += 18) hole(v.x + ca * d, v.y + sa * d, 12 + d * 0.35, 0.55, '255,245,215');
       if (v.siren) {
         const on = (performance.now() / 150) % 2 < 1;
         glows.push([v.x, v.y, 40, on ? 'rgba(255,40,40,0.35)' : 'rgba(40,80,255,0.35)']);
-        hole(v.x, v.y, 40, 0.5);
+        hole(v.x, v.y, 40, 0.5, on ? '255,50,40' : '50,90,255');
       }
       glows.push([v.x - ca * v.model.w * 0.5, v.y - sa * v.model.w * 0.5, 8, 'rgba(255,40,20,0.3)']);
     }
     // fire, flashes, the player
     for (const fr of game.env.fires.values()) {
       if (fr.x < tx0 || fr.x > tx1 || fr.y < ty0 || fr.y > ty1) continue;
-      hole(fr.x * TS + 8, fr.y * TS + 8, 44 * fr.i, 0.95);
+      hole(fr.x * TS + 8, fr.y * TS + 8, 44 * fr.i, 0.95, '255,140,50');
       glows.push([fr.x * TS + 8, fr.y * TS + 6, 26 * fr.i, 'rgba(255,140,40,0.2)']);
     }
-    for (const f of game.fx.flashes) hole(f.x, f.y, f.big ? f.big * 3 : 40, 1);
+    for (const f of game.fx.flashes) hole(f.x, f.y, f.big ? f.big * 3 : 40, 1, '255,236,190');
     if (room) {
       // the room is lit from above; a soft pool of light in the middle
-      hole((room.x0 + room.w / 2) * TS, (room.y0 + room.h / 2) * TS, Math.max(room.w, room.h) * TS * 0.6, 0.75);
-      hole(pl.x, pl.y - 8, 50, 0.6);
-    } else hole(pl.x, pl.y - 8, 34, 0.55);
+      hole((room.x0 + room.w / 2) * TS, (room.y0 + room.h / 2) * TS, Math.max(room.w, room.h) * TS * 0.6, 0.75, '255,215,170');
+      hole(pl.x, pl.y - 8, 50, 0.6, '255,220,185');
+    } else hole(pl.x, pl.y - 8, 34, 0.55, '200,205,230');
+    if (glm) {
+      // coloured glows go into the light map too; the GPU turns them into lit surfaces and bloom
+      for (const [x, y, r, c] of glows) {
+        const [lx, ly] = toL(x, y), rr = r * z * k * 1.5;
+        if (!(rr > 0.5) || lx < -rr || ly < -rr || lx > LW + rr || ly > LH + rr) continue;
+        const gr = lg.createRadialGradient(lx, ly, 0, lx, ly, rr);
+        gr.addColorStop(0, c.replace(/,\s*([0-9.]+)\)$/, (m, a) => `,${Math.min(1, +a * 3)})`));
+        gr.addColorStop(1, 'rgba(0,0,0,0)');
+        lg.fillStyle = gr;
+        lg.beginPath(); lg.arc(lx, ly, rr, 0, 7); lg.fill();
+      }
+      lg.globalCompositeOperation = 'source-over';
+      return;
+    }
     lg.globalCompositeOperation = 'source-over';
     this.dither(lg, LW, LH, dark);
     g.imageSmoothingEnabled = false;

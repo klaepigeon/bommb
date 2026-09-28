@@ -55,8 +55,10 @@
   DU.shimmer = function (dt) {
     const g = G(), w = g.env.weather, pl = g.player, hr = g.clock.hour();
     const on = this.inDesert() && !pl.room && w.kind === 'heat' && hr >= 11 && hr <= 16 && this.level < 0.1 && g.settings.shimmer !== false;
+    this.heatOn = on;
     const cv = document.querySelector('#view canvas') || document.querySelector('canvas');
     if (!cv) return;
+    if (R.gl && R.gl.on) { if (this.shimOn) { cv.style.filter = ''; this.shimOn = false; } return; } // the GPU does the shimmer
     if (!on) { if (this.shimOn) { cv.style.filter = ''; this.shimOn = false; } return; }
     if (!document.getElementById('heatshimmer')) {
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');

@@ -17407,8 +17407,10 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   DU.shimmer = function (dt) {
     const g = G(), w = g.env.weather, pl = g.player, hr = g.clock.hour();
     const on = this.inDesert() && !pl.room && w.kind === 'heat' && hr >= 11 && hr <= 16 && this.level < 0.1 && g.settings.shimmer !== false;
+    this.heatOn = on;
     const cv = document.querySelector('#view canvas') || document.querySelector('canvas');
     if (!cv) return;
+    if (R.gl && R.gl.on) { if (this.shimOn) { cv.style.filter = ''; this.shimOn = false; } return; } // the GPU does the shimmer
     if (!on) { if (this.shimOn) { cv.style.filter = ''; this.shimOn = false; } return; }
     if (!document.getElementById('heatshimmer')) {
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -23739,13 +23741,15 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     g.cam.zoom = this.baseZoom;
   };
   P.present = function () {
+    if (this.glOn && R.gl && R.gl.present(this)) return;
     const dg = this.dg;
     dg.imageSmoothingEnabled = false;
     dg.drawImage(this.cv, 0, 0, this.display.width, this.display.height);
   };
 
   P.render = function () {
-    const game = this.game, g = this.g, cam = game.cam, w = game.world, pl = game.player;
+    const game = this.game, cam = game.cam, w = game.world, pl = game.player;
+    let g = this.g;
     const dpr = this.dpr;
     // zoom out with speed
     const sp = pl.inCar ? Math.abs(pl.inCar.speed) : 0;
@@ -23852,6 +23856,8 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     // weather + lighting in screen space
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     this.drawLighting(g, left, top, z);
+    // (the WebGL path lights the frame on the GPU and takes everything after this as an overlay)
+    g = this.afterLighting(g);
     // hard light and alien light glow through the dark
     g.setTransform(sc, 0, 0, sc, Math.round(-left * sc), Math.round(-top * sc));
     R.ring.draw(g);
@@ -23883,6 +23889,8 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     game.ui.drawHud(g);
     this.present();
   };
+
+  P.afterLighting = function (g) { return g; };
 
   const SWUNG = { knife: 1, razor: 1, machete: 1, hatchet: 1, crowbar: 1, sap: 1 };
   P.drawHuman = function (g, h) {
@@ -23977,22 +23985,23 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     const overcast = we.cloud * 0.18 + we.rain * 0.12;
     if (overcast > 0.02) { g.fillStyle = `rgba(40,50,70,${overcast})`; g.fillRect(0, 0, cam.vw, cam.vh); }
     if (we.heat > 0.1) { g.fillStyle = `rgba(255,200,120,${we.heat * 0.08})`; g.fillRect(0, 0, cam.vw, cam.vh); }
-    if (dark < 0.05) return;
+    const glm = this.glOn;
+    this.glDark = dark;
+    if (dark < 0.05) { if (glm) this.lg.clearRect(0, 0, this.light.width, this.light.height); return; }
     const lg = this.lg, LW = this.light.width, LH = this.light.height;
     const k = LW / cam.vw; // light canvas scale
     const toL = (x, y) => [(x - left) * z * k, (y - top) * z * k];
     lg.globalCompositeOperation = 'source-over';
-    lg.fillStyle = `rgba(12,10,32,${dark})`;
     lg.clearRect(0, 0, LW, LH);
-    lg.fillRect(0, 0, LW, LH);
-    lg.globalCompositeOperation = 'destination-out';
-    const hole = (x, y, r, a) => {
+    if (glm) lg.globalCompositeOperation = 'lighter'; // WebGL: a map of coloured light
+    else { lg.fillStyle = `rgba(12,10,32,${dark})`; lg.fillRect(0, 0, LW, LH); lg.globalCompositeOperation = 'destination-out'; }
+    const hole = (x, y, r, a, col) => {
       const [lx, ly] = toL(x, y);
       const rr = r * z * k;
       if (!(rr > 0.5) || !(a > 0)) return;
       if (lx < -rr || ly < -rr || lx > LW + rr || ly > LH + rr) return;
       const gr = lg.createRadialGradient(lx, ly, 0, lx, ly, rr);
-      gr.addColorStop(0, `rgba(0,0,0,${a})`);
+      gr.addColorStop(0, glm ? `rgba(${col || '255,214,160'},${Math.min(1, a)})` : `rgba(0,0,0,${a})`);
       gr.addColorStop(1, 'rgba(0,0,0,0)');
       lg.fillStyle = gr;
       lg.beginPath(); lg.arc(lx, ly, rr, 0, 7); lg.fill();
@@ -24006,17 +24015,17 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
         const ob = w.o(tx, ty);
         if (room) {
           if (ob === O.FLOORLAMP || ob === O.JUKEBOX || ob === O.SLOT || ob === O.ARCADE || ob === O.TV) {
-            hole(tx * TS + 8, ty * TS + 6, ob === O.FLOORLAMP ? 60 : 30, 0.85);
+            hole(tx * TS + 8, ty * TS + 6, ob === O.FLOORLAMP ? 60 : 30, 0.85, ob === O.FLOORLAMP ? '255,200,120' : ob === O.JUKEBOX ? '255,90,180' : '130,200,255');
             glows.push([tx * TS + 8, ty * TS + 4, 18, ob === O.FLOORLAMP ? 'rgba(255,200,110,0.22)' : ob === O.JUKEBOX ? 'rgba(255,80,160,0.25)' : 'rgba(110,200,255,0.2)']);
           } else if (w.t(tx, ty) === T.DANCE && (tx + ty + Math.floor(t * 4)) % 3 === 0) {
-            hole(tx * TS + 8, ty * TS + 8, 18, 0.7);
+            hole(tx * TS + 8, ty * TS + 8, 18, 0.7, ['255,70,190', '240,184,56', '90,200,255'][(tx + ty) % 3]);
             glows.push([tx * TS + 8, ty * TS + 8, 12, ['rgba(255,70,190,0.3)', 'rgba(240,184,56,0.3)', 'rgba(90,200,255,0.3)'][(tx + ty) % 3]]);
           }
           continue;
         }
         if (ob !== O.LAMP) continue;
         const flick = R.hash2(tx, ty, 2) < 0.06 ? (Math.sin(t * 20 + tx) > 0.3 ? 1 : 0.3) : 1;
-        hole(tx * TS + 8, ty * TS + 6, 58, 0.9 * flick);
+        hole(tx * TS + 8, ty * TS + 6, 58, 0.9 * flick, '255,196,120');
         glows.push([tx * TS + 8, ty * TS + 3, 22, 'rgba(255,200,110,0.22)']);
       }
     // lit windows & neon
@@ -24030,17 +24039,17 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
       const hr = game.clock.hour(), up = !bt.hours && ((hr >= 18 && R.hash2(b.id, day, 5) < 0.6) || (hr < 3 && R.hash2(b.id, day, 6) < 0.18));
       const lit = b.occ > 0 || up || (bt.hours && game.ui.isOpen(b));
       if (lit) {
-        const warm = R.hash2(b.id, 1, 8) < 0.2 ? 'rgba(140,190,255,0.16)' : 'rgba(255,196,110,0.18)'; // TV blue or lamp amber
+        const tv = R.hash2(b.id, 1, 8) < 0.2, warm = tv ? 'rgba(140,190,255,0.16)' : 'rgba(255,196,110,0.18)'; // TV blue or lamp amber
         for (let wx = 3; wx < b.w * TS - 4; wx += 6) if (R.hash2(b.id, wx, 3) < 0.7) {
-          hole(b.x * TS + wx + 1, fy, 10, 0.8);
+          hole(b.x * TS + wx + 1, fy, 10, glm ? 0.38 : 0.8, tv ? '140,190,255' : '255,190,110');
           if (R.hash2(b.id, wx, 4) < 0.5) glows.push([b.x * TS + wx + 1, fy + 3, 7, warm]); // spill onto the walk
         }
-        hole((b.door.x + 0.5) * TS, (b.door.y + (b.face === 'N' ? 0 : 1)) * TS, 26, 0.7);
+        hole((b.door.x + 0.5) * TS, (b.door.y + (b.face === 'N' ? 0 : 1)) * TS, 26, 0.7, '255,200,130');
       }
       if (bt.neon) {
         const pulse = 0.75 + Math.sin(t * 3 + b.id) * 0.25, dead = R.hash2(b.id, 7, 9) < 0.15 && Math.sin(t * 13 + b.id) > 0.55; // the odd sign on the fritz
         const nc = NEON[Math.floor(R.hash2(b.id, 2, 9) * NEON.length)], k = dead ? 0.25 : pulse;
-        hole((b.x + b.w / 2) * TS, b.y * TS + 8, 60, 0.8 * k);
+        hole((b.x + b.w / 2) * TS, b.y * TS + 8, 60, 0.8 * k, nc);
         glows.push([(b.x + b.w / 2) * TS, b.y * TS + 8, 40, `rgba(${nc},${0.22 * k})`]);
         glows.push([(b.x + b.w / 2) * TS, fy + 6, 30, `rgba(${nc},${0.1 * k})`]); // colour pooling on the sidewalk
       }
@@ -24049,26 +24058,40 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     for (const v of game.traffic.list) {
       if (!v.lights || v.wrecked || !cam.onScreen(v.x, v.y, 120)) continue;
       const ca = Math.cos(v.angle), sa = Math.sin(v.angle);
-      for (let d = 18; d <= 70; d += 18) hole(v.x + ca * d, v.y + sa * d, 12 + d * 0.35, 0.55);
+      for (let d = 18; d <= 70; d += 18) hole(v.x + ca * d, v.y + sa * d, 12 + d * 0.35, 0.55, '255,245,215');
       if (v.siren) {
         const on = (performance.now() / 150) % 2 < 1;
         glows.push([v.x, v.y, 40, on ? 'rgba(255,40,40,0.35)' : 'rgba(40,80,255,0.35)']);
-        hole(v.x, v.y, 40, 0.5);
+        hole(v.x, v.y, 40, 0.5, on ? '255,50,40' : '50,90,255');
       }
       glows.push([v.x - ca * v.model.w * 0.5, v.y - sa * v.model.w * 0.5, 8, 'rgba(255,40,20,0.3)']);
     }
     // fire, flashes, the player
     for (const fr of game.env.fires.values()) {
       if (fr.x < tx0 || fr.x > tx1 || fr.y < ty0 || fr.y > ty1) continue;
-      hole(fr.x * TS + 8, fr.y * TS + 8, 44 * fr.i, 0.95);
+      hole(fr.x * TS + 8, fr.y * TS + 8, 44 * fr.i, 0.95, '255,140,50');
       glows.push([fr.x * TS + 8, fr.y * TS + 6, 26 * fr.i, 'rgba(255,140,40,0.2)']);
     }
-    for (const f of game.fx.flashes) hole(f.x, f.y, f.big ? f.big * 3 : 40, 1);
+    for (const f of game.fx.flashes) hole(f.x, f.y, f.big ? f.big * 3 : 40, 1, '255,236,190');
     if (room) {
       // the room is lit from above; a soft pool of light in the middle
-      hole((room.x0 + room.w / 2) * TS, (room.y0 + room.h / 2) * TS, Math.max(room.w, room.h) * TS * 0.6, 0.75);
-      hole(pl.x, pl.y - 8, 50, 0.6);
-    } else hole(pl.x, pl.y - 8, 34, 0.55);
+      hole((room.x0 + room.w / 2) * TS, (room.y0 + room.h / 2) * TS, Math.max(room.w, room.h) * TS * 0.6, 0.75, '255,215,170');
+      hole(pl.x, pl.y - 8, 50, 0.6, '255,220,185');
+    } else hole(pl.x, pl.y - 8, 34, 0.55, '200,205,230');
+    if (glm) {
+      // coloured glows go into the light map too; the GPU turns them into lit surfaces and bloom
+      for (const [x, y, r, c] of glows) {
+        const [lx, ly] = toL(x, y), rr = r * z * k * 1.5;
+        if (!(rr > 0.5) || lx < -rr || ly < -rr || lx > LW + rr || ly > LH + rr) continue;
+        const gr = lg.createRadialGradient(lx, ly, 0, lx, ly, rr);
+        gr.addColorStop(0, c.replace(/,\s*([0-9.]+)\)$/, (m, a) => `,${Math.min(1, +a * 3)})`));
+        gr.addColorStop(1, 'rgba(0,0,0,0)');
+        lg.fillStyle = gr;
+        lg.beginPath(); lg.arc(lx, ly, rr, 0, 7); lg.fill();
+      }
+      lg.globalCompositeOperation = 'source-over';
+      return;
+    }
     lg.globalCompositeOperation = 'source-over';
     this.dither(lg, LW, LH, dark);
     g.imageSmoothingEnabled = false;
@@ -24280,6 +24303,245 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
   };
 })();
 
+// ---- 17_render_gl.js
+// RHAPSODY — the WebGL renderer. The world is still composed with Canvas2D into the
+// 480x320 buffer (every sprite routine and every module that draws keeps working), but the
+// frame is finished on the GPU:
+//   1. LIGHT  the unlit world + a light map of coloured light (lamps, neon, windows,
+//             headlights, sirens, fire, muzzle flashes). Normals come from the art itself:
+//             brighter pixels stand proud, so every sprite, car and wall edge catches light
+//             from the side it's coming from, in its colour. Shadows fill with night blue.
+//   2. BLOOM  bright pixels are pulled out, blurred at half size and added back.
+//   3. FINAL  bloom + the overlay layer (hard light, speech, weather, HUD: everything drawn
+//             after lighting) at full screen resolution, with heat shimmer in the desert
+//             noon, a colour split when you're hit, film grain and optional CRT lines.
+// If WebGL isn't there, or the context is lost, the classic Canvas2D path takes over.
+'use strict';
+(function () {
+  const BW = 480, BH = 320;
+  const GL = (R.gl = { on: false, hurt: 0, t0: performance.now() });
+
+  const VS = 'attribute vec2 p;varying vec2 v;void main(){v=p*0.5+0.5;gl_Position=vec4(p,0.0,1.0);}';
+  const LUM = 'float lum(vec3 c){return dot(c,vec3(0.299,0.587,0.114));}';
+  const FS_LIT = `precision mediump float;varying vec2 v;
+uniform sampler2D uBase;uniform sampler2D uLight;uniform vec2 uTexel;uniform float uDark;uniform vec3 uNight;uniform float uNormal;uniform float uGain;
+${LUM}
+void main(){
+  vec3 a=texture2D(uBase,v).rgb;
+  if(uDark<0.01){gl_FragColor=vec4(a,1.0);return;}
+  vec3 L=texture2D(uLight,v).rgb;
+  vec2 lt=uTexel*3.0;
+  float lx=lum(texture2D(uLight,v+vec2(lt.x,0.0)).rgb)-lum(texture2D(uLight,v-vec2(lt.x,0.0)).rgb);
+  float ly=lum(texture2D(uLight,v+vec2(0.0,lt.y)).rgb)-lum(texture2D(uLight,v-vec2(0.0,lt.y)).rgb);
+  vec2 ld=vec2(lx,ly);float lm=length(ld);
+  float hl=lum(texture2D(uBase,v-vec2(uTexel.x,0.0)).rgb),hr=lum(texture2D(uBase,v+vec2(uTexel.x,0.0)).rgb);
+  float hd=lum(texture2D(uBase,v-vec2(0.0,uTexel.y)).rgb),hu=lum(texture2D(uBase,v+vec2(0.0,uTexel.y)).rgb);
+  vec3 N=normalize(vec3((hl-hr)*uNormal,(hd-hu)*uNormal,1.0));
+  vec3 Ld=normalize(vec3(lm>0.002?ld/lm:vec2(0.0),0.65));
+  float facing=clamp(0.25+1.25*dot(N,Ld),0.15,1.8);
+  float amb=1.0-uDark*0.94;
+  vec3 lit=a*(amb+L*uGain*facing*smoothstep(0.0,0.9,uDark));
+  lit+=uNight*uDark*(1.0-clamp(lum(L)*1.5,0.0,1.0));
+  lit+=L*L*0.06*uDark;
+  gl_FragColor=vec4(lit,1.0);
+}`;
+  const FS_BRIGHT = `precision mediump float;varying vec2 v;uniform sampler2D uTex;uniform float uThr;${LUM}
+void main(){vec3 c=texture2D(uTex,v).rgb;gl_FragColor=vec4(c*smoothstep(uThr,uThr+0.3,lum(c)),1.0);}`;
+  const FS_BLUR = `precision mediump float;varying vec2 v;uniform sampler2D uTex;uniform vec2 uDir;
+void main(){vec3 c=texture2D(uTex,v).rgb*0.227;
+c+=(texture2D(uTex,v+uDir*1.385).rgb+texture2D(uTex,v-uDir*1.385).rgb)*0.316;
+c+=(texture2D(uTex,v+uDir*3.231).rgb+texture2D(uTex,v-uDir*3.231).rgb)*0.070;
+gl_FragColor=vec4(c,1.0);}`;
+  const FS_FINAL = `precision mediump float;varying vec2 v;
+uniform sampler2D uLit;uniform sampler2D uBloom;uniform sampler2D uOver;uniform float uTime;uniform float uHeat;uniform float uHurt;uniform float uGrain;uniform float uScan;uniform float uScanPx;uniform float uBloomK;
+void main(){
+  vec2 uv=v;
+  if(uHeat>0.0){float n=sin(uv.y*140.0+uTime*6.0)*sin(uv.y*37.0-uTime*3.1);uv.x+=n*0.0022*uHeat*uv.y;}
+  vec3 c;
+  if(uHurt>0.01){float o=0.005*uHurt;c=vec3(texture2D(uLit,uv+vec2(o,0.0)).r,texture2D(uLit,uv).g,texture2D(uLit,uv-vec2(o,0.0)).b);}
+  else c=texture2D(uLit,uv).rgb;
+  c+=texture2D(uBloom,uv).rgb*uBloomK;
+  vec4 o=texture2D(uOver,v);
+  c=c*(1.0-o.a)+o.rgb;
+  float gr=fract(sin(dot(gl_FragCoord.xy+vec2(uTime*61.0,uTime*17.0),vec2(12.9898,78.233)))*43758.5453);
+  c+=(gr-0.5)*uGrain;
+  if(uScan>0.0){float s=abs(sin(gl_FragCoord.y*3.14159/uScanPx));c*=1.0-uScan*(1.0-s)*0.45;}
+  gl_FragColor=vec4(c,1.0);
+}`;
+
+  GL.supported = function () {
+    try { const c = document.createElement('canvas'); return !!(c.getContext('webgl') || c.getContext('experimental-webgl')); } catch (e) { return false; }
+  };
+  GL.wanted = function (game) { const s = game.settings.renderer; return s ? s === 'gl' : true; };
+
+  GL.setup = function (r) {
+    if (this.r === r && this.gl) return true;
+    const disp = r.display;
+    let cv = document.getElementById('glview');
+    if (!cv) {
+      cv = document.createElement('canvas');
+      cv.id = 'glview';
+      cv.setAttribute('aria-hidden', 'true');
+      Object.assign(cv.style, { position: 'absolute', left: '0', top: '0', width: '100%', height: '100%', pointerEvents: 'none', imageRendering: 'pixelated', display: 'block' });
+      disp.insertAdjacentElement('afterend', cv);
+    }
+    const gl = cv.getContext('webgl', { alpha: false, antialias: false, depth: false, stencil: false, premultipliedAlpha: false, preserveDrawingBuffer: false, powerPreference: 'high-performance' }) || cv.getContext('experimental-webgl');
+    if (!gl) return false;
+    this.cv = cv; this.gl = gl; this.r = r;
+    cv.addEventListener('webglcontextlost', (e) => { e.preventDefault(); this.fail('context lost'); }, { once: true });
+    const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
+    const prog = (fs) => {
+      const p = gl.createProgram();
+      gl.attachShader(p, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs));
+      gl.bindAttribLocation(p, 0, 'p'); gl.linkProgram(p);
+      if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+      const u = {}; const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+      for (let i = 0; i < n; i++) { const a = gl.getActiveUniform(p, i); u[a.name] = gl.getUniformLocation(p, a.name); }
+      return { p, u };
+    };
+    this.P = { lit: prog(FS_LIT), bright: prog(FS_BRIGHT), blur: prog(FS_BLUR), final: prog(FS_FINAL) };
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    const tex = (w, h, filter) => {
+      const t = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      if (w) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      return t;
+    };
+    const fbo = (w, h, filter) => { const t = tex(w, h, filter), f = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0); return { t, f, w, h }; };
+    this.T = { base: tex(0, 0, gl.NEAREST), over: tex(0, 0, gl.NEAREST), light: tex(0, 0, gl.LINEAR) };
+    this.F = { lit: fbo(BW, BH, gl.NEAREST), b1: fbo(BW / 2, BH / 2, gl.LINEAR), b2: fbo(BW / 2, BH / 2, gl.LINEAR) };
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    // the layer drawn after lighting
+    r.ov = document.createElement('canvas'); r.ov.width = BW; r.ov.height = BH;
+    r.ovg = r.ov.getContext('2d');
+    return true;
+  };
+  GL.fail = function (why) {
+    console.warn('WebGL renderer off:', why);
+    this.on = false;
+    if (this.r) this.r.glOn = false;
+    if (this.cv) this.cv.style.display = 'none';
+    this.gl = null;
+    const g = R.game;
+    if (g && g.ui && g.started) g.ui.toast('Graphics fell back to the classic renderer.', 'warn');
+  };
+  GL.apply = function (game) {
+    const r = game.renderer;
+    if (!r) return;
+    const want = this.wanted(game) && this.supported();
+    if (want) {
+      try { if (!this.setup(r)) throw new Error('no context'); } catch (e) { this.fail(e.message); return; }
+      this.on = true; r.glOn = true; this.cv.style.display = 'block';
+      this.size();
+    } else { this.on = false; r.glOn = false; if (this.cv) this.cv.style.display = 'none'; }
+  };
+  GL.size = function () {
+    if (!this.cv || !this.r) return;
+    const d = this.r.display;
+    if (this.cv.width !== d.width || this.cv.height !== d.height) { this.cv.width = d.width; this.cv.height = d.height; }
+  };
+  const upload = (gl, t, src, premul) => {
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, !!premul);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+  };
+
+  // the whole frame on the GPU
+  GL.present = function (r) {
+    const gl = this.gl;
+    if (!gl || gl.isContextLost()) { this.fail('lost'); return false; }
+    const game = r.game, pl = game.player;
+    try {
+      this.size();
+      const lit = !!r.glFrame; // a world frame (the title screen has no lighting pass)
+      if (!lit) { r.ovg && r.ovg.clearRect(0, 0, BW, BH); r.lg.clearRect(0, 0, r.light.width, r.light.height); }
+      upload(gl, this.T.base, r.cv, false);
+      upload(gl, this.T.over, r.ov, true);
+      upload(gl, this.T.light, r.light, false);
+      const dark = lit ? (r.glDark || 0) : 0;
+      const t = (performance.now() - this.t0) / 1000;
+      const draw = (P, fb, w, h, texs, set) => {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fb ? fb.f : null);
+        gl.viewport(0, 0, w, h);
+        gl.useProgram(P.p);
+        let i = 0;
+        for (const [name, tx] of texs) { gl.activeTexture(gl.TEXTURE0 + i); gl.bindTexture(gl.TEXTURE_2D, tx); gl.uniform1i(P.u[name], i); i++; }
+        set && set(P.u);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      };
+      const F = this.F, T = this.T;
+      // 1. light the world
+      draw(this.P.lit, F.lit, BW, BH, [['uBase', T.base], ['uLight', T.light]], (u) => {
+        gl.uniform2f(u.uTexel, 1 / BW, 1 / BH); gl.uniform1f(u.uDark, dark);
+        gl.uniform3f(u.uNight, 0.035, 0.04, 0.12); gl.uniform1f(u.uNormal, 3.2); gl.uniform1f(u.uGain, pl && pl.room ? 1.3 : 1.75);
+      });
+      // 2. bloom at half size
+      const bloomK = dark > 0.05 ? 0.55 + dark * 0.6 : 0.22;
+      draw(this.P.bright, F.b1, BW / 2, BH / 2, [['uTex', F.lit.t]], (u) => gl.uniform1f(u.uThr, dark > 0.05 ? 0.62 : 0.85));
+      for (let k = 0; k < 2; k++) {
+        draw(this.P.blur, F.b2, BW / 2, BH / 2, [['uTex', F.b1.t]], (u) => gl.uniform2f(u.uDir, (k + 1) * 2 / BW, 0));
+        draw(this.P.blur, F.b1, BW / 2, BH / 2, [['uTex', F.b2.t]], (u) => gl.uniform2f(u.uDir, 0, (k + 1) * 2 / BH));
+      }
+      // 3. to the screen
+      this.hurt = Math.max(0, this.hurt - 0.04);
+      const heat = R.dust && R.dust.heatOn ? 1 : 0;
+      const crt = game.settings.crt ? 1 : 0;
+      draw(this.P.final, null, this.cv.width, this.cv.height, [['uLit', F.lit.t], ['uBloom', F.b1.t], ['uOver', T.over]], (u) => {
+        gl.uniform1f(u.uTime, t); gl.uniform1f(u.uHeat, heat); gl.uniform1f(u.uHurt, this.hurt);
+        gl.uniform1f(u.uGrain, 0.035); gl.uniform1f(u.uScan, crt); gl.uniform1f(u.uScanPx, this.cv.height / BH); gl.uniform1f(u.uBloomK, bloomK);
+      });
+      r.glFrame = false;
+      return true;
+    } catch (e) { this.fail(e.message); return false; }
+  };
+
+  // ---------------------------------------------------------------- hooks
+  const RP = R.Renderer.prototype;
+  // after the lighting pass, everything else is drawn into the overlay layer
+  RP.afterLighting = function (g) {
+    if (!this.glOn || !this.ovg) return g;
+    const o = this.ovg;
+    o.setTransform(1, 0, 0, 1, 0, 0);
+    o.clearRect(0, 0, BW, BH);
+    o.imageSmoothingEnabled = false;
+    o.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    this.glFrame = true;
+    return o;
+  };
+  const bResize = RP.resize;
+  RP.resize = function () { const r = bResize.apply(this, arguments); if (GL.on) GL.size(); return r; };
+  GL.init = function (game) {
+    this.apply(game);
+    if (this.wired) return;
+    this.wired = true;
+    // a hit splits the colours for a moment
+    const U = R.UI.prototype, bHurt = U.hurtFlash;
+    if (bHurt) U.hurtFlash = function (amt) { GL.hurt = Math.min(1, GL.hurt + (amt || 10) / 25); return bHurt.apply(this, arguments); };
+    // settings: renderer and CRT lines
+    const bTab = U.openMenuTab;
+    U.openMenuTab = function (tab) {
+      const r = bTab.apply(this, arguments);
+      if (tab !== 'settings') return r;
+      const body = document.getElementById('mbody'), st = this.game.settings;
+      if (!body || body.querySelector('#sRend')) return r;
+      const cur = st.renderer || (GL.supported() ? 'gl' : 'classic');
+      body.insertAdjacentHTML('afterbegin', `<div class="set"><label for="sRend">Graphics</label><select id="sRend"><option value="gl" ${cur === 'gl' ? 'selected' : ''} ${GL.supported() ? '' : 'disabled'}>Modern (WebGL lighting, bloom)</option><option value="classic" ${cur === 'classic' ? 'selected' : ''}>Classic</option></select></div><div class="set"><label for="sCrt">CRT scanlines</label><input id="sCrt" type="checkbox" ${st.crt ? 'checked' : ''}></div>`);
+      body.querySelector('#sRend').addEventListener('change', (e) => { st.renderer = e.target.value; this.game.saveSettings(); GL.apply(this.game); });
+      body.querySelector('#sCrt').addEventListener('change', (e) => { st.crt = e.target.checked; this.game.saveSettings(); });
+      return r;
+    };
+  };
+})();
+
 // ---- 17_rim.js
 // RHAPSODY — rim light. At night and indoors every person picks up light from whatever is
 // brightest nearby: a street lamp, a neon sign, headlights, a burning car, a muzzle flash, a
@@ -24378,7 +24640,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     const game = this.game, cam = game.cam, pl = game.player;
     const calls = RL.calls; RL.calls = [];
     RL.world = this.wg || RL.world;
-    if (!RL.on || !calls.length) return r;
+    if (!RL.on || this.glOn || !calls.length) return r; // the WebGL path lights sprites from their own normals
     const dark = pl.room ? 0.5 : game.clock.darkness();
     if (dark < 0.15) return r;
     const vw = cam.vw / z, vh = cam.vh / z;
@@ -24450,6 +24712,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     const title = document.getElementById('title');
     title.style.display = 'flex';
     this.resize();
+    R.gl.init(this);
     const save = R.store.get(SAVE);
     this.loop();
     // wait (briefly) for the pixel fonts, then build the world

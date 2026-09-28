@@ -95,7 +95,7 @@
     const game = this.game, cam = game.cam, pl = game.player;
     const calls = RL.calls; RL.calls = [];
     RL.world = this.wg || RL.world;
-    if (!RL.on || !calls.length) return r;
+    if (!RL.on || this.glOn || !calls.length) return r; // the WebGL path lights sprites from their own normals
     const dark = pl.room ? 0.5 : game.clock.darkness();
     if (dark < 0.15) return r;
     const vw = cam.vw / z, vh = cam.vh / z;

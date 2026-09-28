@@ -32,6 +32,7 @@
     const title = document.getElementById('title');
     title.style.display = 'flex';
     this.resize();
+    R.gl.init(this);
     const save = R.store.get(SAVE);
     this.loop();
     // wait (briefly) for the pixel fonts, then build the world
