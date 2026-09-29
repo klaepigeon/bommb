@@ -8,9 +8,10 @@
     "typecheck": "tsc -p tsconfig.json",
     "smoke": "node tools/smoke.mjs",
     "interro": "node tools/interro.mjs",
+    "game1x": "node tools/game1x.mjs",
     "scenarios": "node tools/scenarios.mjs",
     "nightly": "node tools/nightly.mjs",
-    "check": "npm run typecheck && npm run build && npm run smoke && npm run interro"
+    "check": "npm run typecheck && npm run build && npm run smoke && npm run interro && npm run game1x"
   },
   "devDependencies": {
     "typescript": "^5.6.0"

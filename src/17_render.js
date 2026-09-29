@@ -332,7 +332,7 @@
           }
           continue;
         }
-        if (ob !== O.LAMP) continue;
+        if (ob !== O.LAMP || R.blackout) continue; // a blackout kills the street lights
         const flick = R.hash2(tx, ty, 2) < 0.06 ? (Math.sin(t * 20 + tx) > 0.3 ? 1 : 0.3) : 1;
         hole(tx * TS + 8, ty * TS + 6, 58, 0.9 * flick, '255,196,120');
         glows.push([tx * TS + 8, ty * TS + 3, 22, 'rgba(255,200,110,0.22)']);
@@ -340,6 +340,7 @@
     // lit windows & neon
     const NEON = ['255,70,190', '90,220,255', '255,120,40', '140,255,120', '200,110,255'], day = game.clock.day();
     for (const b of w.buildings) {
+      if (R.blackout) break; // and every window and sign with them
       if (!b || b.destroyed) continue;
       if (b.x + b.w < tx0 || b.x > tx1 || b.y + b.h < ty0 || b.y > ty1) continue;
       const bt = D.btypes[b.type];

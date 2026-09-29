@@ -93,6 +93,8 @@
     R.carry.init(this);
     R.interro.init(this);
     R.feats.init(this);
+    R.phoneman.init(this); R.dog.init(this); R.disguise.init(this); R.roadblock.init(this);
+    R.hurricane.init(this); R.moonshine.init(this); R.armored.init(this); R.funeral.init(this);
     R.charm.init(this); R.charm.reinit();
     R.night.init(this);
     R.opening.init(this);

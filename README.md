@@ -54,6 +54,35 @@ This is a ground-up rebuild of the original single-file *Rhapsody* (Port Hollow)
 
 ## This round
 
+- **The Phone Man:** once you have a name (infamy 10+), payphones near you start ringing. A
+  voice offers a contract (a name, a price, three days) and sometimes a way he wants it done:
+  a blade, no guns, an accident, broad daylight, quietly. Do it his way for double; the money
+  is taped under the phone you answered.
+- **A dog:** feed a stray a sandwich and it's yours, with a name. It follows you, waits when you
+  drive or go inside, goes for anyone who comes at you, digs up coins, and makes people like
+  you a little more. Pet it. If it dies, it hurts.
+- **The uniform:** strip a downed cop and wear the blues. Street cops stop knowing your face.
+  In a police station you can lose the case file on you or clear out the property room (20%
+  chance someone notices). Anything serious in front of people blows it.
+- **Roadblocks:** run from a level-2 warrant by car and they set up ahead: two cruisers across
+  the road, shotguns, a spike strip. Shredded tyres crawl; a garage or gas station sells new ones.
+- **Hurricanes:** every few weeks one comes off the Gulf, warned a day ahead. Sideways wind,
+  debris, and a blackout: street lights and windows go dark, and shop registers are there for
+  the taking until the power comes back.
+- **Moonshine:** buy a copper still and mash at a general store, set it up out in the country,
+  and it cooks a jug every five hours. Bars and liquor stores buy it out the back. The ATF
+  smashes untended stills, and visits the ones you're standing next to.
+- **The armored car:** buy the day's route in a bar, or catch one by chance. It won't blow up,
+  but shoot or ram it enough and it dies on the road; drop the crew, then blow or pry the back
+  doors for the bank's bags. Every cop in the county comes.
+- **Mob funerals:** when a don or capo dies, the family buries him at his city's church the
+  next morning, 9 to 1. Pay your respects ($100, standing with the family, unless the widow
+  recognises the man who put him there), or hit the rival boss standing on the steps.
+- Seven new achievements for the above. `node tools/game1x.mjs` tests every one of them (part of
+  `npm run check`).
+
+## Earlier: interrogation round
+
 - **Interrogation:** anyone tied up, or with their hands up at gunpoint, can be interrogated.
   Wear down their resolve (ask, bribe, threaten, rough them up, or make it hurt: the knife, a
   shot to the leg, broken fingers). Pain breaks people fastest, but people in agony lie, and
@@ -121,6 +150,7 @@ Modules are `.js` or `.ts`. The build transpiles TypeScript per file, and `npm r
 
 - `node tools/smoke.mjs`: boot and tick check.
 - `node tools/scenarios.mjs`: real-input scenario suite.
+- `node tools/interro.mjs [sequel]` and `node tools/game1x.mjs`: interrogation, and this round's game 1 features.
 - `node tools/playtest.mjs DAYS OUT STYLE`: the long-haul bot (styles: all, shark, fixer, hijacker).
 - `node tools/nightly.mjs [days] [--update-baseline]`: runs the bot per style and flags any metric that drifted more than 40% from `tools/baseline.json` (writes `nightly-out/summary.md`).
 

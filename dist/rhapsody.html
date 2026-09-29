@@ -16094,6 +16094,162 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
   };
 })();
 
+// ---- 14_armored.js
+// RHAPSODY — the armoured car. Brink's-style grey trucks run the banks' cash between branches,
+// a driver and a guard with a shotgun up front. A bartender will sell you the route for the day;
+// sometimes you just see one go by. You can't blow it up (that's the point of the armour), but
+// you can ram it, shoot the engine out, and once it's dead on the road the crew bails out to
+// fight. Then it's the back doors: dynamite, or a crowbar and a long, loud minute. Inside are
+// canvas bags of bank money. Every cop in the county is on the radio before you've counted it.
+'use strict';
+(function () {
+  const TS = R.TILE;
+  const G = () => R.game;
+  const AR = (R.armored = { t: 0 });
+  const GREY = '#6a6e66';
+  AR.state = function () { const st = R.shark.street(); return (st.armored = st.armored || { hits: 0, earned: 0, tipDay: -1, seenDay: -1 }); };
+  AR.truck = function () { return G().traffic.list.find((v) => v.armored && !v.removed) || null; };
+  // put one on the road out of sight, heading somewhere
+  AR.spawn = function (near) {
+    const g = G(), w = g.world, pl = g.player;
+    const ptx = ((near || pl).x / TS) | 0, pty = ((near || pl).y / TS) | 0;
+    const road = (x, y) => { const f = w.flow[w.idx(x, y)]; return f && !(f & R.FLOW.X); };
+    const s = w.findNear(ptx, pty, 14, 30, road) || w.findNear(ptx, pty, 10, 40, road) || w.findNear(ptx, pty, 6, 50, road);
+    if (!s) return null;
+    const f = w.flow[w.idx(s.x, s.y)], dirs = [0, 1, 2, 3].filter((d) => f & R.DIRBIT[d]);
+    const dir = R.rng.pick(dirs.length ? dirs : [0]);
+    const DIRA = [-Math.PI / 2, 0, Math.PI / 2, Math.PI];
+    const v = g.traffic.make('truck', s.x * TS + 8, s.y * TS + 8, DIRA[dir], { ai: { tx: s.x, ty: s.y, dir, turned: false }, keep: true, locked: true, color: GREY });
+    v.model = Object.assign({}, v.model, { name: 'Armored Car', hp: 900, top: 100 });
+    v.hp = v.maxHp = 900;
+    v.armored = { bags: R.rng.int(3, 6), open: false, dead: false };
+    v.cargo = null; // not swag: the hijack fence doesn't want it
+    const d = g.traffic.addDriver(v, { role: 'guard', weapon: 'revolver', arch: 'square', cash: 30 });
+    d.strangerName = 'Armored Car Driver'; d.keep = true; d.tr.brave = 1;
+    const gd = g.actors.makeHuman(v.x, v.y, { tag: 'guard', weapon: 'shotgun', arch: 'tough', cash: 40 });
+    gd.inCar = v; gd.state = 'drive'; gd.keep = true; gd.strangerName = 'Armored Car Guard'; gd.tr.brave = 1;
+    v.passengers = (v.passengers || []).concat([gd]);
+    v.crew = [d, gd];
+    this.state().seenDay = g.pop.day;
+    return v;
+  };
+  // the engine dies: stop dead, crew out and fighting
+  AR.disable = function (v) {
+    const g = G(), pl = g.player;
+    if (v.armored.dead) return;
+    v.armored.dead = true;
+    v.ai = null; v.speed = 0; v.vx = v.vy = 0; v.parked = true; v.burning = 0;
+    v.model = Object.assign({}, v.model, { top: 0, acc: 0 });
+    for (const c of v.crew || []) {
+      if (!c || c.dead) continue;
+      if (c.inCar === v) g.traffic.exitVehicle(v, c);
+      c.hostile = true; c.hostileLocked = true; c.state = 'idle';
+      g.actors.setFight(c, pl);
+    }
+    v.passengers = [];
+    g.fx.smoke(v.x, v.y - 4, true);
+    g.ui.toast('The armored car grinds to a stop, steam pouring out of the grille. The crew\'s coming out shooting.', 'warn');
+    g.law.crime('explosion', v.x, v.y, {});
+  };
+  AR.crack = function (v, how) {
+    const g = G(), pl = g.player, s = this.state();
+    if (v.armored.open) return;
+    const alive = (v.crew || []).filter((c) => c && !c.dead && !(c.down > 0) && !c.tied && R.dist(c.x, c.y, v.x, v.y) < TS * 10);
+    if (alive.length) return g.ui.toast('Not with the crew still on their feet.', 'warn');
+    if (how === 'dynamite') {
+      if (!(pl.inv.ammo.dynamite > 0)) return g.ui.toast('You need a stick of dynamite.', 'warn');
+      pl.inv.ammo.dynamite--;
+      R.combat.explosion(v.x - Math.cos(v.angle) * 30, v.y - Math.sin(v.angle) * 30, 20, 10, pl, false);
+    } else {
+      g.audio.sfx('crash', v.x, v.y);
+      pl.stats && (pl.stats.pried = (pl.stats.pried || 0) + 1);
+      g.clock.t += 2; // a long, loud couple of minutes
+    }
+    v.armored.open = true;
+    const per = R.rng.int(700, 1400), n = v.armored.bags, total = per * n;
+    pl.addCash(total);
+    s.hits++; s.earned += total;
+    g.audio.sfx('cash');
+    g.law.crime('heist', v.x, v.y, {});
+    // the bank's radio call goes out whether anyone saw your face or not
+    if (!g.law.incident) g.law.startIncident({ type: 'heist', def: g.law.CRIMES.heist, x: v.x, y: v.y, jur: g.law.jurAt(v.x, v.y), identified: !pl.masked, t: g.clock.t, lvl: 3, bounty: g.law.CRIMES.heist.bounty }, null);
+    const inc = g.law.incident;
+    if (inc) inc.level = Math.max(inc.level, 3);
+    const city = g.world.cityAt((v.x / TS) | 0, (v.y / TS) | 0);
+    g.pop.addNews(city ? city.id : g.world.cities[0].id, `ARMORED CAR HIT IN BROAD DAYLIGHT. ${R.fmtMoney(total)} in bank money gone. "A military-style operation," says the chief. The FBI has been called.`);
+    g.ui.banner('ARMORED CAR', `${n} canvas bags · ${R.fmtMoney(total)}. Every cop in the county is coming.`);
+  };
+  AR.context = function (pl) {
+    if (pl.inCar || pl.room || pl.carrying) return null;
+    const v = this.truck();
+    if (!v || !v.armored.dead || v.armored.open || R.dist(pl.x, pl.y, v.x, v.y) > TS * 3) return null;
+    return { label: 'The back doors', fn: () => G().ui.choice('Armored car: the back doors', [
+      { label: 'Blow them', small: `A stick of dynamite (${pl.inv.ammo.dynamite || 0}). Quick and very loud`, fn: () => this.crack(v, 'dynamite') },
+      { label: 'Pry them', small: 'A crowbar and a couple of minutes of screaming metal', fn: () => this.crack(v, 'pry') },
+      { label: 'Leave it', fn: () => {} },
+    ]) };
+  };
+  AR.update = function (dt) {
+    const g = G(), pl = g.player, s = this.state();
+    this.t -= dt;
+    if (this.t > 0) return;
+    this.t = 2;
+    const v = this.truck();
+    if (v) {
+      // gone off the map, or empty and forgotten
+      if (R.dist(v.x, v.y, pl.x, pl.y) > TS * 90 || (v.armored.open && R.dist(v.x, v.y, pl.x, pl.y) > TS * 40)) { g.traffic.remove(v); return; }
+      if (!v.armored.dead && v.hp < v.maxHp * 0.45) this.disable(v);
+      // crew shot from inside or dragged out: the truck dies with them
+      if (!v.armored.dead && v.driver !== (v.crew || [])[0]) this.disable(v);
+      return;
+    }
+    // the day's run, if you bought the route, or once in a while by chance, in daylight, in town
+    const h = g.clock.hour(), city = g.world.cityAt((pl.x / TS) | 0, (pl.y / TS) | 0);
+    if (!city || pl.room || h < 9 || h > 16 || s.seenDay === g.pop.day) return;
+    if (s.tipDay === g.pop.day || R.rng() < 0.004) {
+      const t = this.spawn();
+      if (t) g.ui.toast(s.tipDay === g.pop.day ? 'There: the grey armored car, right on the bartender\'s schedule.' : 'A grey armored car rumbles past on its bank run. Two men up front.', 'warn');
+    }
+  };
+  AR.draw = function (gx) {
+    const v = this.truck();
+    if (!v || v.removed) return;
+    // bank stencil on the box, and the doors hanging open once cracked
+    gx.save(); gx.translate(Math.round(v.x), Math.round(v.y)); gx.rotate(v.angle);
+    gx.fillStyle = '#e4a92a'; gx.fillRect(-18, -2, 14, 4);
+    if (v.armored.open) { gx.fillStyle = '#2a2a2a'; gx.fillRect(-v.model.w / 2 - 1, -7, 3, 14); gx.fillStyle = GREY; gx.fillRect(-v.model.w / 2 - 6, -10, 5, 3); gx.fillRect(-v.model.w / 2 - 6, 7, 5, 3); }
+    gx.restore();
+  };
+  AR.init = function (g) {
+    this.t = 0;
+    if (this.wrapped) return;
+    this.wrapped = true;
+    const TP = R.Traffic.prototype, dmg = TP.damage, ex = TP.explode;
+    // armour: a fraction of the damage, and it never blows
+    TP.damage = function (v, amt, by, blast) {
+      if (v && v.armored) { amt *= 0.4; if (v.hp - amt < 1) amt = Math.max(0, v.hp - 1); blast = false; }
+      return dmg.call(this, v, amt, by, blast);
+    };
+    TP.explode = function (v, by) { if (v && v.armored) { v.burning = 0; if (!v.armored.dead) AR.disable(v); return; } return ex.call(this, v, by); };
+    const PP = R.Player.prototype, ctx = PP.contextAction;
+    PP.contextAction = function () { return AR.context(this) || ctx.call(this); };
+    const GP = R.Game.prototype, tk = GP.tick;
+    GP.tick = function (dt) { const r = tk.apply(this, arguments); if (this.traffic && this.player && this.pop && !this.ui.paused()) AR.update(dt); return r; };
+    const rd = R.ring.draw;
+    R.ring.draw = function (gx) { rd.apply(this, arguments); AR.draw(gx); };
+    const U = R.UI.prototype, io = U.interiorOptions;
+    U.interiorOptions = function (b) {
+      const o = io.call(this, b), g2 = this.game, s = AR.state();
+      if ((b.type === 'bar' || b.type === 'club') && s.tipDay !== g2.pop.day && g2.clock.hour() < 15) o.push({ label: 'Buy the armored car route', price: '$300', small: 'A bank guard drinks here. Today\'s run, in town, 9 to 4', fn: () => {
+        if (!g2.player.pay(300)) return g2.ui.toast('$300 for the route.');
+        s.tipDay = g2.pop.day; s.seenDay = -1;
+        g2.ui.toast('Napkin, pencil: the route. The armored car comes through town today between nine and four. Stop it (it won\'t blow), drop the crew, open the back.', 'good');
+      } });
+      return o;
+    };
+  };
+})();
+
 // ---- 14_arms.js
 // RHAPSODY — the armory, extended. The sap puts people to sleep instead of in the ground
 // (best from behind, on someone who never saw you coming). New guns and blades show up
@@ -18884,6 +19040,205 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
   };
 })();
 
+// ---- 14_disguise.js
+// RHAPSODY — the uniform. Take it off a cop who's out cold (or worse) and put it on: blue shirt,
+// cap, badge. Street cops stop recognising your face; nobody looks twice at a policeman. Walk
+// into a police station in it and you can lose a case file from the detectives' desk, or make
+// the evidence against you disappear from the property room. But do anything serious in front
+// of people and the disguise is blown. Take it off at home, a hotel or a tailor.
+'use strict';
+(function () {
+  const TS = R.TILE;
+  const G = () => R.game;
+  const DS = (R.disguise = {});
+  const SHIRT = ['#141c34', '#2a3a6a', '#3a4e8a', '#5a70b0'], PANTS = ['#0e1424', '#1a2a4a', '#28406a', '#3a5688'], CAP = ['#0c0c10', '#1e1e26', '#34343e', '#4a4a56'];
+  DS.on = () => !!(G() && G().player && G().player.disguise);
+  DS.dress = function (pl) {
+    if (!pl.disguise || !pl.look) return;
+    const ov = (pl.look.oldOverride = pl.look.oldOverride || {});
+    Object.assign(ov, { shirt: SHIRT, pants: PANTS, jacket: null, style: 'cap', cap: CAP, top: 'collar', flare: false, belt: '#1a1410' });
+    pl.look.hatKind = null; pl.look.uniformBadge = true; pl.look.seedStr = (pl.look.seedStr || 'p') + '-cop';
+  };
+  DS.put = function (cop) {
+    const g = G(), pl = g.player;
+    cop.stripped = true;
+    pl.disguise = { since: g.clock.t, name: cop.strangerName || 'Officer' };
+    pl.buildLook();
+    g.audio.sfx('equip');
+    g.ui.toast('Blue shirt, cap, badge. Walk like you own the street: street cops won\'t know your face now. Anything serious in front of people blows it.', 'good');
+  };
+  DS.off = function (why) {
+    const g = G(), pl = g.player;
+    if (!pl.disguise) return;
+    pl.disguise = null; pl.look.uniformBadge = false;
+    pl.buildLook();
+    if (why) g.ui.toast(why, 'bad');
+  };
+  DS.context = function (pl) {
+    if (pl.disguise || pl.inCar || pl.room || pl.carrying) return null;
+    const cop = G().actors.near(pl.x, pl.y, TS * 1.4, (q) => q.kind === 'h' && q.cop && !q.stripped && !q.carried && (q.dead || q.down > 0) && !q.gibbed)[0];
+    return cop ? { label: 'Take the uniform', fn: () => this.put(cop) } : null;
+  };
+  DS.init = function (g) {
+    if (this.wrapped) return;
+    this.wrapped = true;
+    const PP = R.Player.prototype, bl = PP.buildLook, ctx = PP.contextAction;
+    PP.buildLook = function () { const r = bl.apply(this, arguments); if (this.disguise) DS.dress(this); return r; };
+    PP.contextAction = function () { return DS.context(this) || ctx.call(this); };
+    const L = R.Law.prototype, sees = L.copSees, crime = L.crime;
+    // a cop doesn't look at another cop's face
+    L.copSees = function (cop, d) { if (this.game.player.disguise && !this.incident && !(cop.brandishT > 0)) return; return sees.call(this, cop, d); };
+    // anything serious and it's over
+    L.crime = function (type, x, y, opts) {
+      const r = crime.apply(this, arguments), def = this.CRIMES[type];
+      if (this.game.player.disguise && def && def.lvl >= 2 && !(opts && opts.minor)) DS.off('Somebody saw a "cop" do that. The disguise is blown, and they\'ll know that face now.');
+      return r;
+    };
+    // the station
+    const U = R.UI.prototype, io = U.interiorOptions;
+    U.interiorOptions = function (b) {
+      const o = io.call(this, b), g2 = this.game, pl = g2.player, st = R.shark.street(), day = g2.pop.day;
+      if (pl.disguise && b.type === 'police') {
+        const risk = () => { if (R.rng() < 0.2) { DS.off('The desk sergeant squints at you. "You ain\'t from this precinct." Run.'); g2.law.startIncident({ type: 'impersonation', def: { name: 'Impersonating an Officer' }, x: pl.x, y: pl.y, jur: g2.law.jurAt(pl.x, pl.y), identified: true, lvl: 2, bounty: 150 }, null); return true; } return false; };
+        if (st.fileDay !== day) o.push({ label: 'Lose a case file', small: 'The detectives\' desk. Nobody watches it at lunch.', fn: () => {
+          st.fileDay = day; if (risk()) return;
+          const c = R.cases && R.cases.open().sort((a, b2) => b2.progress - a.progress)[0];
+          if (!c) return g2.ui.toast('There\'s no file on you. Somebody\'s doing you a favour already.');
+          c.progress = Math.max(0, c.progress - 60); if (c.status === 'warrant') c.status = 'open';
+          g2.ui.toast(`The file on the ${c.name.toLowerCase()} in ${c.where} goes into the furnace. ${c.det} will be looking for it for a week.`, 'good');
+        } });
+        if (st.evDay !== day) o.push({ label: 'Clear out the property room', small: 'Your evidence box: the gun, the clothes, the prints', fn: () => {
+          st.evDay = day; if (risk()) return;
+          const j = g2.law.jurAt(pl.x, pl.y), b0 = g2.law.bounty[j] || 0;
+          g2.law.bounty[j] = Math.round(b0 * 0.4);
+          g2.ui.toast(`A cardboard box, walked out the back in broad daylight. Bounty here ${R.fmtMoney(b0)} → ${R.fmtMoney(g2.law.bounty[j])}.`, 'good');
+        } });
+      }
+      if (pl.disguise && (b.type === 'house' || b.type === 'hotel' || b.type === 'motel' || b.type === 'tailor' || b.type === 'apartment')) o.push({ label: 'Take off the uniform', small: 'Back to yourself', fn: () => { DS.off(); g2.ui.toast('The uniform goes in a bag. Your own face again.'); } });
+      return o;
+    };
+  };
+})();
+
+// ---- 14_dog.js
+// RHAPSODY — a dog. The strays on the Brass Coast are thin and wary; feed one (a sandwich will
+// do) and it's yours. It follows you everywhere (it waits outside when you go in, and jumps in
+// the back when you drive), goes for anyone who comes at you, digs up the odd coin, and makes
+// people like you a little more. Give it a name. Pet it now and then. Try to keep it alive.
+'use strict';
+(function () {
+  const TS = R.TILE, D = R.data;
+  const G = () => R.game;
+  const DG = (R.dog = {});
+  const NAMES = ['Rufus', 'Bandit', 'Duke', 'Lucky', 'Sadie', 'Boomer', 'Rosie', 'Hank', 'Pepper', 'Buster', 'Molly', 'Cash'];
+  DG.state = function () { return R.shark.street(); };
+  DG.info = function () { return this.state().dog || null; };
+  DG.actor = function () { return G().actors.list.find((a) => a.kind === 'a' && a.companion && !a.dead) || null; };
+  DG.adopt = function (a) {
+    const g = G(), pl = g.player, st = this.state();
+    if (!(pl.inv.cons.sandwich > 0)) return g.ui.toast('It sniffs your empty hands. Bring it something to eat (a sandwich).', 'warn');
+    pl.inv.cons.sandwich--;
+    const name = R.rng.pick(NAMES);
+    st.dog = { name, day: g.pop.day, bond: 10 };
+    this.tame(a);
+    g.audio.sfx('accept');
+    g.ui.story(name, `It wolfs the sandwich down, then leans its whole weight against your leg and won't move.\n\nYou've got a dog. You call it ${name}; it doesn't object.\n\n${name} follows you everywhere, goes for anyone who comes at you, and digs up the odd coin. People like a man with a dog. (USE next to ${name} to pet it or send it home.)`);
+  };
+  DG.tame = function (a) {
+    const info = this.info();
+    a.companion = true; a.keep = true; a.state = 'follow'; a.target = null; a.strangerName = info ? info.name : 'Dog';
+    a.maxHp = a.hp = Math.max(a.maxHp, 60);
+  };
+  DG.summon = function () {
+    const g = G(), pl = g.player, info = this.info();
+    if (!info || this.actor() || pl.room || pl.inCar) return;
+    const s = g.world.findNear(pl.x / TS, pl.y / TS, 1, 4, (x, y) => !g.world.solidPed(x, y) && !g.world.isWater(x, y));
+    if (!s) return;
+    const a = g.actors.makeAnimal(s.x * TS + 8, s.y * TS + 8, 'dog');
+    if (a) this.tame(a);
+  };
+  DG.context = function (pl) {
+    const g = G(), info = this.info();
+    const own = this.actor();
+    if (own && Math.hypot(own.x - pl.x, own.y - pl.y) < TS * 1.4) {
+      return { label: info.name, fn: () => g.ui.choice(info.name, [
+        { label: `Pet ${info.name}`, small: 'Good dog', fn: () => { info.bond = Math.min(100, (info.bond || 0) + 5); pl.cool = Math.min(100, (pl.cool || 0) + 3); g.fx.text(own.x, own.y - 14, '♥', '#e8586a'); g.audio.sfx('click'); } },
+        { label: 'Send it home', small: 'It\'ll find its own way. You can whistle for another stray later', fn: () => { this.state().dog = null; own.companion = false; own.keep = false; own.state = 'wander'; g.ui.toast(`${info.name} trots off without looking back. Dogs are like that.`); } },
+        { label: 'Leave it', fn: () => {} },
+      ]) };
+    }
+    if (!info) {
+      const stray = g.actors.near(pl.x, pl.y, TS * 1.5, (a) => a.kind === 'a' && !a.dead && a.def === D.animals.dog && !a.companion)[0];
+      if (stray) return { label: 'Feed the stray', fn: () => this.adopt(stray) };
+    }
+    return null;
+  };
+  DG.update = function (dt) {
+    const g = G(), pl = g.player, info = this.info();
+    if (!info) return;
+    this.t = (this.t || 0) - dt;
+    if (this.t <= 0) {
+      this.t = 1;
+      if (!this.actor()) this.summon();
+      const a = this.actor();
+      if (a && a.hp < a.maxHp) a.hp = Math.min(a.maxHp, a.hp + 1);
+      // now and then it digs something up
+      if (a && !pl.inCar && R.rng() < 0.004) { const n = R.rng.int(3, 25); pl.addCash(n); g.fx.text(a.x, a.y - 14, `+$${n}`, '#e4a92a'); g.ui.toast(`${info.name} digs up something shiny: $${n}.`, 'good'); }
+    }
+  };
+  DG.init = function (g) {
+    this.t = 0;
+    if (this.wrapped) return;
+    this.wrapped = true;
+    const AP = R.Actors.prototype, ua = AP.updateAnimal;
+    AP.updateAnimal = function (a, dt) {
+      if (!a.companion || a.dead) return ua.call(this, a, dt);
+      const pl = this.game.player, def = a.def;
+      a.t += dt; a.moving = false;
+      // riding along: when you're in a car or indoors it waits; it catches up when you're out
+      if (pl.inCar || pl.room) { a.hidden = !!pl.inCar; return; }
+      a.hidden = false;
+      const dp = R.dist(a.x, a.y, pl.x, pl.y);
+      if (dp > TS * 20) { const s = this.game.world.findNear(pl.x / TS, pl.y / TS, 1, 3, (x, y) => !this.game.world.solidPed(x, y) && !this.game.world.isWater(x, y)); if (s) { a.x = s.x * TS + 8; a.y = s.y * TS + 8; } return; }
+      // anyone coming at you gets the teeth
+      if (!a.target || a.target.dead || a.timer <= 0) {
+        const foe = this.near(pl.x, pl.y, TS * 8, (q) => q.kind === 'h' && !q.dead && q.hostile && !(q.down > 0) && !q.tied)[0] || this.near(pl.x, pl.y, TS * 6, (q) => q.kind === 'a' && !q.dead && q !== a && q.state === 'attack' && q.target === pl)[0];
+        if (foe) { a.state = 'attack'; a.target = foe; a.timer = 10; if (R.rng() < 0.5) this.game.fx.text(a.x, a.y - 14, 'GRRR', '#d9621e'); }
+      }
+      if (a.state === 'attack' && a.target && !a.target.dead) return ua.call(this, a, dt);
+      a.state = 'follow'; a.target = null;
+      // stuck behind a wall: it finds its own way round (and turns up at your heel)
+      if (dp > 60 && Math.hypot(a.x - (a.lastX || 0), a.y - (a.lastY || 0)) < 0.3) a.stuckT = (a.stuckT || 0) + dt; else a.stuckT = 0;
+      a.lastX = a.x; a.lastY = a.y;
+      if (a.stuckT > 1.5) { const s = this.game.world.findNear(pl.x / TS, pl.y / TS, 1, 2, (x, y) => !this.game.world.solidPed(x, y) && !this.game.world.isWater(x, y)); if (s) { a.x = s.x * TS + 8; a.y = s.y * TS + 8; } a.stuckT = 0; return; }
+      if (dp > 28) {
+        const ang = Math.atan2(pl.y - a.y, pl.x - a.x);
+        a.angle = ang; a.moving = true;
+        this.moveActor(a, Math.cos(ang) * def.speed * (dp > 90 ? 1 : 0.7), Math.sin(ang) * def.speed * (dp > 90 ? 1 : 0.7), dt);
+      }
+    };
+    const PP = R.Player.prototype, ctx = PP.contextAction;
+    PP.contextAction = function () { return (!this.inCar && !this.room && DG.context(this)) || ctx.call(this); };
+    const GP = R.Game.prototype, tk = GP.tick;
+    GP.tick = function (dt) { const r = tk.apply(this, arguments); if (this.player && this.actors && !this.ui.paused()) DG.update(dt); return r; };
+    // losing it
+    const C = R.combat, ck = C.kill;
+    C.kill = function (h, source, kind) {
+      const was = h && h.dead, r = ck.apply(this, arguments);
+      if (!was && h && h.companion && h.kind === 'a') {
+        const g2 = G(), info = DG.info();
+        DG.state().dog = null;
+        g2.player.cool = Math.max(0, (g2.player.cool || 0) - 30);
+        g2.ui.story(info ? info.name : 'Your dog', `${info ? info.name : 'Your dog'} doesn't get up.\n\nYou kneel in the road for a long time. Nobody says anything to you, and that's the kindest thing anybody's done for you in years.`);
+      }
+      return r;
+    };
+    // people like a man with a dog
+    const D2 = R.dialog, tree = D2.tree;
+    D2.tree = function (h) { const t = tree.call(this, h); const a = DG.actor(); if (a && h && h.person && Math.hypot(a.x - h.x, a.y - h.y) < TS * 4 && R.rng() < 0.3) h.person.opinion = Math.min(100, (h.person.opinion || 0) + 1); return t; };
+  };
+})();
+
 // ---- 14_dust.js
 // RHAPSODY — dust storms. Out in the Dustwater country a hot afternoon can turn brown in
 // ten minutes: the wind comes up, the sky goes the colour of a paper bag, and you can't
@@ -19132,6 +19487,13 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
     { id: 'roller', name: 'High Roller', how: 'Hold $10,000', test: (pl) => pl.cash >= 10000 },
     { id: 'mogul', name: 'Mogul', how: 'Hold $100,000', test: (pl) => pl.cash >= 100000 },
     { id: 'ring', name: 'Ring Bearer', how: 'Wear a lantern ring', test: (pl) => !!pl.inv.tools.ring },
+    { id: 'phone', name: 'The Voice on the Line', how: 'Collect a Phone Man envelope', test: () => { const s = R.shark.street().phone; return !!(s && s.done >= 1); } },
+    { id: 'dog', name: 'Best Friend', how: 'Adopt a stray dog', test: () => !!R.shark.street().dog },
+    { id: 'blue', name: 'Thin Blue Line', how: 'Wear a police uniform', test: (pl) => !!pl.disguise },
+    { id: 'shine', name: 'White Lightning', how: 'Sell 20 jugs of moonshine', test: () => { const s = R.shark.street().shine; return !!(s && s.sold >= 20); } },
+    { id: 'brinks', name: 'Armored Car', how: 'Crack an armored car', test: () => { const s = R.shark.street().armored; return !!(s && s.hits >= 1); } },
+    { id: 'steps', name: 'On the Church Steps', how: 'Make a hit at a mob funeral', test: () => { const s = R.shark.street().funerals; return !!(s && s.hits >= 1); } },
+    { id: 'storm', name: 'Weathered', how: 'Ride out a hurricane', test: () => { const s = R.shark.street().storm; return !!(s && s.count >= 1); } },
     { id: 'nine', name: 'All Nine Lights', how: 'Own every lantern ring', test: () => !!(R.corps && R.corps.count && R.corps.count() >= 9) },
     { id: 'hunter', name: 'Big Game', how: 'Hunt 10 animals', test: (pl) => st(pl).hunted >= 10 },
     { id: 'road', name: 'Road Warrior', how: 'Travel 50 miles', test: (pl) => st(pl).miles >= 50 },
@@ -19170,6 +19532,144 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
     if (IN) { const act = IN.act; IN.act = function (h) { const was = h.intr && h.intr.broken; const r = act.apply(this, arguments); if (!was && h.intr && h.intr.broken) { const s = G().player.stats; s.broken = (s.broken || 0) + 1; } return r; }; }
     const B = R.bodies, pu = B.pickUp;
     B.pickUp = function (a) { const r = pu.apply(this, arguments); if (a && a.kind === 'h' && !a.dead) { const s = G().player.stats; s.kidnaps = (s.kidnaps || 0) + 1; } return r; };
+  };
+})();
+
+// ---- 14_funeral.js
+// RHAPSODY — funerals. When a don or a capo dies (whoever did it), the family buries him the
+// next morning at the church in his city, and the whole underworld turns out in black: the
+// widow, the soldiers, and a boss from a rival family who came to be seen paying respects. Go
+// and stand at the back with an envelope and the family remembers the gesture (unless you're
+// the reason for the funeral). Or come for the guest of honour: he's standing on the church
+// steps with his hat in his hands and only two men watching him.
+'use strict';
+(function () {
+  const TS = R.TILE;
+  const G = () => R.game;
+  const FU = (R.funeral = { t: 0, actors: [] });
+  FU.state = function () { const st = R.shark.street(); return (st.funerals = st.funerals || { list: [], paid: 0, hits: 0 }); };
+  FU.cur = function () { const g = G(), s = this.state(); return s.list.find((f) => f.day === g.pop.day && !f.over) || null; };
+  // someone important died: book the church for tomorrow morning
+  FU.onDeath = function (p, byPlayer) {
+    const g = G();
+    if (!p || !p.faction || p.faction === 'law' || !(p.isDon || p.role === 'capo')) return;
+    const w = g.world, s = this.state();
+    if (s.list.some((f) => f.pid === p.id)) return;
+    const city = w.cities.find((c) => c.id === p.city) || w.cities[0];
+    const ch = w.buildings.find((b) => b && !b.destroyed && b.type === 'church' && b.cityId === city.id) || w.buildings.find((b) => b && !b.destroyed && b.type === 'church');
+    if (!ch) return;
+    // the guest of honour: a boss from another family
+    const others = g.pop.people.filter((q) => q && q.alive && !q.jailed && q.faction && q.faction !== p.faction && q.faction !== 'law' && (q.role === 'capo' || q.isDon) && !q.actor);
+    const guest = others.length ? R.rng.pick(others) : null;
+    const f = { pid: p.id, name: `${p.first} ${p.last}`, don: !!p.isDon, fam: p.faction, bid: ch.id, day: g.pop.day + 1, byPlayer: !!byPlayer, guest: guest ? guest.id : null, over: false };
+    s.list.push(f);
+    if (s.list.length > 12) s.list.shift();
+    g.pop.addNews(city.id, `Funeral mass for ${f.name} tomorrow morning at ${ch.name}. The family asks for privacy. Police will be "keeping an eye on things."`);
+    if (R.dist(g.player.x, g.player.y, ch.out.x * TS, ch.out.y * TS) < TS * 200) g.ui.toast(`${f.name} will be buried tomorrow morning at ${ch.name}. Everybody who matters will be there.`, 'warn');
+  };
+  FU.stage = function (f) {
+    const g = G(), w = g.world, ch = w.buildings[f.bid];
+    if (!ch) return;
+    f.staged = true;
+    const ox = ch.out.x * TS + 8, oy = ch.out.y * TS + 8, place = (dx, dy) => { const s = w.findNear(ch.out.x + dx, ch.out.y + dy, 0, 3, (x, y) => !w.solidPed(x, y) && !w.isWater(x, y)); return s ? { x: s.x * TS + 8, y: s.y * TS + 8 } : { x: ox, y: oy }; };
+    this.actors = [];
+    const pr = place(0, 2), priest = g.actors.makeHuman(pr.x, pr.y, { arch: 'pious', role: 'priest', cash: 5 });
+    priest.strangerName = 'Father Bianchi'; priest.keep = true; this.actors.push(priest);
+    const widow = g.actors.makeHuman(pr.x - 16, pr.y + 18, { arch: 'timid', cash: 20 });
+    widow.strangerName = `Mrs. ${f.name.split(' ').slice(-1)[0]}`; widow.keep = true; this.actors.push(widow);
+    for (let k = 0; k < 4; k++) {
+      const p = place(-3 + k * 2, 4), m = g.actors.makeHuman(p.x, p.y, { arch: 'tough', role: 'soldier', weapon: 'revolver', cash: 30 });
+      m.strangerName = `${f.fam} soldier`; m.keep = true; m.mourner = f.fam; this.actors.push(m);
+    }
+    const gp = f.guest != null ? g.pop.people[f.guest] : null;
+    if (gp && gp.alive && !gp.actor) {
+      const p = place(3, 3), h = g.actors.makeHuman(p.x, p.y, { person: gp, cash: 400 });
+      h.keep = true; h.funeralGuest = true; this.actors.push(h); f.guestActor = h;
+      for (let k = 0; k < 2; k++) { const b = g.actors.makeHuman(p.x + (k ? 14 : -14), p.y + 10, { arch: 'tough', weapon: 'shotgun', cash: 25 }); b.strangerName = 'Bodyguard'; b.keep = true; b.guarding = h; this.actors.push(b); }
+    }
+    for (const a of this.actors) { a.state = 'idle'; a.timer = 1e9; a.angle = Math.atan2(oy - a.y, ox - a.x); }
+  };
+  FU.clear = function () {
+    const g = G();
+    for (const a of this.actors) if (a && !a.dead && !a.removed && !a.hostile && !a.carried) g.actors.remove(a);
+    this.actors = [];
+  };
+  FU.respects = function (f) {
+    const g = G(), pl = g.player, s = this.state();
+    if (f.paid) return g.ui.toast('You already paid your respects.');
+    if (!pl.pay(100)) return g.ui.toast('You need an envelope: $100.', 'warn');
+    f.paid = true; s.paid++;
+    if (f.byPlayer && R.rng() < 0.5) {
+      g.ui.toast('The widow looks up from the envelope, then at your face, and screams. Every soldier on the steps goes for his gun.', 'bad');
+      for (const a of this.actors) if (a.mourner && !a.dead) { a.hostile = true; a.hostileLocked = true; g.actors.setFight(a, pl); }
+      return;
+    }
+    g.jobs.standing[f.fam] = R.clamp((g.jobs.standing[f.fam] || 0) + (f.byPlayer ? 4 : 12), -100, 100);
+    pl.rep.honor = (pl.rep.honor || 0) + 1;
+    g.ui.toast(`An envelope in the widow's hands, a nod to the soldiers. The ${f.fam} family will remember you came.${f.byPlayer ? ' (Nobody knows. Yet.)' : ''}`, 'good');
+  };
+  FU.context = function (pl) {
+    const f = this.cur();
+    if (!f || !f.staged || pl.inCar || pl.room) return null;
+    const ch = G().world.buildings[f.bid];
+    if (!ch || R.dist(pl.x, pl.y, ch.out.x * TS + 8, ch.out.y * TS + 8) > TS * 5) return null;
+    return { label: `The funeral of ${f.name}`, fn: () => G().ui.choice(`Funeral: ${f.name}`, [
+      { label: 'Pay your respects', price: '$100', small: `An envelope for the widow. The ${f.fam} family notices who came`, fn: () => this.respects(f) },
+      f.guestActor && !f.guestActor.dead ? { label: 'Look over the guests', small: 'Who came, and who\'s watching them', fn: () => G().ui.toast(`${f.guestActor.person ? `${f.guestActor.person.first} ${f.guestActor.person.last}` : 'A rival boss'} of the ${f.guestActor.person ? f.guestActor.person.faction : 'other'} family, on the steps, two bodyguards. The soldiers are all watching the widow.`) } : null,
+      { label: 'Leave', fn: () => {} },
+    ].filter(Boolean)) };
+  };
+  FU.update = function (dt) {
+    const g = G(), pl = g.player, s = this.state();
+    this.t -= dt;
+    if (this.t > 0) return;
+    this.t = 1;
+    const h = g.clock.hour();
+    for (const f of s.list) {
+      if (f.over) continue;
+      if (g.pop.day > f.day || (g.pop.day === f.day && h >= 13)) { f.over = true; if (f.staged) this.clear(); continue; }
+      if (g.pop.day !== f.day || h < 9) continue;
+      const ch = g.world.buildings[f.bid];
+      if (!ch) { f.over = true; continue; }
+      const d = R.dist(pl.x, pl.y, ch.out.x * TS, ch.out.y * TS);
+      if (!f.staged && d < TS * 40) this.stage(f);
+      // keep the named guest from wandering off to his usual day
+      if (f.guestActor && !f.guestActor.dead && f.guestActor.person && g.life) f.guestActor.destKey = g.life.desiredKey(f.guestActor.person);
+      // the hit
+      if (f.guestActor && f.guestActor.dead && !f.hit) {
+        f.hit = true; s.hits++;
+        const own = pl.family, gp = f.guestActor.person;
+        if (own && gp && gp.faction !== own) { pl.addCash(1500); g.jobs.standing[own] = R.clamp((g.jobs.standing[own] || 0) + 10, -100, 100); }
+        for (const a of this.actors) if (!a.dead && (a.mourner || a.guarding)) { a.hostile = true; a.hostileLocked = true; g.actors.setFight(a, pl); }
+        g.pop.addNews(ch.cityId || g.world.cities[0].id, `MASSACRE ON THE CHURCH STEPS. ${gp ? `${gp.first} ${gp.last}` : 'A mourner'} gunned down at the funeral of ${f.name}. "Is nothing sacred?" asks the Archbishop.`);
+        g.ui.toast(`The guest of honour goes down on the church steps.${own && gp && gp.faction !== own ? ' Your family sends $1,500 and its compliments.' : ''}`, 'good');
+      }
+    }
+  };
+  FU.draw = function (gx) {
+    const f = this.cur();
+    if (!f || !f.staged) return;
+    const ch = G().world.buildings[f.bid];
+    if (!ch) return;
+    // the hearse-black coffin on its stand, and wreaths
+    const x = ch.out.x * TS + 8, y = ch.out.y * TS + 8 + 22;
+    gx.fillStyle = '#3a2a1a'; gx.fillRect(x - 3, y + 3, 1, 4); gx.fillRect(x + 12, y + 3, 1, 4);
+    gx.fillStyle = '#1a1210'; gx.fillRect(x - 5, y - 2, 20, 6); gx.fillStyle = '#6a4a2a'; gx.fillRect(x - 5, y - 2, 20, 1); gx.fillStyle = '#c8a040'; gx.fillRect(x + 1, y, 6, 1);
+    for (const [dx, c] of [[-12, '#e8e0e0'], [22, '#c83040']]) { gx.fillStyle = '#2a5a2a'; gx.fillRect(x + dx - 3, y - 4, 7, 7); gx.fillStyle = c; gx.fillRect(x + dx - 1, y - 2, 3, 3); }
+  };
+  FU.init = function (g) {
+    this.t = 0; this.actors = [];
+    if (!this.onDeathFn) this.onDeathFn = (p, by) => FU.onDeath(p, by);
+    const ls = R.bus.map.get('person:died');
+    if (!ls || !ls.includes(this.onDeathFn)) R.bus.on('person:died', this.onDeathFn);
+    if (this.wrapped) return;
+    this.wrapped = true;
+    const PP = R.Player.prototype, ctx = PP.contextAction;
+    PP.contextAction = function () { return FU.context(this) || ctx.call(this); };
+    const GP = R.Game.prototype, tk = GP.tick;
+    GP.tick = function (dt) { const r = tk.apply(this, arguments); if (this.pop && this.player && this.jobs && !this.ui.paused()) FU.update(dt); return r; };
+    const rd = R.ring.draw;
+    R.ring.draw = function (gx) { rd.apply(this, arguments); FU.draw(gx); };
   };
 })();
 
@@ -19362,6 +19862,82 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
     this.wrap();
     const cj = R.campaign.jobsHtml;
     R.campaign.jobsHtml = function () { return HN.html() + cj.call(this); };
+  };
+})();
+
+// ---- 14_hurricane.js
+// RHAPSODY — hurricane season. Every few weeks a storm comes in off the Gulf. The radio and the
+// papers warn you a day ahead; then the wind comes, sideways rain, debris in the air, and the
+// power goes out across the whole coast. In the blackout the street lights and signs die, the
+// burglar alarms are dead, and every shop register is there for the taking (the police have
+// their hands full). The lights come back a few hours after the wind drops. Then the papers
+// count the damage.
+'use strict';
+(function () {
+  const G = () => R.game;
+  const HU = (R.hurricane = {});
+  const NAMES = ['Agnes', 'Camille', 'Celia', 'Eloise', 'Frederic', 'Anita', 'Babe', 'Carmen', 'Delia', 'Fifi', 'Gilda', 'Hilda'];
+  HU.state = function () { const st = R.shark.street(); return (st.storm = st.storm || { next: 18 + R.rng.int(0, 20), warned: false, until: 0, power: 0, name: null, count: 0, looted: {} }); };
+  HU.active = function () { const g = G(), s = this.state(); return g.clock.t < s.until; };
+  HU.warn = function () {
+    const g = G(), s = this.state();
+    s.name = NAMES[s.count % NAMES.length]; s.warned = true;
+    g.pop.addNews(g.world.cities[0].id, `HURRICANE ${s.name.toUpperCase()} TO MAKE LANDFALL TOMORROW NIGHT. Board up your windows; the power company says to expect outages.`);
+    g.ui.toast(`Radio: Hurricane ${s.name} makes landfall tomorrow night. Expect the power to go.`, 'warn');
+  };
+  HU.start = function (hours) {
+    const g = G(), s = this.state();
+    if (!s.name) s.name = NAMES[s.count % NAMES.length];
+    s.until = g.clock.t + (hours || 10) * 60;
+    s.power = s.until + 4 * 60;
+    s.looted = {};
+    g.env.setWeather('storm');
+    g.ui.banner(`HURRICANE ${s.name.toUpperCase()}`, 'The power\'s out across the coast. The alarms are dead. The cops are busy.');
+    g.audio.sfx('thunder');
+  };
+  HU.end = function () {
+    const g = G(), s = this.state();
+    s.count++; s.warned = false; s.next = g.pop.day + 18 + R.rng.int(0, 20);
+    g.pop.addNews(g.world.cities[0].id, `${s.name} is gone. ${R.rng.int(40, 400)} homes damaged, ${R.rng.int(2, 30)} stores looted in the blackout. "Animals," says the mayor.`);
+    g.ui.toast(`Hurricane ${s.name} has blown through. The power's back.`, 'good');
+    s.name = null;
+  };
+  HU.update = function (dt) {
+    const g = G(), s = this.state(), day = g.pop.day, w = g.env.weather;
+    const blackout = g.clock.t < (s.power || 0);
+    R.blackout = blackout;
+    if (this.active()) {
+      if (w.kind !== 'storm') g.env.setWeather('storm');
+      w.wind = { x: 3.2, y: 0.6 };
+      // debris in the air near you
+      if (R.rng() < dt * 6 && g.player && !g.player.room) {
+        const pl = g.player;
+        g.fx.add({ x: pl.x - 180 + R.rng() * 40, y: pl.y - 120 + R.rng() * 240, vx: 260 + R.rng() * 120, vy: (R.rng() - 0.5) * 60, life: 1.6, max: 1.6, c: R.rng.pick(['#6a5a3a', '#3a5a2a', '#8a8a7a', '#5a4030']), s: 2 });
+      }
+    } else if (s.name && g.clock.t >= s.until && s.until > 0 && !blackout) this.end();
+    if (!s.warned && day >= s.next - 1 && !this.active()) this.warn();
+    if (s.warned && day >= s.next && !this.active() && g.clock.hour() >= 18 && g.clock.t > (s.power || 0)) this.start(10);
+  };
+  HU.init = function (g) {
+    if (this.wrapped) return;
+    this.wrapped = true;
+    const GP = R.Game.prototype, tk = GP.tick;
+    GP.tick = function (dt) { const r = tk.apply(this, arguments); if (this.env && this.pop && this.world && !this.ui.paused()) HU.update(dt); return r; };
+    // the registers, in the dark
+    const U = R.UI.prototype, io = U.interiorOptions;
+    const SHOPS = new Set(['general', 'liquor', 'pharmacy', 'pawn', 'gunshop', 'tailor', 'diner', 'bar', 'butcher', 'laundry', 'barber', 'costume', 'garage', 'gas']);
+    U.interiorOptions = function (b) {
+      const o = io.call(this, b), g2 = this.game, s = HU.state();
+      if (R.blackout && SHOPS.has(b.type) && !s.looted[b.id]) o.push({ label: 'Clean out the register', small: 'Blackout: no alarm, no lights, cops stretched thin', fn: () => {
+        s.looted[b.id] = 1;
+        const n = R.rng.int(40, 220);
+        g2.player.addCash(n, true);
+        g2.audio.sfx('cash');
+        if (R.rng() < 0.15) g2.law.crime('robbery', g2.player.x, g2.player.y, { minor: true });
+        g2.ui.toast(`By flashlight: ${R.fmtMoney(n)} from the till. Nobody's coming.`, 'good');
+      } });
+      return o;
+    };
   };
 })();
 
@@ -20090,6 +20666,116 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
     if (!LP.CRIMES.tax) LP.CRIMES.tax = { name: 'Tax Evasion', bounty: 150, lvl: 1 };
     const J = R.Jobs.prototype, jd = J.daily;
     J.daily = function () { jd.call(this); MN.daily(); };
+  };
+})();
+
+// ---- 14_moonshine.js
+// RHAPSODY — white lightning. A general store sells a copper still (and the sugar and cornmeal
+// to feed it). Haul it somewhere out in the country, away from town, and set it up: load it with
+// mash and it cooks a jug every few hours, a fire flickering under the pot all night. Bars and
+// liquor stores buy the jugs, no tax stamps asked about. But the revenuers from the ATF drive the
+// back roads: an untended still gets found and smashed, and one you're standing next to gets
+// visited by two men in suits with shotguns.
+'use strict';
+(function () {
+  const TS = R.TILE, D = R.data;
+  const G = () => R.game;
+  const MS = (R.moonshine = {});
+  const JUG = 35, MAX = 8, HOURS = 5;
+  MS.state = function () { const st = R.shark.street(); return (st.shine = st.shine || { stills: [], jugs: 0, sold: 0, raids: 0 }); };
+  const inTown = (x, y) => { const w = G().world; return w.cities.some((c) => x >= c.x0 - 8 && x <= c.x1 + 8 && y >= c.y0 - 8 && y <= c.y1 + 8); };
+  MS.near = function (pl, r) { const s = this.state(); return s.stills.find((q) => Math.hypot(q.x * TS + 8 - pl.x, q.y * TS + 8 - pl.y) < TS * (r || 1.6)) || null; };
+  MS.setUp = function () {
+    const g = G(), pl = g.player, s = this.state(), tx = (pl.x / TS) | 0, ty = (pl.y / TS) | 0;
+    if (inTown(tx, ty)) return g.ui.toast('Too close to town. Somebody would smell it. Head out into the country.', 'warn');
+    pl.inv.tools.still--;
+    s.stills.push({ x: tx, y: ty, mash: 0, jugs: 0, t: g.clock.t, id: (s.stills.length ? s.stills[s.stills.length - 1].id + 1 : 1) });
+    g.audio.sfx('equip');
+    g.ui.toast('Copper pot, worm, a barrel and a fire pit. Load it with mash and it\'ll cook a jug every few hours.', 'good');
+  };
+  MS.menu = function (st) {
+    const g = G(), pl = g.player, s = this.state();
+    const mash = pl.inv.tools.mash || 0;
+    g.ui.choice('Your still', [
+      { label: `Collect the jugs (${st.jugs})`, small: `${s.jugs} jugs in your trunk already`, fn: () => { if (!st.jugs) return g.ui.toast('Nothing\'s come through yet.'); s.jugs += st.jugs; pl.inv.loot.moonshine = s.jugs; g.ui.toast(`${st.jugs} jugs of white lightning. Bars will take them.`, 'good'); st.jugs = 0; } },
+      { label: `Load it with mash (${st.mash}/${MAX} · you carry ${mash})`, small: 'A sack of sugar and cornmeal per jug', fn: () => { const k = Math.min(mash, MAX - st.mash); if (!k) return g.ui.toast(mash ? 'It\'s full.' : 'You\'re out of mash. A general store sells it.', 'warn'); st.mash += k; pl.inv.tools.mash -= k; st.t = g.clock.t; g.ui.toast(`${k} batches of mash in the pot. Low and slow.`, 'good'); } },
+      { label: 'Break it down', small: 'Pack the still up and take it with you', fn: () => { s.stills = s.stills.filter((q) => q !== st); pl.inv.tools.still = (pl.inv.tools.still || 0) + 1; s.jugs += st.jugs; pl.inv.loot.moonshine = s.jugs; } },
+      { label: 'Leave it', fn: () => {} },
+    ]);
+  };
+  MS.context = function (pl) {
+    if (pl.inCar || pl.room || pl.carrying) return null;
+    const st = this.near(pl);
+    if (st) return { label: 'Your still', fn: () => this.menu(st) };
+    if (pl.inv.tools.still > 0 && !this.near(pl, 20)) {
+      const w = G().world, tx = (pl.x / TS) | 0, ty = (pl.y / TS) | 0;
+      if (!inTown(tx, ty) && !w.isWater(tx, ty) && !R.data.roadTile[w.t(tx, ty)]) return { label: 'Set up the still', fn: () => this.setUp() };
+    }
+    return null;
+  };
+  MS.update = function (dt) {
+    const g = G(), s = this.state(), pl = g.player;
+    this.t = (this.t || 0) - dt;
+    if (this.t > 0) return;
+    this.t = 3;
+    for (const st of s.stills) {
+      while (st.mash > 0 && g.clock.t - st.t >= HOURS * 60) { st.mash--; st.jugs++; st.t += HOURS * 60; }
+      if (st.mash <= 0) st.t = g.clock.t;
+    }
+    // the revenuers, once a day
+    const day = g.pop.day;
+    if (s.raidDay !== day && s.stills.length) {
+      s.raidDay = day;
+      const st = R.rng.pick(s.stills);
+      if (R.rng() < 0.12 + s.stills.length * 0.04) {
+        const here = Math.hypot(st.x * TS - pl.x, st.y * TS - pl.y) < TS * 30;
+        if (!here) {
+          s.stills = s.stills.filter((q) => q !== st); s.raids++;
+          g.pop.addNews(g.world.cities[0].id, `ATF AGENTS SMASH MOONSHINE STILL in the county. "${st.jugs} jugs poured into the creek," says Agent Ness. No arrests.`);
+          g.ui.toast('Word comes down the road: the revenuers found one of your stills and put an axe through it.', 'bad');
+        } else {
+          for (let k = 0; k < 2; k++) {
+            const a = g.actors.makeHuman(st.x * TS + 8 + (k ? 60 : -60), st.y * TS + 50, { weapon: 'shotgun', arch: 'square', tag: 'revenuer', cash: 30, cop: true });
+            if (!a) continue;
+            a.strangerName = k ? 'Agent Ness' : 'Agent Pruitt'; a.hostile = true; a.keep = true; g.actors.setFight(a, pl);
+          }
+          g.ui.toast('Two men in suits and hats coming up the track, shotguns out. Revenuers!', 'bad');
+          g.audio.sfx('alarm');
+        }
+      }
+    }
+  };
+  MS.draw = function (gx) {
+    const g = G(), s = this.state(), t = g.clock.real;
+    for (const st of s.stills) {
+      const x = st.x * TS + 8, y = st.y * TS + 8;
+      gx.fillStyle = '#1b1410'; gx.fillRect(x - 7, y - 11, 11, 12);
+      gx.fillStyle = '#b8642a'; gx.fillRect(x - 6, y - 10, 9, 9); gx.fillStyle = '#e0904a'; gx.fillRect(x - 5, y - 9, 3, 6);
+      gx.fillStyle = '#8a4a1a'; gx.fillRect(x - 2, y - 14, 2, 4); gx.fillRect(x, y - 14, 8, 1); gx.fillRect(x + 7, y - 14, 1, 8);
+      gx.fillStyle = '#5a3a1a'; gx.fillRect(x + 5, y - 6, 6, 7); gx.fillStyle = '#3a2410'; gx.fillRect(x + 5, y - 4, 6, 1);
+      if (st.mash > 0) { gx.fillStyle = Math.floor(t * 8) % 2 ? '#ff9a3a' : '#ffd060'; gx.fillRect(x - 4, y + 1, 5, 2); gx.fillStyle = 'rgba(200,200,200,0.4)'; gx.fillRect(x - 1, y - 18 - (Math.floor(t * 3) % 4), 2, 2); }
+    }
+  };
+  MS.init = function (g) {
+    if (this.wrapped) return;
+    this.wrapped = true;
+    D.loot.moonshine = D.loot.moonshine || { name: 'Jug of Moonshine', v: 0 };
+    const PP = R.Player.prototype, ctx = PP.contextAction;
+    PP.contextAction = function () { return MS.context(this) || ctx.call(this); };
+    const GP = R.Game.prototype, tk = GP.tick;
+    GP.tick = function (dt) { const r = tk.apply(this, arguments); if (this.pop && this.player && !this.ui.paused()) MS.update(dt); return r; };
+    const rd = R.ring.draw;
+    R.ring.draw = function (gx) { rd.apply(this, arguments); if (MS.state().stills.length) MS.draw(gx); };
+    const U = R.UI.prototype, io = U.interiorOptions;
+    U.interiorOptions = function (b) {
+      const o = io.call(this, b), g2 = this.game, pl = g2.player, s = MS.state();
+      if (b.type === 'general') {
+        o.push({ label: 'Copper still', price: '$250', small: 'For "making perfume". Set it up out in the country', fn: () => { if (!pl.pay(250)) return g2.ui.toast('$250.'); pl.inv.tools.still = (pl.inv.tools.still || 0) + 1; g2.audio.sfx('cash'); g2.ui.toast('A copper still, wrapped in a tarp. Set it up somewhere nobody goes.', 'good'); } });
+        o.push({ label: 'Sugar and cornmeal (4 batches)', price: '$20', small: 'Mash for a still. The clerk doesn\'t ask', fn: () => { if (!pl.pay(20)) return g2.ui.toast('$20.'); pl.inv.tools.mash = (pl.inv.tools.mash || 0) + 4; g2.audio.sfx('cash'); } });
+      }
+      if ((b.type === 'bar' || b.type === 'liquor') && s.jugs > 0) o.push({ label: `Sell moonshine (${s.jugs} jugs)`, price: R.fmtMoney(s.jugs * JUG), small: 'The back door, cash, no tax stamps', fn: () => { const n = s.jugs; pl.addCash(n * JUG, true); s.sold += n; s.jugs = 0; pl.inv.loot.moonshine = 0; g2.audio.sfx('cash'); g2.ui.toast(`${n} jugs out the back door. ${R.fmtMoney(n * JUG)}.`, 'good'); } });
+      return o;
+    };
   };
 })();
 
@@ -21075,6 +21761,114 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
   };
 })();
 
+// ---- 14_phoneman.js
+// RHAPSODY — the Phone Man. Once people know your name (infamy 10+), a payphone near you rings
+// every couple of days. Answer it and a voice nobody has ever put a face to offers a contract:
+// a name, where they'll be, a price, and sometimes a way he'd like it done (with a knife, no
+// guns, make it look like an accident, in broad daylight). Do it his way for double. The money
+// is waiting in an envelope taped under the payphone you answered. Let the deadline pass and
+// he doesn't call for a while.
+'use strict';
+(function () {
+  const TS = R.TILE, D = R.data;
+  const G = () => R.game;
+  const PM = (R.phoneman = {});
+  const STYLES = [
+    { id: 'any', text: 'However you like.', test: () => true },
+    { id: 'knife', text: 'With a blade. He wants it personal.', test: (k) => k.blade },
+    { id: 'nogun', text: 'No guns. Nothing the ballistics boys can use.', test: (k) => !k.gun },
+    { id: 'accident', text: 'Make it look like an accident: a car, the water, a fire, a fall.', test: (k) => ['car', 'drown', 'fire', 'fall', 'blast'].includes(k.kind) },
+    { id: 'daylight', text: 'In broad daylight. He wants people to see.', test: (k) => k.hour >= 9 && k.hour < 18 },
+    { id: 'quiet', text: 'Quietly. A silencer, or your hands.', test: (k) => k.silenced || k.melee },
+  ];
+  PM.state = function () { const st = R.shark.street(); return (st.phone = st.phone || { ring: null, job: null, done: 0, cool: 0 }); };
+  const phonesNear = (x, y, r) => {
+    const w = G().world, out = [], tx = (x / TS) | 0, ty = (y / TS) | 0;
+    for (let yy = ty - r; yy <= ty + r; yy++) for (let xx = tx - r; xx <= tx + r; xx++) if (w.inb(xx, yy) && w.o(xx, yy) === D.O.PHONE) out.push({ x: xx, y: yy });
+    return out;
+  };
+  // a phone rings
+  PM.ringNear = function () {
+    const g = G(), pl = g.player, s = this.state();
+    if (s.job || s.ring || pl.room) return false;
+    const ph = phonesNear(pl.x, pl.y, 28).sort((a, b) => Math.hypot(a.x * TS - pl.x, a.y * TS - pl.y) - Math.hypot(b.x * TS - pl.x, b.y * TS - pl.y))[0];
+    if (!ph) return false;
+    s.ring = { x: ph.x, y: ph.y, until: g.clock.t + 180 };
+    g.ui.toast('A payphone is ringing nearby. It keeps ringing.', 'warn');
+    if (!g.waypoint) g.waypoint = { x: ph.x * TS + 8, y: ph.y * TS + 8 };
+    return true;
+  };
+  PM.offer = function () {
+    const g = G(), pop = g.pop, s = this.state();
+    const pool = pop.people.filter((p) => p.alive && p.age >= 20 && !p.isDon && !p.playerPartner && !p.playerChild && p.home != null && p.role !== 'cop');
+    const p = R.rng.pick(pool);
+    if (!p) return null;
+    const style = R.rng() < 0.35 ? STYLES[0] : R.rng.pick(STYLES.slice(1));
+    const pay = R.rng.int(4, 10) * 100;
+    return { pid: p.id, style: style.id, pay, until: pop.day + 3, at: { x: s.ring.x, y: s.ring.y } };
+  };
+  PM.answer = function () {
+    const g = G(), s = this.state(), job = this.offer(), pop = g.pop;
+    s.ring = null;
+    if (!job) return g.ui.toast('Dial tone.');
+    const p = pop.people[job.pid], st = STYLES.find((x) => x.id === job.style), home = g.world.buildings[p.home];
+    g.audio.sfx('click');
+    g.ui.story('The Phone Man', `"Don't say anything. Just listen."\n\n"${p.first} ${p.last}. ${p.age}. Lives at ${home ? home.name : 'the edge of town'}${p.work != null && g.world.buildings[p.work] ? ', works at ' + g.world.buildings[p.work].name : ''}. ${R.fmtMoney(job.pay)}. Three days."\n\n"${st.text}${job.style !== 'any' ? ' Do it my way and it pays double.' : ''}"\n\n"The money will be under this phone." Click.`, () => {
+      g.ui.choice('The contract', [
+        { label: `Take it (${R.fmtMoney(job.pay)}${job.style !== 'any' ? ', double his way' : ''})`, small: `${p.first} ${p.last} · ${st.text}`, fn: () => {
+          s.job = job;
+          p.met = true;
+          if (home && R.poi) R.poi.add(home.out.x, home.out.y, 'tip', `${p.first} ${p.last}`, 'The Phone Man\'s contract');
+          if (home) g.waypoint = { x: home.out.x * TS + 8, y: home.out.y * TS + 8 };
+          g.ui.toast(`Contract: ${p.first} ${p.last}. Their house is marked.`, 'warn');
+        } },
+        { label: 'Hang up', small: 'He won\'t call again for a while', fn: () => { s.cool = g.clock.t + 1440 * 3; } },
+      ]);
+    });
+  };
+  // how a kill was done
+  PM.onKill = function (h, source, kind) {
+    const g = G(), s = this.state(), job = s.job, pl = g.player;
+    if (!job || !h.person || h.person.id !== job.pid) return;
+    const byMe = source === pl || (source && source.driver === pl);
+    const w = D.weapons[pl.weapon] || {};
+    const k = { kind: kind || h.lastHitKind, blade: !!w.blade && (kind === 'melee' || !kind), gun: !!w.gun && kind === 'bullet', melee: kind === 'melee', silenced: pl.silencedGun && pl.silencedGun(pl.weapon), hour: g.clock.hour() };
+    if (!byMe && !['drown', 'fire', 'fall', 'car'].includes(k.kind)) { s.job = null; g.ui.toast('Somebody else got to your contract first. The Phone Man doesn\'t pay for luck.', 'warn'); return; }
+    const st = STYLES.find((x) => x.id === job.style);
+    const his = job.style !== 'any' && st.test(k);
+    job.done = true; job.paid = his ? job.pay * 2 : job.pay;
+    g.ui.toast(his ? 'Done his way. The envelope will be fat.' : 'Done. The envelope is waiting under the payphone.', 'good');
+  };
+  // collect at the phone you answered
+  PM.context = function (pl) {
+    const s = this.state(), g = G();
+    if (s.ring) for (const ph of phonesNear(pl.x, pl.y, 1)) if (ph.x === s.ring.x && ph.y === s.ring.y) return { label: 'Answer the ringing phone', fn: () => this.answer() };
+    const job = s.job;
+    if (job && job.done) for (const ph of phonesNear(pl.x, pl.y, 1)) if (ph.x === job.at.x && ph.y === job.at.y) return { label: 'Feel under the payphone', fn: () => { pl.addCash(job.paid); s.done++; s.job = null; s.cool = g.clock.t + 1440 * 2; g.audio.sfx('cash'); g.ui.toast(`An envelope, taped under the box: ${R.fmtMoney(job.paid)}. Nobody saw you take it.`, 'good'); } };
+    return null;
+  };
+  PM.update = function (dt) {
+    const g = G(), s = this.state(), pl = g.player;
+    this.t = (this.t || 0) - dt;
+    if (this.t > 0) return;
+    this.t = 5;
+    if (s.ring && g.clock.t > s.ring.until) { s.ring = null; g.ui.toast('The payphone stops ringing.'); }
+    if (s.job && !s.job.done && g.pop.day > s.job.until) { s.job = null; s.cool = g.clock.t + 1440 * 4; g.ui.toast('The Phone Man\'s deadline passed. He won\'t be calling for a while.', 'warn'); }
+    if (!s.job && !s.ring && (pl.rep.infamy || 0) >= 10 && g.clock.t > (s.cool || 0) && R.rng() < 0.02) this.ringNear();
+  };
+  PM.init = function (g) {
+    this.t = 10;
+    if (this.wrapped) return;
+    this.wrapped = true;
+    const PP = R.Player.prototype, ctx = PP.contextAction;
+    PP.contextAction = function () { return (!this.inCar && !this.room && PM.context(this)) || ctx.call(this); };
+    const C = R.combat, ck = C.kill;
+    C.kill = function (h, source, kind) { const was = h && h.dead, r = ck.apply(this, arguments); if (!was && h && h.dead) PM.onKill(h, source, kind); return r; };
+    const GP = R.Game.prototype, tk = GP.tick;
+    GP.tick = function (dt) { const r = tk.apply(this, arguments); if (this.player && this.pop && !this.ui.paused()) PM.update(dt); return r; };
+  };
+})();
+
 // ---- 14_profile.js
 // RHAPSODY — the task force. Every murder you get away with leaves a signature: how they
 // died, what was done to them, where they ended up, who they were, where and when. Bodies
@@ -21770,6 +22564,97 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
       };
     }
     void g;
+  };
+})();
+
+// ---- 14_roadblock.js
+// RHAPSODY — roadblocks. Run from the police in a car with a serious warrant (level 2 and up)
+// and they stop chasing and start thinking: two cruisers slewed across the road ahead, officers
+// behind the doors with shotguns, and a spike strip laid in front. Hit the strip and your tyres
+// go: the car limps along at a crawl until a garage fixes it. Go round, go through, or go on foot.
+'use strict';
+(function () {
+  const TS = R.TILE;
+  const G = () => R.game;
+  const RB = (R.roadblock = { strips: [], blocks: 0 });
+
+  RB.place = function () {
+    const g = G(), pl = g.player, v = pl.inCar, w = g.world, inc = g.law.incident;
+    if (!v || !inc) return false;
+    const ang = v.angle, ahead = 20;
+    const tx = Math.round(v.x / TS + Math.cos(ang) * ahead), ty = Math.round(v.y / TS + Math.sin(ang) * ahead);
+    const s = w.findNear(tx, ty, 0, 5, (x, y) => w.flow[w.idx(x, y)] && R.data.roadTile[w.t(x, y)]);
+    if (!s) return false;
+    const cx = s.x * TS + 8, cy = s.y * TS + 8, px = -Math.sin(ang), py = Math.cos(ang);
+    for (const side of [-1, 1]) {
+      const car = g.traffic.make('police', cx + px * side * 22, cy + py * side * 22, ang + Math.PI / 2, { parked: true, keep: true, locked: true });
+      car.siren = true; car.roadblock = true;
+      const cop = g.actors.makeHuman(car.x - Math.cos(ang) * 22, car.y - Math.sin(ang) * 22, { cop: true, role: 'cop', city: inc.jur });
+      cop.look = g.pop.makeLook(R.mulberry(R.rng.int(0, 1e9)), { fem: R.rng.chance(0.25), age: 35, role: 'cop', city: inc.jur });
+      g.actors.arm(cop, R.rng.pick(['shotgun', 'shotgun', 'revolver']));
+      cop.keep = true;
+      inc.units.push(cop);
+    }
+    // the strip, across the lanes in front of the cars
+    this.strips.push({ x: cx - Math.cos(ang) * 30, y: cy - Math.sin(ang) * 30, ang: ang + Math.PI / 2, len: 70, t: 0 });
+    if (this.strips.length > 4) this.strips.shift();
+    this.blocks++;
+    g.ui.toast('ROADBLOCK AHEAD. Cruisers across the road, and something glinting on the tarmac.', 'bad');
+    g.audio.sfx('alarm');
+    return true;
+  };
+  RB.spike = function (v) {
+    if (v.spiked) return;
+    v.spiked = true;
+    v.model = Object.assign({}, v.model, { top: v.model.top * 0.3, acc: v.model.acc * 0.5 });
+    v.hp = Math.max(1, v.hp - 10);
+    const g = G();
+    g.audio.sfx('crash', v.x, v.y);
+    for (let k = 0; k < 10; k++) g.fx.add({ x: v.x, y: v.y, vx: (R.rng() - 0.5) * 60, vy: (R.rng() - 0.5) * 60, life: 0.5, max: 0.5, c: '#2a2a2a', s: 2 });
+    if (v === g.player.inCar) g.ui.toast('BANG BANG BANG. All four tyres. The car wallows along on the rims. A garage can fix it.', 'bad');
+  };
+  RB.update = function (dt) {
+    const g = G(), pl = g.player, inc = g.law.incident;
+    // strips bite anything driving over them
+    for (const s of this.strips) {
+      s.t += dt;
+      for (const v of g.traffic.list) {
+        if (v.removed || v.spiked || v.roadblock || Math.abs(v.speed) < 10) continue;
+        const dx = v.x - s.x, dy = v.y - s.y, along = dx * Math.cos(s.ang) + dy * Math.sin(s.ang), across = -dx * Math.sin(s.ang) + dy * Math.cos(s.ang);
+        if (Math.abs(along) < s.len / 2 && Math.abs(across) < 7) this.spike(v);
+      }
+    }
+    this.strips = this.strips.filter((s) => s.t < 240);
+    this.t = (this.t || 0) - dt;
+    if (this.t > 0) return;
+    this.t = 2;
+    if (inc && inc.level >= 2 && pl.inCar && Math.abs(pl.inCar.speed) > 60 && g.clock.t > (this.next || 0)) { if (this.place()) this.next = g.clock.t + 25; }
+  };
+  RB.draw = function (gx) {
+    for (const s of this.strips) {
+      const c = Math.cos(s.ang), sn = Math.sin(s.ang);
+      for (let k = -s.len / 2; k <= s.len / 2; k += 4) {
+        const x = Math.round(s.x + c * k), y = Math.round(s.y + sn * k);
+        gx.fillStyle = '#1a1a1a'; gx.fillRect(x - 1, y - 1, 3, 3);
+        gx.fillStyle = '#c8c8d0'; gx.fillRect(x, y - 2, 1, 1);
+      }
+    }
+  };
+  RB.init = function (g) {
+    this.strips = []; this.next = 0;
+    if (this.wrapped) return;
+    this.wrapped = true;
+    const GP = R.Game.prototype, tk = GP.tick;
+    GP.tick = function (dt) { const r = tk.apply(this, arguments); if (this.law && this.traffic && !this.ui.paused()) RB.update(dt); return r; };
+    const rd = R.ring.draw;
+    R.ring.draw = function (gx) { rd.apply(this, arguments); if (RB.strips.length) RB.draw(gx); };
+    // a garage fixes the tyres
+    const U = R.UI.prototype, io = U.interiorOptions;
+    U.interiorOptions = function (b) {
+      const o = io.call(this, b), g2 = this.game, v = g2.player.inCar || g2.traffic.list.find((q) => !q.removed && q.spiked && (q.owner === 'player' || q.stolen) && R.dist(q.x, q.y, b.out.x * TS, b.out.y * TS) < TS * 8);
+      if ((b.type === 'garage' || b.type === 'gas') && v && v.spiked) o.push({ label: 'New tyres', price: '$80', small: 'Four whitewalls, no questions', fn: () => { if (!g2.player.pay(80)) return g2.ui.toast('$80 for tyres.'); v.spiked = false; v.model = R.data.vehicles[v.modelId]; g2.ui.toast('Four new tyres. She rides like new.', 'good'); } });
+      return o;
+    };
   };
 })();
 
@@ -26000,7 +26885,7 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
           }
           continue;
         }
-        if (ob !== O.LAMP) continue;
+        if (ob !== O.LAMP || R.blackout) continue; // a blackout kills the street lights
         const flick = R.hash2(tx, ty, 2) < 0.06 ? (Math.sin(t * 20 + tx) > 0.3 ? 1 : 0.3) : 1;
         hole(tx * TS + 8, ty * TS + 6, 58, 0.9 * flick, '255,196,120');
         glows.push([tx * TS + 8, ty * TS + 3, 22, 'rgba(255,200,110,0.22)']);
@@ -26008,6 +26893,7 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
     // lit windows & neon
     const NEON = ['255,70,190', '90,220,255', '255,120,40', '140,255,120', '200,110,255'], day = game.clock.day();
     for (const b of w.buildings) {
+      if (R.blackout) break; // and every window and sign with them
       if (!b || b.destroyed) continue;
       if (b.x + b.w < tx0 || b.x > tx1 || b.y + b.h < ty0 || b.y > ty1) continue;
       const bt = D.btypes[b.type];
@@ -26925,6 +27811,8 @@ void main(){
     R.carry.init(this);
     R.interro.init(this);
     R.feats.init(this);
+    R.phoneman.init(this); R.dog.init(this); R.disguise.init(this); R.roadblock.init(this);
+    R.hurricane.init(this); R.moonshine.init(this); R.armored.init(this); R.funeral.init(this);
     R.charm.init(this); R.charm.reinit();
     R.night.init(this);
     R.opening.init(this);
