@@ -60,6 +60,8 @@ export const HOOKS = {
   landed: [] as ((g: Game, id: PlanetId) => void)[],
   // more places for the nav menu (stations, bases)
   nav: [] as (() => NavTarget[])[],
+  // actions at the top of the nav menu (build a base here...)
+  navExtra: [] as ((g: Game) => { label: string; small?: string; fn: () => void } | null)[],
 };
 export const inSpace = () => SPACE.active;
 export const shipBody = (id: BodyId) => body(id);
@@ -346,7 +348,7 @@ function update(g: Game, dt: number): void {
   if (dist(SPACE.x, SPACE.y, 0, 0) < BODY.sun.radius * 1.6) SQ.hull -= 12 * dt; // the corona
   SPACE.shield = Math.min(my.shield, SPACE.shield + my.shield * 0.08 * dt);
   SPACE.fireT -= dt;
-  if (inp.held('attack') && SPACE.fireT <= 0 && my.guns > 0 && !SPACE.cruise) { SPACE.fireT = 0.22; fire(SPACE.x, SPACE.y, SPACE.a, SPACE.vx, SPACE.vy, 'me', 10, my.guns); sfx('smg'); }
+  if (inp.held('attack') && SPACE.fireT <= 0 && my.guns > 0 && !SPACE.cruise) { SPACE.fireT = 0.22; fire(SPACE.x, SPACE.y, SPACE.a, SPACE.vx, SPACE.vy, 'me', my.dmg, my.guns); sfx('smg'); }
   if (inp.pressed('use')) {
     for (const h of HOOKS.use) { const u = h(g); if (u) { u.fn(); return; } }
     const w = nearWreck(), p = nearPlanet();
@@ -383,6 +385,7 @@ function update(g: Game, dt: number): void {
       const seen = !my.cloak || dist(c.x, c.y, SPACE.x, SPACE.y) < 240;
       const chaser = seen && (c.kind === 'patrol' || c.kind === 'hunter' || (c.hostile && (c.kind === 'capital' || c.kind === 'rebel')));
       if (chaser || (seen && c.hostile && dist(c.x, c.y, SPACE.x, SPACE.y) < 500)) { tx = SPACE.x; ty = SPACE.y; }
+      else if (c.kind === 'capital' && body(c.target)) { const t = body(c.target), oa = Math.atan2(c.y - t.y, c.x - t.x) + 0.25; tx = t.x + Math.cos(oa) * (t.r + 900); ty = t.y + Math.sin(oa) * (t.r + 900); }
       else { const t = body(c.target); tx = t.x; ty = t.y; }
       const want = Math.atan2(ty - c.y, tx - c.x), d = angDiff(c.a, want);
       c.a += clamp(d, -cs.turn * dt * 0.8, cs.turn * dt * 0.8);
@@ -454,7 +457,8 @@ export function openNav(g: Game): void {
   const list = navTargets().map((t) => ({ t, d: Math.hypot(t.pos().x - SPACE.x, t.pos().y - SPACE.y) })).sort((a, b) => a.d - b.d);
   const fmtD = (d: number) => (d > 30000 ? (d / 60000).toFixed(2) + ' AU' : Math.round(d / 10) + ' km');
   const kind = { world: 'land', body: 'scan', station: 'dock', base: 'your base' };
-  g.ui.choice('Where to?', list.slice(0, 14).map(({ t, d }) => ({ label: `${t.name} · ${fmtD(d)}`, small: `${kind[t.kind]}${t.kind === 'world' && PLANETS[t.id] && PLANETS[t.id].frontier ? ' · frontier' : ''}`, fn: () => autopilot(g, t) })));
+  const extra = HOOKS.navExtra.map((h) => h(g)).filter(Boolean) as { label: string; small?: string; fn: () => void }[];
+  g.ui.choice('Where to?', [...extra, ...list.slice(0, 14).map(({ t, d }) => ({ label: `${t.name} · ${fmtD(d)}`, small: `${kind[t.kind]}${t.kind === 'world' && PLANETS[t.id] && PLANETS[t.id].frontier ? ' · frontier' : ''}`, fn: () => autopilot(g, t) }))]);
 }
 
 // ---------------------------------------------------------------- drawing

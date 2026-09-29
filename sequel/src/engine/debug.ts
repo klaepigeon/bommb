@@ -62,7 +62,7 @@ R.debugTab = function (body: HTMLElement, g: Game) {
     sect('Space', [btn('launch', 'Launch'), ...(['freighter', 'patrol', 'hunter', 'capital', 'rebel'] as Craft['kind'][]).map((k) => btn('spawn:' + k, 'Spawn ' + k)), btn('clearsp', 'Clear space'), btn('ore', '+12 ore')]),
     sect('Land on', Object.keys(PLANETS).map((id) => btn('land:' + id, PLANETS[id].name))),
     sect('Earth sectors', [btn('sec:home', 'The Brass Coast'), btn('sec:tokyo', 'Tokyo'), btn('sec:sahara', 'Sahara'), btn('sec:random', 'Random land'), btn('night', 'Neon night (22:00)'), btn('rain', 'Acid rain')]),
-    sect('Stars', [btn('star:sol', 'Sol'), ...STARS.map((s) => btn('star:' + s.id, s.name))]),
+    sect('Stars', [btn('star:sol', 'Sol'), ...STARS.slice(0, 12).map((s) => btn('star:' + s.id, s.name))]),
     sect('The Fear Man & the rings', [btn('fm:mark', 'Mark his club'), btn('fm:tp', 'Take me to him'), btn('fm:kill', 'Kill him now'), btn('ringfly', 'Take off on the ring'), btn('ringfree', 'Unlock rings (skip the kill)')]),
     sect('Aliens & story', [btn('europa', 'Europa: first contact'), btn('titan', 'Titan: the signal')]),
     sect('Look', [btn('look:cody', 'Road duster (Cody)'), btn('look:black', 'Black duster + visor helmet'), btn('look:proto', 'Protoman red')]),

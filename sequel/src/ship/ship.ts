@@ -107,8 +107,11 @@ export interface Stats {
   mass: number; power: number; thrust: number; turn: number; cargo: number; hidden: number;
   guns: number; shield: number; hull: number; crew: number; fuel: number; tube: boolean; battery: boolean; med: boolean; tractor: boolean; jump: boolean;
   missiles: number; burner: boolean; cloak: boolean; pd: number; sensor: boolean; drones: number; refinery: boolean;
+  dmg: number; // damage per laser bolt
   problems: string[];
 }
+// things outside the grid that change a ship (your crew): applied after the grid's stats
+export const STAT_HOOKS: ((st: Stats, s: Ship) => void)[] = [];
 
 export function stats(s: Ship): Stats {
   const H = HULLS[s.hull];
@@ -127,8 +130,8 @@ export function stats(s: Ship): Stats {
   // reactors next to cargo are a fire risk (a warning, not a blocker)
   const risky = s.grid.some((g, i) => g === 'reactor' && [i - 1, i + 1, i - H.w, i + H.w].some((j) => s.grid[j] === 'cargo' && Math.abs((j % H.w) - (i % H.w)) <= 1));
   const live = Math.max(0, engines - blocked);
-  return {
-    mass, power,
+  const out: Stats = {
+    mass, power, dmg: 10,
     thrust: (power < 0 ? live * 45 : (live * 180) / Math.sqrt(mass)) * (count('burner') ? 1.4 : 1),
     turn: 3.2 / Math.sqrt(mass / 10),
     cargo: count('cargo') * 10, hidden: count('hold') * 6,
@@ -137,6 +140,8 @@ export function stats(s: Ship): Stats {
     missiles: count('missile'), burner: count('burner') > 0, cloak: count('cloak') > 0, pd: count('pd'), sensor: count('sensor') > 0, drones: count('drone') * 2, refinery: count('refinery') > 0,
     problems: risky ? [...problems, 'Warning: a reactor sits next to cargo.'] : problems,
   };
+  for (const h of STAT_HOOKS) h(out, s);
+  return out;
 }
 
 // ---------------------------------------------------------------- sprites

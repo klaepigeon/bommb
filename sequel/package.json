@@ -12,7 +12,8 @@
     "earth": "node tools/earth.mjs",
     "fear": "node tools/fear.mjs",
     "flight": "node tools/flight.mjs",
-    "check": "npm run typecheck && npm run build && npm run smoke && npm run frontier && npm run earth && npm run fear && npm run flight"
+    "roadmap": "node tools/roadmap.mjs",
+    "check": "npm run typecheck && npm run build && npm run smoke && npm run frontier && npm run earth && npm run fear && npm run flight && npm run roadmap"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",

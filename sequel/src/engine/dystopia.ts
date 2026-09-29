@@ -14,7 +14,13 @@ rename(D.weapons, {
   knuckles: 'Shock Knuckles', bat: 'Stun Baton', knife: 'Vibro-Knife', revolver: 'Blaster Pistol', magnum: 'Hand Cannon', shotgun: 'Scatter Blaster',
   chopper: 'Pulse SMG', rifle: 'Rail Rifle', derringer: 'Holdout Blaster', sawedoff: 'Sawn-Off Scatter', carbine: 'Laser Carbine', crossbow: 'Bolt Caster',
   tommy: 'Drum Pulse Gun', razor: 'Mono-Wire Razor', machete: 'Plasma Machete', hatchet: 'Arc Hatchet', crowbar: 'Pry Bar', sap: 'Neural Sap',
-  molotov: 'Napalm Canister', dynamite: 'Thermal Detonator',
+  molotov: 'Napalm Canister', dynamite: 'Thermal Detonator', colt45: 'Service Sidearm',
+});
+// the HUD's short labels, in the future's words
+Object.assign((R as any).SHORTW || {}, {
+  knuckles: 'SHOCKERS', bat: 'STUN BATON', knife: 'VIBRO', revolver: 'BLASTER', magnum: 'CANNON', shotgun: 'SCATTER', chopper: 'PULSE SMG', rifle: 'RAIL RIFLE',
+  derringer: 'HOLDOUT', colt45: 'SIDEARM', sawedoff: 'SAWN SCATTER', carbine: 'LASER', crossbow: 'BOLTS', tommy: 'DRUM PULSE', razor: 'MONO-WIRE', machete: 'PLASMA', hatchet: 'ARC HATCHET',
+  crowbar: 'PRY BAR', sap: 'NEURAL SAP', molotov: 'NAPALM', dynamite: 'DETONATOR',
 });
 rename(D.btypes, {
   general: 'Synth-Mart', liquor: 'Synth-Liquor', pharmacy: 'Chrome Clinic', diner: 'Noodle Bar', bar: 'Cantina', club: 'Neon Club', pawn: 'Chop Shop',

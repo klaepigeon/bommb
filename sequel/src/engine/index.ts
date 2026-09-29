@@ -25,6 +25,9 @@ import { markFearMan } from './fearboss';
 import { takeOff } from './ringfly';
 import './debug';
 import './colony';
+import './stations2';
+import './crew';
+import './gore2';
 
 const GP = R.Game.prototype;
 

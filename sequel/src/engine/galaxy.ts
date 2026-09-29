@@ -14,7 +14,8 @@ import { stats } from '../ship/ship';
 import { bodies } from '../space/system';
 
 // the neighbourhood: real stars, real distances (light years), real spectral colours
-export const STARS: { id: string; name: string; ly: number; col: string; radius: number; blurb: string }[] = [
+export interface Star { id: string; name: string; ly: number; col: string; radius: number; blurb: string; x?: number; y?: number }
+export const STARS: Star[] = [
   { id: 'centauri', name: 'Alpha Centauri', ly: 4.37, col: '#fff0c0', radius: 2800, blurb: 'Two suns like ours, dancing. Everyone\'s first stop.' },
   { id: 'barnard', name: 'Barnard\'s Star', ly: 5.96, col: '#ff8a5a', radius: 1400, blurb: 'An old red dwarf, running fast across the sky.' },
   { id: 'wolf359', name: 'Wolf 359', ly: 7.9, col: '#ff6a4a', radius: 1100, blurb: 'Dim, flaring, and famous for the wrong reasons.' },
@@ -23,6 +24,9 @@ export const STARS: { id: string; name: string; ly: number; col: string; radius:
   { id: 'tauceti', name: 'Tau Ceti', ly: 11.9, col: '#fff4d0', radius: 2500, blurb: 'Quiet, sunlike, and full of old comets.' },
 ];
 export const star = (id: string) => STARS.find((s) => s.id === id);
+// where the real six sit around Sol on the chart (bearings are the game's, distances are real)
+const BEARING: Record<string, number> = { centauri: 220, barnard: 60, wolf359: 150, sirius: 300, eridani: 330, tauceti: 12 };
+for (const st of STARS) { const a = ((BEARING[st.id] || 0) * Math.PI) / 180; st.x = Math.cos(a) * st.ly; st.y = Math.sin(a) * st.ly; }
 
 // ---------------------------------------------------------------- a seeded generator
 function rng(seed: string) {
@@ -37,6 +41,25 @@ type Rng = ReturnType<typeof rng>;
 const word = (g: Rng, n = g.int(2, 3)) => { let s = ''; for (let k = 0; k < n; k++) s += g.pick(SYL); return s[0].toUpperCase() + s.slice(1); };
 const hexMix = (a: string, b: string, k: number) => { const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16); const c = [16, 8, 0].map((sh) => Math.round(((pa >> sh) & 255) * (1 - k) + ((pb >> sh) & 255) * k)); return '#' + c.map((v) => v.toString(16).padStart(2, '0')).join(''); };
 const PALETTE = ['#c8603a', '#4a8a4a', '#3a7ed0', '#d8a878', '#8a8478', '#a8e0e8', '#e8d098', '#6a4a8a', '#c84888', '#48b8a0', '#b8c848', '#e89048'];
+
+// ---------------------------------------------------------------- the wider galaxy
+// Past the six: a chart of generated stars out to sixty light years, the same for every save.
+// Every one has a generated system (genSystem), worlds, peoples and wildlife.
+(() => {
+  const g = rng('galaxy-chart');
+  const SPEC: [string, number, string][] = [['#ff8a5a', 1200, 'A red dwarf, dim and patient.'], ['#ffd890', 2300, 'An orange star, old and steady.'], ['#fff4d0', 2600, 'A yellow star much like the Sun.'], ['#d8e8ff', 3400, 'A hot white star. Wear shades.'], ['#a8c8ff', 4000, 'A blue giant, burning fast and bright.'], ['#ff6a4a', 1000, 'A flaring red dwarf. Mind the storms.']];
+  const SUFFIX = ['Prime', 'Major', 'Minor', 'Reach', 'Drift', 'Star', 'Beacon', 'Deep'];
+  for (let n = 0, tries = 0; n < 60 && tries < 2000; tries++) {
+    const d = 5 + Math.sqrt(g.r()) * 55, a = g.r() * Math.PI * 2, x = Math.cos(a) * d, y = Math.sin(a) * d;
+    if (Math.hypot(x, y) < 4 || STARS.some((s) => Math.hypot((s.x || 0) - x, (s.y || 0) - y) < 2.4)) continue;
+    const [col, radius, blurb] = g.pick(SPEC);
+    const name = g.r() < 0.35 ? `${g.pick(['Gliese', 'Kepler', 'HD', 'Ross', 'Luyten', 'Wolf'])} ${g.int(100, 9999)}` : `${word(g)} ${g.pick(SUFFIX)}`;
+    STARS.push({ id: 'g' + (++n), name, ly: +Math.hypot(x, y).toFixed(1), col, radius, blurb, x, y });
+  }
+})();
+export const starPos = (id: string): [number, number] => { if (id === 'sol') return [0, 0]; const s = star(id); return s ? [s.x || 0, s.y || 0] : [0, 0]; };
+// how far one jump reaches: 12 ly, and 3 more for every navigator aboard
+export const jumpRange = () => 12 + 3 * Math.min(3, (SQ.crew || []).filter((c) => c.role === 'navigator').length);
 
 // ---------------------------------------------------------------- species and wildlife for new worlds
 const FEATS = ['antennae', 'crest', 'dome', 'halo', 'visor', 'tendrils', 'horns', 'fins'] as const;
@@ -164,7 +187,7 @@ if (SQ.home !== 'sol') genSystem(SQ.home);
 enterSystem(SQ.system);
 
 // ---------------------------------------------------------------- the jump
-const lyBetween = (a: string, b: string) => { const la = a === 'sol' ? 0 : star(a)!.ly, lb = b === 'sol' ? 0 : star(b)!.ly; return a === 'sol' || b === 'sol' ? Math.max(la, lb) : Math.max(1.5, Math.abs(la - lb) + 2); };
+export const lyBetween = (a: string, b: string) => { const [ax, ay] = starPos(a), [bx, by] = starPos(b); return Math.max(1.5, Math.hypot(ax - bx, ay - by)); };
 export const jumpCost = (to: string) => Math.max(1, Math.ceil(lyBetween(SQ.system, to) / 4));
 export function clearSpace(): { ok: boolean; why: string } {
   const my = stats(SQ.ship);
@@ -176,7 +199,8 @@ export function clearSpace(): { ok: boolean; why: string } {
   return { ok: true, why: '' };
 }
 export function jump(g: Game, to: string): boolean {
-  const c = clearSpace(), cost = jumpCost(to);
+  const c = clearSpace(), cost = jumpCost(to), from = SQ.system;
+  if (lyBetween(from, to) > jumpRange()) { g.ui.toast(`Out of range: ${lyBetween(from, to).toFixed(1)} ly, the drive folds ${jumpRange()}. Hop via a nearer star.`, 'warn'); return false; }
   if (!c.ok) { g.ui.toast(c.why, 'warn'); return false; }
   if (SQ.fuel < cost) { g.ui.toast(`Not enough jump fuel: ${cost} needed, ${SQ.fuel} aboard. Land to refuel, or buy it at the Haulyard.`, 'warn'); return false; }
   SQ.fuel -= cost;
@@ -188,7 +212,7 @@ export function jump(g: Game, to: string): boolean {
   saveSequel();
   g.audio.sfx('boom');
   const inhabited = Object.values(sys.planets).map((p) => p.name).join(' and ');
-  g.ui.story(sys.name, `Space folds, and unfolds ${lyBetween(to === 'sol' ? SQ.known[0] : 'sol', to).toFixed(1)} light years away.\n\n${to === 'sol' ? 'Home. The Sun, the Empire, and everyone you owe money to.' : `${star(to)!.blurb}\n\n${sys.bodies.filter((b) => b.parent === 'sun').length} planets. Inhabited: ${inhabited || 'nothing'}. The flight computer has a course laid in.`}`);
+  g.ui.story(sys.name, `Space folds, and unfolds ${lyBetween(from, to).toFixed(1)} light years away.\n\n${to === 'sol' ? 'Home. The Sun, the Empire, and everyone you owe money to.' : `${star(to)!.blurb}\n\n${sys.bodies.filter((b) => b.parent === 'sun').length} planets. Inhabited: ${inhabited || 'nothing'}. The flight computer has a course laid in.`}`);
   return true;
 }
 // fuel: a free top-up whenever you touch down on an inhabited world

@@ -14,14 +14,20 @@ import { enterDock } from './board';
 import { addCargo, GOODS, price } from './cargo';
 import { stats } from '../ship/ship';
 
-export interface Station { id: string; name: string; parent: string; alt: number; hours: number; kind: 'casino' | 'assay'; col: string; blurb: string }
+export interface Station { id: string; name: string; parent: string; alt: number; hours: number; kind: 'casino' | 'assay' | 'customs' | 'rebel' | 'base'; col: string; blurb: string }
 export const STATIONS: Record<string, Station[]> = {
   sol: [
     { id: 'redvelvet', name: 'The Red Velvet Orbital', parent: 'mars', alt: 520, hours: 9, kind: 'casino', col: '#ff5a8a', blurb: 'A casino wheel over Mars. What happens in orbit burns up on re-entry.' },
     { id: 'haulyard', name: 'Haulyard Assay Station', parent: 'ceres', alt: 320, hours: 6, kind: 'assay', col: '#f0b838', blurb: 'The belt\'s buyer of last resort: ore, ice, platinum. Fuel and patches too.' },
+    { id: 'customs', name: 'Imperial Customs Platform', parent: 'venus', alt: 700, hours: 8, kind: 'customs', col: '#e8e8ff', blurb: 'Every ship bound for the capital stops here. Papers, please.' },
+    { id: 'freeyard', name: 'Free Ganymede Shipyard', parent: 'ganymede', alt: 360, hours: 5, kind: 'rebel', col: '#ff7a3a', blurb: 'The rebellion\'s drydock, hidden in Jupiter\'s glare. No questions, no transponders.' },
   ],
 };
-const stationsHere = () => STATIONS[SQ.system] || [];
+// your own bases count as stations (stations2.ts builds them)
+export const EXTRA: (() => Station[])[] = [];
+export const stationsHere = (): Station[] => [...(STATIONS[SQ.system] || []), ...EXTRA.flatMap((f) => f())];
+// docking handlers for the newer kinds of station
+export const DOCK: Record<string, (g: Game, st: Station) => void> = {};
 const minutes = () => (R.game && R.game.clock ? R.game.clock.t : SQ.minutes);
 export function stationPos(st: Station): { x: number; y: number; vx: number; vy: number } | null {
   const p = shipBody(st.parent);
@@ -40,6 +46,7 @@ function dock(g: Game, st: Station): void {
   const p = stationPos(st)!;
   const rel = Math.hypot(SPACE.vx - p.vx / 60, SPACE.vy - p.vy / 60);
   if (rel > 200) return g.ui.toast(`Too fast to dock (${Math.round(rel)}). Match the station's speed.`, 'warn');
+  if (DOCK[st.kind]) { SPACE.vx = p.vx / 60; SPACE.vy = p.vy / 60; return DOCK[st.kind](g, st); }
   if (st.kind === 'casino') {
     SPACE.vx = p.vx / 60; SPACE.vy = p.vy / 60;
     enterDock(g, 'casino', st.name, 'normal', (g2) => { g2.ui.toast(`You undock from the ${st.name}.`, 'good'); });
@@ -75,8 +82,8 @@ function assay(g: Game, st: Station): void {
     { label: 'Undock', fn: () => {} },
   ]);
 }
-HOOKS.nav.push(() => stationsHere().map((st) => ({ id: st.id, name: st.name, kind: 'station' as const, via: st.parent, r: 0, pos: () => { const p = stationPos(st) || { x: 0, y: 0, vx: 0, vy: 0 }; return { x: p.x, y: p.y, vx: p.vx / 60, vy: p.vy / 60 }; } })));
-HOOKS.use.push((g) => { const st = nearStation(); return st ? { label: st.kind === 'casino' ? 'Dock' : 'Trade', fn: () => dock(g, st) } : null; });
+HOOKS.nav.push(() => stationsHere().map((st) => ({ id: st.id, name: st.name, kind: (st.kind === 'base' ? 'base' : 'station') as 'base' | 'station', via: st.parent, r: 0, pos: () => { const p = stationPos(st) || { x: 0, y: 0, vx: 0, vy: 0 }; return { x: p.x, y: p.y, vx: p.vx / 60, vy: p.vy / 60 }; } })));
+HOOKS.use.push((g) => { const st = nearStation(); return st ? { label: st.kind === 'assay' ? 'Trade' : 'Dock', fn: () => dock(g, st) } : null; });
 
 // ---------------------------------------------------------------- the belt
 interface Rock { key: string; x: number; y: number; r: number; hp: number; good: Good; spin: number; seed: number }

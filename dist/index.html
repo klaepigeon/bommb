@@ -5032,7 +5032,8 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
           }
         }
       }
-      // jobs
+      // jobs (a town can come out with no houses at all: a frontier camp of shops and rigs)
+      this.byCity[cd.id] = this.byCity[cd.id] || [];
       const adults = this.byCity[cd.id].filter((p) => p.age >= 18 && p.age < 67);
       rnd.shuffle(adults);
       let ai = 0;
@@ -24343,7 +24344,8 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
 
   // ---------------------------------------------------------------- the in-screen HUD (canvas, pixel text)
   const HEART = ['.XX.XX.', 'XXXXXXX', 'XXXXXXX', '.XXXXX.', '..XXX..', '...X...'];
-  const SHORTW = { fists: 'FISTS', knuckles: 'KNUCKLES', bat: 'BAT', knife: 'KNIFE', revolver: '.38', magnum: '.357', shotgun: 'SHOTGUN', chopper: 'CHOPPER', rifle: 'RIFLE', molotov: 'MOLOTOV', dynamite: 'DYNAMITE', gascan: 'GAS CAN', ring: 'RING' };
+  // HUD labels; anything without one uses the last word of its name (never 'FISTS' for a gun)
+  const SHORTW = (R.SHORTW = { fists: 'FISTS', knuckles: 'KNUCKLES', bat: 'BAT', knife: 'KNIFE', revolver: '.38', magnum: '.357', shotgun: 'SHOTGUN', chopper: 'CHOPPER', rifle: 'RIFLE', molotov: 'MOLOTOV', dynamite: 'DYNAMITE', gascan: 'GAS CAN', ring: 'RING', derringer: 'DERRINGER', colt45: '.45', sawedoff: 'SAWN-OFF', carbine: 'CARBINE', crossbow: 'CROSSBOW', tommy: 'TOMMY GUN', razor: 'RAZOR', machete: 'MACHETE', hatchet: 'HATCHET', crowbar: 'CROWBAR', sap: 'SAP' });
   const A = () => R.art;
   function hbox(g, x, y, w, h, striped) {
     g.fillStyle = 'rgba(20,12,10,0.5)'; g.fillRect(x + 2, y + 3, w, h);
@@ -24379,7 +24381,7 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
     // weapon + ammo
     const ww = R.data.weapons[pl.weapon];
     const held = pl.held && R.data.props[pl.held.k];
-    const wn = held ? held.name.split(' ').pop().toUpperCase() : SHORTW[pl.weapon] || 'FISTS';
+    const wn = held ? held.name.split(' ').pop().toUpperCase() : SHORTW[pl.weapon] || (ww && pl.weapon !== 'fists' ? ww.name.split(' ').pop().toUpperCase() : 'FISTS');
     const ammo = held ? (held.dur >= 99 ? 'UNBREAKABLE' : 'USES ' + pl.held.dur) : pl.weapon === 'ring' ? `WILL ${Math.round(pl.will)}` : pl.weapon === 'gascan' ? `x${pl.inv.tools.gascan || 0}` : ww && ww.gun ? `${pl.clip[pl.weapon] || 0}/${pl.inv.ammo[ww.ammo] || 0}` : ww && ww.thrown ? `x${pl.inv.ammo[pl.weapon] || 0}` : 'SWAP';
     const bw = Math.max(A().ptWidth(wn, 2), A().ptWidth(ammo)) + 14;
     hbox(g, W - 6 - bw, 6, bw, 34, true);
