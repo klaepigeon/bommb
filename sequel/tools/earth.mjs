@@ -26,7 +26,7 @@ const closeAll = () => run(() => { for (let i = 0; i < 6; i++) { const s = docum
 await p.click('#btnNew');
 await p.waitForTimeout(900);
 const intro = await run(() => ({ title: document.querySelector('#story h1').textContent, text: document.querySelector('#story p').textContent }));
-check(/Earth/.test(intro.title) && /Tavorr/.test(intro.text) && /clamp/.test(intro.text), `the opening: "${intro.title}" (Big Tav, the clamp)`);
+check(/Earth/.test(intro.title) && /Fear Man/.test(intro.text) && /clamp/.test(intro.text), `the opening: "${intro.title}" (the Fear Man, the clamp)`);
 await shot('intro');
 await closeAll();
 
@@ -39,9 +39,9 @@ const start = await run(() => {
   return { city: g.world.cities[0].name, cash: g.player.cash, clamp: BS2.SQ.flags.clamp, don: don && g.pop.name(don), donXeno: don && don.look.xeno, by, robot: robot && g.pop.name(robot), job: g.jobs.active && g.jobs.active.title, weather: g.env.WEATHER_NAMES[g.env.weather.kind] };
 });
 check(start.city === 'Port Hollow' && start.cash >= 600 && start.clamp === 1, `start on the Brass Coast with ${start.cash} credits and a clamped ship`);
-check(start.donXeno === 'tavorr', `the boss of Earth is an alien: ${start.don}`);
+check(start.donXeno === 'fearman', `the boss of Earth is an alien: ${start.don}`);
 check(start.by.cyborg > 20 && start.by.robot > 10 && start.by.mutant > 10 && start.by.android > 5, `the people of the future: ${Object.entries(start.by).map(([k, v]) => v + ' ' + k).join(', ')} (a robot: ${start.robot})`);
-check(/Acid Rain|Smog|Toxic|Haze/.test(start.weather), `Earth's sky: ${start.weather}`);
+check(/Acid Rain|Smog|Toxic|Haze|Heat Dome/.test(start.weather), `Earth's sky: ${start.weather}`);
 const names = await run(() => ({ gun: R.data.weapons.revolver.name, bar: R.data.btypes.bar.name, car: R.data.vehicles.sedan.name }));
 check(names.gun === 'Blaster Pistol' && names.bar === 'Cantina' && /Hover/.test(names.car), `the future's gear: ${names.gun}, ${names.bar}, ${names.car}`);
 // the ship won't launch clamped
@@ -58,7 +58,7 @@ const job = await run(() => {
   return { paid: g.player.cash - c0, reward };
 });
 await p.waitForTimeout(200);
-check(job.paid === job.reward * 3, `Tav's job paid triple: ${job.paid} (base ${job.reward})`);
+check(job.paid === job.reward * 3, `the Fear Man's job paid triple: ${job.paid} (base ${job.reward})`);
 check(await run(() => BS2.SQ.flags.clamp === 0), 'the job took the clamp off the ship');
 await closeAll();
 await tick(30);
@@ -85,6 +85,8 @@ await shot('next_sector');
 // the ship is back on the coast; call it
 const call = await run(() => {
   const g = R.game, pl = g.player, w = g.world; pl.place(w.pad.sx - 20, w.pad.sy + 30);
+  // passers-by near the pad would take the context button: clear them
+  for (const q of g.actors.list.slice()) if (q !== pl && Math.hypot(q.x - pl.x, q.y - pl.y) < 120) g.actors.remove(q);
   const a = pl.contextAction(); const label = a && a.label; if (a) a.fn();
   return { label, here: BS2.SQ.shipAt.join(',') === BS2.SQ.sector.join(','), menu: pl.contextAction() && pl.contextAction().label };
 });

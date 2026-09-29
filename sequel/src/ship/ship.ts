@@ -4,7 +4,8 @@
 import { Px } from '../gfx/px';
 import { ink, rampOf } from '../gfx/pal';
 
-export type Mod = 'cockpit' | 'engine' | 'reactor' | 'fuel' | 'cargo' | 'hold' | 'gun' | 'shield' | 'quarters' | 'med' | 'tube' | 'lounge' | 'battery' | 'armor' | 'tractor' | 'jump';
+export type Mod = 'cockpit' | 'engine' | 'reactor' | 'fuel' | 'cargo' | 'hold' | 'gun' | 'shield' | 'quarters' | 'med' | 'tube' | 'lounge' | 'battery' | 'armor' | 'tractor' | 'jump'
+  | 'missile' | 'burner' | 'cloak' | 'pd' | 'sensor' | 'cryo' | 'drone' | 'plate' | 'refinery';
 
 export interface ModDef { name: string; price: number; mass: number; power: number; col: string; blurb: string }
 export const MODS: Record<Mod, ModDef> = {
@@ -24,14 +25,31 @@ export const MODS: Record<Mod, ModDef> = {
   armor: { name: 'Armour Plate', price: 180, mass: 3, power: 0, col: '#8a92a2', blurb: 'Dead weight that keeps you alive.' },
   tractor: { name: 'Tractor Beam', price: 600, mass: 2, power: -1, col: '#a8f0ff', blurb: 'Pulls in ore, ice and loose cargo from a distance.' },
   jump: { name: 'Jump Drive', price: 5000, mass: 4, power: -3, col: '#ff5ad0', blurb: 'Folds space to the nearby stars. Needs clear space and jump fuel.' },
+  missile: { name: 'Missile Rack', price: 1400, mass: 3, power: -1, col: '#ffb040', blurb: 'Homing missiles: they launch on their own at hostiles while you hold fire.' },
+  burner: { name: 'Afterburner', price: 900, mass: 2, power: -2, col: '#ff7a3a', blurb: 'More thrust and a higher top speed outside cruise.' },
+  cloak: { name: 'Cloaking Field', price: 6000, mass: 3, power: -3, col: '#9a88c8', blurb: 'Patrols and hunters lose you past close range. Rebel tech.' },
+  pd: { name: 'Point Defence', price: 1100, mass: 2, power: -1, col: '#d0d8e8', blurb: 'Swats incoming shots and missiles out of the sky, some of the time.' },
+  sensor: { name: 'Sensor Array', price: 800, mass: 2, power: -1, col: '#68f0ff', blurb: 'Every ship and platinum rock in range, on your screen.' },
+  cryo: { name: 'Cryo Pods', price: 700, mass: 2, power: -1, col: '#a8d8ff', blurb: 'Sleep four more crew. They wake up grumpy.' },
+  drone: { name: 'Drone Bay', price: 3200, mass: 3, power: -2, col: '#f0e060', blurb: 'Two fighter drones that fly with you and shoot what you shoot.' },
+  plate: { name: 'Neutronium Plate', price: 1600, mass: 5, power: 0, col: '#5a6272', blurb: 'The heaviest armour money can buy. Very, very heavy.' },
+  refinery: { name: 'Ore Refinery', price: 2600, mass: 4, power: -2, col: '#c8a070', blurb: 'Turns three ore into one platinum while you fly.' },
 };
 
-export type HullId = 'skiff' | 'cutter' | 'freighter' | 'corvette';
-export const HULLS: Record<HullId, { name: string; w: number; h: number; price: number; paint: string }> = {
-  skiff: { name: 'Skiff', w: 5, h: 3, price: 0, paint: '#d8d4c8' },
-  cutter: { name: 'Cutter', w: 7, h: 4, price: 4000, paint: '#e8742a' },
-  freighter: { name: 'Freighter', w: 9, h: 5, price: 9000, paint: '#8a96a8' },
-  corvette: { name: 'Corvette', w: 9, h: 6, price: 18000, paint: '#3a4a6a' },
+export type HullId = 'skiff' | 'dart' | 'cutter' | 'clipper' | 'freighter' | 'gunship' | 'corvette' | 'hauler' | 'frigate' | 'destroyer' | 'dreadnought';
+// from a one-seat skiff to a capital ship: bigger grids, more of everything, heavier
+export const HULLS: Record<HullId, { name: string; w: number; h: number; price: number; paint: string; cls: string; blurb: string }> = {
+  skiff: { name: 'Skiff', w: 5, h: 3, price: 0, paint: '#d8d4c8', cls: 'light', blurb: 'Cheap, cramped, yours.' },
+  dart: { name: 'Dart', w: 6, h: 3, price: 2500, paint: '#e84848', cls: 'light', blurb: 'An interceptor: all engine and guns.' },
+  cutter: { name: 'Cutter', w: 7, h: 4, price: 4000, paint: '#e8742a', cls: 'light', blurb: 'The smuggler\'s favourite.' },
+  clipper: { name: 'Clipper', w: 8, h: 3, price: 6000, paint: '#e8d098', cls: 'medium', blurb: 'A long, fast trader.' },
+  freighter: { name: 'Freighter', w: 9, h: 5, price: 9000, paint: '#8a96a8', cls: 'medium', blurb: 'Room for a real cargo run.' },
+  gunship: { name: 'Gunship', w: 8, h: 5, price: 12000, paint: '#4a5a3a', cls: 'medium', blurb: 'Wide wings, lots of hardpoints.' },
+  corvette: { name: 'Corvette', w: 9, h: 6, price: 18000, paint: '#3a4a6a', cls: 'heavy', blurb: 'A proper warship, small.' },
+  hauler: { name: 'Bulk Hauler', w: 12, h: 5, price: 22000, paint: '#b89060', cls: 'heavy', blurb: 'A flying warehouse.' },
+  frigate: { name: 'Frigate', w: 11, h: 7, price: 45000, paint: '#6a6a7a', cls: 'heavy', blurb: 'Navy steel, crew for a dozen.' },
+  destroyer: { name: 'Destroyer', w: 13, h: 7, price: 90000, paint: '#2a3a5a', cls: 'capital', blurb: 'The ship patrols run from.' },
+  dreadnought: { name: 'Dreadnought', w: 16, h: 9, price: 250000, paint: '#d8dce8', cls: 'capital', blurb: 'A capital ship. A small city with guns.' },
 };
 
 export interface Ship { name: string; hull: HullId; grid: (Mod | null)[]; paint: string }
@@ -39,6 +57,41 @@ export interface Ship { name: string; hull: HullId; grid: (Mod | null)[]; paint:
 export function blankShip(hull: HullId, name: string): Ship {
   const H = HULLS[hull];
   return { name, hull, grid: new Array(H.w * H.h).fill(null), paint: H.paint };
+}
+
+// NPC ships: a hull for the role and a loadout laid out on its grid (cockpit forward, engines
+// aft, guns on the leading edge, the middle filled for the job)
+export type Role = 'trader' | 'patrol' | 'hunter' | 'capital' | 'rebel' | 'miner';
+const ROLE_HULLS: Record<Role, HullId[]> = { trader: ['clipper', 'freighter', 'hauler', 'cutter'], patrol: ['corvette', 'gunship', 'frigate'], hunter: ['dart', 'gunship', 'cutter'], capital: ['destroyer', 'dreadnought'], rebel: ['cutter', 'gunship', 'dart'], miner: ['clipper', 'hauler'] };
+const ROLE_FILL: Record<Role, Mod[]> = {
+  trader: ['cargo', 'cargo', 'cargo', 'cargo', 'fuel', 'quarters', 'shield', 'cargo'],
+  patrol: ['armor', 'shield', 'missile', 'pd', 'quarters', 'plate', 'sensor', 'shield'],
+  hunter: ['armor', 'tube', 'missile', 'shield', 'burner', 'sensor'],
+  capital: ['plate', 'shield', 'missile', 'pd', 'quarters', 'drone', 'shield', 'armor', 'cryo', 'missile'],
+  rebel: ['cloak', 'shield', 'missile', 'cargo', 'burner'],
+  miner: ['cargo', 'refinery', 'tractor', 'cargo', 'fuel', 'cargo'],
+};
+export function npcShip(role: Role, rnd: () => number = Math.random, name = 'Ship', hullOverride?: HullId): Ship {
+  const hulls = ROLE_HULLS[role], hull = hullOverride || hulls[Math.floor(rnd() * hulls.length)], H = HULLS[hull];
+  const s = blankShip(hull, name), W = H.w, mid = Math.floor(H.h / 2);
+  const set = (x: number, y: number, m: Mod) => { if (x >= 0 && y >= 0 && x < W && y < H.h) s.grid[y * W + x] = m; };
+  set(W - 1, mid, 'cockpit');
+  for (let y = 0; y < H.h; y++) if (y !== mid || H.h < 3) set(0, y, 'engine');
+  const reactors = Math.max(2, Math.ceil((H.w * H.h) / 9));
+  for (let k = 0; k < reactors; k++) set(1 + (k % 2), (mid + Math.ceil(k / 2) * (k % 2 ? 1 : -1) + H.h * 4) % H.h, 'reactor');
+  const gunsN = role === 'trader' || role === 'miner' ? 1 : Math.max(2, Math.floor(H.h * 0.7));
+  for (let k = 0; k < gunsN; k++) set(W - 2, (mid + (k % 2 ? 1 : -1) * Math.ceil((k + 1) / 2) + H.h * 4) % H.h, 'gun');
+  const fill = ROLE_FILL[role];
+  let i = 0;
+  for (let x = 2; x < W - 1; x++) for (let y = 0; y < H.h; y++) if (!s.grid[y * W + x] && rnd() < 0.85) set(x, y, fill[i++ % fill.length]);
+  // power it properly
+  for (let guard = 0; guard < 40 && stats(s).power < 0; guard++) {
+    const j = s.grid.findIndex((m, n) => !!m && m !== 'cockpit' && m !== 'engine' && m !== 'reactor' && m !== 'gun' && n % W > 1);
+    if (j < 0) break;
+    s.grid[j] = 'reactor';
+  }
+  s.paint = role === 'capital' ? '#d8dce8' : role === 'patrol' ? '#eceef4' : role === 'hunter' ? '#2a2a34' : role === 'rebel' ? '#c86a3a' : H.paint;
+  return s;
 }
 
 // the starter: a scrappy skiff
@@ -53,6 +106,7 @@ export function starterShip(name: string): Ship {
 export interface Stats {
   mass: number; power: number; thrust: number; turn: number; cargo: number; hidden: number;
   guns: number; shield: number; hull: number; crew: number; fuel: number; tube: boolean; battery: boolean; med: boolean; tractor: boolean; jump: boolean;
+  missiles: number; burner: boolean; cloak: boolean; pd: number; sensor: boolean; drones: number; refinery: boolean;
   problems: string[];
 }
 
@@ -75,11 +129,12 @@ export function stats(s: Ship): Stats {
   const live = Math.max(0, engines - blocked);
   return {
     mass, power,
-    thrust: power < 0 ? live * 45 : (live * 180) / Math.sqrt(mass),
+    thrust: (power < 0 ? live * 45 : (live * 180) / Math.sqrt(mass)) * (count('burner') ? 1.4 : 1),
     turn: 3.2 / Math.sqrt(mass / 10),
     cargo: count('cargo') * 10, hidden: count('hold') * 6,
-    guns: count('gun'), shield: count('shield') * 40, hull: 40 + s.grid.filter(Boolean).length * 8 + count('armor') * 30,
-    crew: count('quarters') * 2, fuel: 2 + count('fuel') * 2, tube: count('tube') > 0, battery: count('battery') > 0, med: count('med') > 0, tractor: count('tractor') > 0, jump: count('jump') > 0,
+    guns: count('gun'), shield: count('shield') * 40, hull: 40 + s.grid.filter(Boolean).length * 8 + count('armor') * 30 + count('plate') * 80,
+    crew: count('quarters') * 2 + count('cryo') * 4, fuel: 2 + count('fuel') * 2, tube: count('tube') > 0, battery: count('battery') > 0, med: count('med') > 0, tractor: count('tractor') > 0, jump: count('jump') > 0,
+    missiles: count('missile'), burner: count('burner') > 0, cloak: count('cloak') > 0, pd: count('pd'), sensor: count('sensor') > 0, drones: count('drone') * 2, refinery: count('refinery') > 0,
     problems: risky ? [...problems, 'Warning: a reactor sits next to cargo.'] : problems,
   };
 }
@@ -177,8 +232,24 @@ function paintTop(s: Ship): Px {
         p.oval(mx, my, 3, 3, (nx, ny) => (nx * nx + ny * ny > 0.5 ? '#c8c8d0' : '#a8f0ff'));
       } else if (m === 'jump') {
         p.oval(mx, my, 3, 3, (nx, ny) => (nx * nx + ny * ny > 0.45 ? '#ff5ad0' : '#2a0a3a')); p.set(mx, my, '#ffffff');
-      } else if (m === 'armor') {
-        for (let k = 1; k < C - 1; k += 2) p.hline(x0 + 1, x0 + C - 2, y0 + k, hull[0]);
+      } else if (m === 'armor' || m === 'plate') {
+        for (let k = 1; k < C - 1; k += 2) p.hline(x0 + 1, x0 + C - 2, y0 + k, m === 'plate' ? dark[0] : hull[0]);
+      } else if (m === 'missile') {
+        // a pod of warheads
+        for (let k = 0; k < 3; k++) { p.hline(x0 + 1, x0 + C - 2, y0 + 1 + k * 2, '#d0d0d8'); p.set(x0 + C - 2, y0 + 1 + k * 2, '#ff5a3a'); }
+      } else if (m === 'burner') {
+        p.rect(x0, my - 1, C - 1, 3, dark[1]); p.set(x0 + C - 2, my, '#ff7a3a');
+      } else if (m === 'pd') {
+        p.rect(mx - 1, my - 1, 3, 3, dark[2]); p.hline(mx + 1, mx + 3, my - 1, dark[3]);
+      } else if (m === 'sensor') {
+        p.oval(mx, my, 3, 2, (nx, ny) => (ny < 0 ? '#c8f8ff' : '#68b8c8'));
+      } else if (m === 'drone') {
+        // a hangar door with a drone parked in it
+        p.rect(x0 + 1, y0 + 1, C - 2, C - 2, dark[0]); p.rect(mx - 1, my - 1, 3, 2, '#f0e060');
+      } else if (m === 'cloak') {
+        for (let k = 0; k < C; k += 2) p.set(x0 + k, y0 + ((k * 3) % C), '#c8b8ff');
+      } else if (m === 'refinery') {
+        p.rect(x0 + 1, y0 + 1, C - 2, C - 2, '#5a3a1a'); p.oval(mx, my, 1, 1, () => '#ffd060');
       } else {
         p.rect(mx - 1, my - 1, 2, 2, col);
       }
@@ -237,6 +308,15 @@ export function modIcon(m: Mod): HTMLCanvasElement {
     case 'armor': for (let y = 3; y < 14; y += 3) p.hline(3, 12, y, r[0]); break;
     case 'tractor': p.oval(8, 8, 5, 5, (nx, ny) => (nx * nx + ny * ny > 0.55 ? '#a8f0ff' : null)); p.oval(8, 8, 2, 2, () => '#ffffff'); break;
     case 'jump': p.oval(8, 8, 5, 5, (nx, ny) => (nx * nx + ny * ny > 0.4 ? '#ff5ad0' : '#2a0a3a')); p.set(8, 8, '#ffffff'); break;
+    case 'missile': for (let k = 0; k < 3; k++) { p.rect(3 + k * 4, 5, 2, 7, '#d0d0d8'); p.set(3 + k * 4, 4, '#ff5a3a'); p.set(4 + k * 4, 4, '#ff5a3a'); } break;
+    case 'burner': p.rect(3, 6, 6, 4, g); p.rect(9, 5, 2, 6, '#ff7a3a'); p.rect(11, 6, 2, 4, '#ffd060'); break;
+    case 'cloak': for (let y = 3; y < 13; y++) for (let x = 3; x < 13; x++) if ((x + y) % 3 === 0) p.set(x, y, '#e8e0ff'); break;
+    case 'pd': p.rect(6, 8, 4, 4, g); p.rect(7, 3, 2, 5, '#d0d8e8'); break;
+    case 'sensor': p.oval(8, 9, 5, 3, () => '#68f0ff'); p.rect(7, 3, 2, 5, g); break;
+    case 'cryo': p.rect(4, 3, 3, 10, '#a8d8ff'); p.rect(9, 3, 3, 10, '#a8d8ff'); break;
+    case 'drone': p.rect(6, 6, 4, 4, '#f0e060'); p.hline(3, 12, 8, g); break;
+    case 'plate': for (let y = 3; y < 14; y += 2) p.hline(3, 12, y, '#2a303a'); break;
+    case 'refinery': p.rect(4, 4, 8, 8, '#6a4a2a'); p.oval(8, 8, 2, 2, () => '#ffd060'); break;
   }
   c = p.canvas();
   iconCache.set(m, c);

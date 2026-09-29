@@ -10,7 +10,8 @@
     "smoke": "node tools/smoke.mjs",
     "frontier": "node tools/frontier.mjs",
     "earth": "node tools/earth.mjs",
-    "check": "npm run typecheck && npm run build && npm run smoke && npm run frontier && npm run earth"
+    "fear": "node tools/fear.mjs",
+    "check": "npm run typecheck && npm run build && npm run smoke && npm run frontier && npm run earth && npm run fear"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",

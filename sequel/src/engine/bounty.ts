@@ -14,7 +14,7 @@ import { worldProfile, PLANETS } from './planets';
 import { SPACE, HOOKS, type Craft } from './space';
 import { enterDock } from './board';
 import { SHIP_MENU, travelTo } from './travel';
-import { blankShip, stats, type Mod } from '../ship/ship';
+import { npcShip, stats } from '../ship/ship';
 
 const TS = R.TILE;
 const HUNTERS = ['Kade "Dust" Morrow', 'The Widow Sable', 'Ossian Varga', 'Jet Calloway', 'Silas Frane', 'Marguerite Vex', 'Two-Moons Okoro', 'Lucky Petrov'];
@@ -71,14 +71,7 @@ function groundHunters(g: Game, dt: number): void {
 }
 
 // ---------------------------------------------------------------- hunters in space
-function hunterShip() {
-  const s = blankShip('cutter', 'Hunter'), W = 7;
-  const set = (x: number, y: number, m: Mod) => { s.grid[y * W + x] = m; };
-  set(6, 1, 'cockpit'); set(6, 2, 'gun'); set(5, 1, 'gun'); set(0, 1, 'engine'); set(0, 2, 'engine'); set(1, 1, 'engine');
-  set(1, 2, 'reactor'); set(2, 1, 'reactor'); set(3, 1, 'shield'); set(3, 2, 'armor'); set(2, 2, 'tube'); set(4, 2, 'quarters');
-  s.paint = '#2a2a34';
-  return s;
-}
+const hunterShip = () => npcShip('hunter', rnd, 'Hunter');
 let spaceT = 40, boardedT = 0;
 HOOKS.update.push((g, dt) => {
   boardedT -= dt;

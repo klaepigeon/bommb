@@ -112,18 +112,19 @@ function drawSigns(g: CanvasRenderingContext2D, t: number): void {
     if ((b.type === 'office' || b.type === 'bank') && hash(b.id, 3, 5) < 0.6) drawScreen(g, cx, by - 6, t, b.id);
   }
 }
-const SLOGANS = ['TAV PROVIDES', 'OBEY', 'WORK. PAY. SLEEP.', 'CURFEW 22:00', 'THE SYNDICATE LOVES YOU', 'REPORT DISSENT'];
+const SLOGANS = ['FEAR IS ORDER', 'OBEY', 'WORK. PAY. SLEEP.', 'CURFEW 22:00', 'THE SYNDICATE LOVES YOU', 'REPORT DISSENT'];
 function drawScreen(g: CanvasRenderingContext2D, x: number, y: number, t: number, id: number): void {
   const W = 40, H = 26, sx = Math.round(x - W / 2), sy = Math.round(y - H);
   g.fillStyle = '#0a0608'; g.fillRect(sx - 2, sy - 2, W + 4, H + 4);
   g.fillStyle = '#1a0a18'; g.fillRect(sx, sy, W, H);
   const phase = Math.floor(t / 3 + id) % 3;
   if (phase < 2) {
-    // Big Tav's face: purple, spined, too many eyes
-    g.fillStyle = '#6a4a8a'; g.fillRect(sx + 13, sy + 5, 14, 14);
-    g.fillStyle = '#c848a8'; for (let k = 0; k < 4; k++) g.fillRect(sx + 13 + k * 4, sy + 1, 2, 4);
-    g.fillStyle = '#f0d030'; g.fillRect(sx + 15, sy + 9, 2, 2); g.fillRect(sx + 23, sy + 9, 2, 2); g.fillRect(sx + 19, sy + 7, 2, 2);
-    g.fillStyle = '#c848a8'; for (let k = 0; k < 4; k++) g.fillRect(sx + 14 + k * 4, sy + 19, 1, 4);
+    // the Fear Man's face: magenta, a widow's peak going grey, a pencil moustache, the ring
+    g.fillStyle = '#b04a7c'; g.fillRect(sx + 13, sy + 4, 14, 16);
+    g.fillStyle = '#8a8a90'; g.fillRect(sx + 13, sy + 3, 14, 3); g.fillRect(sx + 19, sy + 6, 2, 2);
+    g.fillStyle = '#f0f0f0'; g.fillRect(sx + 15, sy + 10, 3, 2); g.fillRect(sx + 22, sy + 10, 3, 2);
+    g.fillStyle = '#1a1020'; g.fillRect(sx + 16, sy + 10, 1, 2); g.fillRect(sx + 23, sy + 10, 1, 2); g.fillRect(sx + 16, sy + 15, 8, 1);
+    g.fillStyle = '#f0c020'; g.fillRect(sx + 29, sy + 14, 3, 3);
   } else R.art.ptext(g, SLOGANS[(Math.floor(t / 9) + id) % SLOGANS.length], sx + W / 2, sy + 10, { align: 'center', scale: 1, color: '#ff3a7a', shadow: null });
   // scanlines and a roll bar
   g.fillStyle = 'rgba(0,0,0,0.3)'; for (let k = 0; k < H; k += 2) g.fillRect(sx, sy + k, W, 1);

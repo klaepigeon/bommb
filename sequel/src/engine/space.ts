@@ -13,11 +13,11 @@ import { SQ, saveSequel, type Good } from './state';
 import { PLANETS, BODY, landable, type PlanetId, type BodyId } from './planets';
 import { travelTo } from './travel';
 import { bodies, planetArt, gravity, orbitalSpeed, orbitRadius, type Body } from '../space/system';
-import { blankShip, shipSprites, stats, type Ship, type Mod } from '../ship/ship';
+import { npcShip, shipSprites, stats, HULLS, type Ship } from '../ship/ship';
 import { enterFreighter } from './board';
 
 export interface Craft {
-  id: number; kind: 'freighter' | 'patrol' | 'hunter'; ship: Ship; flag: 'empire' | 'solari' | 'hunter';
+  id: number; kind: 'freighter' | 'patrol' | 'hunter' | 'capital' | 'rebel'; ship: Ship; flag: 'empire' | 'solari' | 'hunter' | 'rebel';
   x: number; y: number; vx: number; vy: number; a: number;
   hull: number; maxHull: number; shield: number; maxShield: number;
   disabled: boolean; looted: boolean; dead: boolean;
@@ -50,6 +50,10 @@ export const HOOKS = {
   hud: [] as (() => string | null)[],
   // worlds that ask where to come down (Earth's landing zones)
   land: {} as Record<string, (g: Game, go: () => void) => void>,
+  // draw yourself instead of the ship (flying on a lantern ring); true = drawn
+  self: [] as ((g: CanvasRenderingContext2D, x: number, y: number, a: number, k: number) => boolean)[],
+  // after you set down anywhere
+  landed: [] as ((g: Game, id: PlanetId) => void)[],
 };
 export const inSpace = () => SPACE.active;
 export const shipBody = (id: BodyId) => body(id);
@@ -67,23 +71,10 @@ const sfx = (n: string) => R.game && R.game.audio && R.game.audio.sfx(n);
 const body = (id: BodyId) => bs().find((b) => b.id === id) as Body;
 const inputStick = () => (R.game && R.game.input ? R.game.input.stick : { x: 0, y: 0 });
 
-function freighterShip(): Ship {
-  const s = blankShip('freighter', 'Freighter'), W = 9;
-  const set = (x: number, y: number, m: Mod) => { s.grid[y * W + x] = m; };
-  for (let y = 0; y < 5; y++) for (let x = 2; x < 7; x++) set(x, y, 'cargo');
-  set(8, 2, 'cockpit'); set(0, 1, 'engine'); set(0, 3, 'engine'); set(1, 2, 'reactor'); set(7, 1, 'quarters'); set(7, 3, 'shield'); set(7, 2, 'gun');
-  for (let y = 0; y < 5; y++) if (rnd() < 0.3) set(1, y === 2 ? 1 : y, 'fuel');
-  s.paint = pick(['#8a96a8', '#b8a080', '#a0a8b8']);
-  return s;
-}
-function patrolShip(): Ship {
-  const s = blankShip('cutter', 'Patrol'), W = 7;
-  const set = (x: number, y: number, m: Mod) => { s.grid[y * W + x] = m; };
-  set(6, 1, 'cockpit'); set(6, 2, 'gun'); set(5, 0, 'gun'); set(5, 3, 'gun'); set(0, 1, 'engine'); set(0, 2, 'engine'); set(1, 1, 'reactor'); set(1, 2, 'reactor');
-  set(3, 1, 'shield'); set(3, 2, 'armor'); set(4, 1, 'armor'); set(4, 2, 'armor'); set(2, 1, 'quarters');
-  s.paint = '#eceef4';
-  return s;
-}
+// how big a craft is to hit: half its sprite, give or take
+export const craftR = (c: Craft) => Math.max(12, HULLS[c.ship.hull].w * 3);
+const freighterShip = () => npcShip('trader', rnd, 'Freighter');
+const patrolShip = () => npcShip('patrol', rnd, 'Patrol');
 
 // traffic lives in the lanes around the inhabited worlds, near you
 function spawnFreighter(near?: boolean): void {
@@ -107,6 +98,23 @@ function spawnPatrol(): void {
   });
   R.game.ui.toast('IMPERIAL PATROL: "Unregistered vessel, cut your engines and prepare to be boarded."', 'bad');
   sfx('alarm');
+}
+
+// put any kind of ship near you (debug, events, capital ships on their rounds)
+export function spawnCraft(kind: Craft['kind'], hostile = kind === 'patrol' || kind === 'hunter', dist0 = 500): Craft {
+  const role = kind === 'freighter' ? 'trader' : kind;
+  const sh = npcShip(role, rnd, kind === 'capital' ? 'Imperial Star Dreadnought' : 'Ship'), s = stats(sh), ang = rnd() * Math.PI * 2;
+  const names: Record<string, string> = { freighter: pick(NAMES), patrol: 'Imperial Patrol', hunter: 'Hunter', capital: pick(['ISD Castra Invicta', 'ISD Senate\'s Fist', 'ISD Dominion']), rebel: pick(['Free Ganymede', 'Red Sparrow', 'Long Shot']) };
+  const LANES = landable();
+  const c: Craft = {
+    id: SPACE.nextId++, kind, ship: sh, flag: kind === 'freighter' || kind === 'patrol' || kind === 'capital' ? 'empire' : kind === 'rebel' ? 'rebel' : 'hunter',
+    x: SPACE.x + Math.cos(ang) * dist0, y: SPACE.y + Math.sin(ang) * dist0, vx: SPACE.vx, vy: SPACE.vy, a: ang + Math.PI,
+    hull: s.hull, maxHull: s.hull, shield: s.shield, maxShield: s.shield, disabled: false, looted: false, dead: false,
+    target: LANES.length ? pick(LANES) : ('earth' as PlanetId), cool: 1.5, hostile, name: names[kind],
+    cargo: kind === 'freighter' ? [{ good: pick(GOODS), n: 4 + Math.floor(rnd() * 6) }] : [],
+  };
+  SPACE.crafts.push(c);
+  return c;
 }
 
 // ---------------------------------------------------------------- entering and leaving space
@@ -153,25 +161,26 @@ function land(g: Game, id: PlanetId, force = false): void {
     }
   }
   SQ.heat.empire = Math.max(0, SQ.heat.empire - 10);
+  for (const h of HOOKS.landed) h(g, id);
   saveSequel();
   g.save();
 }
 
 // ---------------------------------------------------------------- combat helpers
-function fire(x: number, y: number, a: number, vx: number, vy: number, from: 'me' | number, dmg: number, n: number): void {
+export function fire(x: number, y: number, a: number, vx: number, vy: number, from: 'me' | number, dmg: number, n: number): void {
   for (let k = 0; k < n; k++) {
     const off = (k - (n - 1) / 2) * 5, px = -Math.sin(a) * off, py = Math.cos(a) * off;
     SPACE.shots.push({ x: x + Math.cos(a) * 14 + px, y: y + Math.sin(a) * 14 + py, vx: vx + Math.cos(a) * 520, vy: vy + Math.sin(a) * 520, life: 1.1, from, dmg });
   }
 }
-function burst(x: number, y: number, n: number, cols: string[], vx = 0, vy = 0): void {
+export function burst(x: number, y: number, n: number, cols: string[], vx = 0, vy = 0): void {
   for (let k = 0; k < n; k++) { const a = rnd() * 7, s = 20 + rnd() * 120; SPACE.sparks.push({ x, y, vx: vx + Math.cos(a) * s, vy: vy + Math.sin(a) * s, life: 0.4 + rnd() * 0.7, col: cols[k % cols.length] }); }
 }
 // the landable world you're low enough over to land on (or hail)
 export const nearPlanet = () => bs().find((b) => b.id !== 'sun' && dist(SPACE.x, SPACE.y, b.x, b.y) < b.r + 220) || null;
 const nearWreck = () => SPACE.crafts.find((c) => c.disabled && !c.looted && !c.dead && dist(SPACE.x, SPACE.y, c.x, c.y) < 70) || null;
 
-function hitCraft(g: Game, c: Craft, dmg: number): void {
+export function hitCraft(g: Game, c: Craft, dmg: number): void {
   const peaceful = !c.hostile;
   if (c.shield > 0) { c.shield = Math.max(0, c.shield - dmg); burst(c.x, c.y, 3, ['#9ad8ff', '#ffffff'], c.vx, c.vy); }
   else { c.hull -= dmg; burst(c.x, c.y, 4, ['#ffd060', '#ff8030'], c.vx, c.vy); }
@@ -188,7 +197,7 @@ function hitCraft(g: Game, c: Craft, dmg: number): void {
   }
   if (c.hull <= 0) {
     c.dead = true; sfx('boom'); burst(c.x, c.y, 40, ['#ffd060', '#ff8030', '#ffffff', '#c83a2a'], c.vx, c.vy);
-    if (c.kind === 'patrol') { SQ.heat.empire += 20; SQ.bounty += 600; g.ui.toast('Patrol destroyed. The Empire will remember that. (+$600 on your head)', 'bad'); g.player.rep.infamy += 5; }
+    if (c.kind === 'patrol' || c.kind === 'capital') { SQ.heat.empire += 20; SQ.bounty += 600; g.ui.toast('Patrol destroyed. The Empire will remember that. (+$600 on your head)', 'bad'); g.player.rep.infamy += 5; }
     else if (c.kind === 'hunter') { const prize = 200 + Math.floor(Math.random() * 300); g.player.cash += prize; g.ui.toast(`${c.name} is scrap. You pull $${prize} from the wreck's strongbox.`, 'good'); }
     else g.ui.toast(`${c.name} breaks apart. Her cargo burns with her.`);
   }
@@ -264,10 +273,10 @@ function update(g: Game, dt: number): void {
       SPACE.vx -= G.ax * hold * dt; SPACE.vy -= G.ay * hold * dt;
       if (mag < 0.2) { const k = Math.pow(0.5, dt); SPACE.vx = frame.vx / 60 + rvx * k; SPACE.vy = frame.vy / 60 + rvy * k; }
     }
-    const sp = Math.hypot(rvx, rvy), cap = 900;
+    const sp = Math.hypot(rvx, rvy), cap = my.burner ? 1250 : 900;
     if (sp > cap) { SPACE.vx = frame.vx / 60 + (rvx * cap) / sp; SPACE.vy = frame.vy / 60 + (rvy * cap) / sp; }
   }
-  if (mag > 0.2 || SPACE.cruise) {
+  if ((mag > 0.2 || SPACE.cruise) && !SQ.ringFly) {
     SPACE.thrustT -= dt;
     if (SPACE.thrustT <= 0) { SPACE.thrustT = 0.05; SPACE.sparks.push({ x: SPACE.x - Math.cos(SPACE.a) * 16, y: SPACE.y - Math.sin(SPACE.a) * 16, vx: SPACE.vx - Math.cos(SPACE.a) * 60 + (rnd() - 0.5) * 20, vy: SPACE.vy - Math.sin(SPACE.a) * 60 + (rnd() - 0.5) * 20, life: 0.35, col: SPACE.cruise ? (rnd() < 0.5 ? '#a8e8ff' : '#ffffff') : rnd() < 0.5 ? '#ffd060' : '#ff8030' }); }
   }
@@ -317,20 +326,23 @@ function update(g: Game, dt: number): void {
     if (c.disabled) { c.vx += cg.ax * dt * 0.2; c.vy += cg.ay * dt * 0.2; c.a += dt * 0.2; }
     else {
       let tx: number, ty: number;
-      const chaser = c.kind !== 'freighter';
-      if (chaser || (c.hostile && dist(c.x, c.y, SPACE.x, SPACE.y) < 500)) { tx = SPACE.x; ty = SPACE.y; }
+      // patrols and hunters come for you; capital ships and rebels only once you've started it.
+      // A cloaking field loses them past close range.
+      const seen = !my.cloak || dist(c.x, c.y, SPACE.x, SPACE.y) < 240;
+      const chaser = seen && (c.kind === 'patrol' || c.kind === 'hunter' || (c.hostile && (c.kind === 'capital' || c.kind === 'rebel')));
+      if (chaser || (seen && c.hostile && dist(c.x, c.y, SPACE.x, SPACE.y) < 500)) { tx = SPACE.x; ty = SPACE.y; }
       else { const t = body(c.target); tx = t.x; ty = t.y; }
       const want = Math.atan2(ty - c.y, tx - c.x), d = angDiff(c.a, want);
       c.a += clamp(d, -cs.turn * dt * 0.8, cs.turn * dt * 0.8);
       // traders cruise the lane; patrols keep pace with you
-      const top = chaser ? Math.max(c.kind === 'hunter' ? 380 : 320, Math.hypot(SPACE.vx, SPACE.vy) * 1.1) : 160;
+      const top = c.kind === 'capital' ? 120 : chaser ? Math.max(c.kind === 'hunter' ? 380 : 320, Math.hypot(SPACE.vx, SPACE.vy) * 1.1) : 160;
       const tvx = Math.cos(c.a) * top, tvy = Math.sin(c.a) * top, k = Math.min(1, dt * 1.2);
       if (!(chaser && dist(c.x, c.y, SPACE.x, SPACE.y) < 130)) { c.vx += (tvx - c.vx) * k; c.vy += (tvy - c.vy) * k; }
       else { c.vx += (SPACE.vx - c.vx) * k; c.vy += (SPACE.vy - c.vy) * k; }
       c.cool -= dt;
-      if (c.hostile && c.cool <= 0 && dist(c.x, c.y, SPACE.x, SPACE.y) < 360 && Math.abs(d) < 0.4) {
+      if (c.hostile && seen && c.cool <= 0 && dist(c.x, c.y, SPACE.x, SPACE.y) < (c.kind === 'capital' ? 520 : 360) && Math.abs(d) < (c.kind === 'capital' ? 1.2 : 0.4)) {
         c.cool = chaser ? 0.5 : 1.3;
-        fire(c.x, c.y, c.a, c.vx, c.vy, c.id, chaser ? 8 : 5, chaser ? 2 : 1);
+        fire(c.x, c.y, c.a, c.vx, c.vy, c.id, chaser ? 8 : 5, clamp(cs.guns, 1, 4));
       }
     }
     c.x += c.vx * dt; c.y += c.vy * dt;
@@ -339,7 +351,7 @@ function update(g: Game, dt: number): void {
   for (const s of SPACE.shots) {
     s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt;
     if (s.from === 'me') {
-      for (const c of SPACE.crafts) if (!c.dead && dist(s.x, s.y, c.x, c.y) < (c.kind === 'freighter' ? 24 : 16)) { hitCraft(g, c, s.dmg); s.life = 0; break; }
+      for (const c of SPACE.crafts) if (!c.dead && dist(s.x, s.y, c.x, c.y) < craftR(c)) { hitCraft(g, c, s.dmg); s.life = 0; break; }
       if (s.life > 0) for (const h of HOOKS.shot) if (h(s.x, s.y, s.dmg)) { s.life = 0; break; }
     }
     else if (dist(s.x, s.y, SPACE.x, SPACE.y) < 14) {
@@ -447,7 +459,7 @@ function draw(g: CanvasRenderingContext2D, BW: number, BH: number): void {
   for (const c of SPACE.crafts) {
     if (c.dead) continue;
     const x = sx(c.x), y = sy(c.y);
-    if (x < -60 || x > W + 60 || y < -60 || y > H + 60) continue;
+    if (x < -160 || x > W + 160 || y < -160 || y > H + 160) continue;
     const spr = shipSprites(c.ship)[frameOf(c.a)];
     if (!sprite(spr, x, y)) { g.fillStyle = c.kind === 'patrol' ? '#ff5a5a' : c.disabled ? '#68f0a0' : '#e8e0c8'; g.fillRect(Math.round(x) - 1, Math.round(y) - 1, 3, 3); continue; }
     if (c.shield > 0 && c.hostile) { g.strokeStyle = 'rgba(150,210,255,0.5)'; g.beginPath(); g.arc(x, y, (spr.width / 2) * shipK, 0, 7); g.stroke(); }
@@ -458,13 +470,15 @@ function draw(g: CanvasRenderingContext2D, BW: number, BH: number): void {
   for (const s of SPACE.shots) { g.fillStyle = s.from === 'me' ? '#ff5ad0' : '#78ff98'; const a = Math.atan2(s.vy, s.vx); for (let k = 0; k < 5; k++) g.fillRect(Math.round(sx(s.x - Math.cos(a) * k / Z)), Math.round(sy(s.y - Math.sin(a) * k / Z)), 2, 2); }
   for (const p of SPACE.sparks) { g.fillStyle = p.col; g.fillRect(Math.round(sx(p.x)), Math.round(sy(p.y)), p.life > 0.3 ? 2 : 1, p.life > 0.3 ? 2 : 1); }
   const my = stats(SQ.ship), me = shipSprites(SQ.ship)[frameOf(SPACE.a)];
-  if (SPACE.cruise || Math.hypot(inputStick().x, inputStick().y) > 0.2) {
+  const selfDrawn = HOOKS.self.some((h) => h(g, W / 2, H / 2, SPACE.a, shipK));
+  if (!selfDrawn && (SPACE.cruise || Math.hypot(inputStick().x, inputStick().y) > 0.2)) {
     const bx = W / 2 - Math.cos(SPACE.a) * (me.width * shipK * 0.42), by = H / 2 - Math.sin(SPACE.a) * (me.width * shipK * 0.42), f = 0.7 + Math.random() * 0.3;
     const glow = g.createRadialGradient(bx, by, 0, bx, by, 10 * shipK * f);
     glow.addColorStop(0, SPACE.cruise ? 'rgba(200,245,255,0.9)' : 'rgba(255,230,140,0.9)'); glow.addColorStop(1, 'rgba(255,120,40,0)');
     g.fillStyle = glow; g.fillRect(bx - 12, by - 12, 24, 24);
   }
-  if (!sprite(me, W / 2, H / 2)) {
+  if (selfDrawn) { /* drawn by a hook */ }
+  else if (!sprite(me, W / 2, H / 2)) {
     // far out: your ship is an arrowhead marker
     const a = SPACE.a; g.fillStyle = '#ff9a3a'; g.beginPath(); g.moveTo(W / 2 + Math.cos(a) * 6, H / 2 + Math.sin(a) * 6); g.lineTo(W / 2 + Math.cos(a + 2.5) * 4, H / 2 + Math.sin(a + 2.5) * 4); g.lineTo(W / 2 + Math.cos(a - 2.5) * 4, H / 2 + Math.sin(a - 2.5) * 4); g.fill();
   } else if (SPACE.shield > 1) { g.strokeStyle = `rgba(150,210,255,${0.2 + 0.4 * (SPACE.shield / Math.max(1, my.shield))})`; g.beginPath(); g.arc(W / 2, H / 2, (me.width / 2) * shipK + 1, 0, 7); g.stroke(); }
@@ -489,7 +503,7 @@ function draw(g: CanvasRenderingContext2D, BW: number, BH: number): void {
   for (const h of HOOKS.draw) h(view);
   const fmt = (d: number) => (d > 30000 ? (d / 60000).toFixed(2) + ' AU' : Math.round(d / 10) + ' KM');
   for (const b of SPACE.B) if (b.id in PLANETS || SQ.course === b.id) mark(b.x, b.y, SQ.course === b.id ? '#ff9a3a' : '#ffe070', BODY[b.id].name.toUpperCase() + ' ' + fmt(dist(SPACE.x, SPACE.y, b.x, b.y) - b.r));
-  for (const c of SPACE.crafts) if (!c.dead && (c.kind !== 'freighter' || (c.disabled && !c.looted) || dist(c.x, c.y, SPACE.x, SPACE.y) < 1400)) mark(c.x, c.y, c.kind !== 'freighter' ? '#ff5a5a' : c.disabled ? '#68f0a0' : '#e8e0c8', c.kind === 'patrol' ? 'PATROL' : c.kind === 'hunter' ? 'HUNTER' : c.disabled ? 'BOARD' : 'FREIGHT');
+  for (const c of SPACE.crafts) if (!c.dead && (c.kind !== 'freighter' || (c.disabled && !c.looted) || dist(c.x, c.y, SPACE.x, SPACE.y) < 1400)) mark(c.x, c.y, c.kind === 'rebel' ? '#ff9a3a' : c.kind !== 'freighter' ? '#ff5a5a' : c.disabled ? '#68f0a0' : '#e8e0c8', c.kind === 'patrol' ? 'PATROL' : c.kind === 'hunter' ? 'HUNTER' : c.kind === 'capital' ? c.name.toUpperCase() : c.kind === 'rebel' ? 'REBEL' : c.disabled ? 'BOARD' : 'FREIGHT');
   // the flight readout, top centre: where you are, how high, how fast, and the orbit you'd need
   const G = SPACE.g;
   if (G) {

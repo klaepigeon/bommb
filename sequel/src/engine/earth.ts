@@ -125,7 +125,7 @@ function rng(seed: number) { let s = seed >>> 0; return () => { s = (s + 0x6d2b7
 const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
 
 // the Syndicate: one boss for the whole planet
-export const BOSS = { family: 'Tavorr', don: 'Xal "Big Tav" Tavorr', name: 'Xal-Tavorr' };
+export const BOSS = { family: 'Dread', don: 'The Fear Man', name: 'The Fear Man' };
 
 const profCache = new Map<string, Profile>();
 export function earthProfile(sx: number, sy: number): Profile {

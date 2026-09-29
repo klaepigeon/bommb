@@ -65,7 +65,7 @@ const ctx = await run(() => { const pl = R.game.player, w = R.game.world; pl.pla
 check(ctx === 'Brass Buzzard', `USE by the ship offers "${ctx}"`);
 await run(() => R.game.player.contextAction().fn());
 await shot('shipmenu');
-// Tav's clamp: pay the release fee, then launch
+// the Fear Man's clamp: pay the release fee, then launch
 const clamp = await run(() => {
   R.game.player.cash += 1500;
   [...document.querySelectorAll('.sheet button, .sheet .opt')].find((x) => /Launch \(clamped\)/.test(x.textContent)).click();
@@ -73,7 +73,7 @@ const clamp = await run(() => {
   if (pay) pay.click();
   return BS2.SQ.flags.clamp;
 });
-check(clamp === 0, 'paid Tav to take the clamp off the ship');
+check(clamp === 0, 'paid the Fear Man to take the clamp off the ship');
 await run(() => { for (let i = 0; i < 5; i++) { const s = document.querySelector('#story'); if (s && getComputedStyle(s).display !== 'none') s.querySelector('button').click(); } R.game.player.contextAction().fn(); });
 await run(() => [...document.querySelectorAll('.sheet button, .sheet .opt')].find((x) => /^Launch/.test(x.textContent)).click());
 await tick(20);

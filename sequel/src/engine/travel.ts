@@ -189,7 +189,8 @@ export function travelTo(g: Game, to: PlanetId, force = false): void {
 export interface MenuOpt { label: string; small?: string; fn: () => void }
 export const SHIP_MENU: ((g: Game) => MenuOpt | null)[] = [];
 // on Earth your ship is parked in one sector; everywhere else it's on the pad you landed at
-export const shipHere = () => SQ.planet !== 'earth' || SQ.home !== 'sol' || (SQ.shipAt[0] === SQ.sector[0] && SQ.shipAt[1] === SQ.sector[1]);
+export const shipHere = () => (!SQ.shipLoc || (SQ.shipLoc.sys === SQ.home && SQ.shipLoc.planet === SQ.planet)) &&
+  (SQ.planet !== 'earth' || SQ.home !== 'sol' || (SQ.shipAt[0] === SQ.sector[0] && SQ.shipAt[1] === SQ.sector[1]));
 export function nearPad(pl: Player): boolean {
   const w = R.game.world;
   return !!w.pad && !pl.room && !pl.inCar && SQ.mode !== 'space' && Math.abs(pl.x - w.pad.sx) < 70 && Math.abs(pl.y - w.pad.sy) < 42;

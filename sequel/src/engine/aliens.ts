@@ -14,7 +14,7 @@ import { PLANETS, worldProfile } from './planets';
 import { addCargo, GOODS } from './cargo';
 import { SCAN, SPACE } from './space';
 
-type Feature = 'antennae' | 'crest' | 'dome' | 'halo' | 'visor' | 'tendrils' | 'horns' | 'fins' | 'implant' | 'robot' | 'mutant' | 'boss';
+type Feature = 'elder' | 'antennae' | 'crest' | 'dome' | 'halo' | 'visor' | 'tendrils' | 'horns' | 'fins' | 'implant' | 'robot' | 'mutant' | 'boss';
 type Eyes = 'big' | 'glow' | 'slit' | 'many' | 'none' | 'red' | 'bar' | 'odd';
 export interface Species {
   id: string; name: string; plural: string; skin: string; eye: string; eyes: Eyes; feature: Feature; accent: string;
@@ -50,10 +50,10 @@ export const SPECIES: Record<string, Species> = {
     names: [], lines: ['I remember a childhood. It was installed on a Tuesday.', 'More human than human, they said. They were wrong.', 'I have four years left. I intend to enjoy them.', 'Have you ever wondered if you\'re real?', 'The rain is lovely, from the inside of a window.'],
     blurb: 'Made to look like people, and some of them think they are. The Peacekeepers retire the ones that run.',
   },
-  tavorr: {
-    id: 'tavorr', name: 'Tavorr', plural: 'the Tavorr', skin: '#6a4a8a', eye: '#f0d030', eyes: 'many', feature: 'boss', accent: '#c848a8',
-    names: ['Xal'], lines: ['You were Vane\'s. Now you\'re mine. Earth is mine.', 'I bought this planet at a discount. You were in the box.', 'Get me credits, get a ship, get out of my sight. In that order.', 'Ten years, and your species still thinks it owns the place.'],
-    blurb: 'Xal-Tavorr, called Big Tav: the one boss of all of Earth\'s underworld. Nobody knows what planet he\'s from. Nobody asks twice.',
+  fearman: {
+    id: 'fearman', name: 'The Fear Man', plural: 'the Fear Man\'s people', skin: '#b04a7c', eye: '#f0c020', eyes: 'none', feature: 'elder', accent: '#f0c020',
+    names: ['The Fear Man'], lines: ['I kept order across a thousand worlds. Now I keep it on this one. Mostly.', 'You were Vane\'s. Now you are mine. Earth is mine. Where did I put my ring?', 'Get me credits, get a ship, get out of my sight. In that order. What order?', 'Order is a kind of fear, properly applied. Who are you again?', 'I remember you. You were younger. So was I.'],
+    blurb: 'The Fear Man: once the terror of a thousand worlds, now the one boss of all of Earth\'s underworld, and very, very old. His yellow ring still glows. His memory doesn\'t.',
   },
   grey: {
     id: 'grey', name: 'Grey', plural: 'Greys', skin: '#a8b4bc', eye: '#08080c', eyes: 'big', feature: 'dome', accent: '#d8e0e8', trader: true,
@@ -101,6 +101,13 @@ export function speciesFor(seed: number): Species | null {
   for (const [id, share] of p.species) { if (roll < share && SPECIES[id]) return SPECIES[id]; roll -= share; }
   return null;
 }
+// the boss of Earth: game 1's Fear Man, ten years older and going grey at the widow's peak
+export function fearLook(look: any): void {
+  look.xeno = 'fearman'; look.xenoSeed = 1; look.seedStr = 'fearman-old';
+  look.skin = '#b04a7c'; look.hair = '#8a8a90'; look.hat = null; look.shades = false; look.fem = false; look.age = 80;
+  look.oldOverride = { skin: ['#4a1030', '#7a2050', '#b04a7c', '#e080aa'], hair: ['#4a4a52', '#6a6a72', '#9a9aa2', '#c8c8d0'], style: 'short', stache: true, jacket: ['#0e0e22', '#1c1c3c', '#2c2c5a', '#44447a'], top: 'collar', shirt: ['#6a4600', '#b88400', '#f0c020', '#fff27a'], pants: ['#08080e', '#14141e', '#22222e', '#34344a'], belt: '#f0c020', flare: false };
+  look.old = null;
+}
 function alienise(look: any, sp: Species, seed: number): void {
   look.xeno = sp.id; look.xenoSeed = seed;
   const pickOf = (a: string[] | undefined, k: number, d: string) => (a && a.length ? a[Math.floor(hashN(seed, k) * a.length)] : d);
@@ -118,7 +125,7 @@ const POP = R.Population.prototype, baseLook = POP.makeLook;
 POP.makeLook = function (this: unknown, rnd: () => number, p: any) {
   const look = baseLook.call(this, rnd, p);
   if (!p || p.role === 'cop' || p.role === 'detective' || p.seed == null) return look;
-  if (p.isDon && p.faction === 'Vane' && SQ.planet === 'earth' && SQ.home === 'sol') { alienise(look, SPECIES.tavorr, p.seed); return look; }
+  if (p.isDon && p.faction === 'Vane' && SQ.planet === 'earth' && SQ.home === 'sol') { fearLook(look); return look; }
   const sp = speciesFor(p.seed);
   if (!sp) return look;
   alienise(look, sp, p.seed);
@@ -150,7 +157,9 @@ const FEATURES: Record<Feature, (s: Species) => { front: Pix[]; back: Pix[] }> =
   robot: (s) => { const f: Pix[] = [[-6, 2, 12, 11, s.skin], [-6, 2, 12, 1, '#ffffff'], [-6, 12, 12, 1, '#303038'], [0, -3, 1, 5, '#303038'], [-1, -4, 3, 2, s.accent], [-6, 6, 1, 1, '#303038'], [5, 6, 1, 1, '#303038']]; return { front: f, back: f }; },
   // lumps and a crooked growth, per person
   mutant: (s) => ({ front: [[-6, 3, 3, 2, s.accent], [3, 1, 3, 3, s.accent], [-2, 13, 4, 1, s.accent]], back: [[-5, 2, 4, 3, s.accent], [2, 4, 3, 2, s.accent]] }),
-  // Big Tav: a crown of spines and a beard of tendrils
+  // the Fear Man: a widow's peak and the yellow ring glowing on his hand
+  elder: () => ({ front: [[-1, 3, 2, 3, '#1a1a20'], [5, 20, 2, 2, '#f0c020'], [6, 19, 1, 1, '#fff27a']], back: [[-1, 3, 2, 2, '#1a1a20']] }),
+  // (unused since the Fear Man took Earth) a crown of spines and a beard of tendrils
   boss: (s) => { const f: Pix[] = [[-6, -3, 2, 4, s.accent], [-2, -5, 2, 6, s.accent], [2, -4, 2, 5, s.accent], [5, -2, 2, 3, s.accent], [-5, 12, 1, 5, s.accent], [-2, 13, 1, 6, s.accent], [1, 13, 1, 6, s.accent], [4, 12, 1, 5, s.accent]]; return { front: f, back: f.slice(0, 4) }; },
 };
 const EYES: Record<Eyes, (s: Species) => Pix[]> = {

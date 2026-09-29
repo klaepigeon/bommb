@@ -33,6 +33,8 @@ export interface Sequel {
   sector: [number, number]; // on Earth: the sector you're standing in (earth.ts)
   shipAt: [number, number]; // on Earth: the sector your ship is parked in
   arriveEdge: { edge: 'n' | 's' | 'e' | 'w'; f: number } | null; // crossing a sector border on foot
+  shipLoc?: { sys: string; planet: PlanetId } | null; // which world your ship is parked on (unset = wherever you are)
+  ringFly?: { ship: Ship; hull: number; style: Record<string, unknown>; shipAt: [number, number]; shipLoc: { sys: string; planet: PlanetId } } | null; // flying on a lantern ring: your ship, parked
 }
 // the Brass Coast's place on the planet (earth.ts)
 export const HOME_SECTOR: [number, number] = [12, 10];

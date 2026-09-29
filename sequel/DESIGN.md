@@ -57,7 +57,7 @@ city in a permanent wet night) and *The Protomen* (a city under a tyrant's light
 - a crimson smog sky, even at noon, with searchlights sweeping it;
 - neon on every storefront, and marquees with chasing bulbs on the clubs, cantinas and hotels;
 - the El: an elevated train on iron girders over every city's main drag, lit windows and sparks;
-- Big Tav's face and slogans (OBEY, TAV PROVIDES) on screens over the towers;
+- the Fear Man's face and slogans (OBEY, FEAR IS ORDER) on screens over the towers;
 - robot Peacekeepers on the corners, acid rain that stings, a VHS grade over the picture.
 
 ## Look: the future the 80s imagined, drawn with Gen 4 pixel craft
@@ -93,7 +93,7 @@ so they read at ship scale.
 
 | World | What it is | Who runs it | Status |
 |---|---|---|---|
-| **Earth** | a dystopian planet-sized Earth; the Brass Coast is one sector of it | Xal "Big Tav" Tavorr's Syndicate, and the street crews under him | landable anywhere on land |
+| **Earth** | a dystopian planet-sized Earth; the Brass Coast is one sector of it | the Fear Man's Syndicate, and the street crews under him | landable anywhere on land |
 | **Mars** | terraformed: green where the money went, red dust where it didn't; the casino world | the Solari families | landable (the start) |
 | **Venus** | the Imperial capital: marble cloud-cities over an acid sea | the Galactic Empire | landable |
 | **Luna** | mining domes, the black market, hymns on the radio | the Choir and the rebels | landable |
@@ -219,10 +219,18 @@ and memory: they remember what you did and when.
 
 ## The opening (built)
 
-The families are finished. An alien, Xal-Tavorr ("Big Tav"), bought the whole underworld of
-Earth, and your old outfit came with it. You start on the Brass Coast with 600 credits and a ship,
-the Brass Buzzard, with a Syndicate clamp on its landing gear. Pay Tav 1,200 or do him one job
-(jobs pay triple now), and you're flying. On Earth every city's crew is a street gang under Tav.
+The families are finished. The Fear Man (game 1's magenta alien from the dead tree) came down
+and took the whole underworld of Earth, and your old outfit came with it. He is very old now,
+and his mind wanders, but his yellow ring still glows. You start in Tom Cody's road duster with
+600 credits and the Brass Buzzard, with a Syndicate clamp on its landing gear. Pay the Fear Man
+1,200 or do him one job (jobs pay triple now), and you're flying; a blue marker leads you back to
+the pad. On Earth every city's crew is a street gang under him.
+
+Kill him (he's frail, but guarded) and his ring and the Sinestro Corps uniform are yours. That
+is the only way into the lantern rings in XX8X: every other light waits until the yellow is on
+your finger. A ring lets you take off into space with no ship, from the construct menu: masked,
+in uniform, at the starter skiff's speed. The ship stays parked where you left it, and any pad
+can call it down.
 
 ## The people of the future (built)
 

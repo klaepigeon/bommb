@@ -98,9 +98,10 @@ GP.tick = function (this: Game, dt: number) {
 // ---------------------------------------------------------------- your ship, wherever you are
 const PP = R.Player.prototype, baseCtx = PP.contextAction;
 PP.contextAction = function (this: Player) {
-  if (SQ.planet === 'earth' && SQ.mode !== 'space' && !shipHere() && nearPad(this)) {
+  if (SQ.mode !== 'space' && !SQ.ringFly && !shipHere() && nearPad(this)) {
     return { label: 'Call ' + SQ.ship.name, fn: () => {
-      SQ.shipAt = [SQ.sector[0], SQ.sector[1]]; saveSequel();
+      if (SQ.planet === 'earth') SQ.shipAt = [SQ.sector[0], SQ.sector[1]];
+      SQ.shipLoc = { sys: SQ.home, planet: SQ.planet }; saveSequel();
       R.game.audio.sfx('boom');
       R.game.ui.toast(`The ${SQ.ship.name} comes down on autopilot from ${isHome(SQ.shipAt) ? 'the coast' : 'orbit'}. Rent on a pad is extra.`, 'good');
     } };
