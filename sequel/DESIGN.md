@@ -1,21 +1,41 @@
-# RHAPSODY II: BRASS STARS (working title)
+# RHAPSODY XX8X
 
-The sequel to *Rhapsody: The Brass Coast*. Same year-XX7X seventies soul, now a space opera: a
-whole solar system of planets you can land on, fly between, rob, rule or burn down. Mobile first,
-played in portrait like a DS.
+The sequel to *Rhapsody: The Brass Coast*, ten years on. The Brass Coast was a county; XX8X is our
+own solar system, and the end goal is a galaxy: the deepest space sim and crime sim we can build,
+with worlds you can land on, fly between, rob, rule or burn down, and aliens to meet on them.
+Mobile first.
 
 ## Pillars
 
-1. **Deep before wide.** Three living planets at launch, each as dense as the Brass Coast.
-   More planets are added later, and each new one must meet the same bar.
-2. **The ship is your horse, your house and your gang hideout.** You build it, crew it, live
+1. **Deep before wide, but wide in the end.** Every inhabited world runs game 1's full simulation.
+   New worlds are added only when they meet that bar, and the goal is very many of them.
+2. **Real physics, magnificent scale.** Real orbits and periods, Newtonian flight in every body's
+   gravity, and a cruise drive and camera that make the distances felt.
+3. **The ship is your horse, your house and your gang hideout.** You build it, crew it, live
    on it, get chased in it and lose it.
-3. **Every faction is a system, not a questline.** Factions have turf, money, heat, grudges
+4. **Every faction is a system, not a questline.** Factions have turf, money, heat, grudges
    and memory, like the families and cops of game 1. Quests grow out of those systems.
-4. **Seventies space.** Chunky hulls, analog dials, shag-carpet cabins, synth radio. The look
-   is the space opera the seventies imagined, not modern sci-fi.
+5. **Every corner of sci-fi.** Diverse worlds and populations: space opera empires, cyberpunk
+   cities, pulp aliens, cosmic horror, hard-SF miners, wizards with rings.
 
-## Look: Gen 4 DS (HeartGold / SoulSilver / Platinum)
+## Scale: from a county to a galaxy
+
+| Level | What it is | Status |
+|---|---|---|
+| District | a city and its streets (game 1's cities) | done |
+| County | game 1's whole map, 880×880 tiles | done: every inhabited world is one |
+| Region | several counties stitched and streamed around you | planned |
+| Planet | many regions across biomes and climate bands, with ecosystems (food chains, migrations, seasons) | planned |
+| Star system | our solar system at true relative distances | done: 8 planets, 6 moons, the Sun |
+| Galaxy | procedurally generated star systems reached by jump drive | planned |
+
+## Look: the future the 80s imagined, drawn with Gen 4 pixel craft
+
+The subject is 80s retro-futurism: neon and chrome, synth-sunset skies, grid horizons, VHS
+glow, big-shouldered starships, holographic signage, Blade Runner streets and Tron interiors. The
+technique is Gen 4 pixel art (HeartGold/SoulSilver/Platinum).
+
+## Pixel technique: Gen 4 DS (HeartGold / SoulSilver / Platinum)
 
 Game 1 is drawn like a Gen 3 GBA game. The sequel moves up a generation:
 
@@ -33,31 +53,39 @@ Game 1 is drawn like a Gen 3 GBA game. The sequel moves up a generation:
 status, cargo, crew, radio, contacts and the ring. On foot it's your phone; in the cockpit it's
 your dashboard.
 
-## The system
+## The solar system (built)
 
-A star with five bodies at first. Three are landable at launch; two are in view and unlock later.
+Our real solar system in year XX8X: the Sun, all eight planets, the Moon, Io, Europa, Ganymede,
+Callisto and Titan. Orbits use real distances (1 AU = 60,000 units) and real periods, so the
+worlds drift apart and together over the in-game months. Planet radii are exaggerated about 200×
+so they read at ship scale.
 
-| Body | What it is | Who runs it | Play |
+| World | What it is | Who runs it | Status |
 |---|---|---|---|
-| **Veridia** | green trade world, casino ring-city | the Solari crime families (space mafia) | rackets, casinos, loan sharking, turf wars |
-| **Castra Prime** | Empire capital, marble and chrome | the Galactic Empire | infiltration, heists, bribery, the court |
-| **Hollow Moon** | frontier mining moon, dust and domes | nobody, so the cult and the rebels | smuggling, bounties, the cult's strange lights |
-| Oa-adjacent station | the Green Lantern outpost | the Corps | later: ring trials |
-| Ysmault drift | a dead, haunted wreck field | Red Lanterns | later: rage and ruin |
+| **Earth** | the Brass Coast itself, ten years on, under game 1's own names | the five families | landable |
+| **Mars** | terraformed: green where the money went, red dust where it didn't; the casino world | the Solari families | landable (the start) |
+| **Venus** | the Imperial capital: marble cloud-cities over an acid sea | the Galactic Empire | landable |
+| **Luna** | mining domes, the black market, hymns on the radio | the Choir and the rebels | landable |
+| Mercury, the gas giants, the moons | prisons, gas rigs, rebel yards, something in Europa's ocean | various | visible, planned |
 
-Each landable planet is a full tile map the size of the Brass Coast, with its own biomes,
-cities, population, economy and law.
+## Flight (built)
 
-## Space
+- **Newtonian:** every body pulls with its surface gravity × radius². With flight assist on,
+  the ship damps drift and leans against gravity. With it off it's pure physics: real orbits,
+  and a predicted trajectory line shows where you're falling.
+- **Cruise drive (RUN):** speed grows with altitude over the nearest world (about 20% per
+  second), so crossing an AU takes under a minute but planets pull you back to local speeds.
+  It drops you out when you dive toward a world or reach your course.
+- **Flight computer:** set a course on the System tab and it steers in cruise, climbing out of
+  any gravity well you're low in before heading off.
+- **Scale:** the camera zooms out with speed and altitude. Worlds shrink to discs, the orbits
+  appear, and your ship becomes a marker.
+- **Landing:** get low over an inhabited world and slow down; hitting a surface fast hurts.
 
-- **System map:** planets on real orbits that move over time. Trade prices and patrol routes
-  shift with them.
-- **Flight:** top-down Newtonian-lite flight with a thrust stick, a boost and a brake. Asteroid
-  fields, stations, patrols, traders, pirates and derelicts.
-- **Landing and launch:** a spaceport per city. Land anywhere else and you risk a crash landing,
-  hidden from the law.
-- **Hyperlanes:** fast travel between planets, taking in-game hours. Things can happen on the way:
-  interdictions, distress calls, cult hymns on the radio.
+## Space (planned next)
+
+- Stations, asteroid fields worth mining, derelicts, distress calls and interdictions.
+- A jump drive to other star systems (procedural), the step from system to galaxy.
 
 ## Ship building
 

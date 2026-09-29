@@ -1,0 +1,487 @@
+// Space, inside game 1's loop. While you're in orbit the world you left is paused, exactly as
+// you left it; the tick flies your ship through the real solar system instead.
+//   Flight: Newtonian. Every body pulls (surface gravity × radius²). With flight assist on
+//   (the default) the ship damps its drift and leans against gravity; turn it off (SNEAK)
+//   for true orbits. The dotted line is where you're falling.
+//   Cruise (RUN): speed scales with your altitude over the nearest body, so open space flies
+//   fast and planets pull you back to local speeds. The camera zooms out with your speed, so
+//   worlds shrink away behind you and the orbits come into view.
+//   A course (System tab) steers you in cruise and drops you out at the destination.
+//   Attack fires, USE lands, boards or hails.
+
+import { SQ, saveSequel, type Good } from './state';
+import { PLANETS, BODY, type PlanetId, type BodyId } from './planets';
+import { travelTo } from './travel';
+import { bodies, planetArt, gravity, orbitalSpeed, orbitRadius, type Body } from '../space/system';
+import { blankShip, shipSprites, stats, type Ship, type Mod } from '../ship/ship';
+import { enterFreighter } from './board';
+
+export interface Craft {
+  id: number; kind: 'freighter' | 'patrol'; ship: Ship; flag: 'empire' | 'solari';
+  x: number; y: number; vx: number; vy: number; a: number;
+  hull: number; maxHull: number; shield: number; maxShield: number;
+  disabled: boolean; looted: boolean; dead: boolean;
+  target: PlanetId; cool: number; hostile: boolean;
+  cargo: { good: Good; n: number }[]; name: string;
+}
+interface Shot { x: number; y: number; vx: number; vy: number; life: number; from: 'me' | number; dmg: number }
+interface Spark { x: number; y: number; vx: number; vy: number; life: number; col: string }
+
+export const SPACE = {
+  active: false,
+  x: 0, y: 0, vx: 0, vy: 0, a: 0, shield: 0,
+  cruise: false, assist: true, zoom: 1, grace: 0,
+  crafts: [] as Craft[], shots: [] as Shot[], sparks: [] as Spark[], nextId: 1, spawnT: 0, fireT: 0, thrustT: 0, hintT: 8,
+  boarding: null as Craft | null,
+  ticks: 0,
+  B: [] as Body[], g: null as ReturnType<typeof gravity> | null,
+};
+
+const NAMES = ['Imperial Hauler 7', 'Castra Venture', 'Solari Queen', 'Ore Mule', 'Marble Barge', 'Senator\'s Pride', 'Dusty Rose', 'Mule Train', 'Tithe of Castra', 'Night Orchid', 'Red Planet Express', 'Tranquility Tug'];
+const GOODS: Good[] = ['rum', 'tea', 'ore', 'meds', 'vinyl', 'blasters'];
+const LANES: PlanetId[] = ['earth', 'mars', 'venus', 'luna'];
+const rnd = () => Math.random();
+const pick = <T>(a: T[]) => a[Math.floor(rnd() * a.length)];
+const dist = (ax: number, ay: number, bx: number, by: number) => Math.hypot(bx - ax, by - ay);
+const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
+const angDiff = (a: number, b: number) => { let d = (b - a) % (Math.PI * 2); if (d > Math.PI) d -= Math.PI * 2; if (d < -Math.PI) d += Math.PI * 2; return d; };
+const minutes = () => (R.game && R.game.clock ? R.game.clock.t : SQ.minutes);
+const bs = () => (SPACE.B.length ? SPACE.B : bodies(minutes()));
+const sfx = (n: string) => R.game && R.game.audio && R.game.audio.sfx(n);
+const body = (id: BodyId) => bs().find((b) => b.id === id) as Body;
+
+function freighterShip(): Ship {
+  const s = blankShip('freighter', 'Freighter'), W = 9;
+  const set = (x: number, y: number, m: Mod) => { s.grid[y * W + x] = m; };
+  for (let y = 0; y < 5; y++) for (let x = 2; x < 7; x++) set(x, y, 'cargo');
+  set(8, 2, 'cockpit'); set(0, 1, 'engine'); set(0, 3, 'engine'); set(1, 2, 'reactor'); set(7, 1, 'quarters'); set(7, 3, 'shield'); set(7, 2, 'gun');
+  for (let y = 0; y < 5; y++) if (rnd() < 0.3) set(1, y === 2 ? 1 : y, 'fuel');
+  s.paint = pick(['#8a96a8', '#b8a080', '#a0a8b8']);
+  return s;
+}
+function patrolShip(): Ship {
+  const s = blankShip('cutter', 'Patrol'), W = 7;
+  const set = (x: number, y: number, m: Mod) => { s.grid[y * W + x] = m; };
+  set(6, 1, 'cockpit'); set(6, 2, 'gun'); set(5, 0, 'gun'); set(5, 3, 'gun'); set(0, 1, 'engine'); set(0, 2, 'engine'); set(1, 1, 'reactor'); set(1, 2, 'reactor');
+  set(3, 1, 'shield'); set(3, 2, 'armor'); set(4, 1, 'armor'); set(4, 2, 'armor'); set(2, 1, 'quarters');
+  s.paint = '#eceef4';
+  return s;
+}
+
+// traffic lives in the lanes around the inhabited worlds, near you
+function spawnFreighter(near?: boolean): void {
+  const home = LANES.map((id) => body(id)).sort((a, b) => dist(a.x, a.y, SPACE.x, SPACE.y) - dist(b.x, b.y, SPACE.x, SPACE.y))[0];
+  if (!near && dist(home.x, home.y, SPACE.x, SPACE.y) > 25000) return;
+  const sh = freighterShip(), s = stats(sh), ang = rnd() * Math.PI * 2;
+  const x = near ? SPACE.x + Math.cos(ang) * 700 : home.x + Math.cos(ang) * (home.r + 400 + rnd() * 1200), y = near ? SPACE.y + Math.sin(ang) * 700 : home.y + Math.sin(ang) * (home.r + 400 + rnd() * 1200);
+  SPACE.crafts.push({
+    id: SPACE.nextId++, kind: 'freighter', ship: sh, flag: rnd() < 0.65 ? 'empire' : 'solari', x, y, vx: 0, vy: 0, a: 0,
+    hull: s.hull, maxHull: s.hull, shield: s.shield, maxShield: s.shield, disabled: false, looted: false, dead: false, target: pick(LANES.filter((l) => l !== home.id)), cool: 0, hostile: false,
+    name: pick(NAMES), cargo: [{ good: pick(GOODS), n: 4 + Math.floor(rnd() * 6) }, { good: pick(GOODS), n: 3 + Math.floor(rnd() * 5) }],
+  });
+}
+function spawnPatrol(): void {
+  const sh = patrolShip(), s = stats(sh), ang = rnd() * Math.PI * 2;
+  SPACE.crafts.push({
+    id: SPACE.nextId++, kind: 'patrol', ship: sh, flag: 'empire', x: SPACE.x + Math.cos(ang) * 600, y: SPACE.y + Math.sin(ang) * 600, vx: SPACE.vx, vy: SPACE.vy, a: ang + Math.PI,
+    hull: s.hull, maxHull: s.hull, shield: s.shield, maxShield: s.shield, disabled: false, looted: false, dead: false, target: 'venus', cool: 1.5, hostile: true, name: 'Imperial Patrol', cargo: [],
+  });
+  R.game.ui.toast('IMPERIAL PATROL: "Unregistered vessel, cut your engines and prepare to be boarded."', 'bad');
+  sfx('alarm');
+}
+
+// ---------------------------------------------------------------- entering and leaving space
+export function launch(g: Game): void {
+  g.save();
+  SPACE.B = bodies(minutes());
+  const b = body(SQ.planet);
+  // up out of the atmosphere, already moving at orbital speed
+  const out = Math.atan2(b.y, b.x), d = b.r + 140, v = orbitalSpeed(b, d);
+  Object.assign(SPACE, { x: b.x + Math.cos(out) * d, y: b.y + Math.sin(out) * d, vx: -Math.sin(out) * v, vy: Math.cos(out) * v, a: out + Math.PI / 2, shots: [], sparks: [], cruise: false });
+  const my = stats(SQ.ship);
+  if (SQ.hull < 0 || SQ.hull > my.hull) SQ.hull = my.hull;
+  SPACE.shield = my.shield;
+  SPACE.crafts = SPACE.crafts.filter((c) => dist(c.x, c.y, SPACE.x, SPACE.y) < 20000);
+  if (!SPACE.crafts.some((c) => c.kind === 'freighter' && !c.dead)) { for (let k = 0; k < 3; k++) spawnFreighter(); spawnFreighter(true); }
+  SPACE.active = true; SQ.mode = 'space';
+  saveSequel();
+  sfx('boom');
+  g.ui.toast(`In orbit over ${BODY[SQ.planet].name}. Stick flies, attack fires, RUN engages cruise, SNEAK toggles flight assist.`, 'good');
+}
+export function resumeSpace(g: Game): void {
+  const s = SQ.space;
+  if (!s) { launch(g); return; }
+  Object.assign(SPACE, { x: s.x, y: s.y, a: s.a, vx: 0, vy: 0, cruise: false });
+  SPACE.B = bodies(minutes());
+  SPACE.active = true;
+  if (!SPACE.crafts.length) { for (let k = 0; k < 3; k++) spawnFreighter(); spawnFreighter(true); }
+}
+function land(g: Game, id: PlanetId): void {
+  SPACE.active = false; SPACE.cruise = false; SQ.mode = 'planet'; SQ.space = null; SQ.course = null;
+  sfx('crash');
+  if (id !== SQ.planet) travelTo(g, id);
+  else { const w = g.world; g.player.place(w.pad.sx - 40, w.pad.sy + 44); g.cam.x = g.player.x; g.cam.y = g.player.y; }
+  const p = PLANETS[id];
+  g.ui.toast(`Landed on ${p.name}. ${p.blurb}`, 'good');
+  // customs: Imperial worlds scan open cargo if you're hot with the Empire
+  if (!p.black && SQ.heat.empire > 10) {
+    const hot = SQ.cargo.filter((l) => l.stolen && !l.hidden);
+    if (hot.length) {
+      const n = hot.reduce((s, l) => s + l.n, 0), fine = Math.min(g.player.cash, 150);
+      SQ.cargo = SQ.cargo.filter((l) => !(l.stolen && !l.hidden));
+      g.player.cash -= fine;
+      setTimeout(() => g.ui.story(p.law + ' Customs', `The scanner finds ${n} crates of stolen cargo in your open bay. They take the crates and ${fine} credits for the paperwork.\n\nNext time, fit a smuggler's hold.`), 500);
+    }
+  }
+  SQ.heat.empire = Math.max(0, SQ.heat.empire - 10);
+  saveSequel();
+  g.save();
+}
+
+// ---------------------------------------------------------------- combat helpers
+function fire(x: number, y: number, a: number, vx: number, vy: number, from: 'me' | number, dmg: number, n: number): void {
+  for (let k = 0; k < n; k++) {
+    const off = (k - (n - 1) / 2) * 5, px = -Math.sin(a) * off, py = Math.cos(a) * off;
+    SPACE.shots.push({ x: x + Math.cos(a) * 14 + px, y: y + Math.sin(a) * 14 + py, vx: vx + Math.cos(a) * 520, vy: vy + Math.sin(a) * 520, life: 1.1, from, dmg });
+  }
+}
+function burst(x: number, y: number, n: number, cols: string[], vx = 0, vy = 0): void {
+  for (let k = 0; k < n; k++) { const a = rnd() * 7, s = 20 + rnd() * 120; SPACE.sparks.push({ x, y, vx: vx + Math.cos(a) * s, vy: vy + Math.sin(a) * s, life: 0.4 + rnd() * 0.7, col: cols[k % cols.length] }); }
+}
+// the landable world you're low enough over to land on (or hail)
+export const nearPlanet = () => bs().find((b) => b.id !== 'sun' && dist(SPACE.x, SPACE.y, b.x, b.y) < b.r + 220) || null;
+const nearWreck = () => SPACE.crafts.find((c) => c.disabled && !c.looted && !c.dead && dist(SPACE.x, SPACE.y, c.x, c.y) < 70) || null;
+
+function hitCraft(g: Game, c: Craft, dmg: number): void {
+  const peaceful = !c.hostile;
+  if (c.shield > 0) { c.shield = Math.max(0, c.shield - dmg); burst(c.x, c.y, 3, ['#9ad8ff', '#ffffff'], c.vx, c.vy); }
+  else { c.hull -= dmg; burst(c.x, c.y, 4, ['#ffd060', '#ff8030'], c.vx, c.vy); }
+  sfx('thup');
+  c.hostile = true;
+  if (peaceful) {
+    g.ui.toast(`${c.name}: "Mayday! Pirates on the ${PLANETS[c.target].name} lane!"`, 'bad');
+    if (c.flag === 'empire') SQ.heat.empire += 15; else SQ.heat.families += 15;
+    g.player.rep.infamy = (g.player.rep.infamy || 0) + 2;
+  }
+  if (c.kind === 'freighter' && !c.disabled && c.hull < c.maxHull * 0.35) {
+    c.disabled = true; c.hostile = false;
+    g.ui.toast(stats(SQ.ship).tube ? `${c.name} is dead in space. Match her speed and USE to board.` : 'Freighter disabled, but you have no boarding tube.', 'good');
+  }
+  if (c.hull <= 0) {
+    c.dead = true; sfx('boom'); burst(c.x, c.y, 40, ['#ffd060', '#ff8030', '#ffffff', '#c83a2a'], c.vx, c.vy);
+    if (c.kind === 'patrol') { SQ.heat.empire += 20; g.ui.toast('Patrol destroyed. The Empire will remember that.', 'bad'); g.player.rep.infamy += 5; }
+    else g.ui.toast(`${c.name} breaks apart. Her cargo burns with her.`);
+  }
+}
+
+// ---------------------------------------------------------------- the simulation
+function update(g: Game, dt: number): void {
+  SPACE.ticks++;
+  const inp = g.input, my = stats(SQ.ship);
+  SPACE.B = bodies(minutes());
+  const G = gravity(SPACE.B, SPACE.x, SPACE.y);
+  SPACE.g = G;
+  const frame = G.dom; // velocities are read relative to the dominant body
+  const rvx = SPACE.vx - frame.vx / 60, rvy = SPACE.vy - frame.vy / 60;
+  if (inp.pressed('run')) {
+    const clear = G.alt > 15; // off the ground: the drive turns and climbs by itself
+    SPACE.cruise = !SPACE.cruise && clear;
+    SPACE.grace = SPACE.cruise ? 3 : 0; // a few seconds to climb away before the drop-out check
+    g.ui.toast(SPACE.cruise ? 'Cruise drive engaged. Speed grows with distance from the nearest world.' : !clear ? `Too low over ${BODY[G.near.id].name} for cruise. Climb out of the atmosphere.` : 'Cruise drive off.', SPACE.cruise ? 'good' : '');
+    sfx(SPACE.cruise ? 'boom' : 'click');
+  }
+  if (inp.pressed('sneak')) { SPACE.assist = !SPACE.assist; g.ui.toast(SPACE.assist ? 'Flight assist on: the ship damps drift and holds against gravity.' : 'Flight assist off: pure Newtonian. Watch the dotted line: that\'s your orbit.'); }
+  // the stick points the nose; a course steers for you in cruise
+  let sx = inp.stick.x, sy = inp.stick.y, mag = Math.hypot(sx, sy);
+  const course = SQ.course ? body(SQ.course) : null;
+  if (course && SPACE.cruise && mag < 0.2) {
+    // the flight computer: head for the course, but climb out of any world you're low over
+    // first instead of ploughing through it
+    const d = Math.hypot(course.x - SPACE.x, course.y - SPACE.y) || 1;
+    let vx = (course.x - SPACE.x) / d, vy = (course.y - SPACE.y) / d;
+    const n = G.near, nd = Math.hypot(SPACE.x - n.x, SPACE.y - n.y) || 1, ox = (SPACE.x - n.x) / nd, oy = (SPACE.y - n.y) / nd;
+    if (n.id !== course.id) { const up = Math.max(0, 2.5 - G.alt / n.r) * 1.6; vx += ox * up; vy += oy * up; }
+    sx = vx; sy = vy; mag = 1;
+  }
+  if (mag > 0.2) {
+    const want = Math.atan2(sy, sx), d = angDiff(SPACE.a, want);
+    SPACE.a += clamp(d, -my.turn * dt * (SPACE.cruise ? 0.6 : 1), my.turn * dt * (SPACE.cruise ? 0.6 : 1));
+  }
+  if (SPACE.cruise) {
+    // cruise: speed proportional to altitude; gravity is left behind in the drive's bubble
+    const vmax = clamp(G.alt * 0.2, 300, 60000);
+    // low over a world with the nose pointing down: turn first, then go
+    const on = G.near, od = Math.hypot(SPACE.x - on.x, SPACE.y - on.y) || 1;
+    const up = (Math.cos(SPACE.a) * (SPACE.x - on.x) + Math.sin(SPACE.a) * (SPACE.y - on.y)) / od;
+    const diving = G.alt < on.r && up < -0.2 && (!course || course.id !== on.id);
+    const tv = mag > 0.2 && !diving ? vmax * Math.min(1, mag) : 0;
+    const cur = Math.hypot(SPACE.vx, SPACE.vy), nv = cur + clamp(tv - cur, -vmax * 2 * dt - 400 * dt, vmax * 0.9 * dt + 200 * dt);
+    SPACE.vx = Math.cos(SPACE.a) * nv; SPACE.vy = Math.sin(SPACE.a) * nv;
+    // drop out near a world (or at the course's end)
+    const dest = course && dist(SPACE.x, SPACE.y, course.x, course.y) < course.r * 2.2;
+    // falling toward a world's surface drops you out (climbing away from one doesn't)
+    const toward = Math.cos(SPACE.a) * (G.near.x - SPACE.x) + Math.sin(SPACE.a) * (G.near.y - SPACE.y) > 0;
+    SPACE.grace -= dt;
+    if ((G.alt < G.near.r * 0.35 && toward && (SPACE.grace <= 0 || G.alt < 30)) || dest) {
+      SPACE.cruise = false;
+      const v = orbitalSpeed(G.near, dist(SPACE.x, SPACE.y, G.near.x, G.near.y)), ang = Math.atan2(SPACE.y - G.near.y, SPACE.x - G.near.x);
+      SPACE.vx = -Math.sin(ang) * v * 0.9 + G.near.vx / 60; SPACE.vy = Math.cos(ang) * v * 0.9 + G.near.vy / 60;
+      if (dest) SQ.course = null;
+      g.ui.toast(`Dropped out of cruise over ${BODY[G.near.id].name}.${PLANETS[G.near.id as PlanetId] ? ' Get low and USE to land.' : ''}`, 'good');
+      sfx('boom');
+    }
+  } else {
+    // Newtonian: thrust plus every body's gravity
+    if (mag > 0.2) {
+      const d = angDiff(SPACE.a, Math.atan2(sy, sx));
+      const push = my.thrust * Math.min(1, mag) * (Math.abs(d) < 1.2 ? 1 : 0.3);
+      SPACE.vx += Math.cos(SPACE.a) * push * dt; SPACE.vy += Math.sin(SPACE.a) * push * dt;
+    }
+    SPACE.vx += G.ax * dt; SPACE.vy += G.ay * dt;
+    if (SPACE.assist) {
+      // assist: the engines lean against gravity (as far as they can) and damp drift
+      const ga = Math.hypot(G.ax, G.ay), hold = Math.min(1, (my.thrust * 0.7) / Math.max(1, ga));
+      SPACE.vx -= G.ax * hold * dt; SPACE.vy -= G.ay * hold * dt;
+      if (mag < 0.2) { const k = Math.pow(0.5, dt); SPACE.vx = frame.vx / 60 + rvx * k; SPACE.vy = frame.vy / 60 + rvy * k; }
+    }
+    const sp = Math.hypot(rvx, rvy), cap = 900;
+    if (sp > cap) { SPACE.vx = frame.vx / 60 + (rvx * cap) / sp; SPACE.vy = frame.vy / 60 + (rvy * cap) / sp; }
+  }
+  if (mag > 0.2 || SPACE.cruise) {
+    SPACE.thrustT -= dt;
+    if (SPACE.thrustT <= 0) { SPACE.thrustT = 0.05; SPACE.sparks.push({ x: SPACE.x - Math.cos(SPACE.a) * 16, y: SPACE.y - Math.sin(SPACE.a) * 16, vx: SPACE.vx - Math.cos(SPACE.a) * 60 + (rnd() - 0.5) * 20, vy: SPACE.vy - Math.sin(SPACE.a) * 60 + (rnd() - 0.5) * 20, life: 0.35, col: SPACE.cruise ? (rnd() < 0.5 ? '#a8e8ff' : '#ffffff') : rnd() < 0.5 ? '#ffd060' : '#ff8030' }); }
+  }
+  SPACE.x += SPACE.vx * dt; SPACE.y += SPACE.vy * dt;
+  // hitting a surface: landable worlds let you set down slowly; anything else hurts
+  const surf = G.near, dd = dist(SPACE.x, SPACE.y, surf.x, surf.y);
+  if (dd < surf.r) {
+    const ang = Math.atan2(SPACE.y - surf.y, SPACE.x - surf.x), sp = Math.hypot(rvx, rvy);
+    SPACE.x = surf.x + Math.cos(ang) * (surf.r + 2); SPACE.y = surf.y + Math.sin(ang) * (surf.r + 2);
+    if (surf.id === 'sun') SQ.hull -= 60 * dt;
+    else if (sp > 120) { SQ.hull -= sp * 0.15; burst(SPACE.x, SPACE.y, 14, ['#ffd060', '#8a6a4a']); sfx('crash'); g.ui.toast(`You hit ${BODY[surf.id].name} at ${Math.round(sp)}. Land slower.`, 'bad'); }
+    const nx = Math.cos(ang), ny = Math.sin(ang), vn = rvx * nx + rvy * ny;
+    if (vn < 0) { SPACE.vx -= vn * nx * 1.3; SPACE.vy -= vn * ny * 1.3; }
+    SPACE.cruise = false;
+  }
+  if (dist(SPACE.x, SPACE.y, 0, 0) < BODY.sun.radius * 1.6) SQ.hull -= 12 * dt; // the corona
+  SPACE.shield = Math.min(my.shield, SPACE.shield + my.shield * 0.08 * dt);
+  SPACE.fireT -= dt;
+  if (inp.held('attack') && SPACE.fireT <= 0 && my.guns > 0 && !SPACE.cruise) { SPACE.fireT = 0.22; fire(SPACE.x, SPACE.y, SPACE.a, SPACE.vx, SPACE.vy, 'me', 10, my.guns); sfx('smg'); }
+  if (inp.pressed('use')) {
+    const w = nearWreck(), p = nearPlanet();
+    if (w) { if (!my.tube) g.ui.toast('You need a Boarding Tube module to board.', 'bad'); else { SPACE.active = false; SPACE.boarding = w; enterFreighter(g, w); return; } }
+    else if (p) {
+      const rel = Math.hypot(SPACE.vx - p.vx / 60, SPACE.vy - p.vy / 60);
+      if (!(p.id in PLANETS)) g.ui.story(BODY[p.id].name, `${BODY[p.id].blurb}\n\nThere's nowhere to set down here yet.`);
+      else if (rel > 260) g.ui.toast(`Too fast to land (${Math.round(rel)}). Ease off below 260.`, 'bad');
+      else { land(g, p.id as PlanetId); return; }
+    }
+  }
+  // the camera: zoom out with speed and with distance from the nearest world
+  const speed = Math.hypot(rvx, rvy);
+  const wantZoom = clamp(1 / (1 + speed / 700 + Math.max(0, G.alt - 2000) / 9000), 1 / 600, 1);
+  SPACE.zoom += (wantZoom - SPACE.zoom) * Math.min(1, dt * 2.5);
+
+  // traffic in the lanes
+  SPACE.spawnT -= dt;
+  if (SPACE.spawnT <= 0) {
+    SPACE.spawnT = 18;
+    if (SPACE.crafts.filter((c) => c.kind === 'freighter' && !c.dead && !c.looted).length < 4) spawnFreighter();
+    if (SQ.heat.empire >= 20 && !SPACE.crafts.some((c) => c.kind === 'patrol' && !c.dead) && !SPACE.cruise) spawnPatrol();
+  }
+  for (const c of SPACE.crafts) {
+    if (c.dead) continue;
+    const cs = stats(c.ship), cg = gravity(SPACE.B, c.x, c.y);
+    c.shield = Math.min(c.maxShield, c.shield + c.maxShield * 0.03 * dt);
+    if (c.disabled) { c.vx += cg.ax * dt * 0.2; c.vy += cg.ay * dt * 0.2; c.a += dt * 0.2; }
+    else {
+      let tx: number, ty: number;
+      if (c.kind === 'patrol' || (c.hostile && dist(c.x, c.y, SPACE.x, SPACE.y) < 500)) { tx = SPACE.x; ty = SPACE.y; }
+      else { const t = body(c.target); tx = t.x; ty = t.y; }
+      const want = Math.atan2(ty - c.y, tx - c.x), d = angDiff(c.a, want);
+      c.a += clamp(d, -cs.turn * dt * 0.8, cs.turn * dt * 0.8);
+      // traders cruise the lane; patrols keep pace with you
+      const top = c.kind === 'patrol' ? Math.max(320, Math.hypot(SPACE.vx, SPACE.vy) * 1.1) : 160;
+      const tvx = Math.cos(c.a) * top, tvy = Math.sin(c.a) * top, k = Math.min(1, dt * 1.2);
+      if (!(c.kind === 'patrol' && dist(c.x, c.y, SPACE.x, SPACE.y) < 130)) { c.vx += (tvx - c.vx) * k; c.vy += (tvy - c.vy) * k; }
+      else { c.vx += (SPACE.vx - c.vx) * k; c.vy += (SPACE.vy - c.vy) * k; }
+      c.cool -= dt;
+      if (c.hostile && c.cool <= 0 && dist(c.x, c.y, SPACE.x, SPACE.y) < 360 && Math.abs(d) < 0.4) {
+        c.cool = c.kind === 'patrol' ? 0.5 : 1.3;
+        fire(c.x, c.y, c.a, c.vx, c.vy, c.id, c.kind === 'patrol' ? 8 : 5, c.kind === 'patrol' ? 2 : 1);
+      }
+    }
+    c.x += c.vx * dt; c.y += c.vy * dt;
+  }
+  SPACE.crafts = SPACE.crafts.filter((c) => dist(c.x, c.y, SPACE.x, SPACE.y) < (c.dead || c.looted ? 3000 : 30000));
+  for (const s of SPACE.shots) {
+    s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt;
+    if (s.from === 'me') { for (const c of SPACE.crafts) if (!c.dead && dist(s.x, s.y, c.x, c.y) < (c.kind === 'freighter' ? 24 : 16)) { hitCraft(g, c, s.dmg); s.life = 0; break; } }
+    else if (dist(s.x, s.y, SPACE.x, SPACE.y) < 14) {
+      s.life = 0; sfx('thup');
+      if (SPACE.shield > 0) { SPACE.shield = Math.max(0, SPACE.shield - s.dmg); burst(SPACE.x, SPACE.y, 3, ['#9ad8ff', '#fff'], SPACE.vx, SPACE.vy); }
+      else { SQ.hull -= s.dmg; burst(SPACE.x, SPACE.y, 4, ['#ffd060', '#ff8030'], SPACE.vx, SPACE.vy); if (g.ui.hurtFlash) g.ui.hurtFlash(s.dmg); }
+    }
+  }
+  SPACE.shots = SPACE.shots.filter((s) => s.life > 0);
+  for (const p of SPACE.sparks) { p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt; }
+  SPACE.sparks = SPACE.sparks.filter((p) => p.life > 0);
+  if (SQ.hull <= 0) {
+    sfx('boom');
+    SQ.cargo = [];
+    const cut = Math.round(g.player.cash * 0.3);
+    g.player.cash -= cut; SQ.hull = my.hull; SQ.heat.empire = 0;
+    land(g, SQ.planet);
+    g.ui.story('Salvage Crew', `We pulled you out of the wreck and towed you home. The cargo's gone and the tow was ${cut} credits.`);
+  }
+  SPACE.hintT -= dt;
+  if (SPACE.hintT <= 0) {
+    SPACE.hintT = 55;
+    const f = SPACE.crafts.find((c) => c.kind === 'freighter' && !c.dead && !c.disabled);
+    if (f && !SQ.cargo.some((l) => l.stolen) && !SPACE.cruise) g.ui.toast(`Scanner: ${f.name} (${f.flag === 'empire' ? 'Imperial' : 'Solari'} flag) bound for ${PLANETS[f.target].name}. Shoot out her engines, then board.`);
+  }
+  SQ.space = { x: SPACE.x, y: SPACE.y, a: SPACE.a };
+}
+
+// ---------------------------------------------------------------- drawing
+// the world is drawn at 2× (the GBA scale) times the flight zoom; far out, worlds shrink to
+// discs and orbits, and your ship becomes a marker
+function draw(g: CanvasRenderingContext2D, BW: number, BH: number): void {
+  const Z = SPACE.zoom, W = BW / 2, H = BH / 2;
+  g.setTransform(2, 0, 0, 2, 0, 0);
+  g.imageSmoothingEnabled = false;
+  const A = R.art;
+  // background: deep space with an 80s synth glow toward the Sun
+  g.fillStyle = '#07051a'; g.fillRect(0, 0, W, H);
+  const sunDir = Math.atan2(-SPACE.y, -SPACE.x);
+  const glow = g.createRadialGradient(W / 2 + Math.cos(sunDir) * W, H / 2 + Math.sin(sunDir) * H, 10, W / 2, H / 2, W * 1.2);
+  glow.addColorStop(0, 'rgba(255,90,160,0.28)'); glow.addColorStop(0.5, 'rgba(90,40,140,0.15)'); glow.addColorStop(1, 'rgba(7,5,26,0)');
+  g.fillStyle = glow; g.fillRect(0, 0, W, H);
+  for (const [layer, size, cell] of [[0.02, 1, 40], [0.06, 1, 60], [0.15, 2, 90]] as [number, number, number][]) {
+    const ox = SPACE.x * layer * Z * 4, oy = SPACE.y * layer * Z * 4;
+    for (let gy = Math.floor(oy / cell); gy <= Math.floor((oy + H) / cell); gy++)
+      for (let gx = Math.floor(ox / cell); gx <= Math.floor((ox + W) / cell); gx++) {
+        const h = R.hash2(gx, gy, size * 13 + cell);
+        if (h > 0.55) continue;
+        g.fillStyle = h < 0.08 ? '#ffe8a0' : h < 0.16 ? '#a8c8ff' : h < 0.2 ? '#ff9ad8' : '#e8e8f8';
+        g.fillRect(Math.round(gx * cell + R.hash2(gx, gy, 1) * cell - ox), Math.round(gy * cell + R.hash2(gx, gy, 2) * cell - oy), size, size);
+      }
+  }
+  // speed lines in cruise
+  if (SPACE.cruise) {
+    const a = Math.atan2(SPACE.vy, SPACE.vx);
+    g.strokeStyle = 'rgba(168,232,255,0.35)';
+    for (let k = 0; k < 18; k++) { const x = R.hash2(k, 11, (performance.now() / 90) | 0) * W, y = R.hash2(k, 12, (performance.now() / 90) | 0) * H; g.beginPath(); g.moveTo(x, y); g.lineTo(x - Math.cos(a) * 18, y - Math.sin(a) * 18); g.stroke(); }
+  }
+  const sx = (x: number) => (x - SPACE.x) * Z + W / 2, sy = (y: number) => (y - SPACE.y) * Z + H / 2;
+  // orbits, once you're far enough out to see them
+  if (Z < 0.2) {
+    g.strokeStyle = `rgba(160,150,230,${clamp(0.4 - Z * 2, 0.1, 0.35)})`; g.setLineDash([2, 3]);
+    for (const b of SPACE.B) {
+      const d = BODY[b.id]; if (!d.parent) continue;
+      const p = SPACE.B.find((x) => x.id === d.parent) as Body, r = orbitRadius(b.id) * Z;
+      if (r < 3 || r > W * 40) continue;
+      g.beginPath(); g.arc(sx(p.x), sy(p.y), r, 0, 7); g.stroke();
+    }
+    g.setLineDash([]);
+  }
+  // the bodies
+  for (const b of SPACE.B) {
+    const r = Math.max(b.id === 'sun' ? 3 : 1.5, b.r * Z), x = sx(b.x), y = sy(b.y);
+    if (x + r * 2 < 0 || x - r * 2 > W || y + r * 2 < 0 || y - r * 2 > H) continue;
+    if (b.id === 'sun') { const sg = g.createRadialGradient(x, y, r * 0.8, x, y, r * 3); sg.addColorStop(0, 'rgba(255,200,120,0.55)'); sg.addColorStop(1, 'rgba(255,90,160,0)'); g.fillStyle = sg; g.fillRect(x - r * 3, y - r * 3, r * 6, r * 6); }
+    if (r < 3) { g.fillStyle = BODY[b.id].color; g.fillRect(Math.round(x - r), Math.round(y - r), Math.ceil(r * 2), Math.ceil(r * 2)); }
+    else {
+      const art = planetArt(b.id), k = r / 96;
+      g.drawImage(art, Math.round(x - (art.width / 2) * k), Math.round(y - (art.height / 2) * k), Math.round(art.width * k), Math.round(art.height * k));
+    }
+    if (Z < 0.25 && b.id !== 'sun') A.ptext(g, BODY[b.id].name.toUpperCase(), Math.round(x), Math.round(y + r + 3), { align: 'center', scale: 1, color: b.id in PLANETS ? '#ffe070' : '#b8b0d8', shadow: '#07051a' });
+  }
+  // the trajectory: where you're falling (no thrust), a few seconds ahead
+  if (!SPACE.cruise) {
+    let px = SPACE.x, py = SPACE.y, vx = SPACE.vx, vy = SPACE.vy;
+    g.fillStyle = 'rgba(104,240,160,0.7)';
+    for (let k = 0; k < 160; k++) {
+      const G = gravity(SPACE.B, px, py);
+      vx += G.ax * 0.1; vy += G.ay * 0.1; px += vx * 0.1; py += vy * 0.1;
+      if (Math.hypot(px - G.near.x, py - G.near.y) < G.near.r) { g.fillStyle = '#ff5a5a'; g.fillRect(Math.round(sx(px)) - 1, Math.round(sy(py)) - 1, 3, 3); break; }
+      if (k % 4 === 0) g.fillRect(Math.round(sx(px)), Math.round(sy(py)), 1, 1);
+    }
+  }
+  // craft, shots, sparks (scaled with the world, but never smaller than a marker)
+  const frameOf = (a: number) => ((Math.round((a / (Math.PI * 2)) * 32) % 32) + 32) % 32;
+  const sprite = (spr: HTMLCanvasElement, x: number, y: number) => {
+    if (Z > 0.55) { const k = Z; g.drawImage(spr, Math.round(x - (spr.width * k) / 2), Math.round(y - (spr.height * k) / 2), Math.round(spr.width * k), Math.round(spr.height * k)); return true; }
+    return false;
+  };
+  for (const c of SPACE.crafts) {
+    if (c.dead) continue;
+    const x = sx(c.x), y = sy(c.y);
+    if (x < -60 || x > W + 60 || y < -60 || y > H + 60) continue;
+    const spr = shipSprites(c.ship)[frameOf(c.a)];
+    if (!sprite(spr, x, y)) { g.fillStyle = c.kind === 'patrol' ? '#ff5a5a' : c.disabled ? '#68f0a0' : '#e8e0c8'; g.fillRect(Math.round(x) - 1, Math.round(y) - 1, 3, 3); continue; }
+    if (c.shield > 0 && c.hostile) { g.strokeStyle = 'rgba(150,210,255,0.5)'; g.beginPath(); g.arc(x, y, (spr.width / 2) * Z, 0, 7); g.stroke(); }
+    if (c.disabled && !c.looted && Math.floor(performance.now() / 300) % 2) { g.fillStyle = '#68f0a0'; g.fillRect(x - 1, y - (spr.height / 2) * Z - 6, 3, 3); }
+    if (c.hostile || c.disabled) { g.fillStyle = '#1c1828'; g.fillRect(x - 14, y + (spr.height / 2) * Z + 2, 28, 3); g.fillStyle = c.disabled ? '#e8b020' : '#e84848'; g.fillRect(x - 14, y + (spr.height / 2) * Z + 2, 28 * Math.max(0, c.hull / c.maxHull), 3); }
+  }
+  for (const s of SPACE.shots) { g.fillStyle = s.from === 'me' ? '#ff5ad0' : '#78ff98'; const a = Math.atan2(s.vy, s.vx); for (let k = 0; k < 5; k++) g.fillRect(Math.round(sx(s.x - Math.cos(a) * k / Z)), Math.round(sy(s.y - Math.sin(a) * k / Z)), 2, 2); }
+  for (const p of SPACE.sparks) { g.fillStyle = p.col; g.fillRect(Math.round(sx(p.x)), Math.round(sy(p.y)), p.life > 0.3 ? 2 : 1, p.life > 0.3 ? 2 : 1); }
+  const my = stats(SQ.ship), me = shipSprites(SQ.ship)[frameOf(SPACE.a)];
+  if (!sprite(me, W / 2, H / 2)) {
+    // far out: your ship is an arrowhead marker
+    const a = SPACE.a; g.fillStyle = '#ff9a3a'; g.beginPath(); g.moveTo(W / 2 + Math.cos(a) * 6, H / 2 + Math.sin(a) * 6); g.lineTo(W / 2 + Math.cos(a + 2.5) * 4, H / 2 + Math.sin(a + 2.5) * 4); g.lineTo(W / 2 + Math.cos(a - 2.5) * 4, H / 2 + Math.sin(a - 2.5) * 4); g.fill();
+  } else if (SPACE.shield > 1) { g.strokeStyle = `rgba(150,210,255,${0.2 + 0.4 * (SPACE.shield / Math.max(1, my.shield))})`; g.beginPath(); g.arc(W / 2, H / 2, (me.width / 2) * Z + 1, 0, 7); g.stroke(); }
+  // edge markers: inhabited worlds, the course, targets
+  const placed: { x: number; y: number }[] = [];
+  const mark = (x: number, y: number, col: string, label: string) => {
+    const dx = (x - SPACE.x) * Z, dy = (y - SPACE.y) * Z;
+    if (Math.abs(dx) < W / 2 - 8 && Math.abs(dy) < H / 2 - 8) return;
+    const a = Math.atan2(dy, dx), k = Math.min((W / 2 - 14) / Math.abs(Math.cos(a) || 1e-3), (H / 2 - 18) / Math.abs(Math.sin(a) || 1e-3));
+    const mx = W / 2 + Math.cos(a) * k;
+    let my2 = H / 2 + Math.sin(a) * k;
+    // stack markers that land on top of each other (a planet and its moon)
+    while (placed.some((p) => Math.abs(p.x - mx) < 60 && Math.abs(p.y - my2) < 10)) my2 += my2 > H / 2 ? -11 : 11;
+    placed.push({ x: mx, y: my2 });
+    g.fillStyle = col; g.beginPath(); g.moveTo(mx + Math.cos(a) * 6, my2 + Math.sin(a) * 6); g.lineTo(mx + Math.cos(a + 2.4) * 5, my2 + Math.sin(a + 2.4) * 5); g.lineTo(mx + Math.cos(a - 2.4) * 5, my2 + Math.sin(a - 2.4) * 5); g.fill();
+    A.ptext(g, label, clamp(mx - Math.cos(a) * 18, 26, W - 26), clamp(my2 - Math.sin(a) * 12 - 2, 6, H - 12), { align: 'center', scale: 1, color: col, shadow: '#07051a' });
+  };
+  const fmt = (d: number) => (d > 30000 ? (d / 60000).toFixed(2) + ' AU' : Math.round(d / 10) + ' KM');
+  for (const b of SPACE.B) if (b.id in PLANETS || SQ.course === b.id) mark(b.x, b.y, SQ.course === b.id ? '#ff9a3a' : '#ffe070', BODY[b.id].name.toUpperCase() + ' ' + fmt(dist(SPACE.x, SPACE.y, b.x, b.y) - b.r));
+  for (const c of SPACE.crafts) if (!c.dead && (c.kind === 'patrol' || (c.disabled && !c.looted) || dist(c.x, c.y, SPACE.x, SPACE.y) < 1400)) mark(c.x, c.y, c.kind === 'patrol' ? '#ff5a5a' : c.disabled ? '#68f0a0' : '#e8e0c8', c.kind === 'patrol' ? 'PATROL' : c.disabled ? 'BOARD' : 'FREIGHT');
+  // the flight readout, top centre: where you are, how high, how fast, and the orbit you'd need
+  const G = SPACE.g;
+  if (G) {
+    const rel = Math.hypot(SPACE.vx - G.dom.vx / 60, SPACE.vy - G.dom.vy / 60), d = dist(SPACE.x, SPACE.y, G.dom.x, G.dom.y);
+    const mode = SPACE.cruise ? 'CRUISE' : SPACE.assist ? 'ASSIST' : 'NEWTONIAN';
+    A.ptext(g, `${mode} · ${BODY[G.dom.id].name.toUpperCase()} · ALT ${fmt(Math.max(0, d - G.dom.r))} · ${Math.round(rel)} U/S${SPACE.cruise ? '' : ' · ORBIT ' + Math.round(orbitalSpeed(G.dom, d))}`, W / 2, 30, { align: 'center', scale: 1, color: SPACE.cruise ? '#a8e8ff' : '#f0ecf8', shadow: '#07051a' });
+  }
+  const bar = (y: number, v: number, col: string, label: string) => { g.fillStyle = 'rgba(12,10,30,0.7)'; g.fillRect(6, y, 62, 7); g.fillStyle = col; g.fillRect(7, y + 1, 60 * clamp(v, 0, 1), 5); A.ptext(g, label, 72, y, { scale: 1, color: '#f0ecf8' }); };
+  bar(H - 22, SQ.hull / my.hull, '#ff5a8a', 'HULL');
+  bar(H - 13, my.shield ? SPACE.shield / my.shield : 0, '#5ad0ff', 'SHIELD');
+  const p = nearPlanet(), w = nearWreck();
+  if (w || p) A.ptext(g, w ? 'USE: BOARD ' + w.name.toUpperCase() : (p!.id in PLANETS ? 'USE: LAND ON ' : 'USE: SCAN ') + BODY[p!.id].name.toUpperCase(), W / 2, H - 34, { align: 'center', scale: 1, color: '#68f0a0', shadow: '#07051a' });
+  g.setTransform(1, 0, 0, 1, 0, 0);
+}
+
+// ---------------------------------------------------------------- hooks into game 1's loop and renderer
+const GP = R.Game.prototype, baseTick = GP.tick;
+GP.tick = function (this: Game, dt: number) {
+  if (!SPACE.active) return baseTick.call(this, dt);
+  this.input.update();
+  if (!this.ui.paused()) { this.clock.update(dt * this.timeScale); update(this, dt); }
+  this.ui.update(dt);
+  this.input.endFrame();
+};
+const RP = R.Renderer.prototype, baseRender = RP.render;
+RP.render = function (this: { g: CanvasRenderingContext2D; cv: HTMLCanvasElement; present(): void; glFrame?: boolean }) {
+  if (!SPACE.active) return baseRender.call(this);
+  draw(this.g, this.cv.width, this.cv.height);
+  this.glFrame = false;
+  this.present();
+};
+// the label on the USE button while flying
+const PP = R.Player.prototype, baseCtx = PP.contextAction;
+PP.contextAction = function (this: Player) {
+  if (SPACE.active) { const w = nearWreck(), p = nearPlanet(); return w ? { label: 'Board', fn: () => {} } : p ? { label: p.id in PLANETS ? 'Land' : 'Scan', fn: () => {} } : null; }
+  return baseCtx.call(this);
+};
