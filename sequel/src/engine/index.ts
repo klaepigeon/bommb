@@ -22,7 +22,7 @@ GP.intro = function (this: Game) {
   const pl = this.player, p = current();
   const c0 = p.cities ? p.cities[0] : { name: R.data.cities[0].name, family: 'Vane', don: 'Gus Vane' };
   pl.stats.startT = this.clock.t;
-  this.ui.story(`${p.name}, year XX8X`, `Ten years since the Brass Coast. Ten years of greying at the temples, of jobs nobody talks about, of that Sinestro Corps uniform folded at the bottom of a duffel bag.\n\nNow you've got a scrappy skiff called the ${SQ.ship.name}, a few hundred credits, and a solar system that went and got itself an Empire while you weren't looking.\n\n${c0.name} is ${c0.family} country. ${c0.don} runs the pads, the cards and the Imperial Security payroll, and word is they're hiring.\n\nYour ship is on Pad 3, right behind you. Walk up to it to launch, refit or trade cargo. Earth is out there too.`, () => {
+  this.ui.story(`${p.name}, year XX8X`, `Ten years since the Brass\u00A0Coast. Ten years of greying at the temples, of jobs nobody talks about, of that Sinestro Corps uniform folded at the bottom of a duffel bag.\n\nNow you've got a scrappy skiff called the ${SQ.ship.name}, a few hundred credits, and a solar system that went and got itself an Empire while you weren't looking.\n\n${c0.name} is ${c0.family} country. ${c0.don} runs the pads, the cards and the Imperial Security payroll, and word is they're hiring.\n\nYour ship is on Pad 3, right behind you. Walk up to it to launch, refit or trade cargo. Earth is out there too.`, () => {
     const offers = this.jobs.offersFor(pl.family);
     const first = offers.find((o: { kind: string }) => o.kind === 'collect') || offers[0];
     if (first) { this.jobs.accept(first); this.jobs.offers[pl.family] = offers.filter((o: unknown) => o !== first); }

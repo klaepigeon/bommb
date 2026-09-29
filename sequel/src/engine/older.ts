@@ -24,7 +24,7 @@ r.lookFromStyle = function (s: any, masked: boolean) {
     l.hairRamp = ov.hair;
   }
   // a clean-shaven face at forty-odd still shows a shadow by noon
-  if (!s.facial || s.facial === 'none') { l.faceExtra = 'stubble'; }
+  if (!s.facial || s.facial === 'clean') l.faceExtra = 'stubble';
   l.aged = true;
   l.seedStr = (l.seedStr || 'player') + '-aged';
   return l;

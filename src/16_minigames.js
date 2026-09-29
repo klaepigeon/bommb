@@ -173,45 +173,83 @@
   };
 
   // ---------------------------------------------------------------- safecracking
+  // Mastermind with a PIN pad: find the 4-digit code. After each guess the lights say how
+  // many digits are right and in place (green) and right but misplaced (amber). A good
+  // listener (the stethoscope) gets an extra try; each wrong guess makes a little noise.
   M.safe = function (opts, done) {
-    const combo = [0, 0, 0].map(() => Math.floor(Math.random() * 40));
+    const N = opts.digits || 4, TRIES = (opts.tries || 10) + (R.game.player.inv.tools.stethoscope ? 2 : 0);
+    // no digit repeats, so every light narrows things down
+    const pool = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    const code = [];
+    while (code.length < N) code.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+    const score = (guess) => {
+      let green = 0, amber = 0;
+      const cRest = [], gRest = [];
+      for (let i = 0; i < N; i++) { if (guess[i] === code[i]) green++; else { cRest.push(code[i]); gRest.push(guess[i]); } }
+      for (const d of gRest) { const k = cRest.indexOf(d); if (k >= 0) { amber++; cRest.splice(k, 1); } }
+      return [green, amber];
+    };
+    // the digits are on the pad drawn in the canvas; the buttons below are the big three
     return M.open({
-      title: 'Crack the Safe', sub: 'Turn the dial. When it clicks and the light flickers, stop and press SET. Right, left, right.', w: 240, h: 140,
-      buttons: [['l', '◀ LEFT'], ['set', 'SET', 'big'], ['r', 'RIGHT ▶'], ['quit', 'QUIT']],
-      init(s) { s.ang = 0; s.v = 0; s.i = 0; s.hold = 0; s.flick = 0; s.lastN = -1; },
-      update(s, dt) {
-        s.ang = (s.ang + s.hold * dt * 12 + 40) % 40;
-        const n = Math.round(s.ang) % 40;
-        if (n !== s.lastN) { s.lastN = n; if (n === combo[s.i]) { s.flick = 1; R.game.audio.sfx('click'); if (navigator.vibrate) try { navigator.vibrate(12); } catch (e) {} } }
-        s.flick = Math.max(0, s.flick - dt * 2);
-      },
+      title: 'Crack the Safe', sub: `Tap digits on the pad to crack the ${N}-digit code. No digit repeats. Green light: right digit, right place. Amber: right digit, wrong place. ${TRIES} tries before it locks out.`, w: 240, h: 150,
+      buttons: [['del', '⌫ DEL'], ['ok', 'ENTER', 'big'], ['quit', 'QUIT']],
+      init(s) { s.cur = []; s.hist = []; s.shake = 0; s.open = 0; s.tries = TRIES; s.press = (id) => this.press(s, id); },
+      update(s, dt) { s.shake = Math.max(0, s.shake - dt * 3); if (s.open) s.open = Math.min(1, s.open + dt * 2); },
       press(s, id) {
         if (id === 'quit') return s.finish(false, 0);
-        if (id === 'l') s.hold = -1; else if (id === 'r') s.hold = 1;
-        if (id === 'set') {
-          const n = Math.round(s.ang) % 40;
-          if (n === combo[s.i]) { s.i++; R.game.audio.sfx('reload'); if (s.i >= 3) { s.msg('The handle gives. It\'s open.'); R.game.audio.sfx('door'); s.finish(true); } else s.msg(`Number ${s.i} set. Now turn it the other way.`); }
-          else { s.i = 0; s.msg('Wrong. The tumblers reset.'); R.game.audio.sfx('bump'); }
+        if (id === 'del') { s.cur.pop(); return; }
+        if (id === 'ok') {
+          if (s.cur.length < N) return s.msg(`Enter all ${N} digits first.`);
+          const [green, amber] = score(s.cur);
+          s.hist.push({ d: s.cur.slice(), green, amber });
+          s.cur = [];
+          if (green === N) { s.open = 0.01; s.msg('Clunk. The bolts slide back. It\'s open.'); R.game.audio.sfx('door'); return s.finish(true, 1200); }
+          R.game.audio.sfx('bump'); s.shake = 1;
+          // a wrong code beeps: anyone nearby might hear
+          const pl = R.game.player; R.game.actors.noise(pl.x, pl.y, R.TILE * 3, 'rustle', pl);
+          if (s.hist.length >= TRIES) { s.msg(`LOCKOUT. The code was ${code.join('')}. Better luck with the next one.`); R.game.audio.sfx('alarm'); return s.finish(false, 1800); }
+          s.msg(green + amber === 0 ? 'None of those digits. Cross them off.' : `${green} in place, ${amber} misplaced. ${TRIES - s.hist.length} tries left.`);
+          return;
         }
+        if (!/^\d$/.test(id)) return;
+        if (s.cur.includes(+id)) return s.msg(`${id} is already in. No digit repeats.`);
+        if (s.cur.length < N) { s.cur.push(+id); R.game.audio.sfx('click'); }
       },
-      release(s) { s.hold = 0; },
+      down(s, x, y) {
+        // tapping the pad on the canvas works too (the digit grid on the right)
+        if (x < 150 || y < 20) return;
+        const col = Math.floor((x - 150) / 28), row = Math.floor((y - 20) / 30);
+        const pad = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['del', '0', 'ok']];
+        if (row >= 0 && row < 4 && col >= 0 && col < 3) this.press(s, pad[row][col]);
+      },
       draw(g, s) {
-        g.fillStyle = '#2a2a30'; g.fillRect(0, 0, 240, 140);
-        box(g, 50, 6, 140, 128, '#4a4a52');
-        const cx = 120, cy = 70;
-        g.fillStyle = INK; g.beginPath(); g.arc(cx, cy, 44, 0, 7); g.fill();
-        g.fillStyle = '#c8c8d0'; g.beginPath(); g.arc(cx, cy, 42, 0, 7); g.fill();
-        g.fillStyle = '#8a8a92'; g.beginPath(); g.arc(cx, cy, 14, 0, 7); g.fill();
-        for (let k = 0; k < 40; k++) {
-          const a = ((k - s.ang) / 40) * Math.PI * 2 - Math.PI / 2;
-          g.fillStyle = INK;
-          const r0 = k % 5 === 0 ? 30 : 35;
-          g.fillRect(Math.round(cx + Math.cos(a) * r0), Math.round(cy + Math.sin(a) * r0), 1.5, 1.5);
-          if (k % 10 === 0) txt(g, String(k), cx + Math.cos(a) * 23, cy + Math.sin(a) * 23 - 3, { align: 'center', color: INK, shadow: null });
-        }
-        g.fillStyle = RED; g.fillRect(cx - 1, cy - 50, 3, 8);
-        g.fillStyle = s.flick ? `rgba(120,255,140,${0.4 + s.flick * 0.6})` : '#1a3a1a'; g.fillRect(176, 14, 8, 8);
-        for (let k = 0; k < 3; k++) { g.fillStyle = k < s.i ? GREEN : '#1a1a1a'; g.fillRect(58 + k * 10, 14, 7, 7); }
+        const ox = s.shake ? (Math.random() - 0.5) * 3 : 0;
+        g.fillStyle = '#23232a'; g.fillRect(0, 0, 240, 150);
+        // the safe door and its display
+        box(g, 6 + ox, 6, 136, 138, '#4a4a56');
+        box(g, 14 + ox, 12, 120, 20, '#0e1a12');
+        for (let i = 0; i < N; i++) txt(g, s.cur[i] != null ? String(s.cur[i]) : '_', 34 + ox + i * 24, 17, { scale: 2, color: '#68f0a0', shadow: null });
+        // the history: each guess and its lights
+        const rows = s.hist.slice(-8);
+        rows.forEach((h, r) => {
+          const y = 38 + r * 13;
+          txt(g, h.d.join(' '), 18 + ox, y, { color: '#e8e0d0', shadow: null });
+          for (let k = 0; k < N; k++) {
+            const c = k < h.green ? '#58e070' : k < h.green + h.amber ? '#f0b030' : '#2a2a30';
+            g.fillStyle = INK; g.fillRect(84 + ox + k * 12, y, 9, 9);
+            g.fillStyle = c; g.fillRect(85 + ox + k * 12, y + 1, 7, 7);
+          }
+        });
+        txt(g, `${Math.max(0, TRIES - s.hist.length)} LEFT`, 18 + ox, 134, { color: TRIES - s.hist.length <= 2 ? RED : GOLD });
+        if (s.open) { g.fillStyle = `rgba(240,184,56,${s.open * 0.35})`; g.fillRect(6, 6, 136, 138); }
+        // the pad
+        const pad = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['⌫', '0', 'OK']];
+        txt(g, 'PIN', 190, 6, { align: 'center', color: '#b8b0a0' });
+        pad.forEach((row, r) => row.forEach((k, c) => {
+          const x = 152 + c * 28, y = 20 + r * 30;
+          box(g, x, y, 24, 24, k === 'OK' ? '#3a8a4a' : k === '⌫' ? '#8a3a2a' : '#c8c0b0');
+          txt(g, k, x + 12, y + 8, { align: 'center', color: k === 'OK' || k === '⌫' ? PAPER : INK, shadow: null });
+        }));
       },
     }, (r) => done && done(!!r));
   };

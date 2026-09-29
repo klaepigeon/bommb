@@ -62,7 +62,7 @@ This is a ground-up rebuild of the original single-file *Rhapsody* (Port Hollow)
 | Shops better indicated; NPCs mark points of interest | Icon boards and OPEN / CLOSED lamps by every shop door. Shops you pass go on the map. Ask anyone "Know any good spots?" and they pin a place. Rumours drop fuzzy pins |
 | Gore; broken animations; menu closing instantly; debug menu | Blood that stains, sprays, pools and gibs (toggle in Settings). Natural walk cadence and working NPC punch poses. Sheets ignore the tap that opened them. Menu > Debug has cheats, time, weather, teleports and spawners |
 | Stop Witness | Fleeing witnesses in shouting range get Intimidate / Bribe chips |
-| Real minigames | Lockpicking, hotwiring, safecracking, blackjack, slots, pool, darts and craps |
+| Real minigames | Lockpicking, hotwiring, safecracking (a Mastermind-style PIN pad: green and amber lights, 10 tries), blackjack, slots, pool, darts and craps |
 | Inventory; know what drugs we're buying | A Pockets tab with pixel icons and actions. Seven named 70s street drugs, each with a street name, effect, duration and comedown, sold by dealers |
 | Hire NPCs to do jobs | People who like you will do your family job for a cut, boost a car, rob a store, run numbers or scout a mark |
 | Hostile animals must be killable | Blows stagger animals and wounded animals limp |

@@ -440,7 +440,9 @@ function draw(g: CanvasRenderingContext2D, BW: number, BH: number): void {
     const mx = W / 2 + Math.cos(a) * k;
     let my2 = H / 2 + Math.sin(a) * k;
     // stack markers that land on top of each other (a planet and its moon)
-    while (placed.some((p) => Math.abs(p.x - mx) < 60 && Math.abs(p.y - my2) < 10)) my2 += my2 > H / 2 ? -11 : 11;
+    // (the direction is fixed up front: flipping it at the midline could bounce forever)
+    const step = my2 > H / 2 ? -11 : 11;
+    for (let n = 0; n < 12 && placed.some((p) => Math.abs(p.x - mx) < 60 && Math.abs(p.y - my2) < 10); n++) my2 += step;
     placed.push({ x: mx, y: my2 });
     g.fillStyle = col; g.beginPath(); g.moveTo(mx + Math.cos(a) * 6, my2 + Math.sin(a) * 6); g.lineTo(mx + Math.cos(a + 2.4) * 5, my2 + Math.sin(a + 2.4) * 5); g.lineTo(mx + Math.cos(a - 2.4) * 5, my2 + Math.sin(a - 2.4) * 5); g.fill();
     A.ptext(g, label, clamp(mx - Math.cos(a) * 18, 26, W - 26), clamp(my2 - Math.sin(a) * 12 - 2, 6, H - 12), { align: 'center', scale: 1, color: col, shadow: '#07051a' });

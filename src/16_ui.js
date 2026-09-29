@@ -718,8 +718,9 @@
     if (roll < 0.3 + brave * 0.2) {
       g.audio.sfx('alarm');
       pl.addCash(Math.round(cash / 2));
+      g.jobs.progress('robbed', b); // half a till still counts: the job was to hit the place
       this.closeSheet();
-      this.toast('The clerk hit the silent alarm. Police are on the way.', 'bad');
+      this.toast('The clerk hit the silent alarm. You grabbed half the till. Police are on the way.', 'bad');
       g.law.startIncident({ type: 'robbery', def: g.law.CRIMES.robbery, x: pl.x, y: pl.y, jur: g.law.jurAt(pl.x, pl.y), identified: !pl.masked, lvl: 2, bounty: 50 }, null);
       return;
     }

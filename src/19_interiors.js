@@ -580,7 +580,12 @@
     const cash = f.cash ? Math.round(R.rng.range(f.cash[0], f.cash[1])) : 0;
     const got = [];
     if (cash > 0) { pl.addCash(cash); got.push(R.fmtMoney(cash)); }
-    if (f.o === O.REGISTER || fa.o === O.REGISTER) room.b.cash = 0;
+    if (f.o === O.REGISTER || fa.o === O.REGISTER) {
+      room.b.cash = 0;
+      // emptying the till counts for a knock-over job however you got to it (the clerk
+      // fled, went down, or pulled a shotgun and lost)
+      if (!room.b.playerOwned) { room.b.robbedDay = g.pop.day; g.jobs.progress('robbed', room.b); }
+    }
     if (f.items && f.items.length && R.rng() < 0.7) {
       const it = R.rng.pick(f.items);
       if (D.loot[it]) { pl.inv.loot[it] = (pl.inv.loot[it] || 0) + 1; got.push(D.loot[it].name); }

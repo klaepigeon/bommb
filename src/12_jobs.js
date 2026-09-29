@@ -164,7 +164,7 @@
       j.reward = Math.round(rnd.int(60, 120) * scale);
       j.rep = 40;
       j.title = `Knock over ${b.name}`;
-      j.desc = `${b.name} in ${tcity.name}. The ${tcity.def.family}s call it theirs. Walk in, gun out, empty the register. Keep what's in the till plus our fee.`;
+      j.desc = `${b.name} in ${tcity.name}. The ${tcity.def.family}s call it theirs. Walk in, gun out, empty the register. If the clerk gets brave, deal with them and empty the till yourself. Keep what's in it plus our fee.`;
       return j;
     }
     if (kind === 'racket') {
