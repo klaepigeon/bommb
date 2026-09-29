@@ -6,7 +6,7 @@ This is a ground-up rebuild of the original single-file *Rhapsody* (Port Hollow)
 
 ## Look & feel (matches the original)
 
-- **GBA screen:** the world renders into a fixed 480×320 buffer, a 240×160 view at 2x like the original, scaled with nearest-neighbour inside a wooden handheld bezel. In portrait the screen sits on top with the joystick and buttons below; in landscape the controls sit either side.
+- **GBA screen:** the world renders into a 480-wide buffer, a 240-wide view at 2x like the original, scaled with nearest-neighbour inside a wooden handheld bezel. In landscape it's 480×320 (3:2) with the controls either side. In portrait the screen sits on top and grows taller (up to 5:4) into the space the joystick and buttons don't need, so phones held upright see more of the world.
 - **The original's characters:** people are painted by the original build's own character routine (`src/03_oldsprites.js`, ported verbatim: 16×32 pixel grids, 4-shade ramps, hair styles, flares, moustaches, poses). The protagonist is a young mafioso: slicked hair, charcoal suit, maroon shirt. Hats are drawn over the top.
 - **The original's buildings and ground:** `src/03_oldtown.js` ports the original's building painter (siding, brick, stucco, concrete and board walls, awnings, shop glass with goods, doors, rooftop vents, lit windows after dark) and its grass, sidewalk, plaza, sand, dirt, boardwalk and parking textures, curbs included.
 - **Scale:** one tile is a person's width. Buildings are 7–16 tiles wide with character-height facades, roads are four lanes, and the map is 880×880 tiles.
@@ -39,6 +39,7 @@ This is a ground-up rebuild of the original single-file *Rhapsody* (Port Hollow)
 
 | Your note | What the rebuild does |
 |---|---|
+| Health | No free healing in a fight. Out of trouble for 15 seconds (not hit, not bleeding, no cops), you patch yourself back up to 60%; food, sleep, doctors and the hospital do the rest |
 | Mobile-first interface | Floating joystick, thumb-sized A/B buttons, contextual action label, bottom-sheet menus, safe-area aware, portrait and landscape layouts |
 | Much bigger map, multiple cities | 880×880-tile procedural region: **Port Hollow** (harbor), **New Avalon** (metropolis), **Dustwater** (desert), **Pinecrest** (snowy forest), **Bayou Clair** (marsh), four hamlets, farms and cabins, a river, a lake, and four-lane highways between them. About 600 buildings |
 | ~1,000 named NPCs + procgen citizens + animals | About 1,010 named people with homes, jobs, spouses, kids, schedules, memories and opinions of you. Anonymous pedestrians and drivers fill the streets. Wildlife is biome-specific: deer, wolves, bears, boar, coyotes, gators, rattlesnakes, birds, cattle |

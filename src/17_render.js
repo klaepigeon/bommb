@@ -7,7 +7,10 @@
 
   // The game renders into a fixed 480x320 buffer (a 240x160 GBA view at 2x, like the
   // original) which is then scaled onto the on-screen canvas with nearest-neighbour.
-  const BW = 480, BH = 320;
+  // the buffer is 480 wide; its height follows the screen's shape (320 on a wide screen,
+  // up to 5:4 tall on a phone held upright, so portrait shows more of the world)
+  const BW = 480;
+  let BH = 320;
   const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
   const Renderer = (R.Renderer = function (game, canvas) {
     this.game = game;
@@ -30,6 +33,9 @@
     const r = this.display.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 3);
     // an integer multiple of the buffer when it fits, otherwise the nearest size
+    const want = r.width > 0 ? Math.max(320, Math.min(600, Math.round((BW * r.height / r.width) / 2) * 2)) : 320;
+    if (want !== BH) { BH = want; this.cv.height = BH; }
+    R.view = { W: BW, H: BH };
     let w = Math.max(BW, Math.round(r.width * dpr)), h = Math.round(w * BH / BW);
     const k = Math.floor(w / BW);
     if (k >= 1 && Math.abs(k * BW - w) < BW * 0.2) { w = k * BW; h = k * BH; }

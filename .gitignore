@@ -1,3 +1,5 @@
 playtest-out/
 nightly-out/
 node_modules/
+sequel/node_modules/
+sequel/dist/

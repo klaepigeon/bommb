@@ -34,6 +34,7 @@ interface GpuRenderer {
   P: { lit: Prog; bright: Prog; blur: Prog; final: Prog };
   T: { base: WebGLTexture; over: WebGLTexture; light: WebGLTexture };
   F: { lit: FB; b1: FB; b2: FB };
+  mkF: () => void;
   supported(): boolean;
   wanted(game: Game): boolean;
   setup(r: Renderer2D): boolean;
@@ -44,7 +45,8 @@ interface GpuRenderer {
   init(game: Game): void;
 }
 (function () {
-  const BW = 480, BH = 320;
+  // the 2D buffer's size (its height follows the screen shape; see the renderer's resize)
+  let BW = 480, BH = 320;
   const GL: GpuRenderer = (R.gl = { on: false, hurt: 0, t0: performance.now(), gl: null } as unknown as GpuRenderer);
   const must = <T>(v: T | null | undefined, what: string): T => { if (v == null) throw new Error('WebGL: no ' + what); return v; };
 
@@ -144,7 +146,8 @@ void main(){
     };
     const fbo = (w: number, h: number, filter: number): FB => { const t = tex(w, h, filter), f = must(gl.createFramebuffer(), 'framebuffer'); gl.bindFramebuffer(gl.FRAMEBUFFER, f); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0); return { t, f, w, h }; };
     this.T = { base: tex(0, 0, gl.NEAREST), over: tex(0, 0, gl.NEAREST), light: tex(0, 0, gl.LINEAR) };
-    this.F = { lit: fbo(BW, BH, gl.NEAREST), b1: fbo(BW / 2, BH / 2, gl.LINEAR), b2: fbo(BW / 2, BH / 2, gl.LINEAR) };
+    this.mkF = () => { this.F = { lit: fbo(BW, BH, gl.NEAREST), b1: fbo(BW / 2, BH / 2, gl.LINEAR), b2: fbo(BW / 2, BH / 2, gl.LINEAR) }; };
+    this.mkF();
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     // the layer drawn after lighting
@@ -189,6 +192,14 @@ void main(){
     const game = r.game, pl = game.player;
     try {
       this.size();
+      // the buffer changed shape (a phone turned): rebuild the targets to match
+      if (r.cv.width !== BW || r.cv.height !== BH) {
+        BW = r.cv.width; BH = r.cv.height;
+        for (const f of Object.values(this.F) as FB[]) { gl.deleteFramebuffer(f.f); gl.deleteTexture(f.t); }
+        this.mkF();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        r.ov.width = BW; r.ov.height = BH;
+      }
       const lit = !!r.glFrame; // a world frame (the title screen has no lighting pass)
       if (!lit) { r.ovg && r.ovg.clearRect(0, 0, BW, BH); r.lg.clearRect(0, 0, r.light.width, r.light.height); }
       upload(gl, this.T.base, r.cv, false);

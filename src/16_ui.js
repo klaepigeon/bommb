@@ -26,7 +26,7 @@
     // tapping the hearts box on the screen opens the menu
     $('#view').addEventListener('click', (e) => {
       const r = e.target.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width * 480, y = (e.clientY - r.top) / r.height * 320;
+      const V = R.view || { W: 480, H: 320 }, x = (e.clientX - r.left) / r.width * V.W, y = (e.clientY - r.top) / r.height * V.H;
       if (game.started && x < 190 && y < 50) this.toggleMenu();
     });
     $('#menubtn').addEventListener('click', () => this.toggleMenu());
@@ -261,7 +261,7 @@
     g.fillStyle = '#2a1a12';
   }
   U.drawHud = function (g) {
-    const game = this.game, pl = game.player, W = 480, H = 320;
+    const game = this.game, pl = game.player, W = (R.view || { W: 480 }).W, H = (R.view || { H: 320 }).H;
     const pt = A().ptext;
     if (!game.started) return;
     // hurt flash: dithered red border

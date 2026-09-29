@@ -84,6 +84,10 @@
     this.drunk = Math.max(0, this.drunk - dt * 0.004);
     if (this.punchT > 0) this.punchT -= dt;
     this.bloody = Math.max(0, this.bloody - dt * 0.003);
+    // out of trouble for a while (not hit, not bleeding, no heat): patch back up to 60%
+    // on your own, a point every three seconds. Food, sleep and doctors do the rest.
+    this.calmT = (this.calmT || 0) + dt;
+    if (this.calmT > 15 && this.hp < this.maxHp * 0.6 && !(this.wnd && this.wnd.bleed > 0) && !(g.law && g.law.active())) this.hp = Math.min(this.maxHp * 0.6, this.hp + dt / 3);
     if (this.outfitChangedSince > 0) this.outfitChangedSince -= dt;
     // cool meter
     if (this.coolOn) {
@@ -580,6 +584,7 @@
     if (this.inside) return;
     if (this.inCar && kind !== 'blast' && kind !== 'fire' && kind !== 'bullet' && kind !== 'fall') return;
     amt *= R.goods.mod(this, 'armor', 1);
+    this.calmT = 0; // resets the out-of-combat regen
     if (this.shieldT > 0) { g.fx.text(this.x, this.y - 26, 'BLOCKED', '#fff27a'); g.fx.sparks(this.x, this.y - 12, 3); return; }
     this.hp -= amt;
     this.bloody = Math.min(1, this.bloody + amt / 60);

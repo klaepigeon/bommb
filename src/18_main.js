@@ -146,6 +146,19 @@
     app.classList.toggle('portrait', portrait);
     app.classList.toggle('landscape', !portrait);
     app.classList.toggle('touch', 'ontouchstart' in window || navigator.maxTouchPoints > 0);
+    // portrait: the screen takes the height the controls don't need (up to 5:4 tall), so
+    // tall phones see more of the world instead of an empty band above the pads
+    const stage = document.getElementById('stage');
+    if (stage) {
+      stage.style.height = '';
+      if (portrait) {
+        const cs = getComputedStyle(app), sw = stage.getBoundingClientRect().width;
+        const ctx = document.getElementById('ctx'), pads = 300, gaps = 24 + 8 + 16;
+        const avail = window.innerHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - gaps - Math.max(64, ctx ? ctx.offsetHeight : 64) - pads;
+        const h = Math.max(sw / 1.5, Math.min(sw * 1.25, avail));
+        stage.style.height = Math.floor(h) + 'px';
+      }
+    }
     this.renderer.resize();
     requestAnimationFrame(() => { this.renderer.resize(); this.fitPads(); });
   };

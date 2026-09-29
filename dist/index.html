@@ -3736,12 +3736,21 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     };
     const shadeHex = (hex, k) => { const [r, g, b] = hexRgb(hex); const [h, s, l] = rgbHsl(r, g, b); return hslHex(k < 0 ? pullHue(h, 250, 14) : h, s, l + k); };
     // ---------------------------------------------------------------- a tiny pixel canvas
+    // colours are interned as packed ints (0 = empty) so painting and export stay cheap
+    const colInt = new Map(), intCol = [''];
+    const toInt = (c) => { let n = colInt.get(c); if (n === undefined) {
+        n = intCol.length;
+        intCol.push(c);
+        colInt.set(c, n);
+    } return n; };
+    const intRgb = [[0, 0, 0]];
     class Px {
-        constructor(w, h) { this.w = w; this.h = h; this.d = new Array(w * h).fill(null); }
+        constructor(w, h) { this.w = w; this.h = h; this.d = new Uint16Array(w * h); }
         in(x, y) { return x >= 0 && y >= 0 && x < this.w && y < this.h; }
-        get(x, y) { return this.in(x, y) ? this.d[y * this.w + x] : null; }
+        get(x, y) { if (!this.in(x, y))
+            return null; const n = this.d[y * this.w + x]; return n ? intCol[n] : null; }
         set(x, y, c) { x |= 0; y |= 0; if (this.in(x, y))
-            this.d[y * this.w + x] = c; return this; }
+            this.d[y * this.w + x] = c ? toInt(c) : 0; return this; }
         rect(x, y, w, h, c) { for (let j = 0; j < h; j++)
             for (let i = 0; i < w; i++)
                 this.set(x + i, y + j, c); return this; }
@@ -3764,12 +3773,13 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
         }
         // a dark line around the silhouette (outside pixels touching inside ones)
         outline(c) {
-            const add = [];
-            for (let y = 0; y < this.h; y++)
-                for (let x = 0; x < this.w; x++) {
-                    if (this.get(x, y))
+            const add = [], d = this.d, w = this.w, h = this.h;
+            const at = (x, y) => x >= 0 && y >= 0 && x < w && y < h && d[y * w + x] !== 0;
+            for (let y = 0; y < h; y++)
+                for (let x = 0; x < w; x++) {
+                    if (d[y * w + x])
                         continue;
-                    if (this.get(x - 1, y) || this.get(x + 1, y) || this.get(x, y - 1) || this.get(x, y + 1))
+                    if (at(x - 1, y) || at(x + 1, y) || at(x, y - 1) || at(x, y + 1))
                         add.push([x, y]);
                 }
             for (const [x, y] of add)
@@ -3780,21 +3790,18 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
             const cv = document.createElement('canvas');
             cv.width = this.w;
             cv.height = this.h;
-            const g = cv.getContext('2d'), im = g.createImageData(this.w, this.h);
-            const cache = new Map();
+            const g = cv.getContext('2d'), im = g.createImageData(this.w, this.h), o = im.data;
+            while (intRgb.length < intCol.length)
+                intRgb.push(hexRgb(intCol[intRgb.length]));
             for (let i = 0; i < this.d.length; i++) {
-                const c = this.d[i];
-                if (!c)
+                const n = this.d[i];
+                if (!n)
                     continue;
-                let rgb = cache.get(c);
-                if (!rgb) {
-                    rgb = hexRgb(c);
-                    cache.set(c, rgb);
-                }
-                im.data[i * 4] = rgb[0];
-                im.data[i * 4 + 1] = rgb[1];
-                im.data[i * 4 + 2] = rgb[2];
-                im.data[i * 4 + 3] = 255;
+                const rgb = intRgb[n];
+                o[i * 4] = rgb[0];
+                o[i * 4 + 1] = rgb[1];
+                o[i * 4 + 2] = rgb[2];
+                o[i * 4 + 3] = 255;
             }
             g.putImageData(im, 0, 0);
             return cv;
@@ -3849,6 +3856,80 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
         Object.defineProperty(E, '_src', { value: L, enumerable: false });
         looksE.set(look, E);
         return E;
+    };
+    // The Emerald finish on a painted sprite: a bright shine band across the crown of the
+    // hair (the overworld sprites' signature) and a light edge on the lit side of the clothes.
+    // Applied to the finished canvas, so every pose, flip and anchor is untouched.
+    const sprE = new WeakMap();
+    const mix = (a, b, k) => { const x = hexRgb(a), y = hexRgb(b); return rgbHex(x[0] + (y[0] - x[0]) * k, x[1] + (y[1] - x[1]) * k, x[2] + (y[2] - x[2]) * k); };
+    const finish = (src, E) => {
+        const w = src.width, h = src.height;
+        const cv = document.createElement('canvas');
+        cv.width = w;
+        cv.height = h;
+        const g = cv.getContext('2d');
+        g.drawImage(src, 0, 0);
+        const im = g.getImageData(0, 0, w, h), d = im.data;
+        const key = (i) => (d[i] << 16) | (d[i + 1] << 8) | d[i + 2];
+        const set = (x, y, hex) => { const i = (y * w + x) * 4; const [r, gg, b] = hexRgb(hex); d[i] = r; d[i + 1] = gg; d[i + 2] = b; };
+        const asKeys = (ramp, from) => new Set((ramp || []).slice(from).map((c) => { const [r, gg, b] = hexRgb(c); return (r << 16) | (gg << 8) | b; }));
+        // hair shine: on the top rows of the hair mass, left of centre
+        if (!E.mask && E.style !== 'bald' && E.style !== 'cap' && Array.isArray(E.hair)) {
+            const hairK = asKeys(E.hair, 1);
+            const top = new Array(w).fill(-1);
+            let minY = 99;
+            for (let x = 0; x < w; x++)
+                for (let y = 0; y < Math.min(h, 20); y++) {
+                    const i = (y * w + x) * 4;
+                    if (d[i + 3] && hairK.has(key(i))) {
+                        top[x] = y;
+                        minY = Math.min(minY, y);
+                        break;
+                    }
+                }
+            const cols = top.map((y, x) => (y >= 0 && y <= minY + 2 ? x : -1)).filter((x) => x >= 0);
+            if (cols.length >= 5) {
+                const x0 = cols[0], span = cols[cols.length - 1] - x0;
+                const shine = mix(E.hair[E.hair.length - 1], '#ffffff', 0.45), soft = mix(E.hair[E.hair.length - 1], '#ffffff', 0.2);
+                for (let x = x0 + Math.round(span * 0.2); x <= x0 + Math.round(span * 0.55); x++) {
+                    if (top[x] < 0)
+                        continue;
+                    const y = top[x] + 1, i = (y * w + x) * 4;
+                    if (y < h && d[i + 3] && hairK.has(key(i)))
+                        set(x, y, shine);
+                    const j = ((y + 1) * w + x) * 4;
+                    if (y + 1 < h && d[j + 3] && hairK.has(key(j)) && (x === x0 + Math.round(span * 0.35)))
+                        set(x, y + 1, soft);
+                }
+            }
+        }
+        // clothes: the leftmost pixel of each shirt/jacket row takes the light tone
+        const cloth = Array.isArray(E.jacket) ? E.jacket : E.shirt;
+        if (Array.isArray(cloth)) {
+            const midK = asKeys(cloth.slice(1, 3), 0), allK = asKeys(cloth, 0), lit = cloth[cloth.length - 1];
+            for (let y = 12; y < h - 6; y++)
+                for (let x = 1; x < w; x++) {
+                    const i = (y * w + x) * 4, l = i - 4;
+                    if (d[i + 3] && midK.has(key(i)) && d[l + 3] && !midK.has(key(l)) && !allK.has(key(l))) {
+                        set(x, y, lit);
+                        break;
+                    }
+                }
+        }
+        g.putImageData(im, 0, 0);
+        return cv;
+    };
+    const baseOldSprite = A.oldSprite;
+    A.oldSprite = function (look, d8, frame, pose) {
+        const c = baseOldSprite.call(this, look, d8, frame, pose);
+        if (!on())
+            return c;
+        let e = sprE.get(c);
+        if (!e) {
+            e = finish(c, A.oldLook(look));
+            sprE.set(c, e);
+        }
+        return e;
     };
     // ---------------------------------------------------------------- ground
     const tileCache = new Map();
@@ -4395,6 +4476,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
     const PITCHED = new Set(['house', 'cabin', 'barn', 'church', 'general', 'tailor', 'barber', 'butcher', 'liquor', 'pawn', 'pharmacy', 'laundry', 'gunshop', 'diner', 'costume']);
     const SHOP = new Set(['general', 'tailor', 'barber', 'butcher', 'liquor', 'pawn', 'pharmacy', 'laundry', 'gunshop', 'diner', 'bar', 'club', 'arcade', 'costume', 'strip', 'casino', 'bank', 'social']);
     const bArt = new Map();
+    const neonByType = new Map();
     const baseBArt = A.buildingArt;
     const pick = (arr, n) => arr[((n % arr.length) + arr.length) % arr.length];
     const paintBuilding = (b, night, neon) => {
@@ -4439,12 +4521,13 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
         }
         else {
             const fp = type === 'hospital' ? FLAT.white : type === 'police' ? FLAT.blue : type === 'club' || type === 'casino' || type === 'strip' ? FLAT.purple : type === 'bar' || type === 'social' ? FLAT.maroon : type === 'bank' || type === 'office' ? FLAT.grey : pick(Object.values(FLAT), seed);
+            const seam = shadeHex(fp[2], -0.04);
             for (let y = 0; y <= ft + 1; y++)
                 for (let x = 0; x < W; x++) {
                     const rim = x < 3 || x >= W - 3 || y < 3 || y > ft - 2;
                     let c = rim ? (y < 1 || x < 1 ? fp[4] : y > ft - 2 ? fp[1] : fp[3]) : fp[2];
                     if (!rim && (y - 3) % 12 === 0)
-                        c = shadeHex(fp[2], -0.04);
+                        c = seam;
                     else if (!rim && hash(x, y, seed & 255) < 0.05)
                         c = hash(x, y, 7) < 0.5 ? fp[1] : fp[3];
                     if (!rim && (y === 3 || x === 3))
@@ -4591,7 +4674,13 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
         const key = b.id + '|' + b.w + 'x' + b.h + b.face + (night ? 'L' : '') + b.type;
         let c = bArt.get(key);
         if (!c) {
-            const neon = baseBArt.call(this, b).neon; // the shop's neon colour, as before
+            // the shop's neon colour, as before (it only depends on the type, so ask the classic
+            // painter once per type rather than once per building)
+            let neon = neonByType.get(b.type);
+            if (!neonByType.has(b.type)) {
+                neon = baseBArt.call(this, b).neon;
+                neonByType.set(b.type, neon);
+            }
             c = paintBuilding(b, night, neon);
             if (bArt.size > 700)
                 bArt.clear();
@@ -4616,7 +4705,7 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
                 if (d[i * 4 + 3] < 128)
                     continue;
                 const [hh, ss, ll] = rgbHsl(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]);
-                p.d[i] = ss < 0.08 ? rgbHex(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]) : hslHex(hh, Math.min(0.85, ss * 1.3 + 0.05), 0.5 + (ll - 0.5) * 1.12);
+                p.d[i] = toInt(ss < 0.08 ? rgbHex(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]) : hslHex(hh, Math.min(0.85, ss * 1.3 + 0.05), 0.5 + (ll - 0.5) * 1.12));
             }
             p.outline('#1c2230');
             cv = p.canvas();
@@ -4735,13 +4824,57 @@ R.old.buildingPalettes = { walls: _t, roofs: qs, awnings: fo, materials: Ur };
             return r;
         };
     };
+    // Build every ground tile and object sprite in idle slices after boot, so walking into a
+    // new biome doesn't pay for them in the middle of a frame.
+    const warmJobs = () => {
+        const jobs = [];
+        for (const [t, n] of Object.entries(VARS))
+            for (let v = 0; v < n; v++)
+                jobs.push(() => groundCanvas(+t, v));
+        for (let v = 0; v < 6; v++)
+            jobs.push(() => groundCanvas(-1, v));
+        for (let v = 0; v < 3; v++)
+            jobs.push(() => { tree(v, false); tree(v, true); cactus(v); bush(v); reed(v); });
+        for (let v = 0; v < 2; v++)
+            jobs.push(() => { pine(v, false); pine(v, true); palm(v); boulder(v); });
+        for (let v = 0; v < 4; v++)
+            jobs.push(() => { flowers(v); fence(v); });
+        // one neon lookup per building type in this world
+        const seen = new Set();
+        for (const b of (R.game && R.game.world ? R.game.world.buildings : []))
+            if (b && !seen.has(b.type)) {
+                seen.add(b.type);
+                const bb = b;
+                jobs.push(() => { if (!neonByType.has(bb.type))
+                    neonByType.set(bb.type, baseBArt.call(A, bb).neon); });
+            }
+        jobs.push(() => { deadtree(); stump(); lamp(); hydrant(); phone(); bench(); pump(); trash(); barrel(); cone(); mailbox(); crate(); signpost(); });
+        return jobs;
+    };
+    const warm = () => {
+        const jobs = warmJobs();
+        const idle = window.requestIdleCallback || ((f) => setTimeout(() => f({ timeRemaining: () => 8 }), 30));
+        const step = (dl) => { while (jobs.length && dl.timeRemaining() > 2)
+            jobs.shift()(); if (jobs.length)
+            idle(step); };
+        idle(step);
+    };
     // UI is defined later in the bundle: hook it once the game boots
     const wait = () => { if (R.UI && R.game) {
         hookSettings();
         R.emerald.apply(R.game);
+        if (on())
+            warm();
+        watchWorld();
     }
     else
         setTimeout(wait, 50); };
+    // a new game or a loaded save brings a new world: warm its building types too
+    let warmedWorld = null;
+    const watchWorld = () => { setInterval(() => { const w = R.game && R.game.world; if (w && w !== warmedWorld && on()) {
+        warmedWorld = w;
+        warm();
+    } }, 1000); };
     wait();
 })();
 
@@ -11618,6 +11751,10 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
     this.drunk = Math.max(0, this.drunk - dt * 0.004);
     if (this.punchT > 0) this.punchT -= dt;
     this.bloody = Math.max(0, this.bloody - dt * 0.003);
+    // out of trouble for a while (not hit, not bleeding, no heat): patch back up to 60%
+    // on your own, a point every three seconds. Food, sleep and doctors do the rest.
+    this.calmT = (this.calmT || 0) + dt;
+    if (this.calmT > 15 && this.hp < this.maxHp * 0.6 && !(this.wnd && this.wnd.bleed > 0) && !(g.law && g.law.active())) this.hp = Math.min(this.maxHp * 0.6, this.hp + dt / 3);
     if (this.outfitChangedSince > 0) this.outfitChangedSince -= dt;
     // cool meter
     if (this.coolOn) {
@@ -12114,6 +12251,7 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
     if (this.inside) return;
     if (this.inCar && kind !== 'blast' && kind !== 'fire' && kind !== 'bullet' && kind !== 'fall') return;
     amt *= R.goods.mod(this, 'armor', 1);
+    this.calmT = 0; // resets the out-of-combat regen
     if (this.shieldT > 0) { g.fx.text(this.x, this.y - 26, 'BLOCKED', '#fff27a'); g.fx.sparks(this.x, this.y - 12, 3); return; }
     this.hp -= amt;
     this.bloody = Math.min(1, this.bloody + amt / 60);
@@ -23945,7 +24083,7 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
     // tapping the hearts box on the screen opens the menu
     $('#view').addEventListener('click', (e) => {
       const r = e.target.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width * 480, y = (e.clientY - r.top) / r.height * 320;
+      const V = R.view || { W: 480, H: 320 }, x = (e.clientX - r.left) / r.width * V.W, y = (e.clientY - r.top) / r.height * V.H;
       if (game.started && x < 190 && y < 50) this.toggleMenu();
     });
     $('#menubtn').addEventListener('click', () => this.toggleMenu());
@@ -24180,7 +24318,7 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
     g.fillStyle = '#2a1a12';
   }
   U.drawHud = function (g) {
-    const game = this.game, pl = game.player, W = 480, H = 320;
+    const game = this.game, pl = game.player, W = (R.view || { W: 480 }).W, H = (R.view || { H: 320 }).H;
     const pt = A().ptext;
     if (!game.started) return;
     // hurt flash: dithered red border
@@ -25114,7 +25252,10 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
 
   // The game renders into a fixed 480x320 buffer (a 240x160 GBA view at 2x, like the
   // original) which is then scaled onto the on-screen canvas with nearest-neighbour.
-  const BW = 480, BH = 320;
+  // the buffer is 480 wide; its height follows the screen's shape (320 on a wide screen,
+  // up to 5:4 tall on a phone held upright, so portrait shows more of the world)
+  const BW = 480;
+  let BH = 320;
   const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
   const Renderer = (R.Renderer = function (game, canvas) {
     this.game = game;
@@ -25137,6 +25278,9 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
     const r = this.display.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 3);
     // an integer multiple of the buffer when it fits, otherwise the nearest size
+    const want = r.width > 0 ? Math.max(320, Math.min(600, Math.round((BW * r.height / r.width) / 2) * 2)) : 320;
+    if (want !== BH) { BH = want; this.cv.height = BH; }
+    R.view = { W: BW, H: BH };
     let w = Math.max(BW, Math.round(r.width * dpr)), h = Math.round(w * BH / BW);
     const k = Math.floor(w / BW);
     if (k >= 1 && Math.abs(k * BW - w) < BW * 0.2) { w = k * BW; h = k * BH; }
@@ -25816,7 +25960,8 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
 // If WebGL isn't there, or the context is lost, the classic Canvas2D path takes over.
 'use strict';
 (function () {
-    const BW = 480, BH = 320;
+    // the 2D buffer's size (its height follows the screen shape; see the renderer's resize)
+    let BW = 480, BH = 320;
     const GL = (R.gl = { on: false, hurt: 0, t0: performance.now(), gl: null });
     const must = (v, what) => { if (v == null)
         throw new Error('WebGL: no ' + what); return v; };
@@ -25934,7 +26079,8 @@ void main(){
         };
         const fbo = (w, h, filter) => { const t = tex(w, h, filter), f = must(gl.createFramebuffer(), 'framebuffer'); gl.bindFramebuffer(gl.FRAMEBUFFER, f); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0); return { t, f, w, h }; };
         this.T = { base: tex(0, 0, gl.NEAREST), over: tex(0, 0, gl.NEAREST), light: tex(0, 0, gl.LINEAR) };
-        this.F = { lit: fbo(BW, BH, gl.NEAREST), b1: fbo(BW / 2, BH / 2, gl.LINEAR), b2: fbo(BW / 2, BH / 2, gl.LINEAR) };
+        this.mkF = () => { this.F = { lit: fbo(BW, BH, gl.NEAREST), b1: fbo(BW / 2, BH / 2, gl.LINEAR), b2: fbo(BW / 2, BH / 2, gl.LINEAR) }; };
+        this.mkF();
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
         // the layer drawn after lighting
@@ -26007,6 +26153,19 @@ void main(){
         const game = r.game, pl = game.player;
         try {
             this.size();
+            // the buffer changed shape (a phone turned): rebuild the targets to match
+            if (r.cv.width !== BW || r.cv.height !== BH) {
+                BW = r.cv.width;
+                BH = r.cv.height;
+                for (const f of Object.values(this.F)) {
+                    gl.deleteFramebuffer(f.f);
+                    gl.deleteTexture(f.t);
+                }
+                this.mkF();
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+                r.ov.width = BW;
+                r.ov.height = BH;
+            }
             const lit = !!r.glFrame; // a world frame (the title screen has no lighting pass)
             if (!lit) {
                 r.ovg && r.ovg.clearRect(0, 0, BW, BH);
@@ -26396,6 +26555,19 @@ void main(){
     app.classList.toggle('portrait', portrait);
     app.classList.toggle('landscape', !portrait);
     app.classList.toggle('touch', 'ontouchstart' in window || navigator.maxTouchPoints > 0);
+    // portrait: the screen takes the height the controls don't need (up to 5:4 tall), so
+    // tall phones see more of the world instead of an empty band above the pads
+    const stage = document.getElementById('stage');
+    if (stage) {
+      stage.style.height = '';
+      if (portrait) {
+        const cs = getComputedStyle(app), sw = stage.getBoundingClientRect().width;
+        const ctx = document.getElementById('ctx'), pads = 300, gaps = 24 + 8 + 16;
+        const avail = window.innerHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - gaps - Math.max(64, ctx ? ctx.offsetHeight : 64) - pads;
+        const h = Math.max(sw / 1.5, Math.min(sw * 1.25, avail));
+        stage.style.height = Math.floor(h) + 'px';
+      }
+    }
     this.renderer.resize();
     requestAnimationFrame(() => { this.renderer.resize(); this.fitPads(); });
   };

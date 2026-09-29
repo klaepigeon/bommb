@@ -65,12 +65,16 @@ interface BuildingArt { cv: HTMLCanvasElement; facadeTop: number; neon?: string 
   const shadeHex = (hex: string, k: number) => { const [r, g, b] = hexRgb(hex); const [h, s, l] = rgbHsl(r, g, b); return hslHex(k < 0 ? pullHue(h, 250, 14) : h, s, l + k); };
 
   // ---------------------------------------------------------------- a tiny pixel canvas
+  // colours are interned as packed ints (0 = empty) so painting and export stay cheap
+  const colInt = new Map<string, number>(), intCol: string[] = [''];
+  const toInt = (c: string) => { let n = colInt.get(c); if (n === undefined) { n = intCol.length; intCol.push(c); colInt.set(c, n); } return n; };
+  const intRgb: [number, number, number][] = [[0, 0, 0]];
   class Px {
-    w: number; h: number; d: (string | null)[];
-    constructor(w: number, h: number) { this.w = w; this.h = h; this.d = new Array(w * h).fill(null); }
+    w: number; h: number; d: Uint16Array;
+    constructor(w: number, h: number) { this.w = w; this.h = h; this.d = new Uint16Array(w * h); }
     in(x: number, y: number) { return x >= 0 && y >= 0 && x < this.w && y < this.h; }
-    get(x: number, y: number) { return this.in(x, y) ? this.d[y * this.w + x] : null; }
-    set(x: number, y: number, c: string | null) { x |= 0; y |= 0; if (this.in(x, y)) this.d[y * this.w + x] = c; return this; }
+    get(x: number, y: number): string | null { if (!this.in(x, y)) return null; const n = this.d[y * this.w + x]; return n ? intCol[n] : null; }
+    set(x: number, y: number, c: string | null) { x |= 0; y |= 0; if (this.in(x, y)) this.d[y * this.w + x] = c ? toInt(c) : 0; return this; }
     rect(x: number, y: number, w: number, h: number, c: string | null) { for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) this.set(x + i, y + j, c); return this; }
     hline(x0: number, x1: number, y: number, c: string) { for (let x = x0; x <= x1; x++) this.set(x, y, c); return this; }
     vline(x: number, y0: number, y1: number, c: string) { for (let y = y0; y <= y1; y++) this.set(x, y, c); return this; }
@@ -84,22 +88,23 @@ interface BuildingArt { cv: HTMLCanvasElement; facadeTop: number; neon?: string 
     }
     // a dark line around the silhouette (outside pixels touching inside ones)
     outline(c: string | ((x: number, y: number) => string)) {
-      const add: [number, number][] = [];
-      for (let y = 0; y < this.h; y++) for (let x = 0; x < this.w; x++) {
-        if (this.get(x, y)) continue;
-        if (this.get(x - 1, y) || this.get(x + 1, y) || this.get(x, y - 1) || this.get(x, y + 1)) add.push([x, y]);
+      const add: [number, number][] = [], d = this.d, w = this.w, h = this.h;
+      const at = (x: number, y: number) => x >= 0 && y >= 0 && x < w && y < h && d[y * w + x] !== 0;
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+        if (d[y * w + x]) continue;
+        if (at(x - 1, y) || at(x + 1, y) || at(x, y - 1) || at(x, y + 1)) add.push([x, y]);
       }
       for (const [x, y] of add) this.set(x, y, typeof c === 'string' ? c : c(x, y));
       return this;
     }
     canvas(): HTMLCanvasElement {
       const cv = document.createElement('canvas'); cv.width = this.w; cv.height = this.h;
-      const g = cv.getContext('2d') as CanvasRenderingContext2D, im = g.createImageData(this.w, this.h);
-      const cache = new Map<string, [number, number, number]>();
+      const g = cv.getContext('2d') as CanvasRenderingContext2D, im = g.createImageData(this.w, this.h), o = im.data;
+      while (intRgb.length < intCol.length) intRgb.push(hexRgb(intCol[intRgb.length]));
       for (let i = 0; i < this.d.length; i++) {
-        const c = this.d[i]; if (!c) continue;
-        let rgb = cache.get(c); if (!rgb) { rgb = hexRgb(c); cache.set(c, rgb); }
-        im.data[i * 4] = rgb[0]; im.data[i * 4 + 1] = rgb[1]; im.data[i * 4 + 2] = rgb[2]; im.data[i * 4 + 3] = 255;
+        const n = this.d[i]; if (!n) continue;
+        const rgb = intRgb[n];
+        o[i * 4] = rgb[0]; o[i * 4 + 1] = rgb[1]; o[i * 4 + 2] = rgb[2]; o[i * 4 + 3] = 255;
       }
       g.putImageData(im, 0, 0);
       return cv;
@@ -151,6 +156,60 @@ interface BuildingArt { cv: HTMLCanvasElement; facadeTop: number; neon?: string 
     looksE.set(look, E);
     return E;
   };
+  // The Emerald finish on a painted sprite: a bright shine band across the crown of the
+  // hair (the overworld sprites' signature) and a light edge on the lit side of the clothes.
+  // Applied to the finished canvas, so every pose, flip and anchor is untouched.
+  const sprE = new WeakMap<HTMLCanvasElement, HTMLCanvasElement>();
+  const mix = (a: string, b: string, k: number) => { const x = hexRgb(a), y = hexRgb(b); return rgbHex(x[0] + (y[0] - x[0]) * k, x[1] + (y[1] - x[1]) * k, x[2] + (y[2] - x[2]) * k); };
+  const finish = (src: HTMLCanvasElement, E: OldLook): HTMLCanvasElement => {
+    const w = src.width, h = src.height;
+    const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+    const g = cv.getContext('2d') as CanvasRenderingContext2D;
+    g.drawImage(src, 0, 0);
+    const im = g.getImageData(0, 0, w, h), d = im.data;
+    const key = (i: number) => (d[i] << 16) | (d[i + 1] << 8) | d[i + 2];
+    const set = (x: number, y: number, hex: string) => { const i = (y * w + x) * 4; const [r, gg, b] = hexRgb(hex); d[i] = r; d[i + 1] = gg; d[i + 2] = b; };
+    const asKeys = (ramp: Ramp | null | undefined, from: number) => new Set((ramp || []).slice(from).map((c) => { const [r, gg, b] = hexRgb(c); return (r << 16) | (gg << 8) | b; }));
+    // hair shine: on the top rows of the hair mass, left of centre
+    if (!E.mask && E.style !== 'bald' && E.style !== 'cap' && Array.isArray(E.hair)) {
+      const hairK = asKeys(E.hair, 1);
+      const top: number[] = new Array(w).fill(-1);
+      let minY = 99;
+      for (let x = 0; x < w; x++) for (let y = 0; y < Math.min(h, 20); y++) { const i = (y * w + x) * 4; if (d[i + 3] && hairK.has(key(i))) { top[x] = y; minY = Math.min(minY, y); break; } }
+      const cols = top.map((y, x) => (y >= 0 && y <= minY + 2 ? x : -1)).filter((x) => x >= 0);
+      if (cols.length >= 5) {
+        const x0 = cols[0], span = cols[cols.length - 1] - x0;
+        const shine = mix(E.hair[E.hair.length - 1], '#ffffff', 0.45), soft = mix(E.hair[E.hair.length - 1], '#ffffff', 0.2);
+        for (let x = x0 + Math.round(span * 0.2); x <= x0 + Math.round(span * 0.55); x++) {
+          if (top[x] < 0) continue;
+          const y = top[x] + 1, i = (y * w + x) * 4;
+          if (y < h && d[i + 3] && hairK.has(key(i))) set(x, y, shine);
+          const j = ((y + 1) * w + x) * 4;
+          if (y + 1 < h && d[j + 3] && hairK.has(key(j)) && (x === x0 + Math.round(span * 0.35))) set(x, y + 1, soft);
+        }
+      }
+    }
+    // clothes: the leftmost pixel of each shirt/jacket row takes the light tone
+    const cloth = Array.isArray(E.jacket) ? E.jacket : E.shirt;
+    if (Array.isArray(cloth)) {
+      const midK = asKeys(cloth.slice(1, 3), 0), allK = asKeys(cloth, 0), lit = cloth[cloth.length - 1];
+      for (let y = 12; y < h - 6; y++) for (let x = 1; x < w; x++) {
+        const i = (y * w + x) * 4, l = i - 4;
+        if (d[i + 3] && midK.has(key(i)) && d[l + 3] && !midK.has(key(l)) && !allK.has(key(l))) { set(x, y, lit); break; }
+      }
+    }
+    g.putImageData(im, 0, 0);
+    return cv;
+  };
+  const baseOldSprite = A.oldSprite as (look: any, d8: number, frame: number, pose: string | null) => HTMLCanvasElement;
+  A.oldSprite = function (look: any, d8: number, frame: number, pose: string | null): HTMLCanvasElement {
+    const c = baseOldSprite.call(this, look, d8, frame, pose);
+    if (!on()) return c;
+    let e = sprE.get(c);
+    if (!e) { e = finish(c, A.oldLook(look) as OldLook); sprE.set(c, e); }
+    return e;
+  };
+
   // ---------------------------------------------------------------- ground
   const tileCache = new Map<string, HTMLCanvasElement>();
   const tuft = (p: Px, x: number, y: number, pal: Ramp) => { p.set(x, y + 1, pal[1]); p.set(x + 1, y, pal[1]); p.set(x + 2, y + 1, pal[1]); p.set(x + 1, y + 1, pal[0]); p.set(x + 1, y - 1, pal[3]); };
@@ -428,6 +487,7 @@ interface BuildingArt { cv: HTMLCanvasElement; facadeTop: number; neon?: string 
   const PITCHED = new Set(['house', 'cabin', 'barn', 'church', 'general', 'tailor', 'barber', 'butcher', 'liquor', 'pawn', 'pharmacy', 'laundry', 'gunshop', 'diner', 'costume']);
   const SHOP = new Set(['general', 'tailor', 'barber', 'butcher', 'liquor', 'pawn', 'pharmacy', 'laundry', 'gunshop', 'diner', 'bar', 'club', 'arcade', 'costume', 'strip', 'casino', 'bank', 'social']);
   const bArt = new Map<string, BuildingArt>();
+  const neonByType = new Map<string, string | undefined>();
   const baseBArt = A.buildingArt as (b: Building) => BuildingArt;
   const pick = <T2>(arr: T2[], n: number) => arr[((n % arr.length) + arr.length) % arr.length];
   const paintBuilding = (b: Building, night: boolean, neon?: string): BuildingArt => {
@@ -454,10 +514,11 @@ interface BuildingArt { cv: HTMLCanvasElement; facadeTop: number; neon?: string 
       if (type === 'church') { const cx = (W / 2) | 0; p.rect(cx - 1, 2, 3, ridge + 2, '#e8e8f0'); p.rect(cx - 3, 5, 7, 2, '#e8e8f0'); }
     } else {
       const fp = type === 'hospital' ? FLAT.white : type === 'police' ? FLAT.blue : type === 'club' || type === 'casino' || type === 'strip' ? FLAT.purple : type === 'bar' || type === 'social' ? FLAT.maroon : type === 'bank' || type === 'office' ? FLAT.grey : pick(Object.values(FLAT), seed);
+      const seam = shadeHex(fp[2], -0.04);
       for (let y = 0; y <= ft + 1; y++) for (let x = 0; x < W; x++) {
         const rim = x < 3 || x >= W - 3 || y < 3 || y > ft - 2;
         let c = rim ? (y < 1 || x < 1 ? fp[4] : y > ft - 2 ? fp[1] : fp[3]) : fp[2];
-        if (!rim && (y - 3) % 12 === 0) c = shadeHex(fp[2], -0.04);
+        if (!rim && (y - 3) % 12 === 0) c = seam;
         else if (!rim && hash(x, y, seed & 255) < 0.05) c = hash(x, y, 7) < 0.5 ? fp[1] : fp[3];
         if (!rim && (y === 3 || x === 3)) c = fp[1]; // the parapet's shadow on the slab
         p.set(x, y, c);
@@ -526,7 +587,10 @@ interface BuildingArt { cv: HTMLCanvasElement; facadeTop: number; neon?: string 
     const key = b.id + '|' + b.w + 'x' + b.h + b.face + (night ? 'L' : '') + b.type;
     let c = bArt.get(key);
     if (!c) {
-      const neon = baseBArt.call(this, b).neon; // the shop's neon colour, as before
+      // the shop's neon colour, as before (it only depends on the type, so ask the classic
+      // painter once per type rather than once per building)
+      let neon = neonByType.get(b.type);
+      if (!neonByType.has(b.type)) { neon = baseBArt.call(this, b).neon; neonByType.set(b.type, neon); }
       c = paintBuilding(b, night, neon);
       if (bArt.size > 700) bArt.clear();
       bArt.set(key, c);
@@ -549,7 +613,7 @@ interface BuildingArt { cv: HTMLCanvasElement; facadeTop: number; neon?: string 
       for (let i = 0; i < w * h; i++) {
         if (d[i * 4 + 3] < 128) continue;
         const [hh, ss, ll] = rgbHsl(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]);
-        p.d[i] = ss < 0.08 ? rgbHex(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]) : hslHex(hh, Math.min(0.85, ss * 1.3 + 0.05), 0.5 + (ll - 0.5) * 1.12);
+        p.d[i] = toInt(ss < 0.08 ? rgbHex(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]) : hslHex(hh, Math.min(0.85, ss * 1.3 + 0.05), 0.5 + (ll - 0.5) * 1.12));
       }
       p.outline('#1c2230');
       cv = p.canvas();
@@ -632,7 +696,31 @@ interface BuildingArt { cv: HTMLCanvasElement; facadeTop: number; neon?: string 
       return r;
     };
   };
+  // Build every ground tile and object sprite in idle slices after boot, so walking into a
+  // new biome doesn't pay for them in the middle of a frame.
+  const warmJobs = (): (() => void)[] => {
+    const jobs: (() => void)[] = [];
+    for (const [t, n] of Object.entries(VARS)) for (let v = 0; v < n; v++) jobs.push(() => groundCanvas(+t, v));
+    for (let v = 0; v < 6; v++) jobs.push(() => groundCanvas(-1, v));
+    for (let v = 0; v < 3; v++) jobs.push(() => { tree(v, false); tree(v, true); cactus(v); bush(v); reed(v); });
+    for (let v = 0; v < 2; v++) jobs.push(() => { pine(v, false); pine(v, true); palm(v); boulder(v); });
+    for (let v = 0; v < 4; v++) jobs.push(() => { flowers(v); fence(v); });
+    // one neon lookup per building type in this world
+    const seen = new Set<string>();
+    for (const b of (R.game && R.game.world ? R.game.world.buildings : [])) if (b && !seen.has(b.type)) { seen.add(b.type); const bb = b; jobs.push(() => { if (!neonByType.has(bb.type)) neonByType.set(bb.type, baseBArt.call(A, bb).neon); }); }
+    jobs.push(() => { deadtree(); stump(); lamp(); hydrant(); phone(); bench(); pump(); trash(); barrel(); cone(); mailbox(); crate(); signpost(); });
+    return jobs;
+  };
+  const warm = () => {
+    const jobs = warmJobs();
+    const idle = (window as any).requestIdleCallback || ((f: (d: { timeRemaining(): number }) => void) => setTimeout(() => f({ timeRemaining: () => 8 }), 30));
+    const step = (dl: { timeRemaining(): number }) => { while (jobs.length && dl.timeRemaining() > 2) (jobs.shift() as () => void)(); if (jobs.length) idle(step); };
+    idle(step);
+  };
   // UI is defined later in the bundle: hook it once the game boots
-  const wait = () => { if (R.UI && R.game) { hookSettings(); R.emerald.apply(R.game); } else setTimeout(wait, 50); };
+  const wait = () => { if (R.UI && R.game) { hookSettings(); R.emerald.apply(R.game); if (on()) warm(); watchWorld(); } else setTimeout(wait, 50); };
+  // a new game or a loaded save brings a new world: warm its building types too
+  let warmedWorld: World | null = null;
+  const watchWorld = () => { setInterval(() => { const w = R.game && R.game.world; if (w && w !== warmedWorld && on()) { warmedWorld = w; warm(); } }, 1000); };
   wait();
 })();
