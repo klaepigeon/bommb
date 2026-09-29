@@ -13,7 +13,8 @@
     "fear": "node tools/fear.mjs",
     "flight": "node tools/flight.mjs",
     "roadmap": "node tools/roadmap.mjs",
-    "check": "npm run typecheck && npm run build && npm run smoke && npm run frontier && npm run earth && npm run fear && npm run flight && npm run roadmap"
+    "interro": "node ../tools/interro.mjs sequel",
+    "check": "npm run typecheck && npm run build && npm run smoke && npm run frontier && npm run earth && npm run fear && npm run flight && npm run roadmap && npm run interro"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",

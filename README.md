@@ -54,6 +54,17 @@ This is a ground-up rebuild of the original single-file *Rhapsody* (Port Hollow)
 
 ## This round
 
+- **Interrogation:** anyone tied up, or with their hands up at gunpoint, can be interrogated.
+  Wear down their resolve (ask, bribe, threaten, rough them up, or make it hurt: the knife, a
+  shot to the leg, broken fingers). Pain breaks people fastest, but people in agony lie, and
+  screams carry. Broken, they give up their money and where the rest is hidden, who they work
+  for (evidence, and the boss's club on the map), the safe combination at work, secrets to
+  blackmail others with, what the police have, and who the rat is. Then let them go, knock
+  them out, or finish it.
+- **Easier kidnapping:** anyone out cold goes over your shoulder with one tap, and anyone with
+  their hands up can be knocked out cold (they stay out while you carry them).
+- **HUD weapon names:** every weapon shows its own name (the newer ones read FISTS before).
+
 | Your note | What changed |
 |---|---|
 | Buildings bigger, not NPCs smaller; scale everything to the player | Characters keep their size. Blocks, buildings, facades, doors, roads (four lanes) and the map (880×880) grew around them, and cars are scaled to fit the lanes |

@@ -21,6 +21,18 @@ See [DESIGN.md](DESIGN.md) for the full plan.
 - **Worlds you can land on:** Earth, Mars (the Solari families), Venus (the Imperial capital and its court), Luna (black market,
   the Choir) and Ceres (ice mines, nobody's law). Each is a full game 1 world with its own
   save, names, families, police, terrain, peoples and wildlife.
+- **Flying that works:** push the stick where you want to go, let go to stop; gravity can't
+  touch you with flight assist on. Press A in open space for **Where to?**: pick any world,
+  moon, station or base and the autopilot cruises there, steers round the Sun and holds you
+  over it. Touch the stick to take over.
+- **Frontier worlds and colonies:** Mercury, Io, Ganymede, Callisto, Titan and every empty
+  planet on other stars are landable claim-camp worlds. Found a colony and build it up.
+- **Stations and bases:** Imperial customs over Venus, the rebels' shipyard at Ganymede (the
+  only yard that fits a cloak), an Imperial dreadnought, and orbital bases of your own.
+- **Crew:** ask anyone (aliens especially) to fly with you; each role improves the ship.
+- **The galaxy chart:** sixty generated stars beyond the real six, 12 light years a jump.
+- **Gore and interrogation:** each sci-fi weapon takes bodies apart its own way; robots leak
+  oil, aliens bleed their own colours; cut implants out of cyborgs; interrogate captives.
 - **Real flight:** the real solar system at true distances and periods. Newtonian flight in
   every body's gravity (flight assist on or off), a cruise drive that scales with altitude,
   a flight computer for courses, a trajectory line and a camera that zooms out to the orbits.
@@ -55,7 +67,7 @@ hull fitted out, spawn any ship, land anywhere, jump to any star, the Fear Man, 
 
 ```
 npm install
-npm run check      # typecheck + build + smoke + frontier + earth + fear
+npm run check      # typecheck + build + all eight suites
 ```
 
 - `tools/smoke.mjs` plays the core loop: Earth, the Fear Man's clamp, orbit, piracy, cruise to Luna,
