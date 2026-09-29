@@ -247,11 +247,11 @@ await shot('alien_world');
 // and home again
 const home = await run(() => {
   const g = R.game, S = BS2.SPACE; BS2.launch(g); g.tick(1 / 60);
-  const a = Math.atan2(S.y, S.x); S.x = Math.cos(a) * 3 * 60000; S.y = Math.sin(a) * 3 * 60000 + 30000; S.vx = S.vy = 0; g.tick(1 / 60);
-  const ok = BS2.jump(g, 'sol');
-  return { ok, system: BS2.SQ.system, fuel: BS2.SQ.fuel };
+  for (let k = 0; k < 16; k++) { const a = k * 0.4; S.x = Math.cos(a) * 3.2 * 60000; S.y = Math.sin(a) * 3.2 * 60000; S.vx = S.vy = 0; g.tick(1 / 60); if (BS2.clearSpace().ok) break; }
+  const why = BS2.clearSpace().why, ok = BS2.jump(g, 'sol');
+  return { ok, why, system: BS2.SQ.system, fuel: BS2.SQ.fuel };
 });
-check(home.ok && home.system === 'sol', `jumped home to Sol (fuel left ${home.fuel})`);
+check(home.ok && home.system === 'sol', `jumped home to Sol (fuel left ${home.fuel})${home.ok ? '' : ' ' + home.why}`);
 await closeAll();
 const back = await landOn('mars');
 await closeAll();

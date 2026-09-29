@@ -34,8 +34,14 @@ export interface Sequel {
   shipAt: [number, number]; // on Earth: the sector your ship is parked in
   arriveEdge: { edge: 'n' | 's' | 'e' | 'w'; f: number } | null; // crossing a sector border on foot
   shipLoc?: { sys: string; planet: PlanetId } | null; // which world your ship is parked on (unset = wherever you are)
+  colonies?: Record<string, Colony>; // colonies you've founded, keyed 'system:planet'
+  bases?: Base[]; // orbital bases you've built
+  crew?: CrewMember[]; // who flies with you
   ringFly?: { ship: Ship; hull: number; style: Record<string, unknown>; shipAt: [number, number]; shipLoc: { sys: string; planet: PlanetId } } | null; // flying on a lantern ring: your ship, parked
 }
+export interface Colony { name: string; founded: number; day: number; pop: number; level: number; mine: number; guns: number; bank: number }
+export interface Base { id: string; sys: string; parent: string; alt: number; hours: number; name: string; level: number; stash: CargoLot[]; turrets: number; day: number; bank: number }
+export interface CrewMember { name: string; species: string; role: 'pilot' | 'gunner' | 'engineer' | 'medic' | 'navigator'; wage: number; seed: number }
 // the Brass Coast's place on the planet (earth.ts)
 export const HOME_SECTOR: [number, number] = [12, 10];
 const homeSector = (s: [number, number] | undefined) => !s || (s[0] === HOME_SECTOR[0] && s[1] === HOME_SECTOR[1]);

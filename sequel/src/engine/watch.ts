@@ -12,7 +12,7 @@ import { fmt } from './bounty';
 import { HULLS, MODS, modIcon, stats, type HullId, type Mod } from '../ship/ship';
 import { GOODS, price, blackMarket, used, addCargo } from './cargo';
 import { bodies, planetArt } from '../space/system';
-import { SPACE } from './space';
+import { SPACE, navTargets, autopilot } from './space';
 import { nearShip } from './travel';
 
 const esc = (s: string) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] as string);
@@ -168,7 +168,7 @@ function systemTab(g: Game, body: HTMLElement): void {
     <canvas class="sw-map" width="300" height="300" aria-label="Map of the ${esc(sys.name)} system"></canvas>
     <p class="sw-info">${inSpace ? 'Set a course, then engage cruise (RUN) and let go of the stick: the flight computer steers and drops you out on arrival.' : `You're on ${esc(worldProfile().name)}. Launch from your ship to fly.`}${SQ.course && BODY[SQ.course] ? ` Course: <b>${BODY[SQ.course].name}</b>.` : ''}</p>
     ${SQ.bounty > 0 ? `<p class="sw-warn">Imperial bounty: <b>${fmt(SQ.bounty)}</b>. Hunters are looking. Answer it at the court on Venus.</p>` : ''}
-    <div class="sect">Inhabited worlds</div><div class="sw-row" id="swland">${(Object.keys(PLANETS) as PlanetId[]).map((id) => `<button data-c="${id}" ${inSpace ? '' : 'disabled'}>${BODY[id].name}${SQ.visited.includes(id) ? '' : ' ★'}</button>`).join('')}</div>
+    <div class="sect">Worlds you can land on</div><div class="sw-row" id="swland">${(Object.keys(PLANETS) as PlanetId[]).map((id) => `<button data-c="${id}" ${inSpace ? '' : 'disabled'}>${BODY[id].name}${PLANETS[id].frontier ? ' (frontier)' : ''}${SQ.visited.includes(id) ? '' : ' ★'}</button>`).join('')}</div>
     ${(Object.keys(PLANETS) as PlanetId[]).map((id) => `<p><b>${BODY[id].name}</b>: ${esc(BODY[id].blurb)} <small>Run by ${esc(PLANETS[id].faction)}.${peoples(id)}</small></p>`).join('')}
     ${onGround ? `<div class="sect">Wildlife on ${esc(worldProfile().name)}</div><p class="sw-info">${esc(wild.join(', '))}. ${esc(describe().join('; '))}.</p>` : ''}
     <div class="sect">The rest of the system</div><div class="sw-row" id="swfar">${BODIES.filter((b) => b.id !== 'sun' && !(b.id in PLANETS)).map((b) => `<button data-c="${b.id}" ${inSpace ? '' : 'disabled'}>${b.name}</button>`).join('')}</div>
@@ -205,6 +205,8 @@ function systemTab(g: Game, body: HTMLElement): void {
     if (!inSpace) return;
     SQ.course = bt.dataset.c as BodyId; saveSequel();
     g.ui.closeSheet();
+    const t = navTargets().find((n) => n.id === SQ.course);
+    if (t) return autopilot(g, t);
     const d = Math.hypot(at(SQ.course).x - SPACE.x, at(SQ.course).y - SPACE.y) / AU;
     g.ui.toast(`Course set for ${BODY[SQ.course].name}, ${d.toFixed(2)} AU out. Engage cruise (RUN) and let go of the stick.`, 'good');
   }));

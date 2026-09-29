@@ -86,6 +86,38 @@ function makeWorld(g: Rng, sys: string, pid: string, name: string): Profile {
   };
 }
 
+// ---------------------------------------------------------------- frontier worlds
+// Every world nobody wrote by hand is still somewhere to land: a few claim camps, prospector
+// outfits instead of families, robots and cyborgs doing the work, wildlife of its own, and
+// nobody's law but the Claim Marshals. Room to found a colony (colony.ts).
+const OUTFITS = ['Claim', 'Drill', 'Dust', 'Ridge', 'Vent', 'Crater', 'Rig', 'Lode'];
+export function frontierWorld(sys: string, pid: string, name: string, terrain: Profile['terrain'], grade?: string, blurb?: string): Profile {
+  const g = rng('frontier:' + sys + ':' + pid);
+  makeFauna(g, `${sys}-${pid}`, terrain);
+  const fams = Array.from({ length: 5 }, () => word(g, 2));
+  const camp = () => g.pick(['Camp', 'Station', 'Dig', 'Claim', 'Outpost', 'Landing']);
+  return {
+    id: pid, name, faction: 'nobody: prospectors and claim-jumpers', frontier: true, grade,
+    blurb: blurb || `${name}: a frontier world. A handful of claim camps, a lot of empty ground, and room for a colony.`,
+    law: 'Claim Marshals', terrain, black: true, fauna: `${sys}-${pid}`,
+    species: [['robot', 0.1], ['cyborg', 0.1], ['belter', 0.08], ['mutant', 0.04]],
+    cities: fams.map((f, i) => ({ name: i === 0 ? `${name} ${camp()}` : `${word(g, 2)} ${camp()}`, tag: g.pick(['a pressure dome and a bar', 'the claim office', 'prefab huts and a drill rig', 'where the ore trucks turn', 'a landing strip and a chapel']), family: f + ' ' + g.pick(OUTFITS), don: `${g.pick(['Old', 'Ma', 'Pa', 'Foreman', 'Boss', 'Doc'])} ${f}`, biome: i === 2 ? 'desert' : undefined })) as Profile['cities'],
+    hamlets: [word(g, 2) + ' Pit', word(g, 2) + ' Well', 'Relay ' + g.int(2, 19), 'Camp ' + word(g, 1)],
+  };
+}
+// Sol's moons and Mercury: frontier, each with its own look
+const SOL_FRONTIER: [string, Profile['terrain'], string, string][] = [
+  ['mercury', 'mars', 'sepia(0.45) saturate(1.35) brightness(1.1) contrast(1.1)', 'Mercury: scorched rock on the day side, frost on the night side, and camps on the line between.'],
+  ['io', 'mars', 'sepia(0.5) hue-rotate(15deg) saturate(1.8) brightness(1.05)', 'Io: sulphur plains, lava lakes and a few mad prospectors.'],
+  ['ganymede', 'ice', 'saturate(0.7) hue-rotate(-12deg) brightness(0.95)', 'Ganymede: the biggest moon, ice and grey rock. The rebels keep a shipyard in orbit.'],
+  ['callisto', 'moon', 'saturate(0.45) brightness(0.82) contrast(1.1)', 'Callisto: dark, cratered and quiet. Too quiet, say the miners.'],
+  ['titan', 'ice', 'sepia(0.7) hue-rotate(-20deg) saturate(1.5) brightness(0.88)', 'Titan: orange haze, methane lakes, and the Choir\'s cathedral in orbit.'],
+];
+for (const [id, terrain, grade, blurb] of SOL_FRONTIER) {
+  const b = SOL.bodies.find((x) => x.id === id);
+  if (b && !SOL.planets[id]) SOL.planets[id] = frontierWorld('sol', id, b.name, terrain, grade, blurb);
+}
+
 // ---------------------------------------------------------------- systems
 const cache = new Map<string, System>();
 export function genSystem(id: string): System {
@@ -111,6 +143,7 @@ export function genSystem(id: string): System {
     };
     bodies.push(b);
     if (inhabited.has(i)) { const w = makeWorld(g, id, pid, name); planets[pid] = w; b.blurb = w.blurb; }
+    else if (!giant) { const w = frontierWorld(id, pid, name, rng('ft:' + id + pid).pick(['ice', 'moon', 'mars', 'jungle'] as const)); planets[pid] = w; b.blurb = w.blurb; }
     if (g.r() < 0.5) { const mid = pid + 'm'; bodies.push({ id: mid, name: name + ' ' + g.pick(['I', 'Minor', 'Prime']), parent: pid, au: g.int(3, 6), days: g.int(5, 30), radius: g.int(90, 150), gs: 25, color: g.pick(PALETTE), blurb: 'A moon. Rock and ice.' }); }
   }
   const sys: System = { id, name: s.name, bodies, planets, belt, ly: s.ly };

@@ -75,6 +75,7 @@ function assay(g: Game, st: Station): void {
     { label: 'Undock', fn: () => {} },
   ]);
 }
+HOOKS.nav.push(() => stationsHere().map((st) => ({ id: st.id, name: st.name, kind: 'station' as const, via: st.parent, r: 0, pos: () => { const p = stationPos(st) || { x: 0, y: 0, vx: 0, vy: 0 }; return { x: p.x, y: p.y, vx: p.vx / 60, vy: p.vy / 60 }; } })));
 HOOKS.use.push((g) => { const st = nearStation(); return st ? { label: st.kind === 'casino' ? 'Dock' : 'Trade', fn: () => dock(g, st) } : null; });
 
 // ---------------------------------------------------------------- the belt

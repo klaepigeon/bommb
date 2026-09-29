@@ -146,7 +146,8 @@
           }
         }
       }
-      // jobs
+      // jobs (a town can come out with no houses at all: a frontier camp of shops and rigs)
+      this.byCity[cd.id] = this.byCity[cd.id] || [];
       const adults = this.byCity[cd.id].filter((p) => p.age >= 18 && p.age < 67);
       rnd.shuffle(adults);
       let ai = 0;

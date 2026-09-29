@@ -80,7 +80,7 @@ GP.tick = function (this: Game, dt: number) {
   const r = baseTick.call(this, dt);
   const on = EARTH.active && !SPACE.active;
   const cv = this.renderer && this.renderer.cv;
-  const want = on ? GRADE : '';
+  const want = on ? GRADE : !SPACE.active && R.planet && R.planet.grade ? R.planet.grade : '';
   if (cv && graded !== want) { cv.style.filter = want; graded = want; }
   const o = ensureOverlay();
   if (o) o.style.display = on ? 'block' : 'none';

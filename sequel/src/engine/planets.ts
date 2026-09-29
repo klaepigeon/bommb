@@ -58,6 +58,8 @@ export interface Profile {
   imperial?: boolean; // Imperial law: the bounty is enforced here
   species?: [string, number][]; // alien species living here, and their share of the population
   fauna?: string; // the ecosystem (see eco.ts)
+  frontier?: boolean; // a frontier world: a few claim camps, nobody's law, room for a colony
+  grade?: string; // a CSS filter over the whole world (Titan's orange haze, Io's sulphur)
 }
 
 export const SOL_PLANETS: Record<PlanetId, Profile> = {

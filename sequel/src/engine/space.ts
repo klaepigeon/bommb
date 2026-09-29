@@ -31,6 +31,7 @@ export const SPACE = {
   active: false,
   x: 0, y: 0, vx: 0, vy: 0, a: 0, shield: 0,
   cruise: false, assist: true, zoom: 1, grace: 0,
+  auto: null as NavTarget | null, autoT: 0, // the autopilot's destination (nav menu or System tab)
   crafts: [] as Craft[], shots: [] as Shot[], sparks: [] as Spark[], nextId: 1, spawnT: 0, fireT: 0, thrustT: 0, hintT: 8,
   boarding: null as Craft | null,
   ticks: 0,
@@ -39,6 +40,9 @@ export const SPACE = {
 
 // what happens when you scan a world you can't land on (aliens.ts adds to this)
 export const SCAN: Record<string, (g: Game) => void> = {};
+// somewhere the autopilot can fly you: a world, a station, a base. pos() is in world units and
+// units per second; r is how far out from the centre to hold (a world's surface, plus a margin)
+export interface NavTarget { id: string; name: string; kind: 'world' | 'body' | 'station' | 'base'; via: BodyId; r: number; pos: () => { x: number; y: number; vx: number; vy: number } }
 // plug-ins for the other space modules (stations, the belt, bounty hunters, the jump drive):
 // update every frame, draw into the view, claim the USE button, catch your shots
 export interface View { g: CanvasRenderingContext2D; sx: (x: number) => number; sy: (y: number) => number; Z: number; W: number; H: number; mark: (x: number, y: number, col: string, label: string) => void }
@@ -54,6 +58,8 @@ export const HOOKS = {
   self: [] as ((g: CanvasRenderingContext2D, x: number, y: number, a: number, k: number) => boolean)[],
   // after you set down anywhere
   landed: [] as ((g: Game, id: PlanetId) => void)[],
+  // more places for the nav menu (stations, bases)
+  nav: [] as (() => NavTarget[])[],
 };
 export const inSpace = () => SPACE.active;
 export const shipBody = (id: BodyId) => body(id);
@@ -133,7 +139,7 @@ export function launch(g: Game): void {
   SPACE.active = true; SQ.mode = 'space';
   saveSequel();
   sfx('boom');
-  g.ui.toast(`In orbit over ${BODY[SQ.planet].name}. Stick flies, attack fires, RUN engages cruise, SNEAK toggles flight assist.`, 'good');
+  g.ui.toast(`In orbit over ${BODY[SQ.planet].name}. Push the stick to fly, let go to stop. A: WHERE TO? (the autopilot flies you there). Attack fires. RUN: cruise.`, 'good');
 }
 export function resumeSpace(g: Game): void {
   const s = SQ.space;
@@ -219,9 +225,35 @@ function update(g: Game, dt: number): void {
     g.ui.toast(SPACE.cruise ? 'Cruise drive engaged. Speed grows with distance from the nearest world.' : !clear ? `Too low over ${BODY[G.near.id].name} for cruise. Climb out of the atmosphere.` : 'Cruise drive off.', SPACE.cruise ? 'good' : '');
     sfx(SPACE.cruise ? 'boom' : 'click');
   }
-  if (inp.pressed('sneak')) { SPACE.assist = !SPACE.assist; g.ui.toast(SPACE.assist ? 'Flight assist on: the ship damps drift and holds against gravity.' : 'Flight assist off: pure Newtonian. Watch the dotted line: that\'s your orbit.'); }
+  if (inp.pressed('sneak')) { SPACE.assist = !SPACE.assist; g.ui.toast(SPACE.assist ? 'Flight assist on: the stick is where you go, letting go stops you, gravity can\'t touch you.' : 'Flight assist off: pure Newtonian. The stick is thrust; watch the dotted line: that\'s your orbit.'); }
   // the stick points the nose; a course steers for you in cruise
   let sx = inp.stick.x, sy = inp.stick.y, mag = Math.hypot(sx, sy);
+  // the autopilot: cruise out to the destination, drop in, and hold station over it.
+  // Touch the stick to take over.
+  const auto = SPACE.auto;
+  let autoVel: { x: number; y: number } | null = null;
+  if (auto && mag > 0.35) { SPACE.auto = null; g.ui.toast('Autopilot off. You have the stick.'); }
+  else if (auto) {
+    const t = auto.pos(), dx = t.x - SPACE.x, dy = t.y - SPACE.y, d = Math.hypot(dx, dy) || 1;
+    const hold = auto.r + (auto.kind === 'station' || auto.kind === 'base' ? 30 : 70);
+    SPACE.autoT -= dt;
+    if (d > hold + 4000 + auto.r * 1.5) {
+      SQ.course = auto.via;
+      if (!SPACE.cruise && G.alt > 15 && SPACE.autoT <= 0) { SPACE.cruise = true; SPACE.grace = 3; }
+    } else {
+      if (SPACE.cruise) { SPACE.cruise = false; SPACE.autoT = 3; }
+      // the hold point: straight out from the target toward where you are
+      const hx = t.x - (dx / d) * hold, hy = t.y - (dy / d) * hold, hd = Math.hypot(hx - SPACE.x, hy - SPACE.y);
+      // no faster than the drive can stop from
+      const brake = Math.max(220, my.thrust * 3) * 0.6, sp = Math.min(900, Math.sqrt(2 * brake * hd), hd * 2.5);
+      autoVel = { x: t.vx + ((hx - SPACE.x) / (hd || 1)) * sp, y: t.vy + ((hy - SPACE.y) / (hd || 1)) * sp };
+      if (hd < 30 && Math.hypot(SPACE.vx - t.vx, SPACE.vy - t.vy) < 40) {
+        SPACE.auto = null; SQ.course = null;
+        g.ui.toast(`Holding over ${auto.name}. ${auto.kind === 'world' ? 'A to land.' : auto.kind === 'station' || auto.kind === 'base' ? 'A to dock.' : 'A to scan.'}`, 'good');
+        sfx('click');
+      }
+    }
+  }
   const course = SQ.course ? body(SQ.course) : null;
   if (course && SPACE.cruise && mag < 0.2) {
     // the flight computer: head for the course, but climb out of any world you're low over
@@ -230,11 +262,22 @@ function update(g: Game, dt: number): void {
     let vx = (course.x - SPACE.x) / d, vy = (course.y - SPACE.y) / d;
     const n = G.near, nd = Math.hypot(SPACE.x - n.x, SPACE.y - n.y) || 1, ox = (SPACE.x - n.x) / nd, oy = (SPACE.y - n.y) / nd;
     if (n.id !== course.id) { const up = Math.max(0, 2.5 - G.alt / n.r) * 1.6; vx += ox * up; vy += oy * up; }
+    // and steer wide of the star: never through the corona
+    const sun = body('sun');
+    if (sun && course.id !== 'sun') {
+      const px = sun.x - SPACE.x, py = sun.y - SPACE.y, along = px * vx + py * vy;
+      if (along > 0 && along < d) {
+        const cx = SPACE.x + vx * along - sun.x, cy = SPACE.y + vy * along - sun.y, miss = Math.hypot(cx, cy) || 1, safe = sun.r * 6;
+        if (miss < safe) { const k = (1 - miss / safe) * 2; vx += (cx / miss) * k; vy += (cy / miss) * k; }
+      }
+    }
     sx = vx; sy = vy; mag = 1;
   }
+  if (autoVel && !SPACE.cruise) { sx = autoVel.x - SPACE.vx; sy = autoVel.y - SPACE.vy; const m = Math.hypot(sx, sy); mag = m > 8 ? 1 : 0; if (!mag) { sx = Math.cos(SPACE.a); sy = Math.sin(SPACE.a); } }
   if (mag > 0.2) {
     const want = Math.atan2(sy, sx), d = angDiff(SPACE.a, want);
-    SPACE.a += clamp(d, -my.turn * dt * (SPACE.cruise ? 0.6 : 1), my.turn * dt * (SPACE.cruise ? 0.6 : 1));
+    const tr = my.turn * dt * (SPACE.cruise ? 0.6 : SPACE.assist ? 2.2 : 1);
+    SPACE.a += clamp(d, -tr, tr);
   }
   if (SPACE.cruise) {
     // cruise: speed proportional to altitude; gravity is left behind in the drive's bubble
@@ -259,20 +302,26 @@ function update(g: Game, dt: number): void {
       g.ui.toast(`Dropped out of cruise over ${BODY[G.near.id].name}.${PLANETS[G.near.id as PlanetId] ? ' Get low and USE to land.' : ''}`, 'good');
       sfx('boom');
     }
+  } else if (SPACE.assist) {
+    // flight assist (the default): arcade flying. The drive cancels gravity outright; the stick
+    // is the direction and speed you want to go, and letting go brakes you to a stop against
+    // whatever world you're near. The autopilot flies the same way.
+    const top = (my.burner ? 1000 : 700) * (0.6 + Math.min(1, my.thrust / 150) * 0.4);
+    const accel = Math.max(220, my.thrust * 3);
+    let tvx: number, tvy: number;
+    if (autoVel) { tvx = autoVel.x; tvy = autoVel.y; }
+    else if (mag > 0.2) { const k = Math.min(1, mag) * top / (mag || 1); tvx = frame.vx / 60 + sx * k; tvy = frame.vy / 60 + sy * k; }
+    else { tvx = frame.vx / 60; tvy = frame.vy / 60; }
+    const dvx = tvx - SPACE.vx, dvy = tvy - SPACE.vy, dm = Math.hypot(dvx, dvy), step = Math.min(dm, accel * dt * (mag > 0.2 || autoVel ? 1 : 1.6));
+    if (dm > 0.001) { SPACE.vx += (dvx / dm) * step; SPACE.vy += (dvy / dm) * step; }
   } else {
-    // Newtonian: thrust plus every body's gravity
+    // Newtonian (SNEAK toggles it): thrust along the nose plus every body's gravity
     if (mag > 0.2) {
       const d = angDiff(SPACE.a, Math.atan2(sy, sx));
       const push = my.thrust * Math.min(1, mag) * (Math.abs(d) < 1.2 ? 1 : 0.3);
       SPACE.vx += Math.cos(SPACE.a) * push * dt; SPACE.vy += Math.sin(SPACE.a) * push * dt;
     }
     SPACE.vx += G.ax * dt; SPACE.vy += G.ay * dt;
-    if (SPACE.assist) {
-      // assist: the engines lean against gravity (as far as they can) and damp drift
-      const ga = Math.hypot(G.ax, G.ay), hold = Math.min(1, (my.thrust * 0.7) / Math.max(1, ga));
-      SPACE.vx -= G.ax * hold * dt; SPACE.vy -= G.ay * hold * dt;
-      if (mag < 0.2) { const k = Math.pow(0.5, dt); SPACE.vx = frame.vx / 60 + rvx * k; SPACE.vy = frame.vy / 60 + rvy * k; }
-    }
     const sp = Math.hypot(rvx, rvy), cap = my.burner ? 1250 : 900;
     if (sp > cap) { SPACE.vx = frame.vx / 60 + (rvx * cap) / sp; SPACE.vy = frame.vy / 60 + (rvy * cap) / sp; }
   }
@@ -284,11 +333,13 @@ function update(g: Game, dt: number): void {
   // hitting a surface: landable worlds let you set down slowly; anything else hurts
   const surf = G.near, dd = dist(SPACE.x, SPACE.y, surf.x, surf.y);
   if (dd < surf.r) {
-    const ang = Math.atan2(SPACE.y - surf.y, SPACE.x - surf.x), sp = Math.hypot(rvx, rvy);
+    // speeds against the world you hit (not whatever pulls hardest out here)
+    const svx = SPACE.vx - surf.vx / 60, svy = SPACE.vy - surf.vy / 60;
+    const ang = Math.atan2(SPACE.y - surf.y, SPACE.x - surf.x), sp = Math.hypot(svx, svy);
     SPACE.x = surf.x + Math.cos(ang) * (surf.r + 2); SPACE.y = surf.y + Math.sin(ang) * (surf.r + 2);
     if (surf.id === 'sun') SQ.hull -= 60 * dt;
     else if (sp > 120) { SQ.hull -= sp * 0.15; burst(SPACE.x, SPACE.y, 14, ['#ffd060', '#8a6a4a']); sfx('crash'); g.ui.toast(`You hit ${BODY[surf.id].name} at ${Math.round(sp)}. Land slower.`, 'bad'); }
-    const nx = Math.cos(ang), ny = Math.sin(ang), vn = rvx * nx + rvy * ny;
+    const nx = Math.cos(ang), ny = Math.sin(ang), vn = svx * nx + svy * ny;
     if (vn < 0) { SPACE.vx -= vn * nx * 1.3; SPACE.vy -= vn * ny * 1.3; }
     SPACE.cruise = false;
   }
@@ -299,11 +350,12 @@ function update(g: Game, dt: number): void {
   if (inp.pressed('use')) {
     for (const h of HOOKS.use) { const u = h(g); if (u) { u.fn(); return; } }
     const w = nearWreck(), p = nearPlanet();
+    if (!w && !p) { openNav(g); return; }
     if (w) { if (!my.tube) g.ui.toast('You need a Boarding Tube module to board.', 'bad'); else { SPACE.active = false; SPACE.boarding = w; enterFreighter(g, w); return; } }
     else if (p) {
       const rel = Math.hypot(SPACE.vx - p.vx / 60, SPACE.vy - p.vy / 60);
       if (!(p.id in PLANETS)) { if (SCAN[p.id]) SCAN[p.id](g); else g.ui.story(BODY[p.id].name, `${BODY[p.id].blurb}\n\nThere's nowhere to set down here yet.`); }
-      else if (rel > 260) g.ui.toast(`Too fast to land (${Math.round(rel)}). Ease off below 260.`, 'bad');
+      else if (rel > 400) g.ui.toast(`Too fast to land (${Math.round(rel)}). Let go of the stick to brake.`, 'bad');
       else { const id = p.id as PlanetId; if (HOOKS.land[id]) HOOKS.land[id](g, () => land(g, id, true)); else land(g, id); return; }
     }
   }
@@ -379,6 +431,30 @@ function update(g: Game, dt: number): void {
   }
   for (const h of HOOKS.update) h(g, dt);
   SQ.space = { x: SPACE.x, y: SPACE.y, a: SPACE.a };
+}
+
+// ---------------------------------------------------------------- the nav menu and autopilot
+export function navTargets(): NavTarget[] {
+  const out: NavTarget[] = [];
+  for (const b of bs()) {
+    if (b.id === 'sun') continue;
+    const id = b.id;
+    out.push({ id, name: BODY[id].name, kind: id in PLANETS ? 'world' : 'body', via: id, r: b.r, pos: () => { const q = body(id); return { x: q.x, y: q.y, vx: q.vx / 60, vy: q.vy / 60 }; } });
+  }
+  for (const h of HOOKS.nav) out.push(...h());
+  return out;
+}
+export function autopilot(g: Game, t: NavTarget): void {
+  SPACE.auto = t; SPACE.autoT = 0; SQ.course = t.via; saveSequel();
+  const p = t.pos(), d = Math.hypot(p.x - SPACE.x, p.y - SPACE.y);
+  g.ui.toast(`Autopilot: ${t.name}, ${d > 30000 ? (d / 60000).toFixed(2) + ' AU' : Math.round(d / 10) + ' km'}. Touch the stick to take over.`, 'good');
+  sfx('boom');
+}
+export function openNav(g: Game): void {
+  const list = navTargets().map((t) => ({ t, d: Math.hypot(t.pos().x - SPACE.x, t.pos().y - SPACE.y) })).sort((a, b) => a.d - b.d);
+  const fmtD = (d: number) => (d > 30000 ? (d / 60000).toFixed(2) + ' AU' : Math.round(d / 10) + ' km');
+  const kind = { world: 'land', body: 'scan', station: 'dock', base: 'your base' };
+  g.ui.choice('Where to?', list.slice(0, 14).map(({ t, d }) => ({ label: `${t.name} · ${fmtD(d)}`, small: `${kind[t.kind]}${t.kind === 'world' && PLANETS[t.id] && PLANETS[t.id].frontier ? ' · frontier' : ''}`, fn: () => autopilot(g, t) })));
 }
 
 // ---------------------------------------------------------------- drawing
@@ -502,7 +578,11 @@ function draw(g: CanvasRenderingContext2D, BW: number, BH: number): void {
   view.mark = mark;
   for (const h of HOOKS.draw) h(view);
   const fmt = (d: number) => (d > 30000 ? (d / 60000).toFixed(2) + ' AU' : Math.round(d / 10) + ' KM');
-  for (const b of SPACE.B) if (b.id in PLANETS || SQ.course === b.id) mark(b.x, b.y, SQ.course === b.id ? '#ff9a3a' : '#ffe070', BODY[b.id].name.toUpperCase() + ' ' + fmt(dist(SPACE.x, SPACE.y, b.x, b.y) - b.r));
+  // world markers: where you're headed, plus the three nearest places to land (not the lot:
+  // a screen full of arrows is no help to anyone)
+  const nearest = SPACE.B.filter((b) => b.id in PLANETS && b.id !== SQ.course).sort((a, b) => dist(SPACE.x, SPACE.y, a.x, a.y) - dist(SPACE.x, SPACE.y, b.x, b.y)).slice(0, 3);
+  const crs = SQ.course ? SPACE.B.find((b) => b.id === SQ.course) : null;
+  for (const b of crs ? [crs, ...nearest] : nearest) mark(b.x, b.y, b === crs ? '#ff9a3a' : '#ffe070', (b === crs ? '> ' : '') + BODY[b.id].name.toUpperCase() + ' ' + fmt(dist(SPACE.x, SPACE.y, b.x, b.y) - b.r));
   for (const c of SPACE.crafts) if (!c.dead && (c.kind !== 'freighter' || (c.disabled && !c.looted) || dist(c.x, c.y, SPACE.x, SPACE.y) < 1400)) mark(c.x, c.y, c.kind === 'rebel' ? '#ff9a3a' : c.kind !== 'freighter' ? '#ff5a5a' : c.disabled ? '#68f0a0' : '#e8e0c8', c.kind === 'patrol' ? 'PATROL' : c.kind === 'hunter' ? 'HUNTER' : c.kind === 'capital' ? c.name.toUpperCase() : c.kind === 'rebel' ? 'REBEL' : c.disabled ? 'BOARD' : 'FREIGHT');
   // the flight readout, top centre: where you are, how high, how fast, and the orbit you'd need
   const G = SPACE.g;
@@ -517,6 +597,7 @@ function draw(g: CanvasRenderingContext2D, BW: number, BH: number): void {
   bar(H - 22, SQ.hull / my.hull, '#ff5a8a', 'HULL');
   bar(H - 13, my.shield ? SPACE.shield / my.shield : 0, '#5ad0ff', 'SHIELD');
   const p = nearPlanet(), w = nearWreck();
+  if (!w && !p) A.ptext(g, SPACE.auto ? `AUTOPILOT: ${SPACE.auto.name.toUpperCase()} · STICK TAKES OVER` : 'USE: WHERE TO?', W / 2, H - 34, { align: 'center', scale: 1, color: SPACE.auto ? '#ff9a3a' : '#68f0a0', shadow: '#07051a' });
   if (w || p) A.ptext(g, w ? 'USE: BOARD ' + w.name.toUpperCase() : (p!.id in PLANETS ? 'USE: LAND ON ' : 'USE: SCAN ') + BODY[p!.id].name.toUpperCase(), W / 2, H - 34, { align: 'center', scale: 1, color: '#68f0a0', shadow: '#07051a' });
   g.setTransform(1, 0, 0, 1, 0, 0);
 }

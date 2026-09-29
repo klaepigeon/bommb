@@ -5,7 +5,7 @@
 import { SQ, resetSequel, saveSequel } from './state';
 import { enterSystem } from './galaxy';
 import { current, nearShip, SHIP_MENU, shipHere, travelTo } from './travel';
-import { launch, resumeSpace, SPACE, nearPlanet, spawnCraft, HOOKS } from './space';
+import { launch, resumeSpace, SPACE, nearPlanet, spawnCraft, HOOKS, navTargets, autopilot } from './space';
 import { openWatch, installWatch } from './watch';
 import { shipSprites, npcShip, stats } from '../ship/ship';
 import './board';
@@ -24,6 +24,7 @@ import { waypointToShip } from './shipmark';
 import { markFearMan } from './fearboss';
 import { takeOff } from './ringfly';
 import './debug';
+import './colony';
 
 const GP = R.Game.prototype;
 
@@ -126,4 +127,4 @@ RP.renderTitle = function (this: { g: CanvasRenderingContext2D; cv: HTMLCanvasEl
 
 // for tests and debugging
 const w = window as unknown as { BS2: Record<string, unknown> };
-w.BS2 = Object.assign(w.BS2 || {}, { SQ, SPACE, launch, shipSprites, nearPlanetId: () => nearPlanet()?.id, spawnCraft, npcShip, stats, WEAPONS, takeOff, HOOKS, shipHere, travelTo });
+w.BS2 = Object.assign(w.BS2 || {}, { navTargets, autopilot, SQ, SPACE, launch, shipSprites, nearPlanetId: () => nearPlanet()?.id, spawnCraft, npcShip, stats, WEAPONS, takeOff, HOOKS, shipHere, travelTo });
