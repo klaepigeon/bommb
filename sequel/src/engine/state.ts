@@ -5,7 +5,7 @@
 import type { PlanetId, BodyId } from './planets';
 import { starterShip, type Ship } from '../ship/ship';
 
-export type Good = 'rum' | 'tea' | 'ore' | 'meds' | 'vinyl' | 'blasters';
+export type Good = 'rum' | 'tea' | 'ore' | 'meds' | 'vinyl' | 'blasters' | 'ice' | 'plat' | 'pearls' | 'xeno';
 export interface CargoLot { good: Good; n: number; stolen: boolean; hidden: boolean }
 
 export interface Sequel {
@@ -23,6 +23,13 @@ export interface Sequel {
   portable: Record<string, unknown> | null; // the player, carried between planets
   minutes: number; // system clock for orbits when no planet is loaded
   course: BodyId | null; // where the flight computer is steering in cruise
+  system: string; // 'sol' or a generated star system's id (where your ship is)
+  home: string; // the system of the world that's loaded (where your feet last touched ground)
+  fuel: number; // jump fuel on board (refills when you land)
+  bounty: number; // the Imperial bounty on your head, system-wide
+  flags: Record<string, number>; // story beats: first contact, the Choir, court dates
+  eco: Record<string, Record<string, number>>; // wildlife populations per world (eco.ts)
+  known: string[]; // star systems the jump drive has charts for
 }
 
 const KEY = 'bs.sequel';
@@ -31,6 +38,7 @@ export function fresh(): Sequel {
   return {
     v: 2, seed: (Math.random() * 1e9) | 0, planet: 'mars', mode: 'planet', arriving: true,
     ship: starterShip('Brass Buzzard'), hull: -1, cargo: [], heat: { empire: 0, families: 0 }, space: null, visited: ['mars'], portable: null, minutes: 0, course: null,
+    system: 'sol', home: 'sol', fuel: 0, bounty: 0, flags: {}, eco: {}, known: ['sol'],
   };
 }
 
@@ -52,9 +60,12 @@ export function resetSequel(): void {
   saveSequel();
 }
 
-export const planetKey = (p: PlanetId) => 'bs.planet.' + p;
+// a world's save and seed are per system (Sol's keys keep their original names)
+const worldId = (p: PlanetId) => (SQ.home === 'sol' ? p : SQ.home + '.' + p);
+export const planetKey = (p: PlanetId) => 'bs.planet.' + worldId(p);
 export function planetSeed(p: PlanetId): number {
   let h = SQ.seed >>> 0;
-  for (let i = 0; i < p.length; i++) h = Math.imul(h ^ p.charCodeAt(i), 16777619) >>> 0;
+  const id = worldId(p);
+  for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619) >>> 0;
   return h % 1000000000;
 }

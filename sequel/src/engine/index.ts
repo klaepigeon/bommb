@@ -3,12 +3,17 @@
 // planets, travel, space, ships, piracy, the Ship Watch and the Gen 4 look.
 
 import { SQ, resetSequel, saveSequel } from './state';
-import { current, nearShip } from './travel';
+import { enterSystem } from './galaxy';
+import { current, nearShip, SHIP_MENU } from './travel';
 import { launch, resumeSpace, SPACE, nearPlanet } from './space';
 import { openWatch, installWatch } from './watch';
 import './board';
 import './gen4';
 import './older';
+import './aliens';
+import './eco';
+import './stations';
+import './bounty';
 
 const GP = R.Game.prototype;
 
@@ -16,6 +21,7 @@ const GP = R.Game.prototype;
 const baseNew = GP.newGame;
 GP.newGame = function (this: Game) {
   resetSequel();
+  enterSystem('sol');
   return baseNew.call(this);
 };
 GP.intro = function (this: Game) {
@@ -51,6 +57,7 @@ function shipMenu(g: Game): void {
     { label: 'Launch', small: 'Into orbit. The planet waits for you.', fn: () => launch(g) },
     { label: 'Refit the ship', small: 'Modules, hulls and paint', fn: () => openWatch(g, 'ship') },
     { label: 'Cargo and trade', small: `Prices on ${current().name}`, fn: () => openWatch(g, 'cargo') },
+    ...SHIP_MENU.map((f) => f(g)).filter((o): o is NonNullable<typeof o> => !!o),
     { label: 'Save', fn: () => { g.save(); saveSequel(); g.ui.toast('Saved.', 'good'); } },
     { label: 'Not now', fn: () => {} },
   ]);
@@ -82,4 +89,5 @@ RP.renderTitle = function (this: { g: CanvasRenderingContext2D; cv: HTMLCanvasEl
 };
 
 // for tests and debugging
-(window as unknown as { BS2: unknown }).BS2 = { SQ, SPACE, launch, nearPlanetId: () => nearPlanet()?.id };
+const w = window as unknown as { BS2: Record<string, unknown> };
+w.BS2 = Object.assign(w.BS2 || {}, { SQ, SPACE, launch, nearPlanetId: () => nearPlanet()?.id });

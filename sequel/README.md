@@ -1,43 +1,56 @@
-# Rhapsody II: Brass Stars (prototype v0.1)
+# RHAPSODY XX8X
 
-The sequel to *Rhapsody: The Brass Coast*: a seventies space opera across a solar system,
-drawn in the Gen 4 DS style (HeartGold/SoulSilver/Platinum) and played like a DS on a phone.
-The world is on the top screen and the Ship Watch on the bottom touch screen.
+The sequel to *Rhapsody: The Brass Coast*, ten years on: a crime sim and space sim across our
+real solar system, and now the stars next door. It runs on game 1's engine (every system:
+crowds, traffic, combat, law, families, jobs, heists, relationships, the lantern rings) with the
+sequel layered on top. Mobile first.
 
-See [DESIGN.md](DESIGN.md) for the full plan, including carrying game 1's systems over.
+See [DESIGN.md](DESIGN.md) for the full plan.
 
-## What's in v0.1
+## What's in it
 
-- **Two planets on foot:** Veridia (green casino trade world) and Hollow Moon (dusty mining
-  moon). Each has a generated spaceport district with Gen 4 buildings and props, wandering
-  NPCs who talk, and day/night with lamp glow and lit windows.
-- **Buildings you can use:** Pad Control (save), the markets (Veridia's legit exchange,
-  Hollow Moon's black market), shipyards, cantinas (a drink and a rumour), the outfitter,
-  the Choir Dome.
-- **Space:** fly between orbiting planets past the sun and an asteroid belt; jump by
-  hyperlane from the Map app; land at Veridia and Hollow Moon. Castra Prime denies clearance
-  for now.
-- **Piracy:** freighters run the lanes. Shoot out their engines, board them through your
-  tube, fight the crew room to room, loot the crates. Imperial patrols come for you once your
-  heat is up.
-- **Ship building:** the Ship app is a module grid (engines, reactors, cargo, smuggler's
-  hold, guns, deflectors, quarters, med bay, boarding tube, shag lounge, lantern battery,
-  armour). The layout drives thrust, power, cargo, guns, shields and hull, plus the sprite
-  you fly and the interior boarders walk. You can also buy bigger hulls.
-- **Trade and smuggling:** six goods with different prices per planet. Stolen cargo only
-  sells on the black market, and Veridia's customs take it from your open bay if you land hot.
+- **Worlds you can land on:** Earth (the Brass Coast itself, ten years older), Mars (the Solari
+  families; you start here), Venus (the Imperial capital and its court), Luna (black market,
+  the Choir) and Ceres (ice mines, nobody's law). Each is a full game 1 world with its own
+  save, names, families, police, terrain, peoples and wildlife.
+- **Real flight:** the real solar system at true distances and periods. Newtonian flight in
+  every body's gravity (flight assist on or off), a cruise drive that scales with altitude,
+  a flight computer for courses, a trajectory line and a camera that zooms out to the orbits.
+- **Piracy:** disable freighters and board them as game 1 interiors; fight the crew, take the
+  crates, sell them on a black market. Imperial patrols come when your heat is up.
+- **Ship building:** a module grid (engines, reactors, cargo, smuggler's hold, guns,
+  deflectors, boarding tube, tractor beam, jump drive and more) that sets how the ship flies.
+- **Aliens:** Greys, the Choir, Martians, Saurians and Belters live in the worlds' populations.
+  Make first contact with the Europans under Europa's ice.
+- **Ecosystems:** every world has its own wildlife and a living food chain.
+- **Stations and mining:** a casino in orbit over Mars, an assay station at Ceres, and an
+  asteroid belt to mine.
+- **The Imperial bounty:** hunters on the ground and in space (they board you), and the court
+  on Venus.
+- **The jump drive:** the six nearest real stars, each with generated worlds, peoples and
+  wildlife.
+- **Game 1 changes that also land here:** Mastermind-style PIN safes, finishable knock-over
+  jobs, and the protagonist ten years older.
 
 ## Controls
 
-Stick or WASD/arrows to move. **A** (J/Z/Space) talks, uses, launches, lands, boards and
-takes. **B** (K/X) runs on foot and fires in space and aboard ships. Tap the apps on the
-bottom screen.
+Game 1's controls. On foot: stick to move, **A** for the context action, **B** to attack,
+RUN, SNEAK. In space: the stick points and thrusts, attack fires, **RUN** toggles cruise,
+**SNEAK** toggles flight assist, **A** lands, docks, boards or scans. The Ship, Cargo and
+System tabs are in the menu.
 
 ## Build and test
 
 ```
 npm install
-npm run check      # typecheck + build + smoke (plays the whole v0.1 loop headless)
+npm run check      # typecheck + build + smoke + frontier
 ```
 
-`dist/index.html` is a single self-contained file.
+- `tools/smoke.mjs` plays the core loop: Mars, orbit, piracy, cruise to Luna, black market,
+  Earth, and back to Mars.
+- `tools/frontier.mjs` plays the newer systems: aliens, first contact, the orbital casino,
+  mining the belt, Ceres wildlife and the food chain, bounty hunters (on the ground and
+  boarding you), the court, and a jump to Alpha Centauri and back.
+
+`dist/index.html` is one self-contained file; `dist/rhapsody-xx8x.html` is the body-only
+variant used for the artifact.

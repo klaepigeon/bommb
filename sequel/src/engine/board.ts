@@ -22,9 +22,38 @@ I.build = function (this: unknown, b: Building, slot: number) {
   b.type = 'warehouse';
   try { return baseBuild.call(this, b, slot); } finally { b.type = 'freighter'; }
 };
+// any other room reached from space (a station, your own ship when boarders come): its exit
+// takes you back to space and runs its own ending
+let docked: { b: Building; done: (g: Game) => void } | null = null;
+export function enterDock(g: Game, type: string, name: string, mode: string, done: (g: Game) => void): void {
+  const w = g.world, pad = w.pad;
+  const b = {
+    id: w.buildings.length, type, name, x: pad.x, y: pad.y, w: 1, h: 1, out: { x: Math.floor(pad.sx / TS) - 2, y: Math.floor(pad.sy / TS) + 3 }, door: { x: 0, y: 0 },
+    face: 'S', city: w.cities[0], cityId: w.cities[0].id, destroyed: false, seedArt: (Math.random() * 1e6) | 0, jobs: {}, fake: true,
+  } as unknown as Building;
+  w.buildings.push(b);
+  docked = { b, done };
+  SPACE.active = false;
+  g.interiors.enter(b, mode);
+  // interior rooms reuse a few slots of the world; nothing should still be burning from last time
+  const room = g.player.room, fires = g.env && g.env.fires;
+  if (room && fires) for (const i of [...fires.keys()]) { const x = i % w.W, y = (i / w.W) | 0; if (x >= room.x0 - 1 && x <= room.x0 + room.w && y >= room.y0 - 1 && y <= room.y0 + room.h) fires.delete(i); }
+}
+export const dockedRoom = () => docked;
+
 // the airlock takes you back to your ship, not out onto a street
 I.exit = function (this: { game: Game }) {
   const g = this.game, room = g.player.room;
+  if (room && docked && room.b === docked.b) {
+    const d = docked;
+    baseExit.call(this);
+    g.world.buildings[room.b.id] = null;
+    g.interiors.clearRoom(room);
+    docked = null;
+    SPACE.active = true; SQ.mode = 'space'; saveSequel();
+    d.done(g);
+    return;
+  }
   if (!room || room.b.type !== 'freighter') return baseExit.call(this);
   baseExit.call(this);
   const h = hold;

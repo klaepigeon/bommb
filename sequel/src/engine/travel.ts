@@ -2,14 +2,14 @@
 // the spaceport pad with your ship, carrying the player between planets, and the text layer
 // that renames game 1's places and people on screen.
 
-import { PLANETS, renames, type PlanetId, type Profile } from './planets';
+import { renames, worldProfile, type PlanetId, type Profile } from './planets';
 import { SQ, saveSequel, planetKey, planetSeed } from './state';
 import { shipSprites } from '../ship/ship';
 
 const GAME1_SAVE = 'rhapsody.save.v2';
 const D = R.data, T = D.T, O = D.O, TS = R.TILE;
 
-export const current = (): Profile => PLANETS[SQ.planet];
+export const current = (): Profile => worldProfile();
 
 // ---------------------------------------------------------------- saves: one per planet
 const store = R.store;
@@ -23,8 +23,8 @@ store.del = (k: string) => baseDel(mapKey(k));
 const GAME1_CITIES = D.cities.map((c: Record<string, unknown>) => ({ ...c }));
 const GAME1_HAMLETS = D.hamlets.map((h: Record<string, unknown>) => ({ ...h }));
 
-export function applyProfile(id: PlanetId): void {
-  const p = PLANETS[id];
+export function applyProfile(): void {
+  const p = worldProfile();
   D.cities.forEach((c: Record<string, unknown>, i: number) => {
     const base = GAME1_CITIES[i], cp = p.cities && p.cities[i];
     // names are display only; family keys stay game 1's (the systems key on them)
@@ -59,6 +59,16 @@ function reshape(w: World, p: Profile): void {
       if (o === O.CACTUS) w.obj[i] = O.BUSH;
       else if (o === O.DEADTREE) w.obj[i] = O.TREE;
       else if (!o && w.tile[i] === T.GRASS && h > 0.975) w.obj[i] = O.FLOWERS;
+    } else if (p.terrain === 'ice') {
+      // a frozen rock: snowfields, bare stone, frost where the grass was
+      w.tile[i] = T.SNOW;
+      if (o === O.TREE || o === O.PALM || o === O.FLOWERS || o === O.REED || o === O.BUSH || o === O.CACTUS || o === O.DEADTREE) w.obj[i] = h < 0.25 ? O.BOULDER : 0;
+    } else if (p.terrain === 'jungle') {
+      // hothouse: everything that can grow, does
+      if (t === T.DESERT || t === T.SAND || t === T.DIRT || t === T.SNOW) w.tile[i] = h < 0.6 ? T.GRASS : T.FOREST;
+      else if (t === T.FIELD) w.tile[i] = h < 0.5 ? T.FOREST : T.GRASS;
+      if (o === O.CACTUS || o === O.DEADTREE || o === O.PINE) w.obj[i] = O.PALM;
+      else if (!o && (w.tile[i] === T.GRASS || w.tile[i] === T.FOREST) && h > 0.93) w.obj[i] = h > 0.97 ? O.TREE : O.BUSH;
     } else if (p.terrain === 'capital') {
       if (t === T.DIRT) w.tile[i] = T.GRASS;
       if (!o && t === T.GRASS && h > 0.985) w.obj[i] = O.FLOWERS;
@@ -120,7 +130,7 @@ for (const [k, v] of R.bus.map) bootListeners.set(k, v.slice());
 // ---------------------------------------------------------------- setup: every planet boots through here
 const GP = R.Game.prototype, baseSetup = GP.setup;
 GP.setup = function (this: Game, _seed: number, _save: unknown) {
-  applyProfile(SQ.planet);
+  applyProfile();
   const seed = planetSeed(SQ.planet);
   const save = R.store.get(GAME1_SAVE);
   baseSetup.call(this, seed, save && save.seed === seed ? save : null);
@@ -134,10 +144,10 @@ GP.setup = function (this: Game, _seed: number, _save: unknown) {
 
 // land on another planet: save this one, carry the player over, rebuild the world in place
 export function travelTo(g: Game, to: PlanetId): void {
-  if (to === SQ.planet) return;
+  if (to === SQ.planet && SQ.home === SQ.system) return;
   g.save();
   SQ.portable = capture(g.player);
-  SQ.planet = to; SQ.arriving = true;
+  SQ.planet = to; SQ.home = SQ.system; SQ.arriving = true;
   saveSequel();
   g.worldLog.length = 0;
   R.art.chunkCache.clear();
@@ -150,9 +160,12 @@ export function travelTo(g: Game, to: PlanetId): void {
 }
 
 // ---------------------------------------------------------------- the ship on its pad
+// extra lines on the ship's menu (the court, the jump drive...), added by other modules
+export interface MenuOpt { label: string; small?: string; fn: () => void }
+export const SHIP_MENU: ((g: Game) => MenuOpt | null)[] = [];
 export function nearShip(pl: Player): boolean {
   const w = R.game.world;
-  return !!w.pad && !pl.room && !pl.inCar && Math.abs(pl.x - w.pad.sx) < 70 && Math.abs(pl.y - w.pad.sy) < 42;
+  return !!w.pad && !pl.room && !pl.inCar && SQ.mode !== 'space' && Math.abs(pl.x - w.pad.sx) < 70 && Math.abs(pl.y - w.pad.sy) < 42;
 }
 const props = R.props, baseGround = props.drawGround;
 props.drawGround = function (g: CanvasRenderingContext2D, inView: (x: number, y: number) => boolean) {

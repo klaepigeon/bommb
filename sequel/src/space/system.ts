@@ -6,12 +6,14 @@ import { BODIES, BODY, AU, type BodyId } from '../engine/planets';
 import { Px } from '../gfx/px';
 import { rampOf, mix } from '../gfx/pal';
 import { hash2 } from '../core/math';
+import { SQ } from '../engine/state';
 
 export interface Body { id: BodyId; x: number; y: number; r: number; vx: number; vy: number }
 
-// a fixed starting phase per body, so the planets aren't lined up at day 0
-const PHASE: Record<string, number> = {};
-BODIES.forEach((b, i) => (PHASE[b.id] = hash2(i, 7, 3) * Math.PI * 2));
+// a fixed starting phase per body, so the planets aren't lined up at day 0 (Sol keeps the
+// phases it always had; other systems hash theirs from the system and body names)
+const strHash = (s: string) => { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return (h >>> 0) / 4294967296; };
+const phase = (id: BodyId) => (SQ.system === 'sol' ? hash2(BODIES.findIndex((b) => b.id === id), 7, 3) : strHash(SQ.system + ':' + id)) * Math.PI * 2;
 
 const orbitR = (id: BodyId) => { const b = BODY[id]; return b.parent === 'sun' ? b.au * AU : b.parent ? b.au * BODY[b.parent].radius : 0; };
 
@@ -21,7 +23,7 @@ export function bodies(minutes: number): Body[] {
   for (const b of BODIES) {
     if (!b.parent) { const s = { id: b.id, x: 0, y: 0, r: b.radius, vx: 0, vy: 0 }; out.push(s); at[b.id] = s; continue; }
     const p = at[b.parent], R = orbitR(b.id), w = (Math.PI * 2) / (b.days * 1440);
-    const a = PHASE[b.id] + days * ((Math.PI * 2) / b.days);
+    const a = phase(b.id) + days * ((Math.PI * 2) / b.days);
     const o = { id: b.id, x: p.x + Math.cos(a) * R, y: p.y + Math.sin(a) * R, r: b.radius, vx: p.vx - Math.sin(a) * R * w, vy: p.vy + Math.cos(a) * R * w };
     out.push(o); at[b.id] = o;
   }
@@ -56,11 +58,12 @@ function vnoise(x: number, y: number, s: number): number {
 export const ART_R = 96; // painted radius of every body's art
 const art = new Map<string, HTMLCanvasElement>();
 export function planetArt(id: BodyId): HTMLCanvasElement {
-  let c = art.get(id);
+  const key = SQ.system + ':' + id;
+  let c = art.get(key);
   if (c) return c;
   const d = BODY[id], R = ART_R, pad = d.rings ? R : 4, p = new Px(R * 2 + pad * 2, R * 2 + pad * 2), C = R + pad;
   const base = rampOf(d.color), sea = d.sea ? rampOf(d.sea) : null;
-  const seed = BODIES.findIndex((b) => b.id === id) * 13 + 1;
+  const seed = SQ.system === 'sol' ? BODIES.findIndex((b) => b.id === id) * 13 + 1 : Math.floor(strHash(key) * 9999);
   const ring = (front: boolean) => p.oval(C, C, R * 1.95, R * 0.55, (nx, ny, x, y) => {
     const k = Math.hypot(nx, ny);
     if (k < 0.62 || k > 0.98 || Math.floor(k * 30) % 5 === 0) return null;
@@ -69,7 +72,9 @@ export function planetArt(id: BodyId): HTMLCanvasElement {
   });
   if (d.rings) ring(false);
   if (id === 'sun') {
-    p.oval(C, C, R, R, (nx, ny, x, y) => { const k = Math.hypot(nx, ny), f = hash2(Math.floor(x / 4), Math.floor(y / 4), 5); return k > 0.94 ? '#f8a030' : k > 0.8 ? (f > 0.5 ? '#ffc848' : '#f8b038') : f > 0.8 ? '#fff4c0' : k < 0.5 ? '#fffbe8' : '#ffe890'; });
+    // the star: its own colour, white-hot at the core, granulated, a darker limb
+    const c0 = d.color;
+    p.oval(C, C, R, R, (nx, ny, x, y) => { const k = Math.hypot(nx, ny), f = hash2(Math.floor(x / 4), Math.floor(y / 4), 5); return k > 0.94 ? mix(c0, '#a03010', 0.35) : k > 0.8 ? (f > 0.5 ? mix(c0, '#ffffff', 0.15) : mix(c0, '#e08020', 0.15)) : f > 0.8 ? mix(c0, '#ffffff', 0.7) : k < 0.5 ? mix(c0, '#ffffff', 0.85) : mix(c0, '#ffffff', 0.4); });
   } else p.oval(C, C, R, R, (nx, ny, x, y) => {
     const n = vnoise(x / 11, y / 11, seed) * 0.6 + vnoise(x / 27, y / 27, seed + 1) * 0.4;
     const l = -nx * 0.55 - ny * 0.55 + (1 - Math.hypot(nx, ny)) * 0.4;
@@ -89,12 +94,12 @@ export function planetArt(id: BodyId): HTMLCanvasElement {
   });
   if (d.rings) ring(true);
   // atmosphere rim on the worlds that have air
-  if (['earth', 'venus', 'mars', 'titan', 'jupiter', 'saturn', 'uranus', 'neptune'].includes(id))
+  if (d.air ?? ['earth', 'venus', 'mars', 'titan', 'jupiter', 'saturn', 'uranus', 'neptune'].includes(id))
     for (let a = 0; a < 360; a += 0.5) {
       const t = (a * Math.PI) / 180, x = Math.round(C + Math.cos(t) * (R + 1)), y = Math.round(C + Math.sin(t) * (R + 1));
       if (!p.has(x, y)) p.set(x, y, Math.cos(t) + Math.sin(t) < 0 ? mix(d.color, '#e0f4ff', 0.6) : mix(d.color, '#1a2a5a', 0.6));
     }
   c = p.canvas();
-  art.set(id, c);
+  art.set(key, c);
   return c;
 }

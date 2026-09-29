@@ -4,7 +4,7 @@
 import { Px } from '../gfx/px';
 import { ink, rampOf } from '../gfx/pal';
 
-export type Mod = 'cockpit' | 'engine' | 'reactor' | 'fuel' | 'cargo' | 'hold' | 'gun' | 'shield' | 'quarters' | 'med' | 'tube' | 'lounge' | 'battery' | 'armor';
+export type Mod = 'cockpit' | 'engine' | 'reactor' | 'fuel' | 'cargo' | 'hold' | 'gun' | 'shield' | 'quarters' | 'med' | 'tube' | 'lounge' | 'battery' | 'armor' | 'tractor' | 'jump';
 
 export interface ModDef { name: string; price: number; mass: number; power: number; col: string; blurb: string }
 export const MODS: Record<Mod, ModDef> = {
@@ -22,6 +22,8 @@ export const MODS: Record<Mod, ModDef> = {
   lounge: { name: 'Shag Lounge', price: 350, mass: 2, power: -1, col: '#e878a8', blurb: 'Orange carpet, a bar, a hi-fi. Crew morale.' },
   battery: { name: 'Lantern Battery', price: 1200, mass: 3, power: 0, col: '#58e058', blurb: 'Recharges your ring in flight.' },
   armor: { name: 'Armour Plate', price: 180, mass: 3, power: 0, col: '#8a92a2', blurb: 'Dead weight that keeps you alive.' },
+  tractor: { name: 'Tractor Beam', price: 600, mass: 2, power: -1, col: '#a8f0ff', blurb: 'Pulls in ore, ice and loose cargo from a distance.' },
+  jump: { name: 'Jump Drive', price: 5000, mass: 4, power: -3, col: '#ff5ad0', blurb: 'Folds space to the nearby stars. Needs clear space and jump fuel.' },
 };
 
 export type HullId = 'skiff' | 'cutter' | 'freighter' | 'corvette';
@@ -50,7 +52,7 @@ export function starterShip(name: string): Ship {
 
 export interface Stats {
   mass: number; power: number; thrust: number; turn: number; cargo: number; hidden: number;
-  guns: number; shield: number; hull: number; crew: number; fuel: number; tube: boolean; battery: boolean; med: boolean;
+  guns: number; shield: number; hull: number; crew: number; fuel: number; tube: boolean; battery: boolean; med: boolean; tractor: boolean; jump: boolean;
   problems: string[];
 }
 
@@ -77,7 +79,7 @@ export function stats(s: Ship): Stats {
     turn: 3.2 / Math.sqrt(mass / 10),
     cargo: count('cargo') * 10, hidden: count('hold') * 6,
     guns: count('gun'), shield: count('shield') * 40, hull: 40 + s.grid.filter(Boolean).length * 8 + count('armor') * 30,
-    crew: count('quarters') * 2, fuel: 2 + count('fuel') * 2, tube: count('tube') > 0, battery: count('battery') > 0, med: count('med') > 0,
+    crew: count('quarters') * 2, fuel: 2 + count('fuel') * 2, tube: count('tube') > 0, battery: count('battery') > 0, med: count('med') > 0, tractor: count('tractor') > 0, jump: count('jump') > 0,
     problems: risky ? [...problems, 'Warning: a reactor sits next to cargo.'] : problems,
   };
 }
@@ -175,6 +177,8 @@ export function modIcon(m: Mod): HTMLCanvasElement {
     case 'lounge': p.rect(3, 8, 10, 4, '#e8742a'); p.rect(3, 6, 2, 6, '#e8742a'); p.rect(11, 6, 2, 6, '#e8742a'); break;
     case 'battery': p.rect(5, 3, 6, 10, g); p.rect(6, 5, 4, 6, '#58e058'); p.hline(6, 9, 3, '#58e058'); break;
     case 'armor': for (let y = 3; y < 14; y += 3) p.hline(3, 12, y, r[0]); break;
+    case 'tractor': p.oval(8, 8, 5, 5, (nx, ny) => (nx * nx + ny * ny > 0.55 ? '#a8f0ff' : null)); p.oval(8, 8, 2, 2, () => '#ffffff'); break;
+    case 'jump': p.oval(8, 8, 5, 5, (nx, ny) => (nx * nx + ny * ny > 0.4 ? '#ff5ad0' : '#2a0a3a')); p.set(8, 8, '#ffffff'); break;
   }
   c = p.canvas();
   iconCache.set(m, c);

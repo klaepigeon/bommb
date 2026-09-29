@@ -4,7 +4,11 @@
 // set a course for the flight computer.
 
 import { SQ, saveSequel, type Good } from './state';
-import { PLANETS, BODY, BODIES, AU, type PlanetId, type BodyId } from './planets';
+import { PLANETS, BODY, BODIES, AU, systemData, worldProfile, type PlanetId, type BodyId } from './planets';
+import { STARS, jump, jumpCost, clearSpace } from './galaxy';
+import { speciesOn } from './aliens';
+import { describe, faunaHere } from './eco';
+import { fmt } from './bounty';
 import { HULLS, MODS, modIcon, stats, type HullId, type Mod } from '../ship/ship';
 import { GOODS, price, blackMarket, used, addCargo } from './cargo';
 import { bodies, planetArt } from '../space/system';
@@ -156,15 +160,24 @@ function cargoTab(g: Game, body: HTMLElement): void {
 function systemTab(g: Game, body: HTMLElement): void {
   const B = bodies(g.clock.t), at = (id: BodyId) => B.find((b) => b.id === id)!;
   const inSpace = SPACE.active;
-  body.innerHTML = `<canvas class="sw-map" width="300" height="300" aria-label="Map of the solar system"></canvas>
-    <p class="sw-info">${inSpace ? 'Set a course, then engage cruise (RUN) and let go of the stick: the flight computer steers and drops you out on arrival.' : `You're on ${PLANETS[SQ.planet].name}. Launch from your ship to fly.`}${SQ.course ? ` Course: <b>${BODY[SQ.course].name}</b>.` : ''}</p>
+  const sys = systemData(SQ.system), my = stats(SQ.ship), cs = clearSpace();
+  const peoples = (id: string) => { const sp = speciesOn(id); return sp.length ? ` Peoples: ${sp.map((x) => esc(x.plural)).join(', ')}.` : ''; };
+  const onGround = !inSpace && SQ.home === SQ.system;
+  const wild = faunaHere().filter((b: { bird?: number; name: string; biome: string[] }) => !b.biome.includes('city') || b.bird).map((b: { name: string }) => b.name);
+  body.innerHTML = `<div class="sect">${esc(sys.name)}${SQ.system !== 'sol' ? ` · ${sys.ly} light years from Sol` : ''}</div>
+    <canvas class="sw-map" width="300" height="300" aria-label="Map of the ${esc(sys.name)} system"></canvas>
+    <p class="sw-info">${inSpace ? 'Set a course, then engage cruise (RUN) and let go of the stick: the flight computer steers and drops you out on arrival.' : `You're on ${esc(worldProfile().name)}. Launch from your ship to fly.`}${SQ.course && BODY[SQ.course] ? ` Course: <b>${BODY[SQ.course].name}</b>.` : ''}</p>
+    ${SQ.bounty > 0 ? `<p class="sw-warn">Imperial bounty: <b>${fmt(SQ.bounty)}</b>. Hunters are looking. Answer it at the court on Venus.</p>` : ''}
     <div class="sect">Inhabited worlds</div><div class="sw-row" id="swland">${(Object.keys(PLANETS) as PlanetId[]).map((id) => `<button data-c="${id}" ${inSpace ? '' : 'disabled'}>${BODY[id].name}${SQ.visited.includes(id) ? '' : ' ★'}</button>`).join('')}</div>
-    ${(Object.keys(PLANETS) as PlanetId[]).map((id) => `<p><b>${BODY[id].name}</b>: ${esc(BODY[id].blurb)} <small>Run by ${esc(PLANETS[id].faction)}.</small></p>`).join('')}
+    ${(Object.keys(PLANETS) as PlanetId[]).map((id) => `<p><b>${BODY[id].name}</b>: ${esc(BODY[id].blurb)} <small>Run by ${esc(PLANETS[id].faction)}.${peoples(id)}</small></p>`).join('')}
+    ${onGround ? `<div class="sect">Wildlife on ${esc(worldProfile().name)}</div><p class="sw-info">${esc(wild.join(', '))}. ${esc(describe().join('; '))}.</p>` : ''}
     <div class="sect">The rest of the system</div><div class="sw-row" id="swfar">${BODIES.filter((b) => b.id !== 'sun' && !(b.id in PLANETS)).map((b) => `<button data-c="${b.id}" ${inSpace ? '' : 'disabled'}>${b.name}</button>`).join('')}</div>
-    <p class="sw-info">1 AU = 150 million km. Neptune is 30 AU out.</p>`;
+    <div class="sect">Jump drive${my.jump ? ` · fuel ${SQ.fuel}/${my.fuel}` : ''}</div>
+    ${my.jump ? `<div class="sw-row" id="swjump">${[{ id: 'sol', name: 'Sol', ly: 0 }, ...STARS].filter((st) => st.id !== SQ.system).map((st) => `<button data-j="${st.id}" ${inSpace && cs.ok && SQ.fuel >= jumpCost(st.id) ? '' : 'disabled'}>${esc(st.name)} · ${jumpCost(st.id)} fuel</button>`).join('')}</div><p class="sw-info">${cs.ok ? 'Clear space. Pick a star.' : esc(cs.why)}</p>` : '<p class="sw-info">Fit a Jump Drive (Refit, on the pad) to reach the nearby stars: Alpha Centauri, Barnard\'s Star, Sirius and more.</p>'}
+    <p class="sw-info">${SQ.system === 'sol' ? '1 AU = 150 million km. Neptune is 30 AU out.' : 'Jump fuel refills when you land on an inhabited world.'}</p>`;
   const cv = body.querySelector('canvas') as HTMLCanvasElement, c = cv.getContext('2d') as CanvasRenderingContext2D;
   c.imageSmoothingEnabled = false;
-  const S = 300, cx = S / 2, cy = S / 2, K = (S / 2 - 16) / Math.sqrt(31);
+  const outer = Math.max(...BODIES.filter((b) => b.parent === 'sun').map((b) => b.au), 1), S = 300, cx = S / 2, cy = S / 2, K = (S / 2 - 16) / Math.sqrt(outer * 1.03);
   const map = (x: number, y: number) => { const d = Math.hypot(x, y) / AU, a = Math.atan2(y, x), r = Math.sqrt(d) * K; return { x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r }; };
   c.fillStyle = '#0c0a24'; c.fillRect(0, 0, S, S);
   // the 80s grid, faintly
@@ -173,7 +186,7 @@ function systemTab(g: Game, body: HTMLElement): void {
   c.strokeStyle = 'rgba(160,150,230,0.35)'; c.setLineDash([2, 3]);
   for (const b of BODIES) if (b.parent === 'sun') { c.beginPath(); c.arc(cx, cy, Math.sqrt(b.au) * K, 0, 7); c.stroke(); }
   c.setLineDash([]);
-  c.fillStyle = '#ffe070'; c.beginPath(); c.arc(cx, cy, 5, 0, 7); c.fill();
+  c.fillStyle = BODY.sun ? BODY.sun.color : '#ffe070'; c.beginPath(); c.arc(cx, cy, 5, 0, 7); c.fill();
   for (const b of BODIES) {
     if (b.id === 'sun') continue;
     const pos = at(b.id);
@@ -185,8 +198,9 @@ function systemTab(g: Game, body: HTMLElement): void {
     if (!moon || b.id === 'luna') R.art.ptext(c, b.name.toUpperCase(), m.x + s / 2 + 2, m.y - 3, { scale: 1, color: b.id in PLANETS ? '#ffe070' : '#b8b0d8' });
     if (SQ.course === b.id) { c.strokeStyle = '#ff9a3a'; c.strokeRect(m.x - 6, m.y - 6, 12, 12); }
   }
-  const me = inSpace ? map(SPACE.x, SPACE.y) : map(at(SQ.planet).x, at(SQ.planet).y);
+  const me = inSpace || !at(SQ.planet) ? map(SPACE.x, SPACE.y) : map(at(SQ.planet).x, at(SQ.planet).y);
   c.fillStyle = '#ff5ad0'; c.beginPath(); c.moveTo(me.x, me.y - 5); c.lineTo(me.x + 4, me.y + 4); c.lineTo(me.x - 4, me.y + 4); c.fill();
+  body.querySelectorAll<HTMLElement>('[data-j]').forEach((bt) => bt.addEventListener('click', () => { if (jump(g, bt.dataset.j as string)) g.ui.closeSheet(); }));
   body.querySelectorAll<HTMLElement>('[data-c]').forEach((bt) => bt.addEventListener('click', () => {
     if (!inSpace) return;
     SQ.course = bt.dataset.c as BodyId; saveSequel();

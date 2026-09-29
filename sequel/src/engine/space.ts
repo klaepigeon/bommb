@@ -10,14 +10,14 @@
 //   Attack fires, USE lands, boards or hails.
 
 import { SQ, saveSequel, type Good } from './state';
-import { PLANETS, BODY, type PlanetId, type BodyId } from './planets';
+import { PLANETS, BODY, landable, type PlanetId, type BodyId } from './planets';
 import { travelTo } from './travel';
 import { bodies, planetArt, gravity, orbitalSpeed, orbitRadius, type Body } from '../space/system';
 import { blankShip, shipSprites, stats, type Ship, type Mod } from '../ship/ship';
 import { enterFreighter } from './board';
 
 export interface Craft {
-  id: number; kind: 'freighter' | 'patrol'; ship: Ship; flag: 'empire' | 'solari';
+  id: number; kind: 'freighter' | 'patrol' | 'hunter'; ship: Ship; flag: 'empire' | 'solari' | 'hunter';
   x: number; y: number; vx: number; vy: number; a: number;
   hull: number; maxHull: number; shield: number; maxShield: number;
   disabled: boolean; looted: boolean; dead: boolean;
@@ -37,9 +37,23 @@ export const SPACE = {
   B: [] as Body[], g: null as ReturnType<typeof gravity> | null,
 };
 
+// what happens when you scan a world you can't land on (aliens.ts adds to this)
+export const SCAN: Record<string, (g: Game) => void> = {};
+// plug-ins for the other space modules (stations, the belt, bounty hunters, the jump drive):
+// update every frame, draw into the view, claim the USE button, catch your shots
+export interface View { g: CanvasRenderingContext2D; sx: (x: number) => number; sy: (y: number) => number; Z: number; W: number; H: number; mark: (x: number, y: number, col: string, label: string) => void }
+export const HOOKS = {
+  update: [] as ((g: Game, dt: number) => void)[],
+  draw: [] as ((v: View) => void)[],
+  use: [] as ((g: Game) => { label: string; fn: () => void } | null)[],
+  shot: [] as ((x: number, y: number, dmg: number) => boolean)[],
+  hud: [] as (() => string | null)[],
+};
+export const inSpace = () => SPACE.active;
+export const shipBody = (id: BodyId) => body(id);
+
 const NAMES = ['Imperial Hauler 7', 'Castra Venture', 'Solari Queen', 'Ore Mule', 'Marble Barge', 'Senator\'s Pride', 'Dusty Rose', 'Mule Train', 'Tithe of Castra', 'Night Orchid', 'Red Planet Express', 'Tranquility Tug'];
 const GOODS: Good[] = ['rum', 'tea', 'ore', 'meds', 'vinyl', 'blasters'];
-const LANES: PlanetId[] = ['earth', 'mars', 'venus', 'luna'];
 const rnd = () => Math.random();
 const pick = <T>(a: T[]) => a[Math.floor(rnd() * a.length)];
 const dist = (ax: number, ay: number, bx: number, by: number) => Math.hypot(bx - ax, by - ay);
@@ -70,13 +84,15 @@ function patrolShip(): Ship {
 
 // traffic lives in the lanes around the inhabited worlds, near you
 function spawnFreighter(near?: boolean): void {
+  const LANES = landable();
+  if (!LANES.length) return;
   const home = LANES.map((id) => body(id)).sort((a, b) => dist(a.x, a.y, SPACE.x, SPACE.y) - dist(b.x, b.y, SPACE.x, SPACE.y))[0];
   if (!near && dist(home.x, home.y, SPACE.x, SPACE.y) > 25000) return;
   const sh = freighterShip(), s = stats(sh), ang = rnd() * Math.PI * 2;
   const x = near ? SPACE.x + Math.cos(ang) * 700 : home.x + Math.cos(ang) * (home.r + 400 + rnd() * 1200), y = near ? SPACE.y + Math.sin(ang) * 700 : home.y + Math.sin(ang) * (home.r + 400 + rnd() * 1200);
   SPACE.crafts.push({
     id: SPACE.nextId++, kind: 'freighter', ship: sh, flag: rnd() < 0.65 ? 'empire' : 'solari', x, y, vx: 0, vy: 0, a: 0,
-    hull: s.hull, maxHull: s.hull, shield: s.shield, maxShield: s.shield, disabled: false, looted: false, dead: false, target: pick(LANES.filter((l) => l !== home.id)), cool: 0, hostile: false,
+    hull: s.hull, maxHull: s.hull, shield: s.shield, maxShield: s.shield, disabled: false, looted: false, dead: false, target: pick(LANES.length > 1 ? LANES.filter((l) => l !== home.id) : LANES), cool: 0, hostile: false,
     name: pick(NAMES), cargo: [{ good: pick(GOODS), n: 4 + Math.floor(rnd() * 6) }, { good: pick(GOODS), n: 3 + Math.floor(rnd() * 5) }],
   });
 }
@@ -94,7 +110,7 @@ function spawnPatrol(): void {
 export function launch(g: Game): void {
   g.save();
   SPACE.B = bodies(minutes());
-  const b = body(SQ.planet);
+  const b = body(SQ.planet) || body('sun');
   // up out of the atmosphere, already moving at orbital speed
   const out = Math.atan2(b.y, b.x), d = b.r + 140, v = orbitalSpeed(b, d);
   Object.assign(SPACE, { x: b.x + Math.cos(out) * d, y: b.y + Math.sin(out) * d, vx: -Math.sin(out) * v, vy: Math.cos(out) * v, a: out + Math.PI / 2, shots: [], sparks: [], cruise: false });
@@ -119,7 +135,7 @@ export function resumeSpace(g: Game): void {
 function land(g: Game, id: PlanetId): void {
   SPACE.active = false; SPACE.cruise = false; SQ.mode = 'planet'; SQ.space = null; SQ.course = null;
   sfx('crash');
-  if (id !== SQ.planet) travelTo(g, id);
+  if (id !== SQ.planet || SQ.home !== SQ.system) travelTo(g, id);
   else { const w = g.world; g.player.place(w.pad.sx - 40, w.pad.sy + 44); g.cam.x = g.player.x; g.cam.y = g.player.y; }
   const p = PLANETS[id];
   g.ui.toast(`Landed on ${p.name}. ${p.blurb}`, 'good');
@@ -160,7 +176,7 @@ function hitCraft(g: Game, c: Craft, dmg: number): void {
   c.hostile = true;
   if (peaceful) {
     g.ui.toast(`${c.name}: "Mayday! Pirates on the ${PLANETS[c.target].name} lane!"`, 'bad');
-    if (c.flag === 'empire') SQ.heat.empire += 15; else SQ.heat.families += 15;
+    if (c.flag === 'empire') { SQ.heat.empire += 15; SQ.bounty += 150; } else if (c.flag === 'solari') SQ.heat.families += 15;
     g.player.rep.infamy = (g.player.rep.infamy || 0) + 2;
   }
   if (c.kind === 'freighter' && !c.disabled && c.hull < c.maxHull * 0.35) {
@@ -169,7 +185,8 @@ function hitCraft(g: Game, c: Craft, dmg: number): void {
   }
   if (c.hull <= 0) {
     c.dead = true; sfx('boom'); burst(c.x, c.y, 40, ['#ffd060', '#ff8030', '#ffffff', '#c83a2a'], c.vx, c.vy);
-    if (c.kind === 'patrol') { SQ.heat.empire += 20; g.ui.toast('Patrol destroyed. The Empire will remember that.', 'bad'); g.player.rep.infamy += 5; }
+    if (c.kind === 'patrol') { SQ.heat.empire += 20; SQ.bounty += 600; g.ui.toast('Patrol destroyed. The Empire will remember that. (+$600 on your head)', 'bad'); g.player.rep.infamy += 5; }
+    else if (c.kind === 'hunter') { const prize = 200 + Math.floor(Math.random() * 300); g.player.cash += prize; g.ui.toast(`${c.name} is scrap. You pull $${prize} from the wreck's strongbox.`, 'good'); }
     else g.ui.toast(`${c.name} breaks apart. Her cargo burns with her.`);
   }
 }
@@ -268,11 +285,12 @@ function update(g: Game, dt: number): void {
   SPACE.fireT -= dt;
   if (inp.held('attack') && SPACE.fireT <= 0 && my.guns > 0 && !SPACE.cruise) { SPACE.fireT = 0.22; fire(SPACE.x, SPACE.y, SPACE.a, SPACE.vx, SPACE.vy, 'me', 10, my.guns); sfx('smg'); }
   if (inp.pressed('use')) {
+    for (const h of HOOKS.use) { const u = h(g); if (u) { u.fn(); return; } }
     const w = nearWreck(), p = nearPlanet();
     if (w) { if (!my.tube) g.ui.toast('You need a Boarding Tube module to board.', 'bad'); else { SPACE.active = false; SPACE.boarding = w; enterFreighter(g, w); return; } }
     else if (p) {
       const rel = Math.hypot(SPACE.vx - p.vx / 60, SPACE.vy - p.vy / 60);
-      if (!(p.id in PLANETS)) g.ui.story(BODY[p.id].name, `${BODY[p.id].blurb}\n\nThere's nowhere to set down here yet.`);
+      if (!(p.id in PLANETS)) { if (SCAN[p.id]) SCAN[p.id](g); else g.ui.story(BODY[p.id].name, `${BODY[p.id].blurb}\n\nThere's nowhere to set down here yet.`); }
       else if (rel > 260) g.ui.toast(`Too fast to land (${Math.round(rel)}). Ease off below 260.`, 'bad');
       else { land(g, p.id as PlanetId); return; }
     }
@@ -296,19 +314,20 @@ function update(g: Game, dt: number): void {
     if (c.disabled) { c.vx += cg.ax * dt * 0.2; c.vy += cg.ay * dt * 0.2; c.a += dt * 0.2; }
     else {
       let tx: number, ty: number;
-      if (c.kind === 'patrol' || (c.hostile && dist(c.x, c.y, SPACE.x, SPACE.y) < 500)) { tx = SPACE.x; ty = SPACE.y; }
+      const chaser = c.kind !== 'freighter';
+      if (chaser || (c.hostile && dist(c.x, c.y, SPACE.x, SPACE.y) < 500)) { tx = SPACE.x; ty = SPACE.y; }
       else { const t = body(c.target); tx = t.x; ty = t.y; }
       const want = Math.atan2(ty - c.y, tx - c.x), d = angDiff(c.a, want);
       c.a += clamp(d, -cs.turn * dt * 0.8, cs.turn * dt * 0.8);
       // traders cruise the lane; patrols keep pace with you
-      const top = c.kind === 'patrol' ? Math.max(320, Math.hypot(SPACE.vx, SPACE.vy) * 1.1) : 160;
+      const top = chaser ? Math.max(c.kind === 'hunter' ? 380 : 320, Math.hypot(SPACE.vx, SPACE.vy) * 1.1) : 160;
       const tvx = Math.cos(c.a) * top, tvy = Math.sin(c.a) * top, k = Math.min(1, dt * 1.2);
-      if (!(c.kind === 'patrol' && dist(c.x, c.y, SPACE.x, SPACE.y) < 130)) { c.vx += (tvx - c.vx) * k; c.vy += (tvy - c.vy) * k; }
+      if (!(chaser && dist(c.x, c.y, SPACE.x, SPACE.y) < 130)) { c.vx += (tvx - c.vx) * k; c.vy += (tvy - c.vy) * k; }
       else { c.vx += (SPACE.vx - c.vx) * k; c.vy += (SPACE.vy - c.vy) * k; }
       c.cool -= dt;
       if (c.hostile && c.cool <= 0 && dist(c.x, c.y, SPACE.x, SPACE.y) < 360 && Math.abs(d) < 0.4) {
-        c.cool = c.kind === 'patrol' ? 0.5 : 1.3;
-        fire(c.x, c.y, c.a, c.vx, c.vy, c.id, c.kind === 'patrol' ? 8 : 5, c.kind === 'patrol' ? 2 : 1);
+        c.cool = chaser ? 0.5 : 1.3;
+        fire(c.x, c.y, c.a, c.vx, c.vy, c.id, chaser ? 8 : 5, chaser ? 2 : 1);
       }
     }
     c.x += c.vx * dt; c.y += c.vy * dt;
@@ -316,7 +335,10 @@ function update(g: Game, dt: number): void {
   SPACE.crafts = SPACE.crafts.filter((c) => dist(c.x, c.y, SPACE.x, SPACE.y) < (c.dead || c.looted ? 3000 : 30000));
   for (const s of SPACE.shots) {
     s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt;
-    if (s.from === 'me') { for (const c of SPACE.crafts) if (!c.dead && dist(s.x, s.y, c.x, c.y) < (c.kind === 'freighter' ? 24 : 16)) { hitCraft(g, c, s.dmg); s.life = 0; break; } }
+    if (s.from === 'me') {
+      for (const c of SPACE.crafts) if (!c.dead && dist(s.x, s.y, c.x, c.y) < (c.kind === 'freighter' ? 24 : 16)) { hitCraft(g, c, s.dmg); s.life = 0; break; }
+      if (s.life > 0) for (const h of HOOKS.shot) if (h(s.x, s.y, s.dmg)) { s.life = 0; break; }
+    }
     else if (dist(s.x, s.y, SPACE.x, SPACE.y) < 14) {
       s.life = 0; sfx('thup');
       if (SPACE.shield > 0) { SPACE.shield = Math.max(0, SPACE.shield - s.dmg); burst(SPACE.x, SPACE.y, 3, ['#9ad8ff', '#fff'], SPACE.vx, SPACE.vy); }
@@ -331,7 +353,7 @@ function update(g: Game, dt: number): void {
     SQ.cargo = [];
     const cut = Math.round(g.player.cash * 0.3);
     g.player.cash -= cut; SQ.hull = my.hull; SQ.heat.empire = 0;
-    land(g, SQ.planet);
+    land(g, SQ.planet in PLANETS ? SQ.planet : Object.keys(PLANETS)[0]);
     g.ui.story('Salvage Crew', `We pulled you out of the wreck and towed you home. The cargo's gone and the tow was ${cut} credits.`);
   }
   SPACE.hintT -= dt;
@@ -340,6 +362,7 @@ function update(g: Game, dt: number): void {
     const f = SPACE.crafts.find((c) => c.kind === 'freighter' && !c.dead && !c.disabled);
     if (f && !SQ.cargo.some((l) => l.stolen) && !SPACE.cruise) g.ui.toast(`Scanner: ${f.name} (${f.flag === 'empire' ? 'Imperial' : 'Solari'} flag) bound for ${PLANETS[f.target].name}. Shoot out her engines, then board.`);
   }
+  for (const h of HOOKS.update) h(g, dt);
   SQ.space = { x: SPACE.x, y: SPACE.y, a: SPACE.a };
 }
 
@@ -408,6 +431,7 @@ function draw(g: CanvasRenderingContext2D, BW: number, BH: number): void {
       if (k % 4 === 0) g.fillRect(Math.round(sx(px)), Math.round(sy(py)), 1, 1);
     }
   }
+  const view: View = { g, sx, sy, Z, W, H, mark: () => {} };
   // craft, shots, sparks (scaled with the world, but never smaller than a marker)
   const frameOf = (a: number) => ((Math.round((a / (Math.PI * 2)) * 32) % 32) + 32) % 32;
   const sprite = (spr: HTMLCanvasElement, x: number, y: number) => {
@@ -421,6 +445,7 @@ function draw(g: CanvasRenderingContext2D, BW: number, BH: number): void {
     const spr = shipSprites(c.ship)[frameOf(c.a)];
     if (!sprite(spr, x, y)) { g.fillStyle = c.kind === 'patrol' ? '#ff5a5a' : c.disabled ? '#68f0a0' : '#e8e0c8'; g.fillRect(Math.round(x) - 1, Math.round(y) - 1, 3, 3); continue; }
     if (c.shield > 0 && c.hostile) { g.strokeStyle = 'rgba(150,210,255,0.5)'; g.beginPath(); g.arc(x, y, (spr.width / 2) * Z, 0, 7); g.stroke(); }
+    if (c.kind === 'hunter' && c.hull < c.maxHull) { g.fillStyle = '#ff5a5a'; g.fillRect(x - 1, y - (spr.height / 2) * Z - 6, 3, 3); }
     if (c.disabled && !c.looted && Math.floor(performance.now() / 300) % 2) { g.fillStyle = '#68f0a0'; g.fillRect(x - 1, y - (spr.height / 2) * Z - 6, 3, 3); }
     if (c.hostile || c.disabled) { g.fillStyle = '#1c1828'; g.fillRect(x - 14, y + (spr.height / 2) * Z + 2, 28, 3); g.fillStyle = c.disabled ? '#e8b020' : '#e84848'; g.fillRect(x - 14, y + (spr.height / 2) * Z + 2, 28 * Math.max(0, c.hull / c.maxHull), 3); }
   }
@@ -436,7 +461,8 @@ function draw(g: CanvasRenderingContext2D, BW: number, BH: number): void {
   const mark = (x: number, y: number, col: string, label: string) => {
     const dx = (x - SPACE.x) * Z, dy = (y - SPACE.y) * Z;
     if (Math.abs(dx) < W / 2 - 8 && Math.abs(dy) < H / 2 - 8) return;
-    const a = Math.atan2(dy, dx), k = Math.min((W / 2 - 14) / Math.abs(Math.cos(a) || 1e-3), (H / 2 - 18) / Math.abs(Math.sin(a) || 1e-3));
+    const top = 30 + 10 * HOOKS.hud.length + 14;
+    const a = Math.atan2(dy, dx), k = Math.min((W / 2 - 14) / Math.abs(Math.cos(a) || 1e-3), (Math.sin(a) < 0 ? H / 2 - top : H / 2 - 30) / Math.abs(Math.sin(a) || 1e-3));
     const mx = W / 2 + Math.cos(a) * k;
     let my2 = H / 2 + Math.sin(a) * k;
     // stack markers that land on top of each other (a planet and its moon)
@@ -447,16 +473,20 @@ function draw(g: CanvasRenderingContext2D, BW: number, BH: number): void {
     g.fillStyle = col; g.beginPath(); g.moveTo(mx + Math.cos(a) * 6, my2 + Math.sin(a) * 6); g.lineTo(mx + Math.cos(a + 2.4) * 5, my2 + Math.sin(a + 2.4) * 5); g.lineTo(mx + Math.cos(a - 2.4) * 5, my2 + Math.sin(a - 2.4) * 5); g.fill();
     A.ptext(g, label, clamp(mx - Math.cos(a) * 18, 26, W - 26), clamp(my2 - Math.sin(a) * 12 - 2, 6, H - 12), { align: 'center', scale: 1, color: col, shadow: '#07051a' });
   };
+  view.mark = mark;
+  for (const h of HOOKS.draw) h(view);
   const fmt = (d: number) => (d > 30000 ? (d / 60000).toFixed(2) + ' AU' : Math.round(d / 10) + ' KM');
   for (const b of SPACE.B) if (b.id in PLANETS || SQ.course === b.id) mark(b.x, b.y, SQ.course === b.id ? '#ff9a3a' : '#ffe070', BODY[b.id].name.toUpperCase() + ' ' + fmt(dist(SPACE.x, SPACE.y, b.x, b.y) - b.r));
-  for (const c of SPACE.crafts) if (!c.dead && (c.kind === 'patrol' || (c.disabled && !c.looted) || dist(c.x, c.y, SPACE.x, SPACE.y) < 1400)) mark(c.x, c.y, c.kind === 'patrol' ? '#ff5a5a' : c.disabled ? '#68f0a0' : '#e8e0c8', c.kind === 'patrol' ? 'PATROL' : c.disabled ? 'BOARD' : 'FREIGHT');
+  for (const c of SPACE.crafts) if (!c.dead && (c.kind !== 'freighter' || (c.disabled && !c.looted) || dist(c.x, c.y, SPACE.x, SPACE.y) < 1400)) mark(c.x, c.y, c.kind !== 'freighter' ? '#ff5a5a' : c.disabled ? '#68f0a0' : '#e8e0c8', c.kind === 'patrol' ? 'PATROL' : c.kind === 'hunter' ? 'HUNTER' : c.disabled ? 'BOARD' : 'FREIGHT');
   // the flight readout, top centre: where you are, how high, how fast, and the orbit you'd need
   const G = SPACE.g;
   if (G) {
     const rel = Math.hypot(SPACE.vx - G.dom.vx / 60, SPACE.vy - G.dom.vy / 60), d = dist(SPACE.x, SPACE.y, G.dom.x, G.dom.y);
     const mode = SPACE.cruise ? 'CRUISE' : SPACE.assist ? 'ASSIST' : 'NEWTONIAN';
-    A.ptext(g, `${mode} · ${BODY[G.dom.id].name.toUpperCase()} · ALT ${fmt(Math.max(0, d - G.dom.r))} · ${Math.round(rel)} U/S${SPACE.cruise ? '' : ' · ORBIT ' + Math.round(orbitalSpeed(G.dom, d))}`, W / 2, 30, { align: 'center', scale: 1, color: SPACE.cruise ? '#a8e8ff' : '#f0ecf8', shadow: '#07051a' });
+    A.ptext(g, `${mode} · ${BODY[G.dom.id].name.toUpperCase()} · ALT ${fmt(Math.max(0, d - G.dom.r))} · ${Math.round(rel)} U/S${SPACE.cruise || d - G.dom.r > 5000 ? '' : ' · ORBIT ' + Math.round(orbitalSpeed(G.dom, d))}`, W / 2, 30, { align: 'center', scale: 1, color: SPACE.cruise ? '#a8e8ff' : '#f0ecf8', shadow: '#07051a' });
   }
+  let hy = 42;
+  for (const h of HOOKS.hud) { const t = h(); if (t) { A.ptext(g, t, W / 2, hy, { align: 'center', scale: 1, color: '#ffb0d8', shadow: '#07051a' }); hy += 10; } }
   const bar = (y: number, v: number, col: string, label: string) => { g.fillStyle = 'rgba(12,10,30,0.7)'; g.fillRect(6, y, 62, 7); g.fillStyle = col; g.fillRect(7, y + 1, 60 * clamp(v, 0, 1), 5); A.ptext(g, label, 72, y, { scale: 1, color: '#f0ecf8' }); };
   bar(H - 22, SQ.hull / my.hull, '#ff5a8a', 'HULL');
   bar(H - 13, my.shield ? SPACE.shield / my.shield : 0, '#5ad0ff', 'SHIELD');
@@ -484,6 +514,6 @@ RP.render = function (this: { g: CanvasRenderingContext2D; cv: HTMLCanvasElement
 // the label on the USE button while flying
 const PP = R.Player.prototype, baseCtx = PP.contextAction;
 PP.contextAction = function (this: Player) {
-  if (SPACE.active) { const w = nearWreck(), p = nearPlanet(); return w ? { label: 'Board', fn: () => {} } : p ? { label: p.id in PLANETS ? 'Land' : 'Scan', fn: () => {} } : null; }
+  if (SPACE.active) { for (const h of HOOKS.use) { const u = h(R.game); if (u) return { label: u.label, fn: () => {} }; } const w = nearWreck(), p = nearPlanet(); return w ? { label: 'Board', fn: () => {} } : p ? { label: p.id in PLANETS ? 'Land' : 'Scan', fn: () => {} } : null; }
   return baseCtx.call(this);
 };

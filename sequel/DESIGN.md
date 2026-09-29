@@ -26,8 +26,8 @@ Mobile first.
 | County | game 1's whole map, 880×880 tiles | done: every inhabited world is one |
 | Region | several counties stitched and streamed around you | planned |
 | Planet | many regions across biomes and climate bands, with ecosystems (food chains, migrations, seasons) | planned |
-| Star system | our solar system at true relative distances | done: 8 planets, 6 moons, the Sun |
-| Galaxy | procedurally generated star systems reached by jump drive | planned |
+| Star system | our solar system at true relative distances | done: 8 planets, Ceres, 6 moons, the belt, the Sun |
+| Galaxy | procedurally generated star systems reached by jump drive | started: the six nearest real stars, each with generated worlds |
 
 ## Look: the future the 80s imagined, drawn with Gen 4 pixel craft
 
@@ -66,7 +66,10 @@ so they read at ship scale.
 | **Mars** | terraformed: green where the money went, red dust where it didn't; the casino world | the Solari families | landable (the start) |
 | **Venus** | the Imperial capital: marble cloud-cities over an acid sea | the Galactic Empire | landable |
 | **Luna** | mining domes, the black market, hymns on the radio | the Choir and the rebels | landable |
-| Mercury, the gas giants, the moons | prisons, gas rigs, rebel yards, something in Europa's ocean | various | visible, planned |
+| **Ceres** | the biggest rock in the belt: ice mines, claim-jumpers, nobody's law | the claim-jumpers | landable |
+| Europa | ice over an ocean, and something under it that answers the radio | the Europans | first contact (scan it) |
+| Titan | orange haze; the Choir's signal comes from here | the signal | scan it |
+| Mercury, the gas giants, the other moons | prisons, gas rigs, rebel yards | various | visible, planned |
 
 ## Flight (built)
 
@@ -82,10 +85,63 @@ so they read at ship scale.
   appear, and your ship becomes a marker.
 - **Landing:** get low over an inhabited world and slow down; hitting a surface fast hurts.
 
+## Stations and the belt (built)
+
+- **The Red Velvet Orbital** circles Mars: dock and you're in a full game 1 casino, in orbit.
+- **The Haulyard Assay Station** circles Ceres: it buys ore, ice and platinum, sells jump fuel
+  and patches hulls.
+- **The asteroid belt** (2.2 to 3.3 AU) is really there: rocks in every stretch of it, thicker
+  toward the middle and around Ceres. Shoot one to crack it, fly through the pieces to scoop
+  them up (a Tractor Beam pulls them in from further). Hitting one at speed hurts.
+
+## Aliens and peoples (built)
+
+Species live inside each world's population (homes, jobs, families, grudges, like anyone),
+with their own bodies, names and voices:
+
+| Species | Where | What they want |
+|---|---|---|
+| Greys | Luna, Ceres | brokers: they buy Song-Pearls and platinum, sell Xeno-Tech (contraband) |
+| The Choir | Luna | hybrids who hum the signal; listen to them three times and it leads to Titan |
+| Martians | Mars | little green tourists with big bankrolls |
+| Saurians | Venus | the Empire's crested old allies, all over the court |
+| Belters | Ceres | people the belt changed: visors, long bones, their own slang |
+| Europans | under Europa's ice | never seen; first contact is a call-and-response of tones, then they trade pearls for records |
+
+Other stars generate their own species (a body plan, colours, eyes, names and a voice).
+
+## Ecosystems (built)
+
+Every world has its own wildlife on game 1's animal AI (grazing, fleeing, packs, ambushes,
+night hunts): Mars has dust hares, striders on the terraformed green, rust wolves and sand
+worms; Venus has garden bucks, marble cats and acid lurkers; Luna has dome rats and crater
+crabs; Ceres has ice bugs and tunnel worms. A daily predator-prey model runs per world (and
+keeps running on worlds you've left). What you meet follows the numbers; hungry predators
+hunt grazers in front of you; herds drift with the seasons. Shoot out the predators and the
+grazers boom, strip the land, and crash below where they started.
+
+## The Imperial bounty (built)
+
+One number for the whole system, on top of game 1's per-city bounties. Crimes on Imperial
+worlds, piracy against Imperial ships and downed patrols raise it. Bounty hunters come for it
+on the ground (armed crews) and in space (gunships that disable you, dock, and board: fight
+them in your own hold). The court on Venus settles it: pay, plead (a good name halves it once),
+or stand trial and serve the time in game 1's jail, with game 1's jailbreaks.
+
+## The jump drive (built)
+
+A Jump Drive module reaches the six nearest real stars (Alpha Centauri, Barnard's Star,
+Wolf 359, Sirius, Epsilon Eridani, Tau Ceti) by their real distances. It needs jump fuel
+(refilled when you land, or bought at the Haulyard) and clear space: 4 AU from the Sun and
+well away from any world. Each star's system is generated from its name: planets, moons,
+sometimes a belt, and one or two inhabited worlds, each a full game 1 world with its own
+cities, families, law, alien species and wildlife.
+
 ## Space (planned next)
 
-- Stations, asteroid fields worth mining, derelicts, distress calls and interdictions.
-- A jump drive to other star systems (procedural), the step from system to galaxy.
+- More stations (an Imperial customs platform, a rebel yard at Ganymede), derelicts, distress
+  calls and interdictions.
+- Charts: a galaxy map beyond the six neighbours.
 
 ## Ship building
 
