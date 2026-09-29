@@ -5,6 +5,7 @@
 import { renames, worldProfile, type PlanetId, type Profile } from './planets';
 import { SQ, saveSequel, planetKey, planetSeed } from './state';
 import { shipSprites } from '../ship/ship';
+import { EARTH, citySpots, isHome, touchSector } from './earth';
 
 const GAME1_SAVE = 'rhapsody.save.v2';
 const D = R.data, T = D.T, O = D.O, TS = R.TILE;
@@ -25,12 +26,16 @@ const GAME1_HAMLETS = D.hamlets.map((h: Record<string, unknown>) => ({ ...h }));
 
 export function applyProfile(): void {
   const p = worldProfile();
+  const sec = (p as { sector?: [number, number] }).sector;
+  // on Earth the people themselves change (the Syndicate and the crews), and away from the
+  // Brass Coast the cities stand wherever the land is
+  const spots = sec && !isHome(sec) ? citySpots(sec[0], sec[1], 9) : null;
   D.cities.forEach((c: Record<string, unknown>, i: number) => {
     const base = GAME1_CITIES[i], cp = p.cities && p.cities[i];
     // names are display only; family keys stay game 1's (the systems key on them)
-    Object.assign(c, base, cp ? { name: cp.name, tag: cp.tag, biome: cp.biome || base.biome } : {});
+    Object.assign(c, base, cp ? { name: cp.name, tag: cp.tag, biome: cp.biome || base.biome } : {}, sec && cp ? { don: cp.don } : {}, spots && spots[i] ? { fx: spots[i].fx, fy: spots[i].fy } : {});
   });
-  D.hamlets.forEach((h: Record<string, unknown>, i: number) => Object.assign(h, GAME1_HAMLETS[i], p.hamlets ? { name: p.hamlets[i] } : {}));
+  D.hamlets.forEach((h: Record<string, unknown>, i: number) => Object.assign(h, GAME1_HAMLETS[i], p.hamlets ? { name: p.hamlets[i] } : {}, spots && spots[5 + i] ? { fx: spots[5 + i].fx, fy: spots[5 + i].fy } : {}));
   R.planet = p;
   setRenames(p);
 }
@@ -45,6 +50,16 @@ function reshape(w: World, p: Profile): void {
     const x = i % w.W, y = (i / w.W) | 0, h = R.hash2(x, y, 77);
     const o = w.obj[i];
     if (p.terrain === 'earth') continue;
+    if (p.terrain === 'dystopia') {
+      // the green went grey: dead grass, dead woods, poisoned marsh, rubble everywhere
+      if (t === T.GRASS || t === T.PARK) w.tile[i] = h < 0.72 ? T.DIRT : T.GRASS;
+      else if (t === T.FOREST && h < 0.5) w.tile[i] = T.DIRT;
+      else if (t === T.FIELD) w.tile[i] = T.DIRT;
+      if (o === O.TREE || o === O.PALM || o === O.PINE) w.obj[i] = h < 0.55 ? O.DEADTREE : o;
+      else if (o === O.FLOWERS) w.obj[i] = 0;
+      else if (!o && (w.tile[i] === T.DIRT || w.tile[i] === T.DESERT) && h > 0.985) w.obj[i] = O.BOULDER;
+      continue;
+    }
     if (p.terrain === 'moon') {
       if (t === T.GRASS || t === T.PARK) w.tile[i] = h < 0.3 ? T.DESERT : T.DIRT;
       else if (t === T.FOREST) w.tile[i] = h < 0.35 ? T.ROCK : T.DIRT;
@@ -97,7 +112,7 @@ function stampPad(w: World): void {
   const { x: px, y: py } = found;
   for (let y = py; y < py + PH; y++) for (let x = px; x < px + PW; x++) { const i = w.idx(x, y); w.tile[i] = T.PARKING; w.obj[i] = 0; }
   // the ship stands on landing legs over the middle of the pad
-  for (let y = py + 3; y < py + 6; y++) for (let x = px + 4; x < px + 10; x++) w.tile[w.idx(x, y)] = T.BLDG;
+  if (shipHere()) for (let y = py + 3; y < py + 6; y++) for (let x = px + 4; x < px + 10; x++) w.tile[w.idx(x, y)] = T.BLDG;
   w.pad = { x: px, y: py, w: PW, h: PH, sx: (px + 7) * TS, sy: (py + 4.5) * TS };
 }
 
@@ -130,21 +145,31 @@ for (const [k, v] of R.bus.map) bootListeners.set(k, v.slice());
 // ---------------------------------------------------------------- setup: every planet boots through here
 const GP = R.Game.prototype, baseSetup = GP.setup;
 GP.setup = function (this: Game, _seed: number, _save: unknown) {
+  EARTH.active = SQ.planet === 'earth' && SQ.home === 'sol';
+  EARTH.sector = [SQ.sector[0], SQ.sector[1]];
+  if (EARTH.active) touchSector(EARTH.sector);
   applyProfile();
   const seed = planetSeed(SQ.planet);
   const save = R.store.get(GAME1_SAVE);
   baseSetup.call(this, seed, save && save.seed === seed ? save : null);
   const pl = this.player, w = this.world;
   if (SQ.portable) { restore(pl, SQ.portable); SQ.portable = null; }
-  if (SQ.arriving && w.pad) { pl.place(w.pad.sx - 40, w.pad.sy + 44); pl.dir = 2; SQ.arriving = false; }
+  if (SQ.arriveEdge) {
+    // walked (or drove) across a sector border: come in at the matching edge, on dry land
+    const e = SQ.arriveEdge, M = 6;
+    const tx = e.edge === 'w' ? w.W - M : e.edge === 'e' ? M : Math.round(e.f * w.W), ty = e.edge === 'n' ? w.H - M : e.edge === 's' ? M : Math.round(e.f * w.H);
+    const s = w.findNear(tx, ty, 0, 60, (x: number, y: number) => !w.solidPed(x, y) && !w.isWater(x, y));
+    pl.place(((s ? s.x : tx) + 0.5) * TS, ((s ? s.y : ty) + 0.5) * TS);
+    SQ.arriveEdge = null; SQ.arriving = false;
+  } else if (SQ.arriving && w.pad) { pl.place(w.pad.sx - 40, w.pad.sy + 44); pl.dir = 2; SQ.arriving = false; }
   if (!SQ.visited.includes(SQ.planet)) SQ.visited.push(SQ.planet);
   this.cam.x = pl.x; this.cam.y = pl.y;
   saveSequel();
 };
 
 // land on another planet: save this one, carry the player over, rebuild the world in place
-export function travelTo(g: Game, to: PlanetId): void {
-  if (to === SQ.planet && SQ.home === SQ.system) return;
+export function travelTo(g: Game, to: PlanetId, force = false): void {
+  if (to === SQ.planet && SQ.home === SQ.system && !force) return;
   g.save();
   SQ.portable = capture(g.player);
   SQ.planet = to; SQ.home = SQ.system; SQ.arriving = true;
@@ -163,9 +188,15 @@ export function travelTo(g: Game, to: PlanetId): void {
 // extra lines on the ship's menu (the court, the jump drive...), added by other modules
 export interface MenuOpt { label: string; small?: string; fn: () => void }
 export const SHIP_MENU: ((g: Game) => MenuOpt | null)[] = [];
-export function nearShip(pl: Player): boolean {
+// on Earth your ship is parked in one sector; everywhere else it's on the pad you landed at
+export const shipHere = () => SQ.planet !== 'earth' || SQ.home !== 'sol' || (SQ.shipAt[0] === SQ.sector[0] && SQ.shipAt[1] === SQ.sector[1]);
+export function nearPad(pl: Player): boolean {
   const w = R.game.world;
   return !!w.pad && !pl.room && !pl.inCar && SQ.mode !== 'space' && Math.abs(pl.x - w.pad.sx) < 70 && Math.abs(pl.y - w.pad.sy) < 42;
+}
+export function nearShip(pl: Player): boolean {
+  const w = R.game.world;
+  return shipHere() && !!w.pad && !pl.room && !pl.inCar && SQ.mode !== 'space' && Math.abs(pl.x - w.pad.sx) < 70 && Math.abs(pl.y - w.pad.sy) < 42;
 }
 const props = R.props, baseGround = props.drawGround;
 props.drawGround = function (g: CanvasRenderingContext2D, inView: (x: number, y: number) => boolean) {
@@ -177,7 +208,8 @@ props.drawGround = function (g: CanvasRenderingContext2D, inView: (x: number, y:
     g.strokeRect(p.x * TS + 3, p.y * TS + 3, p.w * TS - 6, p.h * TS - 6);
     g.beginPath(); g.arc(p.sx, p.sy, 34, 0, 7); g.stroke();
     g.fillStyle = 'rgba(232,176,32,0.9)'; g.font = '8px Silkscreen, monospace'; g.textAlign = 'center';
-    g.fillText('PAD 3 · ' + SQ.ship.name.toUpperCase(), p.sx, (p.y + p.h) * TS - 8);
+    g.fillText(shipHere() ? 'PAD 3 · ' + SQ.ship.name.toUpperCase() : 'PAD 3 · EMPTY', p.sx, (p.y + p.h) * TS - 8);
+    if (!shipHere()) return baseGround.call(this, g, inView);
     // the ship, at twice its space scale, with a shadow
     const spr = shipSprites(SQ.ship)[24]; // nose up
     g.fillStyle = 'rgba(16,12,36,0.35)'; g.beginPath(); g.ellipse(p.sx + 4, p.sy + 10, spr.width * 0.9, spr.height * 0.5, 0, 0, 7); g.fill();
@@ -193,17 +225,22 @@ const fix = (s: string) => { for (const [re, to] of pairs) s = s.replace(re, to)
 function setRenames(p: Profile): void {
   pairs = renames(p);
   // the police go by the world's name for them
+  // Earth has no families any more: crews, bosses, and the Syndicate
+  if (p.terrain === 'dystopia') pairs.push([/\bfamily\b/g, 'crew'], [/\bfamilies\b/g, 'crews'], [/\bFamily\b/g, 'Crew'], [/\bFamilies\b/g, 'Crews'], [/\bDon\b/g, 'Boss'], [/\bdon\b/g, 'boss'], [/\bThe County\b/g, 'The Wastes'], [/\bTHE COUNTY\b/g, 'THE WASTES']);
   if (p.law !== 'Police') pairs.push([/\bPolice\b/g, p.law], [/\bpolice\b/g, p.law], [/\bthe cops\b/g, p.law], [/\bcops\b/g, p.law === 'Imperial Security' ? 'Imperials' : 'security']);
   if (document.body) sweep(document.body);
 }
+// only words people read: never styles, scripts or inputs
+const skip = (n: Node) => { const p = n.parentNode as Element | null; return !!p && (p.nodeName === 'STYLE' || p.nodeName === 'SCRIPT' || p.nodeName === 'TEXTAREA'); };
 function sweep(root: Node): void {
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  if (root.nodeName === 'STYLE' || root.nodeName === 'SCRIPT') return;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (skip(n) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT) });
   for (let n = walker.nextNode(); n; n = walker.nextNode()) { const v = n.nodeValue || ''; const f = fix(v); if (f !== v) n.nodeValue = f; }
 }
 const obs = new MutationObserver((muts) => {
   for (const m of muts) {
-    if (m.type === 'characterData') { const v = m.target.nodeValue || ''; const f = fix(v); if (f !== v) m.target.nodeValue = f; }
-    else for (const n of m.addedNodes) { if (n.nodeType === 3) { const v = n.nodeValue || ''; const f = fix(v); if (f !== v) n.nodeValue = f; } else if (n.nodeType === 1) sweep(n); }
+    if (m.type === 'characterData') { if (skip(m.target)) continue; const v = m.target.nodeValue || ''; const f = fix(v); if (f !== v) m.target.nodeValue = f; }
+    else for (const n of m.addedNodes) { if (n.nodeType === 3 && !skip(n)) { const v = n.nodeValue || ''; const f = fix(v); if (f !== v) n.nodeValue = f; } else if (n.nodeType === 1) sweep(n); }
   }
 });
 addEventListener('DOMContentLoaded', () => obs.observe(document.body, { childList: true, subtree: true, characterData: true }));

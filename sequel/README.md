@@ -9,8 +9,11 @@ See [DESIGN.md](DESIGN.md) for the full plan.
 
 ## What's in it
 
-- **Worlds you can land on:** Earth (the Brass Coast itself, ten years older), Mars (the Solari
-  families; you start here), Venus (the Imperial capital and its court), Luna (black market,
+- **A planet-sized Earth:** 2,592 sectors over the real continents, each a full game 1 map;
+  walk from one to the next, or pick a landing zone from orbit. Streets of Fire and The Protomen
+  are the look: neon, the El, searchlights, acid rain, robot Peacekeepers. You start here, under
+  Big Tav, the one alien boss of Earth.
+- **Worlds you can land on:** Earth, Mars (the Solari families), Venus (the Imperial capital and its court), Luna (black market,
   the Choir) and Ceres (ice mines, nobody's law). Each is a full game 1 world with its own
   save, names, families, police, terrain, peoples and wildlife.
 - **Real flight:** the real solar system at true distances and periods. Newtonian flight in
@@ -43,11 +46,13 @@ System tabs are in the menu.
 
 ```
 npm install
-npm run check      # typecheck + build + smoke + frontier
+npm run check      # typecheck + build + smoke + frontier + earth
 ```
 
-- `tools/smoke.mjs` plays the core loop: Mars, orbit, piracy, cruise to Luna, black market,
-  Earth, and back to Mars.
+- `tools/smoke.mjs` plays the core loop: Earth, Tav's clamp, orbit, piracy, cruise to Luna,
+  black market, Mars, and home to the Brass Coast.
+- `tools/earth.mjs` plays the planet-sized Earth and the opening: the clamp, a triple-pay job,
+  the peoples of the future, crossing sectors, the ocean, calling the ship, landing zones.
 - `tools/frontier.mjs` plays the newer systems: aliens, first contact, the orbital casino,
   mining the belt, Ceres wildlife and the food chain, bounty hunters (on the ground and
   boarding you), the court, and a jump to Alpha Centauri and back.

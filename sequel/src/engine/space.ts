@@ -48,6 +48,8 @@ export const HOOKS = {
   use: [] as ((g: Game) => { label: string; fn: () => void } | null)[],
   shot: [] as ((x: number, y: number, dmg: number) => boolean)[],
   hud: [] as (() => string | null)[],
+  // worlds that ask where to come down (Earth's landing zones)
+  land: {} as Record<string, (g: Game, go: () => void) => void>,
 };
 export const inSpace = () => SPACE.active;
 export const shipBody = (id: BodyId) => body(id);
@@ -63,6 +65,7 @@ const minutes = () => (R.game && R.game.clock ? R.game.clock.t : SQ.minutes);
 const bs = () => (SPACE.B.length ? SPACE.B : bodies(minutes()));
 const sfx = (n: string) => R.game && R.game.audio && R.game.audio.sfx(n);
 const body = (id: BodyId) => bs().find((b) => b.id === id) as Body;
+const inputStick = () => (R.game && R.game.input ? R.game.input.stick : { x: 0, y: 0 });
 
 function freighterShip(): Ship {
   const s = blankShip('freighter', 'Freighter'), W = 9;
@@ -132,10 +135,10 @@ export function resumeSpace(g: Game): void {
   SPACE.active = true;
   if (!SPACE.crafts.length) { for (let k = 0; k < 3; k++) spawnFreighter(); spawnFreighter(true); }
 }
-function land(g: Game, id: PlanetId): void {
+function land(g: Game, id: PlanetId, force = false): void {
   SPACE.active = false; SPACE.cruise = false; SQ.mode = 'planet'; SQ.space = null; SQ.course = null;
   sfx('crash');
-  if (id !== SQ.planet || SQ.home !== SQ.system) travelTo(g, id);
+  if (force || id !== SQ.planet || SQ.home !== SQ.system) travelTo(g, id, true);
   else { const w = g.world; g.player.place(w.pad.sx - 40, w.pad.sy + 44); g.cam.x = g.player.x; g.cam.y = g.player.y; }
   const p = PLANETS[id];
   g.ui.toast(`Landed on ${p.name}. ${p.blurb}`, 'good');
@@ -292,7 +295,7 @@ function update(g: Game, dt: number): void {
       const rel = Math.hypot(SPACE.vx - p.vx / 60, SPACE.vy - p.vy / 60);
       if (!(p.id in PLANETS)) { if (SCAN[p.id]) SCAN[p.id](g); else g.ui.story(BODY[p.id].name, `${BODY[p.id].blurb}\n\nThere's nowhere to set down here yet.`); }
       else if (rel > 260) g.ui.toast(`Too fast to land (${Math.round(rel)}). Ease off below 260.`, 'bad');
-      else { land(g, p.id as PlanetId); return; }
+      else { const id = p.id as PlanetId; if (HOOKS.land[id]) HOOKS.land[id](g, () => land(g, id, true)); else land(g, id); return; }
     }
   }
   // the camera: zoom out with speed and with distance from the nearest world
@@ -434,9 +437,12 @@ function draw(g: CanvasRenderingContext2D, BW: number, BH: number): void {
   const view: View = { g, sx, sy, Z, W, H, mark: () => {} };
   // craft, shots, sparks (scaled with the world, but never smaller than a marker)
   const frameOf = (a: number) => ((Math.round((a / (Math.PI * 2)) * 32) % 32) + 32) % 32;
+  // ships are always drawn: never smaller than half size, however far the camera pulls out
+  const shipK = Math.max(0.5, Math.min(1, Z));
   const sprite = (spr: HTMLCanvasElement, x: number, y: number) => {
-    if (Z > 0.55) { const k = Z; g.drawImage(spr, Math.round(x - (spr.width * k) / 2), Math.round(y - (spr.height * k) / 2), Math.round(spr.width * k), Math.round(spr.height * k)); return true; }
-    return false;
+    const k = shipK;
+    g.drawImage(spr, Math.round(x - (spr.width * k) / 2), Math.round(y - (spr.height * k) / 2), Math.round(spr.width * k), Math.round(spr.height * k));
+    return true;
   };
   for (const c of SPACE.crafts) {
     if (c.dead) continue;
@@ -444,18 +450,24 @@ function draw(g: CanvasRenderingContext2D, BW: number, BH: number): void {
     if (x < -60 || x > W + 60 || y < -60 || y > H + 60) continue;
     const spr = shipSprites(c.ship)[frameOf(c.a)];
     if (!sprite(spr, x, y)) { g.fillStyle = c.kind === 'patrol' ? '#ff5a5a' : c.disabled ? '#68f0a0' : '#e8e0c8'; g.fillRect(Math.round(x) - 1, Math.round(y) - 1, 3, 3); continue; }
-    if (c.shield > 0 && c.hostile) { g.strokeStyle = 'rgba(150,210,255,0.5)'; g.beginPath(); g.arc(x, y, (spr.width / 2) * Z, 0, 7); g.stroke(); }
-    if (c.kind === 'hunter' && c.hull < c.maxHull) { g.fillStyle = '#ff5a5a'; g.fillRect(x - 1, y - (spr.height / 2) * Z - 6, 3, 3); }
-    if (c.disabled && !c.looted && Math.floor(performance.now() / 300) % 2) { g.fillStyle = '#68f0a0'; g.fillRect(x - 1, y - (spr.height / 2) * Z - 6, 3, 3); }
-    if (c.hostile || c.disabled) { g.fillStyle = '#1c1828'; g.fillRect(x - 14, y + (spr.height / 2) * Z + 2, 28, 3); g.fillStyle = c.disabled ? '#e8b020' : '#e84848'; g.fillRect(x - 14, y + (spr.height / 2) * Z + 2, 28 * Math.max(0, c.hull / c.maxHull), 3); }
+    if (c.shield > 0 && c.hostile) { g.strokeStyle = 'rgba(150,210,255,0.5)'; g.beginPath(); g.arc(x, y, (spr.width / 2) * shipK, 0, 7); g.stroke(); }
+    if (c.kind === 'hunter' && c.hull < c.maxHull) { g.fillStyle = '#ff5a5a'; g.fillRect(x - 1, y - (spr.height / 2) * shipK - 6, 3, 3); }
+    if (c.disabled && !c.looted && Math.floor(performance.now() / 300) % 2) { g.fillStyle = '#68f0a0'; g.fillRect(x - 1, y - (spr.height / 2) * shipK - 6, 3, 3); }
+    if (c.hostile || c.disabled) { g.fillStyle = '#1c1828'; g.fillRect(x - 14, y + (spr.height / 2) * shipK + 2, 28, 3); g.fillStyle = c.disabled ? '#e8b020' : '#e84848'; g.fillRect(x - 14, y + (spr.height / 2) * shipK + 2, 28 * Math.max(0, c.hull / c.maxHull), 3); }
   }
   for (const s of SPACE.shots) { g.fillStyle = s.from === 'me' ? '#ff5ad0' : '#78ff98'; const a = Math.atan2(s.vy, s.vx); for (let k = 0; k < 5; k++) g.fillRect(Math.round(sx(s.x - Math.cos(a) * k / Z)), Math.round(sy(s.y - Math.sin(a) * k / Z)), 2, 2); }
   for (const p of SPACE.sparks) { g.fillStyle = p.col; g.fillRect(Math.round(sx(p.x)), Math.round(sy(p.y)), p.life > 0.3 ? 2 : 1, p.life > 0.3 ? 2 : 1); }
   const my = stats(SQ.ship), me = shipSprites(SQ.ship)[frameOf(SPACE.a)];
+  if (SPACE.cruise || Math.hypot(inputStick().x, inputStick().y) > 0.2) {
+    const bx = W / 2 - Math.cos(SPACE.a) * (me.width * shipK * 0.42), by = H / 2 - Math.sin(SPACE.a) * (me.width * shipK * 0.42), f = 0.7 + Math.random() * 0.3;
+    const glow = g.createRadialGradient(bx, by, 0, bx, by, 10 * shipK * f);
+    glow.addColorStop(0, SPACE.cruise ? 'rgba(200,245,255,0.9)' : 'rgba(255,230,140,0.9)'); glow.addColorStop(1, 'rgba(255,120,40,0)');
+    g.fillStyle = glow; g.fillRect(bx - 12, by - 12, 24, 24);
+  }
   if (!sprite(me, W / 2, H / 2)) {
     // far out: your ship is an arrowhead marker
     const a = SPACE.a; g.fillStyle = '#ff9a3a'; g.beginPath(); g.moveTo(W / 2 + Math.cos(a) * 6, H / 2 + Math.sin(a) * 6); g.lineTo(W / 2 + Math.cos(a + 2.5) * 4, H / 2 + Math.sin(a + 2.5) * 4); g.lineTo(W / 2 + Math.cos(a - 2.5) * 4, H / 2 + Math.sin(a - 2.5) * 4); g.fill();
-  } else if (SPACE.shield > 1) { g.strokeStyle = `rgba(150,210,255,${0.2 + 0.4 * (SPACE.shield / Math.max(1, my.shield))})`; g.beginPath(); g.arc(W / 2, H / 2, (me.width / 2) * Z + 1, 0, 7); g.stroke(); }
+  } else if (SPACE.shield > 1) { g.strokeStyle = `rgba(150,210,255,${0.2 + 0.4 * (SPACE.shield / Math.max(1, my.shield))})`; g.beginPath(); g.arc(W / 2, H / 2, (me.width / 2) * shipK + 1, 0, 7); g.stroke(); }
   // edge markers: inhabited worlds, the course, targets
   const placed: { x: number; y: number }[] = [];
   const mark = (x: number, y: number, col: string, label: string) => {

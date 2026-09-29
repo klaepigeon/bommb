@@ -30,15 +30,22 @@ export interface Sequel {
   flags: Record<string, number>; // story beats: first contact, the Choir, court dates
   eco: Record<string, Record<string, number>>; // wildlife populations per world (eco.ts)
   known: string[]; // star systems the jump drive has charts for
+  sector: [number, number]; // on Earth: the sector you're standing in (earth.ts)
+  shipAt: [number, number]; // on Earth: the sector your ship is parked in
+  arriveEdge: { edge: 'n' | 's' | 'e' | 'w'; f: number } | null; // crossing a sector border on foot
 }
+// the Brass Coast's place on the planet (earth.ts)
+export const HOME_SECTOR: [number, number] = [12, 10];
+const homeSector = (s: [number, number] | undefined) => !s || (s[0] === HOME_SECTOR[0] && s[1] === HOME_SECTOR[1]);
 
 const KEY = 'bs.sequel';
 
 export function fresh(): Sequel {
   return {
-    v: 2, seed: (Math.random() * 1e9) | 0, planet: 'mars', mode: 'planet', arriving: true,
-    ship: starterShip('Brass Buzzard'), hull: -1, cargo: [], heat: { empire: 0, families: 0 }, space: null, visited: ['mars'], portable: null, minutes: 0, course: null,
-    system: 'sol', home: 'sol', fuel: 0, bounty: 0, flags: {}, eco: {}, known: ['sol'],
+    v: 2, seed: (Math.random() * 1e9) | 0, planet: 'earth', mode: 'planet', arriving: true,
+    ship: starterShip('Brass Buzzard'), hull: -1, cargo: [], heat: { empire: 0, families: 0 }, space: null, visited: ['earth'], portable: null, minutes: 0, course: null,
+    system: 'sol', home: 'sol', fuel: 0, bounty: 0, flags: { clamp: 1 }, eco: {}, known: ['sol'],
+    sector: [HOME_SECTOR[0], HOME_SECTOR[1]], shipAt: [HOME_SECTOR[0], HOME_SECTOR[1]], arriveEdge: null,
   };
 }
 
@@ -61,7 +68,10 @@ export function resetSequel(): void {
 }
 
 // a world's save and seed are per system (Sol's keys keep their original names)
-const worldId = (p: PlanetId) => (SQ.home === 'sol' ? p : SQ.home + '.' + p);
+const worldId = (p: PlanetId) => {
+  const sec = p === 'earth' && SQ.home === 'sol' && !homeSector(SQ.sector) ? '@' + SQ.sector[0] + ',' + SQ.sector[1] : '';
+  return (SQ.home === 'sol' ? p : SQ.home + '.' + p) + sec;
+};
 export const planetKey = (p: PlanetId) => 'bs.planet.' + worldId(p);
 export function planetSeed(p: PlanetId): number {
   let h = SQ.seed >>> 0;

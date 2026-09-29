@@ -24,10 +24,41 @@ Mobile first.
 |---|---|---|
 | District | a city and its streets (game 1's cities) | done |
 | County | game 1's whole map, 880×880 tiles | done: every inhabited world is one |
-| Region | several counties stitched and streamed around you | planned |
-| Planet | many regions across biomes and climate bands, with ecosystems (food chains, migrations, seasons) | planned |
+| Region | several counties stitched and streamed around you | done on Earth: walk or drive across sector borders |
+| Planet | many regions across biomes and climate bands, with ecosystems (food chains, migrations, seasons) | done on Earth: 72 x 36 sectors (2,592 counties) over the real continents |
 | Star system | our solar system at true relative distances | done: 8 planets, Ceres, 6 moons, the belt, the Sun |
 | Galaxy | procedurally generated star systems reached by jump drive | started: the six nearest real stars, each with generated worlds |
+
+## Earth: a planet-sized tech demo (built)
+
+Earth is a grid of 72 x 36 sectors, five degrees each. Every sector is a full game 1 map (880 x
+880 tiles: cities, roads, countryside, people, traffic, law), generated in under a second the
+first time you enter it. That's 2,592 counties and about two billion tiles. The Brass Coast,
+game 1's whole map, is one sector on the California coast.
+
+- **Real continents:** a hand-made land mask of the real Earth, smoothed and roughened so
+  coastlines run continuously across sector borders. Climate follows latitude and the real
+  deserts, jungles and ice caps.
+- **Real cities, after the collapse:** Neo-Tokyo, the London Arcology, the Cairo Sprawl and
+  about sixty more sit in their real sectors; the rest are habs, blocks and zones.
+- **Moving around:** walk or drive off the edge of a sector into the next (open ocean turns
+  you back). Your ship stays where you parked it; call it to any pad. From orbit, the planet map
+  picks your landing zone.
+- **Saves:** the last few sectors you visited keep full saves; older ones regrow from their seed.
+  The Brass Coast always keeps its save.
+- **From orbit:** Earth is drawn from the same mask (the Americas facing you), with the sprawls
+  lit on the night side.
+
+## Earth's look: Streets of Fire and The Protomen (built)
+
+The main visual reference for Earth and its tech is *Streets of Fire* (a rock-and-roll fable
+city in a permanent wet night) and *The Protomen* (a city under a tyrant's lights). On Earth:
+
+- a crimson smog sky, even at noon, with searchlights sweeping it;
+- neon on every storefront, and marquees with chasing bulbs on the clubs, cantinas and hotels;
+- the El: an elevated train on iron girders over every city's main drag, lit windows and sparks;
+- Big Tav's face and slogans (OBEY, TAV PROVIDES) on screens over the towers;
+- robot Peacekeepers on the corners, acid rain that stings, a VHS grade over the picture.
 
 ## Look: the future the 80s imagined, drawn with Gen 4 pixel craft
 
@@ -62,7 +93,7 @@ so they read at ship scale.
 
 | World | What it is | Who runs it | Status |
 |---|---|---|---|
-| **Earth** | the Brass Coast itself, ten years on, under game 1's own names | the five families | landable |
+| **Earth** | a dystopian planet-sized Earth; the Brass Coast is one sector of it | Xal "Big Tav" Tavorr's Syndicate, and the street crews under him | landable anywhere on land |
 | **Mars** | terraformed: green where the money went, red dust where it didn't; the casino world | the Solari families | landable (the start) |
 | **Venus** | the Imperial capital: marble cloud-cities over an acid sea | the Galactic Empire | landable |
 | **Luna** | mining domes, the black market, hymns on the radio | the Choir and the rebels | landable |
@@ -185,6 +216,36 @@ and memory: they remember what you did and when.
 - **The Lantern Corps:** all nine colours, each a power faction with its own emotion, ring,
   rules and enemies. A colour leads to another, as in game 1. Your Sinestro Corps uniform from
   game 1 is your way in.
+
+## The opening (built)
+
+The families are finished. An alien, Xal-Tavorr ("Big Tav"), bought the whole underworld of
+Earth, and your old outfit came with it. You start on the Brass Coast with 600 credits and a ship,
+the Brass Buzzard, with a Syndicate clamp on its landing gear. Pay Tav 1,200 or do him one job
+(jobs pay triple now), and you're flying. On Earth every city's crew is a street gang under Tav.
+
+## The people of the future (built)
+
+Populations are procedural: besides the alien species, every world has its share of cyborgs
+(chrome plates, red eyes), robots (serial numbers, boxy heads, their own opinions), mutants
+(lumps, extra eyes, strange skins) and androids (pale, glowing eyes, borrowed memories), each
+person varied by their seed. On Earth the police are robot Peacekeeper units. The gear is sci-fi
+everywhere: blasters, vibro-knives, thermal detonators, hover cars, cantinas, chrome clinics.
+
+## Roadmap (next builds)
+
+From the playtest wishlist, in rough order:
+
+1. **Ship variety:** many more hull types and modules, designed in this system.
+2. **Capital ships and bases:** space stations and star destroyers in the world, and eventually
+   building your own.
+3. **Empty planets and colonies:** land on uninhabited worlds and settle them; procedural
+   worlds for every planet without hand-made content, using the Earth sector system.
+4. **A galaxy chart** beyond the six neighbours.
+5. **More stations:** an Imperial customs platform, a rebel shipyard at Ganymede.
+6. **Alien crew** who join your ship.
+7. **The Choir's story** paying off the Titan signal.
+8. **More procedural people:** a wider generator for cyborgs, robots, aliens and mutants.
 
 ## Carrying over from game 1
 

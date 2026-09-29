@@ -31,11 +31,11 @@ await p.waitForTimeout(800);
 await shot('intro');
 await closeStory();
 const start = await run(() => ({ planet: R.planet.name, city: R.game.world.cities[0].name, cash: R.game.player.cash, job: !!R.game.jobs.active }));
-check(start.planet === 'Mars' && start.city === 'Olympus Quay', `new game on ${start.planet} (${start.city})`);
+check(start.planet === 'Earth' && start.city === 'Port Hollow', `new game on ${start.planet} (${start.city})`);
 check(start.job, 'first family job accepted');
 const aged = await run(() => { const l = R.game.player.look; return { aged: !!l.aged, stubble: l.faceExtra, hair: l.oldOverride.hair[3] }; });
 check(aged.aged && aged.stubble, `protagonist ten years older (${aged.stubble}, hair ${aged.hair})`);
-// a marker in Veridia's population, to prove its own save comes back later
+// a marker in the Brass Coast's population, to prove its own save comes back later
 await run(() => { R.game.pop.people[7].opinion = 77; });
 await tick(30);
 await shot('pad');
@@ -65,20 +65,30 @@ const ctx = await run(() => { const pl = R.game.player, w = R.game.world; pl.pla
 check(ctx === 'Brass Buzzard', `USE by the ship offers "${ctx}"`);
 await run(() => R.game.player.contextAction().fn());
 await shot('shipmenu');
-await run(() => [...document.querySelectorAll('.sheet button, .sheet .opt')].find((x) => /Launch/.test(x.textContent)).click());
+// Tav's clamp: pay the release fee, then launch
+const clamp = await run(() => {
+  R.game.player.cash += 1500;
+  [...document.querySelectorAll('.sheet button, .sheet .opt')].find((x) => /Launch \(clamped\)/.test(x.textContent)).click();
+  const pay = [...document.querySelectorAll('.sheet button, .sheet .opt')].find((x) => /release fee/.test(x.textContent));
+  if (pay) pay.click();
+  return BS2.SQ.flags.clamp;
+});
+check(clamp === 0, 'paid Tav to take the clamp off the ship');
+await run(() => { for (let i = 0; i < 5; i++) { const s = document.querySelector('#story'); if (s && getComputedStyle(s).display !== 'none') s.querySelector('button').click(); } R.game.player.contextAction().fn(); });
+await run(() => [...document.querySelectorAll('.sheet button, .sheet .opt')].find((x) => /^Launch/.test(x.textContent)).click());
 await tick(20);
 check(await run(() => BS2.SPACE.active), 'launched into space');
 await shot('space');
 // real physics: let go of the stick with assist off and the ship falls along its orbit
 const orbit = await run(() => {
   const S = BS2.SPACE, g = R.game; S.assist = false;
-  const d0 = Math.hypot(S.x - S.B.find((b) => b.id === 'mars').x, S.y - S.B.find((b) => b.id === 'mars').y), x0 = S.x, y0 = S.y;
+  const d0 = Math.hypot(S.x - S.B.find((b) => b.id === 'earth').x, S.y - S.B.find((b) => b.id === 'earth').y), x0 = S.x, y0 = S.y;
   for (let i = 0; i < 180; i++) g.tick(1 / 60);
-  const m = S.B.find((b) => b.id === 'mars'), d1 = Math.hypot(S.x - m.x, S.y - m.y);
+  const m = S.B.find((b) => b.id === 'earth'), d1 = Math.hypot(S.x - m.x, S.y - m.y);
   S.assist = true;
   return { moved: Math.round(Math.hypot(S.x - x0, S.y - y0)), d0: Math.round(d0), d1: Math.round(d1), dom: S.g.dom.id };
 });
-check(orbit.dom === 'mars' && orbit.moved > 50 && Math.abs(orbit.d1 - orbit.d0) < orbit.d0 * 0.3, `in orbit around Mars (moved ${orbit.moved}, altitude held ${orbit.d0}→${orbit.d1})`);
+check(orbit.dom === 'earth' && orbit.moved > 50 && Math.abs(orbit.d1 - orbit.d0) < orbit.d0 * 0.3, `in orbit around Earth (moved ${orbit.moved}, altitude held ${orbit.d0}→${orbit.d1})`);
 
 // shoot a freighter until it's disabled (attack held, freighter kept in front)
 const disabled = await run(() => {
@@ -182,22 +192,23 @@ const fly = (id) => run((id) => {
   while ((S.cruise || !S.g || S.g.near.id !== id) && t < 60 * 600) { g.tick(1 / 60); t++; if (!S.cruise && t % 600 === 0) g.input.pressedA.run = true; }
   const m = S.B.find((b) => b.id === id), a = Math.atan2(S.y - m.y, S.x - m.x);
   S.x = m.x + Math.cos(a) * (m.r + 60); S.y = m.y + Math.sin(a) * (m.r + 60); S.vx = m.vx / 60; S.vy = m.vy / 60; g.input.pressedA.use = true; g.tick(1 / 60);
-  return { secs: Math.round(t / 60), arrived: t < 60 * 600 };
+  const lz = document.querySelector('[data-lz="home"]'); if (lz) lz.click();
+  return { secs: Math.round(t / 60), arrived: t < 60 * 600, chooser: !!lz };
 }, id);
 await run(() => BS2.launch(R.game));
-const tEarth = await fly('earth');
-await tick(30);
-const earth = await run(() => ({ planet: R.planet.name, city: R.game.world.cities[0].name, date: R.calendar ? R.calendar(0) : '' }));
-check(tEarth.arrived, `cruised to Earth in ${tEarth.secs}s`);
-check(earth.planet === 'Earth' && earth.city === 'Port Hollow', `landed on Earth: ${earth.city} is still there`);
-await closeStory();
-await shot('earth');
-await run(() => BS2.launch(R.game));
 const tMars = await fly('mars');
+await tick(30);
+const mars = await run(() => ({ planet: R.planet.name, city: R.game.world.cities[0].name }));
+check(tMars.arrived, `cruised to Mars in ${tMars.secs}s`);
+check(mars.planet === 'Mars' && mars.city === 'Olympus Quay', `landed on Mars (${mars.city})`);
+await closeStory();
+await shot('mars');
+await run(() => BS2.launch(R.game));
+const tEarth = await fly('earth');
 await tick(20);
-const home = await run(() => ({ planet: R.planet.name, marker: R.game.pop.people[7].opinion, hold: BS2.SQ.ship.grid.includes('hold') }));
-check(tMars.arrived, `cruised back to Mars in ${tMars.secs}s`);
-check(home.planet === 'Mars' && home.marker === 77, 'back on Mars: its population came back from its own save');
+const home = await run(() => ({ planet: R.planet.name, city: R.game.world.cities[0].name, marker: R.game.pop.people[7].opinion, hold: BS2.SQ.ship.grid.includes('hold') }));
+check(tEarth.arrived && tEarth.chooser, `cruised home to Earth in ${tEarth.secs}s and picked the Brass Coast as the landing zone`);
+check(home.planet === 'Earth' && home.city === 'Port Hollow' && home.marker === 77, 'back on the Brass Coast: its population came back from its own save');
 check(home.hold, 'the refit carried over');
 await closeStory();
 await tick(30);

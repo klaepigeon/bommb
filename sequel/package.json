@@ -9,7 +9,8 @@
     "typecheck": "tsc -p tsconfig.json",
     "smoke": "node tools/smoke.mjs",
     "frontier": "node tools/frontier.mjs",
-    "check": "npm run typecheck && npm run build && npm run smoke && npm run frontier"
+    "earth": "node tools/earth.mjs",
+    "check": "npm run typecheck && npm run build && npm run smoke && npm run frontier && npm run earth"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",

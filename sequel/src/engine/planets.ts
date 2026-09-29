@@ -29,8 +29,8 @@ export const SOL_BODIES: BodyDef[] = [
   { id: 'sun', name: 'The Sun', parent: null, au: 0, days: 1, radius: 2600, gs: 900, color: '#ffe070', blurb: 'Don\'t.' },
   { id: 'mercury', name: 'Mercury', parent: 'sun', au: 0.387, days: 88, radius: 180, gs: 40, color: '#a09088', blurb: 'Scorched rock. The Empire runs a solar-mirror prison on the dark side (not open yet).' },
   { id: 'venus', name: 'Venus', parent: 'sun', au: 0.723, days: 225, radius: 430, gs: 95, color: '#e8d098', blurb: 'The Imperial capital: marble cloud-cities floating above an acid sea.' },
-  { id: 'earth', name: 'Earth', parent: 'sun', au: 1.0, days: 365, radius: 460, gs: 100, color: '#4a8a4a', sea: '#2a64b8', blurb: 'Home. The Brass Coast is still down there, ten years older, and so are its families.' },
-  { id: 'luna', name: 'Luna', parent: 'earth', au: 8, days: 27.3, radius: 150, gs: 30, color: '#b0a8a0', blurb: 'The Moon: mining domes, a black market, and hymns on the radio at night.' },
+  { id: 'earth', name: 'Earth', parent: 'sun', au: 1.0, days: 365, radius: 1150, gs: 70, color: '#6a7a4a', sea: '#2a4a5a', blurb: 'Home, if you can call it that: smog, sprawl and acid seas under one alien boss. The Brass Coast is down there somewhere.' },
+  { id: 'luna', name: 'Luna', parent: 'earth', au: 3.4, days: 27.3, radius: 150, gs: 30, color: '#b0a8a0', blurb: 'The Moon: mining domes, a black market, and hymns on the radio at night.' },
   { id: 'mars', name: 'Mars', parent: 'sun', au: 1.524, days: 687, radius: 280, gs: 60, color: '#c8603a', sea: '#3a7ed0', blurb: 'Terraformed and green where the money is, red dust where it isn\'t. Casino city of the system.' },
   { id: 'ceres', name: 'Ceres', parent: 'sun', au: 2.77, days: 1680, radius: 110, gs: 22, color: '#8a8478', blurb: 'The biggest rock in the belt: claim-jumpers, ice miners and nobody\'s law.' },
   { id: 'jupiter', name: 'Jupiter', parent: 'sun', au: 5.2, days: 4333, radius: 1500, gs: 220, color: '#d8a878', bands: true, blurb: 'The king. Gas-mining rigs in the storms (not open yet).' },
@@ -53,7 +53,7 @@ export interface Profile {
   cities: [CityProfile, CityProfile, CityProfile, CityProfile, CityProfile] | null; // null = game 1's own names
   hamlets: [string, string, string, string] | null;
   law: string;
-  terrain: 'earth' | 'mars' | 'moon' | 'capital' | 'jungle' | 'ice';
+  terrain: 'earth' | 'mars' | 'moon' | 'capital' | 'jungle' | 'ice' | 'dystopia';
   black: boolean; // a black market that buys stolen cargo
   imperial?: boolean; // Imperial law: the bounty is enforced here
   species?: [string, number][]; // alien species living here, and their share of the population
@@ -66,7 +66,7 @@ export const SOL_PLANETS: Record<PlanetId, Profile> = {
     cities: null, hamlets: null, law: 'Police', terrain: 'earth', black: false, fauna: 'earth',
   },
   mars: {
-    id: 'mars', name: 'Mars', faction: 'the Solari families', blurb: SOL_BODIES[5].blurb, law: 'Imperial Security', terrain: 'mars', black: false, imperial: true, fauna: 'mars', species: [['martian', 0.08]],
+    id: 'mars', name: 'Mars', faction: 'the Solari families', blurb: SOL_BODIES[5].blurb, law: 'Imperial Security', terrain: 'mars', black: false, imperial: true, fauna: 'mars', species: [['martian', 0.08], ['cyborg', 0.08], ['robot', 0.05]],
     cities: [
       { name: 'Olympus Quay', tag: 'pads, piers and payoffs', family: 'Solari', don: 'Marcello "The Green" Solari' },
       { name: 'Green Mile', tag: 'the casinos never close', family: 'Marchetti', don: 'Vittoria Marchetti' },
@@ -77,7 +77,7 @@ export const SOL_PLANETS: Record<PlanetId, Profile> = {
     hamlets: ['Orchard Ring', 'Viking Landing', 'Tollgate', 'Glasshouse Row'],
   },
   venus: {
-    id: 'venus', name: 'Venus', faction: 'the Galactic Empire', blurb: SOL_BODIES[2].blurb, law: 'Imperial Security', terrain: 'capital', black: false, imperial: true, fauna: 'venus', species: [['saurian', 0.07]],
+    id: 'venus', name: 'Venus', faction: 'the Galactic Empire', blurb: SOL_BODIES[2].blurb, law: 'Imperial Security', terrain: 'capital', black: false, imperial: true, fauna: 'venus', species: [['saurian', 0.07], ['android', 0.06], ['robot', 0.08]],
     cities: [
       { name: 'Imperial Docks', tag: 'customs, cargo and bribes', family: 'Varro', don: 'Senator Lucan Varro' },
       { name: 'Castra Prime', tag: 'marble, neon and surveillance', family: 'Aurelian', don: 'Prefect Aurelia Aurelian' },
@@ -88,7 +88,7 @@ export const SOL_PLANETS: Record<PlanetId, Profile> = {
     hamlets: ['Garrison Nine', 'Aqueduct Gate', 'Cenotaph', 'Relay Station'],
   },
   luna: {
-    id: 'luna', name: 'Luna', faction: 'the Choir and the rebels', blurb: SOL_BODIES[4].blurb, law: 'Mine Security', terrain: 'moon', black: true, fauna: 'luna', species: [['grey', 0.1], ['choir', 0.08]],
+    id: 'luna', name: 'Luna', faction: 'the Choir and the rebels', blurb: SOL_BODIES[4].blurb, law: 'Mine Security', terrain: 'moon', black: true, fauna: 'luna', species: [['grey', 0.1], ['choir', 0.08], ['cyborg', 0.06], ['mutant', 0.04], ['robot', 0.04]],
     cities: [
       { name: 'Tranquility Port', tag: 'no names, no logs', family: 'Ironjaw', don: 'Big Ma Ironjaw' },
       { name: 'Shaft Nine', tag: 'the mine that sings', family: 'Choir', don: 'Mother Canticle' },
@@ -99,7 +99,7 @@ export const SOL_PLANETS: Record<PlanetId, Profile> = {
     hamlets: ['Relay Six', 'Crater Stop', 'The Dig', 'Hymnal'],
   },
   ceres: {
-    id: 'ceres', name: 'Ceres', faction: 'the claim-jumpers', blurb: SOL_BODIES.find((b) => b.id === 'ceres')!.blurb, law: 'Claim Wardens', terrain: 'ice', black: true, fauna: 'ceres', species: [['grey', 0.05], ['belter', 0.12]],
+    id: 'ceres', name: 'Ceres', faction: 'the claim-jumpers', blurb: SOL_BODIES.find((b) => b.id === 'ceres')!.blurb, law: 'Claim Wardens', terrain: 'ice', black: true, fauna: 'ceres', species: [['grey', 0.05], ['belter', 0.12], ['cyborg', 0.1], ['robot', 0.06]],
     cities: [
       { name: 'Occator Deep', tag: 'the bright spot, and the brightest bar', family: 'Mbeki', don: 'Auntie Nandi Mbeki' },
       { name: 'Ahuna Mons', tag: 'the ice volcano company town', family: 'Halloran', don: 'Foreman Halloran' },
@@ -132,7 +132,9 @@ export const SOL: System = { id: 'sol', name: 'Sol', bodies: SOL_BODIES, planets
 export const GEN: { system: ((id: string) => System) | null } = { system: null };
 export const systemData = (id: string): System => (id === 'sol' || !GEN.system ? SOL : GEN.system(id));
 // the profile of the world you're standing on (it may be in a different system from your ship)
-export const worldProfile = (): Profile => systemData(SQ.home).planets[SQ.planet] || SOL_PLANETS.mars;
+// worlds built from sectors (Earth) answer per sector
+export const SECTORED: Record<string, (s: [number, number]) => Profile> = {};
+export const worldProfile = (): Profile => (SQ.home === 'sol' && SECTORED[SQ.planet] ? SECTORED[SQ.planet](SQ.sector) : systemData(SQ.home).planets[SQ.planet] || SOL_PLANETS.mars);
 
 // game 1's own names, for the text layer that renames them on the fly
 export const GAME1 = {
@@ -152,7 +154,7 @@ export function renames(p: Profile): [RegExp, string][] {
   pairs.push(['Gus Vane', p.cities[0].don], ['Don Vane', 'Don ' + p.cities[0].family]);
   GAME1.cities.forEach((c, i) => pairs.push([c, p.cities![i].name]));
   GAME1.hamlets.forEach((h, i) => pairs.push([h, p.hamlets![i]]));
-  GAME1.families.forEach((f, i) => pairs.push([f, p.cities![i].family]));
+  GAME1.families.forEach((f, i) => { const to = p.cities![i].family; pairs.push([f, to], [f + 's', to.endsWith('s') ? to : to + 's']); });
   pairs.push(['the Brass Coast', p.name], ['The Brass Coast', p.name], ['Brass Coast', p.name], ['BRASS COAST', p.name.toUpperCase()]);
   pairs.sort((a, b) => b[0].length - a[0].length);
   const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

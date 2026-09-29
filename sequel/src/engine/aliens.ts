@@ -14,14 +14,47 @@ import { PLANETS, worldProfile } from './planets';
 import { addCargo, GOODS } from './cargo';
 import { SCAN, SPACE } from './space';
 
-type Feature = 'antennae' | 'crest' | 'dome' | 'halo' | 'visor' | 'tendrils' | 'horns' | 'fins';
-type Eyes = 'big' | 'glow' | 'slit' | 'many' | 'none';
+type Feature = 'antennae' | 'crest' | 'dome' | 'halo' | 'visor' | 'tendrils' | 'horns' | 'fins' | 'implant' | 'robot' | 'mutant' | 'boss';
+type Eyes = 'big' | 'glow' | 'slit' | 'many' | 'none' | 'red' | 'bar' | 'odd';
 export interface Species {
   id: string; name: string; plural: string; skin: string; eye: string; eyes: Eyes; feature: Feature; accent: string;
   names: string[]; lines: string[]; blurb: string; trader?: boolean; hums?: boolean;
+  keepSkin?: boolean; // people with parts added (cyborgs) keep their own skin and hair
+  keepName?: boolean; // and their own names
+  skins?: string[]; accents?: string[]; // procedural variety, picked per person
+  unit?: boolean; // robots get serial numbers
 }
 
 export const SPECIES: Record<string, Species> = {
+  // ---- the made and the changed: procedural people of the future
+  cyborg: {
+    id: 'cyborg', name: 'Cyborg', plural: 'cyborgs', skin: '#e0ac7e', eye: '#ff3030', eyes: 'red', feature: 'implant', accent: '#a8b0c0', keepSkin: true, keepName: true,
+    accents: ['#a8b0c0', '#c8a040', '#6a7080', '#d0d8e8', '#8a5a3a'],
+    names: [], lines: ['Upgraded the arm. Still owe on the eye.', 'Warranty expired in XX79. I run on spite.', 'Don\'t stare at the chrome, chum.', 'You still all meat? Brave.', 'The clinic on Fifth does knees cheap.'],
+    blurb: 'People with parts bought, stolen or grown. Half the street is some percentage machine.',
+  },
+  robot: {
+    id: 'robot', name: 'Robot', plural: 'robots', skin: '#9aa0aa', eye: '#68f0ff', eyes: 'bar', feature: 'robot', accent: '#e84848', unit: true,
+    skins: ['#9aa0aa', '#b8a070', '#6a7a8a', '#c8c8d0', '#8a6a5a', '#5a6a5a'], accents: ['#e84848', '#f0b838', '#68f0a0', '#ff5ad0'],
+    names: [], lines: ['GREETINGS. PLEASE STATE YOUR BUSINESS.', 'MY SHIFT ENDS IN 4,112 HOURS.', 'I AM NOT PROGRAMMED FOR SMALL TALK. BUT I AM TRYING.', 'DO YOU REQUIRE ASSISTANCE, OR VIOLENCE?', 'BEEP. THAT WAS A JOKE.'],
+    blurb: 'Service units, security units, units nobody remembers ordering. Some of them have opinions now.',
+  },
+  mutant: {
+    id: 'mutant', name: 'Mutant', plural: 'mutants', skin: '#8ab86a', eye: '#f0d030', eyes: 'odd', feature: 'mutant', accent: '#6a8a4a', keepName: true,
+    skins: ['#8ab86a', '#a878b8', '#c89060', '#6ab8a8', '#b8b860', '#c86a6a'], accents: ['#5a7a3a', '#6a3a7a', '#8a5a2a', '#3a7a6a'],
+    names: [], lines: ['Born downwind of the refinery. Grew an extra something.', 'Don\'t drink the tap water. Look at me.', 'The rain did this. The rain does everything.', 'Third eye sees you coming.', 'We were here first. Before the arcologies.'],
+    blurb: 'Children of the fallout zones and the poisoned seas. The street takes them in; the arcologies don\'t.',
+  },
+  android: {
+    id: 'android', name: 'Android', plural: 'androids', skin: '#e8e0e8', eye: '#68f0ff', eyes: 'glow', feature: 'implant', accent: '#d0d8e8', keepName: true,
+    names: [], lines: ['I remember a childhood. It was installed on a Tuesday.', 'More human than human, they said. They were wrong.', 'I have four years left. I intend to enjoy them.', 'Have you ever wondered if you\'re real?', 'The rain is lovely, from the inside of a window.'],
+    blurb: 'Made to look like people, and some of them think they are. The Peacekeepers retire the ones that run.',
+  },
+  tavorr: {
+    id: 'tavorr', name: 'Tavorr', plural: 'the Tavorr', skin: '#6a4a8a', eye: '#f0d030', eyes: 'many', feature: 'boss', accent: '#c848a8',
+    names: ['Xal'], lines: ['You were Vane\'s. Now you\'re mine. Earth is mine.', 'I bought this planet at a discount. You were in the box.', 'Get me credits, get a ship, get out of my sight. In that order.', 'Ten years, and your species still thinks it owns the place.'],
+    blurb: 'Xal-Tavorr, called Big Tav: the one boss of all of Earth\'s underworld. Nobody knows what planet he\'s from. Nobody asks twice.',
+  },
   grey: {
     id: 'grey', name: 'Grey', plural: 'Greys', skin: '#a8b4bc', eye: '#08080c', eyes: 'big', feature: 'dome', accent: '#d8e0e8', trader: true,
     names: ['Ixx', 'Oolan', 'Tethe', 'Vrin', 'Aash', 'Quelle', 'Numm', 'Seph'],
@@ -69,10 +102,15 @@ export function speciesFor(seed: number): Species | null {
   return null;
 }
 function alienise(look: any, sp: Species, seed: number): void {
-  look.xeno = sp.id;
-  look.skin = sp.skin; look.hair = sp.skin; look.beard = false; look.hat = null; look.shades = false;
+  look.xeno = sp.id; look.xenoSeed = seed;
+  const pickOf = (a: string[] | undefined, k: number, d: string) => (a && a.length ? a[Math.floor(hashN(seed, k) * a.length)] : d);
+  look.xenoAccent = pickOf(sp.accents, 11, sp.accent);
   look.seedStr = 'xeno-' + sp.id + '-' + seed;
-  look.oldOverride = Object.assign({}, look.oldOverride || {}, { skin: ramp(sp.skin), style: 'bald', stache: false, glasses: false });
+  if (sp.keepSkin) { look.old = null; return; }
+  const skin = pickOf(sp.skins, 12, sp.skin);
+  look.xenoSkin = skin;
+  look.skin = skin; look.hair = skin; look.beard = false; look.hat = null; look.shades = false;
+  look.oldOverride = Object.assign({}, look.oldOverride || {}, { skin: ramp(skin), style: 'bald', stache: false, glasses: false });
   look.old = null;
 }
 
@@ -80,11 +118,16 @@ const POP = R.Population.prototype, baseLook = POP.makeLook;
 POP.makeLook = function (this: unknown, rnd: () => number, p: any) {
   const look = baseLook.call(this, rnd, p);
   if (!p || p.role === 'cop' || p.role === 'detective' || p.seed == null) return look;
+  if (p.isDon && p.faction === 'Vane' && SQ.planet === 'earth' && SQ.home === 'sol') { alienise(look, SPECIES.tavorr, p.seed); return look; }
   const sp = speciesFor(p.seed);
   if (!sp) return look;
   alienise(look, sp, p.seed);
   // the population gives everyone a human name; aliens keep their own
-  if (!p._xeno) { p._xeno = sp.id; p.first = sp.names[Math.floor(hashN(p.seed, 3) * sp.names.length)]; p.last = sp.id === 'belter' ? p.last : sp.plural === 'the Choir' ? 'of the Choir' : sp.name; }
+  if (!p._xeno) {
+    p._xeno = sp.id;
+    if (sp.unit) { p.first = ['UNIT', 'SERV', 'SEC', 'MED', 'CARGO', 'ORBO'][Math.floor(hashN(p.seed, 3) * 6)]; p.last = (100 + Math.floor(hashN(p.seed, 4) * 900)) + '-' + 'XKRZVT'[Math.floor(hashN(p.seed, 5) * 6)]; }
+    else if (!sp.keepName && sp.names.length) { p.first = sp.names[Math.floor(hashN(p.seed, 3) * sp.names.length)]; p.last = sp.id === 'belter' ? p.last : sp.plural === 'the Choir' ? 'of the Choir' : sp.name; }
+  }
   return look;
 };
 
@@ -101,6 +144,14 @@ const FEATURES: Record<Feature, (s: Species) => { front: Pix[]; back: Pix[] }> =
   tendrils: (s) => { const f: Pix[] = [[-5, 12, 1, 4, s.accent], [-2, 13, 1, 4, s.accent], [1, 13, 1, 4, s.accent], [4, 12, 1, 4, s.accent]]; return { front: f, back: [] }; },
   horns: (s) => { const f: Pix[] = [[-5, 0, 2, 2, s.accent], [-6, -2, 2, 2, s.accent], [3, 0, 2, 2, s.accent], [4, -2, 2, 2, s.accent]]; return { front: f, back: f }; },
   fins: (s) => { const f: Pix[] = [[-8, 6, 2, 5, s.accent], [6, 6, 2, 5, s.accent], [-1, -1, 2, 3, s.accent]]; return { front: f, back: f }; },
+  // a chrome plate over one side of the face, a jack behind the ear
+  implant: (s) => ({ front: [[1, 6, 5, 6, s.accent], [2, 7, 3, 1, '#ffffff'], [5, 12, 1, 2, s.accent]], back: [[-2, 8, 3, 3, s.accent], [-1, 9, 1, 1, '#ff3030']] }),
+  // a boxy head, rivets, an antenna with a light
+  robot: (s) => { const f: Pix[] = [[-6, 2, 12, 11, s.skin], [-6, 2, 12, 1, '#ffffff'], [-6, 12, 12, 1, '#303038'], [0, -3, 1, 5, '#303038'], [-1, -4, 3, 2, s.accent], [-6, 6, 1, 1, '#303038'], [5, 6, 1, 1, '#303038']]; return { front: f, back: f }; },
+  // lumps and a crooked growth, per person
+  mutant: (s) => ({ front: [[-6, 3, 3, 2, s.accent], [3, 1, 3, 3, s.accent], [-2, 13, 4, 1, s.accent]], back: [[-5, 2, 4, 3, s.accent], [2, 4, 3, 2, s.accent]] }),
+  // Big Tav: a crown of spines and a beard of tendrils
+  boss: (s) => { const f: Pix[] = [[-6, -3, 2, 4, s.accent], [-2, -5, 2, 6, s.accent], [2, -4, 2, 5, s.accent], [5, -2, 2, 3, s.accent], [-5, 12, 1, 5, s.accent], [-2, 13, 1, 6, s.accent], [1, 13, 1, 6, s.accent], [4, 12, 1, 5, s.accent]]; return { front: f, back: f.slice(0, 4) }; },
 };
 const EYES: Record<Eyes, (s: Species) => Pix[]> = {
   big: (s) => [[-4, 9, 3, 2, s.eye], [1, 9, 3, 2, s.eye], [-3, 9, 1, 1, '#ffffff']],
@@ -108,6 +159,9 @@ const EYES: Record<Eyes, (s: Species) => Pix[]> = {
   slit: (s) => [[-3, 9, 2, 2, s.eye], [2, 9, 2, 2, s.eye], [-3, 9, 1, 2, '#101010'], [2, 9, 1, 2, '#101010']],
   many: (s) => [[-4, 8, 1, 1, s.eye], [-2, 9, 1, 1, s.eye], [1, 9, 1, 1, s.eye], [3, 8, 1, 1, s.eye], [-1, 7, 2, 1, s.eye]],
   none: () => [],
+  red: (s) => [[2, 10, 2, 1, s.eye], [4, 10, 1, 1, 'rgba(255,48,48,0.5)']],
+  bar: (s) => [[-4, 9, 8, 2, '#101014'], [-3, 9, 6, 1, s.eye]],
+  odd: (s) => [[-3, 10, 1, 1, '#101010'], [2, 10, 2, 2, '#101010'], [0, 7, 1, 1, s.eye]],
 };
 const DIR8 = ['right', 'downright', 'down', 'downright', 'right', 'upright', 'up', 'upright'];
 const FLIP8 = [false, false, false, true, true, true, false, false];
@@ -128,9 +182,10 @@ A.drawPerson = function (g: CanvasRenderingContext2D, x: number, y: number, dir:
   const moving = walk && Math.abs(walk) > 0.01, bob = moving && (Math.floor(walk * 0.5) % 4) % 2 ? 1 : 0;
   const X = Math.round(x), Y = Math.round(y) - bob;
   const d8 = A.dir8(dir, st && st.ang), n = DIR8[d8], flip = FLIP8[d8], back = n === 'up' || n === 'upright';
-  const f = FEATURES[sp.feature](sp);
+  const varied: Species = look.xenoAccent || look.xenoSkin ? Object.assign({}, sp, { accent: look.xenoAccent || sp.accent, skin: look.xenoSkin || sp.skin }) : sp;
+  const f = FEATURES[sp.feature](varied);
   paint(g, X, Y, back ? f.back : f.front, n, flip);
-  if (!back) paint(g, X, Y, EYES[sp.eyes](sp), n, flip);
+  if (!back) paint(g, X, Y, EYES[sp.eyes](varied), n, flip);
   return res;
 };
 

@@ -7,6 +7,7 @@ import { Px } from '../gfx/px';
 import { rampOf, mix } from '../gfx/pal';
 import { hash2 } from '../core/math';
 import { SQ } from '../engine/state';
+import { landValue, climate, NX, NY } from '../engine/earth';
 
 export interface Body { id: BodyId; x: number; y: number; r: number; vx: number; vy: number }
 
@@ -75,6 +76,26 @@ export function planetArt(id: BodyId): HTMLCanvasElement {
     // the star: its own colour, white-hot at the core, granulated, a darker limb
     const c0 = d.color;
     p.oval(C, C, R, R, (nx, ny, x, y) => { const k = Math.hypot(nx, ny), f = hash2(Math.floor(x / 4), Math.floor(y / 4), 5); return k > 0.94 ? mix(c0, '#a03010', 0.35) : k > 0.8 ? (f > 0.5 ? mix(c0, '#ffffff', 0.15) : mix(c0, '#e08020', 0.15)) : f > 0.8 ? mix(c0, '#ffffff', 0.7) : k < 0.5 ? mix(c0, '#ffffff', 0.85) : mix(c0, '#ffffff', 0.4); });
+  } else if (id === 'earth' && SQ.system === 'sol') {
+    // the real continents, as seen from over the Pacific: smog-brown land, a sick green sea,
+    // the sprawls lit up on the night side
+    const LON0 = -115 * Math.PI / 180;
+    const land: Record<string, string[]> = { ice: ['#8a96a0', '#aab4bc', '#c8d0d8', '#dde4ea', '#f0f4f6'], tundra: ['#3a4238', '#4e5848', '#66705a', '#7e8870', '#98a288'], desert: ['#5a4428', '#7a5e38', '#9a7a4c', '#b89660', '#d0b078'], jungle: ['#1a3020', '#28442c', '#3a5a38', '#4e7048', '#648656'], temperate: ['#2e3424', '#444a30', '#5c6040', '#747850', '#8e9064'] };
+    const sea = ['#0e1a20', '#16282e', '#1e3a3c', '#2a4c48', '#3a605a'];
+    p.oval(C, C, R, R, (nx, ny, x, y) => {
+      const lat = -Math.asin(Math.max(-1, Math.min(1, ny))), cl = Math.cos(lat) || 1e-6;
+      const lon = LON0 + Math.asin(Math.max(-1, Math.min(1, nx / cl)));
+      const u = ((((lon * 180) / Math.PI + 180) / 360) * NX + NX) % NX, v = ((90 - (lat * 180) / Math.PI) / 180) * NY;
+      const l = -nx * 0.55 - ny * 0.55 + (1 - Math.hypot(nx, ny)) * 0.4;
+      const k = l > 0.55 ? 4 : l > 0.2 ? 3 : l > -0.25 ? 2 : l > -0.6 ? 1 : 0;
+      const lv = landValue(u, v);
+      let col = lv < 0.5 ? sea[k] : land[climate((lon * 180) / Math.PI, (lat * 180) / Math.PI)][k];
+      // city lights and burning refineries on the dark side
+      if (lv >= 0.5 && k <= 1 && hash2(x, y, 77) > 0.9) col = hash2(x, y, 78) > 0.5 ? '#ffb040' : '#ff5ad0';
+      // smog streaks
+      if (vnoise(x / 14, y / 5, 31) > 0.72) col = mix(col, '#b89a70', 0.35);
+      return col;
+    });
   } else p.oval(C, C, R, R, (nx, ny, x, y) => {
     const n = vnoise(x / 11, y / 11, seed) * 0.6 + vnoise(x / 27, y / 27, seed + 1) * 0.4;
     const l = -nx * 0.55 - ny * 0.55 + (1 - Math.hypot(nx, ny)) * 0.4;
@@ -97,7 +118,7 @@ export function planetArt(id: BodyId): HTMLCanvasElement {
   if (d.air ?? ['earth', 'venus', 'mars', 'titan', 'jupiter', 'saturn', 'uranus', 'neptune'].includes(id))
     for (let a = 0; a < 360; a += 0.5) {
       const t = (a * Math.PI) / 180, x = Math.round(C + Math.cos(t) * (R + 1)), y = Math.round(C + Math.sin(t) * (R + 1));
-      if (!p.has(x, y)) p.set(x, y, Math.cos(t) + Math.sin(t) < 0 ? mix(d.color, '#e0f4ff', 0.6) : mix(d.color, '#1a2a5a', 0.6));
+      if (!p.has(x, y)) p.set(x, y, id === 'earth' ? (Math.cos(t) + Math.sin(t) < 0 ? '#d8b070' : '#5a3a2a') : Math.cos(t) + Math.sin(t) < 0 ? mix(d.color, '#e0f4ff', 0.6) : mix(d.color, '#1a2a5a', 0.6));
     }
   c = p.canvas();
   art.set(key, c);

@@ -7,12 +7,12 @@ import { PLANETS, type PlanetId } from './planets';
 export const GOODS: Record<Good, { name: string; base: number; contraband?: boolean }> = {
   rum: { name: 'Synth-Rum', base: 40 },
   tea: { name: 'Spice Tea', base: 25 },
-  ore: { name: 'Raw Ore', base: 15 },
+  ore: { name: 'Raw Ore', base: 35 },
   meds: { name: 'Medkits', base: 60 },
   vinyl: { name: 'Holo-Vinyl', base: 35 },
   blasters: { name: 'Blasters', base: 120, contraband: true },
-  ice: { name: 'Belt Ice', base: 20 },
-  plat: { name: 'Platinum', base: 150 },
+  ice: { name: 'Belt Ice', base: 40 },
+  plat: { name: 'Platinum', base: 240 },
   pearls: { name: 'Europan Song-Pearls', base: 260 },
   xeno: { name: 'Xeno-Tech', base: 340, contraband: true },
 };

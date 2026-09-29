@@ -85,46 +85,104 @@ export function stats(s: Ship): Stats {
 }
 
 // ---------------------------------------------------------------- sprites
-const C = 6; // pixels per module cell in space
+// Drawn like the rest of the game: a real hull silhouette (the modules decide its shape),
+// shaded in the paint's ramp with light from above, panel lines and rivets, swept wings on
+// the bigger hulls, an 80s racing stripe, and the ink outline every game 1 sprite has.
+const C = 8; // pixels per module cell in space
 const spriteCache = new Map<string, HTMLCanvasElement[]>();
 
 function paintTop(s: Ship): Px {
   const H = HULLS[s.hull];
-  const W = H.w * C + 8, Hh = H.h * C + 6;
+  const PADX = 8, PADY = 6, W = H.w * C + PADX * 2, Hh = H.h * C + PADY * 2;
   const p = new Px(W, Hh);
-  const hull = rampOf(s.paint);
-  // the hull: rounded at the nose, flat at the tail
-  for (let y = 0; y < H.h * C; y++)
-    for (let x = 0; x < H.w * C; x++) {
-      const gx = Math.floor(x / C), gy = Math.floor(y / C);
-      if (!s.grid[gy * H.w + gx]) {
-        // a filled cell next to it? draw a thin strut, otherwise empty space
-        continue;
+  const hull = rampOf(s.paint), dark = rampOf('#3a3e4a');
+  const cy = PADY + (H.h * C) / 2;
+  const occ = (gx: number, gy: number) => gx >= 0 && gy >= 0 && gx < H.w && gy < H.h && !!s.grid[gy * H.w + gx];
+  // the body's half-height along its length, from the modules in each column, smoothed
+  const half: number[] = [];
+  for (let gx = 0; gx < H.w; gx++) {
+    let lo = H.h, hi = -1;
+    for (let gy = 0; gy < H.h; gy++) if (occ(gx, gy)) { lo = Math.min(lo, gy); hi = Math.max(hi, gy); }
+    half.push(hi < 0 ? 0 : Math.max(Math.abs(lo * C - H.h * C / 2), Math.abs((hi + 1) * C - H.h * C / 2)));
+  }
+  const noseCol = (() => { for (let gx = H.w - 1; gx >= 0; gx--) if (half[gx] > 0) return gx; return H.w - 1; })();
+  const tailCol = half.findIndex((h) => h > 0);
+  const hAt = (x: number) => {
+    const u = (x - PADX) / C, gx = Math.floor(u);
+    if (gx < tailCol || gx > noseCol) return 0;
+    const a = half[Math.max(tailCol, Math.min(noseCol, gx))], b = half[Math.max(tailCol, Math.min(noseCol, gx + 1))] || a;
+    let h = a + (b - a) * Math.max(0, u - gx - 0.5);
+    // the nose tapers to a wedge over its last cell and a half
+    const toNose = (noseCol + 1) * C + PADX - x;
+    if (toNose < C * 1.6) h *= Math.max(0.15, toNose / (C * 1.6));
+    return h;
+  };
+  // wings: bigger hulls get swept wings from mid-body back
+  if (H.h >= 4) {
+    const wx0 = PADX + Math.floor(H.w * 0.2) * C, wx1 = PADX + Math.floor(H.w * 0.62) * C, span = H.h * C / 2 + 5;
+    for (let x = wx0; x < wx1; x++) {
+      const t = (x - wx0) / (wx1 - wx0), reach = span * (1 - t * 0.85);
+      for (let dy = 0; dy <= reach; dy++) for (const sgn of [-1, 1]) {
+        const y = Math.round(cy + sgn * dy);
+        if (y < 1 || y >= Hh - 1) continue;
+        p.set(x, y, dy > reach - 2 ? hull[4] : dy > reach * 0.6 ? dark[2] : hull[1]);
       }
-      const ny = (y - (H.h * C) / 2) / ((H.h * C) / 2);
-      const nose = x > H.w * C - 5 && Math.abs(ny) > 0.55 + (H.w * C - x) * 0.08;
-      if (nose) continue;
-      const l = -ny * 0.8;
-      p.set(x + 4, y + 3, l > 0.4 ? hull[3] : l > -0.3 ? hull[2] : hull[1]);
     }
-  // module details
+  }
+  // the body, lit from above, panel seams on the cell grid, rivets
+  for (let x = PADX - 2; x < W - 2; x++) {
+    const h = hAt(x);
+    if (h <= 0) continue;
+    for (let y = Math.ceil(cy - h); y < cy + h; y++) {
+      const ny = (y - cy) / h;
+      let col = ny < -0.55 ? hull[4] : ny < -0.1 ? hull[3] : ny < 0.45 ? hull[2] : hull[1];
+      if ((x - PADX) % C === 0 && Math.abs(ny) < 0.85) col = hull[1];
+      if ((x - PADX) % C === 3 && (y - PADY) % C === 2) col = hull[4];
+      p.set(x, y, col);
+    }
+  }
+  // the 80s racing stripe down the flank, and a pinstripe
+  const accent = s.paint === '#eceef4' ? '#3a8aff' : s.paint === '#2a2a34' ? '#e84848' : '#ff9a3a';
+  for (let x = PADX; x < W - 4; x++) { const h = hAt(x); if (h > 3) { p.set(x, Math.round(cy + h * 0.35), accent); p.set(x, Math.round(cy + h * 0.35) + 1, accent); if (x % 2) p.set(x, Math.round(cy - h * 0.3), hull[4]); } }
+  // module details, in place on the grid
   for (let gy = 0; gy < H.h; gy++)
     for (let gx = 0; gx < H.w; gx++) {
       const m = s.grid[gy * H.w + gx];
       if (!m) continue;
-      const x0 = gx * C + 4, y0 = gy * C + 3;
-      const col = MODS[m].col;
-      if (m === 'cockpit') { p.rect(x0 + 1, y0 + 1, 4, 4, col); p.set(x0 + 3, y0 + 1, '#e8f8ff'); p.set(x0 + 4, y0 + 2, '#e8f8ff'); }
-      else if (m === 'engine') { p.rect(x0, y0 + 1, 3, 4, '#4a4e5a'); p.set(x0 - 1, y0 + 2, '#f8a040'); p.set(x0 - 1, y0 + 3, '#f8a040'); }
-      else if (m === 'gun') { p.hline(x0 + 2, x0 + 7, y0 + 2, '#3a3e4a'); p.hline(x0 + 2, x0 + 6, y0 + 3, '#6a6e7a'); p.set(x0 + 1, y0 + 2, col); }
-      else if (m === 'cargo' || m === 'hold') { p.rect(x0 + 1, y0 + 1, 4, 4, m === 'hold' ? hull[1] : col); p.set(x0 + 1, y0 + 1, hull[4]); }
-      else if (m === 'shield') { p.oval(x0 + 3, y0 + 3, 2, 2, () => col); }
-      else if (m === 'reactor') { p.rect(x0 + 1, y0 + 1, 4, 4, '#3a3e4a'); p.rect(x0 + 2, y0 + 2, 2, 2, col); }
-      else { p.set(x0 + 2, y0 + 2, col); p.set(x0 + 3, y0 + 3, col); }
+      const x0 = gx * C + PADX, y0 = gy * C + PADY, col = MODS[m].col, mx = x0 + C / 2, my = y0 + C / 2;
+      if (m === 'cockpit') {
+        // a bubble canopy: dark glass, a sky reflection, a hot highlight
+        p.oval(mx + 1, cy, 3, Math.min(3, hAt(mx) - 1), (nx, ny) => (ny < -0.3 ? '#a8e8ff' : ny < 0.3 ? '#3a78b8' : '#1a3a68'));
+        p.set(mx, Math.round(cy) - 2, '#ffffff');
+      } else if (m === 'engine') {
+        // a bell nozzle out the back, glowing
+        const bx = PADX + tailCol * C - 1;
+        p.rect(bx - 3, my - 2, 4, 5, dark[1]); p.rect(bx - 3, my - 1, 1, 3, dark[3]);
+        p.set(bx - 4, my - 1, '#ffb040'); p.set(bx - 4, my, '#fff0a0'); p.set(bx - 4, my + 1, '#ffb040'); p.set(bx - 5, my, '#ff6a20');
+      } else if (m === 'gun') {
+        // a long barrel forward from the hardpoint
+        for (let x = x0 + 2; x < Math.min(W - 1, x0 + C + 5); x++) { p.set(x, my, dark[1]); p.set(x, my - 1, dark[3]); }
+        p.set(Math.min(W - 2, x0 + C + 5), my, '#ff5a5a');
+      } else if (m === 'cargo' || m === 'hold') {
+        p.rect(x0 + 1, y0 + 1, C - 2, C - 2, m === 'hold' ? hull[1] : '#8a6030');
+        p.hline(x0 + 1, x0 + C - 2, y0 + 3, m === 'hold' ? hull[0] : '#c89050');
+        p.hline(x0 + 1, x0 + C - 2, y0 + 5, m === 'hold' ? hull[0] : '#c89050');
+      } else if (m === 'shield') {
+        p.oval(mx, my, 2, 2, (nx, ny) => (nx * nx + ny * ny < 0.3 ? '#ffffff' : '#58a8e8'));
+      } else if (m === 'reactor') {
+        p.rect(x0 + 1, y0 + 1, C - 2, C - 2, dark[1]); p.oval(mx, my, 2, 2, (nx, ny) => (nx * nx + ny * ny < 0.3 ? '#fffbe0' : '#f0d040'));
+      } else if (m === 'tube') {
+        p.oval(mx, my, 3, 3, (nx, ny) => (nx * nx + ny * ny > 0.5 ? dark[3] : '#68f0a0'));
+      } else if (m === 'tractor') {
+        p.oval(mx, my, 3, 3, (nx, ny) => (nx * nx + ny * ny > 0.5 ? '#c8c8d0' : '#a8f0ff'));
+      } else if (m === 'jump') {
+        p.oval(mx, my, 3, 3, (nx, ny) => (nx * nx + ny * ny > 0.45 ? '#ff5ad0' : '#2a0a3a')); p.set(mx, my, '#ffffff');
+      } else if (m === 'armor') {
+        for (let k = 1; k < C - 1; k += 2) p.hline(x0 + 1, x0 + C - 2, y0 + k, hull[0]);
+      } else {
+        p.rect(mx - 1, my - 1, 2, 2, col);
+      }
     }
-  // a paint stripe along the spine
-  const mid = Math.floor((H.h * C) / 2) + 3;
-  for (let x = 4; x < H.w * C; x++) if (p.has(x, mid) && x % 3) p.set(x, mid, hull[4]);
   p.outline(ink);
   return p;
 }

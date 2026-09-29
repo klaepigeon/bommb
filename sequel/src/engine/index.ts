@@ -7,6 +7,7 @@ import { enterSystem } from './galaxy';
 import { current, nearShip, SHIP_MENU } from './travel';
 import { launch, resumeSpace, SPACE, nearPlanet } from './space';
 import { openWatch, installWatch } from './watch';
+import { shipSprites } from '../ship/ship';
 import './board';
 import './gen4';
 import './older';
@@ -14,6 +15,9 @@ import './aliens';
 import './eco';
 import './stations';
 import './bounty';
+import './earthplay';
+import './dystopia';
+import './earthlook';
 
 const GP = R.Game.prototype;
 
@@ -25,14 +29,14 @@ GP.newGame = function (this: Game) {
   return baseNew.call(this);
 };
 GP.intro = function (this: Game) {
-  const pl = this.player, p = current();
-  const c0 = p.cities ? p.cities[0] : { name: R.data.cities[0].name, family: 'Vane', don: 'Gus Vane' };
+  const pl = this.player;
   pl.stats.startT = this.clock.t;
-  this.ui.story(`${p.name}, year XX8X`, `Ten years since the Brass\u00A0Coast. Ten years of greying at the temples, of jobs nobody talks about, of that Sinestro Corps uniform folded at the bottom of a duffel bag.\n\nNow you've got a scrappy skiff called the ${SQ.ship.name}, a few hundred credits, and a solar system that went and got itself an Empire while you weren't looking.\n\n${c0.name} is ${c0.family} country. ${c0.don} runs the pads, the cards and the Imperial Security payroll, and word is they're hiring.\n\nYour ship is on Pad 3, right behind you. Walk up to it to launch, refit or trade cargo. Earth is out there too.`, () => {
+  pl.cash = Math.max(pl.cash, 600);
+  this.ui.story('Earth, year XX8X', `Ten years since the Brass\u00A0Coast. The old mob is finished: an alien called Xal-Tavorr bought the whole underworld of Earth, and your old outfit came with it. You work for Big Tav now.\n\nYou've got 600 credits and a ship, the ${SQ.ship.name}, on Pad 3. Tav's people put a clamp on it.\n\nPay Tav 1,200, or do him one job. Then get off this rock.`, () => {
     const offers = this.jobs.offersFor(pl.family);
     const first = offers.find((o: { kind: string }) => o.kind === 'collect') || offers[0];
     if (first) { this.jobs.accept(first); this.jobs.offers[pl.family] = offers.filter((o: unknown) => o !== first); }
-    this.ui.toast(`Your first job for the ${c0.family} family is marked in gold. Your ship waits on Pad 3.`, 'good');
+    this.ui.toast('Tav\'s job is marked in gold. Jobs pay triple now. Your ship waits on Pad 3.', 'good');
     this.save();
   });
 };
@@ -54,7 +58,7 @@ PP.contextAction = function (this: Player) {
 };
 function shipMenu(g: Game): void {
   g.ui.choice(SQ.ship.name, [
-    { label: 'Launch', small: 'Into orbit. The planet waits for you.', fn: () => launch(g) },
+    SQ.flags.clamp ? { label: 'Launch (clamped)', small: 'Tav\'s clamp is on the landing gear', fn: () => clampMenu(g) } : { label: 'Launch', small: 'Into orbit. The planet waits for you.', fn: () => launch(g) },
     { label: 'Refit the ship', small: 'Modules, hulls and paint', fn: () => openWatch(g, 'ship') },
     { label: 'Cargo and trade', small: `Prices on ${current().name}`, fn: () => openWatch(g, 'cargo') },
     ...SHIP_MENU.map((f) => f(g)).filter((o): o is NonNullable<typeof o> => !!o),
@@ -62,6 +66,30 @@ function shipMenu(g: Game): void {
     { label: 'Not now', fn: () => {} },
   ]);
 }
+
+// Tav's clamp: pay the release fee, or do one job for the Syndicate
+export const CLAMP_FEE = 1200;
+function clampMenu(g: Game): void {
+  g.ui.choice('The Syndicate Clamp', [
+    { label: `Pay Tav's release fee (${CLAMP_FEE})`, small: g.player.cash >= CLAMP_FEE ? 'The clamp comes off now' : `You have ${Math.floor(g.player.cash)}`, fn: () => {
+      if (g.player.cash < CLAMP_FEE) return g.ui.toast('Not enough. Do a job for Tav instead: it pays triple.', 'warn');
+      g.player.cash -= CLAMP_FEE; releaseClamp(g, 'You pay. A Syndicate robot rolls up and cuts the clamp with a torch.');
+    } },
+    { label: 'Do a job for Tav instead', small: 'Any Syndicate job takes the clamp off', fn: () => g.ui.openMenu('jobs') },
+  ]);
+}
+export function releaseClamp(g: Game, how: string): void {
+  if (!SQ.flags.clamp) return;
+  SQ.flags.clamp = 0; saveSequel();
+  g.ui.story('Big Tav', `${how}\n\n"You're free to fly. Bring me credits from the stars and I'll forget you were ever Vane's."`);
+}
+// every job pays triple in XX8X, and Tav's first job frees your ship
+const JP = R.Jobs.prototype, baseComplete = JP.complete;
+JP.complete = function (this: { game: Game }, j: { reward: number; family?: string }, extra?: number) {
+  const r = baseComplete.call(this, j, (extra || 0) + j.reward * 2);
+  if (SQ.flags.clamp) setTimeout(() => releaseClamp(this.game, 'Word comes down from Tav: the job\'s done, the clamp comes off.'), 50);
+  return r;
+};
 
 // ---------------------------------------------------------------- the title screen
 const RP = R.Renderer.prototype;
@@ -90,4 +118,4 @@ RP.renderTitle = function (this: { g: CanvasRenderingContext2D; cv: HTMLCanvasEl
 
 // for tests and debugging
 const w = window as unknown as { BS2: Record<string, unknown> };
-w.BS2 = Object.assign(w.BS2 || {}, { SQ, SPACE, launch, nearPlanetId: () => nearPlanet()?.id });
+w.BS2 = Object.assign(w.BS2 || {}, { SQ, SPACE, launch, shipSprites, nearPlanetId: () => nearPlanet()?.id });
