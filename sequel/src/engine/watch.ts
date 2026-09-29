@@ -13,6 +13,7 @@ import { HULLS, MODS, modIcon, stats, type HullId, type Mod } from '../ship/ship
 import { GOODS, price, blackMarket, used, addCargo } from './cargo';
 import { bodies, planetArt } from '../space/system';
 import { SPACE, navTargets, autopilot } from './space';
+import { headlines } from './market';
 import { nearShip } from './travel';
 
 const esc = (s: string) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] as string);
@@ -136,7 +137,7 @@ function cargoTab(g: Game, body: HTMLElement): void {
   const docked = !SPACE.active && !pl.room && nearShip(pl);
   const black = blackMarket(at);
   const goods = Object.keys(GOODS) as Good[];
-  body.innerHTML = `<div class="sect">Holds · bay ${u.open}/${st.cargo} · hidden ${u.hidden}/${st.hidden}</div>
+  body.innerHTML = `<div class="sect">Market news</div>${headlines().map((t) => `<p class="sw-info">${esc(t)}</p>`).join('')}<div class="sect">Holds · bay ${u.open}/${st.cargo} · hidden ${u.hidden}/${st.hidden}</div>
     ${SQ.cargo.filter((l) => l.n > 0).map((l) => `<p>${l.n} × ${GOODS[l.good].name}${l.stolen ? ' <b style="color:#b83a2a">stolen</b>' : ''}${GOODS[l.good].contraband ? ' <b style="color:#b83a2a">contraband</b>' : ''}${l.hidden ? ' <small>(hidden hold)</small>' : ''}</p>`).join('') || '<p>Empty holds.</p>'}
     <div class="sect">${docked ? (black ? 'Black market' : 'Pad exchange') + ' · ' + PLANETS[at].name : 'Market'}</div>
     ${docked ? goods.map((k) => {

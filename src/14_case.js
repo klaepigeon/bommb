@@ -85,6 +85,8 @@
     const g = G(), pl = g.player;
     for (const c of this.open()) {
       if (c.status !== 'open') continue;
+      // a dead detective's cases sit on a desk until someone new picks them up
+      if (c.stalledUntil && g.clock.t < c.stalledUntil) continue;
       // strangers forget
       for (const x of c.witnesses) {
         if (x.gone) continue;
@@ -233,10 +235,42 @@
   };
 
   // ---------------------------------------------------------------- wiring
+  // ---------------------------------------------------------------- killing the detective
+  // The case doesn't die with them, but it bleeds: the notes are half in their head, the file
+  // goes to someone new who has to start over, and the witnesses stop returning calls. Every
+  // case they carried loses most of its progress, stalls for two days, and loses a witness.
+  const REPLACE = ['Det. Sam Kowalski', 'Det. Nora Beck', 'Det. Luis Arriaga', 'Det. June Tanaka', 'Det. Walt Brennan', 'Det. Ida Moreau'];
+  CS.detectiveKilled = function (name) {
+    const g = G(), s = this.state();
+    const hit = this.open().filter((c) => c.det === name);
+    if (!hit.length) return 0;
+    const next = R.rng.pick(REPLACE.filter((n) => n !== name));
+    for (const c of hit) {
+      c.progress = Math.round(c.progress * 0.3);
+      c.stalledUntil = g.clock.t + 1440 * 2;
+      if (c.status === 'warrant') { c.status = 'open'; }
+      const live = (c.witnesses || []).filter((x) => !x.gone);
+      if (live.length) live[0].gone = 'scared';
+      c.det = next;
+    }
+    g.pop.addNews(hit[0].jur === 'county' ? 'port' : hit[0].jur, `DETECTIVE SLAIN. ${name} was found dead today. The department promises "justice", but word is the files are a mess. ${next} takes over.`);
+    g.ui.toast(`${name} is dead. Their case${hit.length > 1 ? 's' : ''} against you just fell apart (progress cut, stalled two days). ${next} picks up the pieces.`, 'good');
+    s.detsKilled = (s.detsKilled || 0) + 1;
+    return hit.length;
+  };
   CS.init = function (g) {
     this.live = new Map(); this.detective = null; this.lastHour = Math.floor(g.clock.t / 60);
     if (this.wrapped) return;
     this.wrapped = true;
+    const C = R.combat, ck = C.kill;
+    C.kill = function (h, source, kind) {
+      const was = h && h.dead, r = ck.apply(this, arguments);
+      if (!was && h && h.dead && (h.detectiveFor || (h.strangerName && /^(Det\.|Inv\.)/.test(h.strangerName)))) {
+        if (CS.detective === h) CS.detective = null;
+        CS.detectiveKilled(h.strangerName);
+      }
+      return r;
+    };
     const LP = R.Law.prototype, baseCrime = LP.crime, basePay = LP.payBounty;
     LP.crime = function (type, x, y, opts) { const r = baseCrime.apply(this, arguments); try { CS.onCrime(type, x, y, opts || {}); } catch (e) { console.error(e); } return r; };
     LP.payBounty = function (jur) { const r = basePay.apply(this, arguments); if (!(this.bounty[jur] > 0)) for (const c of CS.open()) if (c.jur === jur) { if (c.status === 'warrant') c.status = 'closed'; for (const x of c.witnesses) if (x.cop) x.gone = 'filed'; } return r; };

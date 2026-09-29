@@ -79,7 +79,7 @@ const cross = await run(() => {
   const ms = Math.round(performance.now() - t), pl = R.game.player;
   return { ms, sector: BS2.SQ.sector.join(','), city: R.game.world.cities[0].name, x: Math.round(pl.x / 16), ok: !R.game.world.isWater((pl.x / 16) | 0, (pl.y / 16) | 0) };
 });
-check(cross.sector === '13,10' && cross.x < 60 && cross.ok, `walked east across the border into sector ${cross.sector} (${cross.city}), built in ${cross.ms}ms`);
+check(cross.sector === '13,10' && cross.x < 60 && cross.ok, `walked east across the border into sector ${cross.sector} (${cross.city}), built in ${cross.ms}ms${cross.sector === '13,10' && cross.x < 60 && cross.ok ? '' : ` [x ${cross.x}, dry ${cross.ok}]`}`);
 await tick(30);
 await shot('next_sector');
 // the ship is back on the coast; call it

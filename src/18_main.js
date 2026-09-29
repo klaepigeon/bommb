@@ -92,6 +92,7 @@
     R.profile.init(this);
     R.carry.init(this);
     R.interro.init(this);
+    R.feats.init(this);
     R.charm.init(this); R.charm.reinit();
     R.night.init(this);
     R.opening.init(this);

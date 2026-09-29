@@ -17330,6 +17330,8 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
     const g = G(), pl = g.player;
     for (const c of this.open()) {
       if (c.status !== 'open') continue;
+      // a dead detective's cases sit on a desk until someone new picks them up
+      if (c.stalledUntil && g.clock.t < c.stalledUntil) continue;
       // strangers forget
       for (const x of c.witnesses) {
         if (x.gone) continue;
@@ -17478,10 +17480,42 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
   };
 
   // ---------------------------------------------------------------- wiring
+  // ---------------------------------------------------------------- killing the detective
+  // The case doesn't die with them, but it bleeds: the notes are half in their head, the file
+  // goes to someone new who has to start over, and the witnesses stop returning calls. Every
+  // case they carried loses most of its progress, stalls for two days, and loses a witness.
+  const REPLACE = ['Det. Sam Kowalski', 'Det. Nora Beck', 'Det. Luis Arriaga', 'Det. June Tanaka', 'Det. Walt Brennan', 'Det. Ida Moreau'];
+  CS.detectiveKilled = function (name) {
+    const g = G(), s = this.state();
+    const hit = this.open().filter((c) => c.det === name);
+    if (!hit.length) return 0;
+    const next = R.rng.pick(REPLACE.filter((n) => n !== name));
+    for (const c of hit) {
+      c.progress = Math.round(c.progress * 0.3);
+      c.stalledUntil = g.clock.t + 1440 * 2;
+      if (c.status === 'warrant') { c.status = 'open'; }
+      const live = (c.witnesses || []).filter((x) => !x.gone);
+      if (live.length) live[0].gone = 'scared';
+      c.det = next;
+    }
+    g.pop.addNews(hit[0].jur === 'county' ? 'port' : hit[0].jur, `DETECTIVE SLAIN. ${name} was found dead today. The department promises "justice", but word is the files are a mess. ${next} takes over.`);
+    g.ui.toast(`${name} is dead. Their case${hit.length > 1 ? 's' : ''} against you just fell apart (progress cut, stalled two days). ${next} picks up the pieces.`, 'good');
+    s.detsKilled = (s.detsKilled || 0) + 1;
+    return hit.length;
+  };
   CS.init = function (g) {
     this.live = new Map(); this.detective = null; this.lastHour = Math.floor(g.clock.t / 60);
     if (this.wrapped) return;
     this.wrapped = true;
+    const C = R.combat, ck = C.kill;
+    C.kill = function (h, source, kind) {
+      const was = h && h.dead, r = ck.apply(this, arguments);
+      if (!was && h && h.dead && (h.detectiveFor || (h.strangerName && /^(Det\.|Inv\.)/.test(h.strangerName)))) {
+        if (CS.detective === h) CS.detective = null;
+        CS.detectiveKilled(h.strangerName);
+      }
+      return r;
+    };
     const LP = R.Law.prototype, baseCrime = LP.crime, basePay = LP.payBounty;
     LP.crime = function (type, x, y, opts) { const r = baseCrime.apply(this, arguments); try { CS.onCrime(type, x, y, opts || {}); } catch (e) { console.error(e); } return r; };
     LP.payBounty = function (jur) { const r = basePay.apply(this, arguments); if (!(this.bounty[jur] > 0)) for (const c of CS.open()) if (c.jur === jur) { if (c.status === 'warrant') c.status = 'closed'; for (const x of c.witnesses) if (x.cop) x.gone = 'filed'; } return r; };
@@ -19087,6 +19121,65 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
   };
 })();
 
+// ---- 14_feats.js
+// RHAPSODY — achievements. Milestones you earn by playing however you play: saint or
+// butcher, hunter or high roller. Each one pops up once, with a fanfare, and they're all
+// listed (with the ones still to get) at the bottom of Menu > Status. The sequel adds its own
+// (space, colonies, the Choir...) through R.feats.list.
+'use strict';
+(function () {
+  const FE = (R.feats = {});
+  const G = () => R.game;
+  const st = (pl) => pl.stats || {};
+  FE.list = [
+    { id: 'blood', name: 'First Blood', how: 'Kill someone', test: (pl) => st(pl).kills >= 1 },
+    { id: 'reaper', name: 'The Reaper', how: 'Kill 50 people', test: (pl) => st(pl).kills >= 50 },
+    { id: 'saint', name: 'Saint of the Coast', how: 'Reach 60 honour', test: (pl) => (pl.rep.honor || 0) >= 60 },
+    { id: 'feared', name: 'Feared', how: 'Reach 60 infamy', test: (pl) => (pl.rep.infamy || 0) >= 60 },
+    { id: 'roller', name: 'High Roller', how: 'Hold $10,000', test: (pl) => pl.cash >= 10000 },
+    { id: 'mogul', name: 'Mogul', how: 'Hold $100,000', test: (pl) => pl.cash >= 100000 },
+    { id: 'ring', name: 'Ring Bearer', how: 'Wear a lantern ring', test: (pl) => !!pl.inv.tools.ring },
+    { id: 'nine', name: 'All Nine Lights', how: 'Own every lantern ring', test: () => !!(R.corps && R.corps.count && R.corps.count() >= 9) },
+    { id: 'hunter', name: 'Big Game', how: 'Hunt 10 animals', test: (pl) => st(pl).hunted >= 10 },
+    { id: 'road', name: 'Road Warrior', how: 'Travel 50 miles', test: (pl) => st(pl).miles >= 50 },
+    { id: 'fisher', name: 'Gone Fishin\'', how: 'Catch 5 fish', test: (pl) => st(pl).fish >= 5 },
+    { id: 'broke', name: 'Everybody Talks', how: 'Break someone in an interrogation', test: (pl) => st(pl).broken >= 1 },
+    { id: 'kidnap', name: 'Over the Shoulder', how: 'Carry someone who\'s out cold', test: (pl) => st(pl).kidnaps >= 1 },
+    { id: 'escape', name: 'Houdini', how: 'Escape from custody', test: (pl) => st(pl).escapes >= 1 },
+    { id: 'jobs', name: 'Reliable', how: 'Finish 10 jobs', test: (pl) => st(pl).jobs >= 10 },
+  ];
+  FE.got = function () { const pl = G().player; pl.stats.feats = pl.stats.feats || {}; return pl.stats.feats; };
+  FE.check = function () {
+    const g = G(), pl = g && g.player;
+    if (!pl || !pl.stats || (R.opening && R.opening.active)) return;
+    const got = this.got();
+    for (const f of this.list) {
+      if (got[f.id]) continue;
+      let ok = false;
+      try { ok = !!f.test(pl); } catch (e) { ok = false; }
+      if (ok) { got[f.id] = g.pop ? g.pop.day + 1 : 1; g.audio.sfx('promote'); g.ui.banner('ACHIEVEMENT', `${f.name}: ${f.how}`); return; }
+    }
+  };
+  FE.html = function () {
+    const got = this.got(), n = this.list.filter((f) => got[f.id]).length;
+    return `<div class="sect">Achievements · ${n}/${this.list.length}</div>` + this.list.map((f) => `<p style="margin:2px 0;${got[f.id] ? '' : 'opacity:0.45'}">${got[f.id] ? '★' : '☆'} <b>${f.name}</b> · ${f.how}${got[f.id] ? ` <small>(day ${got[f.id]})</small>` : ''}</p>`).join('');
+  };
+  FE.init = function (g) {
+    this.t = 0;
+    if (this.wrapped) return;
+    this.wrapped = true;
+    const GP = R.Game.prototype, tick = GP.tick;
+    GP.tick = function (dt) { const r = tick.apply(this, arguments); FE.t = (FE.t || 0) - dt; if (FE.t <= 0) { FE.t = 3; FE.check(); } return r; };
+    const U = R.UI.prototype, tab = U.openMenuTab;
+    U.openMenuTab = function (t, s) { const r = tab.apply(this, arguments); if (t === 'status') { const body = document.getElementById('mbody'); if (body) body.insertAdjacentHTML('beforeend', FE.html()); } return r; };
+    // the counters the list needs
+    const IN = R.interro;
+    if (IN) { const act = IN.act; IN.act = function (h) { const was = h.intr && h.intr.broken; const r = act.apply(this, arguments); if (!was && h.intr && h.intr.broken) { const s = G().player.stats; s.broken = (s.broken || 0) + 1; } return r; }; }
+    const B = R.bodies, pu = B.pickUp;
+    B.pickUp = function (a) { const r = pu.apply(this, arguments); if (a && a.kind === 'h' && !a.dead) { const s = G().player.stats; s.kidnaps = (s.kidnaps || 0) + 1; } return r; };
+  };
+})();
+
 // ---- 14_hijack.js
 // RHAPSODY — swag. Every box truck on the Brass Coast is carrying something: cigarettes,
 // furs, Scotch, color TVs, frozen steaks. Pull the driver out, drive it somewhere quiet
@@ -19288,8 +19381,9 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
 // for (evidence on the family, their boss's club on the map), the safe combination at work,
 // the secrets you can squeeze somebody with, what the police know. Then let them go, knock
 // them out, or finish it.
-// Also here: kidnapping made simple. Anyone out cold goes straight over your shoulder with one
-// tap, and anyone with their hands up can be knocked out cold (and stays out a good while).
+// Also here: knockouts and kidnapping. Knock someone out (fists, a sap, a bat, or anyone with
+// their hands up) and they stay out for a whole day, unless somebody wakes them: you can, and
+// a passer-by who finds them will. Anyone out cold goes over your shoulder from the same menu.
 'use strict';
 (function () {
   const TS = R.TILE, D = R.data;
@@ -19487,9 +19581,34 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
   };
   IN.ko = function (h) {
     const g = G();
-    h.tied = h.tied || false; h.down = 60 + R.rng() * 30; h.hp = Math.max(1, Math.min(h.hp, 20)); h.state = 'down'; h.hostile = false; h.wasKO = true;
+    h.tied = h.tied || false; h.hp = Math.max(1, Math.min(h.hp, 20)); h.state = 'down'; h.hostile = false; h.wasKO = true;
+    this.knockOut(h);
     g.fx.text(h.x, h.y - 24, 'K.O.', '#f2e2c0'); g.audio.sfx('ko');
     if (h.witness) h.witness.silenced = true;
+  };
+  // out for a day (game time), unless someone wakes them
+  const DAY = 1440, OUT = 1e6;
+  IN.knockOut = function (h) { h.koUntil = G().clock.t + DAY; h.down = OUT; h.keep = true; h.found = 0; };
+  IN.wake = function (h, by) {
+    const g = G();
+    h.koUntil = null; h.keep = false; h.down = 0.01; h.found = 0;
+    if (by && by !== g.player) { g.actors.say(by, R.rng.pick(['Hey! Hey, buddy, wake up!', 'Oh my God. Are you okay?', 'Somebody call a doctor!'])); if (h.person && R.rng() < 0.6) g.law.crime('assault', h.x, h.y, { victim: h, witness: by, minor: true }); }
+    else if (by === g.player) g.actors.say(h, R.rng.pick(['Wha... where am I?', 'Ugh. My head.', 'What happened?']));
+  };
+  IN.tick = function (dt) {
+    const g = G();
+    this.koT = (this.koT || 0) - dt;
+    if (this.koT > 0) return;
+    this.koT = 1;
+    for (const h of g.actors.list) {
+      if (h.kind !== 'h' || h.dead || !h.koUntil) continue;
+      if (h.carried) continue;
+      if (g.clock.t >= h.koUntil) { this.wake(h, null); continue; }
+      if (h.tied) continue; // tied up: nobody's untying them by accident
+      // passers-by who find someone out cold wake them up (and maybe call it in)
+      const by = g.actors.near(h.x, h.y, TS * 2.5, (q) => q.kind === 'h' && q !== h && !q.dead && !(q.down > 0) && !q.hostile && !q.tied && q !== g.player && !q.carried)[0];
+      if (by) { h.found = (h.found || 0) + 1; if (h.found >= 4) this.wake(h, by); } else h.found = 0;
+    }
   };
   IN.release = function (h) {
     const g = G(), s = this.state(h);
@@ -19513,8 +19632,10 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
       const out = g2.actors.near(pl.x, pl.y, TS * 1.3, (q) => q.kind === 'h' && !q.dead && q.down > 0 && !q.carried && !q.tied && !q.sunk && !q.hidden)[0];
       if (out) {
         const base = ctx.call(this);
-        if (base && /Tie/.test(base.label)) return { label: 'Out cold', fn: () => g2.ui.choice(name(out), [{ label: 'Pick them up', fn: () => R.bodies.pickUp(out) }, { label: base.label, fn: base.fn }, { label: 'Leave them', fn: () => {} }]) };
-        return { label: 'Pick them up', fn: () => R.bodies.pickUp(out) };
+        const opts = [{ label: 'Pick them up', small: 'Over your shoulder', fn: () => R.bodies.pickUp(out) }];
+        if (base && /Tie|pocket|Search/i.test(base.label)) opts.push({ label: base.label, fn: base.fn });
+        opts.push({ label: 'Wake them up', small: 'A slap and some water', fn: () => IN.wake(out, pl) });
+        return { label: 'Out cold', fn: () => g2.ui.choice(name(out), opts.concat([{ label: 'Leave them', fn: () => {} }])) };
       }
       // a captive: tied up, or hands up at gunpoint
       const c = IN.captive(pl);
@@ -19527,9 +19648,18 @@ else if(m.type==='route'){const p=grid?core.find(grid,m.sx,m.sy,m.gx,m.gy):null;
       }
       return ctx.call(this);
     };
+    // a fight's knockout lasts a day now, not half a minute
+    const C = R.combat, cd = C.damage;
+    C.damage = function (h, amt, source, kind) {
+      const wasDown = h && h.down > 0, r = cd.apply(this, arguments);
+      if (h && h.kind === 'h' && !h.dead && !wasDown && h.down > 0 && h.state === 'down' && h.hp <= 0) IN.knockOut(h);
+      return r;
+    };
+    const GP = R.Game.prototype, tk = GP.tick;
+    GP.tick = function (dt) { const r = tk.apply(this, arguments); if (this.actors && this.clock && !this.ui.paused()) IN.tick(dt); return r; };
     // the unconscious stay out while you carry them (they come round a while after you put them down)
     const B = R.bodies, pd = B.putDown;
-    B.putDown = function (x, y) { const a = pd.call(this, x, y); if (a && !a.dead && !a.tied) a.down = Math.max(a.down || 0, 20); return a; };
+    B.putDown = function (x, y) { const a = pd.call(this, x, y); if (a && !a.dead && a.koUntil) a.down = OUT; else if (a && !a.dead && !a.tied) a.down = Math.max(a.down || 0, 20); return a; };
   };
 })();
 
@@ -26801,6 +26931,7 @@ void main(){
     R.profile.init(this);
     R.carry.init(this);
     R.interro.init(this);
+    R.feats.init(this);
     R.charm.init(this); R.charm.reinit();
     R.night.init(this);
     R.opening.init(this);

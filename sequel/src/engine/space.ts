@@ -601,8 +601,11 @@ function draw(g: CanvasRenderingContext2D, BW: number, BH: number): void {
   bar(H - 22, SQ.hull / my.hull, '#ff5a8a', 'HULL');
   bar(H - 13, my.shield ? SPACE.shield / my.shield : 0, '#5ad0ff', 'SHIELD');
   const p = nearPlanet(), w = nearWreck();
-  if (!w && !p) A.ptext(g, SPACE.auto ? `AUTOPILOT: ${SPACE.auto.name.toUpperCase()} · STICK TAKES OVER` : 'USE: WHERE TO?', W / 2, H - 34, { align: 'center', scale: 1, color: SPACE.auto ? '#ff9a3a' : '#68f0a0', shadow: '#07051a' });
-  if (w || p) A.ptext(g, w ? 'USE: BOARD ' + w.name.toUpperCase() : (p!.id in PLANETS ? 'USE: LAND ON ' : 'USE: SCAN ') + BODY[p!.id].name.toUpperCase(), W / 2, H - 34, { align: 'center', scale: 1, color: '#68f0a0', shadow: '#07051a' });
+  let claim: { label: string } | null = null;
+  for (const h of HOOKS.use) { const u = R.game ? h(R.game) : null; if (u) { claim = u; break; } }
+  if (claim) A.ptext(g, 'USE: ' + claim.label.toUpperCase(), W / 2, H - 34, { align: 'center', scale: 1, color: '#68f0a0', shadow: '#07051a' });
+  else if (!w && !p) A.ptext(g, SPACE.auto ? `AUTOPILOT: ${SPACE.auto.name.toUpperCase()} · STICK TAKES OVER` : 'USE: WHERE TO?', W / 2, H - 34, { align: 'center', scale: 1, color: SPACE.auto ? '#ff9a3a' : '#68f0a0', shadow: '#07051a' });
+  if (!claim && (w || p)) A.ptext(g, w ? 'USE: BOARD ' + w.name.toUpperCase() : (p!.id in PLANETS ? 'USE: LAND ON ' : 'USE: SCAN ') + BODY[p!.id].name.toUpperCase(), W / 2, H - 34, { align: 'center', scale: 1, color: '#68f0a0', shadow: '#07051a' });
   g.setTransform(1, 0, 0, 1, 0, 0);
 }
 

@@ -33,6 +33,14 @@ See [DESIGN.md](DESIGN.md) for the full plan.
   Titan, bring five Europan Song-Pearls, and fly to the Source past Neptune. Three endings.
 - **The street:** neon punks and the Bombers (Streets of Fire's leather gang) join the cyborgs,
   robots and mutants on Earth.
+- **Ways to make a living:** contracts boards on every pad (cargo and smuggling runs), Imperial
+  bounties on pirates, hailing freighters (trade at sea, or make them dump their cargo), a market
+  whose prices move with the news, street races against Raven on Earth, and the Pit (on Mars, the
+  Red Pit) in any Neon Club.
+- **Out there:** distress calls (rescues and traps), derelicts to board, solar storms, and Radio
+  Free Luna, a pirate DJ who talks about what you've done.
+- **Chrome and paint:** implants at any Chrome Clinic (reflexes, plating, a titan arm, a heart
+  pump), and paint jobs and a new name for the ship.
 - **Crew:** ask anyone (aliens especially) to fly with you; each role improves the ship.
 - **The galaxy chart:** sixty generated stars beyond the real six, 12 light years a jump.
 - **Gore and interrogation:** each sci-fi weapon takes bodies apart its own way; robots leak
@@ -71,7 +79,7 @@ hull fitted out, spawn any ship, land anywhere, jump to any star, the Fear Man, 
 
 ```
 npm install
-npm run check      # typecheck + build + all eight suites
+npm run check      # typecheck + build + all nine suites
 ```
 
 - `tools/smoke.mjs` plays the core loop: Earth, the Fear Man's clamp, orbit, piracy, cruise to Luna,

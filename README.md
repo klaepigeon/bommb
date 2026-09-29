@@ -61,8 +61,12 @@ This is a ground-up rebuild of the original single-file *Rhapsody* (Port Hollow)
   for (evidence, and the boss's club on the map), the safe combination at work, secrets to
   blackmail others with, what the police have, and who the rat is. Then let them go, knock
   them out, or finish it.
-- **Easier kidnapping:** anyone out cold goes over your shoulder with one tap, and anyone with
-  their hands up can be knocked out cold (they stay out while you carry them).
+- **Knockouts last:** anyone knocked out stays out for a whole day, unless someone wakes them:
+  you can (the "Out cold" menu: pick them up, wake them, tie them), and passers-by who find them
+  will (and may report an assault). Anyone with their hands up can be knocked out too.
+- **Kill the detective:** every case they were working loses most of its progress, stalls for
+  two days while a new detective starts over, and loses a witness.
+- **Achievements:** milestones for every way to play, at the bottom of Menu > Status.
 - **HUD weapon names:** every weapon shows its own name (the newer ones read FISTS before).
 
 | Your note | What changed |

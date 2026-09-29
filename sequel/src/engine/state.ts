@@ -6,7 +6,7 @@ import type { PlanetId, BodyId } from './planets';
 import { starterShip, type Ship } from '../ship/ship';
 
 export type Good = 'rum' | 'tea' | 'ore' | 'meds' | 'vinyl' | 'blasters' | 'ice' | 'plat' | 'pearls' | 'xeno';
-export interface CargoLot { good: Good; n: number; stolen: boolean; hidden: boolean }
+export interface CargoLot { good: Good; n: number; stolen: boolean; hidden: boolean; job?: number }
 
 export interface Sequel {
   v: number;
@@ -34,11 +34,15 @@ export interface Sequel {
   shipAt: [number, number]; // on Earth: the sector your ship is parked in
   arriveEdge: { edge: 'n' | 's' | 'e' | 'w'; f: number } | null; // crossing a sector border on foot
   shipLoc?: { sys: string; planet: PlanetId } | null; // which world your ship is parked on (unset = wherever you are)
+  contracts?: Contract[]; // jobs you've taken from a contracts board (contracts.ts)
+  achieved?: Record<string, number>; // milestones (legend.ts)
+  implants?: Record<string, number>; // chrome in your body (implants.ts)
   colonies?: Record<string, Colony>; // colonies you've founded, keyed 'system:planet'
   bases?: Base[]; // orbital bases you've built
   crew?: CrewMember[]; // who flies with you
   ringFly?: { ship: Ship; hull: number; style: Record<string, unknown>; shipAt: [number, number]; shipLoc: { sys: string; planet: PlanetId } } | null; // flying on a lantern ring: your ship, parked
 }
+export interface Contract { id: number; kind: 'cargo' | 'smuggle' | 'bounty'; from: string; to: string; good?: Good; n?: number; pay: number; due: number; target?: string; name: string; done?: boolean }
 export interface Colony { name: string; founded: number; day: number; pop: number; level: number; mine: number; guns: number; bank: number }
 export interface Base { id: string; sys: string; parent: string; alt: number; hours: number; name: string; level: number; stash: CargoLot[]; turrets: number; day: number; bank: number }
 export interface CrewMember { name: string; species: string; role: 'pilot' | 'gunner' | 'engineer' | 'medic' | 'navigator'; wage: number; seed: number }

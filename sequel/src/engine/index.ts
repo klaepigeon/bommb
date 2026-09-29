@@ -29,6 +29,16 @@ import './stations2';
 import './crew';
 import './gore2';
 import './choir';
+import './market';
+import './custom';
+import './contracts';
+import './hail';
+import './events';
+import './implants';
+import './races';
+import './arena';
+import './radio';
+import './legend';
 
 const GP = R.Game.prototype;
 

@@ -25,7 +25,9 @@ const PRICES: Record<PlanetId, Partial<Record<Good, number>>> = {
 };
 // worlds without a price list (other stars) get a stable one from their name
 const hashed = (p: string, g: string) => { let h = 2166136261; for (const c of p + g) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return 0.6 + ((h >>> 0) % 1000) / 1000; };
-export const price = (p: PlanetId, g: Good) => Math.round(GOODS[g].base * ((PRICES[p] && PRICES[p][g]) || hashed(p, g)));
+// things that move prices day to day (market.ts)
+export const PRICE_MODS: ((p: PlanetId, g: Good) => number)[] = [];
+export const price = (p: PlanetId, g: Good) => Math.max(1, Math.round(GOODS[g].base * ((PRICES[p] && PRICES[p][g]) || hashed(p, g)) * PRICE_MODS.reduce((k, f) => k * f(p, g), 1)));
 // the black market pays full price for stolen goods; legit exchanges won't touch them
 export const blackMarket = (p: PlanetId) => PLANETS[p].black;
 
@@ -42,7 +44,7 @@ export function addCargo(good: Good, n: number, stolen: boolean): number {
   const into = (hidden: boolean, room: number) => {
     const k = Math.min(left, room);
     if (k <= 0) return;
-    const lot = SQ.cargo.find((l) => l.good === good && l.stolen === stolen && l.hidden === hidden);
+    const lot = SQ.cargo.find((l) => l.good === good && l.stolen === stolen && l.hidden === hidden && !l.job);
     if (lot) lot.n += k; else SQ.cargo.push({ good, n: k, stolen, hidden });
     left -= k; put += k;
   };

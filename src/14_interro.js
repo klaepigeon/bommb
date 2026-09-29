@@ -6,8 +6,9 @@
 // for (evidence on the family, their boss's club on the map), the safe combination at work,
 // the secrets you can squeeze somebody with, what the police know. Then let them go, knock
 // them out, or finish it.
-// Also here: kidnapping made simple. Anyone out cold goes straight over your shoulder with one
-// tap, and anyone with their hands up can be knocked out cold (and stays out a good while).
+// Also here: knockouts and kidnapping. Knock someone out (fists, a sap, a bat, or anyone with
+// their hands up) and they stay out for a whole day, unless somebody wakes them: you can, and
+// a passer-by who finds them will. Anyone out cold goes over your shoulder from the same menu.
 'use strict';
 (function () {
   const TS = R.TILE, D = R.data;
@@ -205,9 +206,34 @@
   };
   IN.ko = function (h) {
     const g = G();
-    h.tied = h.tied || false; h.down = 60 + R.rng() * 30; h.hp = Math.max(1, Math.min(h.hp, 20)); h.state = 'down'; h.hostile = false; h.wasKO = true;
+    h.tied = h.tied || false; h.hp = Math.max(1, Math.min(h.hp, 20)); h.state = 'down'; h.hostile = false; h.wasKO = true;
+    this.knockOut(h);
     g.fx.text(h.x, h.y - 24, 'K.O.', '#f2e2c0'); g.audio.sfx('ko');
     if (h.witness) h.witness.silenced = true;
+  };
+  // out for a day (game time), unless someone wakes them
+  const DAY = 1440, OUT = 1e6;
+  IN.knockOut = function (h) { h.koUntil = G().clock.t + DAY; h.down = OUT; h.keep = true; h.found = 0; };
+  IN.wake = function (h, by) {
+    const g = G();
+    h.koUntil = null; h.keep = false; h.down = 0.01; h.found = 0;
+    if (by && by !== g.player) { g.actors.say(by, R.rng.pick(['Hey! Hey, buddy, wake up!', 'Oh my God. Are you okay?', 'Somebody call a doctor!'])); if (h.person && R.rng() < 0.6) g.law.crime('assault', h.x, h.y, { victim: h, witness: by, minor: true }); }
+    else if (by === g.player) g.actors.say(h, R.rng.pick(['Wha... where am I?', 'Ugh. My head.', 'What happened?']));
+  };
+  IN.tick = function (dt) {
+    const g = G();
+    this.koT = (this.koT || 0) - dt;
+    if (this.koT > 0) return;
+    this.koT = 1;
+    for (const h of g.actors.list) {
+      if (h.kind !== 'h' || h.dead || !h.koUntil) continue;
+      if (h.carried) continue;
+      if (g.clock.t >= h.koUntil) { this.wake(h, null); continue; }
+      if (h.tied) continue; // tied up: nobody's untying them by accident
+      // passers-by who find someone out cold wake them up (and maybe call it in)
+      const by = g.actors.near(h.x, h.y, TS * 2.5, (q) => q.kind === 'h' && q !== h && !q.dead && !(q.down > 0) && !q.hostile && !q.tied && q !== g.player && !q.carried)[0];
+      if (by) { h.found = (h.found || 0) + 1; if (h.found >= 4) this.wake(h, by); } else h.found = 0;
+    }
   };
   IN.release = function (h) {
     const g = G(), s = this.state(h);
@@ -231,8 +257,10 @@
       const out = g2.actors.near(pl.x, pl.y, TS * 1.3, (q) => q.kind === 'h' && !q.dead && q.down > 0 && !q.carried && !q.tied && !q.sunk && !q.hidden)[0];
       if (out) {
         const base = ctx.call(this);
-        if (base && /Tie/.test(base.label)) return { label: 'Out cold', fn: () => g2.ui.choice(name(out), [{ label: 'Pick them up', fn: () => R.bodies.pickUp(out) }, { label: base.label, fn: base.fn }, { label: 'Leave them', fn: () => {} }]) };
-        return { label: 'Pick them up', fn: () => R.bodies.pickUp(out) };
+        const opts = [{ label: 'Pick them up', small: 'Over your shoulder', fn: () => R.bodies.pickUp(out) }];
+        if (base && /Tie|pocket|Search/i.test(base.label)) opts.push({ label: base.label, fn: base.fn });
+        opts.push({ label: 'Wake them up', small: 'A slap and some water', fn: () => IN.wake(out, pl) });
+        return { label: 'Out cold', fn: () => g2.ui.choice(name(out), opts.concat([{ label: 'Leave them', fn: () => {} }])) };
       }
       // a captive: tied up, or hands up at gunpoint
       const c = IN.captive(pl);
@@ -245,8 +273,17 @@
       }
       return ctx.call(this);
     };
+    // a fight's knockout lasts a day now, not half a minute
+    const C = R.combat, cd = C.damage;
+    C.damage = function (h, amt, source, kind) {
+      const wasDown = h && h.down > 0, r = cd.apply(this, arguments);
+      if (h && h.kind === 'h' && !h.dead && !wasDown && h.down > 0 && h.state === 'down' && h.hp <= 0) IN.knockOut(h);
+      return r;
+    };
+    const GP = R.Game.prototype, tk = GP.tick;
+    GP.tick = function (dt) { const r = tk.apply(this, arguments); if (this.actors && this.clock && !this.ui.paused()) IN.tick(dt); return r; };
     // the unconscious stay out while you carry them (they come round a while after you put them down)
     const B = R.bodies, pd = B.putDown;
-    B.putDown = function (x, y) { const a = pd.call(this, x, y); if (a && !a.dead && !a.tied) a.down = Math.max(a.down || 0, 20); return a; };
+    B.putDown = function (x, y) { const a = pd.call(this, x, y); if (a && !a.dead && a.koUntil) a.down = OUT; else if (a && !a.dead && !a.tied) a.down = Math.max(a.down || 0, 20); return a; };
   };
 })();
