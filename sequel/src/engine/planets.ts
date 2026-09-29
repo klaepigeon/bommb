@@ -68,7 +68,7 @@ export const SOL_PLANETS: Record<PlanetId, Profile> = {
     cities: null, hamlets: null, law: 'Police', terrain: 'earth', black: false, fauna: 'earth',
   },
   mars: {
-    id: 'mars', name: 'Mars', faction: 'the Solari families', blurb: SOL_BODIES[5].blurb, law: 'Imperial Security', terrain: 'mars', black: false, imperial: true, fauna: 'mars', species: [['martian', 0.08], ['cyborg', 0.08], ['robot', 0.05]],
+    id: 'mars', name: 'Mars', faction: 'the Solari families', blurb: SOL_BODIES[5].blurb, law: 'Imperial Security', terrain: 'mars', black: false, imperial: true, fauna: 'mars', species: [['martian', 0.08], ['cyborg', 0.08], ['punk', 0.04], ['robot', 0.05]],
     cities: [
       { name: 'Olympus Quay', tag: 'pads, piers and payoffs', family: 'Solari', don: 'Marcello "The Green" Solari' },
       { name: 'Green Mile', tag: 'the casinos never close', family: 'Marchetti', don: 'Vittoria Marchetti' },
@@ -90,7 +90,7 @@ export const SOL_PLANETS: Record<PlanetId, Profile> = {
     hamlets: ['Garrison Nine', 'Aqueduct Gate', 'Cenotaph', 'Relay Station'],
   },
   luna: {
-    id: 'luna', name: 'Luna', faction: 'the Choir and the rebels', blurb: SOL_BODIES[4].blurb, law: 'Mine Security', terrain: 'moon', black: true, fauna: 'luna', species: [['grey', 0.1], ['choir', 0.08], ['cyborg', 0.06], ['mutant', 0.04], ['robot', 0.04]],
+    id: 'luna', name: 'Luna', faction: 'the Choir and the rebels', blurb: SOL_BODIES[4].blurb, law: 'Mine Security', terrain: 'moon', black: true, fauna: 'luna', species: [['grey', 0.1], ['choir', 0.08], ['cyborg', 0.06], ['punk', 0.04], ['mutant', 0.04], ['robot', 0.04]],
     cities: [
       { name: 'Tranquility Port', tag: 'no names, no logs', family: 'Ironjaw', don: 'Big Ma Ironjaw' },
       { name: 'Shaft Nine', tag: 'the mine that sings', family: 'Choir', don: 'Mother Canticle' },

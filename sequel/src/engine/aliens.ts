@@ -14,7 +14,7 @@ import { PLANETS, worldProfile } from './planets';
 import { addCargo, GOODS } from './cargo';
 import { SCAN, SPACE } from './space';
 
-type Feature = 'elder' | 'antennae' | 'crest' | 'dome' | 'halo' | 'visor' | 'tendrils' | 'horns' | 'fins' | 'implant' | 'robot' | 'mutant' | 'boss';
+type Feature = 'mohawk' | 'quiff' | 'elder' | 'antennae' | 'crest' | 'dome' | 'halo' | 'visor' | 'tendrils' | 'horns' | 'fins' | 'implant' | 'robot' | 'mutant' | 'boss';
 type Eyes = 'big' | 'glow' | 'slit' | 'many' | 'none' | 'red' | 'bar' | 'odd';
 export interface Species {
   id: string; name: string; plural: string; skin: string; eye: string; eyes: Eyes; feature: Feature; accent: string;
@@ -26,6 +26,19 @@ export interface Species {
 }
 
 export const SPECIES: Record<string, Species> = {
+  // ---- the street: neon punks and Bomber gangs (Streets of Fire)
+  punk: {
+    id: 'punk', name: 'Neon Punk', plural: 'neon punks', skin: '#e0ac7e', eye: '#08080c', eyes: 'none', feature: 'mohawk', accent: '#ff3a7a', keepSkin: true, keepName: true,
+    accents: ['#ff3a7a', '#3af0ff', '#68f0a0', '#ffe070', '#c878ff', '#ff8a3a'],
+    names: [], lines: ['No future, chum. Literally, we checked.', 'Syndicate can kiss my chrome.', 'You lost, old man?', 'Got a cred for a synth-beer?', 'The Peacekeepers fear the mohawk.'],
+    blurb: 'Kids with neon hair and nothing to lose, living in the gaps the Syndicate forgot.',
+  },
+  bomber: {
+    id: 'bomber', name: 'Bomber', plural: 'the Bombers', skin: '#e0ac7e', eye: '#08080c', eyes: 'none', feature: 'quiff', accent: '#141418', keepSkin: true, keepName: true,
+    accents: ['#141418', '#2a1a12', '#3a0a0a'],
+    names: [], lines: ['This is Bomber turf, pal.', 'Nice coat. It\'d look better on me.', 'We run the Battery. Everybody knows that.', 'You want trouble? We\'re the trouble.', 'Raven says hi.'],
+    blurb: 'A motorcycle gang in black leather and grease: rubber overalls, pompadours and bad intentions.',
+  },
   // ---- the made and the changed: procedural people of the future
   cyborg: {
     id: 'cyborg', name: 'Cyborg', plural: 'cyborgs', skin: '#e0ac7e', eye: '#ff3030', eyes: 'red', feature: 'implant', accent: '#a8b0c0', keepSkin: true, keepName: true,
@@ -157,6 +170,10 @@ const FEATURES: Record<Feature, (s: Species) => { front: Pix[]; back: Pix[] }> =
   robot: (s) => { const f: Pix[] = [[-6, 2, 12, 11, s.skin], [-6, 2, 12, 1, '#ffffff'], [-6, 12, 12, 1, '#303038'], [0, -3, 1, 5, '#303038'], [-1, -4, 3, 2, s.accent], [-6, 6, 1, 1, '#303038'], [5, 6, 1, 1, '#303038']]; return { front: f, back: f }; },
   // lumps and a crooked growth, per person
   mutant: (s) => ({ front: [[-6, 3, 3, 2, s.accent], [3, 1, 3, 3, s.accent], [-2, 13, 4, 1, s.accent]], back: [[-5, 2, 4, 3, s.accent], [2, 4, 3, 2, s.accent]] }),
+  // a neon mohawk, spiked tall
+  mohawk: (s) => ({ front: [[-1, -4, 2, 7, s.accent], [-1, -5, 2, 1, '#ffffff'], [1, 12, 1, 1, '#d0d8e8'], [-2, 12, 1, 1, '#d0d8e8']], back: [[-1, -4, 2, 8, s.accent], [-1, -5, 2, 1, '#ffffff']] }),
+  // a greased pompadour and a leather collar
+  quiff: (s) => ({ front: [[-5, 0, 10, 4, '#141418'], [-4, -1, 7, 2, '#2a2a34'], [2, 0, 3, 1, '#58586a'], [-4, 16, 8, 2, s.accent]], back: [[-5, 0, 10, 5, '#141418'], [-4, 16, 8, 2, s.accent]] }),
   // the Fear Man: a widow's peak and the yellow ring glowing on his hand
   elder: () => ({ front: [[-1, 3, 2, 3, '#1a1a20'], [5, 20, 2, 2, '#f0c020'], [6, 19, 1, 1, '#fff27a']], back: [[-1, 3, 2, 2, '#1a1a20']] }),
   // (unused since the Fear Man took Earth) a crown of spines and a beard of tendrils
@@ -266,10 +283,10 @@ function listen(g: Game, a: any): void {
   const lines = [
     'The humming fills your head like warm water. For a second you remember a desert, a gun, a don who picked you up off the sand. Then it\'s gone.',
     '"You were someone else, once. So were we." The hybrid touches your ring hand. The ring hums back, out of tune.',
-    '"Go to Titan. Scan the haze. The signal wants to meet you."',
+    '"Go to Titan. Our Cathedral hangs over it. The signal wants to meet you."',
   ];
   if (pl.will != null && pl.willMax) pl.will = Math.min(pl.willMax, pl.will + 20);
-  g.ui.story(alienName(a), lines[Math.min(n, 3) - 1] + (n >= 3 ? '\n\n(Titan is marked on the System tab.)' : ''));
+  g.ui.story(alienName(a), lines[Math.min(n, 3) - 1] + (n >= 3 ? '\n\n(The Cathedral of the Choir orbits Titan: pick it from "Where to?" in space.)' : ''));
 }
 
 // ---------------------------------------------------------------- Europa: first contact

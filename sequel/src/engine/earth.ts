@@ -150,7 +150,7 @@ export function earthProfile(sx: number, sy: number): Profile {
     ...SOL_PLANETS.earth,
     name: 'Earth', faction: `${BOSS.name}'s Syndicate`, blurb: home ? 'The Brass Coast, ten years on: the same streets under a dirtier sky.' : `Earth, ${region}.`,
     cities, hamlets: [gen(), gen(), gen(), gen()], law: 'Peacekeepers', terrain: 'dystopia' as Profile['terrain'], fauna: 'earth',
-    species: [['cyborg', 0.12], ['robot', 0.07], ['mutant', 0.08], ['android', 0.04], ['grey', 0.02], ['martian', 0.02]],
+    species: [['cyborg', 0.12], ['robot', 0.07], ['mutant', 0.08], ['punk', 0.08], ['bomber', 0.05], ['android', 0.04], ['grey', 0.02], ['martian', 0.02]],
   };
   (p as any).sector = [sx, sy]; (p as any).climate = cl; (p as any).region = region;
   profCache.set(key, p);

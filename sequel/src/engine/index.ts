@@ -28,6 +28,7 @@ import './colony';
 import './stations2';
 import './crew';
 import './gore2';
+import './choir';
 
 const GP = R.Game.prototype;
 

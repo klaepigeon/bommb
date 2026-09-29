@@ -29,6 +29,10 @@ See [DESIGN.md](DESIGN.md) for the full plan.
   planet on other stars are landable claim-camp worlds. Found a colony and build it up.
 - **Stations and bases:** Imperial customs over Venus, the rebels' shipyard at Ganymede (the
   only yard that fits a cloak), an Imperial dreadnought, and orbital bases of your own.
+- **The Choir's story:** listen to the Choir on Luna, answer the signal at their Cathedral over
+  Titan, bring five Europan Song-Pearls, and fly to the Source past Neptune. Three endings.
+- **The street:** neon punks and the Bombers (Streets of Fire's leather gang) join the cyborgs,
+  robots and mutants on Earth.
 - **Crew:** ask anyone (aliens especially) to fly with you; each role improves the ship.
 - **The galaxy chart:** sixty generated stars beyond the real six, 12 light years a jump.
 - **Gore and interrogation:** each sci-fi weapon takes bodies apart its own way; robots leak

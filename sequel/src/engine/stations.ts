@@ -14,7 +14,7 @@ import { enterDock } from './board';
 import { addCargo, GOODS, price } from './cargo';
 import { stats } from '../ship/ship';
 
-export interface Station { id: string; name: string; parent: string; alt: number; hours: number; kind: 'casino' | 'assay' | 'customs' | 'rebel' | 'base'; col: string; blurb: string }
+export interface Station { id: string; name: string; parent: string; alt: number; hours: number; kind: 'casino' | 'assay' | 'customs' | 'rebel' | 'base' | 'cathedral'; col: string; blurb: string }
 export const STATIONS: Record<string, Station[]> = {
   sol: [
     { id: 'redvelvet', name: 'The Red Velvet Orbital', parent: 'mars', alt: 520, hours: 9, kind: 'casino', col: '#ff5a8a', blurb: 'A casino wheel over Mars. What happens in orbit burns up on re-entry.' },

@@ -59,7 +59,7 @@ const PALETTE = ['#c8603a', '#4a8a4a', '#3a7ed0', '#d8a878', '#8a8478', '#a8e0e8
 })();
 export const starPos = (id: string): [number, number] => { if (id === 'sol') return [0, 0]; const s = star(id); return s ? [s.x || 0, s.y || 0] : [0, 0]; };
 // how far one jump reaches: 12 ly, and 3 more for every navigator aboard
-export const jumpRange = () => 12 + 3 * Math.min(3, (SQ.crew || []).filter((c) => c.role === 'navigator').length);
+export const jumpRange = () => 12 + 3 * Math.min(3, (SQ.crew || []).filter((c) => c.role === 'navigator').length) + (SQ.flags.songDrive ? 20 : 0);
 
 // ---------------------------------------------------------------- species and wildlife for new worlds
 const FEATS = ['antennae', 'crest', 'dome', 'halo', 'visor', 'tendrils', 'horns', 'fins'] as const;

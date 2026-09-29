@@ -283,7 +283,7 @@ function update(g: Game, dt: number): void {
   }
   if (SPACE.cruise) {
     // cruise: speed proportional to altitude; gravity is left behind in the drive's bubble
-    const vmax = clamp(G.alt * 0.2, 300, 60000);
+    const vmax = clamp(G.alt * 0.35, 900, 150000);
     // low over a world with the nose pointing down: turn first, then go
     const on = G.near, od = Math.hypot(SPACE.x - on.x, SPACE.y - on.y) || 1;
     const up = (Math.cos(SPACE.a) * (SPACE.x - on.x) + Math.sin(SPACE.a) * (SPACE.y - on.y)) / od;

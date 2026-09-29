@@ -174,6 +174,49 @@ const chart = await run(() => {
 check(chart.chart, 'the System tab carries a galaxy chart');
 await shot('chart');
 
+// ---------------------------------------------------------------- the Choir's story
+await closeAll();
+const choir = await run(() => {
+  const g = R.game, f = BS2.SQ.flags;
+  f.choir = 3;
+  BS2.SQ.cargo.push({ good: 'pearls', n: 6, stolen: false, hidden: false });
+  if (!BS2.SPACE.active) BS2.launch(g);
+  g.ui.closeSheet();
+  const st = BS2.STATIONS.sol.find((s) => s.id === 'cathedral');
+  const dock = () => { const q = BS2.stationPos(st); const S = BS2.SPACE; S.x = q.x; S.y = q.y; S.vx = q.vx / 60; S.vy = q.vy / 60; g.input.pressed = ((base) => { let once = true; return (k) => (k === 'use' && once ? ((once = false), true) : base.call(g.input, k)); })(g.input.pressed); g.tick(1 / 60); };
+  const click = (re) => { const b = [...document.querySelectorAll('.sheet button')].find((x) => re.test(x.textContent)); if (b) b.click(); return !!b; };
+  dock(); const signal = click(/Let it in/);
+  for (let i = 0; i < 6; i++) { const s = document.querySelector('#story'); if (s && getComputedStyle(s).display !== 'none') s.querySelector('button').click(); }
+  dock(); const gave = click(/Song-Pearls/);
+  for (let i = 0; i < 6; i++) { const s = document.querySelector('#story'); if (s && getComputedStyle(s).display !== 'none') s.querySelector('button').click(); }
+  const src = BS2.navTargets().find((n) => n.id === 'source');
+  return { signal, gave, source: f.source, onNav: !!src };
+});
+check(choir.signal && choir.gave && choir.source === 1 && choir.onNav, 'the Choir: the Cathedral over Titan, the signal, five pearls, and the Source appears on the chart');
+const ending = await run(() => {
+  const g = R.game, range0 = 12;
+  window.BS2.SCAN_source ? 0 : 0;
+  const t = BS2.navTargets().find((n) => n.id === 'source');
+  BS2.autopilot(g, t); let n = 0; for (; n < 240 * 60 && BS2.SPACE.auto; n++) g.tick(1 / 60);
+  const near = BS2.nearPlanetId && BS2.nearPlanetId();
+  g.input.pressed = ((base) => { let once = true; return (k) => (k === 'use' && once ? ((once = false), true) : base.call(g.input, k)); })(g.input.pressed);
+  g.tick(1 / 60);
+  for (let i = 0; i < 3; i++) { const s = document.querySelector('#story'); if (s && getComputedStyle(s).display !== 'none') s.querySelector('button').click(); }
+  const b = [...document.querySelectorAll('.sheet button')].find((x) => /Take the song/.test(x.textContent)); if (b) b.click();
+  return { secs: Math.round(n / 60), near, ending: BS2.SQ.flags.ending, song: BS2.SQ.flags.songDrive };
+});
+check(ending.near === 'source' && ending.ending === 3 && ending.song === 1, `flew ${ending.secs} s to the Source past Neptune and took the song (jumps reach 20 ly further)`);
+await closeAll();
+// ---------------------------------------------------------------- the street
+const street = await run(() => {
+  const g = R.game;
+  BS2.SPACE.active = false; BS2.SQ.mode = 'planet'; BS2.SQ.system = 'sol';
+  BS2.travelTo(g, 'earth', true);
+  const by = {}; for (const q of g.pop.people) if (q.look && q.look.xeno) by[q.look.xeno] = (by[q.look.xeno] || 0) + 1;
+  return by;
+});
+check(street.punk > 5 && street.bomber > 3, `Earth's streets: ${street.punk} neon punks and ${street.bomber} Bombers among the ${street.cyborg} cyborgs`);
+
 await b.close();
 console.log(log.join('\n'));
 if (errs.length) { console.error('ERRORS:\n' + errs.join('\n')); process.exit(1); }

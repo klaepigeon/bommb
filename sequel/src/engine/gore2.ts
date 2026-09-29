@@ -31,7 +31,7 @@ export function bloodOf(look: any): string[] | null {
   if (!x || x === 'cyborg' || x === 'belter') return null;
   if (BLOOD_BY[x]) return BLOOD_BY[x];
   const sp = SPECIES[x];
-  return sp ? [look.xenoAccent || sp.accent, sp.accent, sp.skin] : null;
+  return sp && !sp.keepSkin ? [look.xenoAccent || sp.accent, sp.accent, sp.skin] : null;
 }
 const RED = /^#(8a1a14|a8201a|6a1410|b8302a|7a1410|5a0c0c)$/i, REDA = /^rgba\((9\d|1[0-4]\d),\s*(1[0-4]|2\d|30),\s*(1[0-6]|30),/;
 let TINT: string[] | null = null, SPARK = false;
