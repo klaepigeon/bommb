@@ -39,7 +39,7 @@ const start = await run(() => {
   return { city: g.world.cities[0].name, cash: g.player.cash, clamp: BS2.SQ.flags.clamp, don: don && g.pop.name(don), donXeno: don && don.look.xeno, by, robot: robot && g.pop.name(robot), job: g.jobs.active && g.jobs.active.title, weather: g.env.WEATHER_NAMES[g.env.weather.kind] };
 });
 check(start.city === 'Port Hollow' && start.cash >= 600 && start.clamp === 1, `start on the Brass Coast with ${start.cash} credits and a clamped ship`);
-check(start.donXeno === 'fearman', `the boss of Earth is an alien: ${start.don}`);
+check(start.donXeno !== 'fearman' && /Tav/.test(start.don || ''), `the Brass Coast answers to the Fear Man's man: ${start.don}`);
 check(start.by.cyborg > 20 && start.by.robot > 10 && start.by.mutant > 10 && start.by.android > 5, `the people of the future: ${Object.entries(start.by).map(([k, v]) => v + ' ' + k).join(', ')} (a robot: ${start.robot})`);
 check(/Acid Rain|Smog|Toxic|Haze|Heat Dome/.test(start.weather), `Earth's sky: ${start.weather}`);
 const names = await run(() => ({ gun: R.data.weapons.revolver.name, bar: R.data.btypes.bar.name, car: R.data.vehicles.sedan.name }));

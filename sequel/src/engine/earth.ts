@@ -9,12 +9,13 @@
 // Sprawl. Each sector remembers what you did there (the last few you visited keep full saves;
 // older ones regrow from their seed).
 
-import { SQ, saveSequel, HOME_SECTOR } from './state';
+import { SQ, saveSequel, HOME_SECTOR, COAST_SECTOR } from './state';
 import { SOL_PLANETS, SECTORED, type Profile } from './planets';
 
 export const NX = 72, NY = 36;
 export const HOME: [number, number] = HOME_SECTOR;
 export const isHome = (s: [number, number] | null | undefined) => !s || (s[0] === HOME[0] && s[1] === HOME[1]);
+export const isCoast = (s: [number, number] | null | undefined) => !!s && s[0] === COAST_SECTOR[0] && s[1] === COAST_SECTOR[1];
 
 // ---------------------------------------------------------------- the continents
 // land cells per 5-degree row, north (85-90N) to south (85-90S), as [first, last] columns;
@@ -137,18 +138,19 @@ export function earthProfile(sx: number, sy: number): Profile {
   const lon0 = lonOf(sx), lat0 = latOf(sy), lon1 = lonOf(sx + 1), lat1 = latOf(sy + 1);
   const real = CITIES.filter(([, la, lo]) => lo >= lon0 && lo < lon1 && la <= lat0 && la > lat1).map(([n]) => pick(STYLES).replace('{c}', n));
   const gen = () => `${cap(pick(SYL) + pick(SYL))} ${pick(ZONES)}${r() < 0.4 ? ' ' + (1 + Math.floor(r() * 99)) : ''}`;
-  const names = home ? ['Port Hollow', 'New Avalon', 'Dustwater', 'Pinecrest', 'Bayou Clair'] : [...real.slice(0, 5)];
+  const coast = isCoast([sx, sy]);
+  const names = home ? ['Port Hollow', 'New Avalon', 'Dustwater', 'Pinecrest', 'Bayou Clair'] : coast ? ['Coast City', 'Ferris Heights', 'Jordan Point', 'Old Airfield', 'Harbor Row'] : [...real.slice(0, 5)];
   while (names.length < 5) names.push(gen());
   const crews = [...CREWS].sort(() => r() - 0.5).slice(0, 4), bosses = [...BOSSES].sort(() => r() - 0.5).slice(0, 4);
   const cl = climate((lon0 + lon1) / 2, (lat0 + lat1) / 2);
   const cities = names.map((n, i) => ({
-    name: n, tag: home ? ['the harbour where it all started', 'the megablock that ate the old downtown', 'the desert scrapyards', 'the dead pine country', 'the flooded bayou stacks'][i] : pick(TAGS),
-    family: i === 0 ? BOSS.family : crews[i - 1], don: i === 0 ? BOSS.don : bosses[i - 1], biome: cl === 'desert' ? 'desert' : undefined,
+    name: n, tag: coast ? ['the yellow city: Hal Jordan\'s hometown, rebuilt as a shrine to Parallax', 'the aircraft plant, shut since the fall', 'the point where the memorial used to be', 'the dead airfield', 'the harbour, lit gold all night'][i] : home ? ['the harbour where it all started', 'the megablock that ate the old downtown', 'the desert scrapyards', 'the dead pine country', 'the flooded bayou stacks'][i] : pick(TAGS),
+    family: i === 0 ? BOSS.family : crews[i - 1], don: i === 0 ? (coast ? BOSS.don : home ? 'Tav "Big Tav" Morrow' : 'Syndicate Boss ' + pick(BOSSES)) : bosses[i - 1], biome: cl === 'desert' ? 'desert' : undefined,
   })) as Profile['cities'];
-  const region = real.length ? real[0] : `${Math.abs(Math.round((lat0 + lat1) / 2))}°${lat0 > 0 ? 'N' : 'S'} ${Math.abs(Math.round((lon0 + lon1) / 2))}°${lon0 < 0 ? 'W' : 'E'}`;
+  const region = coast ? 'Coast City' : real.length ? real[0] : `${Math.abs(Math.round((lat0 + lat1) / 2))}°${lat0 > 0 ? 'N' : 'S'} ${Math.abs(Math.round((lon0 + lon1) / 2))}°${lon0 < 0 ? 'W' : 'E'}`;
   const p: Profile = {
     ...SOL_PLANETS.earth,
-    name: 'Earth', faction: `${BOSS.name}'s Syndicate`, blurb: home ? 'The Brass Coast, ten years on: the same streets under a dirtier sky.' : `Earth, ${region}.`,
+    name: 'Earth', faction: `${BOSS.name}'s Syndicate`, blurb: coast ? 'Coast City: Hal Jordan\'s hometown. Parallax burned it once; the Fear Man rebuilt it in yellow, for him.' : home ? 'The Brass Coast, ten years on: the same streets under a dirtier sky.' : `Earth, ${region}.`,
     cities, hamlets: [gen(), gen(), gen(), gen()], law: 'Peacekeepers', terrain: 'dystopia' as Profile['terrain'], fauna: 'earth',
     species: [['cyborg', 0.12], ['robot', 0.07], ['mutant', 0.08], ['punk', 0.08], ['bomber', 0.05], ['android', 0.04], ['grey', 0.02], ['martian', 0.02]],
   };

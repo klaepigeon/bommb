@@ -9,6 +9,8 @@
 import { EARTH } from './earth';
 import { SPACE } from './space';
 import { SQ, cityRect } from './state';
+import { inCoastCity } from './dystopia';
+import { COAST_SLOGANS } from './coastcity';
 
 const TS = R.TILE;
 interface Flyer { x: number; y: number; vx: number; alt: number; kind: 'skiff' | 'cab' | 'blimp'; col: string; seed: number; text?: string }
@@ -33,7 +35,7 @@ function step(g: Game, dt: number): void {
   if (city && EARTH.active && AMB.blimpT <= 0 && !AMB.flyers.some((f) => f.kind === 'blimp')) {
     AMB.blimpT = 70 + Math.random() * 60;
     const dir = Math.random() < 0.5 ? 1 : -1;
-    AMB.flyers.push({ x: dir > 0 ? v.x0 - 120 : v.x1 + 120, y: g.player.y + 10 + Math.random() * 60, vx: dir * 14, alt: 110, kind: 'blimp', col: '#ff5ad0', seed: 0, text: SLOGANS[Math.floor(Math.random() * SLOGANS.length)] });
+    AMB.flyers.push({ x: dir > 0 ? v.x0 - 120 : v.x1 + 120, y: g.player.y + 10 + Math.random() * 60, vx: dir * 14, alt: 110, kind: 'blimp', col: '#ff5ad0', seed: 0, text: (inCoastCity() ? COAST_SLOGANS : SLOGANS)[Math.floor(Math.random() * (inCoastCity() ? COAST_SLOGANS : SLOGANS).length)] });
   }
   for (const f of AMB.flyers) f.x += f.vx * dt;
   AMB.flyers = AMB.flyers.filter((f) => f.x > v.x0 - 300 && f.x < v.x1 + 300 && Math.abs(f.y - g.player.y) < 500);

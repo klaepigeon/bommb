@@ -9,6 +9,7 @@
 //   Europans: never seen. They live under the ice and answer the radio (first contact).
 // Other stars bring other species (galaxy.ts adds them to SPECIES).
 
+import { isCoast } from './earth';
 import { SQ, saveSequel } from './state';
 import { PLANETS, worldProfile } from './planets';
 import { addCargo, GOODS } from './cargo';
@@ -138,7 +139,9 @@ const POP = R.Population.prototype, baseLook = POP.makeLook;
 POP.makeLook = function (this: unknown, rnd: () => number, p: any) {
   const look = baseLook.call(this, rnd, p);
   if (!p || p.role === 'cop' || p.role === 'detective' || p.seed == null) return look;
-  if (p.isDon && p.faction === 'Vane' && SQ.planet === 'earth' && SQ.home === 'sol') { fearLook(look); return look; }
+  // the boss of Earth keeps court in Coast City (Hal Jordan's hometown, yellow for his master)
+  const w = (this as any).world;
+  if (p.isDon && SQ.planet === 'earth' && SQ.home === 'sol' && isCoast(SQ.sector) && w && w.cities[0] && p.city === w.cities[0].id) { fearLook(look); return look; }
   const sp = speciesFor(p.seed);
   if (!sp) return look;
   alienise(look, sp, p.seed);

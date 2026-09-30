@@ -50,6 +50,8 @@ export interface Fare { id: number; name: string; who: string; to: string; pay: 
 export interface CrewMember { name: string; species: string; role: 'pilot' | 'gunner' | 'engineer' | 'medic' | 'navigator'; wage: number; seed: number }
 // the Brass Coast's place on the planet (earth.ts)
 export const HOME_SECTOR: [number, number] = [12, 10];
+// Coast City, one sector north up the coast: Hal Jordan's hometown, rebuilt in yellow by the Fear Man for his master
+export const COAST_SECTOR: [number, number] = [12, 9];
 const homeSector = (s: [number, number] | undefined) => !s || (s[0] === HOME_SECTOR[0] && s[1] === HOME_SECTOR[1]);
 
 const KEY = 'bs.sequel';

@@ -3,6 +3,8 @@
 // sector, jumping to any star, the Fear Man, ring flight, first contact. Game 1's own debug
 // tools are still there, folded away underneath.
 
+import { LA } from './lanterns';
+import { COAST_SECTOR } from './state';
 import { SQ, saveSequel, HOME_SECTOR } from './state';
 import { PLANETS, AU } from './planets';
 import { SPACE, launch, spawnCraft, SCAN, type Craft } from './space';
@@ -42,7 +44,7 @@ function jumpTo(g: Game, to: string): void {
 }
 
 const fearActor = (g: Game) => g.actors.list.find((a: any) => a.kind === 'h' && !a.dead && a.look && a.look.xeno === 'fearman');
-const fearPerson = (g: Game) => g.pop.people.find((q: any) => q.isDon && q.faction === 'Vane' && q.alive);
+const fearPerson = (g: Game) => g.pop.people.find((q: any) => q.isDon && q.look && q.look.xeno === 'fearman' && q.alive);
 
 const baseTab = R.debugTab;
 R.debugTab = function (body: HTMLElement, g: Game) {
@@ -61,7 +63,7 @@ R.debugTab = function (body: HTMLElement, g: Game) {
     sect('Ships (fitted out)', (Object.keys(HULLS) as HullId[]).map((h) => btn('hull:' + h, HULLS[h].name))),
     sect('Space', [btn('launch', 'Launch'), ...(['freighter', 'patrol', 'hunter', 'capital', 'rebel'] as Craft['kind'][]).map((k) => btn('spawn:' + k, 'Spawn ' + k)), btn('clearsp', 'Clear space'), btn('ore', '+12 ore')]),
     sect('Land on', Object.keys(PLANETS).map((id) => btn('land:' + id, PLANETS[id].name))),
-    sect('Earth sectors', [btn('sec:home', 'The Brass Coast'), btn('sec:tokyo', 'Tokyo'), btn('sec:sahara', 'Sahara'), btn('sec:random', 'Random land'), btn('night', 'Neon night (22:00)'), btn('rain', 'Acid rain')]),
+    sect('Earth sectors', [btn('sec:home', 'The Brass Coast'), btn('sec:la', 'Los Angeles (Rayner)'), btn('sec:coast', 'Coast City (the Fear Man)'), btn('sec:tokyo', 'Tokyo'), btn('sec:sahara', 'Sahara'), btn('sec:random', 'Random land'), btn('night', 'Neon night (22:00)'), btn('rain', 'Acid rain')]),
     sect('Stars', [btn('star:sol', 'Sol'), ...STARS.slice(0, 12).map((s) => btn('star:' + s.id, s.name))]),
     sect('The Fear Man & the rings', [btn('fm:mark', 'Mark his club'), btn('fm:tp', 'Take me to him'), btn('fm:kill', 'Kill him now'), btn('ringfly', 'Take off on the ring'), btn('ringfree', 'Unlock rings (skip the kill)')]),
     sect('Aliens & story', [btn('europa', 'Europa: first contact'), btn('titan', 'Titan: the signal')]),
@@ -88,18 +90,21 @@ R.debugTab = function (body: HTMLElement, g: Game) {
         case 'sec': {
           ui.closeSheet();
           let s: [number, number] = [HOME_SECTOR[0], HOME_SECTOR[1]];
-          if (v === 'tokyo') s = [63, 10]; else if (v === 'sahara') s = [37, 13];
+          if (v === 'tokyo') s = [63, 10]; else if (v === 'sahara') s = [37, 13]; else if (v === 'la') s = [LA[0], LA[1]]; else if (v === 'coast') s = [COAST_SECTOR[0], COAST_SECTOR[1]];
           else if (v === 'random') { for (let n = 0; n < 500; n++) { const c: [number, number] = [Math.floor(Math.random() * 72), 4 + Math.floor(Math.random() * 26)]; if (landFrac(c[0], c[1]) > 0.6) { s = c; break; } } }
           SPACE.active = false; SQ.mode = 'planet'; SQ.space = null; if (SQ.system !== 'sol') enterSystem('sol');
-          SQ.sector = s; travelTo(g, 'earth', true); break;
+          SQ.sector = s; travelTo(g, 'earth', true);
+          // straight into the middle of town for the named cities
+          if (v === 'la' || v === 'coast') { const c = g.world.cities[0], w = g.world, at = w.findNear(c.cx, c.cy, 0, 8, (x: number, y: number) => !w.solidPed(x, y) && !w.isWater(x, y)) || { x: c.cx, y: c.cy }; const P = g.player; P.place(at.x * R.TILE + 8, at.y * R.TILE + 8); g.cam.x = P.x; g.cam.y = P.y; ui.toast(`${c.name}.`, 'good'); } // (setup made a new player)
+          break;
         }
         case 'night': g.clock.t = Math.floor(g.clock.t / 1440) * 1440 + (g.clock.hour() >= 22 ? 1440 : 0) + 22 * 60; break;
         case 'rain': g.env.setWeather('rain'); break;
         case 'star': ui.closeSheet(); jumpTo(g, v); ui.toast(`Jumped to ${v === 'sol' ? 'Sol' : STARS.find((s) => s.id === v)!.name}.`, 'good'); break;
         case 'fm': {
           const p = fearPerson(g);
-          if (v === 'mark') { markFearMan(g); ui.toast(p ? 'His club is on the map.' : 'No Fear Man here (land on the Brass Coast).'); break; }
-          if (!p) { ui.toast('No Fear Man here. He lives on the Brass Coast, on Earth.', 'warn'); break; }
+          if (v === 'mark') { markFearMan(g); if (p) ui.toast('His club is on the map.'); break; }
+          if (!p) { ui.toast('No Fear Man here. He keeps court in Coast City (Earth sectors > Coast City).', 'warn'); break; }
           const b = g.world.buildings[p.home];
           if (v === 'tp' && b) { ui.closeSheet(); if (pl.room) g.interiors.exit(); if (pl.inCar) pl.exitCar(); pl.place(b.out.x * R.TILE + 8, (b.out.y + 1) * R.TILE + 8); g.cam.x = pl.x; g.cam.y = pl.y; break; }
           if (v === 'kill') {

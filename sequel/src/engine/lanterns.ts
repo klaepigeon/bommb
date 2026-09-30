@@ -28,7 +28,7 @@ const GREEN = ['#0e4a1e', '#1a7a34', '#2eb04e', '#7cf08c'], BLACK = ['#08080c', 
 export function giveRaynerJob(g: Game): void {
   if (SQ.flags.rayner) return;
   SQ.flags.rayner = 1; saveSequel();
-  g.ui.story('The Fear Man\'s job', 'A Syndicate courier finds you on the pad and presses a holo-card into your hand. It plays once, in a thin old voice.\n\n"There is one of them left. One green ring on all of Earth. Kyle Rayner. He guards Los Angeles as though it were still worth guarding."\n\n"Bring me his death and your ship is yours."\n\nLos Angeles is the next sector south: walk or drive off the bottom of the map, or fly there and pick it from the landing zones.\n\n(Or there\'s the other way to get a clamp off: kill the man who put it there.)');
+  g.ui.story('The Fear Man\'s job', 'A Syndicate courier finds you on the pad and presses a holo-card into your hand. It plays once, in a thin old voice.\n\n"My master, Parallax, wants the last green ring gone from this world. There is one of them left. One green ring on all of Earth. Kyle Rayner. He guards Los Angeles as though it were still worth guarding."\n\n"Bring me his death and your ship is yours."\n\nLos Angeles is the next sector south: walk or drive off the bottom of the map, or fly there and pick it from the landing zones.\n\n(Or there\'s the other way to get a clamp off: kill the man who put it there.)');
 }
 export const raynerText = () => (SQ.flags.rayner === 1 ? 'Kill Kyle Rayner in Los Angeles (the next sector south), or kill the Fear Man. Either way the clamp comes off.' : null);
 
@@ -211,7 +211,8 @@ C.kill = function (h: any, source: any, kind: string) {
       pl.wardrobe = pl.wardrobe || {}; pl.wardrobe['unlock:parallax'] = 1;
       Object.assign(pl.style, { jacket: 'parallax' }); pl.buildLook();
       SQ.achieved = SQ.achieved || {}; SQ.achieved.parallax = 1; saveSequel();
-      g.ui.story('Hal Jordan', 'The yellow drains out of him like water out of sand. For a second, at the very end, the man looking up at you is just Hal: the test pilot, the one with the grin.\n\n"Take it," he says, and holds out his hand. "It was never supposed to be his. Or mine."\n\nThe green ring is yours. So is the armour, cracked and still warm, and it fits like it was waiting for you.\n\n(The Parallax Armour: a third less damage from everything. Swap it at any wardrobe.)');
+      SQ.flags.fearWeak = 1;
+      g.ui.story('Hal Jordan', 'The yellow drains out of him like water out of sand. For a second, at the very end, the man looking up at you is just Hal: the test pilot, the one with the grin.\n\n"Take it," he says, and holds out his hand. "It was never supposed to be his. Or mine."\n\nThe green ring is yours. So is the armour, cracked and still warm, and it fits like it was waiting for you.\n\n(The Parallax Armour: a third less damage from everything. Swap it at any wardrobe.)\n\nFar away, in Coast City, the gold starts to fade, and an old man in a club on the main street feels his ring go cold.');
     }, 1800);
   }
   return r;
@@ -233,6 +234,10 @@ const GP = R.Game.prototype, tick = GP.tick;
 GP.tick = function (this: Game, dt: number) {
   const r = tick.call(this, dt);
   if (!this.player || !this.world || this.ui.paused() || SPACE.active) return r;
+  // a new sector or planet is a new world: forget actors left behind in the old one
+  if (LANTERNS.kyle && !this.actors.list.includes(LANTERNS.kyle)) LANTERNS.kyle = null;
+  if (LANTERNS.hal && !this.actors.list.includes(LANTERNS.hal)) LANTERNS.hal = null;
+  if (LANTERNS.marsSpot && !onMars()) LANTERNS.marsSpot = null;
   updateKyle(this, dt); updateHal(this, dt); stepBolts(this, dt);
   const rg = LANTERNS.ring;
   if (rg) {

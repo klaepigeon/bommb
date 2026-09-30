@@ -35,7 +35,7 @@ const start = await run(() => {
   return { jacket: pl.style.jacket, shirt: pl.style.shirt, duster: !!pl.look.duster, don: don && g.pop.name(don), xeno: don && don.look.xeno };
 });
 check(start.jacket === 'duster' && start.shirt === 'tank' && start.duster, `you start in the Road Duster and a black tee (${start.jacket}, ${start.shirt})`);
-check(start.xeno === 'fearman' && /Fear Man/.test(start.don || ''), `the boss of Earth is ${start.don}`);
+check(start.xeno !== 'fearman' && /Tav/.test(start.don || ''), `the Brass Coast is run by the Fear Man's man: ${start.don}`);
 
 // rings are locked while he lives
 const locked = await run(() => { R.corps.give('red', true); return { owned: R.corps.count(), ring: !!R.game.player.inv.tools.ring }; });
@@ -61,13 +61,18 @@ await shot('marker');
 
 // ---------------------------------------------------------------- the Fear Man dies
 const fight = await run(() => {
-  const g = R.game, pl = g.player, p = g.pop.people.find((q) => q.isDon && q.faction === 'Vane');
+  // he keeps court in Coast City, one sector north: Hal Jordan's hometown, all in yellow
+  const g0 = R.game; BS2.landAt(g0, [12, 9], () => BS2.travelTo(g0, 'earth', true));
+  for (let i = 0; i < 6; i++) { const s = document.querySelector('#story'); if (s && getComputedStyle(s).display !== 'none') { const b = s.querySelector('button'); if (b) b.click(); } }
+  const g = R.game, pl = g.player, p = g.pop.people.find((q) => q.isDon && q.look && q.look.xeno === 'fearman');
+  if (!p) return { hp: 999, city: g.world.cities[0].name };
   const a = g.actors.makeHuman(pl.x + 30, pl.y, {}); a.person = p; a.look = p.look;
   g.actors.manage(); // the old man's frailty applies
   const hp = a.maxHp;
   R.combat.kill(a, pl);
-  return { hp, dead: BS2.SQ.flags.fearDead, yellow: R.corps.owns('yellow'), ring: !!pl.inv.tools.ring, suit: !!(pl.wardrobe['unlock:fearsuit'] && pl.wardrobe['unlock:scsuit']) };
+  return { city: g.world.cities[0].name, coast: BS2.inCoastCity(), name: g.pop.name(p), hp, dead: BS2.SQ.flags.fearDead, yellow: R.corps.owns('yellow'), ring: !!pl.inv.tools.ring, suit: !!(pl.wardrobe['unlock:fearsuit'] && pl.wardrobe['unlock:scsuit']) };
 });
+check(fight.city === 'Coast City' && fight.coast && /Fear Man/.test(fight.name || ''), `${fight.name} keeps court in ${fight.city}`);
 check(fight.hp <= 45, `he's old and frail: ${fight.hp} health`);
 check(fight.dead === 1 && fight.yellow && fight.ring && fight.suit, 'killing him gives you his yellow ring and the Sinestro Corps uniform');
 await p.waitForTimeout(700);

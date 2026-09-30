@@ -81,12 +81,12 @@ export async function runOpening(g: Game, then: () => void): Promise<void> {
   OPN.holo = { x: pl.x + 40, y: pl.y + 20, t: 0, look, alpha: 0 };
   g.audio.sfx('alarm');
   await glide(g, pl.x + 20, pl.y - 20, 1.5);
-  await say(null, 'Citizens of Earth.', 'THE FEAR MAN');
+  await say(null, 'Citizens of Earth. I speak for my master, Parallax.', 'THE FEAR MAN');
   await say(null, 'Fear is order. Order is peace. The tithe is due on the first.', 'THE FEAR MAN');
   await say(null, 'Work. Pay. Sleep. And... and...', 'THE FEAR MAN');
   await wait(0.8);
   await say(null, '...what was I saying. Hm. Yes. Obey.', 'THE FEAR MAN');
-  O.caption('The old families are dust. He owns the underworld now. All of it.');
+  O.caption('The old families are dust. He owns the underworld now. And he answers to something worse.');
   await wait(3.4);
   O.caption('');
   await O.fade(true);
@@ -120,7 +120,7 @@ export async function runOpening(g: Game, then: () => void): Promise<void> {
   await Promise.all([walkTo(g, a, ex - 22, ey - 2, 44, 6), walkTo(g, b, ex + 22, ey + 2, 44, 6)]);
   pl.dir = 0;
   await say(a, `Welcome home, ${pl.first}.`);
-  await say(b, 'Mr. Fear heard you were coming back. He sent a present.');
+  await say(b, 'Mr. Fear heard you were coming back. He sent a present. From Coast City, with love.');
   // the clamp robot rolls to the landing leg and bolts it on
   const leg = clampSpot() || { x: p.sx + 24, y: p.sy + 16 };
   leg.y += 6;

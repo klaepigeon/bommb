@@ -54,6 +54,7 @@ import { giveRaynerJob, raynerText, LANTERNS } from './lanterns';
 import './ambient';
 import './cameras';
 import './neon';
+import './coastcity';
 
 const GP = R.Game.prototype;
 

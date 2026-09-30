@@ -3,7 +3,8 @@
 // chrome clinics. And on Earth, the dystopia: smog that never lifts, acid rain that stings,
 // poisoned seas, and the whole picture graded like a VHS tape of a movie that got it right.
 
-import { EARTH } from './earth';
+import { EARTH, isCoast } from './earth';
+import { SQ } from './state';
 import { SPACE } from './space';
 
 const D = R.data;
@@ -63,6 +64,10 @@ EP.setWeather = function (this: any, kind: string) {
 // the grade: on Earth everything looks like a rented videotape of the future
 let overlay: HTMLDivElement | null = null, graded = '', stingT = 0, told = false;
 const GRADE = 'saturate(0.72) sepia(0.34) hue-rotate(-18deg) contrast(1.14) brightness(0.92)';
+// Coast City: every lamp, window and cloud burns gold for Parallax (paler once he's dead)
+const YELLOW = 'sepia(0.85) saturate(2.1) hue-rotate(8deg) contrast(1.1) brightness(0.95)';
+const PALE = 'sepia(0.45) saturate(1.2) hue-rotate(4deg) contrast(1.08) brightness(0.95)';
+export const inCoastCity = () => EARTH.active && isCoast(EARTH.sector);
 function ensureOverlay(): HTMLDivElement | null {
   if (overlay) return overlay;
   const stage = document.querySelector('.stage');
@@ -86,8 +91,13 @@ GP.tick = function (this: Game, dt: number) {
   const r = baseTick.call(this, dt);
   const on = EARTH.active && !SPACE.active;
   const cv = this.renderer && this.renderer.cv;
-  const want = on ? GRADE : !SPACE.active && R.planet && R.planet.grade ? R.planet.grade : '';
-  if (cv && graded !== want) { cv.style.filter = want; graded = want; }
+  const want = on ? (inCoastCity() ? (SQ.flags.parallax === 2 ? PALE : YELLOW) : GRADE) : !SPACE.active && R.planet && R.planet.grade ? R.planet.grade : '';
+  // the grade goes on whatever's actually on screen (the 2D view and the WebGL view)
+  if (graded !== want) {
+    const shown = [cv, document.getElementById('view'), document.getElementById('glview')].filter(Boolean) as HTMLElement[];
+    for (const el of shown) el.style.filter = want;
+    if (shown.length) graded = want;
+  }
   const o = ensureOverlay();
   if (o) o.style.display = on ? 'block' : 'none';
   // acid rain stings out in the open

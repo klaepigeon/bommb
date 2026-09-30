@@ -32,6 +32,9 @@ CP.give = function (this: unknown, col: string, quiet?: boolean) {
 
 // ---------------------------------------------------------------- an old man now
 const SENILE = [
+  'He is on Mars, my master. Parallax. He speaks to me in the yellow.',
+  'I built this city for him. Coast City. His city. He burned it, you know. I rebuilt it in his colour.',
+  'Parallax will be pleased. Parallax is always pleased when they are afraid.',
   'Where did I put... ah. On my hand. Of course.',
   'Hal? Is that you, Hal? No. You\'re too short.',
   'I kept order across a thousand worlds. Which one is this?',
@@ -73,7 +76,7 @@ C.kill = function (h: any, source: any, kind?: string) {
   pl.will = Math.max(pl.will || 0, 100);
   for (let k = 0; k < 60; k++) g.fx.add({ x: h.x, y: h.y - 10, vx: (Math.random() - 0.5) * 200, vy: (Math.random() - 0.5) * 200, life: 1.2, max: 1.2, c: Math.random() < 0.5 ? '#f0c020' : '#fff27a', s: 2, glow: 1 });
   g.audio.sfx('promote');
-  g.pop.addNews('port', 'THE FEAR MAN IS DEAD. The boss of Earth found dead in his own club. The Syndicate is leaderless; the streets are very quiet.');
+  g.pop.addNews(g.world.cities[0].id, 'THE FEAR MAN IS DEAD. The boss of Earth found dead in his own club in Coast City. The Syndicate is leaderless; the streets are very quiet.');
   setTimeout(() => g.ui.story('The Yellow Ring', 'He goes down easier than a legend should. At the end he looks up at you, and for a second he knows exactly who you are.\n\n"Good," he says. "Someone should be afraid of you."\n\nThe ring slides off his finger as if it had been waiting. You take the Sinestro Corps uniform from the wardrobe in his office: blue and black, yellow at the belt, pressed and ready for ten years.\n\nThe yellow ring is yours, and the other lights of the spectrum can find you now. From the construct menu (USE with nothing around), you can TAKE OFF into space with no ship at all.'), 400);
   return r;
 };
@@ -81,8 +84,10 @@ C.kill = function (h: any, source: any, kind?: string) {
 // ---------------------------------------------------------------- where he is
 // once your ship's free, his club goes on the map
 export function markFearMan(g: Game): void {
-  if (!onEarth() || fearDead() || !R.poi) return;
-  const don = g.pop.people.find((q: any) => q.isDon && q.faction === 'Vane' && q.alive);
+  if (!onEarth() || fearDead()) return;
+  const don = g.pop.people.find((q: any) => q.isDon && q.look && q.look.xeno === 'fearman' && q.alive);
   const b = don && don.home != null ? g.world.buildings[don.home] : null;
-  if (b) R.poi.add(b.out.x, b.out.y, 'tip', 'The Fear Man', 'Boss of Earth. Old, and wearing the first ring.');
+  // he keeps court in Coast City; from anywhere else, point the way
+  if (b && R.poi) R.poi.add(b.out.x, b.out.y, 'tip', 'The Fear Man', 'Boss of Earth. Parallax\'s man. Old, and wearing the first ring.');
+  else g.ui.toast('The Fear Man keeps court in Coast City, one sector north up the coast: walk off the top of the map, or land there.', 'warn');
 }

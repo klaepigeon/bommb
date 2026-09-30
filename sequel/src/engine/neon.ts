@@ -5,6 +5,8 @@
 
 import { EARTH } from './earth';
 import { SPACE } from './space';
+import { inCoastCity } from './dystopia';
+import { COAST_NEON } from './coastcity';
 
 const TS = R.TILE;
 const TYPES: Record<string, string[]> = {
@@ -26,7 +28,7 @@ ring.draw = function (gx: CanvasRenderingContext2D) {
   const t = performance.now() / 1000, cx = g.cam.x, cy = g.cam.y;
   for (const b of g.world.buildings) {
     if (!b || b.destroyed) continue;
-    const cols = TYPES[b.type];
+    const cols = TYPES[b.type] && (inCoastCity() ? COAST_NEON : TYPES[b.type]);
     if (!cols) continue;
     const x0 = b.x * TS, x1 = (b.x + b.w) * TS, yF = (b.y + b.h) * TS;
     if (x1 < cx - 320 || x0 > cx + 320 || yF < cy - 240 || yF - b.h * TS > cy + 240) continue;
