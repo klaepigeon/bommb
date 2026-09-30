@@ -22,5 +22,11 @@ if (F) F.list.push(
   { id: 'contact', name: 'First Contact', how: 'Sing with the deep ones under Europa', test: () => !!SQ.flags.europa },
   { id: 'source', name: 'The Source', how: 'Finish the Choir\'s story', test: () => !!SQ.flags.ending },
   { id: 'dread', name: 'Giant Killer', how: 'Destroy the Imperial dreadnought', test: () => !!SQ.flags.dreadDead },
+  { id: 'convoy', name: 'Shepherd', how: 'See a convoy home', test: () => (A().convoys || 0) >= 1 },
+  { id: 'tithe', name: 'Render Unto Caesar', how: 'Crack a tithe barge', test: () => (A().tithes || 0) >= 1 },
+  { id: 'song', name: 'Whale Song', how: 'Sell a leviathan\'s song on Luna', test: () => (SQ.flags.songsSold || 0) >= 1 },
+  { id: 'ahab', name: 'Ahab', how: 'Kill a leviathan', test: () => (A().whales || 0) >= 1 },
+  { id: 'fares', name: 'Cabbie of the Void', how: 'Carry ten passengers', test: () => (A().fares || 0) >= 10 },
+  { id: 'crowd', name: 'Face on the Wall', how: 'Break a Peacekeeper line in a riot', test: () => (SQ.flags.riotHero || 0) >= 1 },
 );
 export {};

@@ -54,37 +54,80 @@ A.drawHat = function (g: CanvasRenderingContext2D, x: number, top: number, kind:
 };
 
 // ---------------------------------------------------------------- the duster's tails
-// the base sprite ends the jacket at the waist; a duster falls to the knee, open at the front
-const baseDraw = A.drawPerson;
-A.drawPerson = function (g: CanvasRenderingContext2D, x: number, y: number, dir: number, walk: number, look: any, st: any) {
-  const res = baseDraw.call(this, g, x, y, dir, walk, look, st);
-  const c = look && look.duster;
-  if (!c || (st && (st.down || st.scale || st.crouch || st.swim || st.ride))) return res;
-  const moving = walk && Math.abs(walk) > 0.01, step = moving ? Math.floor(walk * 0.5) % 4 : 0, bob = moving && step % 2 ? 1 : 0;
-  const X = Math.round(x), Y = Math.round(y) - bob, sway = moving ? (step < 2 ? 1 : -1) : 0;
-  const d8 = A.dir8(dir, st && st.ang);
-  const box = (x0: number, y0: number, w: number, h: number, shade: number) => {
-    g.fillStyle = INK; g.fillRect(x0 - 1, y0, w + 2, h + 1);
-    g.fillStyle = c[shade]; g.fillRect(x0, y0, w, h);
-  };
-  const top = Y - 5, h = 3;
-  if (d8 === 2) { // facing you: two panels under the arms, the legs showing between
-    box(X - 6, top, 3, h, 1); box(X + 3, top, 3, h, 1);
-    g.fillStyle = c[2]; g.fillRect(X - 4, top, 1, h - 1); g.fillRect(X + 3, top, 1, h - 1);
-  } else if (d8 === 1 || d8 === 3) { // three-quarter front
-    const f = d8 === 1 ? 1 : -1;
-    box(f > 0 ? X - 6 : X + 3, top, 3, h, 1); box(f > 0 ? X + 3 : X - 5, top, 2, h - 1, 2);
-  } else if (d8 === 6 || d8 === 5 || d8 === 7) { // from behind: one sheet with a vent up the middle
-    box(X - 6, top, 12, h, 1);
-    g.fillStyle = c[0]; g.fillRect(X, top + 1, 1, h - 1);
-    g.fillStyle = c[2]; g.fillRect(X - 5, top, 4, 1); g.fillRect(X + 1, top, 4, 1);
-  } else { // side-on: the tail swings out behind, a flap in front
-    const f = d8 === 0 ? 1 : -1;
-    box(f > 0 ? X - 6 - sway : X + 2 + sway, top, 4, h, 1);
-    g.fillStyle = c[2]; g.fillRect(f > 0 ? X - 5 - sway : X + 2 + sway, top, 3, 1);
-    box(f > 0 ? X + 1 : X - 3, top, 2, h - 1, 2);
+// The base sprite ends the jacket at the waist; a duster falls to the knee. It's painted into
+// each generated frame from that frame's own pixels (not pasted on top at guessed offsets), so
+// it swings with the legs, never floats off the body, and never covers the hands.
+const hex = (c: string) => parseInt(c.slice(1), 16);
+const coated = new WeakMap<HTMLCanvasElement, HTMLCanvasElement>();
+// facing: +1 = right, -1 = left, 0 = toward or away from you (after the sprite's flip)
+const FACING = [1, 1, 0, -1, -1, -1, 0, 1];
+const BACK = [false, false, false, false, false, true, true, true];
+export function coatSprite(src: HTMLCanvasElement, ramp: string[], d8: number, frame: number): HTMLCanvasElement {
+  const w = src.width, h = src.height;
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h; (cv as any).res = (src as any).res;
+  const g = cv.getContext('2d')!; g.drawImage(src, 0, 0);
+  const im = g.getImageData(0, 0, w, h), d = im.data;
+  const at = (x: number, y: number) => (y * w + x) * 4;
+  const rgb = (i: number) => (d[i] << 16) | (d[i + 1] << 8) | d[i + 2];
+  const cloth = new Set(ramp.map(hex));
+  const set = (x: number, y: number, c: number) => { const i = at(x, y); d[i] = c >> 16; d[i + 1] = (c >> 8) & 255; d[i + 2] = c & 255; d[i + 3] = 255; };
+  // the waist: the lowest row of jacket
+  let waist = -1, jl = w, jr = -1;
+  for (let y = 0; y < h; y++) { let n = 0; for (let x = 0; x < w; x++) { const i = at(x, y); if (d[i + 3] && cloth.has(rgb(i))) n++; } if (n >= 2) waist = y; }
+  if (waist < 0) return src;
+  for (let x = 0; x < w; x++) { const i = at(x, waist); if (d[i + 3] && cloth.has(rgb(i))) { jl = Math.min(jl, x); jr = Math.max(jr, x); } }
+  let bottom = waist;
+  for (let y = waist; y < h; y++) for (let x = 0; x < w; x++) if (d[at(x, y) + 3]) bottom = y;
+  const legLen = bottom - waist;
+  if (legLen < 4) return src;
+  const end = waist + Math.max(2, Math.round(legLen * 0.55));
+  // what the legs are made of (below the hem: trousers and boots); only those, gaps and the
+  // outline get covered, so hands and whatever's in them stay on top
+  const legs = new Set<number>();
+  for (let y = end + 1; y <= bottom; y++) for (let x = 0; x < w; x++) { const i = at(x, y); if (d[i + 3]) legs.add(rgb(i)); }
+  const covers = (x: number, y: number) => { const i = at(x, y); if (!d[i + 3]) return true; const c = rgb(i); return legs.has(c) || cloth.has(c) || ((c >> 16) + ((c >> 8) & 255) + (c & 255) < 90); };
+  const ink = hex(INK), c0 = hex(ramp[1]), c1 = hex(ramp[2]), c2 = hex(ramp[3]);
+  const face = FACING[d8], back = BACK[d8], cx = Math.round((jl + jr) / 2);
+  // the tail swings behind with the stride
+  const sway = frame === 1 ? 2 : frame === 2 ? 0 : 1;
+  let pl = jl, pr = jr;
+  const cols: [number, number, number][] = [];
+  for (let y = waist + 1; y <= end; y++) {
+    let l = w, r = -1;
+    for (let x = 0; x < w; x++) if (d[at(x, y) + 3]) { l = Math.min(l, x); r = Math.max(r, x); }
+    if (r < 0) { l = pl; r = pr; }
+    const k = y - waist, flare = k >= 2 ? 1 : 0;
+    let left = Math.min(l, jl) - flare, right = Math.max(r, jr) + flare;
+    const tailL = face > 0 ? Math.min(sway, k) : 0, tailR = face < 0 ? Math.min(sway, k) : 0;
+    left -= tailL; right += tailR;
+    // a coat hangs; it doesn't stretch across a stride: legs step out from under it
+    left = Math.max(1, left, jl - 1 - tailL); right = Math.min(w - 2, right, jr + 1 + tailR);
+    cols.push([y, left, right]); pl = l; pr = r;
   }
-  return res;
+  for (const [y, left, right] of cols) {
+    for (let x = left; x <= right; x++) {
+      if (!covers(x, y)) continue;
+      // open at the front: the legs show between the panels
+      if (!back && face === 0 && (x === cx || x === cx - 1)) continue;
+      if (!back && face !== 0 && x === cx + face * 2) continue;
+      const edge = x === left || x === right;
+      set(x, y, edge ? ink : y === end ? c0 : back && x === cx ? c0 : x === left + 1 || (face === 0 && !back && (x === cx - 2 || x === cx + 1)) ? c2 : c1);
+    }
+  }
+  // the hem's outline
+  const hem = cols[cols.length - 1];
+  if (hem && hem[0] + 1 < h) for (let x = hem[1]; x <= hem[2]; x++) { const i = at(x, hem[0] + 1); if (!d[i + 3]) set(x, hem[0] + 1, ink); }
+  g.putImageData(im, 0, 0);
+  return cv;
+}
+const baseSprite = A.oldSprite;
+A.oldSprite = function (look: any, d8: number, frame: number, pose: string | null) {
+  const c = baseSprite.call(this, look, d8, frame, pose);
+  if (!look || !look.duster || look.kid) return c;
+  let e = coated.get(c);
+  // the sprite generator shades the jacket in its own ramp (dark to light): match and paint in that
+  if (!e) { const L = A.oldLook(look), j = L && L.jacket && L.jacket.length >= 4 ? L.jacket : look.duster; e = coatSprite(c, j, d8, frame); coated.set(c, e); }
+  return e;
 };
 
 export {};

@@ -40,11 +40,13 @@ export interface Sequel {
   colonies?: Record<string, Colony>; // colonies you've founded, keyed 'system:planet'
   bases?: Base[]; // orbital bases you've built
   crew?: CrewMember[]; // who flies with you
+  fares?: Fare[]; // passengers aboard (passengers.ts)
   ringFly?: { ship: Ship; hull: number; style: Record<string, unknown>; shipAt: [number, number]; shipLoc: { sys: string; planet: PlanetId } } | null; // flying on a lantern ring: your ship, parked
 }
 export interface Contract { id: number; kind: 'cargo' | 'smuggle' | 'bounty'; from: string; to: string; good?: Good; n?: number; pay: number; due: number; target?: string; name: string; done?: boolean }
 export interface Colony { name: string; founded: number; day: number; pop: number; level: number; mine: number; guns: number; bank: number }
 export interface Base { id: string; sys: string; parent: string; alt: number; hours: number; name: string; level: number; stash: CargoLot[]; turrets: number; day: number; bank: number }
+export interface Fare { id: number; name: string; who: string; to: string; pay: number; due: number; twist: 'none' | 'fugitive' | 'cultist' | 'vip'; sprung?: boolean }
 export interface CrewMember { name: string; species: string; role: 'pilot' | 'gunner' | 'engineer' | 'medic' | 'navigator'; wage: number; seed: number }
 // the Brass Coast's place on the planet (earth.ts)
 export const HOME_SECTOR: [number, number] = [12, 10];

@@ -15,7 +15,9 @@
     "roadmap": "node tools/roadmap.mjs",
     "interro": "node ../tools/interro.mjs sequel",
     "features": "node tools/features.mjs",
-    "check": "npm run typecheck && npm run build && npm run smoke && npm run frontier && npm run earth && npm run fear && npm run flight && npm run roadmap && npm run interro && npm run features"
+    "extras": "node tools/extras.mjs",
+    "polish": "node tools/polish.mjs",
+    "check": "npm run typecheck && npm run build && npm run smoke && npm run frontier && npm run earth && npm run fear && npm run flight && npm run roadmap && npm run interro && npm run features && npm run extras && npm run polish"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",

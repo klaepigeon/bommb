@@ -5,7 +5,7 @@
 import { SQ, resetSequel, saveSequel } from './state';
 import { enterSystem } from './galaxy';
 import { current, nearShip, SHIP_MENU, shipHere, travelTo } from './travel';
-import { launch, resumeSpace, SPACE, nearPlanet, spawnCraft, HOOKS, navTargets, autopilot } from './space';
+import { launch, resumeSpace, SPACE, nearPlanet, spawnCraft, HOOKS, navTargets, autopilot, hitCraft } from './space';
 import { openWatch, installWatch } from './watch';
 import { shipSprites, npcShip, stats } from '../ship/ship';
 import './board';
@@ -39,6 +39,15 @@ import './races';
 import './arena';
 import './radio';
 import './legend';
+import './retheme';
+import './scoop';
+import './mines';
+import './convoy';
+import './leviathan';
+import './tithe';
+import './passengers';
+import './riots';
+import './curfew';
 
 const GP = R.Game.prototype;
 
@@ -141,4 +150,4 @@ RP.renderTitle = function (this: { g: CanvasRenderingContext2D; cv: HTMLCanvasEl
 
 // for tests and debugging
 const w = window as unknown as { BS2: Record<string, unknown> };
-w.BS2 = Object.assign(w.BS2 || {}, { navTargets, autopilot, SQ, SPACE, launch, shipSprites, nearPlanetId: () => nearPlanet()?.id, spawnCraft, npcShip, stats, WEAPONS, takeOff, HOOKS, shipHere, travelTo });
+w.BS2 = Object.assign(w.BS2 || {}, { hitCraft, SHIP_MENU, navTargets, autopilot, SQ, SPACE, launch, shipSprites, nearPlanetId: () => nearPlanet()?.id, spawnCraft, npcShip, stats, WEAPONS, takeOff, HOOKS, shipHere, travelTo });

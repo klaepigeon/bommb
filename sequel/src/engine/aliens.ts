@@ -169,7 +169,7 @@ const FEATURES: Record<Feature, (s: Species) => { front: Pix[]; back: Pix[] }> =
   // a boxy head, rivets, an antenna with a light
   robot: (s) => { const f: Pix[] = [[-6, 2, 12, 11, s.skin], [-6, 2, 12, 1, '#ffffff'], [-6, 12, 12, 1, '#303038'], [0, -3, 1, 5, '#303038'], [-1, -4, 3, 2, s.accent], [-6, 6, 1, 1, '#303038'], [5, 6, 1, 1, '#303038']]; return { front: f, back: f }; },
   // lumps and a crooked growth, per person
-  mutant: (s) => ({ front: [[-6, 3, 3, 2, s.accent], [3, 1, 3, 3, s.accent], [-2, 13, 4, 1, s.accent]], back: [[-5, 2, 4, 3, s.accent], [2, 4, 3, 2, s.accent]] }),
+  mutant: (s) => ({ front: [[-6, 3, 3, 2, s.accent], [3, 3, 3, 3, s.accent], [-2, 13, 4, 1, s.accent]], back: [[-5, 2, 4, 3, s.accent], [2, 4, 3, 2, s.accent]] }),
   // a neon mohawk, spiked tall
   mohawk: (s) => ({ front: [[-1, -4, 2, 7, s.accent], [-1, -5, 2, 1, '#ffffff'], [1, 12, 1, 1, '#d0d8e8'], [-2, 12, 1, 1, '#d0d8e8']], back: [[-1, -4, 2, 8, s.accent], [-1, -5, 2, 1, '#ffffff']] }),
   // a greased pompadour and a leather collar
@@ -191,13 +191,41 @@ const EYES: Record<Eyes, (s: Species) => Pix[]> = {
 };
 const DIR8 = ['right', 'downright', 'down', 'downright', 'right', 'upright', 'up', 'upright'];
 const FLIP8 = [false, false, false, true, true, true, false, false];
-function paint(g: CanvasRenderingContext2D, X: number, Y: number, list: Pix[], n: string, flip: boolean): void {
+// the head's top edge in a sprite frame: per column, the first solid row (-1 where empty)
+const tops = new WeakMap<HTMLCanvasElement, number[]>();
+function topsOf(spr: HTMLCanvasElement): number[] {
+  let t = tops.get(spr);
+  if (t) return t;
+  const w = spr.width, h = spr.height, d = spr.getContext('2d')!.getImageData(0, 0, w, h).data;
+  t = [];
+  for (let x = 0; x < w; x++) { let y = 0; while (y < h && d[(y * w + x) * 4 + 3] < 200) y++; t.push(y < h ? y : -1); }
+  tops.set(spr, t);
+  return t;
+}
+// root: features above the skull (spikes, antennae, crests) grow out of the scalp in every
+// view: slid over the head if they'd miss it, and stretched down to meet it
+function paint(g: CanvasRenderingContext2D, X: number, Y: number, list: Pix[], n: string, flip: boolean, root?: number[]): void {
   const cx = n === 'down' || n === 'up' ? 7.5 : n === 'downright' || n === 'upright' ? 9 : 10;
   const sq = n === 'right' ? 0.6 : n === 'downright' || n === 'upright' ? 0.85 : 1;
+  const head = root ? root.map((t, i) => (t >= 0 && t < 8 ? i : -1)).filter((i) => i >= 0) : [];
+  const placed: [number, number, number, number][] = [];
+  let shift: number | null = null;
   for (const [dx, row, w, h, c] of list) {
-    const sx = cx + dx * sq, x = flip ? 16 - sx - w : sx;
+    // mirror by the width actually drawn (the squeezed one), or flipped features slide sideways
+    const ww = Math.max(1, Math.round(w * sq)), sx = cx + dx * sq;
+    let x = Math.round(flip ? 16 - sx - ww : sx), hh = h;
+    if (head.length && row < 4) {
+      // the whole crown of the feature moves together, onto the skull
+      if (shift === null) { const lo = head[0], hi = head[head.length - 1]; shift = x + ww - 1 < lo ? lo - x : x > hi ? Math.max(lo, hi - ww + 1) - x : 0; }
+      x += shift;
+      // a piece touching nothing (not the scalp, not another piece) is stretched down to the scalp
+      const touches = placed.some(([px, py, pw, ph]) => x <= px + pw && x + ww >= px && row <= py + ph && row + hh >= py);
+      let top = 99; for (let i = x; i < x + ww; i++) if (root![i] >= 0) top = Math.min(top, root![i]);
+      if (!touches && top < 99 && row + hh < top) hh = top - row;
+    }
+    placed.push([x, row, ww, hh]);
     g.fillStyle = c;
-    g.fillRect(Math.round(X - 8 + x), Math.round(Y - 25 + row), Math.max(1, Math.round(w * sq)), h);
+    g.fillRect(X - 8 + x, Math.round(Y - 25 + row), ww, hh);
   }
 }
 const A = R.art as any, baseDraw = A.drawPerson;
@@ -210,7 +238,10 @@ A.drawPerson = function (g: CanvasRenderingContext2D, x: number, y: number, dir:
   const d8 = A.dir8(dir, st && st.ang), n = DIR8[d8], flip = FLIP8[d8], back = n === 'up' || n === 'upright';
   const varied: Species = look.xenoAccent || look.xenoSkin ? Object.assign({}, sp, { accent: look.xenoAccent || sp.accent, skin: look.xenoSkin || sp.skin }) : sp;
   const f = FEATURES[sp.feature](varied);
-  paint(g, X, Y, back ? f.back : f.front, n, flip);
+  // the frame the body was drawn with (same stride maths as game 1's drawPerson)
+  const phase = moving ? Math.floor(walk * 0.5) % 4 : 0, frame = phase === 1 ? 1 : phase === 3 ? 2 : 0;
+  const root = sp.feature === 'halo' ? undefined : topsOf(A.oldSprite(look, d8, frame, null));
+  paint(g, X, Y, back ? f.back : f.front, n, flip, root);
   if (!back) paint(g, X, Y, EYES[sp.eyes](varied), n, flip);
   return res;
 };

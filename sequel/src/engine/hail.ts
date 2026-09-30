@@ -8,7 +8,7 @@ import { stats } from '../ship/ship';
 import { addCargo, GOODS, price } from './cargo';
 import { fmt } from './bounty';
 
-const near = (): Craft | null => SPACE.crafts.find((c) => c.kind === 'freighter' && !c.dead && !c.disabled && !c.hostile && Math.hypot(c.x - SPACE.x, c.y - SPACE.y) < 260) || null;
+const near = (): Craft | null => SPACE.crafts.find((c) => c.kind === 'freighter' && !c.dead && !c.disabled && !c.hostile && !(c as any).noHail && Math.hypot(c.x - SPACE.x, c.y - SPACE.y) < 260) || null;
 const worth = (g: Good) => price('earth', g);
 const firepower = (st: ReturnType<typeof stats>) => st.guns * st.dmg + st.missiles * 30 + st.drones * 12 + st.shield * 0.3;
 
