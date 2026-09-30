@@ -58,6 +58,8 @@ export const HOOKS = {
   self: [] as ((g: CanvasRenderingContext2D, x: number, y: number, a: number, k: number) => boolean)[],
   // after you set down anywhere
   landed: [] as ((g: Game, id: PlanetId) => void)[],
+  // a real touchdown from flight (not a save load or a scripted arrival): the landing animation
+  touchdown: [] as ((g: Game, id: PlanetId) => void)[],
   // more places for the nav menu (stations, bases)
   nav: [] as (() => NavTarget[])[],
   // actions at the top of the nav menu (build a base here...)
@@ -170,6 +172,7 @@ function land(g: Game, id: PlanetId, force = false): void {
   }
   SQ.heat.empire = Math.max(0, SQ.heat.empire - 10);
   for (const h of HOOKS.landed) h(g, id);
+  for (const h of HOOKS.touchdown) h(g, id);
   saveSequel();
   g.save();
 }

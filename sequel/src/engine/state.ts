@@ -93,3 +93,6 @@ export function planetSeed(p: PlanetId): number {
   for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619) >>> 0;
   return h % 1000000000;
 }
+
+// in a city: its tiles, or anywhere inside its bounds (cityAt alone misses plazas and parks)
+export const cityRect = (w: any, tx: number, ty: number): any => w.cityAt(tx, ty) || w.cities.find((c: any) => tx >= c.x0 - 2 && tx <= c.x1 + 2 && ty >= c.y0 - 2 && ty <= c.y1 + 2) || null;

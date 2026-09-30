@@ -7,6 +7,43 @@ sequel layered on top. Mobile first.
 
 See [DESIGN.md](DESIGN.md) for the full plan.
 
+## This round
+
+- **The opening, in scenes:** Earth near midnight in the acid rain; the Fear Man forty feet
+  tall as a flickering hologram over the plaza, losing his thread mid-speech; Pad 3 control
+  asking who's coming down; your ship landing; the Syndicate and a clamp robot waiting for you.
+- **Landing and takeoff:** the ship drops onto the pad on its retros (shadow shrinking, grit
+  blasting across the apron, landing legs unfolding, a thump and a shake), and you walk down the
+  ramp. Launching runs it backwards. The clamp is visible on the landing leg.
+- **The Fear Man's one job: kill Kyle Rayner,** the last Green Lantern on Earth, in full uniform
+  in Los Angeles (the next sector south). He warns you off, then fights with the ring (and a
+  shield when he's hurt). Kill him and the ring slides off his finger and streaks into the
+  sky, looking for someone worthy. Not you. The clamp comes off. (Or kill the Fear Man himself:
+  that frees the ship too.)
+- **Parallax on Mars:** Hal Jordan, hair gone white, armour grown over him, burning out claim
+  camps past the ridge. A three-phase boss (fear bolts, a nova ring, then he comes for you).
+  Beat him and he's Hal again for a moment: his green ring and the Parallax Armour (a third
+  less damage) are yours.
+- **Security cameras and the cyberdeck:** cameras over every bank, Corp Tower and Peacekeeper
+  post sweep the street; a crime in view is on tape (your face, unless you're masked). Shoot
+  them out, or jack in with a cyberdeck to loop the feed, wipe the footage or turn them to the
+  wall. The deck pops hover-car locks too.
+- **Earth at night:** a real curfew (22:00 to 05:00) with searchlight drones, tags and passes
+  (or forgeries); riots, with shelves to loot and sides to pick.
+- **Space:** skim gas giants for jump fuel, drop proximity mines, escort convoys through raider
+  ambushes, record (or harpoon) void leviathans, and crack the Empire's tithe barge.
+- **Passengers:** fares from every pad, with fugitives (and their hunters), Choir pilgrims and
+  the occasional senator.
+- **Animation and ambience:** sky lanes of hover skiffs and air-cabs overhead, Syndicate ad
+  blimps with scrolling neon, neon tubes on the cantinas and clubs (the dying ones stutter),
+  security-camera sweeps, steam from the street grates, rain splashing on the pavement,
+  blinking robot antennae and breathing Choir halos.
+- **Fixes:** the road duster was pasted over the sprite and floated off the body as you walked;
+  it's now painted into every walk frame. Alien features (mutant lumps, head spikes, antennae)
+  are rooted to the head in every view. `tools/polish.mjs` checks every character frame for
+  stray pixels, clothes off the body and missing animation.
+- Game 1's newer systems speak XX8X here: vid-phones, credit haulers, acid monsoons, synth-shine.
+
 ## What's in it
 
 - **A planet-sized Earth:** 2,592 sectors over the real continents, each a full game 1 map;
@@ -79,7 +116,7 @@ hull fitted out, spawn any ship, land anywhere, jump to any star, the Fear Man, 
 
 ```
 npm install
-npm run check      # typecheck + build + all nine suites
+npm run check      # typecheck + build + all eleven suites
 ```
 
 - `tools/smoke.mjs` plays the core loop: Earth, the Fear Man's clamp, orbit, piracy, cruise to Luna,
@@ -89,6 +126,11 @@ npm run check      # typecheck + build + all nine suites
 - `tools/fear.mjs` plays the newest layer: the duster, the ship marker, the Fear Man's death and
   his ring, ring flight to Mars and calling the ship down, NPC hulls, missiles and drones, and
   the XX8X debug menu.
+- `tools/extras.mjs` plays this round: the opening at speed, landing and takeoff, Kyle Rayner in LA
+  and his ring flying away, Parallax, cameras and the deck, the curfew, riots, convoys, leviathans,
+  the tithe barge, passengers, mines and skimming.
+- `tools/polish.mjs` is the graphical polish test: every look in every direction and walk frame,
+  checked for stray pixels, clothes off the body, and frames that don't animate.
 - `tools/frontier.mjs` plays the newer systems: aliens, first contact, the orbital casino,
   mining the belt, Ceres wildlife and the food chain, bounty hunters (on the ground and
   boarding you), the court, and a jump to Alpha Centauri and back.

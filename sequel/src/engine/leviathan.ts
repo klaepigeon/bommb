@@ -6,7 +6,7 @@
 // carcass is full of void pearls. Nobody who's done it sleeps well.
 
 import { SQ, saveSequel } from './state';
-import { SPACE, HOOKS, burst } from './space';
+import { SPACE, HOOKS, burst, nearPlanet } from './space';
 import { addCargo } from './cargo';
 import { fmt } from './bounty';
 
@@ -88,6 +88,7 @@ HOOKS.shot.push((x, y, dmg) => {
   return true;
 });
 HOOKS.use.push((g) => {
+  if (nearPlanet()) return null; // over a world, USE lands
   const c = carcass();
   if (c) return { label: 'Harvest', fn: () => {
     c.harvested = true;

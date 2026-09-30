@@ -19,6 +19,8 @@ Ring.updateFearMan = function () { /* he moved to town */ };
 const baseTick = CP.tick;
 CP.tick = function (this: unknown) { if (!fearDead()) return; return baseTick.apply(this, arguments); };
 let allow = false;
+// a ring earned the hard way (Parallax's, off his hand on Mars) comes through regardless
+export function giveRingAnyway(col: string, wear = true): void { allow = true; try { CP.give(col, true); if (wear) CP.wear(col, true); } finally { allow = false; } }
 const baseGive = CP.give;
 CP.give = function (this: unknown, col: string, quiet?: boolean) {
   if (!fearDead() && !allow) {

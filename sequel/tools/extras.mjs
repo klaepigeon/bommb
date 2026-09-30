@@ -19,7 +19,7 @@ const log = [];
 const check = (ok, what) => { log.push((ok ? '✓ ' : '✗ ') + what); if (!ok) errs.push('step failed: ' + what); };
 const closeAll = () => p.evaluate(() => { for (let i = 0; i < 6; i++) { const s = document.querySelector('#story'); if (s && getComputedStyle(s).display !== 'none') { const b = s.querySelector('button'); if (b) b.click(); } } R.game.ui.closeSheet && R.game.ui.closeSheet(); });
 // each step runs on its own, so one failure doesn't hide the rest
-const step = async (name, fn) => { try { const r = await p.evaluate(fn); await closeAll(); return r || {}; } catch (e) { errs.push(name + ': ' + e.message.split('\n')[0]); await closeAll().catch(() => {}); return {}; } };
+const step = async (name, fn) => { try { const r = await p.evaluate(fn); await closeAll(); return r || {}; } catch (e) { errs.push(name + ': ' + e.message.split('\n').slice(0, 4).join(' | ')); await closeAll().catch(() => {}); return {}; } };
 
 await p.click('#btnNew');
 await p.waitForTimeout(900);
@@ -38,8 +38,34 @@ await p.evaluate(() => {
   };
 });
 
+// 0. the opening, in scenes, run at speed: the street, the hologram, Pad 3, the landing, the clamp
+let r = await p.evaluate(async () => {
+  const g = R.game; T.shut(); window.BS2_ANIM = 1;
+  if (BS2.SPACE.active) { BS2.SPACE.active = false; BS2.SQ.mode = 'planet'; }
+  BS2.SQ.flags.rayner = 0; BS2.SQ.flags.clamp = 1;
+  let done = false, holo = false, landed = false, cast = 0;
+  BS2.runOpening(() => { BS2.giveRaynerJob(); done = true; });
+  const t0 = performance.now();
+  for (let i = 0; !done && performance.now() - t0 < 150000; i++) {
+    g.tick(1 / 60);
+    if (BS2.OPN.holo) holo = true;
+    if (BS2.LAND.mode === 'land') landed = true;
+    cast = Math.max(cast, g.actors.list.filter((a) => a.scripted && !a.dead).length);
+    if (i % 20 === 0) {
+      const go = document.querySelector('#nameGo'); if (go && go.offsetParent) go.click();
+      const opt = [...document.querySelectorAll('.sheet button')].find((q) => q.offsetParent && /said hello/.test(q.textContent)); if (opt) opt.click();
+      await new Promise((res) => setTimeout(res, 8));
+    }
+  }
+  await new Promise((res) => setTimeout(res, 1200));
+  const s = document.querySelector('#story'); const story = s && getComputedStyle(s).display !== 'none' ? s.textContent : '';
+  T.shut(); window.BS2_ANIM = 0;
+  return { stage: BS2.OPN.stage, done, holo, landed, cast, clamp: BS2.SQ.flags.clamp, job: BS2.SQ.flags.rayner, lock: !!R.opening.lock, hidden: !!g.player.hidden, cine: !!R.opening.cineOn, story: story.slice(0, 40) };
+});
+check(r.done && r.holo && r.landed && r.cast >= 3, `the opening plays in scenes: the Fear Man's hologram, the ship landing, ${r.cast} Syndicate cast on the pad`);
+check(r.done && r.clamp === 1 && r.job === 1 && !r.lock && !r.hidden && !r.cine, `it ends clamped, with the Rayner job, controls back ${JSON.stringify(r)}`);
 // 1. game 1's systems, in the future's words
-let r = await step('retheme', () => {
+r = await step('retheme', () => {
   const g = R.game;
   const said = BS2.say('The armored car went past the payphone. HURRICANE Agnes. 3 jugs of moonshine, and the Revenuers.');
   const gen = g.world.buildings.find((b) => b && b.type === 'general');
@@ -182,8 +208,8 @@ r = await step('riot', () => {
   if (pl.room) g.interiors.exit();
   const riot = BS2.startRiot(); if (!riot) return { started: false };
   for (const a of riot.crowd.slice(0, 3)) { a.hp = a.maxHp = 5000; }
-  T.ticks(130);
-  const fighting = riot.crowd.filter((a) => a.state === 'fight' && a.target && a.target.riotCop).length;
+  let fighting = 0;
+  for (let i = 0; i < 180; i++) { T.ticks(1); fighting = Math.max(fighting, riot.crowd.filter((a) => a.state === 'fight' && a.target && a.target.riotCop).length); }
   const shop = g.world.buildings.find((b) => b && b.cityId === riot.city && ['general', 'bar', 'pawn', 'liquor', 'diner'].includes(b.type));
   const loot = shop && g.ui.interiorOptions(shop).find((o) => o.label === 'Loot the shelves');
   const cash = g.player.cash; if (loot) loot.fn();
@@ -230,9 +256,104 @@ check(r.tagged === 1 && r.incident, `caught in its light: Curfew Violation, Peac
 check(r.downed === 1, 'shot down in a shower of sparks');
 check(r.pass && r.passOk, `with a Syndicate pass the drone scans you and carries on ${r.pass && r.passOk ? '' : JSON.stringify(r)}`);
 
-// 10. the achievements know about all of it
-r = await step('feats', () => { const ids = R.feats.list.map((f) => f.id); return { ok: ['convoy', 'tithe', 'song', 'ahab', 'fares', 'crowd'].every((k) => ids.includes(k)) }; });
-check(r.ok, 'six new achievements listed');
+// 10. the lanterns: Kyle Rayner (the Fear Man's job) and Parallax
+r = await step('rayner', () => {
+  const g = R.game, pl = g.player; T.ground(); T.inCity();
+  BS2.SQ.flags.clamp = 1; BS2.SQ.flags.rayner = 0;
+  BS2.giveRaynerJob(); T.shut();
+  const job = BS2.SQ.flags.rayner;
+  pl.inv.tools.ring = 0;
+  // Los Angeles: one sector south of the Brass Coast. He turns up on his own.
+  BS2.landAt(g, [12, 11], () => BS2.travelTo(g, 'earth', true)); T.shut();
+  const city = g.world.cities[0].name;
+  T.inCity(); T.ticks(30);
+  const k = BS2.LANTERNS.kyle;
+  if (!k) return { job, city, spawned: false };
+  k.x = pl.x + 40; k.y = pl.y; k.met = true; k.warnT = 0;
+  T.ticks(90);
+  const fought = k.hostile && BS2.LANTERNS.bolts.length + (pl.hp < pl.maxHp ? 1 : 0) > 0;
+  k.shielded = 0; R.combat.kill(k, pl, 'bullet');
+  const flying = !!BS2.LANTERNS.ring;
+  T.ticks(10);
+  return { job, city, spawned: true, fought, dead: BS2.SQ.flags.rayner, flying, ring: !!pl.inv.tools.ring };
+});
+await p.waitForTimeout(3000);
+const clampOff = await p.evaluate(() => { T.shut(); return !BS2.SQ.flags.clamp; });
+check(r.job === 1 && r.spawned && /Angeles|LA/.test(r.city || ''), `the Fear Man's job: Kyle Rayner, found in ${r.city}`);
+check(r.fought, 'he warns you off, then fights with the ring');
+check(r.dead === 2 && r.flying && !r.ring, 'killed: his ring flies away into the sky (not to you)');
+check(clampOff, 'and the Fear Man takes the clamp off your ship');
+const fearWay = await p.evaluate(() => { BS2.SQ.flags.clamp = 1; BS2.SQ.flags.fearDead = 1; T.ticks(2); T.shut(); const ok = !BS2.SQ.flags.clamp; BS2.SQ.flags.fearDead = 0; return ok; });
+check(fearWay, 'or kill the Fear Man himself: the clamp comes off either way');
+r = await step('parallax', () => {
+  const g = R.game, pl = g.player; T.ground(); T.inCity();
+  pl.inv.tools.ring = 0; BS2.SQ.flags.parallax = 1;
+  BS2.spawnHal();
+  const h = BS2.LANTERNS.hal;
+  h.x = pl.x + 60; h.y = pl.y; pl.hp = pl.maxHp = 999;
+  // he only wakes on Mars, so push the fight along by hand: three phases
+  h.hostile = true; g.actors.setFight(h, pl);
+  const phases = [];
+  for (const hp of [1300, 700, 300]) { h.hp = hp; for (let i = 0; i < 120; i++) { BS2.SQ.planet = 'mars'; g.tick(1 / 60); } phases.push(h.phase); }
+  BS2.SQ.planet = 'earth';
+  R.combat.kill(h, pl, 'bullet');
+  return { hp: h.maxHp, phases, dead: BS2.SQ.flags.parallax };
+});
+await p.waitForTimeout(2600);
+const reward = await p.evaluate(() => { T.shut(); const pl = R.game.player; const hp0 = pl.hp = 100; pl.hurt(30, null, 'melee'); return { ring: !!pl.inv.tools.ring, armour: pl.style.jacket, took: hp0 - pl.hp }; });
+check(r.hp >= 1000 && r.phases.join() === '0,1,2' && r.dead === 2, `Parallax: a ${r.hp} hp boss in three phases (${r.phases})`);
+check(reward.ring && reward.armour === 'parallax' && reward.took < 25, `his ring and the Parallax armour are yours (a 30 hit does ${Math.round(reward.took)})`);
+
+r = await step('takeoff', () => {
+  const g = R.game; window.BS2_ANIM = 1;
+  const w = g.world; BS2.SQ.flags.clamp = 0;
+  let launched = false, alt = 0;
+  BS2.shipTakeOff(() => { launched = true; });
+  for (let i = 0; i < 60 * 4 && !launched; i++) { g.tick(1 / 60); alt = Math.max(alt, BS2.shipAlt()); }
+  window.BS2_ANIM = 0;
+  return { launched, alt: Math.round(alt), pad: !!w.pad };
+});
+check(r.launched && r.alt > 150, `takeoff: the ship climbs out of sight (${r.alt} up) before the cut to orbit`);
+
+// 12. cameras and the cyberdeck
+r = await step('cameras', () => {
+  const g = R.game, pl = g.player, C = BS2.CAMS; T.ground(); T.ticks(2);
+  const c = C.list.find((q) => !q.dead);
+  if (!c) return { cams: 0 };
+  // stand in its view
+  let seen = false;
+  for (let k = 0; k < 40 && !seen; k++) { const a = c.face + (Math.random() - 0.5) * 1.4, d = 20 + Math.random() * 40; pl.place(c.x + Math.cos(a) * d, c.y + Math.sin(a) * d); seen = BS2.camSees(c); }
+  const jur = g.law.jurAt(pl.x, pl.y), b0 = g.law.bounty[jur] || 0, t0 = C.tapes; pl.masked = false;
+  g.law.crime('assault', pl.x, pl.y, {});
+  const taped = C.tapes - t0, bounty = (g.law.bounty[jur] || 0) - b0; g.law.incident = null;
+  const pawn = g.world.buildings.find((b) => b && b.type === 'pawn');
+  const buy = pawn && g.ui.interiorOptions(pawn).find((o) => o.label === 'Cyberdeck'); pl.cash += 300; if (buy) buy.fn();
+  pl.place(c.x + Math.cos(c.face) * 14, c.y + Math.sin(c.face) * 14);
+  const a = pl.contextAction(); const label = a && a.label; if (a) a.fn();
+  T.press(/Loop the feed/);
+  pl.place(c.x + Math.cos(c.face) * 30, c.y + Math.sin(c.face) * 30);
+  const looped = !BS2.camSees(c);
+  // and one shot out
+  const c2 = C.list.find((q) => q !== c && !q.dead);
+  if (c2) { pl.place(c2.x, c2.y + 60); R.combat.ray(pl, pl.x, pl.y - 18, Math.atan2(c2.y - 18 - (pl.y - 18), c2.x - pl.x), 200, 12); }
+  g.law.incident = null;
+  return { cams: C.list.length, seen, taped, bounty, deck: !!pl.inv.tools.deck, label, looped, shot: c2 ? c2.dead : true };
+});
+check(r.cams > 5 && r.seen && r.taped === 1 && r.bounty > 0, `${r.cams} security cameras; a crime in view is on tape (+${r.bounty} bounty)`);
+check(r.deck && r.label === 'Jack into the camera' && r.looped, 'a cyberdeck from the Chop Shop: jack in and loop the feed');
+check(r.shot, 'or shoot the camera out');
+r = await step('ambient', () => {
+  const g = R.game; T.ground(); T.inCity();
+  g.clock.t = Math.floor(g.clock.t / 1440) * 1440 + 22 * 60; g.env.setWeather('rain'); g.env.weather.rain = 1;
+  BS2.AMB.flyT = 0; BS2.AMB.blimpT = 0;
+  T.ticks(60 * 5);
+  const pl = g.player; return { earth: BS2.EARTH.active, planet: BS2.SQ.planet, blimpT: Math.round(BS2.AMB.blimpT), room: !!pl.room, cam: [Math.round(g.cam.x - pl.x), Math.round(g.cam.y - pl.y)], flyers: BS2.AMB.flyers.length, blimp: BS2.AMB.flyers.some((f) => f.kind === 'blimp'), splashes: BS2.AMB.splashes.length };
+});
+check(r.flyers >= 2 && r.blimp && r.splashes > 5, JSON.stringify(r) + ' ' + `the city overhead: ${r.flyers} flyers in the sky lanes (a Syndicate blimp among them), rain splashing`);
+
+// 13. the achievements know about all of it
+r = await step('feats', () => { const ids = R.feats.list.map((f) => f.id); return { ok: ['convoy', 'tithe', 'song', 'ahab', 'fares', 'crowd', 'rayner', 'parallax'].every((k) => ids.includes(k)) }; });
+check(r.ok, 'eight new achievements listed');
 
 await b.close();
 console.log(log.join('\n'));

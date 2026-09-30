@@ -4,7 +4,7 @@
 // if you like: put down rioters and the Peacekeepers wipe your local sheet; put down
 // Peacekeepers and the crowd carries you on its shoulders (and the Empire notices).
 
-import { SQ, saveSequel } from './state';
+import { SQ, saveSequel, cityRect } from './state';
 import { EARTH } from './earth';
 import { SPACE } from './space';
 
@@ -17,7 +17,7 @@ const today = (g: Game) => Math.floor(g.clock.t / 1440);
 
 export function startRiot(g: Game): Riot | null {
   const pl = g.player, w = g.world, tx = (pl.x / TS) | 0, ty = (pl.y / TS) | 0;
-  const city = w.cityAt(tx, ty);
+  const city = cityRect(w, tx, ty);
   if (!city) return null;
   const free = (x: number, y: number) => !w.solidPed(x, y) && !w.isWater(x, y);
   const at = w.findNear(tx, ty, 6, 12, free) || w.findNear(tx, ty, 3, 16, free);

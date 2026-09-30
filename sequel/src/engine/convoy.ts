@@ -5,7 +5,7 @@
 // raider you put down. Lose her and you get nothing but the mayday on the radio.
 
 import { SQ, saveSequel } from './state';
-import { SPACE, HOOKS, spawnCraft, burst, type Craft } from './space';
+import { SPACE, HOOKS, spawnCraft, burst, nearPlanet, type Craft } from './space';
 import { BODY, landable } from './planets';
 import { fmt } from './bounty';
 
@@ -44,7 +44,8 @@ function raid(g: Game, cv: Convoy): void {
 
 HOOKS.use.push((g) => {
   const cv = CONVOY.cur;
-  if (!cv || cv.state !== 'offer' || cv.c.dead || Math.hypot(cv.c.x - SPACE.x, cv.c.y - SPACE.y) > 260) return null;
+  // low over a world, USE means land: take the job out here instead
+  if (!cv || cv.state !== 'offer' || cv.c.dead || nearPlanet() || Math.hypot(cv.c.x - SPACE.x, cv.c.y - SPACE.y) > 260) return null;
   return { label: 'Escort', fn: () => g.ui.choice(`${cv.c.name} · escort to ${BODY[cv.to].name}`, [
     { label: `Take the job (${fmt(cv.pay)})`, small: '+ 150 for each raider you put down. Keep her alive.', fn: () => { cv.state = 'on'; g.ui.toast(`Escorting ${cv.c.name} in to ${BODY[cv.to].name}. Stay close.`, 'good'); } },
     { label: 'Not my problem', fn: () => { cv.state = 'done'; CONVOY.cur = null; } },

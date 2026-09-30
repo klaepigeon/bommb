@@ -30,9 +30,9 @@ await p.click('#btnNew');
 await p.waitForTimeout(800);
 await shot('intro');
 await closeStory();
-const start = await run(() => ({ planet: R.planet.name, city: R.game.world.cities[0].name, cash: R.game.player.cash, job: !!R.game.jobs.active }));
+const start = await run(() => ({ planet: R.planet.name, city: R.game.world.cities[0].name, cash: R.game.player.cash, job: BS2.SQ.flags.rayner === 1 }));
 check(start.planet === 'Earth' && start.city === 'Port Hollow', `new game on ${start.planet} (${start.city})`);
-check(start.job, 'first family job accepted');
+check(start.job, 'the Fear Man\'s one job: kill Kyle Rayner');
 const aged = await run(() => { const l = R.game.player.look; return { aged: !!l.aged, stubble: l.faceExtra, hair: l.oldOverride.hair[3] }; });
 check(aged.aged && aged.stubble, `protagonist ten years older (${aged.stubble}, hair ${aged.hair})`);
 // a marker in the Brass Coast's population, to prove its own save comes back later

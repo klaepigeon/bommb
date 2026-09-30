@@ -55,6 +55,8 @@ const r = await p.evaluate((wantSheet) => {
   looks.push({ name: 'player', look: pl.look, coat: !!pl.look.duster });
   for (const j of ['duster', 'duster_black', 'duster_red']) if (ST.jackets[j]) looks.push(withStyle(j, { jacket: j }));
   looks.push(withStyle('visor', { hat: 'protohelm' }));
+  // the lanterns: Kyle Rayner and Parallax
+  if (BS2.spawnKyle) { BS2.spawnKyle(); BS2.spawnHal(); looks.push({ name: 'kyle', look: BS2.LANTERNS.kyle.look, coat: false }, { name: 'parallax', look: BS2.LANTERNS.hal.look, coat: false }); }
   // a crowd off the street
   const crowd = g.pop.people.filter((q) => q.look).slice(0, 24);
   for (const q of crowd) looks.push({ name: 'npc:' + q.first, look: q.look, coat: !!q.look.duster });

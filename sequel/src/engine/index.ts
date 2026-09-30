@@ -48,6 +48,12 @@ import './tithe';
 import './passengers';
 import './riots';
 import './curfew';
+import { takeOff as takeOffAnim } from './landing';
+import { runOpening } from './opening';
+import { giveRaynerJob, raynerText, LANTERNS } from './lanterns';
+import './ambient';
+import './cameras';
+import './neon';
 
 const GP = R.Game.prototype;
 
@@ -62,13 +68,11 @@ GP.intro = function (this: Game) {
   const pl = this.player;
   pl.stats.startT = this.clock.t;
   pl.cash = Math.max(pl.cash, 600);
-  this.ui.story('Earth, year XX8X', `Ten years since the Brass\u00A0Coast. The old mob is finished. The Fear Man, the magenta alien from the dead tree in the desert, came down out of the dark and took the whole underworld of Earth, and your old outfit came with it. He's old now, and his mind wanders, but his ring still glows and everybody still pays.\n\nYou've got 600 credits and a ship, the ${SQ.ship.name}, on Pad 3. His people put a clamp on it.\n\nPay the Fear Man 1,200, or do him one job. Then get off this rock. Or stay, and take his ring off his finger.`, () => {
-    const offers = this.jobs.offersFor(pl.family);
-    const first = offers.find((o: { kind: string }) => o.kind === 'collect') || offers[0];
-    if (first) { this.jobs.accept(first); this.jobs.offers[pl.family] = offers.filter((o: unknown) => o !== first); }
-    this.ui.toast('The Fear Man\'s job is marked in gold. Jobs pay triple now. Your ship waits on Pad 3.', 'good');
-    this.save();
-  });
+  // the Fear Man's one job: the last Green Lantern on Earth
+  const begin = () => { giveRaynerJob(this); this.save(); };
+  // the real thing: the opening in scenes (tests start with ?quick and get the page instead)
+  if (!/quick/.test(location.search)) { runOpening(this, begin); return; }
+  this.ui.story('Earth, year XX8X', `Ten years since the Brass\u00A0Coast. The old mob is finished. The Fear Man, the magenta alien from the dead tree in the desert, came down out of the dark and took the whole underworld of Earth, and your old outfit came with it. He's old now, and his mind wanders, but his ring still glows and everybody still pays.\n\nYou've got 600 credits and a ship, the ${SQ.ship.name}, on Pad 3. His people put a clamp on it.\n\nPay the Fear Man 1,200, or do him one job. Then get off this rock. Or stay, and take his ring off his finger.`, begin);
 };
 
 // resume in space if that's where you saved
@@ -88,7 +92,7 @@ PP.contextAction = function (this: Player) {
 };
 function shipMenu(g: Game): void {
   g.ui.choice(SQ.ship.name, [
-    SQ.flags.clamp ? { label: 'Launch (clamped)', small: 'The Fear Man\'s clamp is on the landing gear', fn: () => clampMenu(g) } : { label: 'Launch', small: 'Into orbit. The planet waits for you.', fn: () => launch(g) },
+    SQ.flags.clamp ? { label: 'Launch (clamped)', small: 'The Fear Man\'s clamp is on the landing gear', fn: () => clampMenu(g) } : { label: 'Launch', small: 'Into orbit. The planet waits for you.', fn: () => takeOffAnim(g, () => launch(g)) },
     { label: 'Refit the ship', small: 'Modules, hulls and paint', fn: () => openWatch(g, 'ship') },
     { label: 'Cargo and trade', small: `Prices on ${current().name}`, fn: () => openWatch(g, 'cargo') },
     ...SHIP_MENU.map((f) => f(g)).filter((o): o is NonNullable<typeof o> => !!o),
@@ -105,9 +109,17 @@ function clampMenu(g: Game): void {
       if (g.player.cash < CLAMP_FEE) return g.ui.toast('Not enough. Do a job for the Fear Man instead: it pays triple.', 'warn');
       g.player.cash -= CLAMP_FEE; releaseClamp(g, 'You pay. A Syndicate robot rolls up and cuts the clamp with a torch.');
     } },
-    { label: 'Do a job for the Fear Man instead', small: 'Any Syndicate job takes the clamp off', fn: () => g.ui.openMenu('jobs') },
+    { label: 'Do the Fear Man\'s job instead', small: 'Kill Kyle Rayner, the last Green Lantern, in Los Angeles (one sector south). Or kill the Fear Man', fn: () => { giveRaynerJob(g); if (SQ.flags.rayner === 1) g.ui.toast(raynerText() || '', 'warn'); } },
   ]);
 }
+LANTERNS.release = (g) => releaseClamp(g, 'Word comes down from the Fear Man: Rayner is dead. The clamp comes off.');
+// or kill the Fear Man himself: nobody's left to enforce the clamp
+const baseTickClamp = GP.tick;
+GP.tick = function (this: Game, dt: number) {
+  const r = baseTickClamp.call(this, dt);
+  if (SQ.flags.clamp && SQ.flags.fearDead && !this.ui.paused()) releaseClamp(this, 'The Fear Man is dead. Nobody\'s left to enforce anything: the clamp robot cuts it off your landing gear itself, and rolls away very fast.');
+  return r;
+};
 export function releaseClamp(g: Game, how: string): void {
   if (!SQ.flags.clamp) return;
   SQ.flags.clamp = 0; saveSequel();
@@ -118,9 +130,7 @@ export function releaseClamp(g: Game, how: string): void {
 // every job pays triple in XX8X, and the Fear Man's first job frees your ship
 const JP = R.Jobs.prototype, baseComplete = JP.complete;
 JP.complete = function (this: { game: Game }, j: { reward: number; family?: string }, extra?: number) {
-  const r = baseComplete.call(this, j, (extra || 0) + j.reward * 2);
-  if (SQ.flags.clamp) setTimeout(() => releaseClamp(this.game, 'Word comes down from the Fear Man: the job\'s done, the clamp comes off.'), 50);
-  return r;
+  return baseComplete.call(this, j, (extra || 0) + j.reward * 2);
 };
 
 // ---------------------------------------------------------------- the title screen

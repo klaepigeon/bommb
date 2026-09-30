@@ -51,15 +51,18 @@ const clamped = await run(() => {
 });
 check(/clamped/.test(clamped || ''), `the ship menu says "${(clamped || '').slice(0, 16)}"`);
 await closeAll();
-// one Syndicate job, at triple pay, takes the clamp off
+// jobs pay triple; only the Fear Man's one job (Kyle Rayner) takes the clamp off
 const job = await run(() => {
-  const g = R.game, j = g.jobs.active, c0 = g.player.cash, reward = j.reward;
+  const g = R.game, offers = g.jobs.offersFor(g.player.family), j = offers[0];
+  g.jobs.accept(j);
+  const c0 = g.player.cash, reward = j.reward;
   g.jobs.complete(j);
-  return { paid: g.player.cash - c0, reward };
+  return { paid: g.player.cash - c0, reward, clamp: BS2.SQ.flags.clamp, rayner: BS2.SQ.flags.rayner };
 });
 await p.waitForTimeout(200);
-check(job.paid === job.reward * 3, `the Fear Man's job paid triple: ${job.paid} (base ${job.reward})`);
-check(await run(() => BS2.SQ.flags.clamp === 0), 'the job took the clamp off the ship');
+check(job.paid === job.reward * 3, `a Syndicate job pays triple: ${job.paid} (base ${job.reward})`);
+check(job.clamp === 1 && job.rayner === 1, 'an ordinary job doesn\'t free the ship: the Fear Man wants Kyle Rayner');
+await run(() => { BS2.SQ.flags.clamp = 0; });
 await closeAll();
 await tick(30);
 await shot('home');

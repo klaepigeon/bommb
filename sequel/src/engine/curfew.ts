@@ -5,13 +5,13 @@
 // costs 200 at a Syndicate Lounge and lasts the week; the Chop Shop sells forgeries that
 // usually scan.
 
-import { SQ, saveSequel } from './state';
+import { SQ, saveSequel, cityRect } from './state';
 import { EARTH } from './earth';
 import { SPACE } from './space';
 
 const TS = R.TILE;
 interface Drone { x: number; y: number; hp: number; seen: number; lost: number; dead: number; checked: boolean }
-export const CURFEW = { drones: [] as Drone[], tags: 0, downed: 0 };
+export const CURFEW = { drones: [] as Drone[], tags: 0, downed: 0, script: false }; // script: a cutscene flies them
 let spawnT = 8;
 const day = (g: Game) => Math.floor(g.clock.t / 1440);
 export const curfewNow = (g: Game) => { const h = g.clock.hour(); return h >= 22 || h < 5; };
@@ -37,9 +37,10 @@ function tag(g: Game, d: Drone): void {
   d.lost = 99;
 }
 function update(g: Game, dt: number): void {
+  if (CURFEW.script) return;
   const pl = g.player, w = g.world;
   const on = EARTH.active && curfewNow(g);
-  const exposed = on && !pl.room && !pl.inCar && !!w.cityAt((pl.x / TS) | 0, (pl.y / TS) | 0);
+  const exposed = on && !pl.room && !pl.inCar && !!cityRect(w, (pl.x / TS) | 0, (pl.y / TS) | 0);
   for (const d of CURFEW.drones) {
     if (d.dead > 0) { d.dead -= dt; continue; }
     const dist = Math.hypot(pl.x - d.x, pl.y - d.y);

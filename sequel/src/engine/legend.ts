@@ -27,6 +27,8 @@ if (F) F.list.push(
   { id: 'song', name: 'Whale Song', how: 'Sell a leviathan\'s song on Luna', test: () => (SQ.flags.songsSold || 0) >= 1 },
   { id: 'ahab', name: 'Ahab', how: 'Kill a leviathan', test: () => (A().whales || 0) >= 1 },
   { id: 'fares', name: 'Cabbie of the Void', how: 'Carry ten passengers', test: () => (A().fares || 0) >= 10 },
+  { id: 'rayner', name: 'In Blackest Night', how: 'Do the Fear Man\'s job', test: () => SQ.flags.rayner === 2 },
+  { id: 'parallax', name: 'Emerald Twilight', how: 'Defeat Parallax on Mars', test: () => SQ.flags.parallax === 2 },
   { id: 'crowd', name: 'Face on the Wall', how: 'Break a Peacekeeper line in a riot', test: () => (SQ.flags.riotHero || 0) >= 1 },
 );
 export {};
