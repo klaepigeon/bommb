@@ -95,6 +95,7 @@
     R.feats.init(this);
     R.phoneman.init(this); R.dog.init(this); R.disguise.init(this); R.roadblock.init(this);
     R.hurricane.init(this); R.moonshine.init(this); R.armored.init(this); R.funeral.init(this);
+    R.crawl.init(this);
     R.charm.init(this); R.charm.reinit();
     R.night.init(this);
     R.opening.init(this);
@@ -293,6 +294,7 @@
       R.seasons.update(sdt);
       R.profile.update(sdt);
       R.carry.update(sdt);
+      R.crawl.update(sdt);
       R.night.update(sdt);
       R.opening.update(sdt);
       R.route.update(this, sdt);

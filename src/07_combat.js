@@ -308,6 +308,8 @@
         if (t.kind === 'v') continue;
         if (hitHuman(t, x, y)) {
           const head = t.kind === 'h' && y < t.y - 13;
+          // low on the body (or a share of body shots): the legs. They'll be crawling after this
+          if (t.kind === 'h' && !head && (y > t.y - 7 || R.rng() < 0.18)) { t.legShot = true; if (att === pl) g.fx.text(t.x, t.y - 22, 'LEG', '#e8b020'); }
           C.damage(t, dmg * (head ? 1.8 : 1), att, 'bullet');
           if (head && att === pl) g.fx.text(t.x, t.y - 26, 'HEADSHOT', '#e4a92a');
           hitT = t;

@@ -221,6 +221,30 @@ check(r.booked && r.staged && /funeral/.test(r.label || ''), `a capo dies: the f
 check(r.paid && r.guest && r.hit, 'pay respects, and a rival boss attends (and can be hit)');
 check(r.over, 'the mourners go home after one');
 
+// 9. crawling: a leg shot, or half their health gone, and they're on their belly
+r = await step('crawl', () => {
+  const g = R.game, pl = g.player;
+  for (let i = 0; i < 6; i++) { const s = document.querySelector('#story'); if (s && getComputedStyle(s).display !== 'none') { const b = s.querySelector('button'); if (b) b.click(); } }
+  T.clear(); g.law.incident = null;
+  const a = g.actors.makeHuman(pl.x + 30, pl.y, { arch: 'timid' }); T.tick(1);
+  a.legShot = true; T.tick(20);
+  const legs = !!a.crawling;
+  const b2 = g.actors.makeHuman(pl.x - 30, pl.y, { arch: 'timid' }); T.tick(1);
+  b2.hp = b2.maxHp * 0.45; T.tick(20);
+  const half = !!b2.crawling;
+  // slow: a crawler covers far less ground than a walker
+  const walker = g.actors.makeHuman(pl.x, pl.y + 40, { arch: 'timid' });
+  const x0 = b2.x, w0 = walker.x;
+  for (let i = 0; i < 120; i++) { g.actors.moveActor(b2, 60, 0, 1 / 60); g.actors.moveActor(walker, 60, 0, 1 / 60); g.clock.real += 1 / 60; }
+  const moved = Math.abs(b2.x - x0), walked = Math.abs(walker.x - w0);
+  let drew = true; try { g.renderer.render(); } catch (e) { drew = e.message; }
+  b2.hp = b2.maxHp; T.tick(20);
+  const open = document.querySelector('.sheet h2, .sheet .ttl, #story h1'); return { legs, half, moved: Math.round(moved), walked: Math.round(walked), drew, up: !b2.crawling, paused: g.ui.paused() && (open ? open.textContent : 'paused') };
+});
+check(r.legs && r.half, 'shot in the legs, or at half health: an NPC goes down and crawls');
+check(r.moved > 0 && r.moved < r.walked * 0.6 && r.drew === true, `crawling is slow (${r.moved}px against ${r.walked}px walking) and draws prone${r.paused ? ' (PAUSED: ' + r.paused + ')' : ''}`);
+check(r.up, 'patched up past three-quarters, they stand again');
+
 await b.close();
 console.log(log.join('\n'));
 if (errs.length) { console.error('ERRORS:\n' + errs.join('\n')); process.exit(1); }

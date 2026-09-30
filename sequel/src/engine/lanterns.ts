@@ -91,9 +91,27 @@ function hpBar(g: CanvasRenderingContext2D, h: any, name: string, col: string): 
 }
 
 // ---------------------------------------------------------------- Kyle Rayner
+// somewhere a person can actually stand: open street, clear on every side (never inside a
+// wall), searched outward ring by ring from the spot you want
+export function openSpot(w: any, cx: number, cy: number, maxR = 40): { x: number; y: number } | null {
+  const clear = (x: number, y: number) => { for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (w.solidPed(x + dx, y + dy) || w.isWater(x + dx, y + dy)) return false; return true; };
+  const street = (x: number, y: number) => !!R.data.roadTile[w.t(x, y)] || w.t(x, y) === R.data.T.WALK || w.t(x, y) === R.data.T.PLAZA;
+  for (let r = 0; r <= maxR; r++) {
+    let best: { x: number; y: number } | null = null;
+    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+      const x = cx + dx, y = cy + dy;
+      if (!w.inb(x, y) || !clear(x, y)) continue;
+      if (street(x, y)) return { x, y };
+      if (!best) best = { x, y };
+    }
+    if (best && r > 6) return best;
+  }
+  return null;
+}
 function spawnKyle(g: Game): void {
   const w = g.world, c = w.cities[0];
-  const at = w.findNear(c.cx, c.cy, 0, 10, (x: number, y: number) => !w.solidPed(x, y) && !w.isWater(x, y) && !!w.cityAt(x, y)) || { x: c.cx, y: c.cy };
+  const at = openSpot(w, c.cx, c.cy) || { x: c.cx, y: c.cy };
   const h = g.actors.makeHuman(at.x * TS + 8, at.y * TS + 8, { arch: 'friendly', tag: 'lantern', cash: 0, look: lanternLook(g) });
   h.look = lanternLook(g);
   h.strangerName = 'Kyle Rayner'; h.keep = true; h.hp = h.maxHp = 420; h.tr.brave = 1; h.kyle = true; h.stay = true; h.state = 'idle'; h.timer = 1e9; h.hostileLocked = true;
@@ -135,7 +153,8 @@ function marsSpot(g: Game): { x: number; y: number } | null {
   const w = g.world, p = w.pad;
   if (!p) return null;
   const free = (x: number, y: number) => !w.cityAt(x, y) && !w.solidPed(x, y) && !w.isWater(x, y);
-  const s = w.findNear(p.x + 7, p.y + 4, 50, 90, free) || w.findNear(p.x + 7, p.y + 4, 30, 120, free);
+  const rough = w.findNear(p.x + 7, p.y + 4, 50, 90, free) || w.findNear(p.x + 7, p.y + 4, 30, 120, free);
+  const s = rough ? openSpot(w, rough.x, rough.y, 20) : null;
   LANTERNS.marsSpot = s;
   return s;
 }
