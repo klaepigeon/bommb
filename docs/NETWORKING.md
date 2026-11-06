@@ -32,6 +32,15 @@ gets their seat back. Host leaving ends the match for everyone (the host *is* th
 `tools/net_test.sh`: a relay, a host, and clients that play their seats only through
 `Net` (a `ViewBot` pressing the same actions as the buttons), to the end of a match.
 
+| Run | Result |
+|---|---|
+| `relay 3` (3 humans + 1 AI) | passed, every process saw the same ending |
+| `relay 4` (4 humans) | passed (failed once in a back-to-back batch; didn't reproduce) |
+| `ip 3` (ENet by address) | passed |
+| `rejoin 3` (a client drops mid-match, AI covers, it rejoins by code) | passed |
+| `lan 2` (room code found by UDP broadcast) | passed |
+| `lan 4` | timed out: on one machine only one client can listen on the discovery port (separate devices don't share it) |
+
 ## NOT tested yet (needs hardware / a deployed relay): the real acceptance tests
 
 1. 3 and 4 humans on separate Android devices; 3 PC players; mixed Android + PC;
