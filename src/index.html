@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Flat 47</title>
+<meta name="theme-color" content="#0b0a09">
+<style>
+/*STYLE*/
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="hud">
+  <div id="cross"></div>
+  <div id="prompt"></div>
+  <div id="toast"></div>
+  <div id="room"></div>
+  <div id="inspectCap"><b></b><span></span><i></i></div>
+</div>
+<div id="doc" class="overlay hidden"><div class="docInner"><canvas></canvas><div class="docText"></div><div class="hint">E / Esc / click to put it down</div></div></div>
+<div id="peep" class="overlay hidden"></div>
+<div id="start" class="overlay">
+  <div class="panel">
+    <h1>FLAT 47</h1>
+    <p class="sub">Building 14, Kerzhansk. Fourth floor.</p>
+    <p class="load" id="loadMsg">Building the flat…</p>
+    <button id="enter" disabled>Enter</button>
+    <div class="keys">
+      <span><b>WASD</b> move</span><span><b>Mouse</b> look</span><span><b>Shift</b> hurry</span><span><b>Ctrl / C</b> crouch</span>
+      <span><b>E</b> use · take · read</span><span><b>F</b> torch</span><span><b>Right mouse</b> inspect held</span><span><b>Left mouse</b> throw held</span>
+    </div>
+    <p class="phones">Headphones. Lights low.</p>
+  </div>
+</div>
+<div id="pause" class="overlay hidden">
+  <div class="panel">
+    <h2>Paused</h2>
+    <label>Look sensitivity <input id="sens" type="range" min="0.3" max="3" step="0.05" value="1"></label>
+    <label>Volume <input id="vol" type="range" min="0" max="1.5" step="0.05" value="0.9"></label>
+    <label>Quality <select id="quality"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select></label>
+    <label><input id="invert" type="checkbox"> Invert look</label>
+    <button id="resume">Resume</button>
+  </div>
+</div>
+<div id="touch" class="hidden"><div id="stick"><div></div></div><div id="tbtns"><button data-k="use">USE</button><button data-k="torch">TORCH</button><button data-k="crouch">CROUCH</button><button data-k="throw">THROW</button></div></div>
+<script>
+/*SCRIPT*/
+</script>
+</body>
+</html>

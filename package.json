@@ -1,0 +1,28 @@
+{
+  "name": "bommb",
+  "version": "1.0.0",
+  "description": "First-person horror: a ruined urban apartment",
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "smoke": "node tools/smoke.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/klaepigeon/bommb.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/klaepigeon/bommb/issues"
+  },
+  "homepage": "https://github.com/klaepigeon/bommb#readme",
+  "dependencies": {
+    "cannon-es": "^0.20.0",
+    "three": "^0.187.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  },
+  "private": true
+}
