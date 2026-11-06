@@ -1,0 +1,349 @@
+{
+ "_note": "v4 table drop.",
+ "table_items": [
+  {
+   "id": "ti4_red_pen",
+   "name": "Red Pen",
+   "icon": "pencil",
+   "desc": "Circle an enemy. Hard. It bleeds 3.",
+   "target": "enemy",
+   "weight": 10,
+   "price": 25,
+   "effects": [
+    {
+     "type": "status",
+     "id": "bleeding",
+     "turns": 3,
+     "stacks": 3,
+     "to": "target"
+    }
+   ],
+   "sneaky": true
+  },
+  {
+   "id": "ti4_hip_flask",
+   "name": "Hip Flask",
+   "icon": "glass",
+   "desc": "A hero drinks. Heals 8. Empowered.",
+   "target": "hero",
+   "weight": 10,
+   "price": 25,
+   "effects": [
+    {
+     "type": "heal",
+     "dice": "8",
+     "to": "target"
+    },
+    {
+     "type": "status",
+     "id": "empowered",
+     "turns": 1,
+     "to": "target"
+    }
+   ]
+  },
+  {
+   "id": "ti4_dropped_dentures",
+   "name": "His Dropped Dentures",
+   "icon": "mouth",
+   "desc": "Hold them up. He looks for 4 seconds. They're not his. He checks.",
+   "target": "none",
+   "weight": 10,
+   "price": 25,
+   "blind": 4
+  },
+  {
+   "id": "ti4_bent_coin",
+   "name": "Bent Coin",
+   "icon": "coin",
+   "desc": "Your next roll is a 7. Exactly. Seven.",
+   "target": "none",
+   "weight": 8,
+   "price": 25,
+   "effects": [
+    {
+     "type": "rig",
+     "side": "hero",
+     "natural": 7
+    }
+   ],
+   "sneaky": true
+  },
+  {
+   "id": "ti4_wet_napkin",
+   "name": "Wet Napkin",
+   "icon": "drop",
+   "desc": "Mop his brow. Calmer. FILE -4.",
+   "target": "none",
+   "weight": 10,
+   "price": 20,
+   "calm": 3,
+   "effects": [
+    {
+     "type": "suspicion",
+     "n": -4
+    }
+   ]
+  },
+  {
+   "id": "ti4_pension_book",
+   "name": "Pension Book",
+   "icon": "tome",
+   "desc": "Cash it. 25 gold. Not your name. Not now.",
+   "target": "none",
+   "weight": 8,
+   "price": 10,
+   "effects": [
+    {
+     "type": "gold",
+     "n": 25
+    }
+   ]
+  },
+  {
+   "id": "ti4_mourning_card",
+   "name": "Mourning Card",
+   "icon": "card",
+   "desc": "With sympathy. A hero gets 10 temporary HP.",
+   "target": "hero",
+   "weight": 10,
+   "price": 25,
+   "effects": [
+    {
+     "type": "temp_hp",
+     "dice": "10",
+     "to": "target"
+    }
+   ]
+  },
+  {
+   "id": "ti4_broken_glass",
+   "name": "Broken Glass",
+   "icon": "glass",
+   "desc": "Scatter it. A 3x3 of spikes. Nobody saw.",
+   "target": "tile",
+   "weight": 8,
+   "price": 25,
+   "effects": [
+    {
+     "type": "terrain",
+     "tile": "spikes",
+     "radius": 1,
+     "only_on": "floor"
+    }
+   ],
+   "sneaky": true
+  },
+  {
+   "id": "ti4_fire_alarm",
+   "name": "Fire Alarm",
+   "icon": "bell",
+   "desc": "Ring it. Every enemy dazed. He looks up for 2 seconds.",
+   "target": "none",
+   "weight": 6,
+   "price": 35,
+   "blind": 2,
+   "effects": [
+    {
+     "type": "status",
+     "id": "dazed",
+     "turns": 1,
+     "to": "all_enemies"
+    }
+   ]
+  },
+  {
+   "id": "ti4_spare_ball",
+   "name": "Spare Ball from the Cage",
+   "icon": "ball",
+   "desc": "Your next two rolls show at least 15. It's warm.",
+   "target": "none",
+   "weight": 6,
+   "price": 40,
+   "effects": [
+    {
+     "type": "rig",
+     "side": "hero",
+     "floor": 15,
+     "n": 2
+    }
+   ],
+   "sneaky": true
+  },
+  {
+   "id": "ti4_old_photo",
+   "name": "Old Photograph",
+   "icon": "eye",
+   "desc": "Show an enemy. Its mother. Feared 2 turns.",
+   "target": "enemy",
+   "weight": 8,
+   "price": 25,
+   "effects": [
+    {
+     "type": "status",
+     "id": "feared",
+     "turns": 2,
+     "to": "target"
+    }
+   ]
+  },
+  {
+   "id": "ti4_card_in_sleeve",
+   "name": "Card Up the Sleeve",
+   "icon": "sleeve",
+   "desc": "Learn to slip. An 18 goes up your sleeve.",
+   "target": "none",
+   "weight": 6,
+   "price": 35,
+   "cheat": "slip",
+   "effects": [
+    {
+     "type": "sleeve",
+     "n": 18
+    }
+   ],
+   "sneaky": true
+  },
+  {
+   "id": "ti4_smelling_salts",
+   "name": "Tin of Snuff",
+   "icon": "tin",
+   "desc": "A hero sniffs. Cleansed. Hasted.",
+   "target": "hero",
+   "weight": 9,
+   "price": 25,
+   "effects": [
+    {
+     "type": "cleanse",
+     "to": "target"
+    },
+    {
+     "type": "status",
+     "id": "hasted",
+     "turns": 2,
+     "to": "target"
+    }
+   ]
+  }
+ ],
+ "totems": [
+  {
+   "id": "th4_pig",
+   "kind": "head",
+   "name": "Pig's Head",
+   "icon": "mouth",
+   "desc": "When a hero hits a bleeding foe...",
+   "event": "hit",
+   "when": {
+    "side": "hero",
+    "target_status": "bleeding"
+   }
+  },
+  {
+   "id": "th4_doll",
+   "kind": "head",
+   "name": "Doll's Head",
+   "icon": "pawn",
+   "desc": "When a hero goes down...",
+   "event": "ally_down",
+   "when": {
+    "side": "hero"
+   }
+  },
+  {
+   "id": "th4_cage",
+   "kind": "head",
+   "name": "Little Cage Head",
+   "icon": "cage",
+   "desc": "When a hero rolls a natural 7...",
+   "event": "natural",
+   "when": {
+    "side": "hero",
+    "natural": 7
+   }
+  },
+  {
+   "id": "th4_moth",
+   "kind": "head",
+   "name": "Moth Head",
+   "icon": "wing",
+   "desc": "When a hero starts a turn alone...",
+   "event": "turn_start",
+   "when": {
+    "side": "hero",
+    "alone": true
+   }
+  },
+  {
+   "id": "th4_till",
+   "kind": "head",
+   "name": "Till Head",
+   "icon": "box",
+   "desc": "When you take a sip...",
+   "event": "sip",
+   "when": {}
+  },
+  {
+   "id": "tb4_red_felt",
+   "kind": "base",
+   "name": "Red Felt Base",
+   "icon": "drop",
+   "desc": "...a random enemy bleeds 2.",
+   "effects": [
+    {
+     "type": "status",
+     "id": "bleeding",
+     "turns": 2,
+     "stacks": 2,
+     "to": "random_enemy"
+    }
+   ]
+  },
+  {
+   "id": "tb4_pennies",
+   "kind": "base",
+   "name": "Base of Pennies",
+   "icon": "coin",
+   "desc": "...gain 2 gold. Every hero gets 1 temporary HP.",
+   "effects": [
+    {
+     "type": "gold",
+     "n": 2
+    },
+    {
+     "type": "temp_hp",
+     "dice": "1",
+     "to": "all_heroes"
+    }
+   ]
+  },
+  {
+   "id": "tb4_glued_dice",
+   "kind": "base",
+   "name": "Base of Glued Dice",
+   "icon": "die",
+   "desc": "...a 7 goes up your sleeve.",
+   "effects": [
+    {
+     "type": "sleeve",
+     "n": 7
+    }
+   ]
+  },
+  {
+   "id": "tb4_ash",
+   "kind": "base",
+   "name": "Base of Ash",
+   "icon": "skull",
+   "desc": "...every enemy takes 1 rot. Someone. Was. Cremated.",
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1",
+     "dtype": "rot",
+     "to": "all_enemies"
+    }
+   ]
+  }
+ ]
+}

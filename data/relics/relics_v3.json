@@ -1,0 +1,1175 @@
+{
+ "relics": [
+  {
+   "id": "bh_red_dabber",
+   "name": "Red Dabber",
+   "rarity": "common",
+   "icon": "dauber",
+   "family": "paper",
+   "desc": "Still wet. Daub them. A hero's first hit each turn marks the target for a turn.",
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "marked",
+       "turns": 1,
+       "to": "target"
+      }
+     ],
+     "label": "Daubed",
+     "when": {
+      "side": "hero"
+     },
+     "once": "turn",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "paper",
+    "marks"
+   ]
+  },
+  {
+   "id": "bh_cold_tea",
+   "name": "Cold Cup of Tea",
+   "rarity": "common",
+   "icon": "cup",
+   "family": "drink",
+   "desc": "She never came back for it. Every sip: a random hero heals 5. Drink it. She won't.",
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "5",
+       "to": "random_hero"
+      }
+     ],
+     "label": "Cold Tea",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "drink",
+    "healing"
+   ]
+  },
+  {
+   "id": "bh_reading_glasses",
+   "name": "Someone's Reading Glasses",
+   "rarity": "common",
+   "icon": "eye",
+   "desc": "Still warm. Heroes' ranged cards reach 1 further. Hers were. Stronger.",
+   "mods": [
+    {
+     "key": "range_add",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "ranged"
+   ]
+  },
+  {
+   "id": "bh_raffle_ticket",
+   "name": "Raffle Ticket No. 0",
+   "rarity": "common",
+   "icon": "ticket",
+   "family": "money",
+   "desc": "Number nought. Never drawn. 40 gold now. 5 more for every fight won.",
+   "triggers": [
+    {
+     "event": "combat_won",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 5
+      }
+     ],
+     "label": "Raffle",
+     "quiet": true
+    }
+   ],
+   "on_gain": [
+    {
+     "type": "gold",
+     "n": 40
+    }
+   ],
+   "tags": [
+    "money"
+   ]
+  },
+  {
+   "id": "bh_full_ashtray",
+   "name": "Full Ashtray",
+   "rarity": "common",
+   "icon": "tray",
+   "family": "candles",
+   "desc": "Forty years of Lambert & Butler. A hero's kill sets a random enemy burning.",
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "status",
+       "id": "burning",
+       "turns": 2,
+       "to": "random_foe"
+      }
+     ],
+     "label": "Ashtray",
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "fire",
+    "kills"
+   ]
+  },
+  {
+   "id": "bh_seat_nineteen",
+   "name": "Seat Nineteen",
+   "rarity": "common",
+   "icon": "chair",
+   "desc": "Nobody sits in nineteen. You do. Heroes start every fight with 4 temporary HP.",
+   "mods": [
+    {
+     "key": "temp_hp_combat",
+     "op": "add",
+     "value": 4,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "defense"
+   ]
+  },
+  {
+   "id": "bh_two_fat_ladies",
+   "name": "Two Fat Ladies",
+   "rarity": "common",
+   "icon": "die",
+   "family": "dice",
+   "desc": "Eighty-eight. A hero's natural 8: empowered for a turn. Don't laugh. He doesn't.",
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "status",
+       "id": "empowered",
+       "turns": 1,
+       "to": "self"
+      }
+     ],
+     "label": "Two Fat Ladies",
+     "when": {
+      "side": "hero",
+      "natural": 8
+     }
+    }
+   ],
+   "tags": [
+    "dice",
+    "damage"
+   ]
+  },
+  {
+   "id": "bh_legs_eleven",
+   "name": "Legs Eleven",
+   "rarity": "common",
+   "icon": "foot",
+   "family": "dice",
+   "desc": "Whistle. A hero's natural 11: hasted, and 2 more squares to run.",
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "status",
+       "id": "hasted",
+       "turns": 1,
+       "to": "self"
+      },
+      {
+       "type": "extra_move",
+       "n": 2,
+       "to": "self"
+      }
+     ],
+     "label": "Legs Eleven",
+     "when": {
+      "side": "hero",
+      "natural": 11
+     }
+    }
+   ],
+   "tags": [
+    "dice",
+    "movement"
+   ]
+  },
+  {
+   "id": "bh_beer_mat",
+   "name": "Wet Beer Mat",
+   "rarity": "common",
+   "icon": "drop",
+   "family": "drink",
+   "desc": "Soaked through. Every sip: every hero gains 3 temporary HP.",
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "temp_hp",
+       "dice": "3",
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Beer Mat",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "drink",
+    "defense"
+   ]
+  },
+  {
+   "id": "bh_caretakers_key",
+   "name": "Caretaker's Key",
+   "rarity": "common",
+   "icon": "key",
+   "desc": "He locked up at eleven. Nobody saw him leave. Each fight a random hero starts hidden.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "hidden",
+       "turns": 2,
+       "to": "random_hero"
+      }
+     ],
+     "label": "Caretaker's Key"
+    }
+   ],
+   "tags": [
+    "stealth"
+   ]
+  },
+  {
+   "id": "bh_travel_sweets",
+   "name": "Tin of Travel Sweets",
+   "rarity": "common",
+   "icon": "tin",
+   "family": "cheats",
+   "desc": "Rattle. Suck. Smile. The FILE drops 4 more after every fight.",
+   "mods": [
+    {
+     "key": "suspicion_decay",
+     "op": "add",
+     "value": 4
+    }
+   ],
+   "tags": [
+    "cheats"
+   ]
+  },
+  {
+   "id": "bh_lost_glove",
+   "name": "Lost Child's Glove",
+   "rarity": "common",
+   "icon": "hand",
+   "family": "dead",
+   "desc": "Lost and found. Mostly lost. A hero goes down: every hero is inspired.",
+   "triggers": [
+    {
+     "event": "ally_down",
+     "effects": [
+      {
+       "type": "status",
+       "id": "inspired",
+       "turns": 2,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Lost Glove",
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "id": "bh_hearing_aid",
+   "name": "Whistling Hearing Aid",
+   "rarity": "common",
+   "icon": "wave",
+   "family": "clocks",
+   "desc": "It screams when he's close. Heroes +3 initiative.",
+   "mods": [
+    {
+     "key": "initiative_bonus",
+     "op": "add",
+     "value": 3,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "initiative"
+   ]
+  },
+  {
+   "id": "bh_pension_book",
+   "name": "Pension Book",
+   "rarity": "common",
+   "icon": "tome",
+   "family": "money",
+   "desc": "Stamped weekly. Last stamp. 1987. Gold gained +15%.",
+   "mods": [
+    {
+     "key": "gold_mult",
+     "op": "add",
+     "value": 0.15
+    }
+   ],
+   "tags": [
+    "money"
+   ]
+  },
+  {
+   "id": "bh_troll_doll",
+   "name": "Lucky Troll Doll",
+   "rarity": "common",
+   "icon": "imp",
+   "family": "dice",
+   "desc": "Hair like a struck match. Rub it. A hero's natural 1 is rolled again.",
+   "mods": [
+    {
+     "key": "reroll_naturals",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "dice",
+    "luck"
+   ]
+  },
+  {
+   "id": "bh_cloakroom_ticket",
+   "name": "Cloakroom Ticket",
+   "rarity": "common",
+   "icon": "ticket",
+   "desc": "Collect your coat. Someone else's. Every fight won: every hero heals 4.",
+   "triggers": [
+    {
+     "event": "combat_won",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "4",
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Cloakroom",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "healing"
+   ]
+  },
+  {
+   "id": "bh_half_time_pie",
+   "name": "Half-Time Pie",
+   "rarity": "common",
+   "icon": "pie",
+   "family": "flesh",
+   "desc": "Meat. Allegedly. Round 3: every hero heals 6.",
+   "triggers": [
+    {
+     "event": "round_start",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "6",
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Half-Time Pie",
+     "when": {
+      "round_ge": 3,
+      "round_le": 3
+     }
+    }
+   ],
+   "tags": [
+    "healing"
+   ]
+  },
+  {
+   "id": "bh_daubed_card",
+   "name": "Fully Daubed Card",
+   "rarity": "uncommon",
+   "icon": "card",
+   "family": "dice",
+   "desc": "Every number. Nobody shouted. A hero's natural 18+: 1 resource back.",
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "res",
+       "n": 1,
+       "to": "self"
+      }
+     ],
+     "label": "Daubed Card",
+     "when": {
+      "side": "hero",
+      "natural_ge": 18
+     },
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "dice",
+    "resource"
+   ]
+  },
+  {
+   "id": "bh_house_shout",
+   "name": "Shout of HOUSE!",
+   "rarity": "uncommon",
+   "icon": "bell",
+   "desc": "Someone has to say it. First kill each fight: every hero heals 6.",
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "6",
+       "to": "all_heroes"
+      }
+     ],
+     "label": "HOUSE!",
+     "when": {
+      "side": "hero"
+     },
+     "once": "combat"
+    }
+   ],
+   "tags": [
+    "healing",
+    "kills"
+   ]
+  },
+  {
+   "id": "bh_cardigan",
+   "name": "Moth-Eaten Cardigan",
+   "rarity": "uncommon",
+   "icon": "coat",
+   "desc": "Knitted for someone who never came. A hero with nobody beside them: +2 defense.",
+   "mods": [
+    {
+     "key": "defense",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero",
+      "alone": true
+     }
+    }
+   ],
+   "tags": [
+    "alone",
+    "defense"
+   ]
+  },
+  {
+   "id": "bh_walking_stick",
+   "name": "Shared Walking Stick",
+   "rarity": "uncommon",
+   "icon": "staff",
+   "desc": "Two of them used it. Then one. A hero next to an ally: +1 to hit and saves.",
+   "mods": [
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero",
+      "alone": false
+     }
+    },
+    {
+     "key": "save_bonus",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero",
+      "alone": false
+     }
+    }
+   ],
+   "tags": [
+    "together"
+   ]
+  },
+  {
+   "id": "bh_dentures",
+   "name": "Glass of Dentures",
+   "rarity": "uncommon",
+   "icon": "mouth",
+   "family": "mouths",
+   "desc": "They still bite. A hero's melee hit heals them 2.",
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "2",
+       "to": "self"
+      }
+     ],
+     "label": "Dentures",
+     "when": {
+      "side": "hero",
+      "melee": true
+     },
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "melee",
+    "healing"
+   ]
+  },
+  {
+   "id": "bh_tote_bag",
+   "name": "Tote Bag of Winnings",
+   "rarity": "uncommon",
+   "icon": "box",
+   "family": "money",
+   "desc": "Heavy. Clinks. Heroes +1 damage for every 120 gold you hold (up to +3).",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     },
+     "per_gold": 120,
+     "scale_cap": 3
+    }
+   ],
+   "tags": [
+    "money",
+    "damage"
+   ]
+  },
+  {
+   "id": "bh_thermos",
+   "name": "Thermos of Stewed Tea",
+   "rarity": "uncommon",
+   "icon": "jar",
+   "family": "drink",
+   "desc": "Tannin and spite. From round 3, every sip cleanses a random hero and heals them 4.",
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "cleanse",
+       "to": "random_hero"
+      },
+      {
+       "type": "heal",
+       "dice": "4",
+       "to": "random_hero"
+      }
+     ],
+     "label": "Thermos",
+     "when": {
+      "round_ge": 3
+     },
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "drink",
+    "healing"
+   ]
+  },
+  {
+   "id": "bh_ball_77",
+   "name": "Ball Seventy-Seven",
+   "rarity": "uncommon",
+   "icon": "ball",
+   "family": "dice",
+   "desc": "Sunset Strip. Chipped. A hero's natural 7 or 17: 2d6 force to a random enemy.",
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "damage",
+       "dice": "2d6",
+       "dtype": "force",
+       "to": "random_foe"
+      }
+     ],
+     "label": "Seventy-Seven",
+     "when": {
+      "side": "hero",
+      "natural": 7
+     }
+    },
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "damage",
+       "dice": "2d6",
+       "dtype": "force",
+       "to": "random_foe"
+      }
+     ],
+     "label": "Seventy-Seven",
+     "when": {
+      "side": "hero",
+      "natural": 17
+     }
+    }
+   ],
+   "tags": [
+    "dice",
+    "damage"
+   ]
+  },
+  {
+   "id": "bh_lipstick_cup",
+   "name": "Lipstick on the Cup",
+   "rarity": "uncommon",
+   "icon": "cup",
+   "family": "mouths",
+   "desc": "Coral Pink. Hers. A healed hero is blessed for a turn.",
+   "triggers": [
+    {
+     "event": "healed",
+     "effects": [
+      {
+       "type": "status",
+       "id": "blessed",
+       "turns": 1,
+       "to": "self"
+      }
+     ],
+     "label": "Lipstick",
+     "when": {
+      "side": "hero"
+     },
+     "once": "turn",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "healing",
+    "mouths"
+   ]
+  },
+  {
+   "id": "bh_raffle_drum",
+   "name": "Raffle Drum",
+   "rarity": "uncommon",
+   "icon": "wheel",
+   "family": "money",
+   "desc": "Round and round. Each round, 1 in 3: a random hero gets 1 resource back.",
+   "triggers": [
+    {
+     "event": "round_start",
+     "effects": [
+      {
+       "type": "res",
+       "n": 1,
+       "to": "random_hero",
+       "chance": 0.34
+      }
+     ],
+     "label": "Raffle Drum",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "resource",
+    "luck"
+   ]
+  },
+  {
+   "id": "bh_fire_exit",
+   "name": "Fire Exit Sign",
+   "rarity": "uncommon",
+   "icon": "door",
+   "desc": "Half lit. Chained shut. A hero below half HP moves 2 further.",
+   "mods": [
+    {
+     "key": "speed",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero",
+      "hp_below": 0.5
+     }
+    }
+   ],
+   "tags": [
+    "movement",
+    "bloodied"
+   ]
+  },
+  {
+   "id": "bh_yellow_fingers",
+   "name": "Nicotine-Stained Fingers",
+   "rarity": "uncommon",
+   "icon": "palm",
+   "family": "cheats",
+   "desc": "Forty a day. Steady hands. Palming adds 4 less to the FILE. Palm a 19+: he looks away 2 seconds.",
+   "mods": [
+    {
+     "key": "cheat_suspicion",
+     "op": "add",
+     "value": -4,
+     "when": {
+      "cheat": "palm"
+     }
+    }
+   ],
+   "triggers": [
+    {
+     "event": "palmed",
+     "effects": [
+      {
+       "type": "blind",
+       "seconds": 2.0
+      }
+     ],
+     "label": "Yellow Fingers",
+     "when": {
+      "natural_ge": 19
+     },
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "cheats"
+   ]
+  },
+  {
+   "id": "bh_hymn_board",
+   "name": "Hymn Board Numbers",
+   "rarity": "uncommon",
+   "icon": "note",
+   "family": "faithful",
+   "desc": "Wrong church. Right numbers. Round 1: every hero is blessed.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "blessed",
+       "turns": 1,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Hymn Board"
+    }
+   ],
+   "tags": [
+    "holy"
+   ]
+  },
+  {
+   "id": "bh_full_house",
+   "name": "The Full House",
+   "rarity": "rare",
+   "icon": "star",
+   "desc": "One card. One winner. A hero with nobody beside them crits on 18-20.",
+   "mods": [
+    {
+     "key": "crit_threshold",
+     "op": "set",
+     "value": 18,
+     "when": {
+      "side": "hero",
+      "alone": true
+     }
+    }
+   ],
+   "tags": [
+    "alone",
+    "crit"
+   ]
+  },
+  {
+   "id": "bh_her_ring",
+   "name": "Her Wedding Ring",
+   "rarity": "rare",
+   "icon": "halo",
+   "family": "dead",
+   "desc": "Keep it. It was. Hers. A hero dies: every hero is empowered for the rest of the fight.",
+   "triggers": [
+    {
+     "event": "hero_death",
+     "effects": [
+      {
+       "type": "status",
+       "id": "empowered",
+       "turns": 99,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Her Ring"
+    }
+   ],
+   "tags": [
+    "dead",
+    "damage"
+   ]
+  },
+  {
+   "id": "bh_last_number",
+   "name": "The Last Number",
+   "rarity": "rare",
+   "icon": "ball",
+   "family": "clocks",
+   "desc": "Nobody's card. Ever. From round 5, heroes deal +3 and roll with advantage.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 3,
+     "when": {
+      "side": "hero",
+      "round_ge": 5
+     }
+    },
+    {
+     "key": "advantage",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero",
+      "round_ge": 5
+     }
+    }
+   ],
+   "tags": [
+    "clocks",
+    "damage"
+   ]
+  },
+  {
+   "id": "bh_eyes_down",
+   "name": "Eyes Down",
+   "rarity": "rare",
+   "icon": "eye",
+   "family": "cheats",
+   "desc": "The call before the first number. He watches 20% less, and his tells never lie.",
+   "mods": [
+    {
+     "key": "watch_mult",
+     "op": "mul",
+     "value": 0.8
+    },
+    {
+     "key": "no_fakeouts",
+     "op": "set",
+     "value": true
+    }
+   ],
+   "tags": [
+    "cheats"
+   ]
+  },
+  {
+   "id": "bh_caretakers_ledger",
+   "name": "Caretaker's Ledger",
+   "rarity": "rare",
+   "icon": "scroll",
+   "family": "paper",
+   "desc": "Every lock. Every stain. Statuses heroes apply last a turn longer.",
+   "mods": [
+    {
+     "key": "status_turns_add",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "paper",
+    "statuses"
+   ]
+  },
+  {
+   "id": "bh_prize_hamper",
+   "name": "First Prize Hamper",
+   "rarity": "rare",
+   "icon": "box",
+   "desc": "Wicker. Ribbon. Something moves. Contains a relic, a card, and 30 gold.",
+   "on_gain": [
+    {
+     "type": "relic",
+     "id": "random"
+    },
+    {
+     "type": "consumable",
+     "id": "random"
+    },
+    {
+     "type": "gold",
+     "n": 30
+    }
+   ],
+   "tags": [
+    "money"
+   ]
+  },
+  {
+   "id": "bh_callers_microphone",
+   "name": "The Spare Microphone",
+   "rarity": "rare",
+   "icon": "bell",
+   "desc": "Feedback. Then a voice like yours. Heroes' first turn each fight: an extra action.",
+   "mods": [
+    {
+     "key": "actions",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero",
+      "first_turn": true
+     }
+    }
+   ],
+   "tags": [
+    "tempo"
+   ]
+  },
+  {
+   "id": "bh_dead_womans_dabber",
+   "name": "Dead Woman's Dabber",
+   "rarity": "cursed",
+   "icon": "dauber",
+   "family": "paper",
+   "desc": "Cursed. The ink is red. Hero hits make the target bleed. Every hero starts each fight bleeding.",
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "bleeding",
+       "turns": 2,
+       "to": "target",
+       "stacks": 1
+      }
+     ],
+     "label": "Red Ink",
+     "when": {
+      "side": "hero"
+     },
+     "quiet": true
+    },
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "bleeding",
+       "turns": 2,
+       "to": "all_heroes",
+       "stacks": 1
+      }
+     ],
+     "label": "Red Ink"
+    }
+   ],
+   "tags": [
+    "bleed",
+    "risk"
+   ]
+  },
+  {
+   "id": "bh_unclaimed_prize",
+   "name": "Unclaimed Prize",
+   "rarity": "cursed",
+   "icon": "ticket",
+   "family": "money",
+   "desc": "Cursed. Nobody came for it. 150 gold. Shops charge a quarter more. They know.",
+   "mods": [
+    {
+     "key": "shop_price_mult",
+     "op": "mul",
+     "value": 1.25
+    }
+   ],
+   "on_gain": [
+    {
+     "type": "gold",
+     "n": 150
+    }
+   ],
+   "tags": [
+    "money",
+    "risk"
+   ]
+  },
+  {
+   "id": "bh_spare_ball",
+   "name": "His Spare Ball",
+   "rarity": "cursed",
+   "icon": "ball",
+   "family": "dice",
+   "desc": "Cursed. Out of his own head. Your dice never show below 5. His crit on 18-20.",
+   "mods": [
+    {
+     "key": "natural_floor",
+     "op": "floor",
+     "value": 5,
+     "when": {
+      "side": "hero"
+     }
+    },
+    {
+     "key": "crit_threshold",
+     "op": "set",
+     "value": 18,
+     "when": {
+      "side": "enemy"
+     }
+    }
+   ],
+   "tags": [
+    "dice",
+    "risk"
+   ]
+  },
+  {
+   "id": "bh_regulars_stool",
+   "name": "The Regular's Stool",
+   "rarity": "cursed",
+   "icon": "chair",
+   "desc": "Cursed. Forty years. One stool. Heroes deal +2. Rest heals half as much.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero"
+     }
+    },
+    {
+     "key": "rest_heal_mult",
+     "op": "mul",
+     "value": 0.5
+    }
+   ],
+   "tags": [
+    "damage",
+    "risk"
+   ]
+  },
+  {
+   "id": "bh_last_orders_bell",
+   "name": "Last Orders Bell",
+   "rarity": "cursed",
+   "icon": "bell",
+   "family": "clocks",
+   "desc": "Cursed. Ding. Heroes get an extra action in round 1. From round 6, enemies hit 3 harder.",
+   "mods": [
+    {
+     "key": "actions",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero",
+      "round_le": 1
+     }
+    },
+    {
+     "key": "enemy_damage_add",
+     "op": "add",
+     "value": 3,
+     "when": {
+      "round_ge": 6
+     }
+    }
+   ],
+   "tags": [
+    "tempo",
+    "risk"
+   ]
+  },
+  {
+   "id": "bh_bingo_wing",
+   "name": "The Bingo Wing",
+   "rarity": "cursed",
+   "icon": "wing",
+   "family": "flesh",
+   "desc": "Cursed. Don't ask whose. Heroes +8 max HP. Heroes take +1 damage from everything.",
+   "mods": [
+    {
+     "key": "max_hp_add",
+     "op": "add",
+     "value": 8,
+     "when": {
+      "side": "hero"
+     }
+    },
+    {
+     "key": "damage_taken_add",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "defense",
+    "risk"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,290 @@
+{
+ "table_items": [
+  {
+   "id": "tibh_dabber",
+   "name": "Half-Dry Dabber",
+   "icon": "dauber",
+   "desc": "Daub an enemy: marked and exposed for 2 turns.",
+   "target": "enemy",
+   "weight": 10,
+   "price": 25,
+   "effects": [
+    {
+     "type": "status",
+     "id": "marked",
+     "turns": 2,
+     "to": "target"
+    },
+    {
+     "type": "status",
+     "id": "exposed",
+     "turns": 2,
+     "to": "target"
+    }
+   ],
+   "sneaky": true
+  },
+  {
+   "id": "tibh_cold_tea",
+   "name": "Someone Else's Tea",
+   "icon": "cup",
+   "desc": "A hero drinks it. Heals 10. Cleansed. Grimaces.",
+   "target": "hero",
+   "weight": 10,
+   "price": 25,
+   "effects": [
+    {
+     "type": "heal",
+     "dice": "10",
+     "to": "target"
+    },
+    {
+     "type": "cleanse",
+     "to": "target"
+    }
+   ]
+  },
+  {
+   "id": "tibh_reading_glasses",
+   "name": "Borrowed Reading Glasses",
+   "icon": "eye",
+   "desc": "A hero's next attack crits on 15+ and ignores cover.",
+   "target": "hero",
+   "weight": 8,
+   "price": 30,
+   "effects": [
+    {
+     "type": "status",
+     "id": "deadeye",
+     "turns": 2,
+     "to": "target"
+    }
+   ]
+  },
+  {
+   "id": "tibh_raffle_stub",
+   "name": "Raffle Stub",
+   "icon": "ticket",
+   "desc": "Tear it. 1 in 2: 50 gold. Otherwise: nothing. Nothing.",
+   "target": "none",
+   "weight": 10,
+   "price": 15,
+   "effects": [
+    {
+     "type": "gold",
+     "n": 50,
+     "chance": 0.5
+    }
+   ]
+  },
+  {
+   "id": "tibh_ashtray",
+   "name": "Ashtray, Thrown",
+   "icon": "tray",
+   "desc": "An enemy takes 2d6 and is dazed. Loud.",
+   "target": "enemy",
+   "weight": 8,
+   "price": 30,
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "2d6",
+     "dtype": "physical",
+     "to": "target"
+    },
+    {
+     "type": "status",
+     "id": "dazed",
+     "turns": 1,
+     "to": "target"
+    }
+   ],
+   "sneaky": true
+  },
+  {
+   "id": "tibh_hymn_book",
+   "name": "Hymn Book",
+   "icon": "tome",
+   "desc": "Read aloud. Every hero is warded for a turn.",
+   "target": "none",
+   "weight": 6,
+   "price": 40,
+   "effects": [
+    {
+     "type": "status",
+     "id": "warded",
+     "turns": 1,
+     "to": "all_heroes"
+    }
+   ]
+  },
+  {
+   "id": "tibh_her_handbag",
+   "name": "Her Handbag",
+   "icon": "box",
+   "desc": "Rummage: a hero regains 2 resource. Mints, too. The FILE drops 5.",
+   "target": "hero",
+   "weight": 8,
+   "price": 30,
+   "effects": [
+    {
+     "type": "res",
+     "n": 2,
+     "to": "target"
+    },
+    {
+     "type": "suspicion",
+     "n": -5
+    }
+   ]
+  },
+  {
+   "id": "tibh_bingo_ball",
+   "name": "Loose Bingo Ball",
+   "icon": "ball",
+   "desc": "Roll it under his foot. He looks down for 4 seconds.",
+   "target": "none",
+   "weight": 12,
+   "price": 20,
+   "blind": 4
+  },
+  {
+   "id": "tibh_wet_wipe",
+   "name": "Wet Wipe",
+   "icon": "drop",
+   "desc": "Every hero is cleansed. Smells of lemon. And worse.",
+   "target": "none",
+   "weight": 8,
+   "price": 30,
+   "effects": [
+    {
+     "type": "cleanse",
+     "to": "all_heroes"
+    }
+   ]
+  },
+  {
+   "id": "tibh_hearing_aid",
+   "name": "Hearing Aid, Turned Up",
+   "icon": "wave",
+   "desc": "Every enemy within 2 squares of your chosen hero is feared for a turn.",
+   "target": "none",
+   "weight": 6,
+   "price": 35,
+   "effects": [
+    {
+     "type": "status",
+     "id": "feared",
+     "turns": 1,
+     "to": "near_foes"
+    }
+   ],
+   "sneaky": true
+  }
+ ],
+ "totems": [
+  {
+   "id": "thbh_tea",
+   "kind": "head",
+   "name": "Teapot Head",
+   "icon": "cup",
+   "desc": "When a hero is healed (once a turn)...",
+   "event": "healed",
+   "when": {
+    "side": "hero"
+   },
+   "once": "turn"
+  },
+  {
+   "id": "thbh_ball",
+   "kind": "head",
+   "name": "Bingo Ball Head",
+   "icon": "ball",
+   "desc": "When a hero rolls a natural 8...",
+   "event": "natural",
+   "when": {
+    "side": "hero",
+    "natural": 8
+   }
+  },
+  {
+   "id": "thbh_widow",
+   "kind": "head",
+   "name": "Widow's Head",
+   "icon": "mask",
+   "desc": "When a hero hits and stands alone...",
+   "event": "hit",
+   "when": {
+    "side": "hero",
+    "alone": true
+   }
+  },
+  {
+   "id": "thbh_clock",
+   "kind": "head",
+   "name": "Clock-Face Head",
+   "icon": "watch",
+   "desc": "When a round ends...",
+   "event": "round_end",
+   "when": {}
+  },
+  {
+   "id": "tbbh_dabber",
+   "kind": "base",
+   "name": "Dabber Base",
+   "icon": "dauber",
+   "desc": "...a random enemy is marked.",
+   "effects": [
+    {
+     "type": "status",
+     "id": "marked",
+     "turns": 1,
+     "to": "random_enemy"
+    }
+   ]
+  },
+  {
+   "id": "tbbh_tea",
+   "kind": "base",
+   "name": "Saucer Base",
+   "icon": "cup",
+   "desc": "...a random hero heals 3.",
+   "effects": [
+    {
+     "type": "heal",
+     "dice": "3",
+     "to": "random_hero"
+    }
+   ]
+  },
+  {
+   "id": "tbbh_ash",
+   "kind": "base",
+   "name": "Base of Ash",
+   "icon": "tray",
+   "desc": "...a random enemy takes 2 fire.",
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "2",
+     "dtype": "fire",
+     "to": "random_enemy"
+    }
+   ]
+  },
+  {
+   "id": "tbbh_ticket",
+   "kind": "base",
+   "name": "Base of Raffle Tickets",
+   "icon": "ticket",
+   "desc": "...1 in 2: gain 4 gold.",
+   "effects": [
+    {
+     "type": "gold",
+     "n": 4,
+     "chance": 0.5
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1116 @@
+{
+ "statuses": [
+  {
+   "id": "chorus",
+   "name": "The Chorus",
+   "kind": "debuff",
+   "icon": "note",
+   "stack": "refresh",
+   "uncleansable": false,
+   "triggers": [
+    {
+     "event": "ability_used",
+     "when": {
+      "repeat": true
+     },
+     "effects": [
+      {
+       "type": "damage",
+       "dice": "1d8",
+       "dtype": "psychic",
+       "to": "self"
+      }
+     ],
+     "label": "The Chorus punishes repetition"
+    }
+   ],
+   "desc": "While the choir sings, using the same card twice in a row costs 1d8 psychic damage."
+  },
+  {
+   "id": "mutating",
+   "name": "Mutating",
+   "kind": "debuff",
+   "icon": "spiral",
+   "stack": "intensity",
+   "max_stacks": 3,
+   "per_stack": true,
+   "mods": [
+    {
+     "key": "defense",
+     "op": "add",
+     "value": -1
+    },
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 1
+    }
+   ],
+   "desc": "-1 defense and +1 damage per stack. Cathedral healing leaves this behind."
+  }
+ ],
+ "enemies": [
+  {
+   "id": "flagellant",
+   "name": "Flagellant",
+   "role": "melee",
+   "setting": "cathedral",
+   "hp": 18,
+   "defense": 11,
+   "speed": 4,
+   "might": 2,
+   "abilities": [
+    "e_scourge"
+   ],
+   "ai": "brute",
+   "tags": [
+    "zoc",
+    "cathedral"
+   ],
+   "tier": 1,
+   "gold": 3,
+   "xp": 2,
+   "triggers": [
+    {
+     "event": "damaged",
+     "effects": [
+      {
+       "type": "status",
+       "id": "empowered",
+       "turns": 3,
+       "to": "self"
+      }
+     ],
+     "label": "Pain is devotion",
+     "quiet": true
+    }
+   ],
+   "model": {
+    "body": "humanoid",
+    "color": "#c8a890",
+    "accent": "#5a1a14",
+    "head": "hood",
+    "weapon": "hook",
+    "h": 1.0,
+    "hunch": 0.35
+   },
+   "death": "collapse",
+   "desc": "Every wound makes it hit harder (+3 damage per hit taken, up to 3 times). Kill it in one go, or keep away."
+  },
+  {
+   "id": "choirboy",
+   "name": "Bone Choirboy",
+   "role": "ranged",
+   "setting": "cathedral",
+   "hp": 11,
+   "defense": 12,
+   "speed": 4,
+   "nerve": 2,
+   "abilities": [
+    "e_hymn",
+    "e_descant"
+   ],
+   "ai": "archer",
+   "tags": [
+    "cathedral",
+    "unholy"
+   ],
+   "vulnerable": [
+    "holy"
+   ],
+   "tier": 1,
+   "gold": 3,
+   "xp": 2,
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "chorus",
+       "turns": -1,
+       "to": "all_heroes"
+      }
+     ],
+     "quiet": true,
+     "label": "The choir begins"
+    }
+   ],
+   "on_death": [
+    {
+     "type": "remove_status",
+     "id": "chorus",
+     "to": "all_heroes"
+    }
+   ],
+   "model": {
+    "body": "robed",
+    "color": "#e8e0d0",
+    "accent": "#8a1a1a",
+    "head": "skull",
+    "h": 0.8
+   },
+   "death": "crumble",
+   "desc": "Sings from the back. While any choirboy lives, using the same card twice in a row hurts you."
+  },
+  {
+   "id": "surgeon_deacon",
+   "name": "Surgeon-Deacon",
+   "role": "support",
+   "setting": "cathedral",
+   "hp": 14,
+   "defense": 12,
+   "speed": 4,
+   "wits": 2,
+   "nerve": 1,
+   "abilities": [
+    "e_suture",
+    "e_bloodlet"
+   ],
+   "ai": "support",
+   "tags": [
+    "cathedral",
+    "healer"
+   ],
+   "tier": 2,
+   "gold": 5,
+   "xp": 3,
+   "model": {
+    "body": "robed",
+    "color": "#d8d0c0",
+    "accent": "#8a2a2a",
+    "head": "mask",
+    "weapon": "knife",
+    "h": 1.05
+   },
+   "death": "collapse",
+   "desc": "Stitches its friends back together. Its patients come back stronger and stranger (mutating)."
+  },
+  {
+   "id": "tithe_collector",
+   "name": "Tithe Collector",
+   "role": "controller",
+   "setting": "cathedral",
+   "hp": 15,
+   "defense": 13,
+   "speed": 5,
+   "grace": 2,
+   "abilities": [
+    "e_tithe",
+    "e_collection_plate"
+   ],
+   "ai": "ambusher",
+   "tags": [
+    "cathedral",
+    "collector"
+   ],
+   "tier": 2,
+   "gold": 12,
+   "xp": 3,
+   "model": {
+    "body": "tall",
+    "color": "#3a2a3a",
+    "accent": "#c8a040",
+    "head": "bucket",
+    "weapon": "hook",
+    "h": 1.0
+   },
+   "death": "collapse",
+   "desc": "Its hook takes one of your cards for two rounds. It carries a great deal of gold."
+  },
+  {
+   "id": "pulpit_tumor",
+   "name": "Pulpit Tumour",
+   "role": "summoner",
+   "setting": "cathedral",
+   "hp": 26,
+   "defense": 9,
+   "speed": 0,
+   "might": 1,
+   "abilities": [
+    "e_bud",
+    "e_lash"
+   ],
+   "ai": "static",
+   "tags": [
+    "cathedral",
+    "immovable",
+    "totem"
+   ],
+   "tier": 2,
+   "gold": 4,
+   "xp": 3,
+   "triggers": [
+    {
+     "event": "turn_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "growing",
+       "turns": -1,
+       "to": "self"
+      }
+     ],
+     "quiet": true,
+     "label": "It grows"
+    },
+    {
+     "event": "damaged",
+     "effects": [
+      {
+       "type": "remove_status",
+       "id": "growing",
+       "to": "self"
+      }
+     ],
+     "quiet": true
+    }
+   ],
+   "model": {
+    "body": "mound",
+    "color": "#a85a50",
+    "accent": "#e8c8b0",
+    "head": "maw",
+    "h": 0.8
+   },
+   "death": "burst",
+   "desc": "Cannot move. Buds wretches and grows stronger every turn nobody hurts it."
+  },
+  {
+   "id": "wretch",
+   "name": "Wretch",
+   "role": "swarm",
+   "setting": "cathedral",
+   "hp": 6,
+   "defense": 10,
+   "speed": 5,
+   "might": 1,
+   "abilities": [
+    "e_claw"
+   ],
+   "ai": "brute",
+   "tags": [
+    "cathedral"
+   ],
+   "tier": 0,
+   "gold": 0,
+   "xp": 1,
+   "model": {
+    "body": "crawler",
+    "color": "#b87a6a",
+    "accent": "#5a2a2a",
+    "h": 0.5
+   },
+   "death": "splat",
+   "desc": "Weak, fast, many."
+  },
+  {
+   "id": "weeping_reliquary",
+   "name": "The Weeping Reliquary",
+   "role": "elite",
+   "elite": true,
+   "setting": "cathedral",
+   "hp": 48,
+   "defense": 14,
+   "speed": 2,
+   "nerve": 3,
+   "abilities": [
+    "e_lamentation",
+    "e_tears"
+   ],
+   "ai": "controller",
+   "tags": [
+    "cathedral",
+    "elite",
+    "immovable"
+   ],
+   "resist": [
+    "physical"
+   ],
+   "vulnerable": [
+    "force"
+   ],
+   "tier": 3,
+   "gold": 14,
+   "xp": 6,
+   "triggers": [
+    {
+     "event": "turn_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "growing",
+       "turns": -1,
+       "stacks": 2,
+       "to": "self"
+      }
+     ],
+     "quiet": true,
+     "label": "It weeps louder"
+    },
+    {
+     "event": "damaged",
+     "effects": [
+      {
+       "type": "remove_status",
+       "id": "growing",
+       "to": "self"
+      }
+     ],
+     "quiet": true
+    }
+   ],
+   "model": {
+    "body": "die",
+    "color": "#c8b890",
+    "accent": "#8a1a1a",
+    "head": "eye",
+    "h": 1.2
+   },
+   "death": "crumble",
+   "desc": "A box of saints' bones. It grows more dangerous every turn it is ignored, and winds up a Lamentation you must step away from."
+  }
+ ],
+ "bosses": [
+  {
+   "id": "fraudulent_saint",
+   "name": "The Fraudulent Saint",
+   "boss": true,
+   "setting": "cathedral",
+   "size": 2,
+   "hp": 120,
+   "defense": 14,
+   "speed": 3,
+   "nerve": 4,
+   "wits": 2,
+   "abilities": [
+    "e_benediction",
+    "e_wrathful_light",
+    "e_laying_on"
+   ],
+   "ai": "boss",
+   "tags": [
+    "cathedral",
+    "boss",
+    "immovable",
+    "healer"
+   ],
+   "resist": [
+    "holy"
+   ],
+   "vulnerable": [
+    "rot"
+   ],
+   "gold": 40,
+   "xp": 14,
+   "model": {
+    "body": "floating",
+    "color": "#f0e0b0",
+    "accent": "#c8a040",
+    "head": "halo",
+    "h": 1.9
+   },
+   "death": "crumble",
+   "intro": "She heals everyone. She has never once been asked to.",
+   "desc": "Heals her congregation. In her second half she inverts healing: for two rounds at a time, healing hurts your heroes instead. Watch the rule rack.",
+   "phases": [
+    {
+     "below": 0.6,
+     "name": "The Inversion",
+     "say": "She opens her hands. The light coming out of them is the wrong colour.",
+     "abilities": [
+      "e_inversion",
+      "e_wrathful_light",
+      "e_laying_on",
+      "e_benediction"
+     ],
+     "on_enter": [
+      {
+       "type": "rule",
+       "rounds": 2,
+       "source": "The Saint",
+       "mod": {
+        "key": "heal_inverted",
+        "op": "set",
+        "value": true,
+        "priority": 3,
+        "when": {
+         "side": "hero"
+        },
+        "label": "The Inversion: healing hurts heroes"
+       }
+      }
+     ]
+    }
+   ],
+   "reward": "relic_false_halo",
+   "persona": "saint"
+  },
+  {
+   "id": "choir_of_one",
+   "name": "The Choir of One",
+   "boss": true,
+   "setting": "cathedral",
+   "size": 2,
+   "hp": 110,
+   "defense": 13,
+   "speed": 3,
+   "nerve": 4,
+   "abilities": [
+    "e_crescendo",
+    "e_echo",
+    "e_dirge"
+   ],
+   "ai": "boss",
+   "tags": [
+    "cathedral",
+    "boss",
+    "immovable"
+   ],
+   "vulnerable": [
+    "force"
+   ],
+   "gold": 40,
+   "xp": 14,
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "chorus",
+       "turns": -1,
+       "to": "all_heroes"
+      }
+     ],
+     "quiet": true
+    }
+   ],
+   "on_death": [
+    {
+     "type": "remove_status",
+     "id": "chorus",
+     "to": "all_heroes"
+    }
+   ],
+   "model": {
+    "body": "tall",
+    "color": "#e8e0d0",
+    "accent": "#5a1a1a",
+    "head": "mask",
+    "h": 1.8
+   },
+   "death": "crumble",
+   "intro": "One voice. It sings every part. It has been rehearsing for a very long time.",
+   "desc": "Sings unstable echoes of itself into being. Its Crescendo hits harder for every echo still standing; echoes burst when they die. Repeating a card is punished while it sings.",
+   "phases": [
+    {
+     "below": 0.5,
+     "name": "Fortissimo",
+     "say": "The echoes stop pretending to be separate.",
+     "abilities": [
+      "e_crescendo",
+      "e_echo",
+      "e_dirge",
+      "e_requiem"
+     ],
+     "on_enter": [
+      {
+       "type": "summon",
+       "unit": "choir_echo",
+       "count": 2
+      }
+     ]
+    }
+   ],
+   "reward": "relic_hymnal",
+   "persona": "choir"
+  }
+ ],
+ "abilities": [
+  {
+   "id": "e_scourge",
+   "name": "Scourge",
+   "icon": "hook",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "stat": "might",
+     "dtype": "physical"
+    },
+    {
+     "type": "status",
+     "id": "bleeding",
+     "turns": 2
+    }
+   ],
+   "desc": "1d8 + Might and bleeding."
+  },
+  {
+   "id": "e_hymn",
+   "name": "Bone Hymn",
+   "icon": "note",
+   "cost": "action",
+   "range": 6,
+   "target": "enemy",
+   "roll": "save",
+   "save": "nerve",
+   "stat": "nerve",
+   "tags": [
+    "basic",
+    "spell",
+    "ranged"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d8+1",
+     "dtype": "psychic"
+    }
+   ],
+   "desc": "Range 6, Nerve save: 1d8 + 1 psychic."
+  },
+  {
+   "id": "e_descant",
+   "name": "Descant",
+   "icon": "scream",
+   "cost": "action",
+   "cooldown": 3,
+   "range": 5,
+   "target": "tile",
+   "area": {
+    "shape": "radius",
+    "n": 1
+   },
+   "affects": "enemies",
+   "roll": "save",
+   "save": "nerve",
+   "stat": "nerve",
+   "tags": [
+    "spell",
+    "area"
+   ],
+   "effects": [
+    {
+     "type": "status",
+     "id": "confused",
+     "turns": 1
+    }
+   ],
+   "desc": "Nerve save or confused for a turn, in a 3x3 area."
+  },
+  {
+   "id": "e_suture",
+   "name": "Grim Suture",
+   "icon": "cross",
+   "cost": "action",
+   "cooldown": 1,
+   "range": 4,
+   "target": "ally_other",
+   "roll": "none",
+   "tags": [
+    "heal"
+   ],
+   "effects": [
+    {
+     "type": "heal",
+     "dice": "2d6+2"
+    },
+    {
+     "type": "status",
+     "id": "mutating",
+     "turns": 3
+    }
+   ],
+   "desc": "Heals an ally 2d6 + 2. They come back mutating: stronger, softer."
+  },
+  {
+   "id": "e_bloodlet",
+   "name": "Bloodletting",
+   "icon": "knife",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "wits",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "stat": "wits",
+     "dtype": "physical"
+    },
+    {
+     "type": "status",
+     "id": "bleeding",
+     "turns": 3,
+     "stacks": 2
+    }
+   ],
+   "desc": "1d6 + Wits and 2 stacks of bleeding."
+  },
+  {
+   "id": "e_tithe",
+   "name": "Tithe Hook",
+   "icon": "hook",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "grace",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "stat": "grace",
+     "dtype": "physical"
+    },
+    {
+     "type": "disable_ability",
+     "turns": 2
+    }
+   ],
+   "desc": "1d6 + Grace and takes one of your cards for 2 rounds."
+  },
+  {
+   "id": "e_collection_plate",
+   "name": "Collection Plate",
+   "icon": "coin",
+   "cost": "bonus",
+   "cooldown": 3,
+   "range": 3,
+   "target": "enemy",
+   "roll": "save",
+   "save": "nerve",
+   "stat": "grace",
+   "tags": [
+    "control"
+   ],
+   "effects": [
+    {
+     "type": "status",
+     "id": "dazed",
+     "turns": 1
+    },
+    {
+     "type": "pull",
+     "n": 2
+    }
+   ],
+   "desc": "Nerve save or dazed and dragged 2 tiles closer."
+  },
+  {
+   "id": "e_bud",
+   "name": "Bud",
+   "icon": "egg",
+   "cost": "action",
+   "cooldown": 2,
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "summon"
+   ],
+   "self_effects": [
+    {
+     "type": "summon",
+     "unit": "wretch",
+     "count": 1
+    }
+   ],
+   "effects": [],
+   "ai_when": {
+    "summons_below": 4
+   },
+   "desc": "A wretch drops off it."
+  },
+  {
+   "id": "e_lash",
+   "name": "Lash",
+   "icon": "root",
+   "cost": "action",
+   "range": 2,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "stat": "might",
+     "dtype": "physical"
+    }
+   ],
+   "desc": "Reach 2. 1d6 + Might, +1 for every turn it has been left alone."
+  },
+  {
+   "id": "e_claw",
+   "name": "Claw",
+   "icon": "fang",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d4",
+     "stat": "might",
+     "dtype": "physical"
+    }
+   ],
+   "desc": "1d4 + Might."
+  },
+  {
+   "id": "e_lamentation",
+   "name": "Lamentation",
+   "icon": "scream",
+   "cost": "action",
+   "cooldown": 2,
+   "windup": 1,
+   "range": 0,
+   "target": "self",
+   "area": {
+    "shape": "around_self",
+    "n": 2
+   },
+   "affects": "enemies",
+   "roll": "save",
+   "save": "nerve",
+   "stat": "nerve",
+   "tags": [
+    "area",
+    "telegraph"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "3d6",
+     "dtype": "psychic",
+     "half_on_save": true
+    },
+    {
+     "type": "status",
+     "id": "feared",
+     "turns": 1,
+     "on": "save_fail"
+    }
+   ],
+   "desc": "Telegraphed: everything within 2 takes 3d6 psychic and is frightened. Step away."
+  },
+  {
+   "id": "e_tears",
+   "name": "Holy Tears",
+   "icon": "drop",
+   "cost": "action",
+   "range": 5,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "nerve",
+   "tags": [
+    "basic",
+    "attack",
+    "ranged"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d10",
+     "dtype": "holy"
+    }
+   ],
+   "desc": "Range 5. 1d10 holy."
+  },
+  {
+   "id": "e_benediction",
+   "name": "Benediction",
+   "icon": "halo",
+   "cost": "action",
+   "cooldown": 2,
+   "range": 0,
+   "target": "self",
+   "area": {
+    "shape": "around_self",
+    "n": 3
+   },
+   "affects": "allies",
+   "roll": "none",
+   "tags": [
+    "heal"
+   ],
+   "effects": [
+    {
+     "type": "heal",
+     "dice": "2d6"
+    },
+    {
+     "type": "status",
+     "id": "blessed",
+     "turns": 2
+    }
+   ],
+   "self_effects": [
+    {
+     "type": "heal",
+     "dice": "2d6"
+    }
+   ],
+   "desc": "Heals and blesses every ally within 3, and herself."
+  },
+  {
+   "id": "e_wrathful_light",
+   "name": "Wrathful Light",
+   "icon": "sun",
+   "cost": "action",
+   "range": 6,
+   "target": "tile",
+   "area": {
+    "shape": "radius",
+    "n": 1
+   },
+   "affects": "enemies",
+   "roll": "save",
+   "save": "grace",
+   "stat": "nerve",
+   "tags": [
+    "spell",
+    "area"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "2d8",
+     "dtype": "holy",
+     "half_on_save": true
+    }
+   ],
+   "desc": "3x3 area, Grace save: 2d8 holy."
+  },
+  {
+   "id": "e_laying_on",
+   "name": "Laying On of Hands",
+   "icon": "hand",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "nerve",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "2d6",
+     "stat": "nerve",
+     "dtype": "holy",
+     "leech": 1.0
+    }
+   ],
+   "desc": "2d6 + Nerve holy. She heals what it deals."
+  },
+  {
+   "id": "e_inversion",
+   "name": "The Inversion",
+   "icon": "spiral",
+   "cost": "bonus",
+   "cooldown": 3,
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "rules"
+   ],
+   "self_effects": [
+    {
+     "type": "rule",
+     "rounds": 2,
+     "source": "The Saint",
+     "mod": {
+      "key": "heal_inverted",
+      "op": "set",
+      "value": true,
+      "priority": 3,
+      "when": {
+       "side": "hero"
+      },
+      "label": "The Inversion: healing hurts heroes"
+     }
+    }
+   ],
+   "effects": [],
+   "ai_bonus": 6,
+   "desc": "For 2 rounds, any healing a hero receives hurts them instead."
+  },
+  {
+   "id": "e_crescendo",
+   "name": "Crescendo",
+   "icon": "note",
+   "cost": "action",
+   "range": 6,
+   "target": "enemy",
+   "roll": "save",
+   "save": "nerve",
+   "stat": "nerve",
+   "tags": [
+    "basic",
+    "spell",
+    "ranged"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "2d6",
+     "dtype": "psychic",
+     "per_ally": 2
+    }
+   ],
+   "desc": "Range 6, Nerve save: 2d6 psychic, +2 for every echo still standing."
+  },
+  {
+   "id": "e_echo",
+   "name": "Sing an Echo",
+   "icon": "mask",
+   "cost": "bonus",
+   "cooldown": 1,
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "summon"
+   ],
+   "self_effects": [
+    {
+     "type": "summon",
+     "unit": "choir_echo",
+     "count": 1
+    }
+   ],
+   "effects": [],
+   "ai_when": {
+    "summons_below": 4
+   },
+   "desc": "Another of itself steps out of the choir."
+  },
+  {
+   "id": "e_dirge",
+   "name": "Dirge",
+   "icon": "scream",
+   "cost": "action",
+   "cooldown": 3,
+   "windup": 1,
+   "range": 6,
+   "target": "enemy",
+   "area": {
+    "shape": "radius",
+    "n": 1
+   },
+   "affects": "enemies",
+   "roll": "save",
+   "save": "nerve",
+   "stat": "nerve",
+   "tags": [
+    "area",
+    "telegraph"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "3d8",
+     "dtype": "psychic",
+     "half_on_save": true
+    }
+   ],
+   "desc": "Telegraphed: a 3x3 area takes 3d8 psychic next turn."
+  },
+  {
+   "id": "e_requiem",
+   "name": "Requiem",
+   "icon": "skull",
+   "cost": "action",
+   "cooldown": 3,
+   "range": 0,
+   "target": "self",
+   "area": {
+    "shape": "around_self",
+    "n": 3
+   },
+   "affects": "enemies",
+   "roll": "save",
+   "save": "nerve",
+   "stat": "nerve",
+   "tags": [
+    "area"
+   ],
+   "effects": [
+    {
+     "type": "status",
+     "id": "dazed",
+     "turns": 2
+    },
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "dtype": "psychic"
+    }
+   ],
+   "desc": "Everything within 3: Nerve save or dazed; 1d8 psychic regardless."
+  },
+  {
+   "id": "e_echo_shriek",
+   "name": "Shriek",
+   "icon": "scream",
+   "cost": "action",
+   "range": 3,
+   "target": "enemy",
+   "roll": "save",
+   "save": "nerve",
+   "stat": "nerve",
+   "tags": [
+    "basic",
+    "spell"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "dtype": "psychic"
+    }
+   ],
+   "desc": "Range 3, Nerve save: 1d6 psychic."
+  }
+ ]
+}

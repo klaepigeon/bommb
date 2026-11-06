@@ -1,0 +1,1913 @@
+{
+ "events": [
+  {
+   "id": "v2_dk_ev_desk",
+   "title": "The School Desk",
+   "persona": "caller",
+   "setting": "drowned",
+   "text": "A school desk floats past, upside down. Carved in the underside, deep, with a fork: STEVE. SEAT 4. Under that, tally marks. Rows of them. The last row stops halfway.",
+   "options": [
+    {
+     "label": "Read the tally marks (Wits)",
+     "check": {
+      "stat": "wits",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "reveal"
+       },
+       {
+        "type": "xp",
+        "n": 10,
+        "target": "all"
+       }
+      ],
+      "pass_text": "They are not days. They are sessions. You learn where he hides the next page.",
+      "fail": [
+       {
+        "type": "suspicion",
+        "n": 8
+       },
+       {
+        "type": "damage",
+        "n": 4,
+        "target": "all"
+       }
+      ],
+      "fail_text": "'That's. That's private.' He turns the desk over. Hard. On your fingers."
+     }
+    },
+    {
+     "label": "Prise the lid open (Might)",
+     "check": {
+      "stat": "might",
+      "dc": 12,
+      "pass": [
+       {
+        "type": "relic",
+        "id": "v2_steves_dice"
+       }
+      ],
+      "pass_text": "Inside: four dice in a sandwich bag. Still warm. Every one of them shows a one.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 7,
+        "target": "chosen"
+       },
+       {
+        "type": "injure",
+        "target": "chosen"
+       }
+      ],
+      "fail_text": "The lid comes down on your wrist. Steve's things. Do not like. Strangers."
+     }
+    },
+    {
+     "label": "Carve your own name under his",
+     "who": true,
+     "effects": [
+      {
+       "type": "max_hp",
+       "n": 5,
+       "target": "chosen"
+      },
+      {
+       "type": "suspicion",
+       "n": -10
+      },
+      {
+       "type": "flag",
+       "key": "v2_signed_desk"
+      }
+     ],
+     "result": "The Caller leans in to watch you do it. 'Good. Good. Now I have. Both of you.' He is gentle with you for a while after."
+    },
+    {
+     "label": "Leave it",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "v2_dk_ev_pearl_diver",
+   "title": "The Pearl Diver",
+   "persona": "ferryman",
+   "setting": "drowned",
+   "text": "A man in a wet suit of sewn-together bin bags sits on the edge of the jetty. 'I hold. Breath. Forever. Forever. Watch.' He has not breathed since you arrived.",
+   "options": [
+    {
+     "label": "Dive with him (Nerve)",
+     "check": {
+      "stat": "nerve",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "relic",
+        "id": "random",
+        "rarity": [
+         "uncommon",
+         "rare"
+        ]
+       }
+      ],
+      "pass_text": "At the bottom, a drowned table set for four. You take something off a plate. Nobody stops you.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 9,
+        "target": "chosen"
+       },
+       {
+        "type": "status_next",
+        "id": "slowed",
+        "turns": 2,
+        "side": "hero"
+       }
+      ],
+      "fail_text": "You come up. Most of you. The water stays in your chest for a long time."
+     }
+    },
+    {
+     "label": "Pay him to dive for you (30 gold)",
+     "cost_gold": 30,
+     "effects": [
+      {
+       "type": "random",
+       "rows": [
+        {
+         "w": 3,
+         "text": "A pearl the size of an eye. It might be an eye.",
+         "effects": [
+          {
+           "type": "gold",
+           "n": 75
+          }
+         ]
+        },
+        {
+         "w": 2,
+         "text": "A finger, with a ring on it.",
+         "effects": [
+          {
+           "type": "relic",
+           "id": "random",
+           "rarity": "common"
+          }
+         ]
+        },
+        {
+         "w": 2,
+         "text": "He does not come up. The water keeps the thirty.",
+         "effects": [
+          {
+           "type": "nothing"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "result": "He goes under without a ripple."
+    },
+    {
+     "label": "Push him in and take his catch",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 35
+      },
+      {
+       "type": "suspicion",
+       "n": 10
+      },
+      {
+       "type": "status_next",
+       "id": "hunted",
+       "turns": 2,
+       "side": "hero"
+      }
+     ],
+     "result": "He goes in. He does not come up. Something down there starts following you instead."
+    },
+    {
+     "label": "Leave it",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "v2_dk_ev_wet_ballot",
+   "title": "The Drowned Vote",
+   "persona": "drowned_king",
+   "setting": "drowned",
+   "text": "The court has flooded to the chin. The King is counting hands. 'One. One must go. Over the side. Over. We vote. We. Vote.'",
+   "options": [
+    {
+     "label": "Vote for yourself",
+     "who": true,
+     "effects": [
+      {
+       "type": "damage",
+       "n": 12,
+       "target": "chosen"
+      },
+      {
+       "type": "attr",
+       "stat": "nerve",
+       "n": 1,
+       "target": "chosen"
+      },
+      {
+       "type": "xp",
+       "n": 15,
+       "target": "chosen"
+      }
+     ],
+     "result": "They throw you over. You climb back up the anchor chain. The court has never seen this. The King applauds with one hand."
+    },
+    {
+     "label": "Rig the count (Grace)",
+     "check": {
+      "stat": "grace",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "gold",
+        "n": 40
+       },
+       {
+        "type": "remove_rule"
+       }
+      ],
+      "pass_text": "A courtier goes over instead. Nobody liked him. His purse floats, and one of the King's rules floats with it.",
+      "fail": [
+       {
+        "type": "remove_relic"
+       },
+       {
+        "type": "suspicion",
+        "n": 8
+       }
+      ],
+      "fail_text": "'Counted. Twice. Twice.' The King takes something off your table as a fine."
+     }
+    },
+    {
+     "label": "Abstain",
+     "effects": [
+      {
+       "type": "enemy_hp_next",
+       "mult": 0.8
+      },
+      {
+       "type": "combat",
+       "kind": "combat"
+      }
+     ],
+     "result": "'Then. All of you.' The court rises out of the water. They are tired. It shows."
+    }
+   ]
+  },
+  {
+   "id": "v2_dk_ev_net",
+   "title": "A Hand in the Net",
+   "persona": "ferryman",
+   "setting": "drowned",
+   "text": "A fishing net, hauled half out. In it: one hand, a woman's, nails bitten. Something square is tucked up the cuff of the cardigan sleeve. The Caller does not look at it.",
+   "options": [
+    {
+     "label": "Take what's up her sleeve (Grace)",
+     "check": {
+      "stat": "grace",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "cheat",
+        "id": "random"
+       },
+       {
+        "type": "table_item",
+        "id": "random"
+       }
+      ],
+      "pass_text": "A card, and the trick for keeping it there. Janet's trick. She was very good.",
+      "fail": [
+       {
+        "type": "suspicion",
+        "n": 14
+       },
+       {
+        "type": "damage",
+        "n": 5,
+        "target": "chosen"
+       }
+      ],
+      "fail_text": "'Janet. Janet did that. Too.' He does not look away for a long time. Then the hand closes on yours."
+     }
+    },
+    {
+     "label": "Shake it",
+     "who": true,
+     "effects": [
+      {
+       "type": "trait",
+       "id": "t_lucky",
+       "target": "chosen"
+      },
+      {
+       "type": "injure",
+       "target": "chosen"
+      }
+     ],
+     "result": "The grip is firm. Then firmer. When it lets go, two of your fingers are numb, and your dice feel lighter."
+    },
+    {
+     "label": "Throw it back",
+     "effects": [
+      {
+       "type": "xp",
+       "n": 8,
+       "target": "all"
+      },
+      {
+       "type": "suspicion",
+       "n": -6
+      }
+     ],
+     "result": "'Thank. Thank you.' He means it. It is the worst thing he has said all night."
+    }
+   ]
+  },
+  {
+   "id": "v2_dk_ev_bilge",
+   "title": "The Bilge Pump",
+   "persona": "caller",
+   "setting": "drowned",
+   "text": "A rusted hand pump bolted to the deck. Every stroke brings up a little water and a little of something else.",
+   "options": [
+    {
+     "label": "Pump until it runs clear (Might)",
+     "check": {
+      "stat": "might",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "heal_pct",
+        "pct": 0.3,
+        "target": "all"
+       },
+       {
+        "type": "consumable",
+        "id": "random"
+       }
+      ],
+      "pass_text": "It runs clear. Clean water, and a card in a bottle at the end of it.",
+      "fail": [
+       {
+        "type": "status_next",
+        "id": "poisoned",
+        "turns": 2,
+        "side": "hero"
+       },
+       {
+        "type": "damage",
+        "n": 4,
+        "target": "all"
+       }
+      ],
+      "fail_text": "It does not run clear. It runs red, then grey, then it runs onto you."
+     }
+    },
+    {
+     "label": "Drink straight from the spout",
+     "who": true,
+     "effects": [
+      {
+       "type": "random",
+       "rows": [
+        {
+         "w": 2,
+         "text": "Brine. Fine.",
+         "effects": [
+          {
+           "type": "max_hp",
+           "n": 4,
+           "target": "chosen"
+          }
+         ]
+        },
+        {
+         "w": 2,
+         "text": "Something swims down with it.",
+         "effects": [
+          {
+           "type": "damage",
+           "n": 8,
+           "target": "chosen"
+          },
+          {
+           "type": "attr",
+           "stat": "might",
+           "n": 1,
+           "target": "chosen"
+          }
+         ]
+        },
+        {
+         "w": 1,
+         "text": "Hair. A lot of hair. You cough up a word that isn't yours.",
+         "effects": [
+          {
+           "type": "level_offer",
+           "target": "chosen"
+          },
+          {
+           "type": "suspicion",
+           "n": 6
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "result": "You put your mouth on it."
+    },
+    {
+     "label": "Leave it",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "v2_fc_ev_pew",
+   "title": "The Memorial Pew",
+   "persona": "deacon",
+   "setting": "cathedral",
+   "text": "A pew with brass plaques screwed along the back. No names. IN LOVING MEMORY OF SEAT 2. SEAT 4. SEAT 4. SEAT 1. SEAT 3. SEAT 4. The screws are new. There is room for more.",
+   "options": [
+    {
+     "label": "Polish the plaques",
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": -8
+      },
+      {
+       "type": "heal_pct",
+       "pct": 0.2,
+       "target": "all"
+      }
+     ],
+     "result": "'Thank you. Thank. They get. Fingerprints.' He hums while you work."
+    },
+    {
+     "label": "Unscrew one (Wits)",
+     "check": {
+      "stat": "wits",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "relic",
+        "id": "v2_maureens_list"
+       }
+      ],
+      "pass_text": "Behind the plaque, folded small: a list of names in angry capitals. Maureen's list. His name is near the top. You take it.",
+      "fail": [
+       {
+        "type": "rule_card",
+        "id": "random"
+       },
+       {
+        "type": "suspicion",
+        "n": 6
+       }
+      ],
+      "fail_text": "The screw will not turn. He screws a new rule onto the rack instead. Slowly. Looking at you."
+     }
+    },
+    {
+     "label": "Sit in it",
+     "who": true,
+     "effects": [
+      {
+       "type": "attr",
+       "stat": "nerve",
+       "n": 1,
+       "target": "chosen"
+      },
+      {
+       "type": "damage",
+       "n": 6,
+       "target": "chosen"
+      },
+      {
+       "type": "xp",
+       "n": 10,
+       "target": "chosen"
+      }
+     ],
+     "result": "The pew is warm. Somebody was just here. You leave a little of yourself on it, the way they did."
+    }
+   ]
+  },
+  {
+   "id": "v2_fc_ev_teeth",
+   "title": "The Tithe of Teeth",
+   "persona": "saint",
+   "setting": "cathedral",
+   "text": "A collection plate heaped with teeth. Some gold. Most not. 'One each. Each. The Lord. Counts. Them.'",
+   "options": [
+    {
+     "label": "Pull one of your own",
+     "who": true,
+     "effects": [
+      {
+       "type": "damage",
+       "n": 5,
+       "target": "chosen"
+      },
+      {
+       "type": "relic",
+       "id": "v2_gold_filling"
+      }
+     ],
+     "result": "It comes out with a sound like a cork. On the plate you find one with a gold filling. A fair swap."
+    },
+    {
+     "label": "Give one from the fallen",
+     "requires": {
+      "fallen_ge": 1
+     },
+     "effects": [
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": "uncommon"
+      },
+      {
+       "type": "suspicion",
+       "n": 5
+      }
+     ],
+     "result": "You brought them all this way. They would want to help. The Saint smiles with somebody else's mouth."
+    },
+    {
+     "label": "Refuse (Nerve)",
+     "check": {
+      "stat": "nerve",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "xp",
+        "n": 12,
+        "target": "all"
+       },
+       {
+        "type": "status_next",
+        "id": "blessed",
+        "turns": 2,
+        "side": "hero"
+       }
+      ],
+      "pass_text": "'Brave. Brave.' She blesses you anyway. Her hand smells of the plate.",
+      "fail": [
+       {
+        "type": "combat",
+        "kind": "combat"
+       }
+      ],
+      "fail_text": "'Then the Lord. Collects.' The congregation stands up together."
+     }
+    }
+   ]
+  },
+  {
+   "id": "v2_fc_ev_stitched_choir",
+   "title": "Stitched Mouths",
+   "persona": "choir",
+   "setting": "cathedral",
+   "text": "A choir in the loft, mouths sewn shut with red thread. They are humming. It is the tune the Caller hums when he's winning.",
+   "options": [
+    {
+     "label": "Unpick one mouth (Grace)",
+     "check": {
+      "stat": "grace",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "level_offer",
+        "target": "chosen"
+       },
+       {
+        "type": "suspicion",
+        "n": 4
+       }
+      ],
+      "pass_text": "The chorister whispers one thing, very fast, before the thread grows back. It's the answer to a question you hadn't asked.",
+      "fail": [
+       {
+        "type": "status_next",
+        "id": "chorus",
+        "turns": 3,
+        "side": "enemy"
+       },
+       {
+        "type": "damage",
+        "n": 6,
+        "target": "chosen"
+       }
+      ],
+      "fail_text": "It screams. The whole loft screams. Next fight, his pieces will be singing."
+     }
+    },
+    {
+     "label": "Hum along",
+     "effects": [
+      {
+       "type": "status_next",
+       "id": "inspired",
+       "turns": 2,
+       "side": "hero"
+      },
+      {
+       "type": "suspicion",
+       "n": 3
+      }
+     ],
+     "result": "You know the words. You didn't know you knew the words."
+    },
+    {
+     "label": "Sew your own mouth shut",
+     "who": true,
+     "effects": [
+      {
+       "type": "upgrade_card",
+       "target": "chosen"
+      },
+      {
+       "type": "injure",
+       "target": "chosen"
+      }
+     ],
+     "result": "Quiet, finally. Your hands get very clever without your mouth to distract them."
+    }
+   ]
+  },
+  {
+   "id": "v2_fc_ev_waiting_room",
+   "title": "Pre-Op",
+   "persona": "nurse",
+   "setting": "cathedral",
+   "text": "Plastic chairs. A ticket dispenser. A red number on the wall clicks over. 4. Nobody gets up. 4. Nobody gets up. 4.",
+   "options": [
+    {
+     "label": "Answer to number four",
+     "who": true,
+     "effects": [
+      {
+       "type": "max_hp",
+       "n": 7,
+       "target": "chosen"
+      },
+      {
+       "type": "rename",
+       "text": "{name} (Four)",
+       "target": "chosen"
+      },
+      {
+       "type": "injure",
+       "target": "chosen"
+      }
+     ],
+     "result": "They take you through. They do something to you that was booked for somebody else. You come out bigger. Your name tag has changed."
+    },
+    {
+     "label": "Steal the anaesthetic (Wits)",
+     "check": {
+      "stat": "wits",
+      "dc": 12,
+      "pass": [
+       {
+        "type": "consumable",
+        "id": "random",
+        "count": 2
+       }
+      ],
+      "pass_text": "Two vials, under the coat. The nurse does not turn round. The nurse does not have a front.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 6,
+        "target": "chosen"
+       },
+       {
+        "type": "suspicion",
+        "n": 7
+       }
+      ],
+      "fail_text": "A needle goes into your hand. 'Not. Your. Turn.'"
+     }
+    },
+    {
+     "label": "Take a ticket and wait",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.5,
+       "target": "all"
+      },
+      {
+       "type": "enemy_hp_next",
+       "mult": 1.15
+      }
+     ],
+     "result": "Your number comes up eventually. They are kind to you. They are very kind. Whatever is waiting next has had time to grow."
+    }
+   ]
+  },
+  {
+   "id": "v2_fc_ev_second_font",
+   "title": "The Other Font",
+   "persona": "saint",
+   "setting": "cathedral",
+   "text": "A second font, behind the first. Warm. Not water. Something in it turns over when you lean close.",
+   "options": [
+    {
+     "label": "Bathe in it",
+     "who": true,
+     "effects": [
+      {
+       "type": "trait",
+       "id": "t_thick",
+       "target": "chosen"
+      },
+      {
+       "type": "attr",
+       "stat": "grace",
+       "n": -1,
+       "target": "chosen"
+      }
+     ],
+     "result": "You come out heavier. Thicker. It took some of how you move as payment."
+    },
+    {
+     "label": "Drink it",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.6,
+       "target": "all"
+      },
+      {
+       "type": "max_hp",
+       "n": -2,
+       "target": "all"
+      }
+     ],
+     "result": "It closes every wound. It also closes a little of what was underneath them."
+    },
+    {
+     "label": "Fish out what's moving (Might)",
+     "check": {
+      "stat": "might",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "relic",
+        "id": "v2_open_wound"
+       }
+      ],
+      "pass_text": "It's a wound. Just a wound, on its own, still open. It wants to be worn.",
+      "fail": [
+       {
+        "type": "status_next",
+        "id": "bleeding",
+        "turns": 3,
+        "side": "hero",
+        "stacks": 1
+       }
+      ],
+      "fail_text": "It slips through your fingers and into your sleeve. You'll be finding it for a while."
+     }
+    },
+    {
+     "label": "Leave it",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "v2_if_ev_timecards",
+   "title": "Somebody's Time Card",
+   "persona": "foreman",
+   "setting": "iron",
+   "text": "A rack of punch cards by the gate. One reads JANET. Clocked in. Never clocked out. The card is soft from being touched.",
+   "options": [
+    {
+     "label": "Clock her out",
+     "effects": [
+      {
+       "type": "remove_rule"
+      },
+      {
+       "type": "xp",
+       "n": 10,
+       "target": "all"
+      }
+     ],
+     "result": "The machine bites the card. Somewhere a whistle blows. 'She. She left early. She always. Left. Early.' One of his rules comes off the rack."
+    },
+    {
+     "label": "Take her card",
+     "effects": [
+      {
+       "type": "relic",
+       "id": "v2_janets_sleeve"
+      },
+      {
+       "type": "suspicion",
+       "n": 15
+      }
+     ],
+     "result": "You slide it up your sleeve. It fits perfectly, because it's been there before. He saw. He's writing it down."
+    },
+    {
+     "label": "Clock yourselves in twice (Wits)",
+     "check": {
+      "stat": "wits",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "gold",
+        "n": 50
+       },
+       {
+        "type": "xp",
+        "n": 8,
+        "target": "all"
+       }
+      ],
+      "pass_text": "Double time. The pay packet is thick and smells of oil.",
+      "fail": [
+       {
+        "type": "injure",
+        "target": "chosen"
+       },
+       {
+        "type": "suspicion",
+        "n": 8
+       }
+      ],
+      "fail_text": "The machine catches your hand in the slot and punches you instead."
+     }
+    }
+   ]
+  },
+  {
+   "id": "v2_if_ev_quarry",
+   "title": "The Blasting Face",
+   "persona": "prospector",
+   "setting": "iron",
+   "text": "A quarry wall packed with charges. The fuse is already lit. The prospector is behind a rock with his fingers in his ears, grinning.",
+   "options": [
+    {
+     "label": "Run in and grab the seam (Nerve)",
+     "check": {
+      "stat": "nerve",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "gold",
+        "n": 60
+       },
+       {
+        "type": "gear",
+        "id": "random"
+       }
+      ],
+      "pass_text": "You get out with an armful of ore and somebody's old kit. The wall comes down where you were.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 9,
+        "target": "all"
+       }
+      ],
+      "fail_text": "You get out. Mostly. Everyone is picking stone out of themselves for a week."
+     }
+    },
+    {
+     "label": "Sell him your claim",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 35
+      }
+     ],
+     "result": "He pays in coins that are still hot. He has bought this claim before. From Gary, he says. Gary did not need it after."
+    },
+    {
+     "label": "Dig by hand",
+     "who": true,
+     "effects": [
+      {
+       "type": "attr",
+       "stat": "might",
+       "n": 1,
+       "target": "chosen"
+      },
+      {
+       "type": "damage",
+       "n": 7,
+       "target": "chosen"
+      }
+     ],
+     "result": "Slow. Bloody. Honest. The Caller finds it very boring, which is a kind of safety."
+    }
+   ]
+  },
+  {
+   "id": "v2_if_ev_iron_lung",
+   "title": "The Iron Lung",
+   "persona": "nurse",
+   "setting": "iron",
+   "text": "A brass cylinder on a trolley, breathing. A head pokes out of one end, eyes closed, lips moving. On the trolley: a clipboard. PATIENT: SEAT 1. VISITORS: NONE.",
+   "options": [
+    {
+     "label": "Switch it off",
+     "effects": [
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": "rare"
+      },
+      {
+       "type": "suspicion",
+       "n": 6
+      },
+      {
+       "type": "status_next",
+       "id": "doomed",
+       "turns": 1,
+       "side": "hero"
+      }
+     ],
+     "result": "The lips stop. Inside the lung, where the body should be, there's a relic and nothing else. Something about you is marked now."
+    },
+    {
+     "label": "Climb in for a while",
+     "who": true,
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 1.0,
+       "target": "chosen"
+      },
+      {
+       "type": "cure",
+       "target": "chosen"
+      },
+      {
+       "type": "status_next",
+       "id": "slowed",
+       "turns": 2,
+       "side": "hero"
+      }
+     ],
+     "result": "It breathes for you. It's so much easier. Getting out is the hard part, and everyone has to wait."
+    },
+    {
+     "label": "Feed it coins (25 gold)",
+     "cost_gold": 25,
+     "effects": [
+      {
+       "type": "max_hp",
+       "n": 3,
+       "target": "all"
+      }
+     ],
+     "result": "The breathing speeds up, grateful. You all breathe a little deeper after."
+    }
+   ]
+  },
+  {
+   "id": "v2_if_ev_wanted",
+   "title": "Wanted: The Party",
+   "persona": "prospector",
+   "setting": "iron",
+   "text": "Your faces on a wall of posters. Badly drawn. One of you has been drawn twice, once with a cross through it. REWARD. DEAD. OR. DEAD.",
+   "options": [
+    {
+     "label": "Tear them all down",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 30
+      },
+      {
+       "type": "elite_next"
+      }
+     ],
+     "result": "Somebody was paid to put those up. They saw you. The next thing on the road will be the person who collects."
+    },
+    {
+     "label": "Sell out one of your own",
+     "requires": {
+      "party_ge": 2
+     },
+     "effects": [
+      {
+       "type": "lose_hero",
+       "target": "weakest",
+       "cause": "sold for the bounty"
+      },
+      {
+       "type": "gold",
+       "n": 120
+      },
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": "rare"
+      }
+     ],
+     "result": "The sheriff is a hat on a stick. He is very pleased. The Caller is more pleased. 'Like. Like Gary. We got. Less. For Gary.'"
+    },
+    {
+     "label": "Draw moustaches on them (Grace)",
+     "check": {
+      "stat": "grace",
+      "dc": 12,
+      "pass": [
+       {
+        "type": "suspicion",
+        "n": -10
+       },
+       {
+        "type": "xp",
+        "n": 6,
+        "target": "all"
+       }
+      ],
+      "pass_text": "Nobody will recognise you now. He laughs, once, like a dropped tray.",
+      "fail": [
+       {
+        "type": "status_next",
+        "id": "marked",
+        "turns": 2,
+        "side": "hero"
+       }
+      ],
+      "fail_text": "You smudge it. The drawings get better. More accurate. The next fight knows your faces."
+     }
+    }
+   ]
+  },
+  {
+   "id": "v2_if_ev_assay",
+   "title": "The Assay Office",
+   "persona": "auctioneer",
+   "setting": "iron",
+   "text": "Scales, acid, a man with a loupe screwed into his eye socket. 'Weigh it. Weigh. Everything. Has a number.'",
+   "options": [
+    {
+     "label": "Melt a relic down",
+     "requires": {
+      "relics_ge": 1
+     },
+     "effects": [
+      {
+       "type": "remove_relic"
+      },
+      {
+       "type": "gold",
+       "n": 95
+      }
+     ],
+     "result": "It goes into the crucible screaming, or that's the crucible. The coins come out stamped with a face you almost know."
+    },
+    {
+     "label": "Have it valued (15 gold)",
+     "cost_gold": 15,
+     "effects": [
+      {
+       "type": "random",
+       "rows": [
+        {
+         "w": 3,
+         "text": "'More. Than. You. Paid.'",
+         "effects": [
+          {
+           "type": "gold",
+           "n": 45
+          }
+         ]
+        },
+        {
+         "w": 2,
+         "text": "He swaps it for a better one while you blink. He thinks you didn't see.",
+         "effects": [
+          {
+           "type": "relic",
+           "id": "random",
+           "rarity": "uncommon"
+          }
+         ]
+        },
+        {
+         "w": 1,
+         "text": "'Fake.' He keeps it anyway.",
+         "effects": [
+          {
+           "type": "remove_relic"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "result": "He holds your things up to the light."
+    },
+    {
+     "label": "Rob the till (Might)",
+     "check": {
+      "stat": "might",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "gold",
+        "n": 70
+       }
+      ],
+      "pass_text": "The till opens with a bell. Nobody comes. Nobody here has legs any more.",
+      "fail": [
+       {
+        "type": "combat",
+        "kind": "combat"
+       }
+      ],
+      "fail_text": "The bell keeps ringing. Things come."
+     }
+    }
+   ]
+  },
+  {
+   "id": "v2_et_ev_seat_four",
+   "title": "Seat Four",
+   "persona": "caller",
+   "setting": "table",
+   "text": "The chair at seat four is pulled out. It is always pulled out. On the cushion, a dent. On the table in front of it, a ring from a can of something, years old.",
+   "options": [
+    {
+     "label": "Sit in it",
+     "who": true,
+     "effects": [
+      {
+       "type": "random",
+       "rows": [
+        {
+         "w": 2,
+         "text": "He deals you in as Steve. Steve was lucky. Right up until.",
+         "effects": [
+          {
+           "type": "trait",
+           "id": "t_lucky",
+           "target": "chosen"
+          }
+         ]
+        },
+        {
+         "w": 2,
+         "text": "The chair remembers how Steve went. It shows you.",
+         "effects": [
+          {
+           "type": "damage",
+           "n": 10,
+           "target": "chosen"
+          },
+          {
+           "type": "xp",
+           "n": 15,
+           "target": "chosen"
+          }
+         ]
+        },
+        {
+         "w": 1,
+         "text": "You know Steve's character. All of it. Every card he never got to play.",
+         "effects": [
+          {
+           "type": "level_offer",
+           "target": "chosen"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "result": "'Sit. Sit-sit. There.' He sounds relieved."
+    },
+    {
+     "label": "Push it in",
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": 10
+      },
+      {
+       "type": "xp",
+       "n": 10,
+       "target": "all"
+      }
+     ],
+     "result": "It scrapes. The whole hall goes quiet. 'That's. Not. Yours. To tidy.' He pulls it back out with his foot."
+    },
+    {
+     "label": "Feel under the cushion (Wits)",
+     "check": {
+      "stat": "wits",
+      "dc": 12,
+      "pass": [
+       {
+        "type": "gold",
+        "n": 40
+       },
+       {
+        "type": "table_item",
+        "id": "random"
+       }
+      ],
+      "pass_text": "Coins, a crisp packet, and something useful wrapped in a napkin.",
+      "fail": [
+       {
+        "type": "relic",
+        "id": "v2_empty_chair"
+       }
+      ],
+      "fail_text": "Your hand finds something that finds your hand. You can't put it down. You don't sit anywhere else, after."
+     }
+    }
+   ]
+  },
+  {
+   "id": "v2_et_ev_sheets",
+   "title": "Old Character Sheets",
+   "persona": "receptionist",
+   "setting": "table",
+   "text": "A shoebox of character sheets. Every one is stamped DECEASED in red, the stamp wet. Pencil, mostly rubbed out. The top one says JANET, Rogue, level 7, and under GEAR: 'sleeve'.",
+   "options": [
+    {
+     "label": "Read Janet's sheet",
+     "effects": [
+      {
+       "type": "cheat",
+       "id": "random"
+      },
+      {
+       "type": "suspicion",
+       "n": 6
+      }
+     ],
+     "result": "In the margins: notes on when he looks away. Times, to the second. She was timing him."
+    },
+    {
+     "label": "Copy a dead man's numbers",
+     "who": true,
+     "effects": [
+      {
+       "type": "attr",
+       "stat": "might",
+       "n": 2,
+       "target": "chosen"
+      },
+      {
+       "type": "max_hp",
+       "n": -4,
+       "target": "chosen"
+      }
+     ],
+     "result": "You rub out your strength and write in his. The paper is thin there now. It'll tear the next time."
+    },
+    {
+     "label": "Burn the box",
+     "effects": [
+      {
+       "type": "remove_rule"
+      },
+      {
+       "type": "damage",
+       "n": 3,
+       "target": "all"
+      },
+      {
+       "type": "suspicion",
+       "n": 8
+      }
+     ],
+     "result": "It burns slow, like hair. He watches the whole time. One of his rules was in the box, and it goes too."
+    }
+   ]
+  },
+  {
+   "id": "v2_et_ev_pizza",
+   "title": "Game Night Leftovers",
+   "persona": "prize_clerk",
+   "setting": "table",
+   "text": "A pizza box on the side table. Eight slices for four players. Two eaten. The receipt is taped to the lid: ORDER FOR FOUR. 1997. COLLECTED: NEVER.",
+   "options": [
+    {
+     "label": "Eat a slice each",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.4,
+       "target": "all"
+      },
+      {
+       "type": "random",
+       "rows": [
+        {
+         "w": 2,
+         "text": "It's fine. That's the worst part.",
+         "effects": [
+          {
+           "type": "nothing"
+          }
+         ]
+        },
+        {
+         "w": 1,
+         "text": "It is not fine.",
+         "effects": [
+          {
+           "type": "status_next",
+           "id": "poisoned",
+           "turns": 2,
+           "side": "hero"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "result": "Cold. Rubbery. Somebody took the pepperoni off one and arranged it in a 4."
+    },
+    {
+     "label": "Read who ordered (Wits)",
+     "check": {
+      "stat": "wits",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "reveal"
+       },
+       {
+        "type": "xp",
+        "n": 12,
+        "target": "all"
+       }
+      ],
+      "pass_text": "Four names, all crossed out by hand. Under them, two blank lines. Waiting. The handwriting is his.",
+      "fail": [
+       {
+        "type": "suspicion",
+        "n": 5
+       }
+      ],
+      "fail_text": "The ink runs as you read. The Caller closes the lid. 'Hungry. Hungry, are we.'"
+     }
+    },
+    {
+     "label": "Save a slice for seat four",
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": -12
+      },
+      {
+       "type": "status_next",
+       "id": "blessed",
+       "turns": 1,
+       "side": "hero"
+      }
+     ],
+     "result": "You put it on a napkin in front of the empty chair. The Caller stops moving entirely for eleven seconds."
+    }
+   ]
+  },
+  {
+   "id": "v2_et_ev_house_rules",
+   "title": "The House Rules",
+   "persona": "magistrate",
+   "setting": "table",
+   "text": "A ring binder of house rules, in many hands. Children's writing at the front. Then adults. Page 41 is torn out; somebody argued about it for forty minutes. After that, only his: squared, pressed so hard it tears. The court. Is. In session.",
+   "options": [
+    {
+     "label": "Write a rule of your own (Wits)",
+     "check": {
+      "stat": "wits",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "remove_rule"
+       },
+       {
+        "type": "rule_card",
+        "id": "rc_mercy"
+       }
+      ],
+      "pass_text": "He reads it. He allows it. 'The court finds you. Reasonable.' A rule of his goes, and yours goes up.",
+      "fail": [
+       {
+        "type": "rule_card",
+        "id": "random"
+       },
+       {
+        "type": "suspicion",
+        "n": 6
+       }
+      ],
+      "fail_text": "'The court finds you. De-delicious. Guilty.' He writes one of his under yours, and yours under his."
+     }
+    },
+    {
+     "label": "Tear out his pages",
+     "effects": [
+      {
+       "type": "remove_rule"
+      },
+      {
+       "type": "remove_rule"
+      },
+      {
+       "type": "suspicion",
+       "n": 18
+      }
+     ],
+     "result": "Two of his rules come out in your fist. He does not speak. He opens his FILE on you and writes for a very long time."
+    },
+    {
+     "label": "Countersign it",
+     "effects": [
+      {
+       "type": "rule_card",
+       "id": "random"
+      },
+      {
+       "type": "gold",
+       "n": 55
+      },
+      {
+       "type": "suspicion",
+       "n": -8
+      }
+     ],
+     "result": "Your signature goes under all of theirs. He pays you for your cooperation. The rules are yours now too."
+    }
+   ]
+  },
+  {
+   "id": "v2_et_ev_photo_booth",
+   "title": "The Photo Booth",
+   "persona": "projectionist",
+   "setting": "table",
+   "text": "A photo booth with a curtain made of a tablecloth. A strip hangs from the slot, still wet. Four frames: the party. The party. The party. The party, and something tall behind the curtain.",
+   "options": [
+    {
+     "label": "Have your picture taken (10 gold)",
+     "cost_gold": 10,
+     "effects": [
+      {
+       "type": "random",
+       "rows": [
+        {
+         "w": 2,
+         "text": "You all look so alive. You keep it.",
+         "effects": [
+          {
+           "type": "max_hp",
+           "n": 2,
+           "target": "all"
+          }
+         ]
+        },
+        {
+         "w": 2,
+         "text": "In the last frame one of you isn't there.",
+         "effects": [
+          {
+           "type": "xp",
+           "n": 15,
+           "target": "random"
+          },
+          {
+           "type": "damage",
+           "n": 6,
+           "target": "random"
+          }
+         ]
+        },
+        {
+         "w": 1,
+         "text": "In the last frame he is in the booth with you. Smiling. His face is a magazine.",
+         "effects": [
+          {
+           "type": "relic",
+           "id": "random",
+           "rarity": "uncommon"
+          },
+          {
+           "type": "suspicion",
+           "n": 8
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "result": "Flash. Flash. Flash. Flash."
+    },
+    {
+     "label": "Pull back the curtain (Nerve)",
+     "check": {
+      "stat": "nerve",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "relic",
+        "id": "random",
+        "rarity": [
+         "uncommon",
+         "rare"
+        ]
+       }
+      ],
+      "pass_text": "Nobody. Just a stool, still warm, and a thing left on it for you.",
+      "fail": [
+       {
+        "type": "combat",
+        "kind": "elite"
+       }
+      ],
+      "fail_text": "Somebody."
+     }
+    },
+    {
+     "label": "Leave it",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "v2_ev_dice_bag",
+   "title": "A Dice Bag with a Name Tag",
+   "persona": "caller",
+   "setting": "any",
+   "text": "A cloth dice bag on the floor. Name tag sewn in: PROPERTY OF STEVE. IF FOUND, DON'T. It rattles on its own.",
+   "options": [
+    {
+     "label": "Tip it out",
+     "effects": [
+      {
+       "type": "random",
+       "rows": [
+        {
+         "w": 3,
+         "text": "Dice. Lots. Four of them are blank on every side but one.",
+         "effects": [
+          {
+           "type": "table_item",
+           "id": "random",
+           "n": 2
+          }
+         ]
+        },
+        {
+         "w": 2,
+         "text": "A tooth, a raffle ticket, and a note: 'he looks away on 7s'.",
+         "effects": [
+          {
+           "type": "cheat",
+           "id": "random"
+          }
+         ]
+        },
+        {
+         "w": 1,
+         "text": "Something crawls out. It had been eating the dice.",
+         "effects": [
+          {
+           "type": "damage",
+           "n": 8,
+           "target": "random"
+          },
+          {
+           "type": "relic",
+           "id": "random",
+           "rarity": "uncommon"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "result": "It's heavier than it should be."
+    },
+    {
+     "label": "Return it to seat four",
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": -10
+      },
+      {
+       "type": "xp",
+       "n": 10,
+       "target": "all"
+      }
+     ],
+     "result": "You put it on the empty chair. The Caller nods, slowly. 'He'll. He'll want that. Later.'"
+    },
+    {
+     "label": "Keep it, unopened",
+     "effects": [
+      {
+       "type": "status_next",
+       "id": "inspired",
+       "turns": 2,
+       "side": "hero"
+      },
+      {
+       "type": "status_next",
+       "id": "jinxed",
+       "turns": 1,
+       "side": "hero"
+      }
+     ],
+     "result": "It rattles all the way to the next fight. It wants to be rolled. It wants it so much."
+    }
+   ]
+  },
+  {
+   "id": "v2_ev_cleaner",
+   "title": "The Cleaner",
+   "persona": "attendant",
+   "setting": "any",
+   "text": "An attendant on her knees under the table, scrubbing at a dark patch with a toothbrush. The patch is shaped like somebody sitting down. 'Mind. Mind the wet floor.'",
+   "options": [
+    {
+     "label": "Help her scrub",
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": -6
+      },
+      {
+       "type": "heal_pct",
+       "pct": 0.2,
+       "target": "all"
+      },
+      {
+       "type": "damage",
+       "n": 2,
+       "target": "all"
+      }
+     ],
+     "result": "Your hands go pink, then red, then pink again. She hums. 'Colin. Always. Colin. Spills.'"
+    },
+    {
+     "label": "Slip her 20 gold for what she's found",
+     "cost_gold": 20,
+     "effects": [
+      {
+       "type": "reveal"
+      },
+      {
+       "type": "table_item",
+       "id": "random"
+      }
+     ],
+     "result": "Out of her apron: something off the floor, and a folded map with a corner circled."
+    },
+    {
+     "label": "Ask whose it is (Nerve)",
+     "check": {
+      "stat": "nerve",
+      "dc": 12,
+      "pass": [
+       {
+        "type": "xp",
+        "n": 15,
+        "target": "all"
+       }
+      ],
+      "pass_text": "She tells you. Name, seat, how. It takes a long time. You will remember it in the next fight, which helps.",
+      "fail": [
+       {
+        "type": "status_next",
+        "id": "feared",
+        "turns": 1,
+        "side": "hero"
+       }
+      ],
+      "fail_text": "She looks up. Her face is a magazine page. It's your face."
+     }
+    }
+   ]
+  },
+  {
+   "id": "v2_ev_vending",
+   "title": "The Vending Machine",
+   "persona": "manager",
+   "setting": "any",
+   "text": "A vending machine humming in a corridor that wasn't there before. Row B: crisps. Row C: cards. Row D: fingers, wrapped, in a little coil.",
+   "options": [
+    {
+     "label": "Buy from row C (12 gold)",
+     "cost_gold": 12,
+     "effects": [
+      {
+       "type": "consumable",
+       "id": "random"
+      }
+     ],
+     "result": "Clunk. A card, slightly warm."
+    },
+    {
+     "label": "Buy from row D (25 gold)",
+     "cost_gold": 25,
+     "effects": [
+      {
+       "type": "random",
+       "rows": [
+        {
+         "w": 2,
+         "text": "It fits. It flexes. It's yours now.",
+         "effects": [
+          {
+           "type": "attr",
+           "stat": "grace",
+           "n": 1,
+           "target": "random"
+          }
+         ]
+        },
+        {
+         "w": 2,
+         "text": "It has a ring on. You keep the ring.",
+         "effects": [
+          {
+           "type": "relic",
+           "id": "random",
+           "rarity": "common"
+          }
+         ]
+        },
+        {
+         "w": 1,
+         "text": "It points. At the door to somewhere secret.",
+         "effects": [
+          {
+           "type": "reveal"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "result": "Clunk."
+    },
+    {
+     "label": "Shake it (Might)",
+     "check": {
+      "stat": "might",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "consumable",
+        "id": "random",
+        "count": 2
+       },
+       {
+        "type": "gold",
+        "n": 15
+       }
+      ],
+      "pass_text": "Everything falls. Even the change.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 10,
+        "target": "chosen"
+       }
+      ],
+      "fail_text": "It falls. On you. The machine apologises in his voice."
+     }
+    },
+    {
+     "label": "Leave it",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "v2_ev_coat_rack",
+   "title": "The Coat Rack",
+   "persona": "receptionist",
+   "setting": "any",
+   "text": "A coat rack by the fire exit, heavy with coats nobody came back for. A cardigan with the sleeves stretched. A parka with BRENDA written on the label. A wax jacket that is still wet.",
+   "options": [
+    {
+     "label": "Take the parka",
+     "effects": [
+      {
+       "type": "gear",
+       "id": "random"
+      },
+      {
+       "type": "suspicion",
+       "n": 4
+      }
+     ],
+     "result": "It fits. Brenda put it on to go home to the kids. In the pocket, her bus fare, and the door key, which opens nothing on this board."
+    },
+    {
+     "label": "Go through the pockets (Grace)",
+     "check": {
+      "stat": "grace",
+      "dc": 12,
+      "pass": [
+       {
+        "type": "gold",
+        "n": 45
+       },
+       {
+        "type": "table_item",
+        "id": "random"
+       }
+      ],
+      "pass_text": "Coins, a lighter, a bus ticket from a town that isn't on any map.",
+      "fail": [
+       {
+        "type": "suspicion",
+        "n": 10
+       },
+       {
+        "type": "lose_consumable"
+       }
+      ],
+      "fail_text": "'Those. Belong. To my players.' He takes something of yours, to make it fair."
+     }
+    },
+    {
+     "label": "Hang your own coats up",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.3,
+       "target": "all"
+      },
+      {
+       "type": "status_next",
+       "id": "exposed",
+       "turns": 1,
+       "side": "hero"
+      }
+     ],
+     "result": "It feels like staying. It feels so much like staying. You go into the next fight in your shirtsleeves."
+    }
+   ]
+  }
+ ]
+}

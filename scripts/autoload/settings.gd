@@ -15,6 +15,8 @@ var values := {
 	"relay_url": "",
 	"face": 0,
 	"screen_shake": true,
+	"text_size": 1.0,
+	"reduced_motion": false,
 }
 
 
@@ -29,6 +31,11 @@ func _ready() -> void:
 
 
 func get_v(key: String, default: Variant = null) -> Variant:
+	return values.get(key, default)
+
+
+## (The campaign's name for get_v.)
+func get_value(key: String, default: Variant = null) -> Variant:
 	return values.get(key, default)
 
 

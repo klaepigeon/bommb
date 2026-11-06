@@ -1,0 +1,1194 @@
+{
+ "enemies": [
+  {
+   "id": "hound",
+   "name": "Hound",
+   "role": "summon",
+   "hp": 12,
+   "defense": 13,
+   "speed": 6,
+   "might": 2,
+   "grace": 2,
+   "abilities": [
+    "s_bite"
+   ],
+   "ai": "ambusher",
+   "tags": [
+    "beast",
+    "summon"
+   ],
+   "tier": 0,
+   "model": {
+    "body": "quadruped",
+    "color": "#6a5a44",
+    "accent": "#3a2a1a",
+    "h": 0.55
+   },
+   "desc": "A ranger's hound. Fast, loyal, bites."
+  },
+  {
+   "id": "imp",
+   "name": "Imp",
+   "role": "summon",
+   "hp": 8,
+   "defense": 14,
+   "speed": 6,
+   "grace": 3,
+   "nerve": 1,
+   "abilities": [
+    "s_sting"
+   ],
+   "ai": "ambusher",
+   "tags": [
+    "flying",
+    "summon",
+    "unholy"
+   ],
+   "tier": 0,
+   "model": {
+    "body": "floating",
+    "color": "#8a2a2a",
+    "accent": "#2a1a1a",
+    "h": 0.5,
+    "wings": true
+   },
+   "desc": "A warlock's imp. Flies over hazards and stings."
+  },
+  {
+   "id": "leech",
+   "name": "Leech",
+   "role": "swarm",
+   "hp": 5,
+   "defense": 10,
+   "speed": 4,
+   "might": 0,
+   "abilities": [
+    "e_leech_latch"
+   ],
+   "ai": "brute",
+   "tags": [
+    "beast",
+    "drowned"
+   ],
+   "tier": 1,
+   "gold": 0,
+   "xp": 1,
+   "model": {
+    "body": "worm",
+    "color": "#3a2a2a",
+    "accent": "#8a2a2a",
+    "h": 0.3
+   },
+   "desc": "Small, wet, and thirsty."
+  },
+  {
+   "id": "drowned_footman",
+   "name": "Drowned Footman",
+   "role": "melee",
+   "setting": "drowned",
+   "hp": 15,
+   "defense": 12,
+   "speed": 3,
+   "might": 2,
+   "grace": 0,
+   "abilities": [
+    "e_rusty_blade"
+   ],
+   "ai": "brute",
+   "tags": [
+    "zoc",
+    "unholy",
+    "drowned"
+   ],
+   "resist": [
+    "cold"
+   ],
+   "vulnerable": [
+    "fire"
+   ],
+   "tier": 1,
+   "gold": 3,
+   "xp": 2,
+   "model": {
+    "body": "humanoid",
+    "color": "#4a5a52",
+    "accent": "#7a6a3a",
+    "head": "helm",
+    "weapon": "sword",
+    "h": 1.0,
+    "hunch": 0.2
+   },
+   "death": "collapse",
+   "desc": "A soldier of the drowned king, still on duty. Slow. Holds the line: walking away from it invites a swing."
+  },
+  {
+   "id": "brine_crossbow",
+   "name": "Brine Crossbowman",
+   "role": "ranged",
+   "setting": "drowned",
+   "hp": 11,
+   "defense": 12,
+   "speed": 4,
+   "might": 0,
+   "grace": 2,
+   "abilities": [
+    "e_crossbow",
+    "e_harpoon"
+   ],
+   "ai": "archer",
+   "tags": [
+    "unholy",
+    "drowned"
+   ],
+   "resist": [
+    "cold"
+   ],
+   "tier": 1,
+   "gold": 3,
+   "xp": 2,
+   "model": {
+    "body": "humanoid",
+    "color": "#3a4a5a",
+    "accent": "#6a5a3a",
+    "head": "hood",
+    "weapon": "crossbow",
+    "h": 0.95
+   },
+   "death": "collapse",
+   "desc": "Keeps its distance and its harpoon. The harpoon drags you into the open."
+  },
+  {
+   "id": "barnacle_bulwark",
+   "name": "Barnacle Bulwark",
+   "role": "defender",
+   "setting": "drowned",
+   "hp": 24,
+   "defense": 15,
+   "speed": 3,
+   "might": 2,
+   "abilities": [
+    "e_shell_bash",
+    "e_shell_wall"
+   ],
+   "ai": "defender",
+   "tags": [
+    "zoc",
+    "drowned"
+   ],
+   "resist": [
+    "physical"
+   ],
+   "vulnerable": [
+    "shock"
+   ],
+   "tier": 2,
+   "gold": 4,
+   "xp": 3,
+   "model": {
+    "body": "hulk",
+    "color": "#6a6a5a",
+    "accent": "#a8a08a",
+    "head": "shell",
+    "weapon": "shield",
+    "h": 1.15
+   },
+   "death": "crumble",
+   "desc": "Crusted shut. Resists physical blows, shields its friends. Lightning finds the gaps."
+  },
+  {
+   "id": "tide_priest",
+   "name": "Tide-Priest",
+   "role": "support",
+   "setting": "drowned",
+   "hp": 13,
+   "defense": 11,
+   "speed": 4,
+   "nerve": 2,
+   "wits": 1,
+   "abilities": [
+    "e_brine_mend",
+    "e_undertow",
+    "e_flood"
+   ],
+   "ai": "support",
+   "tags": [
+    "drowned",
+    "healer"
+   ],
+   "resist": [
+    "cold"
+   ],
+   "tier": 2,
+   "gold": 5,
+   "xp": 3,
+   "model": {
+    "body": "robed",
+    "color": "#2a4a4a",
+    "accent": "#8aa88a",
+    "head": "mitre",
+    "weapon": "staff",
+    "h": 1.05
+   },
+   "death": "collapse",
+   "desc": "Heals the drowned and floods the floor. Kill it first or fight in deep water."
+  },
+  {
+   "id": "mudlark",
+   "name": "Mudlark",
+   "role": "ambusher",
+   "setting": "drowned",
+   "hp": 11,
+   "defense": 13,
+   "speed": 5,
+   "grace": 3,
+   "abilities": [
+    "e_hook",
+    "e_submerge"
+   ],
+   "ai": "ambusher",
+   "tags": [
+    "drowned"
+   ],
+   "tier": 1,
+   "gold": 4,
+   "xp": 2,
+   "model": {
+    "body": "crawler",
+    "color": "#5a4a32",
+    "accent": "#2a2a1a",
+    "h": 0.6
+   },
+   "death": "splat",
+   "desc": "Hides, then hooks whoever stands alone. Keep your party together."
+  },
+  {
+   "id": "bloated_herald",
+   "name": "Bloated Herald",
+   "role": "explosive",
+   "setting": "drowned",
+   "hp": 12,
+   "defense": 9,
+   "speed": 3,
+   "might": 1,
+   "abilities": [
+    "e_burst"
+   ],
+   "ai": "bomber",
+   "tags": [
+    "drowned",
+    "explosive"
+   ],
+   "tier": 1,
+   "gold": 2,
+   "xp": 2,
+   "on_death": [
+    {
+     "type": "terrain",
+     "tile": "bile",
+     "radius": 1,
+     "only_on": "floor"
+    }
+   ],
+   "model": {
+    "body": "blob",
+    "color": "#7a8a5a",
+    "accent": "#4a3a2a",
+    "h": 0.9
+   },
+   "death": "burst",
+   "desc": "Walks up and bursts. Its death leaves bile on the floor. Kill it at range."
+  },
+  {
+   "id": "leech_matron",
+   "name": "Leech Matron",
+   "role": "elite",
+   "setting": "drowned",
+   "elite": true,
+   "hp": 42,
+   "defense": 14,
+   "speed": 4,
+   "might": 3,
+   "abilities": [
+    "e_matron_bite",
+    "e_spawn_leeches"
+   ],
+   "ai": "brute",
+   "tags": [
+    "zoc",
+    "drowned",
+    "elite"
+   ],
+   "start_statuses": [
+    {
+     "id": "regenerating",
+     "turns": -1
+    }
+   ],
+   "tier": 3,
+   "gold": 12,
+   "xp": 6,
+   "model": {
+    "body": "worm",
+    "color": "#4a2a2a",
+    "accent": "#a83a3a",
+    "h": 1.3
+   },
+   "death": "burst",
+   "desc": "Regenerates every turn and breeds leeches. Its bite feeds it. Burn it down fast.",
+   "phases": [
+    {
+     "below": 0.5,
+     "name": "Gorged",
+     "on_enter": [
+      {
+       "type": "summon",
+       "unit": "leech",
+       "count": 3
+      }
+     ],
+     "say": "She is very full."
+    }
+   ]
+  }
+ ],
+ "bosses": [
+  {
+   "id": "rust_tide_knight",
+   "name": "The Rust-Tide Knight",
+   "boss": true,
+   "setting": "drowned",
+   "size": 2,
+   "hp": 120,
+   "defense": 16,
+   "speed": 3,
+   "might": 4,
+   "grace": 0,
+   "nerve": 2,
+   "abilities": [
+    "e_tide_lance",
+    "e_crashing_tide",
+    "e_rearrange"
+   ],
+   "ai": "boss",
+   "tags": [
+    "zoc",
+    "immovable",
+    "unholy",
+    "drowned",
+    "boss"
+   ],
+   "resist": [
+    "cold",
+    "poison"
+   ],
+   "vulnerable": [
+    "shock"
+   ],
+   "gold": 40,
+   "xp": 14,
+   "model": {
+    "body": "knight",
+    "color": "#6a4a32",
+    "accent": "#3a5a52",
+    "head": "greathelm",
+    "weapon": "lance",
+    "h": 1.9
+   },
+   "death": "crumble",
+   "intro": "He swore an oath to a king who drowned. The oath did not drown.",
+   "desc": "Huge reach. Every few rounds his armour rearranges the rubble on the board. Telegraphs a tidal charge in a straight line: step out of it.",
+   "phases": [
+    {
+     "below": 0.5,
+     "name": "Unmoored",
+     "say": "The armour comes loose. Something inside it is still holding the lance.",
+     "abilities": [
+      "e_tide_lance",
+      "e_crashing_tide",
+      "e_rearrange",
+      "e_whirlpool"
+     ],
+     "on_enter": [
+      {
+       "type": "terrain",
+       "tile": "flood",
+       "radius": 2,
+       "only_on": "floor"
+      },
+      {
+       "type": "status",
+       "id": "hasted",
+       "turns": -1,
+       "to": "self"
+      }
+     ]
+    }
+   ],
+   "reward": "relic_oath_shard",
+   "persona": "knight"
+  },
+  {
+   "id": "bloated_magistrate",
+   "name": "The Bloated Magistrate",
+   "boss": true,
+   "setting": "drowned",
+   "size": 2,
+   "hp": 125,
+   "defense": 13,
+   "speed": 2,
+   "might": 4,
+   "nerve": 3,
+   "abilities": [
+    "e_gavel",
+    "e_devour_floor",
+    "e_summon_bailiffs",
+    "e_sentence"
+   ],
+   "ai": "boss",
+   "tags": [
+    "immovable",
+    "drowned",
+    "boss"
+   ],
+   "resist": [
+    "poison"
+   ],
+   "vulnerable": [
+    "fire"
+   ],
+   "gold": 40,
+   "xp": 14,
+   "model": {
+    "body": "blob",
+    "color": "#8a7a5a",
+    "accent": "#2a2a2a",
+    "head": "wig",
+    "h": 1.8
+   },
+   "death": "burst",
+   "intro": "He is hungry and the court is in session. He eats the floor first.",
+   "desc": "Eats two tiles of floor every turn, nearest first, leaving pits. Calls bailiffs. Sentences one hero to stand still. Keep your footing: anything shoved into a pit is gone.",
+   "phases": [
+    {
+     "below": 0.5,
+     "name": "Recess Is Cancelled",
+     "say": "The Magistrate gets up. Nobody has seen his legs before.",
+     "abilities": [
+      "e_gavel",
+      "e_devour_more",
+      "e_summon_bailiffs",
+      "e_sentence"
+     ],
+     "on_enter": [
+      {
+       "type": "summon",
+       "unit": "drowned_footman",
+       "count": 2
+      }
+     ]
+    }
+   ],
+   "reward": "relic_gavel",
+   "persona": "magistrate"
+  }
+ ],
+ "abilities": [
+  {
+   "id": "s_bite",
+   "name": "Bite",
+   "icon": "fang",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "stat": "might",
+     "dtype": "physical"
+    }
+   ],
+   "desc": "1d6 + Might."
+  },
+  {
+   "id": "s_sting",
+   "name": "Sting",
+   "icon": "fang",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "grace",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d4",
+     "stat": "grace",
+     "dtype": "poison"
+    },
+    {
+     "type": "status",
+     "id": "poisoned",
+     "turns": 2
+    }
+   ],
+   "desc": "1d4 + Grace poison and poisoned."
+  },
+  {
+   "id": "e_leech_latch",
+   "name": "Latch",
+   "icon": "fang",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "bonus": 2,
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d4",
+     "dtype": "physical"
+    },
+    {
+     "type": "status",
+     "id": "bleeding",
+     "turns": 2
+    }
+   ],
+   "desc": "1d4 and bleeding."
+  },
+  {
+   "id": "e_rusty_blade",
+   "name": "Rusty Blade",
+   "icon": "sword",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "stat": "might",
+     "dtype": "physical"
+    },
+    {
+     "type": "status",
+     "id": "bleeding",
+     "turns": 2,
+     "chance": 0.35
+    }
+   ],
+   "desc": "1d8 + Might, may open a bleeding wound."
+  },
+  {
+   "id": "e_crossbow",
+   "name": "Crossbow",
+   "icon": "bow",
+   "cost": "action",
+   "range": 6,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "grace",
+   "tags": [
+    "basic",
+    "attack",
+    "ranged"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "stat": "grace",
+     "dtype": "physical"
+    }
+   ],
+   "desc": "Range 6. 1d8 + Grace."
+  },
+  {
+   "id": "e_harpoon",
+   "name": "Harpoon",
+   "icon": "hook",
+   "cost": "action",
+   "cooldown": 3,
+   "range": 4,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "grace",
+   "tags": [
+    "attack",
+    "ranged",
+    "control"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d4",
+     "stat": "grace",
+     "dtype": "physical"
+    },
+    {
+     "type": "pull",
+     "n": 2
+    }
+   ],
+   "desc": "Range 4. 1d4 and drags the target 2 tiles closer."
+  },
+  {
+   "id": "e_shell_bash",
+   "name": "Shell Bash",
+   "icon": "shield",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "stat": "might",
+     "dtype": "physical"
+    },
+    {
+     "type": "push",
+     "n": 1
+    }
+   ],
+   "desc": "1d6 + Might and shoves 1."
+  },
+  {
+   "id": "e_shell_wall",
+   "name": "Shell Wall",
+   "icon": "shield",
+   "cost": "bonus",
+   "cooldown": 2,
+   "range": 0,
+   "target": "self",
+   "area": {
+    "shape": "around_self",
+    "n": 1
+   },
+   "affects": "allies",
+   "roll": "none",
+   "tags": [
+    "defense"
+   ],
+   "effects": [
+    {
+     "type": "status",
+     "id": "guarded",
+     "turns": 1
+    }
+   ],
+   "self_effects": [
+    {
+     "type": "status",
+     "id": "guarded",
+     "turns": 1
+    }
+   ],
+   "ai_bonus": 2,
+   "desc": "It and adjacent allies get +3 defense."
+  },
+  {
+   "id": "e_brine_mend",
+   "name": "Brine Mend",
+   "icon": "heart",
+   "cost": "action",
+   "cooldown": 1,
+   "range": 4,
+   "target": "ally",
+   "roll": "none",
+   "tags": [
+    "heal"
+   ],
+   "effects": [
+    {
+     "type": "heal",
+     "dice": "2d4+2"
+    }
+   ],
+   "desc": "Heals an ally 2d4 + 2."
+  },
+  {
+   "id": "e_undertow",
+   "name": "Undertow",
+   "icon": "wave",
+   "cost": "action",
+   "range": 5,
+   "target": "tile",
+   "area": {
+    "shape": "radius",
+    "n": 1
+   },
+   "affects": "enemies",
+   "roll": "save",
+   "save": "might",
+   "stat": "nerve",
+   "tags": [
+    "spell",
+    "area"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "dtype": "cold",
+     "half_on_save": true
+    },
+    {
+     "type": "status",
+     "id": "slowed",
+     "turns": 1
+    }
+   ],
+   "desc": "Might save: 1d6 cold and slowed, in a 3x3 area."
+  },
+  {
+   "id": "e_flood",
+   "name": "Call the Tide",
+   "icon": "wave",
+   "cost": "bonus",
+   "cooldown": 3,
+   "range": 5,
+   "target": "tile",
+   "roll": "none",
+   "tags": [
+    "terrain"
+   ],
+   "tile_effects": [
+    {
+     "type": "terrain",
+     "tile": "flood",
+     "radius": 1,
+     "only_on": "floor"
+    }
+   ],
+   "effects": [],
+   "ai_bonus": 3,
+   "desc": "Floods a 3x3 patch of floor."
+  },
+  {
+   "id": "e_hook",
+   "name": "Gutting Hook",
+   "icon": "hook",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "grace",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "stat": "grace",
+     "dtype": "physical"
+    },
+    {
+     "type": "damage",
+     "dice": "2d6",
+     "dtype": "physical",
+     "if_self_status": "hidden"
+    }
+   ],
+   "desc": "1d6 + Grace, 2d6 more from hiding."
+  },
+  {
+   "id": "e_submerge",
+   "name": "Submerge",
+   "icon": "cloak",
+   "cost": "bonus",
+   "cooldown": 3,
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "stealth"
+   ],
+   "keeps_hidden": true,
+   "effects": [
+    {
+     "type": "status",
+     "id": "hidden",
+     "turns": 2
+    }
+   ],
+   "ai_bonus": 3,
+   "desc": "Sinks out of sight."
+  },
+  {
+   "id": "e_burst",
+   "name": "Burst",
+   "icon": "skull",
+   "cost": "action",
+   "range": 0,
+   "target": "self",
+   "area": {
+    "shape": "around_self",
+    "n": 1
+   },
+   "affects": "all",
+   "roll": "save",
+   "save": "grace",
+   "stat": "might",
+   "tags": [
+    "area"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "2d6",
+     "dtype": "poison",
+     "half_on_save": true
+    },
+    {
+     "type": "status",
+     "id": "poisoned",
+     "turns": 2
+    }
+   ],
+   "self_effects": [
+    {
+     "type": "self_damage",
+     "n": 999
+    }
+   ],
+   "self_ok": true,
+   "requires_foes_adjacent": true,
+   "ai_bonus": 4,
+   "desc": "Bursts: 2d6 poison to everything adjacent (Grace save halves). Dies doing it."
+  },
+  {
+   "id": "e_matron_bite",
+   "name": "Feeding Bite",
+   "icon": "fang",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d10",
+     "stat": "might",
+     "dtype": "physical",
+     "leech": 0.5
+    }
+   ],
+   "desc": "1d10 + Might; heals half of it."
+  },
+  {
+   "id": "e_spawn_leeches",
+   "name": "Brood",
+   "icon": "egg",
+   "cost": "bonus",
+   "cooldown": 3,
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "summon"
+   ],
+   "self_effects": [
+    {
+     "type": "summon",
+     "unit": "leech",
+     "count": 2
+    }
+   ],
+   "effects": [],
+   "ai_when": {
+    "summons_below": 4
+   },
+   "desc": "Two leeches drop off her."
+  },
+  {
+   "id": "e_tide_lance",
+   "name": "Tide Lance",
+   "icon": "spear",
+   "cost": "action",
+   "range": 2,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "2d8",
+     "stat": "might",
+     "dtype": "physical"
+    }
+   ],
+   "desc": "Reach 2. 2d8 + Might."
+  },
+  {
+   "id": "e_crashing_tide",
+   "name": "Crashing Tide",
+   "icon": "wave",
+   "cost": "action",
+   "cooldown": 2,
+   "windup": 1,
+   "range": 6,
+   "target": "enemy",
+   "area": {
+    "shape": "line",
+    "n": 7
+   },
+   "affects": "enemies",
+   "roll": "save",
+   "save": "grace",
+   "stat": "might",
+   "tags": [
+    "area",
+    "telegraph"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "3d8",
+     "dtype": "cold",
+     "half_on_save": true
+    },
+    {
+     "type": "push",
+     "n": 2
+    }
+   ],
+   "desc": "Telegraphed: a charge down a line of 7 tiles. 3d8 cold and shoved. Step out of the marked line."
+  },
+  {
+   "id": "e_rearrange",
+   "name": "Rearrange",
+   "icon": "cog",
+   "cost": "bonus",
+   "cooldown": 2,
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "rules"
+   ],
+   "self_effects": [
+    {
+     "type": "shuffle_tiles",
+     "tile": "rubble",
+     "n": 4
+    },
+    {
+     "type": "caller",
+     "key": "rearrange"
+    }
+   ],
+   "effects": [],
+   "ai_bonus": 3,
+   "desc": "The armour rearranges the board: up to 4 rubble tiles move."
+  },
+  {
+   "id": "e_whirlpool",
+   "name": "Whirlpool",
+   "icon": "spiral",
+   "cost": "bonus",
+   "cooldown": 2,
+   "range": 0,
+   "target": "self",
+   "area": {
+    "shape": "around_self",
+    "n": 2
+   },
+   "affects": "enemies",
+   "roll": "save",
+   "save": "might",
+   "stat": "might",
+   "tags": [
+    "area",
+    "control"
+   ],
+   "effects": [
+    {
+     "type": "pull",
+     "n": 1
+    },
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "dtype": "cold",
+     "half_on_save": true
+    }
+   ],
+   "desc": "Drags everyone within 2 a tile closer for 1d8 cold."
+  },
+  {
+   "id": "e_gavel",
+   "name": "Gavel",
+   "icon": "mace",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d10",
+     "stat": "might",
+     "dtype": "physical"
+    },
+    {
+     "type": "status",
+     "id": "dazed",
+     "turns": 1
+    }
+   ],
+   "desc": "1d10 + Might and dazed."
+  },
+  {
+   "id": "e_devour_floor",
+   "name": "Devour the Floor",
+   "icon": "mouth",
+   "cost": "bonus",
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "terrain"
+   ],
+   "self_effects": [
+    {
+     "type": "consume_tiles",
+     "n": 2,
+     "tile": "pit"
+    }
+   ],
+   "effects": [],
+   "ai_bonus": 5,
+   "desc": "Eats the 2 nearest free floor tiles. They become pits."
+  },
+  {
+   "id": "e_devour_more",
+   "name": "Devour Everything",
+   "icon": "mouth",
+   "cost": "bonus",
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "terrain"
+   ],
+   "self_effects": [
+    {
+     "type": "consume_tiles",
+     "n": 3,
+     "tile": "pit"
+    }
+   ],
+   "effects": [],
+   "ai_bonus": 5,
+   "desc": "Eats the 3 nearest free floor tiles."
+  },
+  {
+   "id": "e_summon_bailiffs",
+   "name": "Call the Bailiffs",
+   "icon": "bell",
+   "cost": "action",
+   "cooldown": 3,
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "summon"
+   ],
+   "self_effects": [
+    {
+     "type": "summon",
+     "unit": "drowned_footman",
+     "count": 2
+    }
+   ],
+   "effects": [],
+   "ai_when": {
+    "summons_below": 3
+   },
+   "desc": "Two drowned footmen answer."
+  },
+  {
+   "id": "e_sentence",
+   "name": "Sentence",
+   "icon": "scroll",
+   "cost": "action",
+   "cooldown": 3,
+   "range": 6,
+   "target": "enemy",
+   "roll": "save",
+   "save": "nerve",
+   "stat": "nerve",
+   "tags": [
+    "spell",
+    "control"
+   ],
+   "effects": [
+    {
+     "type": "status",
+     "id": "rooted",
+     "turns": 2
+    },
+    {
+     "type": "status",
+     "id": "exposed",
+     "turns": 2
+    }
+   ],
+   "desc": "Nerve save or rooted and exposed for 2 turns."
+  }
+ ]
+}

@@ -1,0 +1,374 @@
+{
+ "totems": [
+  {
+   "id": "th_crow",
+   "kind": "head",
+   "name": "Crow's Head",
+   "icon": "wing",
+   "desc": "When a hero kills...",
+   "event": "kill",
+   "when": {
+    "side": "hero"
+   }
+  },
+  {
+   "id": "th_goat",
+   "kind": "head",
+   "name": "Goat's Head",
+   "icon": "fang",
+   "desc": "When a hero crits...",
+   "event": "crit",
+   "when": {
+    "side": "hero"
+   }
+  },
+  {
+   "id": "th_fish",
+   "kind": "head",
+   "name": "Fish Head",
+   "icon": "wave",
+   "desc": "When a hero misses...",
+   "event": "miss",
+   "when": {
+    "side": "hero"
+   }
+  },
+  {
+   "id": "th_hare",
+   "kind": "head",
+   "name": "Hare's Head",
+   "icon": "fang",
+   "desc": "When a hero rolls a natural 1...",
+   "event": "natural",
+   "when": {
+    "side": "hero",
+    "natural": 1
+   }
+  },
+  {
+   "id": "th_doll",
+   "kind": "head",
+   "name": "Doll's Head",
+   "icon": "mask",
+   "desc": "When you sip...",
+   "event": "sip",
+   "when": {}
+  },
+  {
+   "id": "th_owl",
+   "kind": "head",
+   "name": "Owl's Head",
+   "icon": "eye",
+   "desc": "When a cheat works...",
+   "event": "cheat",
+   "when": {}
+  },
+  {
+   "id": "th_pig",
+   "kind": "head",
+   "name": "Pig's Head",
+   "icon": "skull",
+   "desc": "When a hero is hurt (once a turn)...",
+   "event": "damaged",
+   "when": {
+    "side": "hero"
+   },
+   "once": "turn"
+  },
+  {
+   "id": "th_moth",
+   "kind": "head",
+   "name": "Moth Head",
+   "icon": "wing",
+   "desc": "When your turn starts...",
+   "event": "hero_turn",
+   "when": {}
+  },
+  {
+   "id": "th_ram",
+   "kind": "head",
+   "name": "Ram's Head",
+   "icon": "fang",
+   "desc": "When a hero hits in melee...",
+   "event": "hit",
+   "when": {
+    "side": "hero",
+    "melee": true
+   }
+  },
+  {
+   "id": "th_heron",
+   "kind": "head",
+   "name": "Heron's Head",
+   "icon": "feather",
+   "desc": "When a hero hits at range...",
+   "event": "hit",
+   "when": {
+    "side": "hero",
+    "ranged": true
+   }
+  },
+  {
+   "id": "th_dog",
+   "kind": "head",
+   "name": "Dog's Head",
+   "icon": "wolf",
+   "desc": "When a hero goes down...",
+   "event": "ally_down",
+   "when": {
+    "side": "hero"
+   }
+  },
+  {
+   "id": "th_toad",
+   "kind": "head",
+   "name": "Toad's Head",
+   "icon": "egg",
+   "desc": "When you ring the bell (distract)...",
+   "event": "distracted",
+   "when": {}
+  },
+  {
+   "id": "th_ox",
+   "kind": "head",
+   "name": "Ox Head",
+   "icon": "fang",
+   "desc": "When a fight starts...",
+   "event": "combat_start",
+   "when": {}
+  },
+  {
+   "id": "th_rat",
+   "kind": "head",
+   "name": "Rat's Head",
+   "icon": "fang",
+   "desc": "When you're caught...",
+   "event": "caught",
+   "when": {}
+  },
+  {
+   "id": "th_cat",
+   "kind": "head",
+   "name": "Cat's Head",
+   "icon": "mask",
+   "desc": "When a hero rolls 17 or higher...",
+   "event": "natural",
+   "when": {
+    "side": "hero",
+    "natural_ge": 17
+   }
+  },
+  {
+   "id": "tb_stone",
+   "kind": "base",
+   "name": "Stone Base",
+   "icon": "wall",
+   "desc": "...deal 1d6 to a random enemy.",
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "dtype": "force",
+     "to": "random_enemy"
+    }
+   ]
+  },
+  {
+   "id": "tb_bone",
+   "kind": "base",
+   "name": "Bone Base",
+   "icon": "skull",
+   "desc": "...the hero heals 3.",
+   "effects": [
+    {
+     "type": "heal",
+     "dice": "3",
+     "to": "self"
+    }
+   ]
+  },
+  {
+   "id": "tb_brass",
+   "kind": "base",
+   "name": "Brass Base",
+   "icon": "coin",
+   "desc": "...gain 3 gold.",
+   "effects": [
+    {
+     "type": "gold",
+     "n": 3
+    }
+   ]
+  },
+  {
+   "id": "tb_wax",
+   "kind": "base",
+   "name": "Wax Base",
+   "icon": "candle",
+   "desc": "...a random enemy starts burning.",
+   "effects": [
+    {
+     "type": "status",
+     "id": "burning",
+     "turns": 1,
+     "to": "random_enemy"
+    }
+   ]
+  },
+  {
+   "id": "tb_salt",
+   "kind": "base",
+   "name": "Salt Base",
+   "icon": "drop",
+   "desc": "...the FILE drops 2.",
+   "effects": [
+    {
+     "type": "suspicion",
+     "n": -2
+    }
+   ]
+  },
+  {
+   "id": "tb_felt",
+   "kind": "base",
+   "name": "Felt Base",
+   "icon": "cloak",
+   "desc": "...every hero gains 2 temporary HP.",
+   "effects": [
+    {
+     "type": "temp_hp",
+     "dice": "2",
+     "to": "all_heroes"
+    }
+   ]
+  },
+  {
+   "id": "tb_iron",
+   "kind": "base",
+   "name": "Iron Base",
+   "icon": "shield",
+   "desc": "...the hero is guarded for a turn.",
+   "effects": [
+    {
+     "type": "status",
+     "id": "guarded",
+     "turns": 1,
+     "to": "self"
+    }
+   ]
+  },
+  {
+   "id": "tb_cork",
+   "kind": "base",
+   "name": "Cork Base",
+   "icon": "egg",
+   "desc": "...the hero regains 1 resource.",
+   "effects": [
+    {
+     "type": "res",
+     "n": 1,
+     "to": "self"
+    }
+   ]
+  },
+  {
+   "id": "tb_glass",
+   "kind": "base",
+   "name": "Glass Base",
+   "icon": "glass",
+   "desc": "...a 9 goes up your sleeve.",
+   "effects": [
+    {
+     "type": "sleeve",
+     "n": 9
+    }
+   ]
+  },
+  {
+   "id": "tb_teeth",
+   "kind": "base",
+   "name": "Base of Teeth",
+   "icon": "fang",
+   "desc": "...a random enemy bleeds.",
+   "effects": [
+    {
+     "type": "status",
+     "id": "bleeding",
+     "turns": 2,
+     "stacks": 1,
+     "to": "random_enemy"
+    }
+   ]
+  },
+  {
+   "id": "tb_lead",
+   "kind": "base",
+   "name": "Lead Base",
+   "icon": "die",
+   "desc": "...your next roll shows at least 8.",
+   "effects": [
+    {
+     "type": "rig",
+     "side": "hero",
+     "floor": 8
+    }
+   ]
+  },
+  {
+   "id": "tb_velvet",
+   "kind": "base",
+   "name": "Velvet Base",
+   "icon": "ward",
+   "desc": "...he looks away for 1 second.",
+   "effects": [
+    {
+     "type": "blind",
+     "seconds": 1.2
+    }
+   ]
+  },
+  {
+   "id": "tb_pewter",
+   "kind": "base",
+   "name": "Pewter Base",
+   "icon": "shield",
+   "desc": "...the hero gets 1 extra square of movement.",
+   "effects": [
+    {
+     "type": "extra_move",
+     "n": 1,
+     "to": "self"
+    }
+   ]
+  },
+  {
+   "id": "tb_hair",
+   "kind": "base",
+   "name": "Base Woven from Hair",
+   "icon": "root",
+   "desc": "...a random enemy is dazed.",
+   "effects": [
+    {
+     "type": "status",
+     "id": "dazed",
+     "turns": 1,
+     "to": "random_enemy"
+    }
+   ]
+  },
+  {
+   "id": "tb_blood",
+   "kind": "base",
+   "name": "Blood-Soaked Base",
+   "icon": "drop",
+   "desc": "...every hero heals 1.",
+   "effects": [
+    {
+     "type": "heal",
+     "dice": "1",
+     "to": "all_heroes"
+    }
+   ]
+  }
+ ]
+}

@@ -1,10 +1,15 @@
 class_name Contestant
 extends Node3D
-## A contestant on screen: a PS1 human (Ps1Human, RATFORMER's people) wearing their face
-## photo, walking where the match says they are, and wearing what the match has done to
-## them. Lost parts go (their joint shrinks to nothing; a brass prosthetic can take its
-## place), broken ones get a cast, burns a scorch, a lost eye a patch. Deaths are staged,
-## one animation per way to go (DEATHS), and played once.
+## A contestant's doll. The figures on the Caller's table are not game pieces: they're
+## voodoo dolls of the people playing, stitched from sacking, with a photograph of the
+## player's face sewn on, yarn for hair, and a painted base. What is done to the doll is
+## done to them. Every injury goes in as a pin (a bruise is one pin, a break is two and a
+## twist of red thread, a burn is scorched sacking); a lost part is cut off and the thread
+## left hanging; a brass prosthetic is screwed on in its place. Deaths are staged, one
+## animation per way to go (DEATHS), and played once.
+##
+## Built on RATFORMER's PS1 human rig (Ps1Human), in doll units: the table node it stands
+## on is scaled down, so a 1.8-unit doll is a hand's height on the table.
 
 const DEATHS := ["trapdoor", "launch", "zap", "pop", "boom", "jaws", "clapper", "prize"]
 const WALK_SPEED := 3.0
@@ -27,33 +32,69 @@ var _helmet: Node3D
 var _name_tag: Label3D
 
 
+const SACKING := [Color("e0b878"), Color("d4aa6a"), Color("e8c088"), Color("caa060")]
+const YARN := [Color("c83a2a"), Color("2a5ab8"), Color("d8b020"), Color("3a8a48")]
+
+
 func setup(s: int, face: int, c: Color, display_name: String) -> void:
 	seat = s
 	color = c
-	var shirts := [Color("c83a2a"), Color("2a6ac8"), Color("d8a820"), Color("38a050")]
-	var hairs := [Color("3a2414"), Color("8a6a3a"), Color("1a1410"), Color("b8a070")]
-	human = Ps1Human.make({"face": face, "shirt": c.darkened(0.15), "trousers": Color(0.18, 0.17, 0.22).lerp(c, 0.15),
-		"hair": hairs[s % 4], "long_hair": s % 2 == 1, "glasses": s == 2, "bald": s == 3,
-		"skin": [Color(0.86, 0.68, 0.58), Color(0.72, 0.52, 0.4), Color(0.9, 0.74, 0.64), Color(0.55, 0.38, 0.28)][s % 4]})
+	var sack: Color = SACKING[s % 4]
+	human = Ps1Human.make({"face": face, "shirt": sack, "trousers": sack.darkened(0.12), "shoes": sack.darkened(0.3),
+		"skin": sack.lightened(0.05), "hair": YARN[s % 4].lerp(c, 0.5), "long_hair": false, "bald": false, "face_gain": 1.9})
 	add_child(human)
-	# a party hat each, in their colour
-	var hat := LcMB.new()
-	hat.cyl("h", LcMB.mat(LcTex.solid(c.lightened(0.2))), 0.07, 0.0, 0.18, 6, LcMB.T(), Color(1, 1, 1))
-	var hm := MeshInstance3D.new()
-	hm.mesh = hat.build()
-	hm.position = Vector3(0.02, 0.33, 0.0)
-	hm.rotation.z = 0.25
-	human.head.add_child(hm)
+	_stitches(c)
+	# the base: a painted wooden disc, the name in his hand on a paper slip
+	var base := LcMB.new()
+	base.cyl("b", LcMB.mat(LcTex.wood(Color("3a2416"), 13 + s, 16, 1)), 0.46, 0.42, 0.1, 10, LcMB.T(Vector3(0, -0.02, 0)), Color(1, 1, 1))
+	base.cyl("r", LcMB.mat(LcTex.solid(c.darkened(0.25))), 0.47, 0.47, 0.03, 10, LcMB.T(Vector3(0, 0.07, 0)), Color(1, 1, 1))
+	var bm := MeshInstance3D.new()
+	bm.mesh = base.build()
+	add_child(bm)
 	_name_tag = Label3D.new()
 	_name_tag.text = display_name
+	_name_tag.font = load("res://assets/fonts/fell_sc.ttf")
 	_name_tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_name_tag.position = Vector3(0, 2.25, 0)
+	_name_tag.position = Vector3(0, 2.3, 0)
 	_name_tag.pixel_size = 0.006
-	_name_tag.font_size = 32
-	_name_tag.outline_size = 8
-	_name_tag.modulate = c.lightened(0.3)
+	_name_tag.font_size = 48
+	_name_tag.outline_size = 10
+	_name_tag.modulate = Color("f0e6cc")
+	_name_tag.outline_modulate = Color(0.1, 0.02, 0.02)
 	_name_tag.no_depth_test = true
 	add_child(_name_tag)
+
+
+## The doll's make: a ribbon in its seat's colour, a cross-stitched heart, stitching up the
+## sides, two pins already in (one always is).
+func _stitches(c: Color) -> void:
+	var red := LcMB.mat(LcTex.solid(Color("8a1410")))
+	var mb := LcMB.new()
+	mb.cyl("r", LcMB.mat(LcTex.solid(c)), 0.16, 0.16, 0.05, 8, LcMB.T(Vector3(0, 0.1, 0), Vector3(0, PI / 8.0, 0), Vector3(1.03, 1, 0.68)), Color(1, 1, 1))
+	# an X over the heart
+	mb.box("x", red, Vector3(0.11, 0.018, 0.01), LcMB.T(Vector3(0.07, 0.42, 0.13), Vector3(0, 0, 0.7)), Color(1, 1, 1))
+	mb.box("x", red, Vector3(0.11, 0.018, 0.01), LcMB.T(Vector3(0.07, 0.42, 0.13), Vector3(0, 0, -0.7)), Color(1, 1, 1))
+	# side seams, big uneven stitches
+	for side in [-1.0, 1.0]:
+		for k in 5:
+			mb.box("s", LcMB.mat(LcTex.solid(Color("2a1a10"))), Vector3(0.012, 0.05, 0.03), LcMB.T(Vector3(0.2 * side, 0.12 + k * 0.09, 0.0), Vector3(0, 0, 0.5 * side)), Color(1, 1, 1))
+	var mi := MeshInstance3D.new()
+	mi.mesh = mb.build()
+	human.upper.add_child(mi)
+	_pin(human.upper, Vector3(-0.1, 0.5, 0.1), Vector3(0.6, 0.3, 0), c)
+
+
+## A dressmaker's pin: steel shank, a glass bead on the end.
+func _pin(parent: Node3D, at: Vector3, tilt: Vector3, bead: Color, length := 0.42) -> Node3D:
+	var mb := LcMB.new()
+	mb.cyl("p", LcMB.mat(LcTex.grime(Color("9a9aa0"), Color("d8d8e0"), 16, 3, 0.3)), 0.012, 0.012, length, 4, LcMB.T(), Color(1, 1, 1))
+	mb.sphere("b", LcMB.mat(LcTex.solid(bead)), 0.045, 3, 6, LcMB.T(Vector3(0, length, 0)), Color(1, 1, 1))
+	var mi := MeshInstance3D.new()
+	mi.mesh = mb.build()
+	mi.position = at
+	mi.rotation = tilt
+	parent.add_child(mi)
+	return mi
 
 
 func place(p: Vector3) -> void:
@@ -140,50 +181,71 @@ func _dress(part: String, s: String) -> void:
 		_extras.erase(part)
 	if s == "ok":
 		return
-	var mb := LcMB.new()
+	var holder := Node3D.new()
+	holder.name = key
 	var parent := _joint(part)
-	var at := Vector3.ZERO
+	var at := Vector3(0, -0.12, 0.05)
+	var red := Color("c81810")
+	if part.begins_with("eye"):
+		parent = human.head
+		at = Vector3(-0.05 if part == "eye_l" else 0.05, 0.19, 0.13)
+	elif part == "ears":
+		parent = human.head
+		at = Vector3(0.12, 0.15, 0.0)
+	if s in ["lost", "prosthetic"] and not part.begins_with("eye") and part != "ears":
+		at = _joint(part).position
+		parent = _joint(part).get_parent()
+	parent.add_child(holder)
+	holder.position = at
 	match s:
 		"bruised":
-			mb.box("x", LcMB.mat(LcTex.solid(Color("6a3a7a"))), Vector3(0.09, 0.08, 0.02), LcMB.T(Vector3(0, -0.12, 0.06)), Color(1, 1, 1))
+			_pin(holder, Vector3.ZERO, Vector3(0.9, 0.2, 0.3), Color("6a3a9a"))
 		"burned":
-			mb.box("x", LcMB.mat(LcTex.grime(Color("1a1008"), Color("4a2a10"), 16, 41, 0.4)), Vector3(0.11, 0.12, 0.11), LcMB.T(Vector3(0, -0.1, 0)), Color(1, 1, 1))
+			_pin(holder, Vector3.ZERO, Vector3(0.8, -0.4, 0.2), Color("e88020"))
+			var mb := LcMB.new()
+			mb.box("x", LcMB.mat(LcTex.grime(Color("120a06"), Color("3a2210"), 16, 41, 0.4)), Vector3(0.13, 0.14, 0.12), LcMB.T(Vector3(0, 0.0, -0.04)), Color(1, 1, 1))
+			_add(holder, mb)
 		"broken":
-			mb.box("x", LcMB.mat(LcTex.paper(Color("f0ece0"), 7, 16)), Vector3(0.13, 0.26, 0.13), LcMB.T(Vector3(0, -0.18, 0)), Color(1, 1, 1))
+			_pin(holder, Vector3.ZERO, Vector3(0.9, 0.6, 0.0), red)
+			_pin(holder, Vector3(0.0, -0.05, 0.0), Vector3(0.9, -0.6, 0.0), red)
+			var mb := LcMB.new()
+			for k in 3:
+				mb.cyl("t", LcMB.mat(LcTex.solid(Color("a01410"))), 0.075, 0.075, 0.015, 6, LcMB.T(Vector3(0, -0.03 - k * 0.03, -0.05)), Color(1, 1, 1))
+			_add(holder, mb)
 		"prosthetic":
 			var brass := LcMB.mat(LcTex.brass())
+			var mb := LcMB.new()
 			if part.begins_with("leg"):
 				mb.cyl("p", brass, 0.03, 0.045, 0.42, 6, LcMB.T(Vector3(0, -0.44, 0)), Color(1, 1, 1))
 				mb.cyl("p", brass, 0.05, 0.05, 0.03, 6, LcMB.T(Vector3(0, -0.46, 0)), Color(0.7, 0.7, 0.7))
 			else:
 				mb.cyl("p", brass, 0.03, 0.03, 0.12, 6, LcMB.T(Vector3(0, -0.12, 0)), Color(1, 1, 1))
 				mb.ring("p", brass, 0.04, 0.012, 6, LcMB.T(Vector3(0.0, -0.16, 0), Vector3(0, 0, PI / 2)), Color(1, 1, 1))
-			parent = parent.get_parent() if part.begins_with("hand") or part.begins_with("leg") else parent.get_parent()
-			at = _joint(part).position
+			_add(holder, mb)
 		"lost":
-			# a bandaged stump on the joint above
-			mb.box("x", LcMB.mat(LcTex.paper(Color("e8dccc"), 9, 16)), Vector3(0.1, 0.06, 0.1), LcMB.T(Vector3(0, 0.02, 0)), Color(0.9, 0.7, 0.7))
-			parent = _joint(part).get_parent()
-			at = _joint(part).position
-	if part.begins_with("eye"):
-		var sx := -0.05 if part == "eye_l" else 0.05
-		mb = LcMB.new()
-		var col := Color("101010") if s in ["lost", "broken"] else Color("6a3a7a")
-		mb.box("e", LcMB.mat(LcTex.solid(col)), Vector3(0.06, 0.05, 0.02), LcMB.T(Vector3(sx, 0.19, 0.14)), Color(1, 1, 1))
-		mb.box("e", LcMB.mat(LcTex.solid(Color("101010"))), Vector3(0.26, 0.012, 0.012), LcMB.T(Vector3(0, 0.22, 0.13), Vector3(0, 0, 0.3 if sx < 0 else -0.3)), Color(1, 1, 1))
-		parent = human.head
-		at = Vector3.ZERO
-	elif part == "ears":
-		mb = LcMB.new()
-		mb.cyl("e", LcMB.mat(LcTex.paper(Color("f0ece0"), 7, 16)), 0.135, 0.135, 0.05, 8, LcMB.T(Vector3(0, 0.13, 0)), Color(1, 1, 1))
-		parent = human.head
-		at = Vector3.ZERO
+			if part.begins_with("eye"):
+				# stitched shut, a pin through it
+				var mb := LcMB.new()
+				mb.box("x", LcMB.mat(LcTex.solid(Color("1a0806"))), Vector3(0.07, 0.012, 0.01), LcMB.T(Vector3.ZERO, Vector3(0, 0, 0.7)), Color(1, 1, 1))
+				mb.box("x", LcMB.mat(LcTex.solid(Color("1a0806"))), Vector3(0.07, 0.012, 0.01), LcMB.T(Vector3.ZERO, Vector3(0, 0, -0.7)), Color(1, 1, 1))
+				_add(holder, mb)
+				_pin(holder, Vector3.ZERO, Vector3(1.4, 0, 0), Color("101010"), 0.3)
+			else:
+				# cut off; the thread left hanging
+				var mb := LcMB.new()
+				mb.cyl("s", LcMB.mat(LcTex.solid(Color("8a6a40"))), 0.06, 0.05, 0.04, 6, LcMB.T(Vector3(0, -0.04, 0)), Color(1, 1, 1))
+				mb.box("t", LcMB.mat(LcTex.solid(Color("a01410"))), Vector3(0.008, 0.18, 0.008), LcMB.T(Vector3(0.02, -0.12, 0.01), Vector3(0, 0, 0.3)), Color(1, 1, 1))
+				mb.box("t", LcMB.mat(LcTex.solid(Color("a01410"))), Vector3(0.008, 0.12, 0.008), LcMB.T(Vector3(-0.02, -0.1, 0.0), Vector3(0, 0, -0.4)), Color(1, 1, 1))
+				_add(holder, mb)
+	if part.begins_with("eye") and s in ["bruised", "burned", "broken"]:
+		_pin(holder, Vector3.ZERO, Vector3(1.5, 0, 0), red, 0.28)
+	_extras[part] = holder
+
+
+func _add(parent: Node3D, mb: LcMB) -> void:
 	var mi := MeshInstance3D.new()
 	mi.mesh = mb.build()
-	mi.name = key
-	mi.position = at
 	parent.add_child(mi)
-	_extras[part] = mi
 
 
 ## Lost parts shrink to nothing (the skeleton copies the joints every frame).
@@ -209,7 +271,7 @@ func die(anim: String, focus: Vector3 = Vector3.ZERO) -> void:
 	if dead:
 		return
 	dead = true
-	_name_tag.modulate = Color(0.5, 0.5, 0.5, 0.6)
+	_name_tag.modulate = Color(0.55, 0.45, 0.4, 0.7)
 	if _tw and _tw.is_valid():
 		_tw.kill()
 	_tw = create_tween()
@@ -284,7 +346,10 @@ func die(anim: String, focus: Vector3 = Vector3.ZERO) -> void:
 			# drawn to the Caller, the hatch opens, and that's the prize
 			if focus != Vector3.ZERO:
 				look_toward(focus)
-				var near := focus + (global_position - focus).normalized() * 1.4
+				# toward him, to the edge of the board (his hand comes down there)
+				var f: Vector3 = (get_parent() as Node3D).to_local(focus)
+				f.y = 0.0
+				var near: Vector3 = position + (f - position).normalized() * minf(position.distance_to(f) - 1.0, 4.0)
 				near.y = 0.0
 				tw.tween_property(self, "position", near, 1.6)
 			tw.tween_interval(0.9)
@@ -314,7 +379,7 @@ func _hole() -> void:
 	var mi := MeshInstance3D.new()
 	mi.mesh = mb.build()
 	get_parent().add_child(mi)
-	mi.global_position = global_position + Vector3(0, 0.015, 0)
+	mi.position = position + Vector3(0, 0.015, 0)
 	var tw := mi.create_tween()
 	tw.tween_interval(2.5)
 	tw.tween_property(mi, "scale", Vector3(0.01, 1, 0.01), 0.3)
@@ -327,11 +392,11 @@ func _drop_shoe() -> void:
 	var mi := MeshInstance3D.new()
 	mi.mesh = mb.build()
 	get_parent().add_child(mi)
-	var at := global_position
+	var at := position
 	at.y = 9.0
-	mi.global_position = at
+	mi.position = at
 	var tw := mi.create_tween()
-	tw.tween_property(mi, "global_position:y", 0.04, 1.0).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT).set_delay(0.6)
+	tw.tween_property(mi, "position:y", 0.04, 1.0).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT).set_delay(0.6)
 	tw.parallel().tween_property(mi, "rotation:y", 5.0, 1.0).set_delay(0.6)
 
 
@@ -339,20 +404,21 @@ func _drop_shoe() -> void:
 func _scatter() -> void:
 	for jname in human.part_meshes.keys():
 		var j := human.find_child(jname, true, false) as Node3D
-		var from := j.global_transform if j else human.global_transform
+		var inv := (get_parent() as Node3D).global_transform.affine_inverse()
+		var from: Transform3D = inv * (j.global_transform if j else human.global_transform)
 		for m in human.part_meshes[jname]:
 			var mi := MeshInstance3D.new()
 			mi.mesh = m
 			get_parent().add_child(mi)
-			mi.global_transform = from
+			mi.transform = from
 			var v := Vector3(randf_range(-4, 4), randf_range(3, 7), randf_range(-4, 4))
 			var land := from.origin + Vector3(v.x, 0, v.z) * 0.45
 			land.y = 0.05
 			var tw := mi.create_tween()
 			var peak := from.origin + Vector3(v.x * 0.25, v.y * 0.35, v.z * 0.25)
-			tw.tween_property(mi, "global_position", peak, 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+			tw.tween_property(mi, "position", peak, 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 			tw.parallel().tween_property(mi, "rotation", Vector3(randf() * 6, randf() * 6, randf() * 6), 0.8)
-			tw.tween_property(mi, "global_position", land, 0.5).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+			tw.tween_property(mi, "position", land, 0.5).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
 	# and the party hat floats down last
 	_confetti(Vector3(0, 2.0, 0), 20)
 
@@ -382,8 +448,9 @@ func _confetti(at: Vector3, n: int) -> void:
 	g.colors = PackedColorArray([Color("e8402a"), Color("f0c020"), Color("2a8ae8"), Color("40c060"), Color("e040c0")])
 	g.offsets = PackedFloat32Array([0.0, 0.25, 0.5, 0.75, 1.0])
 	p.color_initial_ramp = g
+	p.local_coords = true
 	get_parent().add_child(p)
-	p.global_position = global_position + at
+	p.position = position + at
 	p.emitting = true
 	get_tree().create_timer(3.0).timeout.connect(p.queue_free)
 
@@ -410,7 +477,8 @@ func _smoke() -> void:
 	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
 	q.material = mat
 	p.mesh = q
+	p.local_coords = true
 	get_parent().add_child(p)
-	p.global_position = global_position + Vector3(0, 1.2, 0)
+	p.position = position + Vector3(0, 1.2, 0)
 	p.emitting = true
 	get_tree().create_timer(2.5).timeout.connect(p.queue_free)

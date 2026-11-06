@@ -1,0 +1,20 @@
+{
+"lore": [
+ {"id": "l_reception", "station": "reception", "title": "Sign-in sheet", "text": "Every line is filled in. The names change; the handwriting does not. At the bottom, in fresh ink: your name, already signed."},
+ {"id": "l_ledger", "station": "ledger", "title": "The ledger", "text": "Columns: NAME, CARD, NUMBERS CALLED, PRIZE, LEFT AT. The LEFT AT column is empty all the way down, except one entry, which just says 'no'."},
+ {"id": "l_ledger2", "station": "ledger", "needs_runs": 3, "title": "The ledger, later pages", "text": "Further back the ledger stops listing bingo and starts listing heroes: classes, levels, how they died. Your parties are in here. So are parties you don't remember playing."},
+ {"id": "l_prize", "station": "prize_counter", "title": "Prize counter", "text": "The prizes are the same every week: a bear, a radio, a ham, a die with no numbers. Nobody has ever claimed the die. The tag says 'reserved'."},
+ {"id": "l_tape", "station": "cassette", "title": "The cassette", "text": "A label in careful capitals: CALLING PRACTICE. On it, a voice reads numbers for forty minutes. At the end it says, quietly, 'They liked it better when somebody played back.' Then the campaign rules, read for the first time."},
+ {"id": "l_cage", "station": "stage_cage", "title": "The old cage", "text": "The cage he used to call from. The door is wired shut from the inside. There is a ball still in it. You can't read its number; it keeps rolling away from you."},
+ {"id": "l_cage2", "station": "stage_cage", "needs_runs": 1, "title": "The old cage, again", "text": "Somebody has cleaned it since you were last here. The ball inside now has a number. It is the number of campaigns you have played."},
+ {"id": "l_board", "station": "number_board", "title": "The number board", "text": "Every number has been called at least once. Except the ones in the bottom corner, which have never lit. The bulbs are fine. He just never calls them."},
+ {"id": "l_masks", "station": "masks", "title": "The mask rack", "text": "A row of painted faces on pegs. Each is a little worn at the mouth. The pegs are labelled in his hand: RECEPTION. PRIZES. NIGHTS. AUCTIONS. KINGS. CHURCH. SHIFTS. UNDERSTUDY. One peg has no label and no mask."},
+ {"id": "l_masks2", "station": "masks", "needs_deaths": 2, "title": "The unlabelled peg", "text": "The empty peg has a mask on it now. It is unfinished: just the outline of a face, and a name you recognise from a hero you lost."},
+ {"id": "l_notices", "station": "notices", "title": "Notice board", "text": "HOUSE RULES: 1. Eyes down. 2. No talking during calls. 3. The caller is always right. 4. The caller may change the house rules. 5. See rule 4. Below: LOST, ONE DIE, TWENTY SIDES, ANSWERS TO NOTHING."},
+ {"id": "l_notices2", "station": "notices", "needs_wins": 1, "title": "A new notice", "text": "Pinned over the others: CAMPAIGN NIGHT. EVERY NIGHT. ALL WELCOME. ALL STAY. Somebody has crossed out STAY and written WIN. Somebody else has crossed that out."},
+ {"id": "l_cabinet", "station": "cabinet", "title": "Trophy cabinet", "text": "Little brass cups for Best Attendance, Most Numbers, Longest Night. The engraving on the newest cup is still being done; you can see the scratches moving."},
+ {"id": "l_clock", "station": "clock", "title": "The clock", "text": "Stopped at seven. Not seven o'clock. Just seven. The second hand twitches every time somebody rolls a die."},
+ {"id": "l_exit", "station": "exit_door", "title": "The exit", "text": "The sign is lit. The door is real, the handle is real, it opens onto a corridor and the corridor opens onto this hall, from the other end. He doesn't stop you trying."},
+ {"id": "l_table", "station": "table", "title": "The table", "text": "The table is older than the hall. Under the felt there are rings from a hundred cups and four initials carved deep into the wood. One set of initials is his. He does not have initials."}
+]
+}

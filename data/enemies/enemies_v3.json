@@ -1,0 +1,2034 @@
+{
+ "_note": "Content drop v3: new enemies, elites and bosses across all four books.",
+ "abilities": [
+  {
+   "id": "v3_e_bell_toll",
+   "name": "Bell Toll",
+   "icon": "bell",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d10",
+     "stat": "might",
+     "dtype": "physical"
+    },
+    {
+     "type": "status",
+     "id": "dazed",
+     "turns": 1,
+     "chance": 0.3
+    }
+   ],
+   "desc": "1d10 + Might. The helmet rings. You may ring with it (dazed)."
+  },
+  {
+   "id": "v3_e_cast_net",
+   "name": "Cast Net",
+   "icon": "net",
+   "cost": "action",
+   "cooldown": 2,
+   "range": 4,
+   "target": "enemy",
+   "roll": "save",
+   "save": "grace",
+   "stat": "wits",
+   "tags": [
+    "control",
+    "ranged"
+   ],
+   "effects": [
+    {
+     "type": "status",
+     "id": "rooted",
+     "turns": 1
+    },
+    {
+     "type": "status",
+     "id": "slowed",
+     "turns": 2
+    }
+   ],
+   "desc": "Range 4, Grace save or rooted for a turn and slowed for two."
+  },
+  {
+   "id": "v3_e_gutting_knife",
+   "name": "Gutting Knife",
+   "icon": "knife",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "grace",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "stat": "grace",
+     "dtype": "physical"
+    },
+    {
+     "type": "damage",
+     "dice": "2d6",
+     "dtype": "physical",
+     "if_target_status": "rooted"
+    }
+   ],
+   "desc": "1d6 + Grace, 2d6 more against anything that cannot move."
+  },
+  {
+   "id": "v3_e_eel_jolt",
+   "name": "Jolt",
+   "icon": "bolt",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "grace",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d4",
+     "stat": "grace",
+     "dtype": "shock"
+    },
+    {
+     "type": "status",
+     "id": "dazed",
+     "turns": 1,
+     "chance": 0.25
+    }
+   ],
+   "desc": "1d4 + Grace shock. Sometimes it dazes."
+  },
+  {
+   "id": "v3_e_lamp_beam",
+   "name": "The Beam Comes Round",
+   "icon": "sun",
+   "cost": "action",
+   "cooldown": 2,
+   "windup": 1,
+   "range": 7,
+   "target": "enemy",
+   "area": {
+    "shape": "line",
+    "n": 7
+   },
+   "affects": "enemies",
+   "roll": "save",
+   "save": "grace",
+   "stat": "nerve",
+   "tags": [
+    "area",
+    "telegraph"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "3d6",
+     "dtype": "fire",
+     "half_on_save": true
+    },
+    {
+     "type": "status",
+     "id": "burning",
+     "turns": 2,
+     "on": "save_fail"
+    }
+   ],
+   "desc": "Telegraphed: the lamp sweeps a 7-tile line next turn. 3d6 fire and burning. Get out of the light."
+  },
+  {
+   "id": "v3_e_lamp_glare",
+   "name": "Glare",
+   "icon": "eye",
+   "cost": "action",
+   "range": 5,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "nerve",
+   "tags": [
+    "basic",
+    "attack",
+    "ranged"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "stat": "nerve",
+     "dtype": "fire"
+    }
+   ],
+   "desc": "Range 5. 1d8 + Nerve fire."
+  },
+  {
+   "id": "v3_e_oar_strike",
+   "name": "Oar",
+   "icon": "spear",
+   "cost": "action",
+   "range": 2,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "2d8",
+     "stat": "might",
+     "dtype": "physical"
+    }
+   ],
+   "desc": "Reach 2. 2d8 + Might."
+  },
+  {
+   "id": "v3_e_oar_sweep",
+   "name": "Sweep the Deck",
+   "icon": "wave",
+   "cost": "action",
+   "cooldown": 2,
+   "range": 0,
+   "target": "self",
+   "area": {
+    "shape": "around_self",
+    "n": 1
+   },
+   "affects": "enemies",
+   "roll": "save",
+   "save": "might",
+   "stat": "might",
+   "tags": [
+    "area"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "2d8",
+     "dtype": "physical",
+     "half_on_save": true
+    },
+    {
+     "type": "push",
+     "n": 2
+    }
+   ],
+   "desc": "Everything adjacent: 2d8 and shoved 2 (Might save halves)."
+  },
+  {
+   "id": "v3_e_the_toll",
+   "name": "The Toll",
+   "icon": "coin",
+   "cost": "action",
+   "cooldown": 3,
+   "range": 6,
+   "target": "enemy",
+   "roll": "save",
+   "save": "nerve",
+   "stat": "nerve",
+   "tags": [
+    "spell",
+    "control"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "2d6",
+     "dtype": "psychic",
+     "half_on_save": true
+    },
+    {
+     "type": "disable_ability",
+     "turns": 2
+    }
+   ],
+   "desc": "Nerve save: 2d6 psychic, and he takes one of your cards as the fare for 2 rounds."
+  },
+  {
+   "id": "v3_e_pole_away",
+   "name": "Pole Away",
+   "icon": "feather",
+   "cost": "bonus",
+   "cooldown": 2,
+   "range": 4,
+   "target": "empty",
+   "roll": "none",
+   "tags": [
+    "move"
+   ],
+   "tile_effects": [
+    {
+     "type": "teleport"
+    }
+   ],
+   "effects": [],
+   "ai_bonus": 1,
+   "desc": "Pushes off from the bottom and drifts somewhere else."
+  },
+  {
+   "id": "v3_e_call_passengers",
+   "name": "Passengers",
+   "icon": "bell",
+   "cost": "action",
+   "cooldown": 3,
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "summon"
+   ],
+   "self_effects": [
+    {
+     "type": "summon",
+     "unit": "drowned_footman",
+     "count": 1
+    },
+    {
+     "type": "summon",
+     "unit": "v3_eel_knot",
+     "count": 1
+    }
+   ],
+   "effects": [],
+   "ai_when": {
+    "summons_below": 3
+   },
+   "desc": "Somebody climbs out of the water. Something else follows."
+  },
+  {
+   "id": "v3_e_dust_wings",
+   "name": "Dust of Hymns",
+   "icon": "wing",
+   "cost": "action",
+   "range": 4,
+   "target": "enemy",
+   "roll": "save",
+   "save": "nerve",
+   "stat": "nerve",
+   "tags": [
+    "basic",
+    "spell",
+    "ranged"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "dtype": "psychic"
+    },
+    {
+     "type": "status",
+     "id": "dazed",
+     "turns": 1
+    }
+   ],
+   "desc": "Range 4, Nerve save: 1d6 psychic and dazed. The dust is made of old words."
+  },
+  {
+   "id": "v3_e_grave_spade",
+   "name": "Grave Spade",
+   "icon": "axe",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "stat": "might",
+     "dtype": "physical"
+    },
+    {
+     "type": "push",
+     "n": 1
+    }
+   ],
+   "desc": "1d8 + Might and a shove toward the hole."
+  },
+  {
+   "id": "v3_e_lay_to_rest",
+   "name": "Lay to Rest",
+   "icon": "cross",
+   "cost": "bonus",
+   "cooldown": 2,
+   "range": 0,
+   "target": "self",
+   "area": {
+    "shape": "around_self",
+    "n": 1
+   },
+   "affects": "allies",
+   "roll": "none",
+   "tags": [
+    "defense"
+   ],
+   "effects": [
+    {
+     "type": "status",
+     "id": "guarded",
+     "turns": 1
+    }
+   ],
+   "self_effects": [
+    {
+     "type": "status",
+     "id": "guarded",
+     "turns": 1
+    }
+   ],
+   "ai_bonus": 2,
+   "desc": "It and adjacent allies get +3 defense. It has buried better than you."
+  },
+  {
+   "id": "v3_e_incense",
+   "name": "Incense",
+   "icon": "potion",
+   "cost": "action",
+   "cooldown": 2,
+   "range": 0,
+   "target": "self",
+   "area": {
+    "shape": "around_self",
+    "n": 2
+   },
+   "affects": "allies",
+   "roll": "none",
+   "tags": [
+    "heal"
+   ],
+   "effects": [
+    {
+     "type": "status",
+     "id": "regenerating",
+     "turns": 2
+    }
+   ],
+   "self_effects": [
+    {
+     "type": "status",
+     "id": "regenerating",
+     "turns": 2
+    }
+   ],
+   "ai_bonus": 1,
+   "desc": "Allies within 2 regenerate for 2 turns. The smoke smells of hospitals."
+  },
+  {
+   "id": "v3_e_censer_swing",
+   "name": "Censer",
+   "icon": "flame",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "stat": "might",
+     "dtype": "fire"
+    },
+    {
+     "type": "status",
+     "id": "burning",
+     "turns": 2,
+     "chance": 0.3
+    }
+   ],
+   "desc": "1d6 + Might fire. May set you burning."
+  },
+  {
+   "id": "v3_e_till_death",
+   "name": "Till Death",
+   "icon": "hand",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d10",
+     "stat": "might",
+     "dtype": "physical"
+    },
+    {
+     "type": "status",
+     "id": "marked",
+     "turns": 2
+    }
+   ],
+   "desc": "1d10 + Might. You are marked: attacks against you get +2."
+  },
+  {
+   "id": "v3_e_bouquet",
+   "name": "Throw the Bouquet",
+   "icon": "spikes",
+   "cost": "action",
+   "cooldown": 3,
+   "range": 5,
+   "target": "tile",
+   "area": {
+    "shape": "radius",
+    "n": 1
+   },
+   "affects": "enemies",
+   "roll": "save",
+   "save": "grace",
+   "stat": "might",
+   "tags": [
+    "area",
+    "ranged"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "2d6",
+     "dtype": "physical",
+     "half_on_save": true
+    },
+    {
+     "type": "status",
+     "id": "bleeding",
+     "turns": 2,
+     "on": "save_fail"
+    }
+   ],
+   "desc": "3x3 area, Grace save: 2d6 and bleeding. Whoever catches it is next."
+  },
+  {
+   "id": "v3_e_bridesmaids",
+   "name": "Bridesmaids",
+   "icon": "egg",
+   "cost": "bonus",
+   "cooldown": 3,
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "summon"
+   ],
+   "self_effects": [
+    {
+     "type": "summon",
+     "unit": "wretch",
+     "count": 2
+    }
+   ],
+   "effects": [],
+   "ai_when": {
+    "summons_below": 3
+   },
+   "desc": "Two wretches in grey lace come up the aisle."
+  },
+  {
+   "id": "v3_e_absolution",
+   "name": "Absolution",
+   "icon": "scroll",
+   "cost": "action",
+   "range": 6,
+   "target": "enemy",
+   "roll": "save",
+   "save": "nerve",
+   "stat": "nerve",
+   "tags": [
+    "basic",
+    "spell",
+    "ranged"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "2d8",
+     "dtype": "psychic"
+    }
+   ],
+   "desc": "Range 6, Nerve save: 2d8 psychic. It already knows what you did."
+  },
+  {
+   "id": "v3_e_penance",
+   "name": "Penance",
+   "icon": "hourglass",
+   "cost": "bonus",
+   "cooldown": 3,
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "rules"
+   ],
+   "self_effects": [
+    {
+     "type": "rule",
+     "rounds": 2,
+     "source": "The Confessor",
+     "mod": {
+      "key": "damage_taken_add",
+      "op": "add",
+      "value": 2,
+      "when": {
+       "side": "hero"
+      },
+      "label": "Penance: heroes take 2 more damage from everything"
+     }
+    }
+   ],
+   "effects": [],
+   "ai_bonus": 5,
+   "desc": "For 2 rounds your heroes take 2 more damage from every source."
+  },
+  {
+   "id": "v3_e_whispered_sins",
+   "name": "Whispered Sins",
+   "icon": "mouth",
+   "cost": "action",
+   "cooldown": 3,
+   "windup": 1,
+   "range": 0,
+   "target": "self",
+   "area": {
+    "shape": "around_self",
+    "n": 2
+   },
+   "affects": "enemies",
+   "roll": "save",
+   "save": "nerve",
+   "stat": "nerve",
+   "tags": [
+    "area",
+    "telegraph"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "3d6",
+     "dtype": "psychic",
+     "half_on_save": true
+    },
+    {
+     "type": "status",
+     "id": "feared",
+     "turns": 1,
+     "on": "save_fail"
+    }
+   ],
+   "desc": "Telegraphed: everything within 2 hears its own sins. 3d6 psychic and frightened. Step back from the grille."
+  },
+  {
+   "id": "v3_e_call_penitents",
+   "name": "Next in Line",
+   "icon": "bell",
+   "cost": "action",
+   "cooldown": 3,
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "summon"
+   ],
+   "self_effects": [
+    {
+     "type": "summon",
+     "unit": "v3_stitched_penitent",
+     "count": 2
+    }
+   ],
+   "effects": [],
+   "ai_when": {
+    "summons_below": 3
+   },
+   "desc": "Two penitents shuffle out of the queue."
+  },
+  {
+   "id": "v3_e_seal",
+   "name": "Seal of Confession",
+   "icon": "mask",
+   "cost": "action",
+   "cooldown": 2,
+   "range": 6,
+   "target": "enemy",
+   "roll": "save",
+   "save": "nerve",
+   "stat": "nerve",
+   "tags": [
+    "spell",
+    "control"
+   ],
+   "effects": [
+    {
+     "type": "status",
+     "id": "silenced",
+     "turns": 2
+    },
+    {
+     "type": "status",
+     "id": "exposed",
+     "turns": 2
+    }
+   ],
+   "desc": "Nerve save or silenced and exposed for 2 turns. What is said here stays here."
+  },
+  {
+   "id": "v3_e_shovel",
+   "name": "Coal Shovel",
+   "icon": "axe",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "stat": "might",
+     "dtype": "fire"
+    },
+    {
+     "type": "status",
+     "id": "burning",
+     "turns": 2,
+     "chance": 0.3
+    }
+   ],
+   "desc": "1d8 + Might fire, straight from the firebox. May set you burning."
+  },
+  {
+   "id": "v3_e_spike_leg",
+   "name": "Spike Leg",
+   "icon": "spikes",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "grace",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "stat": "grace",
+     "dtype": "physical"
+    },
+    {
+     "type": "status",
+     "id": "bleeding",
+     "turns": 2
+    }
+   ],
+   "desc": "1d6 + Grace and bleeding."
+  },
+  {
+   "id": "v3_e_cable_snare",
+   "name": "Cable Snare",
+   "icon": "net",
+   "cost": "bonus",
+   "cooldown": 2,
+   "range": 4,
+   "target": "enemy",
+   "roll": "save",
+   "save": "might",
+   "stat": "grace",
+   "tags": [
+    "control"
+   ],
+   "effects": [
+    {
+     "type": "pull",
+     "n": 2
+    },
+    {
+     "type": "status",
+     "id": "rooted",
+     "turns": 1
+    }
+   ],
+   "desc": "Might save or reeled in 2 tiles and rooted."
+  },
+  {
+   "id": "v3_e_punch_card",
+   "name": "Punch the Card",
+   "icon": "cog",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "2d4",
+     "stat": "might",
+     "dtype": "physical"
+    }
+   ],
+   "desc": "2d4 + Might. Clack."
+  },
+  {
+   "id": "v3_e_billy_club",
+   "name": "Billy Club",
+   "icon": "mace",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d10",
+     "stat": "might",
+     "dtype": "physical"
+    },
+    {
+     "type": "status",
+     "id": "dazed",
+     "turns": 1
+    }
+   ],
+   "desc": "1d10 + Might and dazed."
+  },
+  {
+   "id": "v3_e_break_line",
+   "name": "Break the Line",
+   "icon": "fist",
+   "cost": "action",
+   "cooldown": 2,
+   "range": 0,
+   "target": "self",
+   "area": {
+    "shape": "around_self",
+    "n": 1
+   },
+   "affects": "enemies",
+   "roll": "save",
+   "save": "might",
+   "stat": "might",
+   "tags": [
+    "area"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "dtype": "physical",
+     "half_on_save": true
+    },
+    {
+     "type": "push",
+     "n": 2
+    }
+   ],
+   "desc": "Everything adjacent: 1d8 and shoved 2 (Might save halves)."
+  },
+  {
+   "id": "v3_e_pickaxe",
+   "name": "Pickaxe",
+   "icon": "axe",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "2d8",
+     "stat": "might",
+     "dtype": "physical"
+    }
+   ],
+   "desc": "2d8 + Might."
+  },
+  {
+   "id": "v3_e_dynamite",
+   "name": "Dynamite",
+   "icon": "flame",
+   "cost": "action",
+   "cooldown": 3,
+   "windup": 1,
+   "range": 6,
+   "target": "tile",
+   "area": {
+    "shape": "radius",
+    "n": 1
+   },
+   "affects": "all",
+   "roll": "save",
+   "save": "grace",
+   "stat": "wits",
+   "tags": [
+    "area",
+    "telegraph"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "4d6",
+     "dtype": "fire",
+     "half_on_save": true
+    }
+   ],
+   "desc": "Telegraphed: a lit stick lands. Next turn, 4d6 fire to the 3x3 around it. The fuse is short. Run."
+  },
+  {
+   "id": "v3_e_salt_claim",
+   "name": "Salt the Claim",
+   "icon": "trap",
+   "cost": "bonus",
+   "cooldown": 3,
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "terrain"
+   ],
+   "self_effects": [
+    {
+     "type": "random_tiles",
+     "tile": "spikes",
+     "n": 3,
+     "only_on": "floor"
+    }
+   ],
+   "effects": [],
+   "ai_bonus": 3,
+   "desc": "Three random floor tiles sprout spikes. Mine. Mine. Mine."
+  },
+  {
+   "id": "v3_e_gold_fever",
+   "name": "Gold Fever",
+   "icon": "coin",
+   "cost": "bonus",
+   "cooldown": 3,
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "rules"
+   ],
+   "self_effects": [
+    {
+     "type": "rule",
+     "rounds": 2,
+     "source": "The Prospector",
+     "mod": {
+      "key": "damage_dealt_add",
+      "op": "add",
+      "value": 2,
+      "when": {
+       "side": "enemy"
+      },
+      "label": "Gold Fever: enemies deal 2 more damage"
+     }
+    }
+   ],
+   "effects": [],
+   "ai_bonus": 5,
+   "desc": "For 2 rounds his side deals 2 more damage."
+  },
+  {
+   "id": "v3_e_seep",
+   "name": "Seep",
+   "icon": "drop",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "stat": "might",
+     "dtype": "poison"
+    },
+    {
+     "type": "status",
+     "id": "slowed",
+     "turns": 1
+    }
+   ],
+   "desc": "1d6 + Might poison and slowed. Sticky."
+  },
+  {
+   "id": "v3_e_strike_through",
+   "name": "Strike Through",
+   "icon": "pencil",
+   "cost": "action",
+   "cooldown": 2,
+   "range": 5,
+   "target": "enemy",
+   "roll": "save",
+   "save": "wits",
+   "stat": "wits",
+   "tags": [
+    "spell",
+    "ranged"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "dtype": "psychic"
+    },
+    {
+     "type": "status",
+     "id": "weakened",
+     "turns": 2
+    }
+   ],
+   "desc": "Wits save: 1d6 psychic and weakened. Your score has been corrected."
+  },
+  {
+   "id": "v3_e_smother",
+   "name": "Smother",
+   "icon": "cloak",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "grace",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "stat": "grace",
+     "dtype": "physical"
+    },
+    {
+     "type": "status",
+     "id": "dazed",
+     "turns": 1
+    },
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "dtype": "physical",
+     "if_self_status": "hidden"
+    }
+   ],
+   "desc": "1d8 + Grace and dazed; 1d8 more from hiding."
+  },
+  {
+   "id": "v3_e_lie_flat",
+   "name": "Lie Flat",
+   "icon": "cloak",
+   "cost": "bonus",
+   "cooldown": 3,
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "stealth"
+   ],
+   "keeps_hidden": true,
+   "effects": [
+    {
+     "type": "status",
+     "id": "hidden",
+     "turns": 2
+    }
+   ],
+   "ai_bonus": 3,
+   "desc": "Lies flat on the table. Just a cloth. Just a cloth."
+  }
+ ],
+ "enemies": [
+  {
+   "id": "v3_bell_diver",
+   "name": "Bell Diver",
+   "role": "melee",
+   "setting": "drowned",
+   "hp": 20,
+   "defense": 14,
+   "speed": 3,
+   "might": 2,
+   "abilities": [
+    "v3_e_bell_toll"
+   ],
+   "ai": "brute",
+   "tags": [
+    "zoc",
+    "drowned"
+   ],
+   "resist": [
+    "cold",
+    "physical"
+   ],
+   "vulnerable": [
+    "shock"
+   ],
+   "tier": 1,
+   "gold": 3,
+   "xp": 2,
+   "model": {
+    "body": "humanoid",
+    "color": "#5a5a4a",
+    "accent": "#a88a4a",
+    "h": 1.05,
+    "head": "bucket",
+    "weapon": "hammer",
+    "hunch": 0.15
+   },
+   "death": "collapse",
+   "desc": "A brass helmet, still full of the sea. Slow. Tough. Lightning gets in through the rivets."
+  },
+  {
+   "id": "v3_net_widow",
+   "name": "Net-Widow",
+   "role": "controller",
+   "setting": "drowned",
+   "hp": 12,
+   "defense": 12,
+   "speed": 4,
+   "grace": 2,
+   "wits": 2,
+   "abilities": [
+    "v3_e_cast_net",
+    "v3_e_gutting_knife"
+   ],
+   "ai": "controller",
+   "tags": [
+    "drowned"
+   ],
+   "resist": [
+    "cold"
+   ],
+   "tier": 2,
+   "gold": 4,
+   "xp": 3,
+   "model": {
+    "body": "robed",
+    "color": "#3a4440",
+    "accent": "#8a8a6a",
+    "h": 0.95,
+    "head": "hood",
+    "weapon": "knife"
+   },
+   "death": "collapse",
+   "desc": "Waits on the shore for someone who will not come back. Nets you, then guts what she caught. Rooted heroes take double."
+  },
+  {
+   "id": "v3_eel_knot",
+   "name": "Eel Knot",
+   "role": "swarm",
+   "setting": "drowned",
+   "hp": 7,
+   "defense": 13,
+   "speed": 5,
+   "grace": 2,
+   "abilities": [
+    "v3_e_eel_jolt"
+   ],
+   "ai": "ambusher",
+   "tags": [
+    "beast",
+    "drowned"
+   ],
+   "resist": [
+    "shock"
+   ],
+   "tier": 1,
+   "gold": 1,
+   "xp": 1,
+   "model": {
+    "body": "worm",
+    "color": "#2a3a3a",
+    "accent": "#6a9a8a",
+    "h": 0.4
+   },
+   "death": "splat",
+   "desc": "Several eels that agreed to be one thing. Quick, and it stings with a spark."
+  },
+  {
+   "id": "v3_lamp_keeper",
+   "name": "The Lamp Keeper",
+   "role": "elite",
+   "setting": "drowned",
+   "elite": true,
+   "hp": 46,
+   "defense": 14,
+   "speed": 3,
+   "nerve": 3,
+   "wits": 1,
+   "abilities": [
+    "v3_e_lamp_glare",
+    "v3_e_lamp_beam",
+    "e_flood"
+   ],
+   "ai": "controller",
+   "tags": [
+    "drowned",
+    "elite",
+    "immovable"
+   ],
+   "resist": [
+    "cold",
+    "fire"
+   ],
+   "vulnerable": [
+    "shock"
+   ],
+   "tier": 3,
+   "gold": 13,
+   "xp": 6,
+   "model": {
+    "body": "tall",
+    "color": "#4a4a3a",
+    "accent": "#e8c870",
+    "h": 1.5,
+    "head": "cage"
+   },
+   "death": "crumble",
+   "desc": "The lighthouse walked inland when the sea did. Its beam winds up a turn before it sweeps a line: get out of the light. Floods the floor to slow you down.",
+   "phases": [
+    {
+     "below": 0.5,
+     "name": "The Lens Cracks",
+     "say": "The light goes wrong. It is looking for one of you now.",
+     "abilities": [
+      "v3_e_lamp_glare",
+      "v3_e_lamp_beam",
+      "e_flood",
+      "e_whirlpool"
+     ],
+     "on_enter": [
+      {
+       "type": "terrain",
+       "tile": "flood",
+       "radius": 1,
+       "only_on": "floor"
+      },
+      {
+       "type": "summon",
+       "unit": "v3_eel_knot",
+       "count": 2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "v3_hymnal_moth",
+   "name": "Hymnal Moth",
+   "role": "ranged",
+   "setting": "cathedral",
+   "hp": 9,
+   "defense": 13,
+   "speed": 5,
+   "nerve": 2,
+   "abilities": [
+    "v3_e_dust_wings"
+   ],
+   "ai": "archer",
+   "tags": [
+    "flying",
+    "beast",
+    "cathedral"
+   ],
+   "vulnerable": [
+    "fire"
+   ],
+   "tier": 1,
+   "gold": 2,
+   "xp": 2,
+   "model": {
+    "body": "floating",
+    "color": "#a89a7a",
+    "accent": "#4a3a2a",
+    "h": 0.6,
+    "wings": true
+   },
+   "death": "splat",
+   "desc": "Ate the hymn books. Now it sheds the words. They get in your eyes."
+  },
+  {
+   "id": "v3_sexton",
+   "name": "The Sexton",
+   "role": "defender",
+   "setting": "cathedral",
+   "hp": 24,
+   "defense": 14,
+   "speed": 3,
+   "might": 2,
+   "abilities": [
+    "v3_e_grave_spade",
+    "v3_e_lay_to_rest"
+   ],
+   "ai": "defender",
+   "tags": [
+    "zoc",
+    "cathedral"
+   ],
+   "resist": [
+    "physical"
+   ],
+   "vulnerable": [
+    "holy"
+   ],
+   "tier": 2,
+   "gold": 4,
+   "xp": 3,
+   "model": {
+    "body": "hulk",
+    "color": "#4a3a30",
+    "accent": "#8a7a6a",
+    "h": 1.1,
+    "head": "hood",
+    "weapon": "hammer"
+   },
+   "death": "collapse",
+   "desc": "Digs for the cathedral. Shields whoever stands near it. Its spade shoves you toward the hole."
+  },
+  {
+   "id": "v3_censer_bearer",
+   "name": "Censer-Bearer",
+   "role": "support",
+   "setting": "cathedral",
+   "hp": 13,
+   "defense": 11,
+   "speed": 4,
+   "might": 1,
+   "nerve": 2,
+   "abilities": [
+    "v3_e_incense",
+    "v3_e_censer_swing"
+   ],
+   "ai": "support",
+   "tags": [
+    "cathedral",
+    "healer"
+   ],
+   "resist": [
+    "fire"
+   ],
+   "tier": 2,
+   "gold": 4,
+   "xp": 3,
+   "model": {
+    "body": "robed",
+    "color": "#6a3a30",
+    "accent": "#c8a870",
+    "h": 1.0,
+    "head": "mitre",
+    "weapon": "staff"
+   },
+   "death": "collapse",
+   "desc": "Swings a censer of something sweet. Everything near it knits back together. Kill it first."
+  },
+  {
+   "id": "v3_stitched_penitent",
+   "name": "Stitched Penitent",
+   "role": "melee",
+   "setting": "cathedral",
+   "hp": 14,
+   "defense": 11,
+   "speed": 4,
+   "might": 2,
+   "abilities": [
+    "e_scourge"
+   ],
+   "ai": "brute",
+   "tags": [
+    "cathedral",
+    "unholy"
+   ],
+   "vulnerable": [
+    "holy"
+   ],
+   "tier": 1,
+   "gold": 2,
+   "xp": 2,
+   "on_death": [
+    {
+     "type": "terrain",
+     "tile": "flesh",
+     "only_on": "floor"
+    }
+   ],
+   "model": {
+    "body": "humanoid",
+    "color": "#7a5a4a",
+    "accent": "#3a1a1a",
+    "h": 0.95,
+    "head": "mask",
+    "hunch": 0.35
+   },
+   "death": "splat",
+   "desc": "Sewn shut at the mouth. Still confessing. Where it falls the floor starts living."
+  },
+  {
+   "id": "v3_bone_bride",
+   "name": "The Bone Bride",
+   "role": "elite",
+   "setting": "cathedral",
+   "elite": true,
+   "hp": 48,
+   "defense": 14,
+   "speed": 4,
+   "might": 3,
+   "nerve": 2,
+   "abilities": [
+    "v3_e_till_death",
+    "v3_e_bouquet"
+   ],
+   "ai": "brute",
+   "tags": [
+    "zoc",
+    "cathedral",
+    "elite",
+    "unholy"
+   ],
+   "resist": [
+    "psychic"
+   ],
+   "vulnerable": [
+    "holy"
+   ],
+   "start_statuses": [
+    {
+     "id": "regenerating",
+     "turns": -1
+    }
+   ],
+   "tier": 3,
+   "gold": 14,
+   "xp": 6,
+   "model": {
+    "body": "tall",
+    "color": "#d8d0c0",
+    "accent": "#6a1a1a",
+    "h": 1.4,
+    "head": "skull"
+   },
+   "death": "crumble",
+   "desc": "She has been walking up the aisle for a hundred years. Regenerates. Marks whoever she touches. Halfway down, her bridesmaids arrive.",
+   "phases": [
+    {
+     "below": 0.5,
+     "name": "Something Borrowed",
+     "say": "The veil comes off. There is nobody under it. There is somebody under it.",
+     "abilities": [
+      "v3_e_till_death",
+      "v3_e_bouquet",
+      "v3_e_bridesmaids"
+     ],
+     "on_enter": [
+      {
+       "type": "summon",
+       "unit": "wretch",
+       "count": 2
+      },
+      {
+       "type": "status",
+       "id": "hasted",
+       "turns": -1,
+       "to": "self"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "v3_stoker",
+   "name": "Stoker",
+   "role": "melee",
+   "setting": "iron",
+   "hp": 16,
+   "defense": 12,
+   "speed": 4,
+   "might": 2,
+   "abilities": [
+    "v3_e_shovel"
+   ],
+   "ai": "brute",
+   "tags": [
+    "iron",
+    "construct"
+   ],
+   "resist": [
+    "fire"
+   ],
+   "vulnerable": [
+    "cold"
+   ],
+   "immune": [
+    "burning"
+   ],
+   "tier": 1,
+   "gold": 3,
+   "xp": 2,
+   "model": {
+    "body": "humanoid",
+    "color": "#3a2a22",
+    "accent": "#d0603a",
+    "h": 1.0,
+    "head": "bucket",
+    "weapon": "wrench"
+   },
+   "death": "collapse",
+   "desc": "Feeds the engines. The engines are gone. It feeds whatever is left. Its shovel is hot."
+  },
+  {
+   "id": "v3_rail_spider",
+   "name": "Rail Spider",
+   "role": "ambusher",
+   "setting": "iron",
+   "hp": 13,
+   "defense": 13,
+   "speed": 6,
+   "grace": 3,
+   "abilities": [
+    "v3_e_spike_leg",
+    "v3_e_cable_snare"
+   ],
+   "ai": "ambusher",
+   "tags": [
+    "iron",
+    "construct"
+   ],
+   "vulnerable": [
+    "shock"
+   ],
+   "immune": [
+    "poisoned",
+    "bleeding"
+   ],
+   "tier": 2,
+   "gold": 4,
+   "xp": 3,
+   "model": {
+    "body": "crawler",
+    "color": "#4a4038",
+    "accent": "#b08a3a",
+    "h": 0.7
+   },
+   "death": "crumble",
+   "desc": "Eight legs of track-laying machinery. It reels the stragglers in on a cable and goes to work."
+  },
+  {
+   "id": "v3_punch_clock",
+   "name": "Punch Clock",
+   "role": "totem",
+   "setting": "iron",
+   "hp": 18,
+   "defense": 10,
+   "speed": 0,
+   "might": 1,
+   "abilities": [
+    "v3_e_punch_card"
+   ],
+   "ai": "static",
+   "tags": [
+    "iron",
+    "construct",
+    "immovable",
+    "totem"
+   ],
+   "vulnerable": [
+    "shock"
+   ],
+   "immune": [
+    "bleeding",
+    "poisoned"
+   ],
+   "tier": 2,
+   "gold": 4,
+   "xp": 3,
+   "triggers": [
+    {
+     "event": "turn_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "hasted",
+       "turns": 1,
+       "to": "allies"
+      }
+     ],
+     "label": "The clock punches everyone in"
+    }
+   ],
+   "model": {
+    "body": "construct",
+    "color": "#5a4a3a",
+    "accent": "#e8d8b0",
+    "h": 1.2
+   },
+   "death": "crumble",
+   "desc": "It does not move. Every turn it punches every machine on shift in: they move faster and are harder to hit. Break it."
+  },
+  {
+   "id": "v3_strikebreaker",
+   "name": "The Strikebreaker",
+   "role": "elite",
+   "setting": "iron",
+   "elite": true,
+   "hp": 48,
+   "defense": 15,
+   "speed": 4,
+   "might": 3,
+   "abilities": [
+    "v3_e_billy_club",
+    "v3_e_break_line"
+   ],
+   "ai": "brute",
+   "tags": [
+    "zoc",
+    "iron",
+    "construct",
+    "elite"
+   ],
+   "vulnerable": [
+    "shock"
+   ],
+   "immune": [
+    "poisoned"
+   ],
+   "start_statuses": [
+    {
+     "id": "steadfast",
+     "turns": -1
+    }
+   ],
+   "tier": 3,
+   "gold": 14,
+   "xp": 6,
+   "model": {
+    "body": "hulk",
+    "color": "#3a3a3a",
+    "accent": "#b08a3a",
+    "h": 1.35,
+    "head": "helm",
+    "weapon": "hammer"
+   },
+   "death": "crumble",
+   "desc": "Hired to break the line. Cannot be pushed. Shoves everything around it away. Halfway down it whistles for a hound and starts hitting harder.",
+   "phases": [
+    {
+     "below": 0.5,
+     "name": "Scab Labour",
+     "say": "It whistles. Something with too many teeth answers.",
+     "on_enter": [
+      {
+       "type": "summon",
+       "unit": "rivet_hound",
+       "count": 1
+      },
+      {
+       "type": "status",
+       "id": "empowered",
+       "turns": -1,
+       "to": "self"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "v3_spilled_pint",
+   "name": "Spilled Pint",
+   "role": "swarm",
+   "setting": "table",
+   "hp": 10,
+   "defense": 10,
+   "speed": 3,
+   "might": 1,
+   "abilities": [
+    "v3_e_seep"
+   ],
+   "ai": "brute",
+   "tags": [
+    "table"
+   ],
+   "resist": [
+    "physical"
+   ],
+   "vulnerable": [
+    "fire"
+   ],
+   "tier": 1,
+   "gold": 2,
+   "xp": 1,
+   "on_death": [
+    {
+     "type": "terrain",
+     "tile": "water",
+     "radius": 1,
+     "only_on": "floor"
+    }
+   ],
+   "model": {
+    "body": "blob",
+    "color": "#8a6a2a",
+    "accent": "#e8d8a0",
+    "h": 0.5
+   },
+   "death": "splat",
+   "desc": "Somebody knocked it over in round three. It has been spreading across the map ever since. Leaves the floor wet when it goes."
+  },
+  {
+   "id": "v3_scorekeeper",
+   "name": "The Scorekeeper",
+   "role": "controller",
+   "setting": "table",
+   "hp": 14,
+   "defense": 12,
+   "speed": 4,
+   "grace": 2,
+   "wits": 3,
+   "abilities": [
+    "e_jab_pencil",
+    "v3_e_strike_through"
+   ],
+   "ai": "controller",
+   "tags": [
+    "table"
+   ],
+   "vulnerable": [
+    "fire"
+   ],
+   "tier": 2,
+   "gold": 4,
+   "xp": 3,
+   "model": {
+    "body": "paper",
+    "color": "#e8e0c8",
+    "accent": "#3a3026",
+    "h": 1.0,
+    "head": "round",
+    "weapon": "pencil"
+   },
+   "death": "crumble",
+   "desc": "Keeps the score. Corrects it. Marks you, then weakens whoever it has crossed out."
+  },
+  {
+   "id": "v3_tablecloth_ghost",
+   "name": "Tablecloth",
+   "role": "ambusher",
+   "setting": "table",
+   "hp": 13,
+   "defense": 13,
+   "speed": 5,
+   "grace": 3,
+   "abilities": [
+    "v3_e_smother",
+    "v3_e_lie_flat"
+   ],
+   "ai": "ambusher",
+   "tags": [
+    "table",
+    "flying"
+   ],
+   "resist": [
+    "physical"
+   ],
+   "vulnerable": [
+    "fire"
+   ],
+   "tier": 2,
+   "gold": 4,
+   "xp": 3,
+   "model": {
+    "body": "floating",
+    "color": "#e8e0d0",
+    "accent": "#8a2a2a",
+    "h": 1.0,
+    "head": "none"
+   },
+   "death": "collapse",
+   "desc": "The cloth from the last game. It still has the stain. Lies flat, then smothers whoever stands alone."
+  }
+ ],
+ "bosses": [
+  {
+   "id": "v3_the_ferryman",
+   "name": "The Ferryman",
+   "boss": true,
+   "setting": "drowned",
+   "size": 2,
+   "hp": 118,
+   "defense": 14,
+   "speed": 3,
+   "might": 4,
+   "nerve": 3,
+   "abilities": [
+    "v3_e_oar_strike",
+    "v3_e_oar_sweep",
+    "v3_e_the_toll",
+    "v3_e_pole_away"
+   ],
+   "ai": "boss",
+   "tags": [
+    "immovable",
+    "drowned",
+    "boss",
+    "unholy"
+   ],
+   "resist": [
+    "cold",
+    "poison"
+   ],
+   "vulnerable": [
+    "fire"
+   ],
+   "gold": 40,
+   "xp": 14,
+   "model": {
+    "body": "robed",
+    "color": "#2a302c",
+    "accent": "#c8b890",
+    "h": 1.85,
+    "head": "hood",
+    "weapon": "staff"
+   },
+   "death": "collapse",
+   "intro": "He rows people across. Water. That used to be streets. You have not paid.",
+   "desc": "Long reach with the oar and a sweep that throws you off the deck. The Toll takes one of your cards as fare. In his second half he calls passengers up out of the flood.",
+   "phases": [
+    {
+     "below": 0.5,
+     "name": "The Far Shore",
+     "say": "He stops rowing. The water keeps going. Everyone he ever carried is coming back for a refund.",
+     "abilities": [
+      "v3_e_oar_strike",
+      "v3_e_oar_sweep",
+      "v3_e_the_toll",
+      "v3_e_call_passengers",
+      "e_whirlpool"
+     ],
+     "on_enter": [
+      {
+       "type": "terrain",
+       "tile": "flood",
+       "radius": 2,
+       "only_on": "floor"
+      },
+      {
+       "type": "summon",
+       "unit": "v3_eel_knot",
+       "count": 2
+      }
+     ]
+    }
+   ],
+   "persona": "ferryman"
+  },
+  {
+   "id": "v3_the_confessor",
+   "name": "The Confessor",
+   "boss": true,
+   "setting": "cathedral",
+   "size": 2,
+   "hp": 115,
+   "defense": 13,
+   "speed": 2,
+   "nerve": 4,
+   "wits": 3,
+   "abilities": [
+    "v3_e_absolution",
+    "v3_e_whispered_sins",
+    "v3_e_penance",
+    "v3_e_call_penitents"
+   ],
+   "ai": "boss",
+   "tags": [
+    "cathedral",
+    "boss",
+    "immovable"
+   ],
+   "resist": [
+    "psychic",
+    "holy"
+   ],
+   "vulnerable": [
+    "fire"
+   ],
+   "gold": 40,
+   "xp": 14,
+   "model": {
+    "body": "robed",
+    "color": "#3a2420",
+    "accent": "#c8b89a",
+    "h": 1.8,
+    "head": "hood"
+   },
+   "death": "crumble",
+   "intro": "Behind the grille. It listens. It remembers. Everything. Kneel.",
+   "desc": "Absolution hurts from across the room; Whispered Sins winds up a turn before it frightens everything near the grille. Penance makes your heroes take more damage. Penitents keep coming while it lives.",
+   "phases": [
+    {
+     "below": 0.5,
+     "name": "The Veil Lifts",
+     "say": "The grille opens. It was never a grille. It was teeth.",
+     "abilities": [
+      "v3_e_absolution",
+      "v3_e_whispered_sins",
+      "v3_e_penance",
+      "v3_e_call_penitents",
+      "v3_e_seal"
+     ],
+     "on_enter": [
+      {
+       "type": "terrain",
+       "tile": "flesh",
+       "radius": 1,
+       "only_on": "floor"
+      },
+      {
+       "type": "summon",
+       "unit": "v3_stitched_penitent",
+       "count": 2
+      }
+     ]
+    }
+   ],
+   "persona": "confessor"
+  },
+  {
+   "id": "v3_the_prospector",
+   "name": "The Prospector",
+   "boss": true,
+   "setting": "iron",
+   "size": 2,
+   "hp": 120,
+   "defense": 14,
+   "speed": 3,
+   "might": 4,
+   "wits": 3,
+   "abilities": [
+    "v3_e_pickaxe",
+    "v3_e_dynamite",
+    "v3_e_salt_claim"
+   ],
+   "ai": "boss",
+   "tags": [
+    "iron",
+    "boss",
+    "immovable"
+   ],
+   "resist": [
+    "fire"
+   ],
+   "vulnerable": [
+    "cold"
+   ],
+   "gold": 40,
+   "xp": 14,
+   "model": {
+    "body": "hulk",
+    "color": "#5a4a32",
+    "accent": "#e8c870",
+    "h": 1.8,
+    "head": "round",
+    "weapon": "hammer"
+   },
+   "death": "collapse",
+   "intro": "Found gold. Once. Has been digging. Ever since. You are standing. On his claim.",
+   "desc": "Throws dynamite a turn before it goes off: move. Salts the floor with spikes. In his second half the mine caves in around him, mites pour out, and gold fever makes his side hit harder.",
+   "phases": [
+    {
+     "below": 0.5,
+     "name": "Gold Fever",
+     "say": "He hits a seam. He laughs. The ceiling laughs with him.",
+     "abilities": [
+      "v3_e_pickaxe",
+      "v3_e_dynamite",
+      "v3_e_salt_claim",
+      "v3_e_gold_fever"
+     ],
+     "on_enter": [
+      {
+       "type": "consume_tiles",
+       "n": 3,
+       "tile": "pit"
+      },
+      {
+       "type": "summon",
+       "unit": "scrap_mite",
+       "count": 2
+      }
+     ]
+    }
+   ],
+   "persona": "prospector"
+  }
+ ]
+}

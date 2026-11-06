@@ -1,0 +1,495 @@
+{
+ "table_items": [
+  {
+   "id": "ti_whiskey",
+   "name": "Shot of Whiskey",
+   "icon": "glass",
+   "desc": "Offer him a drink: he looks away for 6 seconds.",
+   "target": "none",
+   "weight": 10,
+   "price": 30,
+   "blind": 6
+  },
+  {
+   "id": "ti_dropped_coin",
+   "name": "Dropped Coin",
+   "icon": "coin",
+   "desc": "He looks down for 3 seconds.",
+   "target": "none",
+   "weight": 14,
+   "price": 15,
+   "blind": 3
+  },
+  {
+   "id": "ti_chalk",
+   "name": "Chalk",
+   "icon": "pencil",
+   "desc": "Draw a new floor tile over anything (not under a miniature).",
+   "target": "tile",
+   "weight": 10,
+   "price": 20,
+   "effects": [
+    {
+     "type": "terrain",
+     "tile": "floor",
+     "overwrite_walls": true
+    }
+   ],
+   "sneaky": true
+  },
+  {
+   "id": "ti_spare_d20",
+   "name": "Spare d20",
+   "icon": "die",
+   "desc": "Your next roll shows at least 14.",
+   "target": "none",
+   "weight": 10,
+   "price": 30,
+   "effects": [
+    {
+     "type": "rig",
+     "side": "hero",
+     "floor": 14
+    }
+   ],
+   "sneaky": true
+  },
+  {
+   "id": "ti_lucky_penny",
+   "name": "Lucky Penny",
+   "icon": "coin",
+   "desc": "Your next roll is a natural 20.",
+   "target": "none",
+   "weight": 6,
+   "price": 45,
+   "effects": [
+    {
+     "type": "rig",
+     "side": "hero",
+     "natural": 20
+    }
+   ],
+   "sneaky": true
+  },
+  {
+   "id": "ti_bribe",
+   "name": "Bribe Envelope",
+   "icon": "ticket",
+   "desc": "The FILE drops 25.",
+   "target": "none",
+   "weight": 10,
+   "price": 35,
+   "effects": [
+    {
+     "type": "suspicion",
+     "n": -25
+    }
+   ]
+  },
+  {
+   "id": "ti_wet_napkin",
+   "name": "Wet Napkin",
+   "icon": "drop",
+   "desc": "Wipe a miniature clean: cleanse a hero.",
+   "target": "hero",
+   "weight": 10,
+   "price": 15,
+   "effects": [
+    {
+     "type": "cleanse",
+     "to": "target"
+    }
+   ]
+  },
+  {
+   "id": "ti_matchstick",
+   "name": "Matchstick",
+   "icon": "flame",
+   "desc": "Set a tile on fire.",
+   "target": "tile",
+   "weight": 10,
+   "price": 20,
+   "effects": [
+    {
+     "type": "terrain",
+     "tile": "fire"
+    }
+   ],
+   "sneaky": true
+  },
+  {
+   "id": "ti_tape_measure",
+   "name": "Tape Measure",
+   "icon": "nudge",
+   "desc": "A hero gets 3 extra squares of movement.",
+   "target": "hero",
+   "weight": 10,
+   "price": 20,
+   "effects": [
+    {
+     "type": "extra_move",
+     "n": 3,
+     "to": "target"
+    }
+   ]
+  },
+  {
+   "id": "ti_sugar_cube",
+   "name": "Sugar Cube",
+   "icon": "egg",
+   "desc": "Every hero heals 6.",
+   "target": "none",
+   "weight": 10,
+   "price": 30,
+   "effects": [
+    {
+     "type": "heal",
+     "dice": "6",
+     "to": "all_heroes"
+    }
+   ]
+  },
+  {
+   "id": "ti_smelling_salts",
+   "name": "Smelling Salts",
+   "icon": "potion",
+   "desc": "Wake a downed hero with 8 HP.",
+   "target": "hero",
+   "weight": 10,
+   "price": 30,
+   "effects": [
+    {
+     "type": "heal",
+     "dice": "8",
+     "to": "target"
+    }
+   ]
+  },
+  {
+   "id": "ti_glue",
+   "name": "Glue",
+   "icon": "drop",
+   "desc": "Glue an enemy's base down: rooted for 2 turns.",
+   "target": "enemy",
+   "weight": 10,
+   "price": 20,
+   "effects": [
+    {
+     "type": "status",
+     "id": "rooted",
+     "turns": 2,
+     "to": "target"
+    }
+   ],
+   "sneaky": true
+  },
+  {
+   "id": "ti_pin",
+   "name": "Hat Pin",
+   "icon": "spear",
+   "desc": "Stick an enemy miniature: 1d10 damage.",
+   "target": "enemy",
+   "weight": 10,
+   "price": 25,
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d10",
+     "dtype": "force",
+     "to": "target"
+    }
+   ],
+   "sneaky": true
+  },
+  {
+   "id": "ti_paint_thinner",
+   "name": "Paint Thinner",
+   "icon": "drop",
+   "desc": "Strip an enemy's paint: exposed and brittle for 2 turns.",
+   "target": "enemy",
+   "weight": 10,
+   "price": 25,
+   "effects": [
+    {
+     "type": "status",
+     "id": "exposed",
+     "turns": 2,
+     "to": "target"
+    },
+    {
+     "type": "status",
+     "id": "brittle",
+     "turns": 2,
+     "to": "target"
+    }
+   ],
+   "sneaky": true
+  },
+  {
+   "id": "ti_extra_card",
+   "name": "Extra Card",
+   "icon": "card",
+   "desc": "A hero gets an extra action.",
+   "target": "hero",
+   "weight": 7,
+   "price": 40,
+   "effects": [
+    {
+     "type": "extra_action",
+     "kind": "action",
+     "to": "target"
+    }
+   ]
+  },
+  {
+   "id": "ti_snuff",
+   "name": "Pinch of Snuff",
+   "icon": "drop",
+   "desc": "A hero gets an extra bonus action and is hasted.",
+   "target": "hero",
+   "weight": 10,
+   "price": 25,
+   "effects": [
+    {
+     "type": "extra_action",
+     "kind": "bonus",
+     "to": "target"
+    },
+    {
+     "type": "status",
+     "id": "hasted",
+     "turns": 1,
+     "to": "target"
+    }
+   ]
+  },
+  {
+   "id": "ti_cigarette",
+   "name": "Cigarette",
+   "icon": "candle",
+   "desc": "Calm: he takes 3 seconds longer to turn round.",
+   "target": "none",
+   "weight": 12,
+   "price": 15,
+   "calm": 3
+  },
+  {
+   "id": "ti_mirror_shard",
+   "name": "Mirror Shard",
+   "icon": "eye",
+   "desc": "Learn PEEK for the rest of the run.",
+   "target": "none",
+   "weight": 5,
+   "price": 40,
+   "cheat": "peek"
+  },
+  {
+   "id": "ti_eraser_crumb",
+   "name": "Eraser Crumb",
+   "icon": "eraser",
+   "desc": "Learn SHAVE for the rest of the run.",
+   "target": "none",
+   "weight": 5,
+   "price": 40,
+   "cheat": "shave"
+  },
+  {
+   "id": "ti_pencil_shaving",
+   "name": "Pencil Shaving",
+   "icon": "pencil",
+   "desc": "Learn FUDGE for the rest of the run.",
+   "target": "none",
+   "weight": 5,
+   "price": 40,
+   "cheat": "fudge"
+  },
+  {
+   "id": "ti_tweezers",
+   "name": "Eyebrow Tweezers",
+   "icon": "card",
+   "desc": "Learn SWAP for the rest of the run.",
+   "target": "none",
+   "weight": 4,
+   "price": 50,
+   "cheat": "swap_rule"
+  },
+  {
+   "id": "ti_greased_palm",
+   "name": "Greased Palm",
+   "icon": "steal",
+   "desc": "Learn STEAL for the rest of the run.",
+   "target": "none",
+   "weight": 4,
+   "price": 50,
+   "cheat": "steal"
+  },
+  {
+   "id": "ti_dice_sleeve",
+   "name": "Loaded Sleeve",
+   "icon": "sleeve",
+   "desc": "A 17 goes up your sleeve.",
+   "target": "none",
+   "weight": 10,
+   "price": 35,
+   "effects": [
+    {
+     "type": "sleeve",
+     "n": 17
+    }
+   ],
+   "sneaky": true
+  },
+  {
+   "id": "ti_bandage",
+   "name": "Roll of Tape",
+   "icon": "cross",
+   "desc": "A hero heals 12.",
+   "target": "hero",
+   "weight": 12,
+   "price": 25,
+   "effects": [
+    {
+     "type": "heal",
+     "dice": "12",
+     "to": "target"
+    }
+   ]
+  },
+  {
+   "id": "ti_ash",
+   "name": "Cigar Ash",
+   "icon": "drop",
+   "desc": "Every enemy is dazed.",
+   "target": "none",
+   "weight": 5,
+   "price": 40,
+   "effects": [
+    {
+     "type": "status",
+     "id": "dazed",
+     "turns": 1,
+     "to": "all_enemies"
+    }
+   ],
+   "sneaky": true
+  },
+  {
+   "id": "ti_holy_water",
+   "name": "Holy Water",
+   "icon": "drop",
+   "desc": "Every hero is blessed for 2 turns.",
+   "target": "none",
+   "weight": 10,
+   "price": 30,
+   "effects": [
+    {
+     "type": "status",
+     "id": "blessed",
+     "turns": 2,
+     "to": "all_heroes"
+    }
+   ]
+  },
+  {
+   "id": "ti_lighter_fluid",
+   "name": "Lighter Fluid",
+   "icon": "flame",
+   "desc": "Every enemy starts burning.",
+   "target": "none",
+   "weight": 5,
+   "price": 40,
+   "effects": [
+    {
+     "type": "status",
+     "id": "burning",
+     "turns": 2,
+     "to": "all_enemies"
+    }
+   ],
+   "sneaky": true
+  },
+  {
+   "id": "ti_toothpick",
+   "name": "Toothpick",
+   "icon": "spear",
+   "desc": "His next roll shows 5 or less.",
+   "target": "none",
+   "weight": 10,
+   "price": 25,
+   "effects": [
+    {
+     "type": "rig",
+     "side": "enemy",
+     "cap": 5
+    }
+   ],
+   "sneaky": true
+  },
+  {
+   "id": "ti_two_dice",
+   "name": "Two Dice Glued Together",
+   "icon": "die",
+   "desc": "Your next two rolls show at least 11.",
+   "target": "none",
+   "weight": 10,
+   "price": 35,
+   "effects": [
+    {
+     "type": "rig",
+     "side": "hero",
+     "floor": 11,
+     "n": 2
+    }
+   ],
+   "sneaky": true
+  },
+  {
+   "id": "ti_lottery",
+   "name": "Scratch Card",
+   "icon": "ticket",
+   "desc": "Scratch it: 30 gold.",
+   "target": "none",
+   "weight": 10,
+   "price": 10,
+   "effects": [
+    {
+     "type": "gold",
+     "n": 30
+    }
+   ]
+  },
+  {
+   "id": "ti_mint",
+   "name": "Mint",
+   "icon": "egg",
+   "desc": "The FILE drops 10.",
+   "target": "none",
+   "weight": 12,
+   "price": 15,
+   "effects": [
+    {
+     "type": "suspicion",
+     "n": -10
+    }
+   ]
+  },
+  {
+   "id": "ti_tear_gas",
+   "name": "Pepper Pot",
+   "icon": "drop",
+   "desc": "Every enemy next to your heroes is jinxed for 2 turns.",
+   "target": "none",
+   "weight": 6,
+   "price": 35,
+   "effects": [
+    {
+     "type": "status",
+     "id": "jinxed",
+     "turns": 2,
+     "to": "all_enemies"
+    }
+   ],
+   "sneaky": true
+  }
+ ]
+}

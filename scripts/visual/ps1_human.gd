@@ -439,7 +439,8 @@ func _build() -> void:
 	upper.add_child(head)
 	var hb := LcMB.new()
 	var ftex: Texture2D = spec.get("face_tex") if spec.get("face_tex") is Texture2D else face_texture(int(spec.get("face", 0)))
-	_head_mesh(hb, skin, LcMB.mat(ftex))
+	# (a photograph: it catches the light more than cloth does)
+	_head_mesh(hb, skin, LcMB.mat(ftex, Color(1.0, 1.0, 1.0) * float(spec.get("face_gain", 1.0))))
 	for side in [-1.0, 1.0]:
 		hb.box("s", skin, Vector3(0.025, 0.06, 0.04), LcMB.T(Vector3(0.122 * side, 0.15, -0.005)), Color(0.85, 0.85, 0.85))    # ears
 	if not spec.get("bald", false):

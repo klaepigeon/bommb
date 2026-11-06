@@ -18,28 +18,33 @@ static func shader() -> Shader:
 		_two_sided.code = (load("res://assets/shaders/ink.gdshader") as Shader).code.replace("cull_back", "cull_disabled")
 	return _two_sided
 
-## The campaign's materials, remade on RATFORMER's ink shader so the house's lamps light
-## them: the texture is blown up with hard pixels and the Caller's pen-work (the blood-red
-## ink sheets) is baked over it, as his PS1 shader drew it. `unlit` glows (eyes, bulbs).
+## MEAT PARTY: the campaign's own PSX material (shaders/psx.gdshader, lit by the hall's
+## lamps and candles), with his pen-work over the texture as the campaign draws it.
+## `unlit` glows (eyes, bulbs).
 static func mat(tex: Texture2D, tint: Color = Color.WHITE, uv_scale := Vector2.ONE, unlit := false, _snap := -1.0) -> ShaderMaterial:
 	var key := "%s|%s|%s|%s" % [str(tex.get_instance_id() if tex else 0), tint.to_html(), str(uv_scale), str(unlit)]
 	if _mat_cache.has(key):
 		return _mat_cache[key]
 	var m := ShaderMaterial.new()
-	m.shader = shader()
 	var t: Texture2D = tex if tex else LcTex.solid(Color.WHITE)
-	if not unlit:
-		t = inked(t)
+	m.shader = PSX_UNLIT if unlit else PSX
 	m.set_shader_parameter("albedo_tex", t)
-	m.set_shader_parameter("tint", tint if not unlit else Color.BLACK)
-	m.set_shader_parameter("emission_color", tint if unlit else Color.BLACK)
-	m.set_shader_parameter("world_uv", false)
-	m.set_shader_parameter("uv_scale", uv_scale)
-	m.set_shader_parameter("edge_ink", 0.0)
-	m.set_shader_parameter("bump", 0.0)
-	m.set_shader_parameter("rim", 0.15)
+	m.set_shader_parameter("albedo", tint)
+	m.set_shader_parameter("snap_res", MB.snap_default)
+	if not unlit:
+		m.set_shader_parameter("uv_scale", uv_scale)
+		var kind := LcTex.ink_kind(t)
+		if kind != "":
+			var sheet := LcTex.ink_sheet(kind)
+			if sheet:
+				m.set_shader_parameter("ink_tex", sheet)
+				m.set_shader_parameter("ink_amount", INK_AMOUNT.get(kind, 0.6))
 	_mat_cache[key] = m
 	return m
+
+
+const PSX := preload("res://shaders/psx.gdshader")
+const PSX_UNLIT := preload("res://shaders/psx_unshaded.gdshader")
 
 
 ## The same surface, for the zone's boxes: projected in world space, `per_m` repeats a unit.

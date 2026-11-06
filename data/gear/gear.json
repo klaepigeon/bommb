@@ -1,0 +1,1700 @@
+{
+ "gear": [
+  {
+   "id": "gw_boarding_axe",
+   "name": "Boarding Axe",
+   "slot": "weapon",
+   "rarity": "common",
+   "icon": "axe",
+   "desc": "+1 melee damage. Card: Cleave.",
+   "price": 40,
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "melee": true
+     }
+    }
+   ],
+   "ability": "g_cleave"
+  },
+  {
+   "id": "gw_pike",
+   "name": "Lead Pike",
+   "slot": "weapon",
+   "rarity": "common",
+   "icon": "spear",
+   "desc": "Card: Lunge (reach 2).",
+   "price": 40,
+   "ability": "g_lunge"
+  },
+  {
+   "id": "gw_knife_bandolier",
+   "name": "Knife Bandolier",
+   "slot": "weapon",
+   "rarity": "common",
+   "icon": "knife",
+   "desc": "Card: Throw Knife.",
+   "price": 40,
+   "ability": "g_throw_knife"
+  },
+  {
+   "id": "gw_meat_hook",
+   "name": "Meat Hook",
+   "slot": "weapon",
+   "rarity": "uncommon",
+   "icon": "hook",
+   "desc": "Card: Hook. Hits on bleeding targets +2.",
+   "price": 70,
+   "ability": "g_hook_pull",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "target_status": "bleeding"
+     }
+    }
+   ]
+  },
+  {
+   "id": "gw_church_bell",
+   "name": "Church Bell on a Rope",
+   "slot": "weapon",
+   "rarity": "uncommon",
+   "icon": "bell",
+   "desc": "Card: Toll.",
+   "price": 70,
+   "ability": "g_bell_ring"
+  },
+  {
+   "id": "gw_rusted_sabre",
+   "name": "Rusted Sabre",
+   "slot": "weapon",
+   "rarity": "common",
+   "icon": "sword",
+   "desc": "Hits poison the target.",
+   "price": 40,
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "poisoned",
+       "turns": 2,
+       "to": "target"
+      }
+     ],
+     "when": {
+      "melee": true
+     },
+     "label": "Rust",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "gw_serrated",
+   "name": "Serrated Cleaver",
+   "slot": "weapon",
+   "rarity": "uncommon",
+   "icon": "knife",
+   "desc": "Hits cause bleeding.",
+   "price": 70,
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "bleeding",
+       "turns": 2,
+       "stacks": 1,
+       "to": "target"
+      }
+     ],
+     "label": "Serrated",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "gw_flaming_brand",
+   "name": "Flaming Brand",
+   "slot": "weapon",
+   "rarity": "uncommon",
+   "icon": "flame",
+   "desc": "Hits add 1d4 fire.",
+   "price": 70,
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "damage",
+       "dice": "1d4",
+       "dtype": "fire",
+       "to": "target"
+      }
+     ],
+     "label": "Brand",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "gw_lamp",
+   "name": "Hurricane Lamp",
+   "slot": "weapon",
+   "rarity": "uncommon",
+   "icon": "candle",
+   "desc": "Card: Lamp Burst.",
+   "price": 70,
+   "ability": "g_lamp_burst"
+  },
+  {
+   "id": "gw_dice_sling",
+   "name": "Dice Sling",
+   "slot": "weapon",
+   "rarity": "uncommon",
+   "icon": "die",
+   "desc": "Card: Dice Shot.",
+   "price": 70,
+   "ability": "g_dice_shot"
+  },
+  {
+   "id": "gw_chain",
+   "name": "Ship's Chain",
+   "slot": "weapon",
+   "rarity": "uncommon",
+   "icon": "net",
+   "desc": "Card: Chain Lash.",
+   "price": 70,
+   "ability": "g_chain_lash"
+  },
+  {
+   "id": "gw_aspergillum",
+   "name": "Aspergillum",
+   "slot": "weapon",
+   "rarity": "uncommon",
+   "icon": "drop",
+   "desc": "Card: Holy Spray. Holy damage +1.",
+   "price": 70,
+   "ability": "g_holy_spray",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "dtype": "holy"
+     }
+    }
+   ]
+  },
+  {
+   "id": "gw_executioner",
+   "name": "Executioner's Sword",
+   "slot": "weapon",
+   "rarity": "rare",
+   "icon": "sword",
+   "desc": "+4 damage to targets at half HP or less.",
+   "price": 110,
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 4,
+     "when": {
+      "bloodied_target": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "gw_lucky_cue",
+   "name": "Lucky Pool Cue",
+   "slot": "weapon",
+   "rarity": "rare",
+   "icon": "staff",
+   "desc": "Crits on 18-20.",
+   "price": 110,
+   "mods": [
+    {
+     "key": "crit_threshold",
+     "op": "set",
+     "value": 18
+    }
+   ]
+  },
+  {
+   "id": "gw_bone_club",
+   "name": "Femur Club",
+   "slot": "weapon",
+   "rarity": "common",
+   "icon": "mace",
+   "desc": "+1 to hit. Kills frighten adjacent enemies.",
+   "price": 40,
+   "mods": [
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 1
+    }
+   ],
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "status",
+       "id": "feared",
+       "turns": 1,
+       "to": "adjacent_foes"
+      }
+     ],
+     "label": "Femur",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "gw_scalpel",
+   "name": "Surgeon's Scalpel",
+   "slot": "weapon",
+   "rarity": "common",
+   "icon": "knife",
+   "desc": "+2 damage when flanking.",
+   "price": 40,
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "flanking": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "gw_crossbow_pistol",
+   "name": "Hand Crossbow",
+   "slot": "weapon",
+   "rarity": "common",
+   "icon": "bow",
+   "desc": "Ranged cards reach 1 further.",
+   "price": 40,
+   "mods": [
+    {
+     "key": "range_add",
+     "op": "add",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "gw_witch_staff",
+   "name": "Driftwood Staff",
+   "slot": "weapon",
+   "rarity": "common",
+   "icon": "staff",
+   "desc": "Spells +1 damage, +1 resource each turn.",
+   "price": 40,
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "tag": "spell"
+     }
+    },
+    {
+     "key": "res_regen",
+     "op": "add",
+     "value": 1
+    }
+   ],
+   "classes": [
+    "wizard",
+    "warlock",
+    "cleric",
+    "bard"
+   ]
+  },
+  {
+   "id": "gw_vampire_fangs",
+   "name": "Set of Fangs",
+   "slot": "weapon",
+   "rarity": "rare",
+   "icon": "fang",
+   "desc": "Card: Bite. Kills heal 4.",
+   "price": 110,
+   "ability": "g_bite",
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "4",
+       "to": "self"
+      }
+     ],
+     "label": "Fangs",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "gw_shock_rod",
+   "name": "Cattle Prod",
+   "slot": "weapon",
+   "rarity": "uncommon",
+   "icon": "bolt",
+   "desc": "Hits add 1d4 shock and daze on a crit.",
+   "price": 70,
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "damage",
+       "dice": "1d4",
+       "dtype": "shock",
+       "to": "target"
+      }
+     ],
+     "label": "Prod",
+     "quiet": true
+    },
+    {
+     "event": "crit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "dazed",
+       "turns": 1,
+       "to": "target"
+      }
+     ],
+     "label": "Prod",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "gw_halberd",
+   "name": "Halberd",
+   "slot": "weapon",
+   "rarity": "rare",
+   "icon": "axe",
+   "desc": "Card: Lunge. +1 to hit, +1 damage.",
+   "price": 110,
+   "ability": "g_lunge",
+   "mods": [
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 1
+    },
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "gw_mirror_blade",
+   "name": "Mirror Blade",
+   "slot": "weapon",
+   "rarity": "rare",
+   "icon": "sword",
+   "desc": "Card: Mirror Flash. Hits against dazed enemies +3.",
+   "price": 110,
+   "ability": "g_mirror_flash",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 3,
+     "when": {
+      "target_status": "dazed"
+     }
+    }
+   ]
+  },
+  {
+   "id": "gw_bone_flute",
+   "name": "Bone Flute",
+   "slot": "weapon",
+   "rarity": "uncommon",
+   "icon": "note",
+   "desc": "Card: Bone Flute.",
+   "price": 70,
+   "ability": "g_bone_flute"
+  },
+  {
+   "id": "gw_war_pick",
+   "name": "War Pick",
+   "slot": "weapon",
+   "rarity": "common",
+   "icon": "axe",
+   "desc": "+1 damage. Hits make the target brittle.",
+   "price": 40,
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 1
+    }
+   ],
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "brittle",
+       "turns": 1,
+       "to": "target"
+      }
+     ],
+     "when": {
+      "melee": true
+     },
+     "label": "Pick",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "gw_tower_shield",
+   "name": "Tower Shield",
+   "slot": "weapon",
+   "rarity": "uncommon",
+   "icon": "shield",
+   "desc": "+1 defense. Card: Slam.",
+   "price": 70,
+   "defense": 1,
+   "ability": "g_shield_slam"
+  },
+  {
+   "id": "gw_long_bow",
+   "name": "Yew Longbow",
+   "slot": "weapon",
+   "rarity": "uncommon",
+   "icon": "bow",
+   "desc": "Ranged cards +2 range, +1 damage at range.",
+   "price": 70,
+   "mods": [
+    {
+     "key": "range_add",
+     "op": "add",
+     "value": 2
+    },
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "ranged": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "ga_leather",
+   "name": "Boiled Leather",
+   "slot": "armour",
+   "rarity": "common",
+   "icon": "cloak",
+   "desc": "+1 defense.",
+   "price": 40,
+   "defense": 1
+  },
+  {
+   "id": "ga_chain",
+   "name": "Rusted Mail",
+   "slot": "armour",
+   "rarity": "common",
+   "icon": "net",
+   "desc": "+2 defense, -1 speed.",
+   "price": 40,
+   "defense": 2,
+   "speed": -1
+  },
+  {
+   "id": "ga_plate",
+   "name": "Iron Plate",
+   "slot": "armour",
+   "rarity": "rare",
+   "icon": "shield",
+   "desc": "+3 defense, -1 speed, resists physical.",
+   "price": 110,
+   "defense": 3,
+   "speed": -1,
+   "resist": [
+    "physical"
+   ]
+  },
+  {
+   "id": "ga_oilskin",
+   "name": "Oilskin Coat",
+   "slot": "armour",
+   "rarity": "common",
+   "icon": "cloak",
+   "desc": "Resist cold. +5 HP.",
+   "price": 40,
+   "hp": 5,
+   "resist": [
+    "cold"
+   ]
+  },
+  {
+   "id": "ga_vestments",
+   "name": "Bloodied Vestments",
+   "slot": "armour",
+   "rarity": "uncommon",
+   "icon": "cross",
+   "desc": "+1 defense, heals you give +20%.",
+   "price": 70,
+   "defense": 1,
+   "mods": [
+    {
+     "key": "heal_dealt_mult",
+     "op": "add",
+     "value": 0.2
+    }
+   ]
+  },
+  {
+   "id": "ga_padded",
+   "name": "Padded Jack",
+   "slot": "armour",
+   "rarity": "common",
+   "icon": "cloak",
+   "desc": "+8 HP.",
+   "price": 40,
+   "hp": 8
+  },
+  {
+   "id": "ga_scale",
+   "name": "Fish-Scale Coat",
+   "slot": "armour",
+   "rarity": "uncommon",
+   "icon": "wave",
+   "desc": "+2 defense. Resists rot.",
+   "price": 70,
+   "defense": 2,
+   "resist": [
+    "rot"
+   ]
+  },
+  {
+   "id": "ga_skin_suit",
+   "name": "Second Skin",
+   "slot": "armour",
+   "rarity": "rare",
+   "icon": "mask",
+   "desc": "+12 HP. Kills heal 3.",
+   "price": 110,
+   "hp": 12,
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "3",
+       "to": "self"
+      }
+     ],
+     "label": "Skin",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "ga_cassock",
+   "name": "Black Cassock",
+   "slot": "armour",
+   "rarity": "uncommon",
+   "icon": "cloak",
+   "desc": "Resists holy and psychic. +1 to saves.",
+   "price": 70,
+   "resist": [
+    "holy",
+    "psychic"
+   ],
+   "mods": [
+    {
+     "key": "save_bonus",
+     "op": "add",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "ga_apron",
+   "name": "Butcher's Apron",
+   "slot": "armour",
+   "rarity": "common",
+   "icon": "drop",
+   "desc": "+4 HP. When hurt, empowered for a turn (once a turn).",
+   "price": 40,
+   "hp": 4,
+   "triggers": [
+    {
+     "event": "damaged",
+     "effects": [
+      {
+       "type": "status",
+       "id": "empowered",
+       "turns": 1,
+       "to": "self"
+      }
+     ],
+     "once": "turn",
+     "label": "Apron",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "ga_wax_coat",
+   "name": "Coat of Wax",
+   "slot": "armour",
+   "rarity": "uncommon",
+   "icon": "candle",
+   "desc": "Resists fire. Whoever hurts you catches fire (once a turn).",
+   "price": 70,
+   "resist": [
+    "fire"
+   ],
+   "triggers": [
+    {
+     "event": "damaged",
+     "effects": [
+      {
+       "type": "status",
+       "id": "burning",
+       "turns": 1,
+       "to": "target"
+      }
+     ],
+     "once": "turn",
+     "label": "Wax",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "ga_rubber",
+   "name": "Rubber Waders",
+   "slot": "armour",
+   "rarity": "common",
+   "icon": "drop",
+   "desc": "Resists shock. +1 speed.",
+   "price": 40,
+   "resist": [
+    "shock"
+   ],
+   "speed": 1
+  },
+  {
+   "id": "ga_mirror",
+   "name": "Mirror Breastplate",
+   "slot": "armour",
+   "rarity": "rare",
+   "icon": "ward",
+   "desc": "+2 defense. Misses against you daze the attacker.",
+   "price": 110,
+   "defense": 2,
+   "triggers": [
+    {
+     "event": "missed_by",
+     "effects": [
+      {
+       "type": "status",
+       "id": "dazed",
+       "turns": 1,
+       "to": "target"
+      }
+     ],
+     "label": "Mirror",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "ga_cardboard",
+   "name": "Cardboard Armour",
+   "slot": "armour",
+   "rarity": "common",
+   "icon": "card",
+   "desc": "+1 defense, +3 HP. The Caller finds it very funny.",
+   "price": 40,
+   "defense": 1,
+   "hp": 3
+  },
+  {
+   "id": "ga_bandages",
+   "name": "Mummy Wrappings",
+   "slot": "armour",
+   "rarity": "uncommon",
+   "icon": "net",
+   "desc": "Regenerate 2 at the start of your turn.",
+   "price": 70,
+   "triggers": [
+    {
+     "event": "turn_start",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "2",
+       "to": "self"
+      }
+     ],
+     "label": "Wrappings",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "ga_hide",
+   "name": "Wolf Hide",
+   "slot": "armour",
+   "rarity": "uncommon",
+   "icon": "wolf",
+   "desc": "+1 speed, +1 to hit while flanking.",
+   "price": 70,
+   "speed": 1,
+   "mods": [
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "flanking": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "gt_rabbit",
+   "name": "Rabbit's Foot (Right)",
+   "slot": "trinket",
+   "rarity": "common",
+   "icon": "fang",
+   "desc": "Reroll natural 1s once.",
+   "price": 40,
+   "mods": [
+    {
+     "key": "reroll_naturals",
+     "op": "set",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "gt_amulet",
+   "name": "Tin Amulet",
+   "slot": "trinket",
+   "rarity": "common",
+   "icon": "ward",
+   "desc": "+1 to saves.",
+   "price": 40,
+   "mods": [
+    {
+     "key": "save_bonus",
+     "op": "add",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "gt_ring",
+   "name": "Signet Ring",
+   "slot": "trinket",
+   "rarity": "common",
+   "icon": "coin",
+   "desc": "+1 to hit.",
+   "price": 40,
+   "mods": [
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "gt_tooth_necklace",
+   "name": "Tooth Necklace",
+   "slot": "trinket",
+   "rarity": "common",
+   "icon": "fang",
+   "desc": "+1 damage.",
+   "price": 40,
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "gt_boots",
+   "name": "Felt Boots",
+   "slot": "trinket",
+   "rarity": "common",
+   "icon": "feather",
+   "desc": "+1 speed.",
+   "price": 40,
+   "speed": 1
+  },
+  {
+   "id": "gt_locket",
+   "name": "Locket with Hair",
+   "slot": "trinket",
+   "rarity": "uncommon",
+   "icon": "heart",
+   "desc": "+6 HP. When you go down, adjacent allies are empowered.",
+   "price": 70,
+   "hp": 6,
+   "triggers": [
+    {
+     "event": "damaged",
+     "effects": [
+      {
+       "type": "status",
+       "id": "empowered",
+       "turns": 1,
+       "to": "adjacent_allies"
+      }
+     ],
+     "when": {
+      "hp_below": 0.25
+     },
+     "once": "combat",
+     "label": "Locket",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "gt_hourglass",
+   "name": "Pocket Hourglass",
+   "slot": "trinket",
+   "rarity": "uncommon",
+   "icon": "cog",
+   "desc": "Cards recharge a round faster.",
+   "price": 70,
+   "mods": [
+    {
+     "key": "cooldown_add",
+     "op": "add",
+     "value": -1
+    }
+   ]
+  },
+  {
+   "id": "gt_bead",
+   "name": "Prayer Bead",
+   "slot": "trinket",
+   "rarity": "common",
+   "icon": "egg",
+   "desc": "+1 resource each turn.",
+   "price": 40,
+   "mods": [
+    {
+     "key": "res_regen",
+     "op": "add",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "gt_eye_patch",
+   "name": "Eye Patch",
+   "slot": "trinket",
+   "rarity": "uncommon",
+   "icon": "eye",
+   "desc": "Ignore cover. +1 range.",
+   "price": 70,
+   "mods": [
+    {
+     "key": "ignore_cover",
+     "op": "set",
+     "value": true
+    },
+    {
+     "key": "range_add",
+     "op": "add",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "gt_dice_earring",
+   "name": "Dice Earring",
+   "slot": "trinket",
+   "rarity": "uncommon",
+   "icon": "die",
+   "desc": "Crit on 19-20. Crits recharge your cards.",
+   "price": 70,
+   "mods": [
+    {
+     "key": "crit_threshold",
+     "op": "set",
+     "value": 19
+    }
+   ],
+   "triggers": [
+    {
+     "event": "crit",
+     "effects": [
+      {
+       "type": "refresh_cooldowns",
+       "to": "self"
+      }
+     ],
+     "label": "Earring",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "gt_mourning_pin",
+   "name": "Mourning Pin",
+   "slot": "trinket",
+   "rarity": "uncommon",
+   "icon": "banner",
+   "desc": "+2 damage while you're below half HP.",
+   "price": 70,
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "hp_below": 0.5
+     }
+    }
+   ]
+  },
+  {
+   "id": "gt_snakeskin",
+   "name": "Snakeskin Belt",
+   "slot": "trinket",
+   "rarity": "common",
+   "icon": "spiral",
+   "desc": "Resists poison.",
+   "price": 40,
+   "resist": [
+    "poison"
+   ],
+   "immune": [
+    "poisoned"
+   ]
+  },
+  {
+   "id": "gt_iron_will",
+   "name": "Iron Ring",
+   "slot": "trinket",
+   "rarity": "uncommon",
+   "icon": "ward",
+   "desc": "Can't be feared or confused.",
+   "price": 70,
+   "immune": [
+    "feared",
+    "confused"
+   ]
+  },
+  {
+   "id": "gt_lucky_coin",
+   "name": "Lucky Coin",
+   "slot": "trinket",
+   "rarity": "rare",
+   "icon": "coin",
+   "desc": "Crit on 19-20. Crits pay 5 gold.",
+   "price": 110,
+   "mods": [
+    {
+     "key": "crit_threshold",
+     "op": "set",
+     "value": 19
+    }
+   ],
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 5
+      }
+     ],
+     "when": {
+      "natural_ge": 19
+     },
+     "label": "Lucky Coin",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "gt_spur",
+   "name": "Spur",
+   "slot": "trinket",
+   "rarity": "common",
+   "icon": "star",
+   "desc": "Kills give 2 extra squares of movement.",
+   "price": 40,
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "extra_move",
+       "n": 2,
+       "to": "self"
+      }
+     ],
+     "label": "Spur",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "gt_vial",
+   "name": "Vial of Ichor",
+   "slot": "trinket",
+   "rarity": "uncommon",
+   "icon": "potion",
+   "desc": "Start every fight with 6 temporary HP.",
+   "price": 70,
+   "mods": [
+    {
+     "key": "temp_hp_combat",
+     "op": "add",
+     "value": 6
+    }
+   ]
+  },
+  {
+   "id": "gt_thimble",
+   "name": "Silver Thimble",
+   "slot": "trinket",
+   "rarity": "common",
+   "icon": "ward",
+   "desc": "The first hit on you each fight is halved: start warded.",
+   "price": 40,
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "warded",
+       "turns": 1,
+       "to": "self"
+      }
+     ],
+     "label": "Thimble",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "gt_finger_bone",
+   "name": "Finger Bone",
+   "slot": "trinket",
+   "rarity": "uncommon",
+   "icon": "skull",
+   "desc": "Kills give you a bonus action.",
+   "price": 70,
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "extra_action",
+       "kind": "bonus",
+       "to": "self"
+      }
+     ],
+     "once": "turn",
+     "label": "Finger Bone",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "gt_wishbone",
+   "name": "Wishbone",
+   "slot": "trinket",
+   "rarity": "rare",
+   "icon": "root",
+   "desc": "Your natural 1s become 20s, once a fight.",
+   "price": 110,
+   "triggers": [
+    {
+     "event": "fumble",
+     "effects": [
+      {
+       "type": "rig",
+       "side": "hero",
+       "natural": 20
+      }
+     ],
+     "once": "combat",
+     "label": "Wishbone"
+    }
+   ]
+  },
+  {
+   "id": "gt_brass_bell",
+   "name": "Little Brass Bell",
+   "slot": "trinket",
+   "rarity": "common",
+   "icon": "bell",
+   "desc": "Start every fight hasted.",
+   "price": 40,
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "hasted",
+       "turns": 1,
+       "to": "self"
+      }
+     ],
+     "label": "Bell",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "gt_glass_heart",
+   "name": "Glass Heart",
+   "slot": "trinket",
+   "rarity": "rare",
+   "icon": "heart",
+   "desc": "+3 damage, but you take +2.",
+   "price": 110,
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 3
+    },
+    {
+     "key": "damage_taken_add",
+     "op": "add",
+     "value": 2
+    }
+   ]
+  },
+  {
+   "id": "gt_candle_stub",
+   "name": "Candle Stub",
+   "slot": "trinket",
+   "rarity": "common",
+   "icon": "candle",
+   "desc": "Fire damage +2.",
+   "price": 40,
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "dtype": "fire"
+     }
+    }
+   ]
+  },
+  {
+   "id": "gt_shrunken_head",
+   "name": "Shrunken Head",
+   "slot": "trinket",
+   "rarity": "uncommon",
+   "icon": "skull",
+   "desc": "+1 defense, +1 to saves.",
+   "price": 70,
+   "defense": 1,
+   "mods": [
+    {
+     "key": "save_bonus",
+     "op": "add",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "gt_tuning_fork",
+   "name": "Tuning Fork",
+   "slot": "trinket",
+   "rarity": "uncommon",
+   "icon": "note",
+   "desc": "Statuses you apply last a turn longer.",
+   "price": 70,
+   "mods": [
+    {
+     "key": "status_turns_add",
+     "op": "add",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "gt_needle",
+   "name": "Sewing Needle",
+   "slot": "trinket",
+   "rarity": "common",
+   "icon": "spear",
+   "desc": "Heals you give +2.",
+   "price": 40,
+   "mods": [
+    {
+     "key": "heal_dealt_mult",
+     "op": "add",
+     "value": 0.25
+    }
+   ]
+  },
+  {
+   "id": "gt_monocle",
+   "name": "Cracked Monocle",
+   "slot": "trinket",
+   "rarity": "common",
+   "icon": "eye",
+   "desc": "+1 to hit at range.",
+   "price": 40,
+   "mods": [
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "ranged": true
+     }
+    }
+   ]
+  }
+ ],
+ "abilities": [
+  {
+   "id": "g_cleave",
+   "name": "Cleave",
+   "icon": "axe",
+   "desc": "Hit an enemy and everything next to you: 1d8 + Might.",
+   "tags": [
+    "gear",
+    "attack",
+    "melee",
+    "area"
+   ],
+   "cost": "action",
+   "cooldown": 2,
+   "range": 0,
+   "target": "self",
+   "area": {
+    "shape": "around_self",
+    "n": 1
+   },
+   "affects": "enemies",
+   "roll": "attack",
+   "stat": "might",
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "stat": "might",
+     "dtype": "physical"
+    }
+   ]
+  },
+  {
+   "id": "g_lunge",
+   "name": "Lunge",
+   "icon": "spear",
+   "desc": "Reach 2: 1d10 + Might.",
+   "tags": [
+    "gear",
+    "attack",
+    "melee"
+   ],
+   "cost": "action",
+   "range": 2,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d10",
+     "stat": "might",
+     "dtype": "physical"
+    }
+   ]
+  },
+  {
+   "id": "g_throw_knife",
+   "name": "Throw Knife",
+   "icon": "knife",
+   "desc": "Bonus action, range 4: 1d4 + Grace.",
+   "tags": [
+    "gear",
+    "attack"
+   ],
+   "cost": "bonus",
+   "cooldown": 1,
+   "range": 4,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "grace",
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d4",
+     "stat": "grace",
+     "dtype": "physical"
+    }
+   ]
+  },
+  {
+   "id": "g_hook_pull",
+   "name": "Hook",
+   "icon": "hook",
+   "desc": "Range 3: drag an enemy 2 tiles toward you, 1d6.",
+   "tags": [
+    "gear",
+    "attack",
+    "control"
+   ],
+   "cost": "action",
+   "cooldown": 2,
+   "range": 3,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "dtype": "physical"
+    },
+    {
+     "type": "pull",
+     "n": 2
+    }
+   ]
+  },
+  {
+   "id": "g_bell_ring",
+   "name": "Toll",
+   "icon": "bell",
+   "desc": "Bonus: every enemy within 2 makes a Nerve save (DC 13) or is dazed.",
+   "tags": [
+    "gear",
+    "control"
+   ],
+   "cost": "bonus",
+   "cooldown": 3,
+   "range": 0,
+   "target": "self",
+   "area": {
+    "shape": "radius",
+    "n": 2
+   },
+   "affects": "enemies",
+   "roll": "save",
+   "save": "nerve",
+   "stat": "nerve",
+   "effects": [
+    {
+     "type": "status",
+     "id": "dazed",
+     "turns": 1
+    }
+   ]
+  },
+  {
+   "id": "g_bone_flute",
+   "name": "Bone Flute",
+   "icon": "note",
+   "desc": "Bonus: allies within 2 are inspired.",
+   "tags": [
+    "gear",
+    "support"
+   ],
+   "cost": "bonus",
+   "cooldown": 3,
+   "range": 0,
+   "target": "self",
+   "area": {
+    "shape": "around_self",
+    "n": 2
+   },
+   "affects": "allies",
+   "roll": "none",
+   "effects": [
+    {
+     "type": "status",
+     "id": "inspired",
+     "turns": 2
+    }
+   ],
+   "self_effects": [
+    {
+     "type": "status",
+     "id": "inspired",
+     "turns": 2
+    }
+   ]
+  },
+  {
+   "id": "g_lamp_burst",
+   "name": "Lamp Burst",
+   "icon": "flame",
+   "desc": "Range 4, 3x3: 2d6 fire, Grace save for half.",
+   "tags": [
+    "gear",
+    "attack",
+    "area"
+   ],
+   "cost": "action",
+   "cooldown": 3,
+   "range": 4,
+   "target": "tile",
+   "area": {
+    "shape": "radius",
+    "n": 1
+   },
+   "affects": "all",
+   "roll": "save",
+   "save": "grace",
+   "stat": "wits",
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "2d6",
+     "dtype": "fire",
+     "half_on_save": true
+    },
+    {
+     "type": "status",
+     "id": "burning",
+     "turns": 2,
+     "on": "save_fail"
+    }
+   ]
+  },
+  {
+   "id": "g_shield_slam",
+   "name": "Slam",
+   "icon": "shield",
+   "desc": "1d6 + Might and stun on a hit. Recharge 3.",
+   "tags": [
+    "gear",
+    "attack",
+    "melee",
+    "control"
+   ],
+   "cost": "action",
+   "cooldown": 3,
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "stat": "might",
+     "dtype": "physical"
+    },
+    {
+     "type": "status",
+     "id": "stunned",
+     "turns": 1
+    }
+   ]
+  },
+  {
+   "id": "g_stitch",
+   "name": "Stitch",
+   "icon": "cross",
+   "desc": "Bonus: an adjacent ally heals 1d8 + Wits.",
+   "tags": [
+    "gear",
+    "heal"
+   ],
+   "cost": "bonus",
+   "cooldown": 2,
+   "range": 1,
+   "target": "ally_or_downed",
+   "roll": "none",
+   "effects": [
+    {
+     "type": "heal",
+     "dice": "1d8",
+     "stat": "wits"
+    }
+   ]
+  },
+  {
+   "id": "g_dice_shot",
+   "name": "Dice Shot",
+   "icon": "die",
+   "desc": "Range 5: 1d20 damage. That's it. That's the card.",
+   "tags": [
+    "gear",
+    "attack"
+   ],
+   "cost": "action",
+   "cooldown": 2,
+   "range": 5,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "grace",
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d20",
+     "dtype": "force"
+    }
+   ]
+  },
+  {
+   "id": "g_mirror_flash",
+   "name": "Mirror Flash",
+   "icon": "eye",
+   "desc": "Bonus, range 3: blind (dazed) an enemy and give it disadvantage.",
+   "tags": [
+    "gear",
+    "control"
+   ],
+   "cost": "bonus",
+   "cooldown": 2,
+   "range": 3,
+   "target": "enemy",
+   "roll": "none",
+   "effects": [
+    {
+     "type": "status",
+     "id": "dazed",
+     "turns": 1
+    },
+    {
+     "type": "status",
+     "id": "jinxed",
+     "turns": 1
+    }
+   ]
+  },
+  {
+   "id": "g_chain_lash",
+   "name": "Chain Lash",
+   "icon": "net",
+   "desc": "Range 3 line: 1d8 to everything in it, roots them.",
+   "tags": [
+    "gear",
+    "attack",
+    "area"
+   ],
+   "cost": "action",
+   "cooldown": 3,
+   "range": 3,
+   "target": "tile",
+   "area": {
+    "shape": "line",
+    "n": 3
+   },
+   "affects": "enemies",
+   "roll": "attack",
+   "stat": "might",
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "stat": "might",
+     "dtype": "physical"
+    },
+    {
+     "type": "status",
+     "id": "rooted",
+     "turns": 1
+    }
+   ]
+  },
+  {
+   "id": "g_holy_spray",
+   "name": "Holy Spray",
+   "icon": "drop",
+   "desc": "Cone 2: 1d8 holy, Nerve save for half.",
+   "tags": [
+    "gear",
+    "attack",
+    "area"
+   ],
+   "cost": "action",
+   "cooldown": 2,
+   "range": 2,
+   "target": "tile",
+   "area": {
+    "shape": "cone",
+    "n": 2
+   },
+   "affects": "enemies",
+   "roll": "save",
+   "save": "nerve",
+   "stat": "nerve",
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "dtype": "holy",
+     "half_on_save": true
+    }
+   ]
+  },
+  {
+   "id": "g_bite",
+   "name": "Bite",
+   "icon": "fang",
+   "desc": "Bonus, adjacent: 1d6 and heal what you deal.",
+   "tags": [
+    "gear",
+    "attack",
+    "melee"
+   ],
+   "cost": "bonus",
+   "cooldown": 1,
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "dtype": "blood",
+     "leech": 1.0
+    }
+   ]
+  }
+ ]
+}

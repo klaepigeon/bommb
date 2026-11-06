@@ -1,0 +1,89 @@
+{
+ "_doc": "Lore for the freezer, the staff room and the cage room (data/hall/building_v3.json), plus a few new pages for the hall's own stations. A station of the form 'thing:<id>' is read when you look at that thing in the building.",
+ "lore": [
+  {
+   "id": "l3_timesheet",
+   "station": "thing:staff_timesheet",
+   "title": "The timesheet",
+   "text": "NAME. IN. OUT. Four rows, the same four names, week after week. The OUT column is empty all the way down. Then one week somebody has stopped filling in OUT and started writing LEFT, in red, and circling a number. Nobody circles numbers on a timesheet. Except a caller."
+  },
+  {
+   "id": "l3_timesheet2",
+   "station": "thing:staff_timesheet",
+   "needs_runs": 2,
+   "title": "The timesheet, next week",
+   "text": "Next week's sheet is already filled in. Five rows now. The fifth name is in your handwriting, and beside it, in red, already: LEFT. The number circled is the number of the chair you sit in."
+  },
+  {
+   "id": "l3_stock_sheet",
+   "station": "thing:freezer_log",
+   "title": "Freezer stock",
+   "text": "The Cook kept good stock. Every name went in on a Friday, after the last game, after the lights. Dave, who called the numbers before the machine did. Margaret, who sold the books. Tommy, who carried the cage. Maureen, who complained. Stock in. Never out."
+  },
+  {
+   "id": "l3_tally",
+   "station": "thing:freezer_tally",
+   "title": "LET",
+   "text": "Somebody counted their hours in the cold, five scratches at a time, until their nails went. Then they tried to write something. LET. Let me out. Let me go. Let them know. Or let it. Let it have me."
+  },
+  {
+   "id": "l3_notices",
+   "station": "thing:staff_notice",
+   "title": "Memo: the cage",
+   "text": "'Whoever is on the cage Friday, do NOT oil it. It doesn't like oil. It likes to be held. Hold it until it stops. If it does not stop, do not let go. If you let go, do not come in Monday.' Signed: the Management. Under it, a later hand: 'Tommy let go.'"
+  },
+  {
+   "id": "l3_drawing",
+   "station": "thing:staff_notice",
+   "needs_runs": 3,
+   "title": "A crayon drawing",
+   "text": "A man at a long table with a cage for a head. Little people round the table, all smiling, all holding cards. One of them is coloured in red all over, carefully, inside the lines. Signed TOMMY, AGE 7, and labelled, with an arrow at the cage: DAD."
+  },
+  {
+   "id": "l3_clock_card",
+   "station": "thing:clock_machine",
+   "title": "Your clock card",
+   "text": "Your name, typed. A column of IN stamps going back further than you've been alive, every one at the same minute: two minutes to midnight. There are no OUT stamps. There's no OUT on the machine. Just IN, and a lever that doesn't go back."
+  },
+  {
+   "id": "l3_coat_seven",
+   "station": "thing:coat_seven",
+   "title": "Ticket seven",
+   "text": "The cloakroom ticket is stapled to the collar. The name on it is TOMMY, and the date is the night the hall closed. On the hanger the coat is a child's size. When you hold it up, it's a man's."
+  },
+  {
+   "id": "l3_mk_card",
+   "station": "thing:cage_card",
+   "title": "Maintenance card",
+   "text": "Seven heads in forty years. The first was too slow to keep up with the room. The second wouldn't stop calling, not even when the room was empty. The third bit him. He doesn't have anything to bite with any more. He kept the cages anyway. You keep your old faces, if you're him. You never know who'll want one."
+  },
+  {
+   "id": "l3_mk_card2",
+   "station": "thing:cage_card",
+   "needs_deaths": 3,
+   "title": "Maintenance card, the back",
+   "text": "MK VIII: ON ORDER. FITTING: THE NEXT ONE TO SIT IN THE CHAIR. Measurements are pinned to the back of the card. Head circumference. Jaw. The distance between the eyes. They're yours, to the millimetre."
+  },
+  {
+   "id": "l3_notices_staff",
+   "station": "notices",
+   "needs_runs": 1,
+   "title": "STAFF WANTED",
+   "text": "A curled card, drawing-pinned over older cards. STAFF WANTED. Must be good with numbers. Must not mind the cold. Must not mind staying late. Apply within. Underneath, smaller: there is no without."
+  },
+  {
+   "id": "l3_ledger_staff",
+   "station": "ledger",
+   "needs_runs": 5,
+   "title": "The ledger, staff page",
+   "text": "A page for staff, not players. Same columns. LEFT AT is filled in on every row, in the same red: COLD ROOM. COLD ROOM. CAGES. COLD ROOM. The last row is blank but for a name. The ink is still wet. It's yours."
+  },
+  {
+   "id": "l3_clock",
+   "station": "clock",
+   "needs_runs": 2,
+   "title": "The clock, closer",
+   "text": "Taped behind the glass, against the face: a clocking-in card, punched IN at two minutes to midnight. The clock didn't stop. Somebody clocked it in, and it's been waiting for its shift to end ever since."
+  }
+ ]
+}

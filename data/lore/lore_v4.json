@@ -1,0 +1,145 @@
+{
+ "_doc": "Lore for the coach trip (data/hall/building_v4.json): the Lounge Bar, the Beer Cellar, the Car Park, the Manager's Flat, the Boiler Room, and the card on the private door in the office, plus a few later pages for the hall's own stations. A station of the form 'thing:<id>' is read when you look at that thing in the building. Two of these are the puzzle's clues: the poster gives the outing's date, and Ruth's card says her birthday is outing day; the card on the private door only makes sense once you have both.",
+ "lore": [
+  {
+   "id": "l4_poster",
+   "station": "thing:outing_poster",
+   "title": "The Lucky Dip Outing",
+   "text": "THE LUCKY DIP OUTING. Saturday the 9th of August. Coach leaves the car park at 7 o'clock sharp. Fifty-two seats, drawn from the cage, one ball, one seat. Fish supper on the front. Sing-song all the way. Back by midnight. Promise. - The Management."
+  },
+  {
+   "id": "l4_poster2",
+   "station": "thing:outing_poster",
+   "needs_runs": 2,
+   "title": "The poster, again",
+   "text": "Somebody has pasted a strip across the corner: SOLD OUT. Under it, a second strip, newer, the paste still wet: NEXT OUTING. The date is tonight's. The seats are still drawn from the cage. There is one seat left."
+  },
+  {
+   "id": "l4_slate",
+   "station": "thing:bar_slate",
+   "title": "The slate",
+   "text": "Fifty-one names in chalk. Halves of mild, port and lemon, a bag of scratchings. After every one: ON THE COACH. SETTLE UP AFTER. Nobody settled up. The barman never rubbed them off. Chalk lasts, if nobody touches it. Nobody touches it."
+  },
+  {
+   "id": "l4_slate2",
+   "station": "thing:bar_slate",
+   "needs_deaths": 2,
+   "title": "The slate, the bottom line",
+   "text": "At the very bottom, smaller, a name you know, because it's yours. Your tab is long. Every run you've played is on it, a stroke each, in fives. After it, the same words, in the same hand: ON THE COACH."
+  },
+  {
+   "id": "l4_delivery",
+   "station": "thing:delivery_note",
+   "title": "For the drayman",
+   "text": "Deliveries Thursdays. Come down the drop, not the steps. Leave the empties by the hatch. Do not leave the yard door open after dark. Do not let anybody back in through the yard after twelve, whoever they say they are, however cold they say they are, even if they've got her coat on."
+  },
+  {
+   "id": "l4_manifest",
+   "station": "thing:coach_door",
+   "title": "The driver's sheet",
+   "text": "Fifty-two seats. Fifty-two names, one per ball drawn. Fifty-one ticks: boarded. Seat 14, no tick: RUTH (the gaffer's girl) - running late, collect from the flat. The coach was meant to wait for her. At the bottom, in a different pen, pressed hard: 23:58. DOORS OPENED. NONE ALIGHTED."
+  },
+  {
+   "id": "l4_birthday",
+   "station": "thing:coach_seat14",
+   "title": "A birthday card, seat 14",
+   "text": "A card with a coach on the front. Inside: 'RUTH - 21 TODAY! Born on outing day and you've had your birthday on the outing every year since, my lucky dip. Save me a chip. Love, Dad x.' She never sat in the seat. She was late. She was upstairs, finding her coat."
+  },
+  {
+   "id": "l4_tacho",
+   "station": "thing:coach_cab",
+   "title": "The tachograph",
+   "text": "The paper disc is still in the slot. Engine on 19:00. Engine off 23:58. Distance: none. The needle never moved. The coach sat in the car park with its doors shut and its engine running and fifty-one people singing in it, for five hours, and never went anywhere at all."
+  },
+  {
+   "id": "l4_cars",
+   "station": "thing:car_keys",
+   "title": "Pay and display",
+   "text": "9 AUG. 18:41. EXPIRES 23:58. Three cars, three tickets, all bought for an evening and a fish supper. The cars are still waiting to be driven home. The tickets are renewed every night by somebody who can't let them go, and the tyres have never once gone flat."
+  },
+  {
+   "id": "l4_door_note",
+   "station": "thing:flat_door_note",
+   "title": "For Ruth",
+   "text": "He changed the lock the week after the outing, so nobody else could go up. He gave the code to the only person who'd know it. He left the card on the door so she'd see it when she got in late. She would have been very late now. He leaves the landing light on."
+  },
+  {
+   "id": "l4_bed",
+   "station": "thing:ruth_bed",
+   "title": "Her bed",
+   "text": "Clean sheets every Saturday for thirty years. A hot water bottle filled every night at quarter to twelve, because she was always back by midnight, and she always felt the cold. Presents on the end of the bed that he wraps again when the paper fades."
+  },
+  {
+   "id": "l4_letter",
+   "station": "thing:flat_letter",
+   "title": "A letter, unsent",
+   "text": "'To whoever. They all got on. I watched them from up here with her cake. Ruth was late, she ran down to give the caretaker her key so he could run the speaker cable out to the coach for the sing-song. The doors shut. The singing started. It went on all night. At two minutes to twelve it stopped, and the doors opened, and nobody got off. Nobody was on it. Ruth wasn't in the yard. She wasn't anywhere.'"
+  },
+  {
+   "id": "l4_letter2",
+   "station": "thing:flat_letter",
+   "needs_runs": 3,
+   "title": "The letter, the second page",
+   "text": "'A man came after. A salesman, in a good suit, with a machine in a crate. He said anybody can be called home, if you have the right voice, and the right numbers, and you never, ever stop calling. I signed for it. I'm paying for it still. MK I. It was too slow. They're all too slow. She hasn't come back yet.'"
+  },
+  {
+   "id": "l4_photo",
+   "station": "thing:flat_photo",
+   "needs_deaths": 1,
+   "title": "The photograph",
+   "text": "You look again. Her thumb has moved. The ball says 14. Behind her, in the coach window, fifty-one faces, all turned to the camera, all smiling, all the same smile. One of them, at the back, has a cage for a head, and it's very, very small, as if it was still a long way off."
+  },
+  {
+   "id": "l4_caretaker_log",
+   "station": "thing:boiler_log",
+   "title": "The caretaker's log",
+   "text": "9 AUG. Boss had me run a tannoy cable from the amp out to the coach, for the sing-song. Ruth brought me the key. 19:00 amp on. 21:00 amp on, can't turn it down. 22:30 it's calling numbers, nobody at the mic. 23:00 coach windows all fogged. 23:58 the last number. I went out with the shovel and the doors were open and there was only the singing left, going round the inside of the coach with nobody to sing it."
+  },
+  {
+   "id": "l4_gauge",
+   "station": "thing:boiler_gauge",
+   "title": "The gauge",
+   "text": "Fifty-two heads on the dial, the way other gauges have pounds. The needle went up one at a time, all that night, and stuck at fifty-one. The caretaker kept the fire high ever since, because the higher he kept it, the quieter the knocking. The knocking is what they do when they're cold."
+  },
+  {
+   "id": "l4_amp",
+   "station": "thing:pa_amp",
+   "title": "The tannoy amplifier",
+   "text": "Taped to the YARD switch, a column of numbers in biro, one per ball drawn for the outing. Each one has been crossed through, neatly, fifty-one times, in the order they were called over the coach speakers. The last number in the column is 14. It isn't crossed out. Nobody has ever called it, because she wasn't on the coach to hear it."
+  },
+  {
+   "id": "l4_amp2",
+   "station": "thing:pa_amp",
+   "needs_deaths": 3,
+   "title": "The amplifier, the back panel",
+   "text": "Screwed to the back of the cabinet, a brass plate from the manufacturer. CALLER, MK I. FOR CALLING HOME. Under it, scratched with a screwdriver, a fifty-third number, added to the column on the switch since you last looked. It's the number of your chair."
+  },
+  {
+   "id": "l4_after",
+   "station": "thing:coach_after",
+   "title": "All present",
+   "text": "The driver's sheet has a tick by seat 14 now, in fresh ink. Fifty-two of fifty-two. The engine is still running. It will always be running. Nobody on board seems to mind. They're only waiting for the driver, and the driver is only waiting for the doors to close, and the doors are only waiting for you to step back."
+  },
+  {
+   "id": "l4_notices",
+   "station": "notices",
+   "needs_runs": 4,
+   "title": "Sign-up sheet",
+   "text": "Pinned under everything else, a sheet ruled into fifty-two boxes: COACH OUTING - PUT YOUR NAME DOWN. Fifty-one names in fifty-one hands. Box 14 says RUTH in a girl's capitals, with a heart over the U. The heart has been gone over in red so many times the paper has worn through."
+  },
+  {
+   "id": "l4_clock",
+   "station": "clock",
+   "needs_deaths": 4,
+   "title": "Two minutes to twelve",
+   "text": "Two minutes to midnight was when the coach doors opened on nobody, and the hall's clock stopped with them. The manager wrote it on the fire door so nobody would leave before then. WE CLOSE AT. Every night, the Caller calls until two minutes to twelve. Every night, one number is never called."
+  },
+  {
+   "id": "l4_ledger",
+   "station": "ledger",
+   "needs_runs": 7,
+   "title": "The ledger, the outing page",
+   "text": "A page headed OUTING, in the receptionist's hand. Fifty-two names with a ball number each. In the LEFT AT column, fifty-one times: THE COACH. Against Ruth, at last, in a different ink: THE COACH. Below that, room for one more. The column is already filled in."
+  }
+ ]
+}

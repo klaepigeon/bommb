@@ -1,0 +1,2166 @@
+{
+ "events": [
+  {
+   "id": "ev_raffle",
+   "title": "The Raffle",
+   "persona": "prize_clerk",
+   "setting": "any",
+   "text": "A biscuit tin of folded tickets. 'One each, love. Winner takes the tin. Everybody else takes what they get.'",
+   "options": [
+    {
+     "label": "Buy a ticket (15 gold)",
+     "cost_gold": 15,
+     "effects": [
+      {
+       "type": "random",
+       "rows": [
+        {
+         "w": 3,
+         "text": "A pink ticket. Nothing.",
+         "effects": [
+          {
+           "type": "nothing"
+          }
+         ]
+        },
+        {
+         "w": 3,
+         "text": "A yellow ticket: a card from the tin.",
+         "effects": [
+          {
+           "type": "consumable",
+           "id": "random"
+          }
+         ]
+        },
+        {
+         "w": 2,
+         "text": "A blue ticket: a fistful of gold.",
+         "effects": [
+          {
+           "type": "gold",
+           "n": 45
+          }
+         ]
+        },
+        {
+         "w": 1,
+         "text": "The winning ticket. The tin had a relic in it.",
+         "effects": [
+          {
+           "type": "relic",
+           "id": "random",
+           "rarity": [
+            "uncommon",
+            "rare"
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Steal the tin",
+     "check": {
+      "stat": "grace",
+      "dc": 15,
+      "pass": [
+       {
+        "type": "relic",
+        "id": "random",
+        "rarity": [
+         "common",
+         "uncommon"
+        ]
+       },
+       {
+        "type": "gold",
+        "n": 20
+       }
+      ],
+      "pass_text": "Nobody saw. Nobody ever sees.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 6,
+        "target": "chosen"
+       },
+       {
+        "type": "gold",
+        "n": -20
+       }
+      ],
+      "fail_text": "The Clerk's hand closes over yours. It is much stronger than it looks."
+     }
+    },
+    {
+     "label": "Walk past",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ev_dice_game",
+   "title": "A Quiet Game",
+   "persona": "ferryman",
+   "setting": "any",
+   "text": "Someone at a side table is throwing dice for money. 'High roll wins. Your stake, my stake. Simple.'",
+   "options": [
+    {
+     "label": "Stake 25 gold (Nerve check)",
+     "cost_gold": 25,
+     "check": {
+      "stat": "nerve",
+      "dc": 12,
+      "pass": [
+       {
+        "type": "gold",
+        "n": 60
+       }
+      ],
+      "pass_text": "You win. He pays you in coins that are still warm.",
+      "fail": [
+       {
+        "type": "nothing"
+       }
+      ],
+      "fail_text": "He wins. He always wins. He apologises."
+     }
+    },
+    {
+     "label": "Stake a hero's luck instead",
+     "who": true,
+     "effects": [
+      {
+       "type": "trait",
+       "id": "t_lucky",
+       "target": "chosen"
+      },
+      {
+       "type": "injure",
+       "target": "chosen"
+      }
+     ],
+     "result": "He rolls for you. You win something you can't see, and lose something you can feel."
+    },
+    {
+     "label": "Decline",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ev_wishing_well",
+   "title": "The Wishing Well",
+   "persona": "caller",
+   "setting": "any",
+   "text": "A well in the middle of the page. The water is a long way down. Coins glint. Something else glints back.",
+   "options": [
+    {
+     "label": "Throw in 20 gold",
+     "cost_gold": 20,
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.4,
+       "target": "all"
+      }
+     ],
+     "result": "Warmth comes up out of the well like breath."
+    },
+    {
+     "label": "Climb down for the coins",
+     "check": {
+      "stat": "might",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "gold",
+        "n": 55
+       }
+      ],
+      "pass_text": "You come up wet and rich.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 8,
+        "target": "chosen"
+       },
+       {
+        "type": "gold",
+        "n": 15
+       }
+      ],
+      "fail_text": "Something bit you. You came up with a little anyway."
+     }
+    },
+    {
+     "label": "Leave it",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ev_wounded_stranger",
+   "title": "A Stranger on the Floor",
+   "persona": "caller",
+   "setting": "any",
+   "text": "An adventurer from somebody else's campaign is lying in the margin. Their miniature is chipped. 'Take me with you,' they say. 'Or take my things.'",
+   "options": [
+    {
+     "label": "Take them with you",
+     "requires": {
+      "party_le": 3
+     },
+     "effects": [
+      {
+       "type": "recruit"
+      }
+     ],
+     "result": "They stand up, unsteadily, and join the table."
+    },
+    {
+     "label": "Take their things",
+     "effects": [
+      {
+       "type": "consumable",
+       "id": "random",
+       "count": 2
+      },
+      {
+       "type": "gold",
+       "n": 15
+      }
+     ],
+     "result": "They watch you do it."
+    },
+    {
+     "label": "Patch them up and send them on",
+     "effects": [
+      {
+       "type": "xp",
+       "n": 8,
+       "target": "all"
+      }
+     ],
+     "result": "They limp off to their own campaign. Your party feels better about itself."
+    }
+   ]
+  },
+  {
+   "id": "ev_bargain_bin",
+   "title": "The Bargain Bin",
+   "persona": "prize_clerk",
+   "setting": "any",
+   "text": "A bin of returned prizes. 'All sold as seen. Some were seen doing things.'",
+   "options": [
+    {
+     "label": "Dig for a relic (30 gold)",
+     "cost_gold": 30,
+     "effects": [
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "common",
+        "uncommon"
+       ]
+      }
+     ],
+     "result": "You find something with the price tag still on."
+    },
+    {
+     "label": "Grab a handful of cards (15 gold)",
+     "cost_gold": 15,
+     "effects": [
+      {
+       "type": "consumable",
+       "id": "random",
+       "count": 2
+      }
+     ],
+     "result": "Two cards. One is sticky."
+    },
+    {
+     "label": "Swap a relic for gold",
+     "requires": {
+      "relics_ge": 1
+     },
+     "effects": [
+      {
+       "type": "remove_relic"
+      },
+      {
+       "type": "gold",
+       "n": 70
+      }
+     ],
+     "result": "The Clerk weighs it, sniffs it, pays you."
+    }
+   ]
+  },
+  {
+   "id": "ev_mirror",
+   "title": "The Long Mirror",
+   "persona": "caller",
+   "setting": "any",
+   "text": "A mirror propped against nothing. Your party is in it, but slightly to the left, and one of them is smiling.",
+   "options": [
+    {
+     "label": "Look closely",
+     "who": true,
+     "check": {
+      "stat": "wits",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "level_offer",
+        "target": "chosen"
+       }
+      ],
+      "pass_text": "You learn something about yourself you'd rather not have.",
+      "fail": [
+       {
+        "type": "status_next",
+        "id": "confused",
+        "turns": 1,
+        "side": "hero"
+       }
+      ],
+      "fail_text": "You keep seeing it at the edge of your vision. Next fight, your party starts confused."
+     }
+    },
+    {
+     "label": "Smash it",
+     "effects": [
+      {
+       "type": "damage",
+       "n": 4,
+       "target": "all"
+      },
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "uncommon"
+       ]
+      }
+     ],
+     "result": "Seven years. And a shard of something useful."
+    },
+    {
+     "label": "Turn it to the wall",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ev_bones",
+   "title": "Somebody's Bones",
+   "persona": "caller",
+   "setting": "any",
+   "text": "A skeleton in a chair, holding a hand of cards. Its turn, by the look of it.",
+   "options": [
+    {
+     "label": "Play its hand",
+     "effects": [
+      {
+       "type": "consumable",
+       "id": "random"
+      },
+      {
+       "type": "status_next",
+       "id": "cursed",
+       "turns": 2,
+       "side": "hero"
+      }
+     ],
+     "result": "Good cards. Cold cards. Your party starts the next fight cursed."
+    },
+    {
+     "label": "Bury it",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.15,
+       "target": "all"
+      },
+      {
+       "type": "xp",
+       "n": 5,
+       "target": "all"
+      }
+     ],
+     "result": "It seems lighter when you lift it."
+    },
+    {
+     "label": "Search its pockets",
+     "check": {
+      "stat": "grace",
+      "dc": 11,
+      "pass": [
+       {
+        "type": "gold",
+        "n": 40
+       }
+      ],
+      "pass_text": "Gold teeth, mostly.",
+      "fail": [
+       {
+        "type": "injure",
+        "target": "chosen"
+       }
+      ],
+      "fail_text": "It takes offence."
+     }
+    }
+   ]
+  },
+  {
+   "id": "ev_campfire",
+   "title": "A Campfire",
+   "persona": "caller",
+   "setting": "any",
+   "text": "Someone has drawn a campfire on the page. It gives off real heat. The Caller is pretending not to watch.",
+   "options": [
+    {
+     "label": "Rest by it",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.3,
+       "target": "all"
+      }
+     ],
+     "result": "For a moment it is almost cosy."
+    },
+    {
+     "label": "Tell stories",
+     "effects": [
+      {
+       "type": "xp",
+       "n": 12,
+       "target": "all"
+      }
+     ],
+     "result": "Everyone remembers something they'd forgotten they knew."
+    },
+    {
+     "label": "Sharpen everything",
+     "effects": [
+      {
+       "type": "status_next",
+       "id": "empowered",
+       "turns": 2,
+       "side": "hero"
+      }
+     ],
+     "result": "Next fight, your party starts empowered."
+    }
+   ]
+  },
+  {
+   "id": "ev_caller_offer",
+   "title": "An Offer",
+   "persona": "auctioneer",
+   "setting": "any",
+   "text": "The Auctioneer leans over the table. 'Off the record. I'll give you something good for something you'll miss.'",
+   "options": [
+    {
+     "label": "Trade max HP for a rare relic",
+     "who": true,
+     "effects": [
+      {
+       "type": "max_hp",
+       "n": -6,
+       "target": "chosen"
+      },
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "rare"
+       ]
+      }
+     ],
+     "result": "Done. You feel slightly thinner."
+    },
+    {
+     "label": "Trade all your cards for gold",
+     "requires": {
+      "consumables_ge": 1
+     },
+     "effects": [
+      {
+       "type": "lose_consumable"
+      },
+      {
+       "type": "lose_consumable"
+      },
+      {
+       "type": "lose_consumable"
+      },
+      {
+       "type": "gold",
+       "n": 80
+      }
+     ],
+     "result": "He shuffles them into his own deck."
+    },
+    {
+     "label": "No deal",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ev_scratchcard",
+   "title": "Scratchcard",
+   "persona": "prize_clerk",
+   "setting": "any",
+   "text": "'Free scratchcard with every visit, love. Match three.' Three silver panels.",
+   "options": [
+    {
+     "label": "Scratch the first panel",
+     "effects": [
+      {
+       "type": "random",
+       "rows": [
+        {
+         "w": 2,
+         "text": "A bear. Not a match. A small consolation.",
+         "effects": [
+          {
+           "type": "gold",
+           "n": 10
+          }
+         ]
+        },
+        {
+         "w": 1,
+         "text": "Three bears.",
+         "effects": [
+          {
+           "type": "gold",
+           "n": 75
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Scratch all three at once",
+     "effects": [
+      {
+       "type": "random",
+       "rows": [
+        {
+         "w": 2,
+         "text": "Nothing at all.",
+         "effects": [
+          {
+           "type": "nothing"
+          }
+         ]
+        },
+        {
+         "w": 2,
+         "text": "A card.",
+         "effects": [
+          {
+           "type": "consumable",
+           "id": "random"
+          }
+         ]
+        },
+        {
+         "w": 1,
+         "text": "Three keys. A relic.",
+         "effects": [
+          {
+           "type": "relic",
+           "id": "random"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Keep it for later",
+     "effects": [
+      {
+       "type": "consumable",
+       "id": "c_lucky_ticket"
+      }
+     ],
+     "result": "It turns out to be a raffle ticket after all."
+    }
+   ]
+  },
+  {
+   "id": "ev_trainer",
+   "title": "The Old Pro",
+   "persona": "ferryman",
+   "setting": "any",
+   "text": "An old miniature with a lot of paint chipped off. 'I can show one of you a thing or two. For a price.'",
+   "options": [
+    {
+     "label": "Pay 40 gold for a lesson",
+     "cost_gold": 40,
+     "who": true,
+     "effects": [
+      {
+       "type": "level_offer",
+       "target": "chosen"
+      }
+     ],
+     "result": "Hard lessons. Good ones."
+    },
+    {
+     "label": "Spar with him",
+     "who": true,
+     "check": {
+      "stat": "might",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "upgrade_card",
+        "target": "chosen"
+       }
+      ],
+      "pass_text": "He laughs and shows you how to do it properly.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 10,
+        "target": "chosen"
+       },
+       {
+        "type": "xp",
+        "n": 6,
+        "target": "chosen"
+       }
+      ],
+      "fail_text": "He laughs and shows you the floor."
+     }
+    },
+    {
+     "label": "Not today",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ev_lost_die",
+   "title": "A Lost Die",
+   "persona": "caller",
+   "setting": "any",
+   "text": "A twenty-sided die, lying face down. On the poster at the hall it said: LOST. ONE DIE. ANSWERS TO NOTHING.",
+   "options": [
+    {
+     "label": "Keep it",
+     "effects": [
+      {
+       "type": "relic",
+       "id": "cracked_die"
+      }
+     ],
+     "result": "It is warm, and heavier on one side."
+    },
+    {
+     "label": "Hand it in at the counter",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 50
+      },
+      {
+       "type": "flag",
+       "key": "returned_die"
+      }
+     ],
+     "result": "The Clerk is visibly moved. Gold changes hands."
+    },
+    {
+     "label": "Roll it",
+     "effects": [
+      {
+       "type": "random",
+       "rows": [
+        {
+         "w": 1,
+         "text": "A twenty. Everyone feels lucky.",
+         "effects": [
+          {
+           "type": "status_next",
+           "id": "blessed",
+           "turns": 3,
+           "side": "hero"
+          }
+         ]
+        },
+        {
+         "w": 1,
+         "text": "A one. It rolls away and won't come back.",
+         "effects": [
+          {
+           "type": "status_next",
+           "id": "dazed",
+           "turns": 1,
+           "side": "hero"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ev_pit_stop",
+   "title": "The Tea Urn",
+   "persona": "nurse",
+   "setting": "any",
+   "text": "The tea urn has been on since before the campaign. The Night Nurse pours four cups without asking.",
+   "options": [
+    {
+     "label": "Drink up",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.25,
+       "target": "all"
+      }
+     ],
+     "result": "Stewed, but it helps."
+    },
+    {
+     "label": "Ask for something stronger (20 gold)",
+     "cost_gold": 20,
+     "effects": [
+      {
+       "type": "cure",
+       "target": "all"
+      },
+      {
+       "type": "heal_pct",
+       "pct": 0.15,
+       "target": "all"
+      }
+     ],
+     "result": "She puts something in the cups. Injuries ease."
+    },
+    {
+     "label": "Pocket the biscuits",
+     "effects": [
+      {
+       "type": "consumable",
+       "id": "c_draught"
+      }
+     ],
+     "result": "They're medicinal. She says."
+    }
+   ]
+  },
+  {
+   "id": "ev_toll",
+   "title": "The Toll",
+   "persona": "ferryman",
+   "setting": "any",
+   "text": "A gate across the page and a man with a cash box. 'Toll. Everyone pays. One way or another.'",
+   "options": [
+    {
+     "label": "Pay 30 gold",
+     "cost_gold": 30,
+     "effects": [
+      {
+       "type": "xp",
+       "n": 4,
+       "target": "all"
+      }
+     ],
+     "result": "He lets you through and wishes you luck. He seems to mean it."
+    },
+    {
+     "label": "Pay in blood",
+     "effects": [
+      {
+       "type": "damage",
+       "n": 6,
+       "target": "all"
+      }
+     ],
+     "result": "He takes it with a little silver spoon."
+    },
+    {
+     "label": "Go round the long way",
+     "effects": [
+      {
+       "type": "combat",
+       "kind": "combat"
+      }
+     ],
+     "result": "The long way is full of people who also didn't pay."
+    }
+   ]
+  },
+  {
+   "id": "ev_painter",
+   "title": "The Painter",
+   "persona": "understudy",
+   "setting": "any",
+   "text": "Someone is repainting miniatures at a little desk with a tiny brush. 'Hold still. This will improve you.'",
+   "options": [
+    {
+     "label": "Let them paint a hero",
+     "who": true,
+     "effects": [
+      {
+       "type": "max_hp",
+       "n": 5,
+       "target": "chosen"
+      },
+      {
+       "type": "rename",
+       "text": "{name} the Repainted",
+       "target": "chosen"
+      }
+     ],
+     "result": "A fresh coat. They look newer. Sturdier. Not quite themselves."
+    },
+    {
+     "label": "Ask them to paint the enemy",
+     "cost_gold": 25,
+     "effects": [
+      {
+       "type": "enemy_hp_next",
+       "mult": 0.8
+      }
+     ],
+     "result": "They paint the next lot in very thin colours. Next fight, enemies have 20% less HP."
+    },
+    {
+     "label": "Steal a brush",
+     "check": {
+      "stat": "grace",
+      "dc": 12,
+      "pass": [
+       {
+        "type": "relic",
+        "id": "random",
+        "rarity": [
+         "common"
+        ]
+       }
+      ],
+      "pass_text": "You pocket a brush and something else that was in the jar.",
+      "fail": [
+       {
+        "type": "status_next",
+        "id": "marked",
+        "turns": 2,
+        "side": "hero"
+       }
+      ],
+      "fail_text": "They dab a red dot on you. Next fight, your party is marked."
+     }
+    }
+   ]
+  },
+  {
+   "id": "ev_crossroads",
+   "title": "Crossroads Shrine",
+   "persona": "caller",
+   "setting": "any",
+   "text": "A little shrine where two pencil lines cross. Offerings: coins, a tooth, a die.",
+   "options": [
+    {
+     "label": "Leave a coin (10 gold)",
+     "cost_gold": 10,
+     "effects": [
+      {
+       "type": "status_next",
+       "id": "blessed",
+       "turns": 3,
+       "side": "hero"
+      }
+     ],
+     "result": "Next fight your party starts blessed."
+    },
+    {
+     "label": "Take the offerings",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 35
+      },
+      {
+       "type": "status_next",
+       "id": "cursed",
+       "turns": 3,
+       "side": "hero"
+      }
+     ],
+     "result": "Gold. And the feeling of being looked at. Next fight your party starts cursed."
+    },
+    {
+     "label": "Pray",
+     "check": {
+      "stat": "nerve",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "heal_pct",
+        "pct": 0.5,
+        "target": "all"
+       }
+      ],
+      "pass_text": "Something answers.",
+      "fail": [
+       {
+        "type": "nothing"
+       }
+      ],
+      "fail_text": "Nothing answers. That is its own sort of answer."
+     }
+    }
+   ]
+  },
+  {
+   "id": "ev_ghost_party",
+   "title": "The Last Party",
+   "persona": "caller",
+   "setting": "any",
+   "requires": {
+    "fallen_ge": 1
+   },
+   "text": "Your dead are standing at the edge of the page, translucent, waiting for a turn that isn't coming.",
+   "options": [
+    {
+     "label": "Speak to them",
+     "effects": [
+      {
+       "type": "xp",
+       "n": 15,
+       "target": "all"
+      }
+     ],
+     "result": "They tell you how they died. It is useful, and awful."
+    },
+    {
+     "label": "Take their equipment",
+     "effects": [
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "uncommon"
+       ]
+      },
+      {
+       "type": "status_next",
+       "id": "feared",
+       "turns": 1,
+       "side": "hero"
+      }
+     ],
+     "result": "They let you. They don't look away. Next fight, your party starts frightened."
+    },
+    {
+     "label": "Let them rest",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.3,
+       "target": "all"
+      }
+     ],
+     "result": "They nod and are gone. The table feels lighter."
+    }
+   ]
+  },
+  {
+   "id": "ev_sweepstakes",
+   "title": "Sweepstakes",
+   "persona": "auctioneer",
+   "setting": "any",
+   "text": "'Put a hero's name in the hat. If they survive the next fight, they collect. If not, I do.'",
+   "options": [
+    {
+     "label": "Put a name in",
+     "who": true,
+     "effects": [
+      {
+       "type": "xp",
+       "n": 20,
+       "target": "chosen"
+      },
+      {
+       "type": "elite_next"
+      }
+     ],
+     "result": "The next fight will be an elite. Your champion has been training for it already."
+    },
+    {
+     "label": "Bet on the house",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 50
+      },
+      {
+       "type": "enemy_hp_next",
+       "mult": 1.25
+      }
+     ],
+     "result": "He pays out now. The next lot of enemies are a little sturdier."
+    },
+    {
+     "label": "Don't gamble",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ev_rulebook_page",
+   "title": "A Torn Page",
+   "persona": "caller",
+   "setting": "any",
+   "text": "A page torn from the rulebook, blowing across the table. The Caller glances at it, then at you.",
+   "options": [
+    {
+     "label": "Keep it",
+     "effects": [
+      {
+       "type": "relic",
+       "id": "page_41"
+      }
+     ],
+     "result": "Page 41. A paragraph about ties."
+    },
+    {
+     "label": "Give it back to him",
+     "effects": [
+      {
+       "type": "remove_rule"
+      },
+      {
+       "type": "gold",
+       "n": 10
+      }
+     ],
+     "result": "He takes it, and strikes one of his own rules out in thanks. Or to make room."
+    },
+    {
+     "label": "Eat it",
+     "who": true,
+     "effects": [
+      {
+       "type": "attr",
+       "stat": "wits",
+       "n": 1,
+       "target": "chosen"
+      },
+      {
+       "type": "damage",
+       "n": 3,
+       "target": "chosen"
+      }
+     ],
+     "result": "Dry. Educational."
+    }
+   ]
+  },
+  {
+   "id": "ev_bingo_night",
+   "title": "Bingo Night",
+   "persona": "caller",
+   "setting": "any",
+   "text": "The campaign stops. The Caller produces a bingo card for each of you. 'Old habits.' He starts calling.",
+   "options": [
+    {
+     "label": "Play along",
+     "effects": [
+      {
+       "type": "random",
+       "rows": [
+        {
+         "w": 3,
+         "text": "Nothing. Two away on one card.",
+         "effects": [
+          {
+           "type": "xp",
+           "n": 4,
+           "target": "all"
+          }
+         ]
+        },
+        {
+         "w": 2,
+         "text": "A line! A modest prize.",
+         "effects": [
+          {
+           "type": "gold",
+           "n": 40
+          }
+         ]
+        },
+        {
+         "w": 1,
+         "text": "Full house. He seems genuinely pleased for you.",
+         "effects": [
+          {
+           "type": "relic",
+           "id": "random",
+           "rarity": [
+            "uncommon",
+            "rare"
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Cheat (Grace)",
+     "check": {
+      "stat": "grace",
+      "dc": 15,
+      "pass": [
+       {
+        "type": "relic",
+        "id": "random",
+        "rarity": [
+         "rare"
+        ]
+       }
+      ],
+      "pass_text": "Full house. He knows. He lets it go. This time.",
+      "fail": [
+       {
+        "type": "rule_card",
+        "id": "random"
+       }
+      ],
+      "fail_text": "He knows. He adds a rule."
+     }
+    },
+    {
+     "label": "Get on with the campaign",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.1,
+       "target": "all"
+      }
+     ],
+     "result": "He looks a little disappointed. You use the break to rest."
+    }
+   ]
+  },
+  {
+   "id": "ev_bandit_toll",
+   "title": "Highwaymen",
+   "persona": "caller",
+   "setting": "any",
+   "text": "Painted cut-out bandits pop up from behind the scenery. 'Your money or your lives!' They are made of cardboard and quite determined.",
+   "options": [
+    {
+     "label": "Fight",
+     "effects": [
+      {
+       "type": "combat",
+       "kind": "combat"
+      },
+      {
+       "type": "gold",
+       "n": 25
+      }
+     ],
+     "result": "They come at you. They have some gold, at least."
+    },
+    {
+     "label": "Pay them off (25 gold)",
+     "cost_gold": 25,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ],
+     "result": "They take it and fold flat."
+    },
+    {
+     "label": "Talk them down (Nerve)",
+     "check": {
+      "stat": "nerve",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "recruit",
+        "class": "rogue"
+       }
+      ],
+      "pass_text": "One of them throws in with you. Not cardboard, it turns out.",
+      "fail": [
+       {
+        "type": "combat",
+        "kind": "combat"
+       }
+      ],
+      "fail_text": "They are not convinced."
+     }
+    }
+   ]
+  },
+  {
+   "id": "ev_fortune",
+   "title": "The Fortune-Teller",
+   "persona": "confessor",
+   "setting": "any",
+   "text": "A veiled figure turns over cards. 'I see a death. I see a prize. Choose which one you want me to look at.'",
+   "options": [
+    {
+     "label": "Look at the death",
+     "effects": [
+      {
+       "type": "status_next",
+       "id": "warded",
+       "turns": 2,
+       "side": "hero"
+      },
+      {
+       "type": "reveal"
+      }
+     ],
+     "result": "Forewarned. Next fight your party starts warded."
+    },
+    {
+     "label": "Look at the prize",
+     "effects": [
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "common",
+        "uncommon"
+       ]
+      },
+      {
+       "type": "elite_next"
+      }
+     ],
+     "result": "A prize, and the road to it. The next fight is an elite."
+    },
+    {
+     "label": "Cut the deck yourself",
+     "check": {
+      "stat": "wits",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "rule_card",
+        "id": "rc_sudden_death"
+       },
+       {
+        "type": "xp",
+        "n": 10,
+        "target": "all"
+       }
+      ],
+      "pass_text": "You draw Sudden Death. You'll learn quickly.",
+      "fail": [
+       {
+        "type": "rule_card",
+        "id": "rc_glass_table"
+       }
+      ],
+      "fail_text": "You draw the Glass Table. Everyone hits harder, you included."
+     }
+    }
+   ]
+  },
+  {
+   "id": "ev_hungry_box",
+   "title": "The Hungry Box",
+   "persona": "caller",
+   "setting": "any",
+   "text": "A wooden box with a slot. A label: FEED ME A CARD. It is purring.",
+   "options": [
+    {
+     "label": "Feed it a card",
+     "requires": {
+      "consumables_ge": 1
+     },
+     "effects": [
+      {
+       "type": "lose_consumable"
+      },
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "common",
+        "uncommon"
+       ]
+      }
+     ],
+     "result": "It purrs louder and spits out a relic."
+    },
+    {
+     "label": "Feed it gold (30)",
+     "cost_gold": 30,
+     "effects": [
+      {
+       "type": "consumable",
+       "id": "random",
+       "count": 3
+      }
+     ],
+     "result": "It coughs up three cards. Slightly damp."
+    },
+    {
+     "label": "Kick it",
+     "effects": [
+      {
+       "type": "damage",
+       "n": 5,
+       "target": "random"
+      },
+      {
+       "type": "gold",
+       "n": 20
+      }
+     ],
+     "result": "It bites. Some coins fall out."
+    }
+   ]
+  },
+  {
+   "id": "ev_extra_life",
+   "title": "Insert Coin",
+   "persona": "caller",
+   "setting": "any",
+   "text": "An arcade cabinet in the corner of the page. CONTINUE? it asks. A coin slot.",
+   "options": [
+    {
+     "label": "Insert 50 gold",
+     "cost_gold": 50,
+     "effects": [
+      {
+       "type": "relic",
+       "id": "pewter_halo"
+      }
+     ],
+     "result": "One more go. The cabinet dispenses a pewter halo."
+    },
+    {
+     "label": "Play a round",
+     "who": true,
+     "check": {
+      "stat": "grace",
+      "dc": 12,
+      "pass": [
+       {
+        "type": "xp",
+        "n": 20,
+        "target": "chosen"
+       }
+      ],
+      "pass_text": "High score.",
+      "fail": [
+       {
+        "type": "xp",
+        "n": 5,
+        "target": "chosen"
+       }
+      ],
+      "fail_text": "Game over. Still, practice."
+     }
+    },
+    {
+     "label": "Unplug it",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ev_doppel",
+   "title": "Your Own Miniatures",
+   "persona": "understudy",
+   "setting": "any",
+   "text": "Four miniatures, painted exactly like your party, standing in the middle of the page. One is facing the wrong way.",
+   "options": [
+    {
+     "label": "Turn it round",
+     "effects": [
+      {
+       "type": "upgrade_card",
+       "target": "random"
+      }
+     ],
+     "result": "Something in one of your heroes clicks into place."
+    },
+    {
+     "label": "Smash them",
+     "effects": [
+      {
+       "type": "status_next",
+       "id": "empowered",
+       "turns": 2,
+       "side": "hero"
+      },
+      {
+       "type": "damage",
+       "n": 3,
+       "target": "all"
+      }
+     ],
+     "result": "It hurts. It helps. Next fight your party starts empowered."
+    },
+    {
+     "label": "Take them",
+     "effects": [
+      {
+       "type": "relic",
+       "id": "cursed_miniature"
+      }
+     ],
+     "result": "They weigh more than they should."
+    }
+   ]
+  },
+  {
+   "id": "ev_lost_and_found",
+   "title": "Lost Property",
+   "persona": "receptionist",
+   "setting": "any",
+   "text": "A cardboard box: LOST PROPERTY. Inside: a hat, a lot of single gloves, and something wrapped in newspaper.",
+   "options": [
+    {
+     "label": "Unwrap the newspaper",
+     "effects": [
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "common",
+        "uncommon",
+        "cursed"
+       ]
+      }
+     ],
+     "result": "Whatever it was, it's yours now."
+    },
+    {
+     "label": "Take the gloves",
+     "effects": [
+      {
+       "type": "consumable",
+       "id": "c_smoke"
+      },
+      {
+       "type": "consumable",
+       "id": "c_net"
+      }
+     ],
+     "result": "There were things in the gloves."
+    },
+    {
+     "label": "Hand in something of yours",
+     "requires": {
+      "consumables_ge": 1
+     },
+     "effects": [
+      {
+       "type": "lose_consumable"
+      },
+      {
+       "type": "heal_pct",
+       "pct": 0.35,
+       "target": "all"
+      }
+     ],
+     "result": "The Receptionist gives you a ticket and a sandwich."
+    }
+   ]
+  },
+  {
+   "id": "ev_statue",
+   "title": "The Weeping Statue",
+   "persona": "caller",
+   "setting": "any",
+   "text": "A statue of somebody's hero. Its eyes are wet. A plaque: HE STAYED.",
+   "options": [
+    {
+     "label": "Wipe its eyes",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.2,
+       "target": "all"
+      },
+      {
+       "type": "status_next",
+       "id": "regenerating",
+       "turns": 2,
+       "side": "hero"
+      }
+     ],
+     "result": "Next fight your party regenerates for two turns."
+    },
+    {
+     "label": "Read the small print",
+     "who": true,
+     "check": {
+      "stat": "wits",
+      "dc": 12,
+      "pass": [
+       {
+        "type": "trait",
+        "id": "t_iron_will",
+        "target": "chosen"
+       }
+      ],
+      "pass_text": "It tells you how he stayed. It takes nerve.",
+      "fail": [
+       {
+        "type": "status_next",
+        "id": "feared",
+        "turns": 1,
+        "side": "hero"
+       }
+      ],
+      "fail_text": "It tells you why. Next fight, your party starts frightened."
+     }
+    },
+    {
+     "label": "Topple it",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 30
+      }
+     ],
+     "result": "There was gold in the base. Of course there was."
+    }
+   ]
+  },
+  {
+   "id": "ev_merchant_cart",
+   "title": "The Peddler",
+   "persona": "prize_clerk",
+   "setting": "any",
+   "text": "A peddler with a cart that wasn't here a moment ago. 'One-time offer. Pick one. Everything else goes back in the cart.'",
+   "options": [
+    {
+     "label": "The bottle (20 gold)",
+     "cost_gold": 20,
+     "effects": [
+      {
+       "type": "consumable",
+       "id": "c_draught",
+       "count": 2
+      }
+     ],
+     "result": "Two healing draughts."
+    },
+    {
+     "label": "The box (45 gold)",
+     "cost_gold": 45,
+     "effects": [
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "uncommon"
+       ]
+      }
+     ],
+     "result": "A relic, wrapped in brown paper."
+    },
+    {
+     "label": "The map (25 gold)",
+     "cost_gold": 25,
+     "effects": [
+      {
+       "type": "reveal"
+      },
+      {
+       "type": "xp",
+       "n": 8,
+       "target": "all"
+      }
+     ],
+     "result": "It shows you what's hidden in this Book."
+    }
+   ]
+  },
+  {
+   "id": "ev_accident",
+   "title": "An Accident",
+   "persona": "caller",
+   "setting": "any",
+   "text": "The Caller knocks the table. Your miniatures fall over. 'Sorry. Sorry. Let me put them back.' He puts them back. Not quite where they were.",
+   "options": [
+    {
+     "label": "Let him",
+     "effects": [
+      {
+       "type": "random",
+       "rows": [
+        {
+         "w": 1,
+         "text": "He puts one back a level higher. A mistake. He doesn't correct it.",
+         "effects": [
+          {
+           "type": "level_offer",
+           "target": "random"
+          }
+         ]
+        },
+        {
+         "w": 1,
+         "text": "He puts one back with a chip missing.",
+         "effects": [
+          {
+           "type": "injure",
+           "target": "random"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Put them back yourself (Wits)",
+     "check": {
+      "stat": "wits",
+      "dc": 11,
+      "pass": [
+       {
+        "type": "heal_pct",
+        "pct": 0.2,
+        "target": "all"
+       }
+      ],
+      "pass_text": "Exactly where they were. He seems almost relieved.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 4,
+        "target": "all"
+       }
+      ],
+      "fail_text": "Close enough. Not quite."
+     }
+    }
+   ]
+  },
+  {
+   "id": "ev_dueling_grounds",
+   "title": "A Challenge",
+   "persona": "caller",
+   "setting": "any",
+   "text": "A painted knight blocks the path. 'Single combat. Your best against me. To first blood.'",
+   "options": [
+    {
+     "label": "Accept (Might)",
+     "who": true,
+     "check": {
+      "stat": "might",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "xp",
+        "n": 25,
+        "target": "chosen"
+       },
+       {
+        "type": "gold",
+        "n": 30
+       }
+      ],
+      "pass_text": "First blood is his. He bows and pays.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 12,
+        "target": "chosen"
+       },
+       {
+        "type": "xp",
+        "n": 8,
+        "target": "chosen"
+       }
+      ],
+      "fail_text": "First blood is yours. In the bad way."
+     }
+    },
+    {
+     "label": "Accept, with tricks (Grace)",
+     "who": true,
+     "check": {
+      "stat": "grace",
+      "dc": 15,
+      "pass": [
+       {
+        "type": "relic",
+        "id": "random",
+        "rarity": [
+         "uncommon"
+        ]
+       }
+      ],
+      "pass_text": "You win without being touched. He gives you his token.",
+      "fail": [
+       {
+        "type": "injure",
+        "target": "chosen"
+       }
+      ],
+      "fail_text": "He has seen that trick before."
+     }
+    },
+    {
+     "label": "Decline",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ev_supply_cache",
+   "title": "A Supply Cache",
+   "persona": "caller",
+   "setting": "any",
+   "text": "A crate stamped PROPERTY OF THE PREVIOUS PARTY. The previous party will not be needing it.",
+   "options": [
+    {
+     "label": "Take the medicine",
+     "effects": [
+      {
+       "type": "consumable",
+       "id": "c_draught"
+      },
+      {
+       "type": "consumable",
+       "id": "c_salts"
+      }
+     ],
+     "result": "A draught and some salts."
+    },
+    {
+     "label": "Take the weapons",
+     "effects": [
+      {
+       "type": "consumable",
+       "id": "c_fire_flask"
+      },
+      {
+       "type": "consumable",
+       "id": "c_oil"
+      }
+     ],
+     "result": "Lamp oil and weapon oil."
+    },
+    {
+     "label": "Take the money",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 40
+      }
+     ],
+     "result": "Forty gold and a note saying sorry."
+    }
+   ]
+  },
+  {
+   "id": "ev_intermission",
+   "title": "Intermission",
+   "persona": "caller",
+   "setting": "any",
+   "text": "'Five minutes,' says the Caller, and leaves the table. The hall is very quiet without him. You could do anything.",
+   "options": [
+    {
+     "label": "Look at his notes",
+     "check": {
+      "stat": "wits",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "reveal"
+       },
+       {
+        "type": "remove_rule"
+       }
+      ],
+      "pass_text": "You read ahead. You cross something out.",
+      "fail": [
+       {
+        "type": "rule_card",
+        "id": "random"
+       }
+      ],
+      "fail_text": "He comes back early. He adds a rule. He doesn't say why."
+     }
+    },
+    {
+     "label": "Stretch your legs",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.2,
+       "target": "all"
+      },
+      {
+       "type": "cure",
+       "target": "all"
+      }
+     ],
+     "result": "Everyone feels better for walking about."
+    },
+    {
+     "label": "Sit perfectly still",
+     "effects": [
+      {
+       "type": "xp",
+       "n": 10,
+       "target": "all"
+      }
+     ],
+     "result": "When he comes back he looks at you for a long time. He seems pleased."
+    }
+   ]
+  },
+  {
+   "id": "ev_well_of_names",
+   "title": "A List of Names",
+   "persona": "receptionist",
+   "setting": "any",
+   "text": "A sign-in sheet pinned to the page. Your names are already on it, in a hand that isn't yours.",
+   "options": [
+    {
+     "label": "Cross your names out",
+     "effects": [
+      {
+       "type": "remove_rule"
+      },
+      {
+       "type": "damage",
+       "n": 4,
+       "target": "all"
+      }
+     ],
+     "result": "The pen bites. A rule is struck out too."
+    },
+    {
+     "label": "Sign again, properly",
+     "effects": [
+      {
+       "type": "max_hp",
+       "n": 3,
+       "target": "all"
+      }
+     ],
+     "result": "It feels like confirming a booking."
+    },
+    {
+     "label": "Add a name",
+     "requires": {
+      "party_le": 3
+     },
+     "effects": [
+      {
+       "type": "recruit"
+      }
+     ],
+     "result": "Somebody sits down at the table who wasn't there before."
+    }
+   ]
+  },
+  {
+   "id": "ev_drinks_cart",
+   "title": "The Drinks Cart",
+   "persona": "auctioneer",
+   "setting": "any",
+   "text": "A trolley squeaks up to your elbow. Bottles, a bucket of ice, something in a jar with a face. 'On the house,' he says. Nothing is on the house.",
+   "options": [
+    {
+     "label": "Something strong",
+     "effects": [
+      {
+       "type": "table_item",
+       "id": "ti_whiskey"
+      },
+      {
+       "type": "table_item",
+       "id": "ti_whiskey"
+      },
+      {
+       "type": "suspicion",
+       "n": 5
+      }
+     ],
+     "result": "Two shots, poured where he can see. He watches you pocket them. He doesn't stop you."
+    },
+    {
+     "label": "The jar with the face",
+     "effects": [
+      {
+       "type": "totem",
+       "id": "random",
+       "kind": "head"
+      },
+      {
+       "type": "damage",
+       "n": 4,
+       "target": "random"
+      }
+     ],
+     "result": "It bites on the way out. You keep the head anyway."
+    },
+    {
+     "label": "Just water",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.2,
+       "target": "all"
+      },
+      {
+       "type": "suspicion",
+       "n": -10
+      }
+     ],
+     "result": "Water. He seems disappointed in you. Good."
+    }
+   ]
+  },
+  {
+   "id": "ev_second_table",
+   "title": "Another Table",
+   "persona": "caller",
+   "setting": "any",
+   "text": "Across the hall, another table is set up. Another party, mid-game. They don't look up. Their miniatures look like yours.",
+   "options": [
+    {
+     "label": "Steal from their pile",
+     "check": {
+      "stat": "grace",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "gear",
+        "id": "random"
+       },
+       {
+        "type": "gear",
+        "id": "random"
+       }
+      ],
+      "pass_text": "Two pieces off their stash. Nobody notices. Nobody at that table is breathing.",
+      "fail": [
+       {
+        "type": "suspicion",
+        "n": 20
+       },
+       {
+        "type": "injure",
+        "target": "random"
+       }
+      ],
+      "fail_text": "One of them grabs your wrist. Their hand is cold and painted."
+     },
+     "who": true
+    },
+    {
+     "label": "Watch their game",
+     "effects": [
+      {
+       "type": "cheat",
+       "id": "peek"
+      },
+      {
+       "type": "xp",
+       "n": 10,
+       "target": "all"
+      }
+     ],
+     "result": "They cheat, badly. You learn how not to."
+    },
+    {
+     "label": "Walk away",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ev_dropped_dice",
+   "title": "Dice on the Floor",
+   "persona": "caller",
+   "setting": "any",
+   "text": "Under the table, a scatter of dice. Some of them are his. Some of them are warm.",
+   "options": [
+    {
+     "label": "Pocket them",
+     "effects": [
+      {
+       "type": "table_item",
+       "id": "ti_spare_d20"
+      },
+      {
+       "type": "table_item",
+       "id": "ti_two_dice"
+      },
+      {
+       "type": "suspicion",
+       "n": 8
+      }
+     ],
+     "result": "Into your sleeve. He hears them click."
+    },
+    {
+     "label": "Give them back",
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": -15
+      },
+      {
+       "type": "gold",
+       "n": 15
+      }
+     ],
+     "result": "'Honest,' he says, like it's a disease. He tips you anyway."
+    },
+    {
+     "label": "Crush one underfoot",
+     "effects": [
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "uncommon"
+       ]
+      },
+      {
+       "type": "suspicion",
+       "n": 12
+      }
+     ],
+     "result": "It cracks like a tooth. There was something inside it."
+    }
+   ]
+  },
+  {
+   "id": "ev_dentist",
+   "title": "The Caller's Dentist",
+   "persona": "nurse",
+   "setting": "any",
+   "requires": {
+    "gold_ge": 30
+   },
+   "text": "A chair with straps. A tray of tools. 'He has a lot of teeth to keep clean,' she says, 'and some of them are yours now. Sit.'",
+   "options": [
+    {
+     "label": "Sit (30 gold)",
+     "cost_gold": 30,
+     "who": true,
+     "effects": [
+      {
+       "type": "trait",
+       "id": "t_thick",
+       "target": "chosen"
+      },
+      {
+       "type": "damage",
+       "n": 6,
+       "target": "chosen"
+      }
+     ],
+     "result": "She takes something out and puts something in. It's better. It's worse."
+    },
+    {
+     "label": "Buy a tooth (20 gold)",
+     "cost_gold": 20,
+     "effects": [
+      {
+       "type": "gear",
+       "id": "gt_tooth_necklace"
+      }
+     ],
+     "result": "She threads it on a string for you. It's still warm."
+    },
+    {
+     "label": "Leave",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

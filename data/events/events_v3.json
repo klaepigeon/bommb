@@ -1,0 +1,2457 @@
+{
+ "_note": "Events v3: a content drop across every setting. Ids prefixed v3e_.",
+ "events": [
+  {
+   "id": "v3e_dk_tide_bell",
+   "title": "The Tide Bell",
+   "persona": "ferryman",
+   "setting": "drowned",
+   "text": "A bell hangs under the jetty. Below the waterline. It still rings. Every ring, the water climbs a step.",
+   "options": [
+    {
+     "label": "Ring it once more (Nerve)",
+     "check": {
+      "stat": "nerve",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "relic",
+        "id": "random",
+        "rarity": [
+         "uncommon"
+        ]
+       },
+       {
+        "type": "xp",
+        "n": 10,
+        "target": "all"
+       }
+      ],
+      "pass_text": "It rings. Something under the water rings back. It leaves you a gift on the step.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 5,
+        "target": "all"
+       },
+       {
+        "type": "status_next",
+        "id": "slowed",
+        "turns": 2,
+        "side": "hero"
+       }
+      ],
+      "fail_text": "The water climbs. Over the step. Over your boots. It does not go back down."
+     }
+    },
+    {
+     "label": "Cut the rope (Might)",
+     "check": {
+      "stat": "might",
+      "dc": 12,
+      "pass": [
+       {
+        "type": "enemy_hp_next",
+        "mult": 0.8
+       },
+       {
+        "type": "gold",
+        "n": 25
+       }
+      ],
+      "pass_text": "The bell sinks. Down there, a lot of things stop waiting. Some coins float up.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 6,
+        "target": "chosen"
+       },
+       {
+        "type": "injure",
+        "target": "chosen"
+       }
+      ],
+      "fail_text": "The rope whips back. It was holding more than a bell."
+     }
+    },
+    {
+     "label": "Leave it",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "v3e_dk_floats",
+   "title": "Numbered Floats",
+   "persona": "caller",
+   "setting": "drowned",
+   "text": "Wooden balls bob on the black water. Numbers painted on. 7. 22. 45. His cage rattles each time one goes under.",
+   "options": [
+    {
+     "label": "Fish one out",
+     "who": true,
+     "effects": [
+      {
+       "type": "random",
+       "rows": [
+        {
+         "w": 3,
+         "text": "Number seven. Lucky. Lucky. He says it twice.",
+         "effects": [
+          {
+           "type": "gold",
+           "n": 40
+          }
+         ]
+        },
+        {
+         "w": 2,
+         "text": "Number fifty-one. A card is stuck to it.",
+         "effects": [
+          {
+           "type": "consumable",
+           "id": "random",
+           "count": 1
+          }
+         ]
+        },
+        {
+         "w": 2,
+         "text": "Number nought. There is no. Nought. He takes it off you.",
+         "effects": [
+          {
+           "type": "damage",
+           "n": 8,
+           "target": "chosen"
+          },
+          {
+           "type": "suspicion",
+           "n": 6
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "result": "The ball is heavier than wood should be."
+    },
+    {
+     "label": "Call them out loud (Wits)",
+     "check": {
+      "stat": "wits",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "reveal"
+       },
+       {
+        "type": "xp",
+        "n": 12,
+        "target": "all"
+       }
+      ],
+      "pass_text": "You call them in order. He goes very still. Then. 'Yes. Yes. That was. The order.'",
+      "fail": [
+       {
+        "type": "suspicion",
+        "n": 12
+       },
+       {
+        "type": "status_next",
+        "id": "jinxed",
+        "turns": 1,
+        "side": "hero"
+       }
+      ],
+      "fail_text": "'Wrong. Wrong. That is. My job.' Your dice feel cold for a while."
+     }
+    },
+    {
+     "label": "Leave it",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "v3e_dk_wellington",
+   "title": "One Wellington",
+   "persona": "caller",
+   "setting": "drowned",
+   "text": "A single wellington boot, upright on the rocks. Size eleven. Biro inside the rim: STEVE. It is full. The water is warm.",
+   "options": [
+    {
+     "label": "Pour it out",
+     "effects": [
+      {
+       "type": "xp",
+       "n": 10,
+       "target": "all"
+      },
+      {
+       "type": "suspicion",
+       "n": -8
+      },
+      {
+       "type": "flag",
+       "key": "v3e_poured_steve"
+      }
+     ],
+     "result": "Dice spill out with the water. Eleven of them. All ones. He counts them. Under his breath."
+    },
+    {
+     "label": "Drink from it",
+     "who": true,
+     "effects": [
+      {
+       "type": "attr",
+       "stat": "nerve",
+       "n": 1,
+       "target": "chosen"
+      },
+      {
+       "type": "injure",
+       "target": "chosen"
+      }
+     ],
+     "result": "It tastes of pennies and laughing. Something in your chest stops trusting the dice."
+    },
+    {
+     "label": "Wear it",
+     "who": true,
+     "effects": [
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "common"
+       ]
+      },
+      {
+       "type": "status_next",
+       "id": "slowed",
+       "turns": 2,
+       "side": "hero"
+      }
+     ],
+     "result": "It fits. Of course it fits. Something rattles in the toe. You walk like him now."
+    },
+    {
+     "label": "Leave it",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "v3e_dk_tote",
+   "title": "The Tote Board",
+   "persona": "drowned_king",
+   "setting": "drowned",
+   "text": "A betting board rises out of the moat. Every party that drowned here. Then yours. The odds on you are very long.",
+   "options": [
+    {
+     "label": "Bet on yourselves (40 gold)",
+     "cost_gold": 40,
+     "effects": [
+      {
+       "type": "random",
+       "rows": [
+        {
+         "w": 3,
+         "text": "You live. The King pays out. In wet coins. Grudgingly.",
+         "effects": [
+          {
+           "type": "gold",
+           "n": 100
+          }
+         ]
+        },
+        {
+         "w": 2,
+         "text": "The board changes your odds while you watch. The bet is void.",
+         "effects": [
+          {
+           "type": "nothing"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "result": "'Brave. Brave. Wet.' The King takes your coins."
+    },
+    {
+     "label": "Bet against yourselves",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 60
+      },
+      {
+       "type": "suspicion",
+       "n": 10
+      },
+      {
+       "type": "elite_next"
+      }
+     ],
+     "result": "'Clever. Now you must lose. Or I. Will know.' He sends something big to make sure."
+    },
+    {
+     "label": "Rub your names off (Grace)",
+     "check": {
+      "stat": "grace",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "remove_rule"
+       },
+       {
+        "type": "suspicion",
+        "n": -5
+       }
+      ],
+      "pass_text": "Your names smear away. So does one of his rules. Nobody is watching the board.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 6,
+        "target": "chosen"
+       },
+       {
+        "type": "status_next",
+        "id": "marked",
+        "turns": 2,
+        "side": "hero"
+       }
+      ],
+      "fail_text": "Your names will not come off. They are carved. He underlines them."
+     }
+    }
+   ]
+  },
+  {
+   "id": "v3e_dk_choir_below",
+   "title": "The Choir Below",
+   "persona": "ferryman",
+   "setting": "drowned",
+   "text": "Singing, from under the boards. Hymn numbers. The same as bingo numbers. Somebody down there is about to win.",
+   "options": [
+    {
+     "label": "Sing along (Nerve)",
+     "check": {
+      "stat": "nerve",
+      "dc": 12,
+      "pass": [
+       {
+        "type": "heal_pct",
+        "pct": 0.4,
+        "target": "all"
+       }
+      ],
+      "pass_text": "You know the words. You did not know you knew them. It helps.",
+      "fail": [
+       {
+        "type": "status_next",
+        "id": "feared",
+        "turns": 1,
+        "side": "hero"
+       },
+       {
+        "type": "damage",
+        "n": 3,
+        "target": "all"
+       }
+      ],
+      "fail_text": "The singing stops. Everything down there turns to listen to you."
+     }
+    },
+    {
+     "label": "Drop coins through the gaps (20 gold)",
+     "cost_gold": 20,
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": -12
+      },
+      {
+       "type": "xp",
+       "n": 8,
+       "target": "all"
+      }
+     ],
+     "result": "Plink. Plink. The singing gets kinder. He notes your manners."
+    },
+    {
+     "label": "Prise up a board (Might)",
+     "check": {
+      "stat": "might",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "relic",
+        "id": "random",
+        "rarity": [
+         "rare"
+        ]
+       }
+      ],
+      "pass_text": "A drowned hand offers you its prize card. It wants you to have it. It is so tired of holding it.",
+      "fail": [
+       {
+        "type": "lose_consumable"
+       },
+       {
+        "type": "injure",
+        "target": "chosen"
+       }
+      ],
+      "fail_text": "Hands. Many hands. They take a card from you. And a finger, to be sure."
+     }
+    }
+   ]
+  },
+  {
+   "id": "v3e_dk_goblet",
+   "title": "Drink, Breathe",
+   "persona": "drowned_king",
+   "setting": "drowned",
+   "text": "The King offers a goblet of seawater. A tiny crown floats in it. 'Drink. Breathe water. Like me. Never. Leave.'",
+   "options": [
+    {
+     "label": "Drink",
+     "who": true,
+     "effects": [
+      {
+       "type": "trait",
+       "id": "t_thick",
+       "target": "chosen"
+      },
+      {
+       "type": "attr",
+       "stat": "grace",
+       "n": -1,
+       "target": "chosen"
+      }
+     ],
+     "result": "You breathe it. It stays in. You are heavier now, and harder to move. Harder to kill."
+    },
+    {
+     "label": "Take the tiny crown",
+     "effects": [
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "uncommon"
+       ]
+      },
+      {
+       "type": "combat",
+       "kind": "combat"
+      }
+     ],
+     "result": "'Thief. Thief. Court!' The court climbs out of the moat to discuss it."
+    },
+    {
+     "label": "Pour it back into the moat",
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": 6
+      },
+      {
+       "type": "heal_pct",
+       "pct": 0.2,
+       "target": "all"
+      }
+     ],
+     "result": "'Rude.' He sulks. While he sulks, you rest."
+    }
+   ]
+  },
+  {
+   "id": "v3e_ca_collection",
+   "title": "The Collection Plate",
+   "persona": "deacon",
+   "setting": "cathedral",
+   "text": "The plate comes round. It is a dauber tray. Everyone in the pews puts in something warm.",
+   "options": [
+    {
+     "label": "Give gold (30 gold)",
+     "cost_gold": 30,
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.5,
+       "target": "all"
+      },
+      {
+       "type": "suspicion",
+       "n": -6
+      }
+     ],
+     "result": "The deacon blesses you with a dauber. A red dot, on the forehead. You feel seen to."
+    },
+    {
+     "label": "Give blood",
+     "who": true,
+     "effects": [
+      {
+       "type": "damage",
+       "n": 8,
+       "target": "chosen"
+      },
+      {
+       "type": "status_next",
+       "id": "blessed",
+       "turns": 2,
+       "side": "hero"
+      }
+     ],
+     "result": "You bleed into the tray. The pews say amen. Your next fight goes better. Holier."
+    },
+    {
+     "label": "Take from the plate (Grace)",
+     "check": {
+      "stat": "grace",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "gold",
+        "n": 60
+       },
+       {
+        "type": "table_item",
+        "id": "random"
+       }
+      ],
+      "pass_text": "You take more than you gave. Nobody saw. Something did.",
+      "fail": [
+       {
+        "type": "suspicion",
+        "n": 15
+       },
+       {
+        "type": "status_next",
+        "id": "cursed",
+        "turns": 2,
+        "side": "hero"
+       }
+      ],
+      "fail_text": "The whole church turns round. 'Thief.' He writes it in red."
+     }
+    }
+   ]
+  },
+  {
+   "id": "v3e_ca_hymn88",
+   "title": "Hymn Eighty-Eight",
+   "persona": "choir",
+   "setting": "cathedral",
+   "text": "The board says HYMN 88. Two fat ladies. The congregation turns to you. You don't know the words. Nobody alive does.",
+   "options": [
+    {
+     "label": "Sing it anyway (Nerve)",
+     "check": {
+      "stat": "nerve",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "xp",
+        "n": 15,
+        "target": "all"
+       },
+       {
+        "type": "status_next",
+        "id": "inspired",
+        "turns": 1,
+        "side": "hero"
+       }
+      ],
+      "pass_text": "You make it up. They sing it back to you, word for word. As if it was always that.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 5,
+        "target": "all"
+       },
+       {
+        "type": "status_next",
+        "id": "chorus",
+        "turns": 2,
+        "side": "hero"
+       }
+      ],
+      "fail_text": "Wrong. The choir corrects you. All of them. All at once. For a long time."
+     }
+    },
+    {
+     "label": "Mouth along (Grace)",
+     "check": {
+      "stat": "grace",
+      "dc": 12,
+      "pass": [
+       {
+        "type": "suspicion",
+        "n": -8
+       }
+      ],
+      "pass_text": "Nobody notices. He nods along. Good. Good. Blend.",
+      "fail": [
+       {
+        "type": "suspicion",
+        "n": 12
+       },
+       {
+        "type": "xp",
+        "n": 5,
+        "target": "all"
+       }
+      ],
+      "fail_text": "You mouth the wrong shape. He hears silence in the wrong place."
+     }
+    },
+    {
+     "label": "Leave it",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "v3e_ca_pew_four",
+   "title": "Pew Four",
+   "persona": "confessor",
+   "setting": "cathedral",
+   "text": "A cardigan, folded on the end of pew four. A dauber in the pocket. A note: SAVE ME A SEAT. J.",
+   "options": [
+    {
+     "label": "Wear the cardigan",
+     "who": true,
+     "effects": [
+      {
+       "type": "cheat",
+       "id": "random"
+      },
+      {
+       "type": "suspicion",
+       "n": 10
+      }
+     ],
+     "result": "It fits. The sleeves are very deep. He will notice the sleeves. He noticed hers."
+    },
+    {
+     "label": "Leave it folded",
+     "effects": [
+      {
+       "type": "flag",
+       "key": "v3e_janets_seat"
+      },
+      {
+       "type": "suspicion",
+       "n": -5
+      },
+      {
+       "type": "xp",
+       "n": 6,
+       "target": "all"
+      }
+     ],
+     "result": "You save her the seat. 'Thank. You.' He sounds. Older."
+    },
+    {
+     "label": "Check the pockets (Wits)",
+     "check": {
+      "stat": "wits",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "table_item",
+        "id": "random"
+       },
+       {
+        "type": "gold",
+        "n": 20
+       }
+      ],
+      "pass_text": "A spare die. A mint. Bus fare home. She was planning to leave.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 4,
+        "target": "chosen"
+       },
+       {
+        "type": "status_next",
+        "id": "marked",
+        "turns": 2,
+        "side": "hero"
+       }
+      ],
+      "fail_text": "A pin. Then the cardigan's arms close round you. Briefly. Firmly."
+     }
+    }
+   ]
+  },
+  {
+   "id": "v3e_ca_fingers",
+   "title": "The Ring Fingers",
+   "persona": "saint",
+   "setting": "cathedral",
+   "text": "A glass box of saints' fingers. Every one wears a wedding ring. One finger still twitches. It points at you.",
+   "options": [
+    {
+     "label": "Take the twitching one",
+     "effects": [
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "uncommon"
+       ]
+      },
+      {
+       "type": "status_next",
+       "id": "hunted",
+       "turns": 2,
+       "side": "hero"
+      }
+     ],
+     "result": "It stops pointing. Something else starts."
+    },
+    {
+     "label": "Take a ring",
+     "who": true,
+     "effects": [
+      {
+       "type": "gold",
+       "n": 45
+      },
+      {
+       "type": "injure",
+       "target": "chosen"
+      }
+     ],
+     "result": "The ring comes off. Your finger goes with it. Fair trade. Says the saint."
+    },
+    {
+     "label": "Pray (Nerve)",
+     "check": {
+      "stat": "nerve",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "cure",
+        "target": "all"
+       },
+       {
+        "type": "heal_pct",
+        "pct": 0.25,
+        "target": "all"
+       }
+      ],
+      "pass_text": "The fingers fold. In prayer. Your wounds close the way doors do.",
+      "fail": [
+       {
+        "type": "suspicion",
+        "n": 8
+       },
+       {
+        "type": "status_next",
+        "id": "cursed",
+        "turns": 1,
+        "side": "hero"
+       }
+      ],
+      "fail_text": "Every finger points at you now."
+     }
+    }
+   ]
+  },
+  {
+   "id": "v3e_ca_warm_altar",
+   "title": "The Warm Altar",
+   "persona": "deacon",
+   "setting": "cathedral",
+   "text": "The altar has a pulse. Lay a hand on it and it learns your shape. Lay something precious on it and it gives back.",
+   "options": [
+    {
+     "label": "Offer a relic",
+     "requires": {
+      "relics_ge": 1
+     },
+     "effects": [
+      {
+       "type": "remove_relic"
+      },
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "rare"
+       ]
+      }
+     ],
+     "result": "It swallows. It thinks. It gives back something bigger. Wetter."
+    },
+    {
+     "label": "Offer yourself",
+     "who": true,
+     "effects": [
+      {
+       "type": "attr",
+       "stat": "might",
+       "n": 1,
+       "target": "chosen"
+      },
+      {
+       "type": "max_hp",
+       "n": -4,
+       "target": "chosen"
+      }
+     ],
+     "result": "It takes a little of you. What is left is stronger. Less of it."
+    },
+    {
+     "label": "Leave it",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "v3e_ca_booth",
+   "title": "Booth Out of Order",
+   "persona": "confessor",
+   "setting": "cathedral",
+   "text": "A confession booth. A raffle drum where the grille should be. Put in your sin. Draw out someone else's.",
+   "options": [
+    {
+     "label": "Confess a cheat",
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": -15
+      },
+      {
+       "type": "lose_consumable"
+      }
+     ],
+     "result": "He hears it. He is not angry. He takes a card. As a. Receipt."
+    },
+    {
+     "label": "Draw a sin (Wits)",
+     "check": {
+      "stat": "wits",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "cheat",
+        "id": "random"
+       },
+       {
+        "type": "xp",
+        "n": 8,
+        "target": "all"
+       }
+      ],
+      "pass_text": "Janet's. A trick with a sleeve. You understand it immediately.",
+      "fail": [
+       {
+        "type": "rule_card",
+        "id": "random"
+       },
+       {
+        "type": "suspicion",
+        "n": 6
+       }
+      ],
+      "fail_text": "It is Derek's sin. It is a rule. It is yours now."
+     }
+    },
+    {
+     "label": "Leave it",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "v3e_ir_time_cards",
+   "title": "Clocking In",
+   "persona": "foreman",
+   "setting": "iron",
+   "text": "A rack of time cards. Yours are there, already punched. Departure: blank. One old card reads LINDA. 1986. Departure: blank.",
+   "options": [
+    {
+     "label": "Punch out early (Grace)",
+     "check": {
+      "stat": "grace",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "rest"
+       },
+       {
+        "type": "suspicion",
+        "n": 8
+       }
+      ],
+      "pass_text": "Clunk. Shift over. You sit down somewhere quiet. He will check the cards later.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 6,
+        "target": "all"
+       },
+       {
+        "type": "elite_next"
+       }
+      ],
+      "fail_text": "The machine rings. A foreman comes. Several foremen."
+     }
+    },
+    {
+     "label": "Work a double",
+     "who": true,
+     "effects": [
+      {
+       "type": "gold",
+       "n": 55
+      },
+      {
+       "type": "damage",
+       "n": 9,
+       "target": "chosen"
+      }
+     ],
+     "result": "Sixteen hours on the line. You can't remember what you made. The pay is real."
+    },
+    {
+     "label": "Punch Linda out",
+     "effects": [
+      {
+       "type": "xp",
+       "n": 15,
+       "target": "all"
+      },
+      {
+       "type": "suspicion",
+       "n": -10
+      },
+      {
+       "type": "flag",
+       "key": "v3e_linda_clocked_out"
+      }
+     ],
+     "result": "Clunk. Far away, under a dust sheet, something sighs. The Caller is quiet. 'Thank. You.'"
+    }
+   ]
+  },
+  {
+   "id": "v3e_ir_scales",
+   "title": "Weighed Out",
+   "persona": "prospector",
+   "setting": "iron",
+   "text": "'Gold for meat. Meat for gold. Fair weight.' The scales are rusted to one side. The other pan holds false teeth.",
+   "options": [
+    {
+     "label": "Trade flesh",
+     "who": true,
+     "effects": [
+      {
+       "type": "max_hp",
+       "n": -5,
+       "target": "chosen"
+      },
+      {
+       "type": "gold",
+       "n": 80
+      }
+     ],
+     "result": "He weighs you. Generously. He takes it from somewhere you won't miss. Much."
+    },
+    {
+     "label": "Trade gold (50 gold)",
+     "cost_gold": 50,
+     "effects": [
+      {
+       "type": "max_hp",
+       "n": 3,
+       "target": "all"
+      }
+     ],
+     "result": "He gives you meat. You don't ask whose. Everyone feels sturdier."
+    },
+    {
+     "label": "Tip the scales (Might)",
+     "check": {
+      "stat": "might",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "gold",
+        "n": 40
+       }
+      ],
+      "pass_text": "The pan slams down. Gold slides off. He doesn't notice. Too busy with the teeth.",
+      "fail": [
+       {
+        "type": "suspicion",
+        "n": 10
+       },
+       {
+        "type": "combat",
+        "kind": "combat"
+       }
+      ],
+      "fail_text": "'Thumb. On the. Scale.' The prospector calls his friends."
+     }
+    }
+   ]
+  },
+  {
+   "id": "v3e_ir_boiler",
+   "title": "The Boiler",
+   "persona": "foreman",
+   "setting": "iron",
+   "text": "A boiler with a door like an oven. Inside, it is not coal. It is dice. Thousands. Glowing.",
+   "options": [
+    {
+     "label": "Shovel more in (Might)",
+     "check": {
+      "stat": "might",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "status_next",
+        "id": "empowered",
+        "turns": 2,
+        "side": "hero"
+       },
+       {
+        "type": "xp",
+        "n": 10,
+        "target": "all"
+       }
+      ],
+      "pass_text": "The engine roars. So do you.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 8,
+        "target": "chosen"
+       },
+       {
+        "type": "status_next",
+        "id": "burning",
+        "turns": 1,
+        "side": "hero"
+       }
+      ],
+      "fail_text": "The door bangs open. Hot dice. Everywhere."
+     }
+    },
+    {
+     "label": "Pull a die out",
+     "who": true,
+     "effects": [
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "uncommon"
+       ]
+      },
+      {
+       "type": "injure",
+       "target": "chosen"
+      }
+     ],
+     "result": "You reach in. You pull one out. Your hand stays a bit. In there."
+    },
+    {
+     "label": "Shut the door",
+     "effects": [
+      {
+       "type": "enemy_hp_next",
+       "mult": 0.85
+      },
+      {
+       "type": "suspicion",
+       "n": 5
+      }
+     ],
+     "result": "The line slows. Everything you meet next is tired. He liked the noise."
+    }
+   ]
+  },
+  {
+   "id": "v3e_ir_payroll",
+   "title": "Back Pay",
+   "persona": "foreman",
+   "setting": "iron",
+   "text": "A payroll ledger. Wages owed to workers who never clocked out. The total is enormous. The names are from the table.",
+   "options": [
+    {
+     "label": "Claim their wages (Wits)",
+     "check": {
+      "stat": "wits",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "gold",
+        "n": 90
+       },
+       {
+        "type": "suspicion",
+        "n": 12
+       }
+      ],
+      "pass_text": "You forge four signatures. Steve's is easy. Everyone's is easy.",
+      "fail": [
+       {
+        "type": "suspicion",
+        "n": 20
+       },
+       {
+        "type": "damage",
+        "n": 4,
+        "target": "all"
+       }
+      ],
+      "fail_text": "The ledger knows their handwriting. It knows yours better."
+     }
+    },
+    {
+     "label": "Settle their debts (40 gold)",
+     "cost_gold": 40,
+     "effects": [
+      {
+       "type": "xp",
+       "n": 20,
+       "target": "all"
+      },
+      {
+       "type": "suspicion",
+       "n": -10
+      }
+     ],
+     "result": "You pay what they owed. Somewhere, a tab is closed. Sandra's, probably."
+    },
+    {
+     "label": "Burn the ledger",
+     "effects": [
+      {
+       "type": "remove_rule"
+      },
+      {
+       "type": "status_next",
+       "id": "burning",
+       "turns": 1,
+       "side": "hero"
+      }
+     ],
+     "result": "It goes up fast. A rule goes with it. So does your sleeve."
+    }
+   ]
+  },
+  {
+   "id": "v3e_ir_points",
+   "title": "Points Failure",
+   "persona": "caller",
+   "setting": "iron",
+   "text": "Two tracks. One lever. On one line, a stranger, tied down. On the other, your gold. The train is a bingo cage on wheels.",
+   "options": [
+    {
+     "label": "Save the stranger",
+     "requires": {
+      "party_le": 3
+     },
+     "effects": [
+      {
+       "type": "recruit",
+       "level": 1
+      },
+      {
+       "type": "gold",
+       "n": -40
+      }
+     ],
+     "result": "The cage runs over your purse. The stranger stands up. Takes a seat. Says nothing."
+    },
+    {
+     "label": "Save the gold",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 60
+      },
+      {
+       "type": "suspicion",
+       "n": 8
+      }
+     ],
+     "result": "The cage rolls on. You don't look. He does. He writes something down."
+    },
+    {
+     "label": "Derail it (Might)",
+     "check": {
+      "stat": "might",
+      "dc": 15,
+      "pass": [
+       {
+        "type": "relic",
+        "id": "random",
+        "rarity": [
+         "rare"
+        ]
+       },
+       {
+        "type": "xp",
+        "n": 10,
+        "target": "all"
+       }
+      ],
+      "pass_text": "The cage tips. Numbers everywhere. One of them is a prize.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 6,
+        "target": "all"
+       },
+       {
+        "type": "injure",
+        "target": "random"
+       }
+      ],
+      "fail_text": "It doesn't tip. It turns. Towards you."
+     }
+    }
+   ]
+  },
+  {
+   "id": "v3e_ir_canary",
+   "title": "The Canary",
+   "persona": "prospector",
+   "setting": "iron",
+   "text": "A canary in a cage of rib bones. It sings bingo numbers. When it stops, the shaft fills with something.",
+   "options": [
+    {
+     "label": "Feed it (15 gold)",
+     "cost_gold": 15,
+     "effects": [
+      {
+       "type": "status_next",
+       "id": "blessed",
+       "turns": 2,
+       "side": "hero"
+      },
+      {
+       "type": "xp",
+       "n": 5,
+       "target": "all"
+      }
+     ],
+     "result": "It sings louder. Kelly's eye. Number one. You feel watched over."
+    },
+    {
+     "label": "Wring its neck",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 20
+      },
+      {
+       "type": "rule_card",
+       "id": "random"
+      },
+      {
+       "type": "suspicion",
+       "n": 6
+      }
+     ],
+     "result": "Quiet. Then a new rule, chalked on the wall in a hand you don't know."
+    },
+    {
+     "label": "Listen to the numbers (Wits)",
+     "check": {
+      "stat": "wits",
+      "dc": 12,
+      "pass": [
+       {
+        "type": "reveal"
+       },
+       {
+        "type": "table_item",
+        "id": "random"
+       }
+      ],
+      "pass_text": "Not numbers. Directions. Down here, behind the third prop.",
+      "fail": [
+       {
+        "type": "status_next",
+        "id": "confused",
+        "turns": 1,
+        "side": "hero"
+       }
+      ],
+      "fail_text": "Numbers in your head. They stay. Next fight, you lose count."
+     }
+    }
+   ]
+  },
+  {
+   "id": "v3e_tb_ash",
+   "title": "Ash on the Map",
+   "persona": "caller",
+   "setting": "table",
+   "text": "Cigarette ash drifts down onto the map. He does not smoke. He has no mouth. The ash spells a word. EYES.",
+   "options": [
+    {
+     "label": "Blow it off",
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": -6
+      },
+      {
+       "type": "xp",
+       "n": 6,
+       "target": "all"
+      }
+     ],
+     "result": "Gone. 'Thank you. Sorry. That. Is old.'"
+    },
+    {
+     "label": "Read the rest (Wits)",
+     "check": {
+      "stat": "wits",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "reveal"
+       },
+       {
+        "type": "level_offer",
+        "target": "chosen"
+       }
+      ],
+      "pass_text": "EYES DOWN. HE CHEATS. SEAT TWO. It all blows away.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 5,
+        "target": "chosen"
+       },
+       {
+        "type": "status_next",
+        "id": "dazed",
+        "turns": 1,
+        "side": "hero"
+       }
+      ],
+      "fail_text": "Ash in your eyes. It does not wash out. Not for a while."
+     }
+    },
+    {
+     "label": "Leave it",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "v3e_tb_dust_sheet",
+   "title": "Under the Dust Sheet",
+   "persona": "caller",
+   "setting": "table",
+   "text": "The edge of the map peels back. Under it: the real hall. Seat one. A dust sheet over a shape still holding a handbag.",
+   "options": [
+    {
+     "label": "Lift the sheet (Nerve)",
+     "check": {
+      "stat": "nerve",
+      "dc": 15,
+      "pass": [
+       {
+        "type": "relic",
+        "id": "random",
+        "rarity": [
+         "rare"
+        ]
+       },
+       {
+        "type": "flag",
+        "key": "v3e_saw_linda"
+       }
+      ],
+      "pass_text": "She is smiling. She is still smiling. She hands you something from the bag.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 10,
+        "target": "chosen"
+       },
+       {
+        "type": "status_next",
+        "id": "feared",
+        "turns": 2,
+        "side": "hero"
+       },
+       {
+        "type": "suspicion",
+        "n": 10
+       }
+      ],
+      "fail_text": "You don't get to see. He does it for you. Gently. Then not."
+     }
+    },
+    {
+     "label": "Tuck her back in",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.3,
+       "target": "all"
+      },
+      {
+       "type": "suspicion",
+       "n": -10
+      }
+     ],
+     "result": "You smooth the sheet. He stops. Then lets you. 'She. Gets cold.'"
+    },
+    {
+     "label": "Take the handbag",
+     "who": true,
+     "effects": [
+      {
+       "type": "gold",
+       "n": 70
+      },
+      {
+       "type": "status_next",
+       "id": "hunted",
+       "turns": 3,
+       "side": "hero"
+      },
+      {
+       "type": "rule_card",
+       "id": "random"
+      }
+     ],
+     "result": "Purse. Mints. Something has started following you. A new rule, in her handwriting."
+    }
+   ]
+  },
+  {
+   "id": "v3e_tb_flashboard",
+   "title": "The Flashboard",
+   "persona": "prize_clerk",
+   "setting": "table",
+   "text": "The hall's number board flickers across the sky. Lights come on, one by one. When the last lights, someone wins.",
+   "options": [
+    {
+     "label": "Count the lights (Wits)",
+     "check": {
+      "stat": "wits",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "gold",
+        "n": 50
+       },
+       {
+        "type": "xp",
+        "n": 10,
+        "target": "all"
+       }
+      ],
+      "pass_text": "Eighty-nine lit. One left. You count it out loud before he does. A prize.",
+      "fail": [
+       {
+        "type": "suspicion",
+        "n": 10
+       }
+      ],
+      "fail_text": "You count wrong. He counts right. He counts you."
+     }
+    },
+    {
+     "label": "Smash the bulbs (Might)",
+     "check": {
+      "stat": "might",
+      "dc": 12,
+      "pass": [
+       {
+        "type": "enemy_hp_next",
+        "mult": 0.75
+       }
+      ],
+      "pass_text": "Dark. The next fight starts in the dark. They can't see you either.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 6,
+        "target": "all"
+       },
+       {
+        "type": "elite_next"
+       }
+      ],
+      "fail_text": "Glass. Then the board relights. Brighter. Angrier."
+     }
+    },
+    {
+     "label": "Leave it",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "v3e_tb_eyes_down",
+   "title": "Eyes Down",
+   "persona": "caller",
+   "setting": "table",
+   "text": "'Eyes. Down.' Everyone looks at their sheet. You don't. Behind him the hall door is open. A crack.",
+   "options": [
+    {
+     "label": "Look at the door (Nerve)",
+     "check": {
+      "stat": "nerve",
+      "dc": 16,
+      "pass": [
+       {
+        "type": "flag",
+        "key": "v3e_saw_door"
+       },
+       {
+        "type": "xp",
+        "n": 25,
+        "target": "all"
+       },
+       {
+        "type": "reveal"
+       }
+      ],
+      "pass_text": "Outside: a car park. Rain. A car with its lights on. Somebody waiting. Still.",
+      "fail": [
+       {
+        "type": "suspicion",
+        "n": 25
+       },
+       {
+        "type": "damage",
+        "n": 5,
+        "target": "all"
+       }
+      ],
+      "fail_text": "His cage turns. All the way round. 'I. Said. Down.'"
+     }
+    },
+    {
+     "label": "Eyes down",
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": -10
+      },
+      {
+       "type": "heal_pct",
+       "pct": 0.2,
+       "target": "all"
+      }
+     ],
+     "result": "Good. Good. He reads the numbers softly. Like a bedtime story."
+    }
+   ]
+  },
+  {
+   "id": "v3e_tb_tea_urn",
+   "title": "The Tea Urn",
+   "persona": "receptionist",
+   "setting": "table",
+   "text": "An urn at the edge of the map, hissing. Paper cups. A sign: 10p A CUP. HONESTY BOX. The box is full of teeth.",
+   "options": [
+    {
+     "label": "Pay (10 gold)",
+     "cost_gold": 10,
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.35,
+       "target": "all"
+      }
+     ],
+     "result": "Stewed. Sweet. The best thing that has happened tonight."
+    },
+    {
+     "label": "Help yourselves",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.35,
+       "target": "all"
+      },
+      {
+       "type": "suspicion",
+       "n": 12
+      }
+     ],
+     "result": "Just as sweet. He doesn't say anything. He doesn't need to."
+    },
+    {
+     "label": "Put in a tooth",
+     "who": true,
+     "effects": [
+      {
+       "type": "gold",
+       "n": 30
+      },
+      {
+       "type": "damage",
+       "n": 3,
+       "target": "chosen"
+      }
+     ],
+     "result": "The box rattles. It gives you change."
+    }
+   ]
+  },
+  {
+   "id": "v3e_tb_scorecards",
+   "title": "Old Bingo Cards",
+   "persona": "understudy",
+   "setting": "table",
+   "text": "A stack of bingo cards, decades of them. The same five numbers circled on every one. Somebody was telling somebody something.",
+   "options": [
+    {
+     "label": "Study the pattern (Wits)",
+     "check": {
+      "stat": "wits",
+      "dc": 15,
+      "pass": [
+       {
+        "type": "cheat",
+        "id": "random"
+       },
+       {
+        "type": "reveal"
+       }
+      ],
+      "pass_text": "It's how he looks away. When. For how long. Pauline worked it out. Nineteen years.",
+      "fail": [
+       {
+        "type": "suspicion",
+        "n": 15
+       },
+       {
+        "type": "damage",
+        "n": 3,
+        "target": "chosen"
+       }
+      ],
+      "fail_text": "He takes the cards back. One at a time. Off your fingers."
+     }
+    },
+    {
+     "label": "Burn them for warmth",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.2,
+       "target": "all"
+      },
+      {
+       "type": "remove_rule"
+      }
+     ],
+     "result": "The cards curl up. One of his rules goes with them. He doesn't notice. Yet."
+    },
+    {
+     "label": "Pocket one",
+     "effects": [
+      {
+       "type": "table_item",
+       "id": "random"
+      },
+      {
+       "type": "suspicion",
+       "n": 5
+      }
+     ],
+     "result": "Seat four. 2001. Dabbed so hard it went through."
+    }
+   ]
+  },
+  {
+   "id": "v3e_any_pink_ticket",
+   "title": "Pink Ticket",
+   "persona": "prize_clerk",
+   "setting": "any",
+   "text": "Someone has pressed a raffle ticket into your hand. Pink. Number 1974. The year Maureen sat down.",
+   "options": [
+    {
+     "label": "Claim the prize",
+     "effects": [
+      {
+       "type": "random",
+       "rows": [
+        {
+         "w": 3,
+         "text": "A tin of biscuits. Under the biscuits, something better.",
+         "effects": [
+          {
+           "type": "relic",
+           "id": "random",
+           "rarity": [
+            "common"
+           ]
+          }
+         ]
+        },
+        {
+         "w": 2,
+         "text": "Two cards, still in the cellophane.",
+         "effects": [
+          {
+           "type": "consumable",
+           "id": "random",
+           "count": 2
+          }
+         ]
+        },
+        {
+         "w": 1,
+         "text": "The prize is a rule. The rule is yours now.",
+         "effects": [
+          {
+           "type": "rule_card",
+           "id": "random"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "result": "The clerk checks the number. Twice. Then a third time."
+    },
+    {
+     "label": "Tear it up",
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": -5
+      },
+      {
+       "type": "xp",
+       "n": 8,
+       "target": "all"
+      }
+     ],
+     "result": "Maureen would have kept it. Maureen would have remembered you tearing it."
+    },
+    {
+     "label": "Leave it",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "v3e_any_interval",
+   "title": "The Interval",
+   "persona": "caller",
+   "setting": "any",
+   "text": "'Interval. Ten minutes. Do not. Leave. Your seats.' The lights come up. For ten minutes, the hall is real.",
+   "options": [
+    {
+     "label": "Stretch your legs (Grace)",
+     "check": {
+      "stat": "grace",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "heal_pct",
+        "pct": 0.3,
+        "target": "all"
+       },
+       {
+        "type": "table_item",
+        "id": "random"
+       }
+      ],
+      "pass_text": "The bar. The toilets. A fire exit, chained. You bring back something from the bar.",
+      "fail": [
+       {
+        "type": "suspicion",
+        "n": 15
+       }
+      ],
+      "fail_text": "You are not in your seat when the lights go down. He was counting."
+     }
+    },
+    {
+     "label": "Stay seated",
+     "effects": [
+      {
+       "type": "heal",
+       "n": 6,
+       "target": "all"
+      },
+      {
+       "type": "suspicion",
+       "n": -8
+      }
+     ],
+     "result": "You sit. He watches you sit. 'Good. Good. Everyone. Stays.'"
+    },
+    {
+     "label": "Go to the toilets",
+     "effects": [
+      {
+       "type": "combat",
+       "kind": "combat"
+      },
+      {
+       "type": "gold",
+       "n": 20
+      }
+     ],
+     "result": "The toilets are on the board. Something in the end cubicle has been waiting. It has change for the machine."
+    }
+   ]
+  },
+  {
+   "id": "v3e_any_meat_raffle",
+   "title": "Meat Raffle",
+   "persona": "auctioneer",
+   "setting": "any",
+   "text": "A meat raffle. A pound a strip. The tray is covered with a tea towel. The tea towel is breathing.",
+   "options": [
+    {
+     "label": "Buy a strip (20 gold)",
+     "cost_gold": 20,
+     "effects": [
+      {
+       "type": "random",
+       "rows": [
+        {
+         "w": 3,
+         "text": "Good meat. Everyone feels it.",
+         "effects": [
+          {
+           "type": "max_hp",
+           "n": 3,
+           "target": "all"
+          }
+         ]
+        },
+        {
+         "w": 2,
+         "text": "Bad meat. Full refund. Plus interest.",
+         "effects": [
+          {
+           "type": "status_next",
+           "id": "poisoned",
+           "turns": 2,
+           "side": "hero"
+          },
+          {
+           "type": "gold",
+           "n": 35
+          }
+         ]
+        },
+        {
+         "w": 1,
+         "text": "It bites back. It likes you.",
+         "effects": [
+          {
+           "type": "trait",
+           "id": "t_bloodthirsty",
+           "target": "random"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "result": "Number called. Yours. The auctioneer wraps it in newspaper."
+    },
+    {
+     "label": "Lift the towel (Nerve)",
+     "check": {
+      "stat": "nerve",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "relic",
+        "id": "random",
+        "rarity": [
+         "uncommon"
+        ]
+       }
+      ],
+      "pass_text": "Under the towel, among the cuts: a prize. Unclaimed since 1999.",
+      "fail": [
+       {
+        "type": "status_next",
+        "id": "feared",
+        "turns": 2,
+        "side": "hero"
+       },
+       {
+        "type": "damage",
+        "n": 4,
+        "target": "all"
+       }
+      ],
+      "fail_text": "It looks at you. The meat looks at you."
+     }
+    },
+    {
+     "label": "Leave it",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "v3e_any_fifth_chair",
+   "title": "A Fifth Chair",
+   "persona": "caller",
+   "setting": "any",
+   "text": "There is a fifth chair at the table tonight. Nobody sits in it. The cushion is warm. He deals it a hand anyway.",
+   "options": [
+    {
+     "label": "Let it play",
+     "requires": {
+      "party_le": 3
+     },
+     "effects": [
+      {
+       "type": "recruit",
+       "level": 2
+      },
+      {
+       "type": "suspicion",
+       "n": 5
+      }
+     ],
+     "result": "Someone sits down. They smell of the hall. They know your names."
+    },
+    {
+     "label": "Take its cards",
+     "effects": [
+      {
+       "type": "consumable",
+       "id": "random",
+       "count": 2
+      },
+      {
+       "type": "status_next",
+       "id": "hunted",
+       "turns": 2,
+       "side": "hero"
+      }
+     ],
+     "result": "You take the hand. The chair turns to face you."
+    },
+    {
+     "label": "Push it under the table",
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": 8
+      },
+      {
+       "type": "xp",
+       "n": 10,
+       "target": "all"
+      }
+     ],
+     "result": "He doesn't like that. He doesn't say so. He writes."
+    }
+   ]
+  },
+  {
+   "id": "v3e_any_tape",
+   "title": "The Tape Recorder",
+   "persona": "caller",
+   "setting": "any",
+   "text": "A cassette recorder on the table. Red light on. It has taped every session. The counter reads 9999.",
+   "options": [
+    {
+     "label": "Play it back (Wits)",
+     "check": {
+      "stat": "wits",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "xp",
+        "n": 20,
+        "target": "all"
+       },
+       {
+        "type": "reveal"
+       }
+      ],
+      "pass_text": "A man's voice. Young. Laughing. Rolling dice. 'My go. My go.' It is him. Before.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 4,
+        "target": "all"
+       },
+       {
+        "type": "status_next",
+        "id": "confused",
+        "turns": 1,
+        "side": "hero"
+       }
+      ],
+      "fail_text": "Screaming, played backwards. You can't stop hearing it forwards."
+     }
+    },
+    {
+     "label": "Record over it",
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": -12
+      },
+      {
+       "type": "remove_relic"
+      }
+     ],
+     "result": "Thirty years, gone. He thanks you. Takes something for the tape."
+    },
+    {
+     "label": "Steal the tape",
+     "effects": [
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "uncommon"
+       ]
+      },
+      {
+       "type": "suspicion",
+       "n": 15
+      }
+     ],
+     "result": "In your pocket. Warm. He will look for it. He will look for a long time."
+    }
+   ]
+  },
+  {
+   "id": "v3e_any_static",
+   "title": "Static",
+   "persona": "caller",
+   "setting": "any",
+   "text": "He stops mid-sentence. The cage spins. A voice comes out that isn't his. A woman's. 'Linda, love. Get your coat.' Then he is back.",
+   "options": [
+    {
+     "label": "Answer the voice (Nerve)",
+     "check": {
+      "stat": "nerve",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "xp",
+        "n": 15,
+        "target": "all"
+       },
+       {
+        "type": "flag",
+        "key": "v3e_answered_static"
+       }
+      ],
+      "pass_text": "'She can't. She's. Comfortable.' The other voice is gone. He sounds grateful. And worse.",
+      "fail": [
+       {
+        "type": "status_next",
+        "id": "feared",
+        "turns": 1,
+        "side": "hero"
+       },
+       {
+        "type": "suspicion",
+        "n": 10
+       }
+      ],
+      "fail_text": "Static. Then your voice, coming out of his cage. Saying things you didn't."
+     }
+    },
+    {
+     "label": "Pretend you heard nothing",
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": -8
+      }
+     ],
+     "result": "'Where were we. Yes. Yes. The dragon.'"
+    },
+    {
+     "label": "Ask him who that was",
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": 10
+      },
+      {
+       "type": "reveal"
+      },
+      {
+       "type": "xp",
+       "n": 5,
+       "target": "all"
+      }
+     ],
+     "result": "'Wrong. Number.' He shows you a secret page. To change the subject."
+    }
+   ]
+  },
+  {
+   "id": "v3e_any_dauber_nurse",
+   "title": "Red Ink",
+   "persona": "nurse",
+   "setting": "any",
+   "text": "A nurse with a bingo dauber instead of a syringe. 'Hold still. Just a dab. Marks you. As seen to.'",
+   "options": [
+    {
+     "label": "Let her",
+     "who": true,
+     "effects": [
+      {
+       "type": "cure",
+       "target": "chosen"
+      },
+      {
+       "type": "heal_pct",
+       "pct": 0.5,
+       "target": "chosen"
+      },
+      {
+       "type": "status_next",
+       "id": "marked",
+       "turns": 1,
+       "side": "hero"
+      }
+     ],
+     "result": "Dab. The wound closes round a red dot. The dot does not wash off."
+    },
+    {
+     "label": "Pay her to go away (15 gold)",
+     "cost_gold": 15,
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": -4
+      }
+     ],
+     "result": "She takes it. She dabs the coin instead. Off she goes."
+    },
+    {
+     "label": "Dab her back (Grace)",
+     "check": {
+      "stat": "grace",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "consumable",
+        "id": "random",
+        "count": 1
+       },
+       {
+        "type": "table_item",
+        "id": "random"
+       }
+      ],
+      "pass_text": "Dab. She stops. Seen to. She leaves her trolley.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 5,
+        "target": "chosen"
+       },
+       {
+        "type": "status_next",
+        "id": "poisoned",
+        "turns": 2,
+        "side": "hero"
+       }
+      ],
+      "fail_text": "She is faster. The ink goes in. It is not ink."
+     }
+    }
+   ]
+  },
+  {
+   "id": "v3e_sec_seat_zero",
+   "title": "Seat Zero",
+   "persona": "caller",
+   "setting": "any",
+   "secret": true,
+   "text": "A seat numbered 0. Brown vinyl. Cigarette burns. It is his. Before he called the numbers, he sat here. He played.",
+   "options": [
+    {
+     "label": "Sit in it (Nerve)",
+     "check": {
+      "stat": "nerve",
+      "dc": 16,
+      "pass": [
+       {
+        "type": "relic",
+        "id": "random",
+        "rarity": [
+         "rare"
+        ]
+       },
+       {
+        "type": "level_offer",
+        "target": "all"
+       },
+       {
+        "type": "flag",
+        "key": "v3e_sat_zero"
+       }
+      ],
+      "pass_text": "You see the table from his side. Every cheat. Every look. He lets you.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 8,
+        "target": "all"
+       },
+       {
+        "type": "suspicion",
+        "n": 20
+       }
+      ],
+      "fail_text": "'Mine. MINE.' The cage stops spinning. Everything stops."
+     }
+    },
+    {
+     "label": "Ask him who he was",
+     "effects": [
+      {
+       "type": "xp",
+       "n": 15,
+       "target": "all"
+      },
+      {
+       "type": "unlock",
+       "id": "caller_tape"
+      }
+     ],
+     "result": "'I rolled. Like you. I lost. Like you. Someone. Had to. Call.'"
+    },
+    {
+     "label": "Leave it",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "v3e_sec_staff_room",
+   "title": "The Staff Room",
+   "persona": "receptionist",
+   "setting": "any",
+   "secret": true,
+   "text": "A door marked STAFF. A kettle. A rota. A photograph of the Caller, with a face. He is smiling. He is holding a dauber.",
+   "options": [
+    {
+     "label": "Take the photograph",
+     "effects": [
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "rare"
+       ]
+      },
+      {
+       "type": "suspicion",
+       "n": 20
+      },
+      {
+       "type": "elite_next"
+      }
+     ],
+     "result": "He was handsome. He knows you have it. Something big is sent to ask for it back."
+    },
+    {
+     "label": "Read the rota (Wits)",
+     "check": {
+      "stat": "wits",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "gold",
+        "n": 60
+       },
+       {
+        "type": "remove_rule"
+       },
+       {
+        "type": "reveal"
+       }
+      ],
+      "pass_text": "Whose turn to call. Every name crossed out. His isn't. You cross out a rule while you're here.",
+      "fail": [
+       {
+        "type": "suspicion",
+        "n": 15
+       }
+      ],
+      "fail_text": "Your name is on the rota. Next week."
+     }
+    },
+    {
+     "label": "Make a cup of tea",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.6,
+       "target": "all"
+      },
+      {
+       "type": "cure",
+       "target": "all"
+      }
+     ],
+     "result": "Proper mugs. Proper milk. For a minute, it is just a hall."
+    }
+   ]
+  },
+  {
+   "id": "v3e_sec_lost_property",
+   "title": "Lost Property",
+   "persona": "attendant",
+   "setting": "any",
+   "secret": true,
+   "text": "A box marked LOST PROPERTY. A handbag. A bag of dice. A cardigan with deep sleeves. A ring. A coat with car keys in it.",
+   "options": [
+    {
+     "label": "Take the dice",
+     "who": true,
+     "effects": [
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "uncommon"
+       ]
+      },
+      {
+       "type": "trait",
+       "id": "t_lucky",
+       "target": "chosen"
+      }
+     ],
+     "result": "Steve's. Warm. They roll ones for him. For you, they try."
+    },
+    {
+     "label": "Take the car keys",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.5,
+       "target": "all"
+      },
+      {
+       "type": "suspicion",
+       "n": -10
+      },
+      {
+       "type": "flag",
+       "key": "v3e_brendas_keys"
+      }
+     ],
+     "result": "Brenda's. A little plastic house on the fob. You will never get to use them. It helps to hold them."
+    },
+    {
+     "label": "Take everything",
+     "effects": [
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "rare"
+       ]
+      },
+      {
+       "type": "gear",
+       "id": "random"
+      },
+      {
+       "type": "suspicion",
+       "n": 25
+      },
+      {
+       "type": "status_next",
+       "id": "hunted",
+       "turns": 2,
+       "side": "hero"
+      }
+     ],
+     "result": "Their things. All of it. Something follows you out. Several somethings."
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,84 @@
+{
+ "_doc": "Room-unique relics for the three rooms added in data/hall/building_v3.json: the walk-in freezer off the kitchen, the staff room off the back corridor, and the cage room off the cellar. Each is hidden in one room spot ('unique') and nowhere else.",
+ "relics": [
+  {
+   "id": "rr_meat_hook",
+   "name": "The Hook from the Cold Room",
+   "rarity": "room",
+   "icon": "hook",
+   "room": "freezer",
+   "desc": "Cold steel that never warms. Every fight opens with the cold in them: every enemy is slowed for a round, and heroes' melee hits on slowed targets deal +3.",
+   "tags": ["room", "freezer"],
+   "mods": [
+    {"key": "damage_dealt_add", "op": "add", "value": 3, "when": {"side": "hero", "melee": true, "target_status": "slowed"}}
+   ],
+   "triggers": [
+    {"event": "combat_start", "effects": [{"type": "status", "id": "slowed", "turns": 1, "to": "all_enemies"}], "label": "The Hook"}
+   ]
+  },
+  {
+   "id": "rr_frozen_ring",
+   "name": "Margaret's Ring, in Ice",
+   "rarity": "room",
+   "icon": "ward",
+   "room": "freezer",
+   "desc": "Still on the finger. The finger is still cold. Once a turn, a hero who takes a hit grows a skin of frost: 1d4+2 temporary HP.",
+   "tags": ["room", "freezer"],
+   "triggers": [
+    {"event": "damaged", "effects": [{"type": "temp_hp", "dice": "1d4+2", "to": "self"}], "when": {"side": "hero"}, "once": "turn", "label": "Margaret's Ring"}
+   ]
+  },
+  {
+   "id": "rr_blank_badge",
+   "name": "HELLO MY NAME IS ____",
+   "rarity": "room",
+   "icon": "ticket",
+   "room": "staffroom",
+   "desc": "A staff badge, the name scratched out so hard the pin bent. He can't put a name to your face: he watches 15% less, and cheats add 20% less to the FILE.",
+   "tags": ["room", "staffroom"],
+   "mods": [
+    {"key": "watch_mult", "op": "mul", "value": 0.85},
+    {"key": "cheat_suspicion", "op": "mul", "value": 0.8}
+   ]
+  },
+  {
+   "id": "rr_staff_mug",
+   "name": "A Mug: WORLD'S BEST",
+   "rarity": "room",
+   "icon": "glass",
+   "room": "staffroom",
+   "desc": "The rest of the slogan has been worn off by a thumb. Every sip, a random hero gets a bonus action and the FILE drops 1.",
+   "tags": ["room", "staffroom"],
+   "triggers": [
+    {"event": "sip", "effects": [{"type": "extra_action", "kind": "bonus", "to": "random_hero"}, {"type": "suspicion", "n": -1}], "label": "Tea Break", "quiet": true}
+   ]
+  },
+  {
+   "id": "rr_ball_number_one",
+   "name": "Ball Number One",
+   "rarity": "room",
+   "icon": "egg",
+   "room": "cageroom",
+   "desc": "The first number he ever called. It's warm. It has always been warm. Heroes can't roll a natural 1.",
+   "tags": ["room", "cageroom"],
+   "mods": [
+    {"key": "natural_floor", "op": "set", "value": 2, "when": {"side": "hero"}}
+   ]
+  },
+  {
+   "id": "rr_head_mk_iv",
+   "name": "Head, MK IV",
+   "rarity": "room",
+   "icon": "cage",
+   "room": "cageroom",
+   "desc": "One of his old faces. It turns when you aren't looking. Start every fight with a 17 up your sleeve, and he looks away 15% longer, listening for it.",
+   "tags": ["room", "cageroom"],
+   "mods": [
+    {"key": "away_mult", "op": "mul", "value": 1.15}
+   ],
+   "triggers": [
+    {"event": "combat_start", "effects": [{"type": "sleeve", "n": 17}], "label": "MK IV", "quiet": true}
+   ]
+  }
+ ]
+}

@@ -1,0 +1,827 @@
+{
+ "_doc": "More social encounters (npcs) and towns. See scripts/campaign/social.gd.",
+ "npcs": [
+  {
+   "id": "v2_npc_lock_keeper",
+   "name": "The Lock-Keeper",
+   "persona": "knight",
+   "setting": "drowned",
+   "tags": [
+    "lock",
+    "dock"
+   ],
+   "dc": 13,
+   "goal": 3,
+   "patience": 4,
+   "likes": [
+    "threaten",
+    "listen"
+   ],
+   "hates": [
+    "bribe",
+    "charm"
+   ],
+   "greeting": "The gate. Is shut. Shut. Who. Who goes.",
+   "tell": "He respects. A firm hand. Money. Money is for. Cowards.",
+   "lines": {
+    "hit": [
+     "Hm. The chain. Moves.",
+     "You. Could have. Been a soldier."
+    ],
+    "miss": [
+     "No.",
+     "The water. Says. Wait."
+    ],
+    "like": [
+     "Yes. Yes. Like a sergeant.",
+     "Good. Good. Speak plain."
+    ],
+    "hate": [
+     "Coin. Coin. To a sentry. Shame.",
+     "Smile again. I. Dare you."
+    ],
+    "bribe": [
+     "He drops it. Into the lock. Plunk."
+    ]
+   },
+   "win": {
+    "text": "He winds the gate up. Behind it: the next stretch of water, and a crate nobody claimed.",
+    "effects": [
+     {
+      "type": "reveal"
+     },
+     {
+      "type": "consumable",
+      "id": "random"
+     }
+    ]
+   },
+   "lose": {
+    "text": "He opens the sluice. On you.",
+    "effects": [
+     {
+      "type": "damage",
+      "n": 6,
+      "target": "all"
+     },
+     {
+      "type": "status_next",
+      "id": "slowed",
+      "turns": 2,
+      "side": "hero"
+     }
+    ]
+   }
+  },
+  {
+   "id": "v2_npc_bell_diver",
+   "name": "The Bell Diver",
+   "persona": "ferryman",
+   "setting": "drowned",
+   "tags": [
+    "dock",
+    "road"
+   ],
+   "dc": 12,
+   "goal": 3,
+   "patience": 4,
+   "likes": [
+    "plead",
+    "lie"
+   ],
+   "hates": [
+    "threaten"
+   ],
+   "greeting": "Bell. Down there. Still. Ringing. You hear. You hear it.",
+   "tell": "He wants. Someone to say. They hear it too. True or. Not.",
+   "lines": {
+    "hit": [
+     "Yes. Yes. Ding.",
+     "You. Do hear it."
+    ],
+    "miss": [
+     "Hm. Deaf. Deaf, then."
+    ],
+    "like": [
+     "Ding. Ding. Ding. Yes."
+    ],
+    "hate": [
+     "Hands off. Off. I hold my breath. Longer than you. Live."
+    ],
+    "bribe": [
+     "Coins. For the bell. It eats them."
+    ]
+   },
+   "win": {
+    "text": "He goes down. He comes up with something from inside the bell.",
+    "effects": [
+     {
+      "type": "relic",
+      "id": "random",
+      "rarity": "common"
+     },
+     {
+      "type": "xp",
+      "n": 6,
+      "target": "all"
+     }
+    ]
+   },
+   "lose": {
+    "text": "He takes the slowest of you down to hear it properly.",
+    "effects": [
+     {
+      "type": "damage",
+      "n": 10,
+      "target": "weakest"
+     }
+    ]
+   }
+  },
+  {
+   "id": "v2_npc_anatomist",
+   "name": "The Anatomist",
+   "persona": "deacon",
+   "setting": "cathedral",
+   "tags": [
+    "church",
+    "ward"
+   ],
+   "dc": 13,
+   "goal": 3,
+   "patience": 4,
+   "likes": [
+    "listen",
+    "bribe"
+   ],
+   "hates": [
+    "plead"
+   ],
+   "bribe": 20,
+   "greeting": "Lie down. Down. I only. Want. To look.",
+   "tell": "He likes. Quiet patients. And paying ones. Begging. Makes him. Cut. Faster.",
+   "lines": {
+    "hit": [
+     "Fascinating.",
+     "Hold. Still. Good."
+    ],
+    "miss": [
+     "Wrong. Wrong organ."
+    ],
+    "like": [
+     "Yes. A good patient. Very good."
+    ],
+    "hate": [
+     "Begging. Begging. The bad ones. Beg."
+    ],
+    "bribe": [
+     "Fees. Fees are. Ethical."
+    ]
+   },
+   "win": {
+    "text": "He sews something useful into one of you. It barely shows.",
+    "effects": [
+     {
+      "type": "max_hp",
+      "n": 5,
+      "target": "random"
+     },
+     {
+      "type": "cure",
+      "target": "all"
+     }
+    ]
+   },
+   "lose": {
+    "text": "He looks. With his hands. With his tools.",
+    "effects": [
+     {
+      "type": "injure",
+      "target": "random"
+     },
+     {
+      "type": "damage",
+      "n": 5,
+      "target": "random"
+     }
+    ],
+    "fight": "combat"
+   }
+  },
+  {
+   "id": "v2_npc_pew_four",
+   "name": "The Woman in Pew Four",
+   "persona": "confessor",
+   "setting": "cathedral",
+   "tags": [
+    "church",
+    "town"
+   ],
+   "dc": 12,
+   "goal": 3,
+   "patience": 4,
+   "likes": [
+    "plead",
+    "charm"
+   ],
+   "hates": [
+    "lie",
+    "threaten"
+   ],
+   "greeting": "This seat. Is taken. Saved. He's coming back. Steve is. Coming back.",
+   "tell": "She wants. Someone to be sorry. Properly. She can smell. A lie.",
+   "lines": {
+    "hit": [
+     "He was. Kind. Sometimes.",
+     "You. Can sit. At the end."
+    ],
+    "miss": [
+     "You didn't know him."
+    ],
+    "like": [
+     "Oh. Oh, sit with me.",
+     "You'd have liked him. Everyone. Liked him."
+    ],
+    "hate": [
+     "LIAR. He. Heard. That.",
+     "Don't you. Don't you raise your voice. In his pew."
+    ],
+    "bribe": [
+     "She puts it in his hymn book. For when he's back."
+    ]
+   },
+   "win": {
+    "text": "She gives you his lucky thing. 'He won't. Need it. Now. Will he.'",
+    "effects": [
+     {
+      "type": "relic",
+      "id": "v2_steves_dice"
+     },
+     {
+      "type": "suspicion",
+      "n": -5
+     }
+    ]
+   },
+   "lose": {
+    "text": "She screams his name. Something answers from seat four.",
+    "effects": [
+     {
+      "type": "suspicion",
+      "n": 10
+     }
+    ],
+    "fight": "combat"
+   }
+  },
+  {
+   "id": "v2_npc_claim_jumper",
+   "name": "The Claim Jumper",
+   "persona": "prospector",
+   "setting": "iron",
+   "tags": [
+    "saloon",
+    "road"
+   ],
+   "dc": 13,
+   "goal": 3,
+   "patience": 4,
+   "likes": [
+    "threaten",
+    "bribe"
+   ],
+   "hates": [
+    "charm",
+    "plead"
+   ],
+   "greeting": "That's. My. Hole. In the ground. Mine.",
+   "tell": "He only. Respects. Two things. A gun. Or gold. Smile at him and. He shoots.",
+   "lines": {
+    "hit": [
+     "Fine. Fine. Talk.",
+     "Hm. Hard. Like rock."
+    ],
+    "miss": [
+     "Get. Off. My land."
+    ],
+    "like": [
+     "Now. We understand. Each other."
+    ],
+    "hate": [
+     "Smiling. Smiling at a man. With a pick.",
+     "Beg. Beg somewhere else."
+    ],
+    "bribe": [
+     "He bites it. Twice. Pockets it."
+    ]
+   },
+   "win": {
+    "text": "He sells you the claim cheap. There's something down there already.",
+    "effects": [
+     {
+      "type": "gold",
+      "n": 40
+     },
+     {
+      "type": "gear",
+      "id": "random"
+     }
+    ]
+   },
+   "lose": {
+    "text": "He calls his partners. They have picks.",
+    "effects": [
+     {
+      "type": "gold",
+      "n": -15
+     }
+    ],
+    "fight": "combat"
+   }
+  },
+  {
+   "id": "v2_npc_switchman",
+   "name": "The Switchman",
+   "persona": "foreman",
+   "setting": "iron",
+   "tags": [
+    "works",
+    "rail"
+   ],
+   "dc": 12,
+   "goal": 3,
+   "patience": 5,
+   "likes": [
+    "lie",
+    "listen"
+   ],
+   "hates": [
+    "plead"
+   ],
+   "greeting": "Lever. One. Lever. Two. Which track. Which. Track.",
+   "tell": "He wants. To hear. The train's. Running on time. Even if. It isn't.",
+   "lines": {
+    "hit": [
+     "On time. On time.",
+     "Hm. The points. Agree."
+    ],
+    "miss": [
+     "Late. Late. LATE."
+    ],
+    "like": [
+     "Yes. Yes. The 9:14. Right on time."
+    ],
+    "hate": [
+     "Begging. On my line. Derailment.",
+     "Please. Please. Kevin. Never said please. Kevin. Never said. Anything."
+    ],
+    "bribe": [
+     "Coins. On the rail. Flattened."
+    ]
+   },
+   "win": {
+    "text": "He throws a lever. The road ahead bends somewhere better.",
+    "effects": [
+     {
+      "type": "reveal"
+     },
+     {
+      "type": "status_next",
+      "id": "hasted",
+      "turns": 1,
+      "side": "hero"
+     }
+    ]
+   },
+   "lose": {
+    "text": "He throws the other lever.",
+    "effects": [
+     {
+      "type": "damage",
+      "n": 8,
+      "target": "random"
+     },
+     {
+      "type": "elite_next"
+     }
+    ]
+   }
+  },
+  {
+   "id": "v2_npc_prop_master",
+   "name": "The Prop Master",
+   "persona": "manager",
+   "setting": "table",
+   "tags": [
+    "backstage",
+    "town"
+   ],
+   "dc": 12,
+   "goal": 3,
+   "patience": 4,
+   "likes": [
+    "bribe",
+    "charm"
+   ],
+   "hates": [
+    "threaten"
+   ],
+   "greeting": "Props. Props. Everything back. In its box. Everything.",
+   "tell": "She likes. Being paid. And told. The props are. Lovely.",
+   "lines": {
+    "hit": [
+     "Careful. With that.",
+     "Hm. You may. Touch."
+    ],
+    "miss": [
+     "That's not. A prop. Put it down."
+    ],
+    "like": [
+     "Oh. You noticed. The paint."
+    ],
+    "hate": [
+     "Shouting. In the wings. Unprofessional.",
+     "Touch me and. You go in. A box."
+    ],
+    "bribe": [
+     "Petty cash. Thank you. Thank you."
+    ]
+   },
+   "win": {
+    "text": "She lends you something off the prop table. 'Bring it. Back. Nobody. Brings it back.'",
+    "effects": [
+     {
+      "type": "table_item",
+      "id": "random",
+      "n": 2
+     }
+    ]
+   },
+   "lose": {
+    "text": "She files you under BROKEN.",
+    "effects": [
+     {
+      "type": "lose_consumable"
+     },
+     {
+      "type": "suspicion",
+      "n": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "v2_npc_janet",
+   "name": "Janet (Understudy)",
+   "persona": "understudy",
+   "setting": "table",
+   "tags": [
+    "backstage",
+    "cards"
+   ],
+   "dc": 14,
+   "goal": 4,
+   "patience": 5,
+   "likes": [
+    "lie",
+    "charm"
+   ],
+   "hates": [
+    "plead",
+    "bribe"
+   ],
+   "greeting": "Hi. Hi. I'm. Janet. Tonight. Tonight I'm Janet.",
+   "tell": "Janet liked. Liars. And charmers. She cheated. She'd know. Begging won't. Fool her. Money. Insults her.",
+   "lines": {
+    "hit": [
+     "Ha. Ha. Good one.",
+     "You. You're like me."
+    ],
+    "miss": [
+     "Amateur."
+    ],
+    "like": [
+     "Oh. You're good. You're. Really good.",
+     "Show me. Your sleeve."
+    ],
+    "hate": [
+     "Begging. He liked it. When I begged. Don't.",
+     "Money? I never. Needed. His money."
+    ],
+    "bribe": [
+     "She lets the coin roll off the table. Into his tray."
+    ]
+   },
+   "win": {
+    "text": "Janet leans in. She tells you exactly how long he looks away, and what to do with it.",
+    "effects": [
+     {
+      "type": "cheat",
+      "id": "random"
+     },
+     {
+      "type": "table_item",
+      "id": "random"
+     },
+     {
+      "type": "suspicion",
+      "n": -8
+     }
+    ]
+   },
+   "lose": {
+    "text": "The tape on the face comes loose. It isn't Janet. It was never Janet. 'Cheat.'",
+    "effects": [
+     {
+      "type": "suspicion",
+      "n": 15
+     }
+    ],
+    "fight": "combat"
+   }
+  },
+  {
+   "id": "v2_npc_coat_check",
+   "name": "The Coat Check",
+   "persona": "attendant",
+   "setting": "any",
+   "tags": [
+    "inn",
+    "town",
+    "cloakroom"
+   ],
+   "dc": 12,
+   "goal": 3,
+   "patience": 4,
+   "likes": [
+    "listen",
+    "plead"
+   ],
+   "hates": [
+    "bribe"
+   ],
+   "greeting": "Ticket. Ticket. Nobody. Ever. Brings the ticket.",
+   "tell": "She wants. Someone to. Hear about the coats. Tips. Insult her.",
+   "lines": {
+    "hit": [
+     "Hm. Hm. Fine.",
+     "That one's. Seat two's."
+    ],
+    "miss": [
+     "No ticket. No coat."
+    ],
+    "like": [
+     "You. Remember them too? Yes?"
+    ],
+    "hate": [
+     "A tip. A TIP. For their. Coats.",
+     "Put it. Away."
+    ],
+    "bribe": [
+     "She drops it in the lost property box. With the teeth."
+    ]
+   },
+   "win": {
+    "text": "She gives you a coat that isn't yours. It's warm inside. Recently warm.",
+    "effects": [
+     {
+      "type": "gear",
+      "id": "random"
+     },
+     {
+      "type": "heal_pct",
+      "pct": 0.15,
+      "target": "all"
+     }
+    ]
+   },
+   "lose": {
+    "text": "She keeps something of yours. 'Ticket. Next time.'",
+    "effects": [
+     {
+      "type": "lose_consumable"
+     },
+     {
+      "type": "gold",
+      "n": -10
+     }
+    ]
+   }
+  },
+  {
+   "id": "v2_npc_bingo_runner",
+   "name": "The Runner",
+   "persona": "prize_clerk",
+   "setting": "any",
+   "tags": [
+    "inn",
+    "road",
+    "hall"
+   ],
+   "dc": 12,
+   "goal": 3,
+   "patience": 4,
+   "likes": [
+    "charm",
+    "bribe"
+   ],
+   "hates": [
+    "lie"
+   ],
+   "greeting": "Eyes down. Eyes. Down. Who's got. A full house.",
+   "tell": "She runs the cards. Between tables. She likes. Nice faces. And tips. And she checks. Every number.",
+   "lines": {
+    "hit": [
+     "Lovely. Lovely.",
+     "Two little ducks. Twenty-two."
+    ],
+    "miss": [
+     "Not your number, love."
+    ],
+    "like": [
+     "Ooh. Legs eleven. You charmer."
+    ],
+    "hate": [
+     "Checked. Checked it. That's not. On your card.",
+     "False call. FALSE CALL."
+    ],
+    "bribe": [
+     "Into the apron. She winks. With the wrong eye."
+    ]
+   },
+   "win": {
+    "text": "She slips you a card that's already half daubed.",
+    "effects": [
+     {
+      "type": "relic",
+      "id": "v2_paulines_dauber"
+     }
+    ]
+   },
+   "lose": {
+    "text": "False call. The whole hall turns to look at you.",
+    "effects": [
+     {
+      "type": "suspicion",
+      "n": 12
+     },
+     {
+      "type": "status_next",
+      "id": "marked",
+      "turns": 2,
+      "side": "hero"
+     }
+    ]
+   }
+  }
+ ],
+ "towns": [
+  {
+   "id": "v2_town_lockgate",
+   "name": "Lockgate",
+   "setting": "drowned",
+   "persona": "knight",
+   "visits": 2,
+   "intro": "Lockgate. The water. Is held back. Here. For now. For. Now. The bell rings twice.",
+   "places": [
+    {
+     "name": "The Lock",
+     "kind": "social",
+     "tag": "lock",
+     "icon": "key",
+     "desc": "A gate, a winch, a man in rusted armour."
+    },
+    {
+     "name": "The Chandlery",
+     "kind": "shop",
+     "stock": [
+      "consumable",
+      "gear"
+     ],
+     "icon": "anchor",
+     "desc": "Rope, tar, and dead men's boots."
+    },
+    {
+     "name": "The Bell-House",
+     "kind": "effects",
+     "effects": [
+      {
+       "type": "xp",
+       "n": 10,
+       "target": "all"
+      },
+      {
+       "type": "status_next",
+       "id": "steadfast",
+       "turns": 2,
+       "side": "hero"
+      }
+     ],
+     "icon": "bell",
+     "desc": "Ring the drowned bell.",
+     "text": "It rings under the water. Something rings back, very far down."
+    },
+    {
+     "name": "The Harbour Wall",
+     "kind": "effects",
+     "effects": [
+      {
+       "type": "bounty",
+       "goal": "crits_ge",
+       "n": 2,
+       "text": "Bounty: land two critical hits next fight",
+       "gold": 45
+      }
+     ],
+     "icon": "wall",
+     "desc": "Names scratched into the stone.",
+     "text": "WANTED, written over the names. The names are older. Some are seat numbers."
+    },
+    {
+     "name": "The Pier",
+     "kind": "social",
+     "tag": "dock",
+     "icon": "wave",
+     "desc": "Somebody is waiting on the pier."
+    }
+   ]
+  },
+  {
+   "id": "v2_town_infirmary",
+   "name": "The Infirmary",
+   "setting": "cathedral",
+   "persona": "nurse",
+   "visits": 2,
+   "intro": "The Infirmary. Visiting hours. Are. Now. Are. Always. Two visits. Then. Lights out.",
+   "places": [
+    {
+     "name": "The Ward",
+     "kind": "social",
+     "tag": "ward",
+     "icon": "cross",
+     "desc": "Rows of beds. One is being prepared for you."
+    },
+    {
+     "name": "Pew Four",
+     "kind": "social",
+     "npc": "v2_npc_pew_four",
+     "icon": "chair",
+     "desc": "A woman saving a seat."
+    },
+    {
+     "name": "The Dispensary",
+     "kind": "shop",
+     "stock": [
+      "consumable",
+      "relic"
+     ],
+     "icon": "potion",
+     "desc": "Behind a grille. The labels are handwritten."
+    },
+    {
+     "name": "Bloodletting",
+     "kind": "effects",
+     "effects": [
+      {
+       "type": "damage",
+       "n": 6,
+       "target": "all"
+      },
+      {
+       "type": "max_hp",
+       "n": 3,
+       "target": "all"
+      },
+      {
+       "type": "cure",
+       "target": "all"
+      }
+     ],
+     "icon": "drop",
+     "desc": "Free. They insist.",
+     "text": "Bowls fill. You feel lighter. Then, oddly, stronger."
+    },
+    {
+     "name": "The Night Desk",
+     "kind": "effects",
+     "cost_gold": 15,
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.6,
+       "target": "all"
+      },
+      {
+       "type": "suspicion",
+       "n": -5
+      }
+     ],
+     "icon": "page_rest",
+     "desc": "A bed for the night. 15 gold.",
+     "poor_text": "'No. Money. No bed. Floor's free.'",
+     "text": "A nurse checks on you every hour. You never see her come in. You never hear her go."
+    }
+   ]
+  }
+ ]
+}

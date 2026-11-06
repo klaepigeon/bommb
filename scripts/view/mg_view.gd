@@ -19,7 +19,7 @@ func on_event(_e: Dictionary) -> void:
 	pass
 
 
-## [camera position, look-at point]
+## [camera position, look-at point, (optional) how far your head is from it, in metres]
 func camera() -> Array:
 	return [Vector3(0, 10, 10.5), center]
 

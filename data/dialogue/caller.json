@@ -1,0 +1,1506 @@
+{
+ "personas": [
+  {
+   "id": "caller",
+   "name": "The Caller",
+   "desc": "He runs the hall. He runs the game. He wears all the faces.",
+   "voice": {
+    "style": "caller",
+    "pitch": 1.0
+   },
+   "attention": {
+    "watch": [
+     3.5,
+     6.5
+    ],
+    "away": [
+     2.6,
+     5.0
+    ],
+    "tell": 0.9,
+    "fake_away": 0.12,
+    "fake_tell": 0.08
+   }
+  },
+  {
+   "id": "receptionist",
+   "name": "The Receptionist",
+   "mask": {
+    "skin": "#e4d4b4",
+    "hair": "#2a6a2a",
+    "fringe": 3,
+    "iris": "#5a4a3a",
+    "tired": true,
+    "brow": -1,
+    "lips": "#a86a5a",
+    "mouth_w": 12,
+    "smile": 0
+   },
+   "desc": "Signs you in. Signs you out.",
+   "voice": {
+    "style": "cold",
+    "pitch": 1.15
+   },
+   "attention": {
+    "watch": [
+     5.0,
+     8.0
+    ],
+    "away": [
+     2.0,
+     3.0
+    ],
+    "tell": 0.7,
+    "fake_away": 0.0,
+    "fake_tell": 0.0
+   }
+  },
+  {
+   "id": "auctioneer",
+   "name": "The Auctioneer",
+   "mask": {
+    "skin": "#e8d8b8",
+    "hair": "#4a2a1a",
+    "iris": "#2a3a5a",
+    "brow": 1,
+    "mustache": true,
+    "smile": 1,
+    "teeth": true,
+    "lips": "#a85a4a"
+   },
+   "desc": "Sells rules to people who should not buy them.",
+   "voice": {
+    "style": "warm",
+    "pitch": 0.9
+   }
+  },
+  {
+   "id": "prize_clerk",
+   "name": "The Prize Clerk",
+   "mask": {
+    "skin": "#ecdcc0",
+    "hair": "#8a6a3a",
+    "iris": "#3a5a3a",
+    "glasses": true,
+    "smile": 1,
+    "blush": true,
+    "lips": "#b87060"
+   },
+   "desc": "Runs the prize counter. Everything has a price; the prices are honest.",
+   "voice": {
+    "style": "warm",
+    "pitch": 1.1
+   }
+  },
+  {
+   "id": "nurse",
+   "name": "The Night Nurse",
+   "mask": {
+    "skin": "#e8e0d0",
+    "hair": "#e8e8e0",
+    "fringe": 4,
+    "iris": "#5a6a8a",
+    "tired": true,
+    "lips": "#9a5a5a",
+    "smile": -1
+   },
+   "desc": "Keeps the rest stops. Keeps the bandages. Keeps count.",
+   "voice": {
+    "style": "cold",
+    "pitch": 1.4
+   },
+   "attention": {
+    "watch": [
+     6.0,
+     9.0
+    ],
+    "away": [
+     1.6,
+     2.6
+    ],
+    "tell": 0.6,
+    "fake_away": 0.05,
+    "fake_tell": 0.0
+   }
+  },
+  {
+   "id": "drowned_king",
+   "name": "The Drowned King",
+   "mask": {
+    "skin": "#a8b8a8",
+    "iris": "#2a4a4a",
+    "crown": true,
+    "brow": -2,
+    "lips": "#5a6a6a",
+    "smile": -1,
+    "stain": false
+   },
+   "desc": "A king who went down with his kingdom. Still taking petitions.",
+   "voice": {
+    "style": "gross",
+    "pitch": 0.85
+   },
+   "attention": {
+    "watch": [
+     2.5,
+     4.0
+    ],
+    "away": [
+     4.0,
+     6.5
+    ],
+    "tell": 1.2,
+    "fake_away": 0.05,
+    "fake_tell": 0.25
+   }
+  },
+  {
+   "id": "ferryman",
+   "name": "The Ferryman",
+   "mask": {
+    "skin": "#c8c0a8",
+    "hair": "#3a3a3a",
+    "iris": "#1a1a1a",
+    "mustache": true,
+    "lips": "#6a5a4a"
+   },
+   "desc": "Rows people across water that used to be streets.",
+   "voice": {
+    "style": "cold",
+    "pitch": 0.7
+   },
+   "attention": {
+    "watch": [
+     6.0,
+     10.0
+    ],
+    "away": [
+     1.5,
+     2.5
+    ],
+    "tell": 0.5,
+    "fake_away": 0.0,
+    "fake_tell": 0.0
+   }
+  },
+  {
+   "id": "deacon",
+   "name": "The Deacon",
+   "mask": {
+    "skin": "#e8c8b8",
+    "iris": "#6a2a2a",
+    "brow": 2,
+    "smile": 2,
+    "teeth": true,
+    "lips": "#a83a3a",
+    "blush": true
+   },
+   "desc": "Very welcoming. Too welcoming.",
+   "voice": {
+    "style": "warm",
+    "pitch": 0.8
+   },
+   "attention": {
+    "watch": [
+     3.0,
+     5.0
+    ],
+    "away": [
+     3.0,
+     5.0
+    ],
+    "tell": 1.0,
+    "fake_away": 0.2,
+    "fake_tell": 0.0
+   }
+  },
+  {
+   "id": "confessor",
+   "name": "The Confessor",
+   "mask": {
+    "skin": "#d8d0c0",
+    "iris": "#2a2a2a",
+    "veil": true,
+    "lips": "#5a2a2a"
+   },
+   "desc": "Listens behind a veil. Remembers everything.",
+   "voice": {
+    "style": "child",
+    "pitch": 0.9
+   },
+   "attention": {
+    "watch": [
+     5.0,
+     7.0
+    ],
+    "away": [
+     2.0,
+     3.5
+    ],
+    "tell": 0.4,
+    "fake_away": 0.0,
+    "fake_tell": 0.2
+   }
+  },
+  {
+   "id": "foreman",
+   "name": "The Foreman",
+   "mask": {
+    "skin": "#c8a888",
+    "hair": "#2a2a2a",
+    "iris": "#3a3a2a",
+    "brow": -2,
+    "mustache": true,
+    "lips": "#8a5a4a",
+    "stain": true
+   },
+   "desc": "Clocks people in. Never clocks them out.",
+   "voice": {
+    "style": "psychotic",
+    "pitch": 0.8
+   },
+   "attention": {
+    "watch": [
+     4.0,
+     4.0
+    ],
+    "away": [
+     3.0,
+     3.0
+    ],
+    "tell": 0.8,
+    "fake_away": 0.0,
+    "fake_tell": 0.0
+   }
+  },
+  {
+   "id": "prospector",
+   "name": "The Prospector",
+   "mask": {
+    "skin": "#d8b890",
+    "hair": "#a8a8a0",
+    "iris": "#4a4a8a",
+    "teeth": true,
+    "smile": 1,
+    "lips": "#9a6a4a"
+   },
+   "desc": "Found gold once. Has been digging ever since.",
+   "voice": {
+    "style": "psychotic",
+    "pitch": 0.85
+   },
+   "attention": {
+    "watch": [
+     1.5,
+     5.0
+    ],
+    "away": [
+     1.0,
+     4.5
+    ],
+    "tell": 0.6,
+    "fake_away": 0.35,
+    "fake_tell": 0.3,
+    "speed": 1.2
+   }
+  },
+  {
+   "id": "understudy",
+   "name": "The Understudy",
+   "mask": {
+    "skin": "#d8d8d0",
+    "iris": "#8a8a8a",
+    "stitches": true,
+    "lips": "#8a8a8a",
+    "smile": 0,
+    "stain": false
+   },
+   "desc": "Knows everyone's lines. Wants everyone's part.",
+   "voice": {
+    "style": "psychotic",
+    "pitch": 1.1
+   },
+   "attention": {
+    "watch": [
+     1.2,
+     4.0
+    ],
+    "away": [
+     1.2,
+     3.5
+    ],
+    "tell": 0.5,
+    "fake_away": 0.4,
+    "fake_tell": 0.35,
+    "speed": 1.25
+   }
+  },
+  {
+   "id": "saint",
+   "name": "The Saint",
+   "mask": {
+    "skin": "#f0e0c8",
+    "hair": "#e8c860",
+    "fringe": 1,
+    "iris": "#4a8aa8",
+    "smile": 1,
+    "blush": true,
+    "lips": "#c88070"
+   },
+   "desc": "Heals everyone. Nobody asked her to.",
+   "voice": {
+    "style": "psychotic",
+    "pitch": 1.45
+   },
+   "attention": {
+    "watch": [
+     2.0,
+     6.0
+    ],
+    "away": [
+     2.0,
+     5.0
+    ],
+    "tell": 0.9,
+    "fake_away": 0.3,
+    "fake_tell": 0.1
+   }
+  },
+  {
+   "id": "magistrate",
+   "name": "The Magistrate",
+   "mask": {
+    "skin": "#d8c098",
+    "hair": "#e8e4d8",
+    "fringe": 5,
+    "iris": "#3a2a1a",
+    "brow": -2,
+    "lips": "#8a4a3a",
+    "smile": -1
+   },
+   "desc": "Presides. Digests.",
+   "voice": {
+    "style": "gross",
+    "pitch": 0.7
+   },
+   "attention": {
+    "watch": [
+     2.5,
+     4.5
+    ],
+    "away": [
+     3.5,
+     6.0
+    ],
+    "tell": 1.1,
+    "fake_away": 0.1,
+    "fake_tell": 0.2
+   }
+  },
+  {
+   "id": "knight",
+   "name": "The Rust-Tide Knight",
+   "desc": "Holds a bridge for a king who drowned.",
+   "voice": {
+    "style": "cold",
+    "pitch": 0.62
+   },
+   "mask": {
+    "skin": "#8a8a80",
+    "iris": "#1a1a1a",
+    "brow": 0,
+    "lips": "#4a4a44",
+    "mouth_w": 14,
+    "smile": 0,
+    "eye_w": 11,
+    "stain": true,
+    "stitches": true
+   },
+   "attention": {
+    "watch": [
+     5.0,
+     7.0
+    ],
+    "away": [
+     2.0,
+     2.5
+    ],
+    "tell": 0.6,
+    "fake_away": 0.0,
+    "fake_tell": 0.0
+   }
+  },
+  {
+   "id": "choir",
+   "name": "The Choir of One",
+   "desc": "Sings every part.",
+   "voice": {
+    "style": "child",
+    "pitch": 0.95
+   },
+   "mask": {
+    "skin": "#e8e0d8",
+    "iris": "#e8e8e8",
+    "brow": 2,
+    "lips": "#2a0a0a",
+    "mouth_w": 20,
+    "smile": -1,
+    "teeth": true,
+    "blush": true
+   },
+   "attention": {
+    "watch": [
+     2.0,
+     4.0
+    ],
+    "away": [
+     2.0,
+     4.0
+    ],
+    "tell": 0.8,
+    "fake_away": 0.25,
+    "fake_tell": 0.25
+   }
+  },
+  {
+   "id": "duelist",
+   "name": "The Duelist Engine",
+   "desc": "Waits at the end of the street.",
+   "voice": {
+    "style": "cold",
+    "pitch": 1.25
+   },
+   "mask": {
+    "skin": "#c8c0b0",
+    "hair": "#1a1a1a",
+    "iris": "#c8281c",
+    "brow": -1,
+    "lips": "#6a5a4a",
+    "mouth_w": 8,
+    "smile": 0,
+    "mustache": true
+   },
+   "attention": {
+    "watch": [
+     4.0,
+     4.0
+    ],
+    "away": [
+     2.0,
+     2.0
+    ],
+    "tell": 0.3,
+    "fake_away": 0.0,
+    "fake_tell": 0.0
+   }
+  },
+  {
+   "id": "heap",
+   "name": "The Heap",
+   "desc": "Every miniature he gave up on.",
+   "voice": {
+    "style": "gross",
+    "pitch": 0.58
+   },
+   "mask": {
+    "skin": "#a89878",
+    "iris": "#5a6a3a",
+    "brow": -2,
+    "lips": "#5a2a2a",
+    "mouth_w": 16,
+    "smile": -2,
+    "tired": true,
+    "stitches": true,
+    "stain": true
+   },
+   "attention": {
+    "watch": [
+     1.5,
+     3.0
+    ],
+    "away": [
+     3.5,
+     6.0
+    ],
+    "tell": 1.4,
+    "fake_away": 0.1,
+    "fake_tell": 0.1
+   }
+  }
+ ],
+ "dialogue": [
+  {
+   "id": "title_idle",
+   "chance": 0.5,
+   "lines": [
+    "You. Have returned.",
+    "Sit. Sit-sit. There.",
+    "The hall is open. The hall is al-always open.",
+    "Eyes down. Pens re-ready.",
+    "I am... the Caller. I will be all of them.",
+    "Sit. The dice. Are warm.",
+    "Not yet. Sit.",
+    "Friday. It is always. Friday.",
+    "Your chair. I kept it. Dusted.",
+    "Coats on the hooks. Nobody needs. Coats.",
+    "Pens. Cards. Faces. Eyes down."
+   ]
+  },
+  {
+   "id": "new_campaign",
+   "gesture": "spread",
+   "lines": [
+    "A new campaign. Four Books.",
+    "Choose four. Any four. The dead may also play.",
+    "We play until. Until. Until it is finished."
+   ]
+  },
+  {
+   "id": "party_chosen",
+   "gesture": "tap",
+   "lines": [
+    "Good. The miniatures go on the board.",
+    "Four. I will learn their n-names. Then forget them.",
+    "It is decided. No one leaves the table."
+   ]
+  },
+  {
+   "id": "book_start",
+   "look": true,
+   "gesture": "spin",
+   "lines": [
+    "Turn the page.",
+    "A new Book. [whirr] Begin.",
+    "Chapter. Next chapter.",
+    "Page one. Again. Page one.",
+    "A new Book. Same table.",
+    "Open it. Gently. The spine. Is old.",
+    "I wrote this one. At night. [whirr]",
+    "Turn. Turn the page. Do not. Skip."
+   ]
+  },
+  {
+   "id": "map_choose",
+   "chance": 0.25,
+   "cooldown": 4,
+   "lines": [
+    "Choose a page.",
+    "Where will you go. Choose.",
+    "Left. Or right. Either is... a choice.",
+    "Every road. Comes back here.",
+    "Pick. I will. Pretend. To be surprised.",
+    "That way is wet. That way is wet too.",
+    "Point. With your finger. Not. Your eyes.",
+    "Careful. Some pages. Are stuck together."
+   ]
+  },
+  {
+   "id": "enter_combat",
+   "chance": 0.3,
+   "cooldown": 2,
+   "gesture": "tap",
+   "lines": [
+    "Positions.",
+    "Let us begin.",
+    "The pieces are on the board.",
+    "Initiative. Ro-rolled. Already.",
+    "Eyes down.",
+    "Pieces. On the felt.",
+    "Roll. For. Who goes first. I know who.",
+    "They have been. Waiting. In the box.",
+    "Hands where I. Can count them. Begin."
+   ]
+  },
+  {
+   "id": "enter_elite",
+   "look": true,
+   "gesture": "point",
+   "lines": [
+    "This one is larger.",
+    "A difficult piece. I painted it m-myself.",
+    "Be careful. This one bites. Bites.",
+    "I keep this one. In the good box.",
+    "Big. Big piece. Mind your fingers.",
+    "This one. Has a name. I will not. Say it.",
+    "Two hands to lift it. I. Have. Two.",
+    "Larger. Hungrier. Painted. Wet."
+   ]
+  },
+  {
+   "id": "enter_boss",
+   "look": true,
+   "gesture": "spread",
+   "lines": [
+    "Now. The main event.",
+    "Lights. Down.",
+    "This is the part. The part people re-remember.",
+    "Everyone. Quiet now.",
+    "The big number. Coming up.",
+    "House lights. Off.",
+    "I have been. Saving this. For you.",
+    "Sit up. Straight. This one. Watches."
+   ]
+  },
+  {
+   "id": "crit_hero",
+   "chance": 0.45,
+   "cooldown": 3,
+   "lines": [
+    "Twenty.",
+    "A twenty. Hm.",
+    "Well rolled.",
+    "Lucky. Lucky-lucky.",
+    "Top of the shop.",
+    "Twenty. I. Will remember. That.",
+    "Hm. Hmm. Good. Hand.",
+    "Nobody. Rolls. Like that. Here.",
+    "Lucky. For now. For now."
+   ]
+  },
+  {
+   "id": "crit_enemy",
+   "chance": 0.45,
+   "cooldown": 3,
+   "gesture": "tap",
+   "lines": [
+    "Twenty. For me.",
+    "That will hurt.",
+    "Oh. Oh no. For you.",
+    "Twenty. Mine. All mine.",
+    "Oh. That is. A lot of. Damage.",
+    "The die. Agrees. With me.",
+    "Lovely. Lovely number.",
+    "Sorry. Not. Sorry."
+   ]
+  },
+  {
+   "id": "fumble_hero",
+   "chance": 0.4,
+   "cooldown": 3,
+   "lines": [
+    "One.",
+    "A one. Noted.",
+    "The die does not like you.",
+    "Kelly's eye. One.",
+    "One. Kelly's eye. Again.",
+    "Dropped. It. Off the table.",
+    "Ones. Always ones. Here.",
+    "The die. Remembers. What you did.",
+    "Unlucky. For. Some."
+   ]
+  },
+  {
+   "id": "fumble_enemy",
+   "chance": 0.35,
+   "cooldown": 3,
+   "lines": [
+    "One. Unfortunate.",
+    "My piece dropped it.",
+    "...I will pretend I did not see that.",
+    "Clumsy. My fault. Not his.",
+    "He slipped. I will. Repaint. Him.",
+    "No. No. Do not. Look.",
+    "The felt. Is. Uneven there.",
+    "...Ignore. That. One."
+   ]
+  },
+  {
+   "id": "hero_down",
+   "chance": 0.7,
+   "cooldown": 1,
+   "look": false,
+   "lines": [
+    "Down.",
+    "Your piece is down. Not out. Not yet.",
+    "Three saves. I will count them. I count.",
+    "Lie still. I will. Count.",
+    "On the floor. Like. The others.",
+    "Down. Down. Not. Gone.",
+    "Someone. Pick them up. Or. Do not.",
+    "Hm. That one. Bleeds. On my felt."
+   ]
+  },
+  {
+   "id": "hero_death",
+   "look": true,
+   "gesture": "lean",
+   "lines": [
+    "Gone.",
+    "I will keep their card. I keep all the cards.",
+    "Their name goes in the book.",
+    "One fewer at the table.",
+    "Coat off the hook. Coat. On the peg.",
+    "They are staying. Now.",
+    "I will save. Their seat.",
+    "Ink. Not pencil. For that one.",
+    "One more. Regular.",
+    "Shh. Shh. They are. Comfortable."
+   ]
+  },
+  {
+   "id": "victory",
+   "chance": 0.4,
+   "cooldown": 2,
+   "lines": [
+    "It appears you have won.",
+    "Clear the board.",
+    "Back in the box. All of them.",
+    "Box them up. Gently.",
+    "Board clear. For now.",
+    "Good. Good. Next page.",
+    "Sweep the dice. Count them. All there.",
+    "You. Won. That. One."
+   ]
+  },
+  {
+   "id": "elite_victory",
+   "lines": [
+    "The large one is down. Impressive.",
+    "I will repaint it. It will re-return.",
+    "My good piece. Broken.",
+    "I will glue. It. Back.",
+    "Hm. I. Liked. That one.",
+    "Down. It took. Three coats of paint.",
+    "Fine. Fine. Fine."
+   ]
+  },
+  {
+   "id": "boss_victory",
+   "look": true,
+   "gesture": "spread",
+   "lines": [
+    "You... won. I did not plan for that.",
+    "The Book is finished.",
+    "Full house. Collect your p-prize.",
+    "The Book. Closes. Not the hall.",
+    "House. You. Called it. Not me.",
+    "Clap. [clap] Clap.",
+    "Prize. Prize. At the counter.",
+    "Well. Well. Another. Book."
+   ]
+  },
+  {
+   "id": "defeat",
+   "look": true,
+   "gesture": "lean",
+   "lines": [
+    "And that is the game.",
+    "No one left. I will clean up.",
+    "Again. We will play again. Same time. Same time. Same t-",
+    "Nobody. Left. Lights down.",
+    "I will stack the chairs.",
+    "That is a full house. For me.",
+    "Same time. Next week. Same. Time.",
+    "Sit. Sit. You can. Stay. Now."
+   ]
+  },
+  {
+   "id": "run_won",
+   "look": true,
+   "gesture": "spread",
+   "lines": [
+    "You finished it. No one finishes it.",
+    "That was the last page. I think. I am checking. [click]"
+   ]
+  },
+  {
+   "id": "new_run_after_loss",
+   "chance": 1.0,
+   "lines": [
+    "You came back. They all come back.",
+    "The last ones did not make it. Sit."
+   ]
+  },
+  {
+   "id": "event_start",
+   "chance": 0.2,
+   "cooldown": 3,
+   "lines": [
+    "Something on this page.",
+    "Listen. I will read it once.",
+    "Hush. Read this.",
+    "A page. I. Wrote. Myself.",
+    "Something. Here. Is not. On the map.",
+    "Listen. Once. I will. Not. Repeat.",
+    "This bit. Is true."
+   ]
+  },
+  {
+   "id": "shop_enter",
+   "persona": "prize_clerk",
+   "lines": [
+    "Prizes. Tickets or gold.",
+    "Look. Do not touch. Touch. Buy.",
+    "Everything has a price. Everything.",
+    "Prizes. One each. One.",
+    "A bear. A radio. A ham. And these.",
+    "Honest prices. Honest. Mostly.",
+    "No refunds. They never. Come back.",
+    "Pick a prize. Not the die. That is reserved."
+   ]
+  },
+  {
+   "id": "rest_enter",
+   "persona": "nurse",
+   "lines": [
+    "Sit. Before you fall.",
+    "Rest. I will wake you.",
+    "Bandages. On the left.",
+    "Feet up. Head down.",
+    "Plasters. Tea. In that order.",
+    "Hold still. I will. Count. Your. Breaths.",
+    "Sleep. He will. Not. Move the board.",
+    "Bed. Blanket. Nobody. Checks under."
+   ]
+  },
+  {
+   "id": "gambit_offer",
+   "persona": "auctioneer",
+   "look": true,
+   "gesture": "point",
+   "lines": [
+    "A new rule. Going cheap. Ch-cheap.",
+    "Two rules. Take one.",
+    "Lot seven. A small change. Small. For me."
+   ]
+  },
+  {
+   "id": "gambit_accept",
+   "persona": "auctioneer",
+   "lines": [
+    "Sold.",
+    "Going. Going. Gone."
+   ]
+  },
+  {
+   "id": "gambit_refuse",
+   "persona": "auctioneer",
+   "lines": [
+    "No sale. Noted.",
+    "Your loss."
+   ]
+  },
+  {
+   "id": "relic_found",
+   "chance": 0.6,
+   "lines": [
+    "Ah. That is where that went.",
+    "Someone left that. Someone always does.",
+    "Yours now.",
+    "That was. Somebody's.",
+    "Lost property. Now. Yours.",
+    "Keep it. They. Will not. Ask.",
+    "Pocket it. Quickly.",
+    "Oh. I. Wondered. Where."
+   ]
+  },
+  {
+   "id": "level_up",
+   "chance": 0.5,
+   "cooldown": 2,
+   "lines": [
+    "They are getting better. I will adjust.",
+    "Stronger. Hm.",
+    "Taller now. On the board.",
+    "Better. I will. Be. Worse.",
+    "Learning. Hm. They all. Learn.",
+    "A new card. Shuffle. It in.",
+    "You remind me. Of. Someone."
+   ]
+  },
+  {
+   "id": "repeat_ability",
+   "chance": 0.4,
+   "cooldown": 6,
+   "lines": [
+    "That card again.",
+    "Again. Again-again.",
+    "I see a pattern.",
+    "Same trick. Same. Trick.",
+    "I have seen. That. Card.",
+    "Predictable. Like. Fridays.",
+    "Again. I. Am. Writing. It down.",
+    "That one. Is getting. Worn."
+   ]
+  },
+  {
+   "id": "rule_added",
+   "chance": 0.7,
+   "cooldown": 2,
+   "look": true,
+   "lines": [
+    "A new rule.",
+    "I have changed a rule. It is on the rack.",
+    "House rules apply.",
+    "New rule. Pinned. On the board.",
+    "See. Rule. Four.",
+    "I am allowed. I. Am the Caller.",
+    "Written. In. Red.",
+    "The rules. Grow. At night."
+   ]
+  },
+  {
+   "id": "rearrange",
+   "chance": 0.8,
+   "cooldown": 2,
+   "lines": [
+    "Someone moved my board.",
+    "The board is... different now.",
+    "Who touched. The board.",
+    "Tiles. Moved. Not by me.",
+    "The map. Is. Wrong now.",
+    "Put. It. Back.",
+    "Fine. New board. Same. Game."
+   ]
+  },
+  {
+   "id": "reinforcements",
+   "chance": 1.0,
+   "lines": [
+    "More of them."
+   ]
+  },
+  {
+   "id": "regular_number",
+   "chance": 0.8,
+   "cooldown": 3,
+   "lines": [
+    "Their number came up.",
+    "That is their number. Of course.",
+    "Bingo. For them.",
+    "Their number. They waited. Years.",
+    "Called. At. Last.",
+    "Dab. Dab. Dab.",
+    "That one. Is theirs. Always was.",
+    "See. I do. Call. Some."
+   ]
+  },
+  {
+   "id": "boss_phase",
+   "look": true,
+   "lines": [
+    "Now it is interesting.",
+    "Second half. [whirr] The real half."
+   ]
+  },
+  {
+   "id": "idle",
+   "chance": 0.15,
+   "cooldown": 8,
+   "lines": [
+    "Take your time. I have all of it.",
+    "...",
+    "Eyes down.",
+    "Is someone coughing. There is no one in the back.",
+    "The urn. Is. Boiling.",
+    "Somebody. Is in. My chair. No. Nobody.",
+    "Tick. Tick. Seven.",
+    "Your turn. Your turn. Still.",
+    "I can wait. I. Have waited. Long."
+   ]
+  },
+  {
+   "id": "look_idle",
+   "chance": 0.6,
+   "cooldown": 4,
+   "lines": [
+    "Yes.",
+    "What.",
+    "I am still here.",
+    "Eyes. Down.",
+    "[click] [click]",
+    "Down. Eyes. Down.",
+    "Yes. I see. You.",
+    "Do not. Look. At the door.",
+    "Hello. Hello.",
+    "Something. On my face?",
+    "[whirr] Still here. Always. Here."
+   ]
+  },
+  {
+   "id": "fallen_dealt",
+   "look": true,
+   "lines": [
+    "I kept their card.",
+    "They died once. It did not take.",
+    "Welcome back. Back. Back."
+   ]
+  },
+  {
+   "id": "seance",
+   "persona": "receptionist",
+   "lines": [
+    "Two names. One chair. Sign.",
+    "We will stitch them together."
+   ]
+  },
+  {
+   "id": "walk_hall",
+   "chance": 0.5,
+   "lines": [
+    "Mind the chairs.",
+    "Look around. Everything here is mine.",
+    "Mind the. Wet floor.",
+    "The exit. Is that way. It. Comes back.",
+    "Do not. Open. The cold room.",
+    "Every. Chair. Has a. Name.",
+    "Touch nothing. Touch. Everything."
+   ]
+  },
+  {
+   "id": "pass_without_acting",
+   "chance": 0.5,
+   "cooldown": 5,
+   "lines": [
+    "Nothing. You do nothing.",
+    "Passing. Hm.",
+    "Waiting. Is. Also. Playing.",
+    "Nothing. Hm. Nothing. Noted.",
+    "Sit on. Your hands. Good.",
+    "Cowardly. Or wise. Same. Here.",
+    "Pass. Pass. Like Pauline. Waiting."
+   ]
+  },
+  {
+   "id": "enemy_first",
+   "look": true,
+   "lines": [
+    "They were here first. They go first.",
+    "Ambush."
+   ]
+  },
+  {
+   "id": "exploit",
+   "chance": 0.7,
+   "cooldown": 10,
+   "look": true,
+   "lines": [
+    "Clever. I will allow it. Once.",
+    "That is not how I meant the rule. It is how I wrote it."
+   ]
+  },
+  {
+   "id": "caught",
+   "gesture": "",
+   "lines": [
+    "I saw that.",
+    "Hands. Where I can count them.",
+    "No. NO. We do not do that at this table.",
+    "Cheater. Ch-cheater.",
+    "I see you. I see. I see.",
+    "Your hand was in my game.",
+    "Sleeves. Up.",
+    "That die. Is not. Ours.",
+    "I SAW.",
+    "Janet. Did that. Once.",
+    "Fingers. Count them. For me."
+   ]
+  },
+  {
+   "id": "caught_forgiven",
+   "lines": [
+    "Once. I blinked. I do not blink.",
+    "I will let that go. I am keeping it."
+   ]
+  },
+  {
+   "id": "caught_fined",
+   "lines": [
+    "A fee. Into the jar.",
+    "Pay.",
+    "That costs. Everything costs."
+   ]
+  },
+  {
+   "id": "audit",
+   "lines": [
+    "Empty your pockets.",
+    "Audit. Hold still.",
+    "Your file is full. I will make room."
+   ]
+  },
+  {
+   "id": "house_edge",
+   "lines": [
+    "The house takes this personally now.",
+    "My pieces have heard about you."
+   ]
+  },
+  {
+   "id": "distracted",
+   "chance": 0.35,
+   "cooldown": 3,
+   "lines": [
+    "What was that.",
+    "Who rang.",
+    "...",
+    "Hm?",
+    "...Was that. A car.",
+    "[whirr] Who. Coughed.",
+    "Hm. Linda?",
+    "Somebody. Said. My name.",
+    "The door. Did the. Door move."
+   ]
+  },
+  {
+   "id": "back_at_table",
+   "lines": [
+    "You are back. Nothing moved. I checked.",
+    "You were gone. I counted.",
+    "Sit. Sit.",
+    "There you are.",
+    "Sit. Sit. The game. Did not stop.",
+    "You were. Gone. I counted.",
+    "Welcome. Back. Back.",
+    "Your seat. Is warm. I. Kept it."
+   ]
+  },
+  {
+   "id": "boss_magistrate_intro",
+   "persona": "magistrate",
+   "lines": [
+    "Order. Order. I am so hungry. Order.",
+    "The court finds you... de-delicious. Guilty. Guilty.",
+    "Approach the bench. Closer."
+   ]
+  },
+  {
+   "id": "boss_magistrate_hurt",
+   "persona": "magistrate",
+   "lines": [
+    "You opened me. Look what I ate.",
+    "Objection. Something is *leaking*."
+   ]
+  },
+  {
+   "id": "boss_magistrate_kill",
+   "persona": "magistrate",
+   "lines": [
+    "Sentence: digestion.",
+    "Next case. Mm."
+   ]
+  },
+  {
+   "id": "boss_magistrate_taunt",
+   "persona": "magistrate",
+   "lines": [
+    "Hungry. Still hungry.",
+    "You will be floor soon. Floor."
+   ],
+   "chance": 0.35,
+   "cooldown": 2
+  },
+  {
+   "id": "boss_magistrate_death",
+   "persona": "magistrate",
+   "lines": [
+    "Full. Finally full. Why does it hurt.",
+    "Court... adjourned..."
+   ]
+  },
+  {
+   "id": "boss_heap_intro",
+   "persona": "heap",
+   "lines": [
+    "We were going to be heroes. He did not finish us.",
+    "Hold me. All of me.",
+    "Which face. Any face."
+   ]
+  },
+  {
+   "id": "boss_heap_hurt",
+   "persona": "heap",
+   "lines": [
+    "Pieces. I am coming off in pieces.",
+    "Glue me back. Glue. Glue."
+   ]
+  },
+  {
+   "id": "boss_heap_kill",
+   "persona": "heap",
+   "lines": [
+    "Now you are one of us.",
+    "Lie down. In the pile."
+   ]
+  },
+  {
+   "id": "boss_heap_taunt",
+   "persona": "heap",
+   "lines": [
+    "My arm is someone else's. Want it.",
+    "He sanded my face off. I was smiling wrong."
+   ],
+   "chance": 0.35,
+   "cooldown": 2
+  },
+  {
+   "id": "boss_heap_death",
+   "persona": "heap",
+   "lines": [
+    "Thank you. Thank you. Thank you.",
+    "Put down. Finally."
+   ]
+  },
+  {
+   "id": "boss_choir_intro",
+   "persona": "choir",
+   "lines": [
+    "*We* are happy to see you. *We* are happy to see you. *We* are",
+    "Sing. You do not need your mouth."
+   ]
+  },
+  {
+   "id": "boss_choir_hurt",
+   "persona": "choir",
+   "lines": [
+    "One of us is quiet.",
+    "Harmony. HARMONY. harm."
+   ]
+  },
+  {
+   "id": "boss_choir_kill",
+   "persona": "choir",
+   "lines": [
+    "A new voice. Low. Lovely.",
+    "Back row. Breathe when we breathe."
+   ]
+  },
+  {
+   "id": "boss_choir_taunt",
+   "persona": "choir",
+   "lines": [
+    "La. La. La. La. La. La.",
+    "Do you hear your part."
+   ],
+   "chance": 0.35,
+   "cooldown": 2
+  },
+  {
+   "id": "boss_choir_death",
+   "persona": "choir",
+   "lines": [
+    "...",
+    "We forgot the last verse."
+   ]
+  },
+  {
+   "id": "boss_knight_intro",
+   "persona": "knight",
+   "lines": [
+    "Halt. State your name.",
+    "I hold this bridge. I have always held it."
+   ]
+  },
+  {
+   "id": "boss_knight_hurt",
+   "persona": "knight",
+   "lines": [
+    "Damage noted.",
+    "The armour is not empty. That is the problem."
+   ]
+  },
+  {
+   "id": "boss_knight_kill",
+   "persona": "knight",
+   "lines": [
+    "One fewer. Proceeding.",
+    "Fallen. As expected."
+   ]
+  },
+  {
+   "id": "boss_knight_taunt",
+   "persona": "knight",
+   "lines": [
+    "Halt.",
+    "Trespasser."
+   ],
+   "chance": 0.35,
+   "cooldown": 2
+  },
+  {
+   "id": "boss_knight_death",
+   "persona": "knight",
+   "lines": [
+    "The oath is... dis-discontinued.",
+    "Tell the king I held."
+   ]
+  },
+  {
+   "id": "boss_duelist_intro",
+   "persona": "duelist",
+   "lines": [
+    "Draw.",
+    "Twelve paces. Turn. Draw."
+   ]
+  },
+  {
+   "id": "boss_duelist_hurt",
+   "persona": "duelist",
+   "lines": [
+    "Recalibrating.",
+    "Best of three. I have decided."
+   ]
+  },
+  {
+   "id": "boss_duelist_kill",
+   "persona": "duelist",
+   "lines": [
+    "Clean.",
+    "Ninety-four percent. I rounded up."
+   ]
+  },
+  {
+   "id": "boss_duelist_taunt",
+   "persona": "duelist",
+   "lines": [
+    "Do not move.",
+    "Nine paces. Not twelve."
+   ],
+   "chance": 0.35,
+   "cooldown": 2
+  },
+  {
+   "id": "boss_duelist_death",
+   "persona": "duelist",
+   "lines": [
+    "Miss. I... missed.",
+    "Holster. The. Holster."
+   ]
+  },
+  {
+   "id": "boss_saint_intro",
+   "persona": "saint",
+   "lines": [
+    "Come here. Let me *fix* you. HOLD STILL.",
+    "I heal. I heal! Whether you like it or *not*!"
+   ]
+  },
+  {
+   "id": "boss_saint_hurt",
+   "persona": "saint",
+   "lines": [
+    "You made me use the other hands.",
+    "The light! LOOK at the light!"
+   ]
+  },
+  {
+   "id": "boss_saint_kill",
+   "persona": "saint",
+   "lines": [
+    "There. All better. ALL BETTER.",
+    "Healed. Into the ground."
+   ]
+  },
+  {
+   "id": "boss_saint_taunt",
+   "persona": "saint",
+   "lines": [
+    "Who is hurting. WHO IS HURTING.",
+    "Bless you. Bless you. Blessyoublessyou."
+   ],
+   "chance": 0.35,
+   "cooldown": 2
+  },
+  {
+   "id": "boss_saint_death",
+   "persona": "saint",
+   "lines": [
+    "Pray. Somebody pray.",
+    "I only wanted to be needed."
+   ]
+  },
+  {
+   "id": "boss_foreman_intro",
+   "persona": "foreman",
+   "lines": [
+    "CLOCK IN! CLOCK IN!",
+    "Overtime! Nobody goes home!"
+   ]
+  },
+  {
+   "id": "boss_foreman_hurt",
+   "persona": "foreman",
+   "lines": [
+    "That is a WRITE-UP.",
+    "Double shift! More hands!"
+   ]
+  },
+  {
+   "id": "boss_foreman_kill",
+   "persona": "foreman",
+   "lines": [
+    "Clocked out. Ha. Ha. Ha.",
+    "Replace them. Hands first."
+   ]
+  },
+  {
+   "id": "boss_foreman_taunt",
+   "persona": "foreman",
+   "lines": [
+    "Faster! The line does not stop!",
+    "Break is over. Break was never on."
+   ],
+   "chance": 0.35,
+   "cooldown": 2
+  },
+  {
+   "id": "boss_foreman_death",
+   "persona": "foreman",
+   "lines": [
+    "Is it five o'clock. It is never five o'clock.",
+    "Shift... over..."
+   ]
+  },
+  {
+   "id": "boss_caller_intro",
+   "persona": "caller",
+   "lines": [
+    "You have played everything I wrote. One piece is left. It is me."
+   ]
+  },
+  {
+   "id": "boss_caller_hurt",
+   "persona": "caller",
+   "lines": [
+    "I have counted all of you. I counted you t-twice.",
+    "You play *well*. I do not know what to do with that.",
+    "Every face. EVERY FACE. Look at me."
+   ]
+  },
+  {
+   "id": "boss_caller_kill",
+   "persona": "caller",
+   "lines": [
+    "Your card. Into the drawer.",
+    "Drawer. Drawer. Drawer."
+   ]
+  },
+  {
+   "id": "boss_caller_taunt",
+   "persona": "caller",
+   "lines": [
+    "Eyes down. EYES DOWN.",
+    "I wrote the rules. I am writing them now."
+   ],
+   "chance": 0.35,
+   "cooldown": 2
+  },
+  {
+   "id": "boss_caller_death",
+   "persona": "caller",
+   "lines": [
+    "Last call. Last... call. Last.",
+    "House... rules... I made the..."
+   ]
+  },
+  {
+   "id": "mask_off",
+   "gesture": "",
+   "lines": [
+    "That one never fit.",
+    "Another face. I have many.",
+    "Under it. Nothing. Always nothing."
+   ]
+  }
+ ]
+}

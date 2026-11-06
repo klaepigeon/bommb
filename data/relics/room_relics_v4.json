@@ -1,0 +1,136 @@
+{
+ "_doc": "Room-unique relics for the five rooms added in data/hall/building_v4.json: the Lounge Bar, the Beer Cellar, the Car Park, the Manager's Flat and the Boiler Room. Each is hidden in one room spot ('unique') and nowhere else.",
+ "relics": [
+  {
+   "id": "rr_bottomless_pint",
+   "name": "The Pint That Won't Stop",
+   "rarity": "room",
+   "icon": "glass",
+   "room": "bar",
+   "desc": "Poured for someone who never came back for it. It stays full: each sip takes a quarter less, and heals a random hero 1d4.",
+   "tags": ["room", "bar"],
+   "mods": [
+    {"key": "sip_amount", "op": "mul", "value": 0.75}
+   ],
+   "triggers": [
+    {"event": "sip", "effects": [{"type": "heal", "dice": "1d4", "to": "random_hero"}], "label": "Bottomless", "quiet": true}
+   ]
+  },
+  {
+   "id": "rr_last_orders_bell",
+   "name": "The Last Orders Bell",
+   "rarity": "room",
+   "icon": "bell",
+   "room": "bar",
+   "desc": "Its clapper was tied down for a reason. From round 4 on, every hero gets a bonus action at the start of the round. Drink up.",
+   "tags": ["room", "bar"],
+   "triggers": [
+    {"event": "round_start", "effects": [{"type": "extra_action", "kind": "bonus", "to": "all_heroes"}], "when": {"round_ge": 4}, "label": "Last Orders"}
+   ]
+  },
+  {
+   "id": "rr_sea_keg",
+   "name": "A Keg of the Sea",
+   "rarity": "room",
+   "icon": "drop",
+   "room": "barcellar",
+   "desc": "Seawater, and something still swimming in it. Every fight opens with the enemies soaked through: vulnerable for a round, and slowed for two.",
+   "tags": ["room", "barcellar"],
+   "triggers": [
+    {"event": "combat_start", "effects": [{"type": "status", "id": "vulnerable", "turns": 1, "to": "all_enemies"}, {"type": "status", "id": "slowed", "turns": 2, "to": "all_enemies"}], "label": "The Keg"}
+   ]
+  },
+  {
+   "id": "rr_spile_mallet",
+   "name": "The Cellarman's Mallet",
+   "rarity": "room",
+   "icon": "mace",
+   "room": "barcellar",
+   "desc": "Forty years of knocking things in. Heroes' melee hits deal +2, and a melee crit knocks the target dazed.",
+   "tags": ["room", "barcellar"],
+   "mods": [
+    {"key": "damage_dealt_add", "op": "add", "value": 2, "when": {"side": "hero", "melee": true}}
+   ],
+   "triggers": [
+    {"event": "crit", "effects": [{"type": "status", "id": "dazed", "turns": 1, "to": "target"}], "when": {"side": "hero", "melee": true}, "label": "Knocked In"}
+   ]
+  },
+  {
+   "id": "rr_seat_fourteen",
+   "name": "Coach Ticket, Seat 14",
+   "rarity": "room",
+   "icon": "ticket",
+   "room": "carpark",
+   "desc": "Punched so often there's no middle left. Start every fight with a 14 up your sleeve; a hero who rolls a natural 14 gets a bonus action.",
+   "tags": ["room", "carpark"],
+   "triggers": [
+    {"event": "combat_start", "effects": [{"type": "sleeve", "n": 14}], "label": "Seat 14", "quiet": true},
+    {"event": "natural", "effects": [{"type": "extra_action", "kind": "bonus", "to": "self"}], "when": {"side": "hero", "natural": 14}, "label": "Seat 14"}
+   ]
+  },
+  {
+   "id": "rr_st_christopher",
+   "name": "St Christopher, from a Dashboard",
+   "rarity": "room",
+   "icon": "coin",
+   "room": "carpark",
+   "desc": "Patron of travellers. It didn't help them. It might help you: heroes get +3 initiative and move 1 tile further.",
+   "tags": ["room", "carpark"],
+   "mods": [
+    {"key": "initiative_bonus", "op": "add", "value": 3, "when": {"side": "hero"}},
+    {"key": "speed", "op": "add", "value": 1, "when": {"side": "hero"}}
+   ]
+  },
+  {
+   "id": "rr_hot_water_bottle",
+   "name": "Ruth's Hot Water Bottle",
+   "rarity": "room",
+   "icon": "heart",
+   "room": "flat",
+   "desc": "Filled every night at quarter to twelve, for someone who never came home. Heroes start every fight with 5 temporary HP.",
+   "tags": ["room", "flat"],
+   "mods": [
+    {"key": "temp_hp_combat", "op": "add", "value": 5, "when": {"side": "hero"}}
+   ]
+  },
+  {
+   "id": "rr_birthday_candle",
+   "name": "A 21 Candle, Never Lit",
+   "rarity": "room",
+   "icon": "candle",
+   "room": "flat",
+   "desc": "Kept for when she got back. The first time a hero goes down in a fight, every hero heals 1d6+2 and is blessed for 2 turns.",
+   "tags": ["room", "flat"],
+   "triggers": [
+    {"event": "ally_down", "effects": [{"type": "heal", "dice": "1d6+2", "to": "all_heroes"}, {"type": "status", "id": "blessed", "turns": 2, "to": "all_heroes"}], "when": {"side": "hero"}, "once": "combat", "label": "Make a Wish"}
+   ]
+  },
+  {
+   "id": "rr_pilot_light",
+   "name": "The Pilot Light",
+   "rarity": "room",
+   "icon": "flame",
+   "room": "boiler",
+   "desc": "It has never gone out. Every fight, a random enemy starts burning for 2 turns, and heroes' hits on burning targets deal +2.",
+   "tags": ["room", "boiler"],
+   "mods": [
+    {"key": "damage_dealt_add", "op": "add", "value": 2, "when": {"side": "hero", "target_status": "burning"}}
+   ],
+   "triggers": [
+    {"event": "combat_start", "effects": [{"type": "status", "id": "burning", "turns": 2, "to": "random_enemy"}], "label": "Pilot Light"}
+   ]
+  },
+  {
+   "id": "rr_coke_shovel",
+   "name": "The Caretaker's Shovel",
+   "rarity": "room",
+   "icon": "axe",
+   "room": "boiler",
+   "desc": "Worn bright on one edge from feeding the fire. Every kill feeds it: the killer heals 2 and the FILE drops 1.",
+   "tags": ["room", "boiler"],
+   "triggers": [
+    {"event": "kill", "effects": [{"type": "heal", "dice": "2", "to": "self"}, {"type": "suspicion", "n": -1}], "when": {"side": "hero"}, "label": "Stoke It", "quiet": true}
+   ]
+  }
+ ]
+}

@@ -1,75 +1,75 @@
 class_name GameView
-extends Node3D
-## A match on screen. Builds the hall, the Caller and the contestants, then follows the
-## views Net sends (the same on the host, offline, or a client): moves people, plays the
-## Caller's lines and gestures, stages deaths, swaps minigame views in and out, and turns
-## local input (touch, keyboard, pads) into actions for this device's seats.
+extends Node
+## A match on screen. You're sat at the Caller's table in the bingo hall (LAST CALL: The
+## Campaign's Stage and Hall: its low-resolution render, its ink post-process, its lamps,
+## candles, flashboard and rooms). On the table: the board, and the four voodoo dolls.
+## Follows the views Net sends (the same on the host, offline, or a client): moves the
+## dolls, plays the Caller's lines and gestures, stages deaths, swaps minigame views in and
+## out, and turns local input (touch, keyboard, pads) into actions for this device's seats.
+
+const TABLE_SCALE := 0.085
 
 signal leave_requested
 signal lobby_requested
 
-var venue: Venue
+var stage: Stage
+var table: Node3D               # doll units: everything on the board lives under this
+var venue: TableBoard
 var caller: CallerActor
 var contestants: Dictionary = {}    # seat -> Contestant
-var cam: Camera3D
 var hud: Hud
 var mgv: MgView
 var view: Dictionary = {}
 var dice: LcDice3D
 var _phase := ""
-var _cam_pos := Vector3(0, 12, 13)
-var _cam_look := Vector3.ZERO
+var _cam_pos := Vector3(0, 1.62, 1.72)
+var _cam_look := Vector3(0, 0.74, -0.12)
+var _fov := 52.0
 var _shake := 0.0
 var _move_sent: Dictionary = {}
 var _move_t := 0.0
-var _retro: RetroScreen
 var _deaths_shown: Dictionary = {}
 
 
 func _ready() -> void:
-	var env := WorldEnvironment.new()
-	var e := Environment.new()
-	e.background_mode = Environment.BG_COLOR
-	e.background_color = Color("1a0c18")
-	env.environment = e
-	add_child(env)
-	venue = Venue.new()
-	add_child(venue)
+	stage = Stage.new()
+	add_child(stage)
+	stage.set_internal_height(Settings.screen_lines() if Settings.screen_lines() > 0 else 540)
+	var hall := stage.hall
+	table = Node3D.new()
+	table.name = "MeatParty"
+	table.scale = Vector3.ONE * TABLE_SCALE
+	hall.board_root.add_child(table)
+	venue = TableBoard.new()
+	table.add_child(venue)
 	venue.build(Assets.load_json("res://assets/data/board.json").get("spaces", []))
-	caller = CallerActor.new()
-	caller.scale = Vector3.ONE * 1.3
-	caller.position = venue.caller_spot()
-	caller.rotation.y = -0.6
-	add_child(caller)
+	caller = CallerActor.wrap(hall.caller)
+	hall.add_child(caller)
 	dice = LcDice3D.new()
-	dice.setup(6, Color("e8dcc0"), Color("8a1a12"), 0.22)
+	dice.setup(6, Color("e8dcc0"), Color("8a1a12"), 0.3)
 	dice.visible = false
-	add_child(dice)
+	table.add_child(dice)
 	for s in Seats.seats:
 		var c := Contestant.new()
-		add_child(c)
+		table.add_child(c)
 		c.setup(int(s.seat), int(s.face), s.color, str(s.name))
 		c.place(venue.stand_pos(0, int(s.seat)))
 		contestants[int(s.seat)] = c
-	cam = Camera3D.new()
-	cam.fov = 50
-	cam.far = 80
-	add_child(cam)
-	cam.current = true
-	cam.position = _cam_pos
-	cam.look_at(Vector3.ZERO)
 	hud = Hud.new()
 	add_child(hud)
 	hud.act.connect(func(seat, a): Net.send_action(seat, a))
 	hud.leave_pressed.connect(func(): leave_requested.emit())
 	hud.lobby_pressed.connect(func(): lobby_requested.emit())
 	Net.state.connect(_on_state)
-	RetroScreen.lines = Settings.screen_lines()
-	_retro = RetroScreen.install(self)
 	Audio.music("board")
 	Audio.ambience("hall")
 	if not Net.last_view.is_empty():
 		_on_state(Net.last_view, [])
+
+
+## The table, in hall coordinates (for the camera).
+func on_table(p: Vector3) -> Vector3:
+	return table.to_global(p)
 
 
 func _exit_tree() -> void:
@@ -92,8 +92,7 @@ func viewer_sight() -> float:
 
 
 func shake(amount: float) -> void:
-	if Settings.get_v("screen_shake", true):
-		_shake = maxf(_shake, amount)
+	stage.add_shake(amount)
 
 
 func _on_state(v: Dictionary, events: Array) -> void:
@@ -110,10 +109,19 @@ func _on_state(v: Dictionary, events: Array) -> void:
 		if not p.alive and not c.dead and not _deaths_shown.has(int(p.seat)):
 			# joined late or missed it: show them gone
 			_deaths_shown[int(p.seat)] = true
-			c.die(str(p.death), caller.global_position)
+			c.die(str(p.death), caller.fig.global_position)
 	caller.set_unrest(float(v.unrest))
 	if v.key_space != null:
 		venue.show_key(int(v.key_space))
+	# the flashboard over the stage: the round, and how many are left
+	var alive := 0
+	for p in v.players:
+		if p.alive:
+			alive += 1
+	stage.hall.flashboard.set_left("ROUND", "%02d" % int(v.round))
+	stage.hall.flashboard.set_right("LEFT", "%02d" % alive, alive <= 1)
+	# the room reacts: dread with his unrest, red at the edges when he's watching hard
+	stage.post.set_shader_parameter("dread", clampf(float(v.unrest) / 3.0, 0.0, 1.0) * 0.8)
 
 
 func _phase_changed(p: String) -> void:
@@ -122,7 +130,7 @@ func _phase_changed(p: String) -> void:
 	if p in ["mg_intro"] and mgv == null:
 		var script := MinigameRegistry.view_script(str(view.mg_id))
 		mgv = script.new()
-		add_child(mgv)
+		table.add_child(mgv)
 		mgv.setup(self, view)
 	if p in ["turn", "ceremony", "ending", "door"] and mgv != null:
 		mgv.queue_free()
@@ -143,7 +151,7 @@ func _phase_changed(p: String) -> void:
 		for s in contestants:
 			var c: Contestant = contestants[s]
 			if not c.dead:
-				c.walk_to(Venue.DOOR + Vector3(0, 0, -2.5))
+				c.walk_to(venue.door_node.position + Vector3(0.6, 0, -3.0))
 		caller.play("panic")
 
 
@@ -153,6 +161,10 @@ func _event(e: Dictionary) -> void:
 			hud.say(str(e.text))
 			caller.play(str(e.gesture))
 			caller.set_mood(str(e.mood))
+			var gz := 0.55 if str(e.mood) == "intense" else 0.0
+			stage.post.set_shader_parameter("gaze", gz)
+			if str(e.mood) == "glitch":
+				_glitch(0.6)
 			caller.speak(clampf(str(e.text).length() * 0.05, 0.8, 4.0))
 			Audio.voice(str(e.get("id", "")), str(e.text))
 		"toast":
@@ -167,15 +179,19 @@ func _event(e: Dictionary) -> void:
 		"roll":
 			var c: Contestant = contestants[int(e.seat)]
 			dice.visible = true
-			var to := c.position + Vector3(0.6, 0.25, 0.6)
-			dice.roll_to(int(e.n), caller.global_position + Vector3(0, 2.0, 0), to, 0.9)
-			Audio.sfx("dice_clack", 0.1, 0.0)
+			var to := c.position + Vector3(0.8, 0.3, 0.8)
+			var from := table.to_local(caller.fig.global_position + Vector3(0, 1.2, 0.6))
+			dice.roll_to(int(e.n), from, to, 0.9)
+			Sfx.play("dice_rattle", -2.0)
+			stage.hall.flashboard.light(int(e.n))
 			get_tree().create_timer(3.0).timeout.connect(func(): dice.visible = false)
 		"death":
 			var s := int(e.seat)
 			_deaths_shown[s] = true
-			contestants[s].die(str(e.anim), caller.global_position)
+			contestants[s].die(str(e.anim), caller.fig.global_position)
 			shake(0.5)
+			stage.flash(0.35)
+			Sfx.play("death", -2.0)
 			Audio.duck(2.0)
 		"injure":
 			Audio.sfx("hurt", 0.15, -2.0)
@@ -198,6 +214,7 @@ func _event(e: Dictionary) -> void:
 			caller.play("hatch")
 		"unrest":
 			caller.play("glitch")
+			_glitch(1.0)
 		"key":
 			Audio.sfx("bell", 0.0, -4.0, 1.5)
 	if mgv:
@@ -223,28 +240,45 @@ func _process(delta: float) -> void:
 		caller.look("exit")
 
 
+func _glitch(amount: float) -> void:
+	var tw := create_tween()
+	tw.tween_method(func(v): stage.post.set_shader_parameter("glitch", v), amount, 0.0, 0.7)
+
+
+## Seated at the table. Leans in over the board for a turn or a game; looks up at him for
+## the ceremonies and the door.
 func _camera(delta: float) -> void:
-	var want_pos := Vector3(0, 12.5, 13.5)
-	var want_look := Vector3(0, 0, 0.5)
+	var want_pos := Vector3(0, 1.62, 1.72)
+	var want_look := Vector3(0, 0.74, -0.12)
+	var fov := 52.0
 	if mgv:
 		var c := mgv.camera()
-		want_pos = c[0]
-		want_look = c[1]
+		want_look = on_table(c[1])
+		# the board views were made from far above: same angle, from your chair
+		var dir: Vector3 = (on_table(c[0]) - want_look).normalized()
+		want_pos = want_look + dir * (float(c[2]) if c.size() > 2 else 1.05)
+		fov = 50.0
 	elif view.phase == "turn":
 		var s := int(view.turn.get("seat", -1))
 		if contestants.has(s):
-			var p: Vector3 = contestants[s].position
-			want_look = p * 0.45 + Vector3(0, 0.5, 0)
-			want_pos = want_look + Vector3(0, 9.0, 10.0)
-	elif view.phase in ["ceremony", "door"]:
-		want_look = caller.global_position + Vector3(-2, 1.0, 0)
-		want_pos = want_look + Vector3(-1, 4.0, 7.5)
-	_cam_pos = _cam_pos.lerp(want_pos, minf(1.0, delta * 2.5))
-	_cam_look = _cam_look.lerp(want_look, minf(1.0, delta * 2.5))
-	_shake = maxf(0.0, _shake - delta * 1.5)
-	var j := Vector3(randf_range(-1, 1), randf_range(-1, 1), 0) * _shake * 0.3
-	cam.position = _cam_pos + j
-	cam.look_at(_cam_look, Vector3.UP)
+			var p := on_table(contestants[s].position)
+			want_look = Vector3(p.x * 0.75, 0.8, p.z * 0.75)
+			want_pos = want_look + Vector3(0, 0.55, 0.7)
+	elif view.phase in ["ceremony", "door", "intro"]:
+		want_pos = Vector3(0, 1.32, 1.72)
+		want_look = Vector3(0, 1.75, -1.6)
+		fov = 56.0
+	elif view.phase == "ending" and view.ending == "escape":
+		want_look = on_table(venue.door_node.position + Vector3(0.6, 1.0, 0))
+		want_pos = want_look + Vector3(0, 0.25, 0.7)
+	var k := minf(1.0, delta * 2.2)
+	_cam_pos = _cam_pos.lerp(want_pos, k)
+	_cam_look = _cam_look.lerp(want_look, k)
+	_fov = lerpf(_fov, fov, k)
+	stage._base_pos = _cam_pos
+	stage._look_at = _cam_look
+	stage._fov = _fov
+	stage._apply_camera()
 
 
 ## Movement for local seats in real-time games: each seat's device (touch stick, a

@@ -1,0 +1,672 @@
+{
+ "encounters": [
+  {
+   "id": "v3_dk_diving_bell",
+   "name": "The Diving Bell",
+   "kind": "combat",
+   "setting": "drowned",
+   "difficulty": 1,
+   "layout": "hall_open",
+   "enemies": [
+    "v3_bell_diver",
+    "v3_bell_diver",
+    "v3_eel_knot",
+    "v3_eel_knot"
+   ],
+   "desc": "Two divers in brass helmets and the eels that live in their suits. The divers shrug off blows; lightning gets in.",
+   "intro": "They went down to look for the king. They came back. Without. Their faces.",
+   "optional": [
+    {
+     "type": "no_downs",
+     "text": "Nobody goes down",
+     "gold": 20
+    }
+   ]
+  },
+  {
+   "id": "v3_dk_widows_walk",
+   "name": "The Widow's Walk",
+   "kind": "combat",
+   "setting": "drowned",
+   "difficulty": 2,
+   "layout": "split_bridge",
+   "enemies": [
+    "v3_net_widow",
+    "drowned_footman",
+    "drowned_footman",
+    "brine_crossbow"
+   ],
+   "desc": "The widow nets whoever crosses the bridge; the footmen hold the far end. Rooted heroes take double from her knife.",
+   "intro": "She is waiting for someone. On the bridge. It is not you. She will take you. Anyway.",
+   "optional": [
+    {
+     "type": "rounds_le",
+     "text": "Win within 5 rounds",
+     "n": 5,
+     "gold": 25
+    }
+   ]
+  },
+  {
+   "id": "v3_dk_eel_pool",
+   "name": "The Eel Pool",
+   "kind": "combat",
+   "setting": "drowned",
+   "difficulty": 2,
+   "layout": "islands",
+   "enemies": [
+    "v3_eel_knot",
+    "v3_eel_knot",
+    "v3_eel_knot",
+    "v3_net_widow"
+   ],
+   "triggers": [
+    {
+     "event": "round_end",
+     "effects": [
+      {
+       "type": "random_tiles",
+       "tile": "flood",
+       "n": 2,
+       "only_on": "floor"
+      }
+     ],
+     "label": "The pool spreads"
+    }
+   ],
+   "desc": "Fast eels and a net-thrower among the islands. Every round two more tiles flood.",
+   "intro": "Do not put your hand in. Do not put. Your hand. In.",
+   "optional": [
+    {
+     "type": "no_downs",
+     "text": "Nobody goes down",
+     "gold": 25
+    }
+   ]
+  },
+  {
+   "id": "v3_dk_salvage",
+   "name": "Salvage Rights",
+   "kind": "combat",
+   "setting": "drowned",
+   "difficulty": 3,
+   "min_act": 1,
+   "layout": "corridor_pillars",
+   "enemies": [
+    "v3_bell_diver",
+    "v3_bell_diver",
+    "tide_priest",
+    "v3_net_widow",
+    "v3_eel_knot"
+   ],
+   "desc": "A full salvage crew: two divers up front, a tide-priest to mend them, a widow with a net.",
+   "intro": "Everything down here belongs to someone. They are. Collecting.",
+   "optional": [
+    {
+     "type": "kill_tag",
+     "text": "Kill the healer",
+     "tag": "healer",
+     "gold": 20
+    },
+    {
+     "type": "no_deaths",
+     "text": "Nobody dies",
+     "gold": 25
+    }
+   ]
+  },
+  {
+   "id": "v3_dk_e_keeper",
+   "name": "The Lamp Keeper",
+   "kind": "elite",
+   "setting": "drowned",
+   "difficulty": 3,
+   "layout": "flooded_court",
+   "enemies": [
+    "v3_lamp_keeper",
+    "v3_eel_knot",
+    "v3_eel_knot",
+    "brine_crossbow"
+   ],
+   "desc": "The lighthouse walked inland. Its beam sweeps a line a turn after it is marked: get out of the light.",
+   "intro": "It is still turning. Still warning. Ships. There are no ships. There is you.",
+   "optional": [
+    {
+     "type": "no_downs",
+     "text": "Nobody goes down",
+     "gold": 30
+    },
+    {
+     "type": "crits_ge",
+     "text": "Score 2 critical hits",
+     "n": 2,
+     "reward": "relic"
+    }
+   ]
+  },
+  {
+   "id": "v3_dk_e_divers",
+   "name": "The Deep Crew",
+   "kind": "elite",
+   "setting": "drowned",
+   "difficulty": 3,
+   "layout": "bog",
+   "enemies": [
+    {
+     "id": "v3_bell_diver",
+     "elite": true
+    },
+    {
+     "id": "v3_bell_diver",
+     "elite": true
+    },
+    "v3_net_widow"
+   ],
+   "desc": "Two veteran divers in the mud and a widow to pin you in place for them.",
+   "intro": "The ones who went deepest. They did not. Come up. All the way.",
+   "optional": [
+    {
+     "type": "rounds_le",
+     "text": "Win within 5 rounds",
+     "n": 5,
+     "gold": 30
+    }
+   ]
+  },
+  {
+   "id": "v3_dk_boss_ferryman",
+   "name": "The Ferryman",
+   "kind": "boss",
+   "setting": "drowned",
+   "difficulty": 4,
+   "layout": "v3_ferry_landing",
+   "enemies": [
+    {
+     "id": "v3_the_ferryman",
+     "at": "1"
+    },
+    "v3_eel_knot",
+    "v3_eel_knot"
+   ],
+   "desc": "He takes a card as his fare and sweeps you off the landing. At half strength the flood rises and his passengers climb out.",
+   "intro": "He rows people across. Water. That used to be streets. You have not paid.",
+   "optional": [
+    {
+     "type": "no_deaths",
+     "text": "Nobody dies",
+     "gold": 40
+    }
+   ]
+  },
+  {
+   "id": "v3_fc_moths",
+   "name": "Moths in the Choir Loft",
+   "kind": "combat",
+   "setting": "cathedral",
+   "difficulty": 1,
+   "layout": "chapel",
+   "enemies": [
+    "v3_hymnal_moth",
+    "v3_hymnal_moth",
+    "v3_hymnal_moth",
+    "wretch",
+    "wretch"
+   ],
+   "desc": "Moths that ate the hymnals. Their dust dazes. The wretches are just hungry.",
+   "intro": "They ate. The hymn books. Every word. Now they sing. With their wings.",
+   "optional": [
+    {
+     "type": "rounds_le",
+     "text": "Win within 4 rounds",
+     "n": 4,
+     "gold": 20
+    }
+   ]
+  },
+  {
+   "id": "v3_fc_gravediggers",
+   "name": "The Gravediggers",
+   "kind": "combat",
+   "setting": "cathedral",
+   "difficulty": 2,
+   "layout": "pit_room",
+   "enemies": [
+    "v3_sexton",
+    "v3_stitched_penitent",
+    "v3_stitched_penitent",
+    "choirboy"
+   ],
+   "desc": "The sexton shields its penitents and shoves you toward the pits. Where penitents fall, the floor comes alive.",
+   "intro": "Somebody has to dig. Somebody. Has to fill them.",
+   "optional": [
+    {
+     "type": "no_downs",
+     "text": "Nobody goes down",
+     "gold": 25
+    }
+   ]
+  },
+  {
+   "id": "v3_fc_censers",
+   "name": "Thurible",
+   "kind": "combat",
+   "setting": "cathedral",
+   "difficulty": 2,
+   "layout": "nave",
+   "enemies": [
+    "v3_censer_bearer",
+    "v3_stitched_penitent",
+    "v3_stitched_penitent",
+    "flagellant"
+   ],
+   "desc": "The censer-bearer makes everything near it regenerate. Kill it first or fight forever.",
+   "intro": "Breathe in. It smells like. A hospital. Breathe in.",
+   "optional": [
+    {
+     "type": "kill_tag_by",
+     "text": "Kill the censer-bearer by round 3",
+     "tag": "healer",
+     "round": 3,
+     "reward": "item"
+    }
+   ]
+  },
+  {
+   "id": "v3_fc_queue",
+   "name": "The Queue for Confession",
+   "kind": "combat",
+   "setting": "cathedral",
+   "difficulty": 3,
+   "min_act": 1,
+   "layout": "long_hall",
+   "enemies": [
+    "v3_stitched_penitent",
+    "v3_stitched_penitent",
+    "v3_stitched_penitent",
+    "v3_censer_bearer",
+    "v3_hymnal_moth"
+   ],
+   "desc": "A long line of penitents waiting their turn, kept fresh by incense. They would like you to wait too.",
+   "intro": "Take a number. They have. All taken numbers. Nobody has been called.",
+   "optional": [
+    {
+     "type": "no_downs",
+     "text": "Nobody goes down",
+     "gold": 30
+    }
+   ]
+  },
+  {
+   "id": "v3_fc_e_bride",
+   "name": "The Wedding",
+   "kind": "elite",
+   "setting": "cathedral",
+   "difficulty": 3,
+   "layout": "chapel",
+   "enemies": [
+    "v3_bone_bride",
+    "v3_hymnal_moth",
+    "v3_hymnal_moth",
+    "wretch"
+   ],
+   "desc": "The bride regenerates and marks whoever she touches. Halfway down, her bridesmaids arrive and she speeds up.",
+   "intro": "Everyone rise. She has been. Walking. Up this aisle. For a very long time.",
+   "optional": [
+    {
+     "type": "rounds_le",
+     "text": "Win within 6 rounds",
+     "n": 6,
+     "gold": 30
+    },
+    {
+     "type": "no_deaths",
+     "text": "Nobody dies",
+     "reward": "relic"
+    }
+   ]
+  },
+  {
+   "id": "v3_fc_e_vigil",
+   "name": "The Night Vigil",
+   "kind": "elite",
+   "setting": "cathedral",
+   "difficulty": 3,
+   "layout": "long_hall",
+   "enemies": [
+    {
+     "id": "v3_sexton",
+     "elite": true
+    },
+    "v3_censer_bearer",
+    {
+     "id": "flagellant",
+     "elite": true
+    },
+    "v3_stitched_penitent"
+   ],
+   "desc": "A veteran sexton holds the line; the censer keeps everyone regenerating behind it.",
+   "intro": "They keep the vigil. All night. Every night. Tonight. For you.",
+   "optional": [
+    {
+     "type": "kill_tag",
+     "text": "Kill the censer-bearer",
+     "tag": "healer",
+     "gold": 25
+    }
+   ]
+  },
+  {
+   "id": "v3_fc_boss_confessor",
+   "name": "The Confessor",
+   "kind": "boss",
+   "setting": "cathedral",
+   "difficulty": 4,
+   "layout": "v3_confessional",
+   "enemies": [
+    {
+     "id": "v3_the_confessor",
+     "at": "1"
+    },
+    "v3_stitched_penitent",
+    "v3_hymnal_moth"
+   ],
+   "desc": "Absolution hurts from anywhere. Whispered Sins winds up a turn before it frightens everything within 2. Penance makes your heroes take more damage.",
+   "intro": "Behind the grille. It listens. It remembers. Everything. Kneel.",
+   "optional": [
+    {
+     "type": "no_deaths",
+     "text": "Nobody dies",
+     "gold": 40
+    }
+   ]
+  },
+  {
+   "id": "v3_if_stokehold",
+   "name": "The Stokehold",
+   "kind": "combat",
+   "setting": "iron",
+   "difficulty": 1,
+   "layout": "machine_floor",
+   "enemies": [
+    "v3_stoker",
+    "v3_stoker",
+    "scrap_mite",
+    "scrap_mite"
+   ],
+   "desc": "Stokers with hot shovels and mites that run at you and go off. The stokers do not burn.",
+   "intro": "Feed the fire. Feed the fire. There is no. Engine. Feed the fire.",
+   "optional": [
+    {
+     "type": "no_downs",
+     "text": "Nobody goes down",
+     "gold": 20
+    }
+   ]
+  },
+  {
+   "id": "v3_if_clocking_on",
+   "name": "Clocking On",
+   "kind": "combat",
+   "setting": "iron",
+   "difficulty": 2,
+   "layout": "rail_yard",
+   "objective": {
+    "type": "destroy"
+   },
+   "enemies": [
+    "v3_punch_clock",
+    "rivet_hound",
+    "rivet_hound",
+    "v3_stoker"
+   ],
+   "desc": "While the punch clock stands, every machine on shift is hasted. Break the clock.",
+   "intro": "Clack. Clack. Everyone is. On time. Except you.",
+   "optional": [
+    {
+     "type": "no_downs",
+     "text": "Nobody goes down",
+     "gold": 25
+    }
+   ]
+  },
+  {
+   "id": "v3_if_spider_track",
+   "name": "Spider Track",
+   "kind": "combat",
+   "setting": "iron",
+   "difficulty": 2,
+   "layout": "ambush_ring",
+   "enemy_first": true,
+   "enemies": [
+    "v3_rail_spider",
+    "v3_rail_spider",
+    "steam_gunner",
+    "v3_stoker"
+   ],
+   "desc": "Rail spiders reel stragglers in on cables. You are surrounded and they move first. Stay together.",
+   "intro": "They lay the track. Anything on the track. Gets laid. Under.",
+   "optional": [
+    {
+     "type": "no_downs",
+     "text": "Nobody goes down",
+     "gold": 25
+    }
+   ]
+  },
+  {
+   "id": "v3_if_night_shift",
+   "name": "The Night Shift",
+   "kind": "combat",
+   "setting": "iron",
+   "difficulty": 3,
+   "min_act": 1,
+   "layout": "long_hall",
+   "enemies": [
+    "v3_punch_clock",
+    "v3_rail_spider",
+    "v3_stoker",
+    "steam_gunner",
+    "lamp_tinker"
+   ],
+   "desc": "A full shift, punched in and hasted. The clock is behind them. Get to it.",
+   "intro": "Nights are. Longer. Here. Nobody. Clocks out.",
+   "optional": [
+    {
+     "type": "kill_tag_by",
+     "text": "Break the clock by round 3",
+     "tag": "totem",
+     "round": 3,
+     "reward": "table"
+    }
+   ]
+  },
+  {
+   "id": "v3_if_e_strikebreaker",
+   "name": "The Strikebreaker",
+   "kind": "elite",
+   "setting": "iron",
+   "difficulty": 3,
+   "layout": "barricade",
+   "enemies": [
+    "v3_strikebreaker",
+    "v3_stoker",
+    "scrap_mite",
+    "scrap_mite"
+   ],
+   "desc": "It cannot be pushed and it shoves everything around it away. At half strength it calls a hound and hits harder.",
+   "intro": "There was a strike. Once. There is not. Any more. He saw to it.",
+   "optional": [
+    {
+     "type": "rounds_le",
+     "text": "Win within 6 rounds",
+     "n": 6,
+     "gold": 25
+    },
+    {
+     "type": "no_deaths",
+     "text": "Nobody dies",
+     "reward": "relic"
+    }
+   ]
+  },
+  {
+   "id": "v3_if_e_nest",
+   "name": "The Spider Shed",
+   "kind": "elite",
+   "setting": "iron",
+   "difficulty": 3,
+   "layout": "crossroads",
+   "enemies": [
+    {
+     "id": "v3_rail_spider",
+     "elite": true
+    },
+    {
+     "id": "v3_rail_spider",
+     "elite": true
+    },
+    "lamp_tinker",
+    "scrap_mite"
+   ],
+   "desc": "Two veteran rail spiders and a tinker wiring the floor. Do not get separated.",
+   "intro": "This is where they. Keep. The ones that broke. Down.",
+   "optional": [
+    {
+     "type": "no_downs",
+     "text": "Nobody goes down",
+     "gold": 30
+    }
+   ]
+  },
+  {
+   "id": "v3_if_boss_prospector",
+   "name": "The Prospector",
+   "kind": "boss",
+   "setting": "iron",
+   "difficulty": 4,
+   "layout": "v3_mine_shaft",
+   "enemies": [
+    {
+     "id": "v3_the_prospector",
+     "at": "1"
+    },
+    "scrap_mite",
+    "v3_stoker"
+   ],
+   "desc": "Dynamite is marked a turn before it goes off: move. In his second half the shaft caves in around him and gold fever takes his side.",
+   "intro": "Found gold. Once. Has been digging. Ever since. You are standing. On his claim.",
+   "optional": [
+    {
+     "type": "no_deaths",
+     "text": "Nobody dies",
+     "gold": 40
+    }
+   ]
+  },
+  {
+   "id": "v3_et_spillage",
+   "name": "Spillage",
+   "kind": "combat",
+   "setting": "table",
+   "difficulty": 1,
+   "layout": "big_die",
+   "enemies": [
+    "v3_spilled_pint",
+    "v3_spilled_pint",
+    "v3_spilled_pint",
+    "unfinished_mini"
+   ],
+   "desc": "Somebody spilled a drink across the map in round three. It slows whatever it touches and leaves the floor wet.",
+   "intro": "Steve. Knocked it over. Steve. Never. Cleaned it up.",
+   "optional": [
+    {
+     "type": "rounds_le",
+     "text": "Win within 4 rounds",
+     "n": 4,
+     "gold": 25
+    }
+   ]
+  },
+  {
+   "id": "v3_et_scorekeeping",
+   "name": "Keeping Score",
+   "kind": "combat",
+   "setting": "table",
+   "difficulty": 2,
+   "layout": "chapel",
+   "enemies": [
+    "v3_scorekeeper",
+    "paper_knight",
+    "paper_knight",
+    "v3_spilled_pint"
+   ],
+   "desc": "The scorekeeper marks you and crosses you out; the paper knights do the rest.",
+   "intro": "Somebody. Has to. Keep score. I have. Kept. Every score.",
+   "optional": [
+    {
+     "type": "no_downs",
+     "text": "Nobody goes down",
+     "gold": 25
+    }
+   ]
+  },
+  {
+   "id": "v3_et_tablecloth",
+   "name": "Under the Tablecloth",
+   "kind": "combat",
+   "setting": "table",
+   "difficulty": 2,
+   "layout": "unfinished",
+   "enemies": [
+    "v3_tablecloth_ghost",
+    "v3_tablecloth_ghost",
+    "margin_scribbler",
+    "eraser_wraith"
+   ],
+   "desc": "Two cloths lie flat and wait for someone to stand alone. Keep together.",
+   "intro": "Lift the cloth. There is nothing. Under. Lift the cloth. Again.",
+   "optional": [
+    {
+     "type": "no_downs",
+     "text": "Nobody goes down",
+     "gold": 25
+    }
+   ]
+  },
+  {
+   "id": "v3_et_e_final_tally",
+   "name": "The Final Tally",
+   "kind": "elite",
+   "setting": "table",
+   "difficulty": 3,
+   "layout": "long_hall",
+   "enemies": [
+    {
+     "id": "v3_scorekeeper",
+     "elite": true
+    },
+    {
+     "id": "v3_tablecloth_ghost",
+     "elite": true
+    },
+    "loaded_die_enemy",
+    "v3_spilled_pint"
+   ],
+   "desc": "A veteran scorekeeper weakening your hitters while the cloth smothers stragglers and the die rolls itself at you.",
+   "intro": "Add it up. Add. It. Up. You are. Short.",
+   "optional": [
+    {
+     "type": "crits_ge",
+     "text": "Score 3 critical hits",
+     "n": 3,
+     "reward": "relic"
+    },
+    {
+     "type": "no_deaths",
+     "text": "Nobody dies",
+     "gold": 30
+    }
+   ]
+  }
+ ]
+}

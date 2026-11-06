@@ -1,0 +1,2020 @@
+{
+ "rooms": [
+  {
+   "id": "kitchen",
+   "name": "The Kitchen",
+   "persona": "cook",
+   "label": "KITCHEN",
+   "door": {
+    "at": [
+     -7.5,
+     -4.6
+    ]
+   },
+   "style": {
+    "wall": "#5a6a58",
+    "floor": "#2e2c26",
+    "light": "#e8d8a0",
+    "tiles": true
+   },
+   "size": [
+    7.0,
+    6.0
+   ],
+   "props": [
+    {
+     "kind": "box",
+     "at": [
+      -2.6,
+      -2.2
+     ],
+     "size": [
+      1.4,
+      0.95,
+      0.7
+     ],
+     "color": "#2a2826",
+     "name": "stove"
+    },
+    {
+     "kind": "cyl",
+     "at": [
+      -2.6,
+      -2.2
+     ],
+     "y": 0.95,
+     "r": 0.34,
+     "h": 0.5,
+     "color": "#6a6a64",
+     "name": "the big pot"
+    },
+    {
+     "kind": "box",
+     "at": [
+      2.6,
+      -2.4
+     ],
+     "size": [
+      0.9,
+      2.0,
+      0.7
+     ],
+     "color": "#d8d4c8",
+     "name": "fridge"
+    },
+    {
+     "kind": "box",
+     "at": [
+      0.0,
+      0.2
+     ],
+     "size": [
+      1.6,
+      0.9,
+      0.8
+     ],
+     "color": "#6a4a30",
+     "name": "chopping block"
+    },
+    {
+     "kind": "shelf",
+     "at": [
+      0.0,
+      -2.75
+     ],
+     "size": [
+      2.4,
+      2.0,
+      0.35
+     ],
+     "color": "#4a3424",
+     "name": "spice rack"
+    },
+    {
+     "kind": "box",
+     "at": [
+      2.9,
+      0.6
+     ],
+     "size": [
+      0.7,
+      0.9,
+      1.4
+     ],
+     "color": "#8a8a84",
+     "name": "sink"
+    },
+    {
+     "kind": "box",
+     "at": [
+      3.45,
+      -1.95
+     ],
+     "y": 1.15,
+     "size": [
+      0.02,
+      0.32,
+      0.24
+     ],
+     "color": "#d8ccb0",
+     "name": "the stock sheet"
+    }
+   ],
+   "spots": [
+    {
+     "id": "fridge",
+     "name": "The fridge",
+     "at": [
+      2.6,
+      1.2,
+      -2.0
+     ],
+     "unique": "rr_pickled_fingers",
+     "look": "A big white fridge, humming. There's a smell. There's always a smell.",
+     "found": "Behind the milk: a jar. Fingers, in brine, all different sizes. One of them still has a ring.",
+     "search": [
+      {
+       "w": 3,
+       "text": "A carton of something. You don't open it. You take the thing taped to the back.",
+       "effects": [
+        {
+         "type": "table_item",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "Milk. Gone off. It moves.",
+       "effects": [
+        {
+         "type": "nothing"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "pot",
+     "name": "The big pot",
+     "at": [
+      -2.6,
+      1.3,
+      -2.2
+     ],
+     "look": "Something has been simmering for a very long time.",
+     "search": [
+      {
+       "w": 3,
+       "text": "You fish around with a ladle. Coins come up. So does a tooth.",
+       "effects": [
+        {
+         "type": "gold",
+         "n": 20
+        }
+       ]
+      },
+      {
+       "w": 1,
+       "text": "It's hotter than it looks. Somebody's hand is in there, and it grabs.",
+       "effects": [
+        {
+         "type": "damage",
+         "n": 5,
+         "target": "random"
+        }
+       ]
+      },
+      {
+       "w": 3,
+       "text": "A sealed tin floating in the broth.",
+       "effects": [
+        {
+         "type": "table_item",
+         "id": "random"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "block",
+     "name": "The chopping block",
+     "at": [
+      0.0,
+      1.0,
+      0.2
+     ],
+     "unique": "rr_cooks_cleaver",
+     "look": "Scored a thousand times. The cleaver is buried in it, handle up.",
+     "found": "You work the cleaver out of the wood. It comes away wet, though the block is dry.",
+     "search": [
+      {
+       "w": 2,
+       "text": "Under the block: a weapon somebody hid from the cook.",
+       "effects": [
+        {
+         "type": "gear",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "Bone dust and a bad feeling.",
+       "effects": [
+        {
+         "type": "nothing"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "spices",
+     "name": "The spice rack",
+     "at": [
+      0.0,
+      1.3,
+      -2.6
+     ],
+     "look": "Little jars with handwritten labels: SALT. PEPPER. DAVE. MARGARET.",
+     "search": [
+      {
+       "w": 3,
+       "text": "A jar that isn't spice.",
+       "effects": [
+        {
+         "type": "table_item",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 1,
+       "text": "A carved stopper shaped like a head.",
+       "effects": [
+        {
+         "type": "totem",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 3,
+       "text": "Something in a twist of paper.",
+       "effects": [
+        {
+         "type": "table_item",
+         "id": "random"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "caller": [
+    1.2,
+    -1.9,
+    -0.3
+   ],
+   "place": {
+    "centre": [
+     -10.5,
+     -6.0
+    ],
+    "rot": 1.5708
+   }
+  },
+  {
+   "id": "cloakroom",
+   "name": "The Cloakroom",
+   "persona": "receptionist",
+   "label": "CLOAKS",
+   "door": {
+    "at": [
+     -7.5,
+     0.3
+    ]
+   },
+   "style": {
+    "wall": "#6a3a30",
+    "floor": "#3a2a20",
+    "light": "#f0c890",
+    "tiles": false
+   },
+   "size": [
+    6.0,
+    5.0
+   ],
+   "props": [
+    {
+     "kind": "rail",
+     "at": [
+      -1.5,
+      -1.9
+     ],
+     "size": [
+      3.0,
+      1.8,
+      0.5
+     ],
+     "color": "#2a2420",
+     "name": "coat rail"
+    },
+    {
+     "kind": "box",
+     "at": [
+      1.8,
+      0.8
+     ],
+     "size": [
+      2.0,
+      1.0,
+      0.6
+     ],
+     "color": "#5a3a24",
+     "name": "counter"
+    },
+    {
+     "kind": "box",
+     "at": [
+      2.3,
+      -1.9
+     ],
+     "size": [
+      1.0,
+      0.7,
+      0.7
+     ],
+     "color": "#8a7a5a",
+     "name": "lost property box"
+    },
+    {
+     "kind": "cyl",
+     "at": [
+      -2.4,
+      1.6
+     ],
+     "r": 0.2,
+     "h": 0.8,
+     "color": "#3a3a40",
+     "name": "umbrella stand"
+    }
+   ],
+   "spots": [
+    {
+     "id": "lost",
+     "name": "Lost property",
+     "at": [
+      2.3,
+      0.8,
+      -1.9
+     ],
+     "unique": "rr_glass_eye",
+     "look": "A box of things people left behind: gloves, a doll, dentures, a wedding ring with the finger.",
+     "found": "In a sock at the bottom: an eye. Glass. You'd swear it moved.",
+     "search": [
+      {
+       "w": 3,
+       "text": "A pair of gloves with something in each finger.",
+       "effects": [
+        {
+         "type": "table_item",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "Somebody's good boots, still laced.",
+       "effects": [
+        {
+         "type": "gear",
+         "id": "random"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "coats",
+     "name": "The coats",
+     "at": [
+      -1.5,
+      1.4,
+      -1.9
+     ],
+     "look": "Heavy coats on numbered hooks. Some of them are damp. Some of them are heavy in the wrong way.",
+     "search": [
+      {
+       "w": 3,
+       "text": "Coins in the lining.",
+       "effects": [
+        {
+         "type": "gold",
+         "n": 15
+        }
+       ]
+      },
+      {
+       "w": 3,
+       "text": "A hip flask in an inside pocket.",
+       "effects": [
+        {
+         "type": "table_item",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 1,
+       "text": "Something in the sleeve bites.",
+       "effects": [
+        {
+         "type": "damage",
+         "n": 3,
+         "target": "random"
+        }
+       ]
+      },
+      {
+       "w": 1,
+       "text": "Pinned inside a collar: a charm.",
+       "effects": [
+        {
+         "type": "relic",
+         "id": "random",
+         "rarity": [
+          "common",
+          "uncommon"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "tickets",
+     "name": "The ticket drawer",
+     "at": [
+      1.8,
+      1.1,
+      0.8
+     ],
+     "unique": "rr_ticket_zero",
+     "look": "Pink tickets, numbered, in a cash drawer that won't quite close.",
+     "found": "Under the tray, a ticket printed with a zero. The hook it matches is empty. It's always been empty.",
+     "search": [
+      {
+       "w": 2,
+       "text": "Tickets. So many tickets.",
+       "effects": [
+        {
+         "type": "nothing"
+        }
+       ]
+      },
+      {
+       "w": 3,
+       "text": "A ticket stub with a drink still owed on it.",
+       "effects": [
+        {
+         "type": "table_item",
+         "id": "random"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "umbrellas",
+     "name": "The umbrella stand",
+     "at": [
+      -2.4,
+      0.9,
+      1.6
+     ],
+     "look": "Black umbrellas, a cane, and one walking stick topped with a brass skull.",
+     "search": [
+      {
+       "w": 3,
+       "text": "The skull-headed stick. It's heavier than it should be.",
+       "effects": [
+        {
+         "type": "gear",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "Umbrellas. Wet, though it isn't raining.",
+       "effects": [
+        {
+         "type": "nothing"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "caller": [
+    0.6,
+    -1.8,
+    0.0
+   ],
+   "place": {
+    "centre": [
+     -10.0,
+     1.5
+    ],
+    "rot": 1.5708
+   }
+  },
+  {
+   "id": "office",
+   "name": "The Manager's Office",
+   "persona": "manager",
+   "label": "PRIVATE",
+   "door": {
+    "at": [
+     7.5,
+     -3.2
+    ]
+   },
+   "style": {
+    "wall": "#3a4a3a",
+    "floor": "#2a2018",
+    "light": "#d0e0c0",
+    "tiles": false
+   },
+   "size": [
+    6.0,
+    5.0
+   ],
+   "props": [
+    {
+     "kind": "box",
+     "at": [
+      0.0,
+      -0.8
+     ],
+     "size": [
+      1.8,
+      0.8,
+      0.9
+     ],
+     "color": "#3a2618",
+     "name": "desk"
+    },
+    {
+     "kind": "box",
+     "at": [
+      -2.5,
+      -2.0
+     ],
+     "size": [
+      0.6,
+      1.4,
+      0.6
+     ],
+     "color": "#5a5a50",
+     "name": "filing cabinet"
+    },
+    {
+     "kind": "box",
+     "at": [
+      2.4,
+      -2.0
+     ],
+     "size": [
+      0.8,
+      0.9,
+      0.8
+     ],
+     "color": "#2a2a2a",
+     "name": "safe"
+    },
+    {
+     "kind": "frame",
+     "at": [
+      0.0,
+      -2.45
+     ],
+     "y": 1.8,
+     "size": [
+      0.9,
+      1.1,
+      0.05
+     ],
+     "color": "#8a6a30",
+     "name": "portrait"
+    }
+   ],
+   "spots": [
+    {
+     "id": "desk",
+     "name": "The desk drawer",
+     "at": [
+      0.0,
+      0.9,
+      -0.8
+     ],
+     "unique": "rr_managers_pen",
+     "look": "A green leather desk, a blotter, a nameplate with the name scratched off.",
+     "found": "A fountain pen, full. The ink is red and it smells like a penny.",
+     "search": [
+      {
+       "w": 3,
+       "text": "Petty cash.",
+       "effects": [
+        {
+         "type": "gold",
+         "n": 25
+        }
+       ]
+      },
+      {
+       "w": 3,
+       "text": "A paperweight with something sealed inside.",
+       "effects": [
+        {
+         "type": "table_item",
+         "id": "random"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "files",
+     "name": "The filing cabinet",
+     "at": [
+      -2.5,
+      1.3,
+      -2.0
+     ],
+     "unique": "rr_your_file",
+     "look": "Drawers labelled by year. The years go further back than the hall does.",
+     "found": "Under Y, for You: your file. It's thick. There are photographs.",
+     "search": [
+      {
+       "w": 3,
+       "text": "You find your page in tonight's file and tear it out.",
+       "effects": [
+        {
+         "type": "suspicion",
+         "n": -20
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "Files on people. Most of them end with a red line.",
+       "effects": [
+        {
+         "type": "nothing"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "safe",
+     "name": "The safe",
+     "at": [
+      2.4,
+      0.9,
+      -2.0
+     ],
+     "look": "A black safe with a dial. Someone has written the combination on the wall above it: it is your birthday.",
+     "search": [
+      {
+       "w": 3,
+       "text": "It opens. It shouldn't. Money, rolled tight.",
+       "effects": [
+        {
+         "type": "gold",
+         "n": 60
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "A velvet bag inside the safe.",
+       "effects": [
+        {
+         "type": "relic",
+         "id": "random",
+         "rarity": [
+          "common",
+          "uncommon"
+         ]
+        }
+       ]
+      },
+      {
+       "w": 1,
+       "text": "A carved head wrapped in a handkerchief.",
+       "effects": [
+        {
+         "type": "totem",
+         "id": "random"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "portrait",
+     "name": "The portrait",
+     "at": [
+      0.0,
+      1.8,
+      -2.4
+     ],
+     "look": "The Caller, painted in oils, in a suit, with a human face. The face is wrong in a way you can't point at.",
+     "search": [
+      {
+       "w": 3,
+       "text": "You look behind the frame. Something looks back.",
+       "effects": [
+        {
+         "type": "nothing"
+        }
+       ]
+      },
+      {
+       "w": 1,
+       "text": "The eyes follow you. Then the hand does.",
+       "effects": [
+        {
+         "type": "damage",
+         "n": 4,
+         "target": "random"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "caller": [
+    0.0,
+    -1.75,
+    0.0
+   ],
+   "place": {
+    "centre": [
+     10.0,
+     -4.5
+    ],
+    "rot": -1.5708
+   }
+  },
+  {
+   "id": "toilets",
+   "name": "The Toilets",
+   "persona": "attendant",
+   "label": "TOILETS",
+   "door": {
+    "at": [
+     7.5,
+     2.6
+    ]
+   },
+   "style": {
+    "wall": "#8a9a8a",
+    "floor": "#3a4440",
+    "light": "#c8e8d8",
+    "tiles": true
+   },
+   "size": [
+    6.0,
+    5.0
+   ],
+   "props": [
+    {
+     "kind": "stall",
+     "at": [
+      -2.0,
+      -1.7
+     ],
+     "size": [
+      1.0,
+      1.9,
+      1.2
+     ],
+     "color": "#6a7a70",
+     "name": "stall one"
+    },
+    {
+     "kind": "stall",
+     "at": [
+      -0.9,
+      -1.7
+     ],
+     "size": [
+      1.0,
+      1.9,
+      1.2
+     ],
+     "color": "#6a7a70",
+     "name": "stall two"
+    },
+    {
+     "kind": "stall",
+     "at": [
+      0.2,
+      -1.7
+     ],
+     "size": [
+      1.0,
+      1.9,
+      1.2
+     ],
+     "color": "#5a2a24",
+     "name": "stall three"
+    },
+    {
+     "kind": "box",
+     "at": [
+      2.3,
+      0.0
+     ],
+     "size": [
+      0.6,
+      0.9,
+      2.2
+     ],
+     "color": "#c8c8c0",
+     "name": "sinks"
+    },
+    {
+     "kind": "frame",
+     "at": [
+      2.85,
+      0.0
+     ],
+     "y": 1.5,
+     "size": [
+      0.05,
+      0.8,
+      2.0
+     ],
+     "color": "#a8b8b8",
+     "name": "mirror"
+    }
+   ],
+   "spots": [
+    {
+     "id": "mirror",
+     "name": "The mirror",
+     "at": [
+      2.8,
+      1.5,
+      0.0
+     ],
+     "unique": "rr_grinning_reflection",
+     "look": "A long mirror over the sinks. You're in it. You're smiling. You are not smiling.",
+     "found": "You walk away. Your reflection doesn't. It waves.",
+     "search": [
+      {
+       "w": 3,
+       "text": "Just you. Just you. Just you.",
+       "effects": [
+        {
+         "type": "nothing"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "cistern",
+     "name": "The cistern",
+     "at": [
+      -0.9,
+      1.6,
+      -2.0
+     ],
+     "unique": "rr_cistern_razor",
+     "look": "A high cistern on a chain. Something is taped inside the lid.",
+     "found": "A straight razor in a bag, taped under the lid. Clean. Recently cleaned.",
+     "search": [
+      {
+       "w": 3,
+       "text": "A bag taped inside the lid.",
+       "effects": [
+        {
+         "type": "table_item",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "A wrapped blade.",
+       "effects": [
+        {
+         "type": "gear",
+         "id": "random"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "stall3",
+     "name": "The third stall",
+     "at": [
+      0.2,
+      1.0,
+      -1.4
+     ],
+     "look": "The door is red. The lock says OCCUPIED. There are shoes under it, and they point the wrong way.",
+     "search": [
+      {
+       "w": 2,
+       "text": "It opens. Something grabs. You get away with most of your hand.",
+       "effects": [
+        {
+         "type": "damage",
+         "n": 6,
+         "target": "random"
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "On the floor: something somebody dropped in a hurry.",
+       "effects": [
+        {
+         "type": "relic",
+         "id": "random",
+         "rarity": [
+          "common",
+          "uncommon"
+         ]
+        }
+       ]
+      },
+      {
+       "w": 1,
+       "text": "Scratched into the door: a face. You pry off the bit with the face on it.",
+       "effects": [
+        {
+         "type": "totem",
+         "id": "random"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "sinks",
+     "name": "The sinks",
+     "at": [
+      2.3,
+      1.0,
+      0.0
+     ],
+     "look": "Cold water only. The soap is a grey lump with a hair in it.",
+     "search": [
+      {
+       "w": 3,
+       "text": "You wash the miniatures' faces. Everyone feels better.",
+       "effects": [
+        {
+         "type": "heal_pct",
+         "pct": 0.15,
+         "target": "all"
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "The water runs red, then clear, then red.",
+       "effects": [
+        {
+         "type": "nothing"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "caller": [
+    2.1,
+    -1.9,
+    -0.6
+   ],
+   "place": {
+    "centre": [
+     10.0,
+     2.0
+    ],
+    "rot": -1.5708
+   }
+  },
+  {
+   "id": "booth",
+   "name": "The Projection Booth",
+   "persona": "projectionist",
+   "label": "BOOTH",
+   "door": {
+    "at": [
+     0.0,
+     7.0
+    ]
+   },
+   "style": {
+    "wall": "#2a2420",
+    "floor": "#1a1612",
+    "light": "#f8f0d0",
+    "tiles": false
+   },
+   "size": [
+    5.0,
+    4.0
+   ],
+   "props": [
+    {
+     "kind": "box",
+     "at": [
+      1.3,
+      1.25
+     ],
+     "size": [
+      0.9,
+      1.1,
+      0.9
+     ],
+     "color": "#3a3a3a",
+     "name": "projector"
+    },
+    {
+     "kind": "cyl",
+     "at": [
+      1.05,
+      1.25
+     ],
+     "y": 1.1,
+     "r": 0.35,
+     "h": 0.06,
+     "color": "#5a5a5a",
+     "name": "reel"
+    },
+    {
+     "kind": "cyl",
+     "at": [
+      1.6,
+      1.25
+     ],
+     "y": 1.1,
+     "r": 0.35,
+     "h": 0.06,
+     "color": "#5a5a5a",
+     "name": "reel"
+    },
+    {
+     "kind": "box",
+     "at": [
+      -1.8,
+      0.8
+     ],
+     "size": [
+      0.9,
+      0.9,
+      0.6
+     ],
+     "color": "#4a3a2a",
+     "name": "film cans"
+    },
+    {
+     "kind": "chair",
+     "at": [
+      -0.9,
+      -1.0
+     ],
+     "size": [
+      0.5,
+      0.9,
+      0.5
+     ],
+     "color": "#5a2a24",
+     "name": "chair"
+    }
+   ],
+   "spots": [
+    {
+     "id": "projector",
+     "name": "The projector",
+     "at": [
+      1.3,
+      1.2,
+      1.25
+     ],
+     "unique": "rr_projector_bulb",
+     "look": "It's running. There's no film in it. The beam goes out through a little window into the hall and lands on the back of your chair.",
+     "found": "You unscrew the bulb with your sleeve. It doesn't go out.",
+     "search": [
+      {
+       "w": 2,
+       "text": "The beam. Your chair. Somebody sitting in it.",
+       "effects": [
+        {
+         "type": "nothing"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "cans",
+     "name": "The film cans",
+     "at": [
+      -1.8,
+      1.0,
+      0.8
+     ],
+     "unique": "rr_old_reel",
+     "look": "Round tins, labelled in his handwriting: GAME NIGHT. GAME NIGHT. GAME NIGHT. YOU.",
+     "found": "You open the one labelled YOU. It's already been watched.",
+     "search": [
+      {
+       "w": 3,
+       "text": "A tin with no film in it, just this.",
+       "effects": [
+        {
+         "type": "table_item",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 1,
+       "text": "A splice of film wrapped round a tiny carved base.",
+       "effects": [
+        {
+         "type": "totem",
+         "id": "random"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "window",
+     "name": "The little window",
+     "at": [
+      1.3,
+      1.5,
+      1.95
+     ],
+     "look": "You can see the whole hall from here, and the table. Your seat is not empty.",
+     "search": [
+      {
+       "w": 3,
+       "text": "From up here you can see the shape of the night. Some pages on the map are clearer now.",
+       "effects": [
+        {
+         "type": "reveal"
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "Your seat. Somebody in it. Gone.",
+       "effects": [
+        {
+         "type": "nothing"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "chair",
+     "name": "The chair",
+     "at": [
+      -0.9,
+      0.9,
+      -1.0
+     ],
+     "look": "A cinema seat torn out of somewhere and bolted to the floor facing the wall. The wall has a dent the shape of a head.",
+     "search": [
+      {
+       "w": 3,
+       "text": "Down the back of the seat.",
+       "effects": [
+        {
+         "type": "gold",
+         "n": 30
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "Under the seat, wrapped in programmes.",
+       "effects": [
+        {
+         "type": "gear",
+         "id": "random"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "caller": [
+    -1.6,
+    -1.4,
+    0.6
+   ],
+   "place": {
+    "centre": [
+     0.0,
+     9.0
+    ],
+    "rot": 3.1416
+   }
+  },
+  {
+   "id": "cellar",
+   "name": "The Cellar",
+   "persona": "drowned_king",
+   "label": "CELLAR",
+   "door": {
+    "at": [
+     -5.2,
+     -14.0
+    ],
+    "from": "stairs",
+    "kind": "arch",
+    "width": 1.6,
+    "height": 2.3
+   },
+   "style": {
+    "wall": "#2a3030",
+    "floor": "#14201e",
+    "light": "#a8d0c0",
+    "tiles": false
+   },
+   "size": [
+    7.0,
+    6.0
+   ],
+   "props": [
+    {
+     "kind": "barrel",
+     "at": [
+      -2.6,
+      -2.2
+     ],
+     "r": 0.4,
+     "h": 1.0,
+     "color": "#5a3a20",
+     "name": "barrel"
+    },
+    {
+     "kind": "barrel",
+     "at": [
+      -1.7,
+      -2.4
+     ],
+     "r": 0.4,
+     "h": 1.0,
+     "color": "#5a3a20",
+     "name": "barrel"
+    },
+    {
+     "kind": "barrel",
+     "at": [
+      -2.2,
+      -1.5
+     ],
+     "r": 0.4,
+     "h": 1.0,
+     "color": "#4a2a18",
+     "name": "barrel"
+    },
+    {
+     "kind": "cage",
+     "at": [
+      2.2,
+      -2.0
+     ],
+     "r": 0.5,
+     "color": "#8a6a2a",
+     "name": "the other cage"
+    },
+    {
+     "kind": "box",
+     "at": [
+      0.0,
+      1.5
+     ],
+     "size": [
+      3.0,
+      0.04,
+      2.0
+     ],
+     "color": "#0a1a1a",
+     "name": "water",
+     "walk_over": true
+    },
+    {
+     "kind": "chain",
+     "at": [
+      2.8,
+      1.2
+     ],
+     "size": [
+      0.1,
+      2.4,
+      0.1
+     ],
+     "color": "#4a4a44",
+     "name": "chains"
+    }
+   ],
+   "spots": [
+    {
+     "id": "barrels",
+     "name": "The barrels",
+     "at": [
+      -2.2,
+      1.1,
+      -2.0
+     ],
+     "unique": "rr_cellar_cask",
+     "look": "Old casks. One of them is still being drunk from: you can hear it, somewhere inside.",
+     "found": "You turn the tap on the last cask. It pours forever.",
+     "search": [
+      {
+       "w": 3,
+       "text": "A bottle wedged between the casks.",
+       "effects": [
+        {
+         "type": "table_item",
+         "id": "random"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "cage",
+     "name": "The other cage",
+     "at": [
+      2.2,
+      1.0,
+      -2.0
+     ],
+     "unique": "rr_teeth_cage",
+     "look": "Another bingo cage. Smaller. Full of teeth instead of balls, and they're not all human.",
+     "found": "You lift it down. The teeth rattle like they're laughing.",
+     "search": [
+      {
+       "w": 2,
+       "text": "Teeth. Teeth. A filling.",
+       "effects": [
+        {
+         "type": "nothing"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "water",
+     "name": "The water",
+     "at": [
+      0.0,
+      0.3,
+      1.5
+     ],
+     "look": "Black water over the floor. It's deeper than a floor should be.",
+     "search": [
+      {
+       "w": 2,
+       "text": "Something under the water takes hold of your ankle.",
+       "effects": [
+        {
+         "type": "damage",
+         "n": 6,
+         "target": "random"
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "You fish something out. It was waiting.",
+       "effects": [
+        {
+         "type": "relic",
+         "id": "random",
+         "rarity": [
+          "common",
+          "uncommon"
+         ]
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "A weapon on the bottom, dropped by somebody who isn't coming back for it.",
+       "effects": [
+        {
+         "type": "gear",
+         "id": "random"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "chains",
+     "name": "The chains",
+     "at": [
+      2.8,
+      1.2,
+      1.2
+     ],
+     "look": "Chains from the ceiling, with cuffs. The cuffs are miniature-sized. And full-sized.",
+     "search": [
+      {
+       "w": 2,
+       "text": "A shackle that fits a fist nicely.",
+       "effects": [
+        {
+         "type": "gear",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 1,
+       "text": "A tiny carved head hanging on a chain.",
+       "effects": [
+        {
+         "type": "totem",
+         "id": "random"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "caller": [
+    1.0,
+    0.5,
+    -0.3
+   ],
+   "place": {
+    "centre": [
+     -5.2,
+     -17.0
+    ],
+    "rot": 0.0,
+    "floor": -2.8
+   }
+  }
+ ],
+ "relics": [
+  {
+   "id": "rr_pickled_fingers",
+   "name": "Jar of Pickled Fingers",
+   "rarity": "room",
+   "icon": "jar",
+   "room": "kitchen",
+   "desc": "Every kill, a finger goes back in the jar: the killer gets a bonus action (once a turn) and heals 2.",
+   "tags": [
+    "room",
+    "kitchen"
+   ],
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "extra_action",
+       "kind": "bonus",
+       "to": "self"
+      },
+      {
+       "type": "heal",
+       "dice": "2",
+       "to": "self"
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "once": "turn",
+     "label": "Pickled Fingers"
+    }
+   ]
+  },
+  {
+   "id": "rr_cooks_cleaver",
+   "name": "The Cook's Cleaver",
+   "rarity": "room",
+   "icon": "axe",
+   "room": "kitchen",
+   "desc": "Heroes' melee hits on bleeding targets deal +4, and every melee crit takes a limb: the target is rooted and bleeds 3 stacks.",
+   "tags": [
+    "room",
+    "kitchen"
+   ],
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 4,
+     "when": {
+      "side": "hero",
+      "melee": true,
+      "target_status": "bleeding"
+     }
+    }
+   ],
+   "triggers": [
+    {
+     "event": "crit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "rooted",
+       "turns": 1,
+       "to": "target"
+      },
+      {
+       "type": "status",
+       "id": "bleeding",
+       "turns": 3,
+       "stacks": 3,
+       "to": "target"
+      }
+     ],
+     "when": {
+      "side": "hero",
+      "melee": true
+     },
+     "label": "The Cleaver"
+    }
+   ]
+  },
+  {
+   "id": "rr_glass_eye",
+   "name": "Someone's Glass Eye",
+   "rarity": "room",
+   "icon": "eye",
+   "room": "cloakroom",
+   "desc": "Still warm. He can tell it's looking at him: he watches 20% less, and peeking can't be caught.",
+   "tags": [
+    "room",
+    "cloakroom"
+   ],
+   "mods": [
+    {
+     "key": "watch_mult",
+     "op": "mul",
+     "value": 0.8
+    },
+    {
+     "key": "cheat_safe",
+     "op": "set",
+     "value": true,
+     "when": {
+      "cheat": "peek"
+     }
+    }
+   ],
+   "cheats": [
+    "peek"
+   ]
+  },
+  {
+   "id": "rr_ticket_zero",
+   "name": "Ticket No. 0",
+   "rarity": "room",
+   "icon": "ticket",
+   "room": "cloakroom",
+   "desc": "The coat it belongs to has never been collected. Start every fight with a 20 up your sleeve, and your sleeve holds one more.",
+   "tags": [
+    "room",
+    "cloakroom"
+   ],
+   "mods": [
+    {
+     "key": "sleeve_size",
+     "op": "add",
+     "value": 1
+    }
+   ],
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "sleeve",
+       "n": 20
+      }
+     ],
+     "label": "Ticket No. 0",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "rr_managers_pen",
+   "name": "The Manager's Pen",
+   "rarity": "room",
+   "icon": "pencil",
+   "room": "office",
+   "desc": "It writes in red. Fudging and shaving can't be caught, and fudges heal twice as much.",
+   "tags": [
+    "room",
+    "office"
+   ],
+   "mods": [
+    {
+     "key": "cheat_safe",
+     "op": "set",
+     "value": true,
+     "when": {
+      "cheat": "fudge"
+     }
+    },
+    {
+     "key": "cheat_safe",
+     "op": "set",
+     "value": true,
+     "when": {
+      "cheat": "shave"
+     }
+    },
+    {
+     "key": "fudge_heal",
+     "op": "add",
+     "value": 1
+    }
+   ],
+   "cheats": [
+    "fudge",
+    "shave"
+   ]
+  },
+  {
+   "id": "rr_your_file",
+   "name": "Your Own File",
+   "rarity": "room",
+   "icon": "scroll",
+   "room": "office",
+   "desc": "A folder with your name on it, and every game you've ever played. Cheats add 40% less to the FILE; when it's over 50, your heroes deal +2.",
+   "tags": [
+    "room",
+    "office"
+   ],
+   "mods": [
+    {
+     "key": "cheat_suspicion",
+     "op": "mul",
+     "value": 0.6
+    },
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero",
+      "suspicion_ge": 50
+     }
+    }
+   ]
+  },
+  {
+   "id": "rr_grinning_reflection",
+   "name": "Your Reflection, Grinning",
+   "rarity": "room",
+   "icon": "mask",
+   "room": "toilets",
+   "desc": "It stayed in the mirror when you left. Whenever you're caught, your reflection takes the slap instead (the slap does nothing) and you lose only 5 gold.",
+   "tags": [
+    "room",
+    "toilets"
+   ],
+   "mods": [
+    {
+     "key": "caught_damage_mult",
+     "op": "mul",
+     "value": 0.0
+    },
+    {
+     "key": "caught_fine",
+     "op": "set",
+     "value": 5
+    }
+   ]
+  },
+  {
+   "id": "rr_cistern_razor",
+   "name": "The Razor in the Cistern",
+   "rarity": "room",
+   "icon": "knife",
+   "room": "toilets",
+   "desc": "Heroes' first attack each fight can't miss: start every fight with a natural 20 waiting.",
+   "tags": [
+    "room",
+    "toilets"
+   ],
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "rig",
+       "side": "hero",
+       "natural": 20
+      }
+     ],
+     "label": "The Razor",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "rr_old_reel",
+   "name": "A Reel of Old Games",
+   "rarity": "room",
+   "icon": "spiral",
+   "room": "booth",
+   "desc": "Film of other players, other nights. Peeking shows you everything and adds nothing to the FILE; every peek gives a hero a bonus action.",
+   "tags": [
+    "room",
+    "booth"
+   ],
+   "mods": [
+    {
+     "key": "cheat_suspicion",
+     "op": "set",
+     "value": 0,
+     "when": {
+      "cheat": "peek"
+     }
+    }
+   ],
+   "cheats": [
+    "peek"
+   ],
+   "triggers": [
+    {
+     "event": "cheat",
+     "effects": [
+      {
+       "type": "extra_action",
+       "kind": "bonus",
+       "to": "random_hero"
+      }
+     ],
+     "when": {
+      "cheat": "peek"
+     },
+     "label": "The Reel"
+    }
+   ]
+  },
+  {
+   "id": "rr_projector_bulb",
+   "name": "The Projector Bulb",
+   "rarity": "room",
+   "icon": "sun",
+   "room": "booth",
+   "desc": "Still hot. Every fight starts with him dazzled: he looks away for 5 seconds, and every enemy is dazed in the first round.",
+   "tags": [
+    "room",
+    "booth"
+   ],
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "blind",
+       "seconds": 5
+      },
+      {
+       "type": "status",
+       "id": "dazed",
+       "turns": 1,
+       "to": "all_enemies"
+      }
+     ],
+     "label": "The Bulb"
+    }
+   ]
+  },
+  {
+   "id": "rr_teeth_cage",
+   "name": "The Other Cage",
+   "rarity": "room",
+   "icon": "cage",
+   "room": "cellar",
+   "desc": "A small bingo cage full of teeth. Once a round, the first hero roll of 10 or less is rerolled... and if the reroll's a 20, every enemy bleeds.",
+   "tags": [
+    "room",
+    "cellar"
+   ],
+   "mods": [
+    {
+     "key": "reroll_naturals",
+     "op": "set",
+     "value": 10,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "status",
+       "id": "bleeding",
+       "turns": 2,
+       "stacks": 2,
+       "to": "all_enemies"
+      }
+     ],
+     "when": {
+      "side": "hero",
+      "natural": 20
+     },
+     "label": "Teeth"
+    }
+   ]
+  },
+  {
+   "id": "rr_cellar_cask",
+   "name": "The Cask with No Bottom",
+   "rarity": "room",
+   "icon": "glass",
+   "room": "cellar",
+   "desc": "Every sip: every hero heals 3 and regains 1 resource, and the FILE drops 2.",
+   "tags": [
+    "room",
+    "cellar"
+   ],
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "3",
+       "to": "all_heroes"
+      },
+      {
+       "type": "res",
+       "n": 1,
+       "to": "all_heroes"
+      },
+      {
+       "type": "suspicion",
+       "n": -2
+      }
+     ],
+     "label": "The Cask",
+     "quiet": true
+    }
+   ]
+  }
+ ],
+ "personas": [
+  {
+   "id": "cook",
+   "name": "The Cook",
+   "desc": "Tastes everything. Everything.",
+   "voice": {
+    "style": "gross",
+    "pitch": 0.75
+   },
+   "mask": {
+    "skin": "#d8b8a0",
+    "hair": "#e8e8e0",
+    "fringe": 4,
+    "iris": "#3a2a1a",
+    "brow": -1,
+    "lips": "#8a3a2a",
+    "mouth_w": 16,
+    "smile": 1,
+    "teeth": true,
+    "stain": true,
+    "tired": true
+   },
+   "attention": {
+    "watch": [
+     2.0,
+     3.5
+    ],
+    "away": [
+     4.0,
+     6.0
+    ],
+    "tell": 1.2,
+    "fake_away": 0.05,
+    "fake_tell": 0.2
+   }
+  },
+  {
+   "id": "manager",
+   "name": "The Manager",
+   "desc": "Signs the cheques. Keeps the files.",
+   "voice": {
+    "style": "cold",
+    "pitch": 0.9
+   },
+   "mask": {
+    "skin": "#e0d4c0",
+    "hair": "#2a2a2a",
+    "iris": "#2a3a4a",
+    "brow": 0,
+    "lips": "#9a6a5a",
+    "mouth_w": 10,
+    "smile": 0,
+    "glasses": true,
+    "mustache": true
+   },
+   "attention": {
+    "watch": [
+     6.0,
+     9.0
+    ],
+    "away": [
+     1.5,
+     2.2
+    ],
+    "tell": 0.5,
+    "fake_away": 0.0,
+    "fake_tell": 0.0
+   }
+  },
+  {
+   "id": "attendant",
+   "name": "The Attendant",
+   "desc": "Hands you a towel. Watches you use it.",
+   "voice": {
+    "style": "child",
+    "pitch": 0.8
+   },
+   "mask": {
+    "skin": "#c8d0c8",
+    "hair": "#4a3a2a",
+    "iris": "#6a1a1a",
+    "brow": 1,
+    "lips": "#6a4a4a",
+    "mouth_w": 6,
+    "smile": -1,
+    "tired": true,
+    "stitches": true
+   }
+  },
+  {
+   "id": "projectionist",
+   "name": "The Projectionist",
+   "desc": "Shows the same film every night. It's of you.",
+   "voice": {
+    "style": "psychotic",
+    "pitch": 1.0
+   },
+   "mask": {
+    "skin": "#e8e0d0",
+    "hair": "#1a1a1a",
+    "fringe": 1,
+    "iris": "#e8e8e8",
+    "brow": 2,
+    "lips": "#2a1a1a",
+    "mouth_w": 18,
+    "smile": 2,
+    "teeth": true
+   },
+   "attention": {
+    "watch": [
+     1.0,
+     4.0
+    ],
+    "away": [
+     1.0,
+     4.0
+    ],
+    "tell": 0.4,
+    "fake_away": 0.4,
+    "fake_tell": 0.4,
+    "speed": 1.3
+   }
+  }
+ ]
+}

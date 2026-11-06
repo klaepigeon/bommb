@@ -4,6 +4,9 @@ extends Node
 
 var screen: Node
 var _ui: Control
+var bg_stage: Stage           # the hall behind every menu (a match builds its own)
+var bg_caller: CallerActor
+var _idle: Timer
 var _status: Label
 var _lobby_box: VBoxContainer
 
@@ -32,23 +35,63 @@ func _swap(n: Node) -> void:
 	screen = n
 	_status = null
 	_lobby_box = null
+	if n is GameView:
+		_drop_stage()
+	else:
+		_ensure_stage()
 	add_child(n)
 
 
+## The hall, for the menus: you're sat at his table; he's waiting.
+func _ensure_stage(pose := "title") -> void:
+	if bg_stage == null:
+		bg_stage = Stage.new()
+		add_child(bg_stage)
+		move_child(bg_stage, 0)
+		bg_stage.set_internal_height(Settings.screen_lines() if Settings.screen_lines() > 0 else 540)
+		bg_caller = CallerActor.wrap(bg_stage.hall.caller)
+		bg_stage.hall.add_child(bg_caller)
+		bg_stage.hall.flashboard.set_left("MEAT", "PARTY")
+		bg_stage.hall.flashboard.set_right("FILE", "00")
+		_idle = Timer.new()
+		_idle.wait_time = 3.2
+		_idle.autostart = true
+		_idle.timeout.connect(func(): if bg_caller: bg_caller.play(["wave", "spread", "tip_hat", "beckon", "drum", "look_door", "head_spin", "stare", "tap", "lean"][randi() % 10]))
+		add_child(_idle)
+	bg_stage.set_pose(pose, 0.9)
+
+
+func _drop_stage() -> void:
+	if bg_stage:
+		bg_stage.queue_free()
+		bg_stage = null
+		bg_caller = null
+	if _idle:
+		_idle.queue_free()
+		_idle = null
+
+
+## A sheet of his card stock laid on the table, with a heading in red ink.
 func _page(title: String) -> VBoxContainer:
 	var c := Control.new()
 	c.theme = UiKit.theme()
 	c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_swap(c)
-	UiKit.bg(c)
-	var m := MarginContainer.new()
-	m.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "right", "top", "bottom"]:
-		m.add_theme_constant_override("margin_" + side, 16)
-	c.add_child(m)
-	var v := UiKit.vbox(8)
-	m.add_child(v)
-	v.add_child(UiKit.label(title, 26, UiKit.GOLD, true))
+	bg_stage.set_pose("deal", 0.9)
+	var sheet := UiKit.panel()
+	sheet.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	sheet.offset_left = -470
+	sheet.offset_right = 470
+	sheet.offset_top = -320
+	sheet.offset_bottom = 320
+	c.add_child(sheet)
+	var sc := ScrollContainer.new()
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	sheet.add_child(sc)
+	var v := UiKit.vbox(10)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sc.add_child(v)
+	v.add_child(UiKit.label(title, 26, UiKit.HOT, true))
 	_ui = c
 	return v
 
@@ -61,57 +104,45 @@ func _toast(t: String) -> void:
 # --- main menu ----------------------------------------------------------------------
 
 func menu() -> void:
-	Audio.music("board")
+	Audio.music("title")
 	var c := Control.new()
 	c.theme = UiKit.theme()
 	c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_swap(c)
-	# the Caller waits behind the menu
-	var vpc := SubViewportContainer.new()
-	vpc.stretch = true
-	vpc.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	c.add_child(vpc)
-	var vp := SubViewport.new()
-	vp.size = Vector2i(640, 360)
-	vpc.add_child(vp)
-	var w := Node3D.new()
-	vp.add_child(w)
-	var env := WorldEnvironment.new()
-	env.environment = Environment.new()
-	env.environment.background_mode = Environment.BG_COLOR
-	env.environment.background_color = Color("1e1028")
-	w.add_child(env)
-	var cl := CallerActor.new()
-	cl.position = Vector3(1.2, -0.2, 0)
-	cl.rotation.y = -0.35
-	w.add_child(cl)
-	var cam := Camera3D.new()
-	cam.position = Vector3(0.2, 1.9, 4.2)
-	w.add_child(cam)
-	cam.look_at(Vector3(0.6, 1.6, 0))
-	Lamp.create(w, Vector3(0.5, 3.0, 1.5), Color(1, 0.6, 0.7), 0.9, 6.0)
-	var t := Timer.new()
-	t.wait_time = 2.6
-	t.autostart = true
-	t.timeout.connect(func(): cl.play(["wave", "spread", "dance", "tip_hat", "beckon", "conduct", "laugh", "look_door", "head_spin"][randi() % 9]))
-	c.add_child(t)
-	var v := UiKit.vbox(8)
-	v.set_anchors_and_offsets_preset(Control.PRESET_LEFT_WIDE)
-	v.offset_left = 24
-	v.offset_right = 270
-	v.offset_top = 24
+	bg_stage.set_pose("title", 1.2)
+	var title := UIKit.label("MEAT PARTY", 96, Color("a01a12"), true)
+	title.add_theme_font_override("font", UIKit.voice_font)
+	title.add_theme_color_override("font_outline_color", Color(0.03, 0.01, 0.01))
+	title.add_theme_constant_override("outline_size", 10)
+	title.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	title.offset_left = -720
+	title.offset_right = -40
+	title.offset_top = 24
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	c.add_child(title)
+	var sub := UiKit.voice("hosted by THE CALLER", 30)
+	sub.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	sub.offset_left = -720
+	sub.offset_right = -46
+	sub.offset_top = 140
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	c.add_child(sub)
+	var v := UiKit.vbox(10)
+	v.set_anchors_and_offsets_preset(Control.PRESET_CENTER_LEFT)
+	v.offset_left = 60
+	v.offset_right = 420
+	v.offset_top = -170
+	v.offset_bottom = 300
 	c.add_child(v)
-	v.add_child(UiKit.label("MEAT PARTY", 30, UiKit.HOT, true))
-	v.add_child(UiKit.label("hosted by THE CALLER", 13, UiKit.GOLD))
-	var b := UiKit.button("PLAY (vs. AI)", single, 40)
+	var b := UiKit.primary("PLAY (vs. AI)", single, 44)
 	v.add_child(b)
 	b.grab_focus.call_deferred()
-	v.add_child(UiKit.button("LOCAL PARTY (2-4)", local_setup, 40))
-	v.add_child(UiKit.button("ONLINE", online, 40))
+	v.add_child(UiKit.button("LOCAL PARTY (2-4)", local_setup, 44))
+	v.add_child(UiKit.button("ONLINE", online, 44))
 	v.add_child(UiKit.button("SETTINGS", settings, 40))
 	if not OS.has_feature("mobile"):
-		v.add_child(UiKit.button("QUIT", func(): get_tree().quit(), 36))
-	_status = UiKit.label("", 12, UiKit.TEAL)
+		v.add_child(UiKit.button("LEAVE", func(): get_tree().quit(), 36))
+	_status = UiKit.label("", 12, UiKit.CREAM)
 	v.add_child(_status)
 
 
@@ -139,7 +170,7 @@ func local_setup() -> void:
 
 func online() -> void:
 	var v := _page("ONLINE")
-	v.add_child(UiKit.label("Phones and PCs can share a room. On the same Wi-Fi, a room is found by its code. Over the internet, rooms go through the relay (%s)." % Settings.relay_url(), 12, UiKit.DIM))
+	v.add_child(UiKit.label("Phones and PCs can share a room. On the same Wi-Fi, a room is found by its code. Over the internet, rooms go through the relay (%s)." % Settings.relay_url(), 12, UiKit.INK))
 	var h := UiKit.hbox(8)
 	v.add_child(h)
 	h.add_child(UiKit.button("HOST ON THIS NETWORK", func():
@@ -170,7 +201,7 @@ func online() -> void:
 			var parts := ip.text.strip_edges().split(":")
 			Net.join_ip(parts[0], int(parts[1]) if parts.size() > 1 else 0)
 			lobby(), 44, 140))
-	_status = UiKit.label("", 13, UiKit.TEAL)
+	_status = UiKit.label("", 13, UiKit.HOT)
 	v.add_child(_status)
 	v.add_child(UiKit.button("BACK", menu, 40))
 
@@ -178,8 +209,8 @@ func online() -> void:
 # --- the lobby (every mode) --------------------------------------------------------------
 
 func lobby() -> void:
-	var v := _page("THE GREEN ROOM")
-	_status = UiKit.label("", 13, UiKit.TEAL)
+	var v := _page("THE SEATING PLAN")
+	_status = UiKit.label("", 13, UiKit.HOT)
 	v.add_child(_status)
 	if Net.online():
 		_status.text = "Room code: %s" % Net.code if Net.code != "" else "Connecting..."
@@ -195,13 +226,13 @@ func _fill_lobby() -> void:
 		c.queue_free()
 	var authority := Net.is_authority()
 	if Net.online() and Net.code != "":
-		_lobby_box.add_child(UiKit.label("ROOM  %s" % Net.code, 28, UiKit.GOLD, true))
+		_lobby_box.add_child(UiKit.label("ROOM  %s" % Net.code, 28, UiKit.HOT, true))
 	for s in Seats.seats:
 		var h := UiKit.hbox(8)
 		_lobby_box.add_child(h)
 		var face := TextureRect.new()
 		face.texture = Assets.face_texture(int(s.face))
-		face.custom_minimum_size = Vector2(28, 34)
+		face.custom_minimum_size = Vector2(40, 50)
 		face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		face.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		face.visible = s.kind != "empty"
@@ -214,8 +245,9 @@ func _fill_lobby() -> void:
 				desc = "%s  %s" % [s.name, "READY" if s.ready else "not ready"]
 			"ai":
 				desc = "%s  (AI)" % s.name
-		var l := UiKit.label("%d. %s" % [int(s.seat) + 1, desc], 15, (s.color as Color).lightened(0.3) if s.kind != "empty" else UiKit.DIM)
-		l.custom_minimum_size = Vector2(300, 0)
+		var l := UiKit.label("%d. %s" % [int(s.seat) + 1, desc], 15, (s.color as Color).darkened(0.45) if s.kind != "empty" else UiKit.DIM)
+		l.custom_minimum_size = Vector2(380, 0)
+		l.autowrap_mode = TextServer.AUTOWRAP_OFF
 		h.add_child(l)
 		var seat := int(s.seat)
 		if authority and s.kind in ["empty", "ai"]:
@@ -244,7 +276,7 @@ func _fill_lobby() -> void:
 	var row := UiKit.hbox(8)
 	_lobby_box.add_child(row)
 	if authority:
-		var go := UiKit.button("START THE PARTY", func(): Net.launch(), 50, 220)
+		var go := UiKit.primary("SIT DOWN", func(): Net.launch(), 50, 200)
 		go.disabled = not Net.all_ready() or (Net.online() and Net.code in ["", "....."])
 		row.add_child(go)
 		go.grab_focus.call_deferred()

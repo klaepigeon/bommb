@@ -1,0 +1,427 @@
+{
+ "families": [
+  {
+   "id": "cheats",
+   "name": "The Cheats",
+   "desc": "Sleight of hand.",
+   "2": {
+    "desc": "Cheats add 20% less to his FILE.",
+    "mods": [
+     {
+      "key": "cheat_suspicion",
+      "op": "mul",
+      "value": 0.8
+     }
+    ]
+   },
+   "3": {
+    "desc": "One more die up your sleeve, and the first time you're caught each fight, he lets it go.",
+    "mods": [
+     {
+      "key": "sleeve_size",
+      "op": "add",
+      "value": 1
+     },
+     {
+      "key": "caught_forgiven",
+      "op": "set",
+      "value": true
+     }
+    ]
+   }
+  },
+  {
+   "id": "dice",
+   "name": "The Dice",
+   "desc": "Bone, glass, lead.",
+   "2": {
+    "desc": "Heroes crit on 19-20.",
+    "mods": [
+     {
+      "key": "crit_threshold",
+      "op": "set",
+      "value": 19,
+      "when": {
+       "side": "hero"
+      }
+     }
+    ]
+   },
+   "3": {
+    "desc": "A hero's natural 20 gives the action back.",
+    "triggers": [
+     {
+      "event": "natural",
+      "effects": [
+       {
+        "type": "extra_action",
+        "kind": "action",
+        "to": "self"
+       }
+      ],
+      "when": {
+       "side": "hero",
+       "natural": 20
+      },
+      "label": "The Dice"
+     }
+    ]
+   }
+  },
+  {
+   "id": "drink",
+   "name": "The Drink",
+   "desc": "Last orders were a while ago.",
+   "2": {
+    "desc": "Every sip heals every hero 2.",
+    "triggers": [
+     {
+      "event": "sip",
+      "effects": [
+       {
+        "type": "heal",
+        "dice": "2",
+        "to": "all_heroes"
+       }
+      ],
+      "label": "The Drink"
+     }
+    ]
+   },
+   "3": {
+    "desc": "Every sip, you spit: 1d6 to every enemy.",
+    "triggers": [
+     {
+      "event": "sip",
+      "effects": [
+       {
+        "type": "damage",
+        "dice": "1d6",
+        "dtype": "force",
+        "to": "all_enemies"
+       }
+      ],
+      "label": "Spit"
+     }
+    ]
+   }
+  },
+  {
+   "id": "money",
+   "name": "The Money",
+   "desc": "Everything has a price.",
+   "2": {
+    "desc": "+25% gold.",
+    "mods": [
+     {
+      "key": "gold_mult",
+      "op": "add",
+      "value": 0.25
+     }
+    ]
+   },
+   "3": {
+    "desc": "Caught? Pay 20 gold instead. +1 damage per 100 gold you hold (up to +5).",
+    "mods": [
+     {
+      "key": "caught_fine",
+      "op": "set",
+      "value": 20
+     },
+     {
+      "key": "damage_dealt_add",
+      "op": "add",
+      "value": 1,
+      "when": {
+       "side": "hero"
+      },
+      "per_gold": 100,
+      "scale_cap": 5
+     }
+    ]
+   }
+  },
+  {
+   "id": "dead",
+   "name": "The Dead",
+   "desc": "Some players never leave.",
+   "2": {
+    "desc": "Death saves are 3 easier.",
+    "mods": [
+     {
+      "key": "death_save_dc",
+      "op": "add",
+      "value": -3
+     }
+    ]
+   },
+   "3": {
+    "desc": "When a hero goes down, every enemy takes 2d6 rot.",
+    "triggers": [
+     {
+      "event": "ally_down",
+      "effects": [
+       {
+        "type": "damage",
+        "dice": "2d6",
+        "dtype": "rot",
+        "to": "all_enemies"
+       }
+      ],
+      "when": {
+       "side": "hero"
+      },
+      "label": "The Dead"
+     }
+    ]
+   }
+  },
+  {
+   "id": "faithful",
+   "name": "The Faithful",
+   "desc": "Prayers, said badly.",
+   "2": {
+    "desc": "Healing is 25% stronger.",
+    "mods": [
+     {
+      "key": "heal_dealt_mult",
+      "op": "add",
+      "value": 0.25,
+      "when": {
+       "side": "hero"
+      }
+     }
+    ]
+   },
+   "3": {
+    "desc": "At the start of your turn every hero heals 2.",
+    "triggers": [
+     {
+      "event": "hero_turn",
+      "effects": [
+       {
+        "type": "heal",
+        "dice": "2",
+        "to": "all_heroes"
+       }
+      ],
+      "label": "The Faithful"
+     }
+    ]
+   }
+  },
+  {
+   "id": "paper",
+   "name": "The Paper",
+   "desc": "The rules are just paper.",
+   "2": {
+    "desc": "Your cards' save DCs +1.",
+    "mods": [
+     {
+      "key": "save_dc",
+      "op": "add",
+      "value": 1,
+      "when": {
+       "side": "hero"
+      }
+     }
+    ]
+   },
+   "3": {
+    "desc": "Every fight starts with your heroes inspired for 2 turns.",
+    "triggers": [
+     {
+      "event": "combat_start",
+      "effects": [
+       {
+        "type": "status",
+        "id": "inspired",
+        "turns": 2,
+        "to": "all_heroes"
+       }
+      ],
+      "label": "The Paper"
+     }
+    ]
+   }
+  },
+  {
+   "id": "mouths",
+   "name": "The Mouths",
+   "desc": "Noise, and where it goes.",
+   "2": {
+    "desc": "Distractions recharge twice as fast.",
+    "mods": [
+     {
+      "key": "distract_cooldown",
+      "op": "mul",
+      "value": 0.5
+     }
+    ]
+   },
+   "3": {
+    "desc": "Every distraction dazes every enemy.",
+    "triggers": [
+     {
+      "event": "distracted",
+      "effects": [
+       {
+        "type": "status",
+        "id": "dazed",
+        "turns": 1,
+        "to": "all_enemies"
+       }
+      ],
+      "label": "The Mouths"
+     }
+    ]
+   }
+  },
+  {
+   "id": "clocks",
+   "name": "The Clocks",
+   "desc": "It is always late.",
+   "2": {
+    "desc": "Cards recharge a round faster.",
+    "mods": [
+     {
+      "key": "cooldown_add",
+      "op": "add",
+      "value": -1,
+      "when": {
+       "side": "hero"
+      }
+     }
+    ]
+   },
+   "3": {
+    "desc": "From round 3, heroes get an extra bonus action.",
+    "mods": [
+     {
+      "key": "bonus_actions",
+      "op": "add",
+      "value": 1,
+      "when": {
+       "side": "hero",
+       "round_ge": 3
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "flesh",
+   "name": "The Flesh",
+   "desc": "It's only meat.",
+   "2": {
+    "desc": "Kills heal the killer 3.",
+    "triggers": [
+     {
+      "event": "kill",
+      "effects": [
+       {
+        "type": "heal",
+        "dice": "3",
+        "to": "self"
+       }
+      ],
+      "when": {
+       "side": "hero"
+      },
+      "label": "The Flesh"
+     }
+    ]
+   },
+   "3": {
+    "desc": "Heroes below half HP deal +2 damage.",
+    "mods": [
+     {
+      "key": "damage_dealt_add",
+      "op": "add",
+      "value": 2,
+      "when": {
+       "side": "hero",
+       "hp_below": 0.5
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "minis",
+   "name": "The Miniatures",
+   "desc": "Lead, paint, glue.",
+   "2": {
+    "desc": "Heroes +1 speed.",
+    "mods": [
+     {
+      "key": "speed",
+      "op": "add",
+      "value": 1,
+      "when": {
+       "side": "hero"
+      }
+     }
+    ]
+   },
+   "3": {
+    "desc": "Nudges can't be caught and go a square further.",
+    "mods": [
+     {
+      "key": "cheat_safe",
+      "op": "set",
+      "value": true,
+      "when": {
+       "cheat": "nudge"
+      }
+     },
+     {
+      "key": "nudge_squares",
+      "op": "add",
+      "value": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "candles",
+   "name": "The Candles",
+   "desc": "Light, and what it costs.",
+   "2": {
+    "desc": "Heroes' fire damage +2.",
+    "mods": [
+     {
+      "key": "damage_dealt_add",
+      "op": "add",
+      "value": 2,
+      "when": {
+       "side": "hero",
+       "dtype": "fire"
+      }
+     }
+    ]
+   },
+   "3": {
+    "desc": "Heroes' hits set the target burning.",
+    "triggers": [
+     {
+      "event": "hit",
+      "effects": [
+       {
+        "type": "status",
+        "id": "burning",
+        "turns": 1,
+        "to": "target"
+       }
+      ],
+      "when": {
+       "side": "hero"
+      },
+      "label": "The Candles",
+      "quiet": true
+     }
+    ]
+   }
+  }
+ ]
+}

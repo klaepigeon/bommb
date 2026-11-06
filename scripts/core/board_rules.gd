@@ -157,7 +157,7 @@ func _step() -> void:
 		core.toast("%s picks up a small brass winding key." % pl.name)
 	# Walking past the wallpaper, a sharp eye catches what's under it.
 	if sp.type == "clue" and steps > 0 and not pl.clues.has(int(sp.get("clue", 0))):
-		if core.rng.randf() < 0.35 * Body.sight(pl.body):
+		if core.rng.randf() < 0.5 * Body.sight(pl.body):
 			var ci := int(sp.get("clue", 0))
 			pl.clues[ci] = core.code[ci]
 			core.toast("Walking past, you notice: %s The number is %d." % [str(sp.get("text", "")), core.code[ci]], s)

@@ -1,0 +1,112 @@
+{
+"_note": "Book IV hero classes: the Medium, the Caretaker, the Croupier and the Mourner, two ancestries, their level-up traits and card upgrades, the Medium's dead regular and how each one is unlocked. Abilities live in abilities_v4.json.",
+"classes": [
+ {"id": "medium", "name": "Medium", "blurb": "Talks to the regulars. Most of them are dead. Most of them answer.", "hp": 20, "hp_level": 5, "defense": 12, "speed": 4,
+  "attrs": {"might": -1, "grace": 1, "wits": 1, "nerve": 3}, "res_name": "Echoes", "res_max": 5, "res_start": 1, "res_regen": 1,
+  "start": ["md_whisper", "md_call", "md_haunt", "md_cold_spot"], "signature": "md_seance", "learn": ["md_possess", "md_borrowed", "md_grave_chill", "md_wail"],
+  "tags": [],
+  "triggers": [
+   {"event": "kill", "effects": [{"type": "res", "n": 1, "to": "self"}], "quiet": true},
+   {"event": "kill", "listen": true, "effects": [{"type": "res", "n": 1, "to": "self"}], "quiet": true}
+  ],
+  "trait": "Echoes: regains 1 each turn, and 1 more whenever anything on the board dies. The dead have a lot to say.",
+  "strengths": "summons, curses, attrition", "weaknesses": "fragile, slow to start", "weapon": "planchette", "palette": ["#4a3a52", "#c8b8d8"],
+  "icon": "candle", "ai_profile": "summoner", "sideline_card": "spark",
+  "look": {"body": "robed", "head": "wig", "weapon": "pencil", "offhand": "symbol"},
+  "unlocked": false, "unlock": "medium"},
+ {"id": "caretaker", "name": "Caretaker", "blurb": "Has the keys to every room. Including that one.", "hp": 28, "hp_level": 6, "defense": 15, "speed": 4,
+  "attrs": {"might": 2, "grace": 0, "wits": 2, "nerve": 1}, "res_name": "Keys", "res_max": 4, "res_start": 1, "res_regen": 1,
+  "start": ["ck_mop", "ck_wet_floor", "ck_lock", "ck_chairs"], "signature": "ck_closing", "learn": ["ck_mousetraps", "ck_bleach", "ck_sweep", "ck_shortcut"],
+  "tags": ["zoc"], "triggers": [],
+  "trait": "Keys: regains 1 each turn. Zone of control: nobody leaves without signing out. Rearranges the board: wet floors, stacked chairs, locked doors.",
+  "strengths": "terrain, area denial, holding a corridor", "weaknesses": "modest damage, his floors are slippery for everyone", "weapon": "mop", "palette": ["#4a5a4a", "#c8a030"],
+  "icon": "key", "ai_profile": "controller", "sideline_card": "ash",
+  "look": {"body": "humanoid", "head": "bucket", "weapon": "staff", "offhand": "wrench"},
+  "unlocked": true},
+ {"id": "croupier", "name": "Croupier", "blurb": "Never touches the money. Only the dice. Only a little.", "hp": 20, "hp_level": 5, "defense": 14, "speed": 5,
+  "attrs": {"might": 0, "grace": 2, "wits": 3, "nerve": 0}, "res_name": "Chips", "res_max": 6, "res_start": 2, "res_regen": 1,
+  "start": ["cp_deal", "cp_loaded", "cp_cold", "cp_double"], "signature": "cp_house", "learn": ["cp_cut", "cp_ride", "cp_spread", "cp_ante"],
+  "tags": [],
+  "triggers": [
+   {"event": "die_rolled", "listen": true, "when": {"natural": 20}, "effects": [{"type": "res", "n": 1, "to": "self"}], "quiet": true},
+   {"event": "die_rolled", "listen": true, "when": {"natural": 1}, "effects": [{"type": "res", "n": 1, "to": "self"}], "quiet": true},
+   {"event": "hit", "when": {"natural": 20}, "effects": [{"type": "res", "n": 1, "to": "self"}], "quiet": true}
+  ],
+  "trait": "Chips: regains 1 each turn, and 1 more whenever anyone at the table rolls a natural 1 or 20. Rigs the next roll: yours, theirs, anyone's.",
+  "strengths": "dice manipulation, swaps, setting up allies", "weaknesses": "light damage, needs a plan", "weapon": "cards", "palette": ["#1e3a2a", "#c8a85a"],
+  "icon": "die", "ai_profile": "archer", "sideline_card": "ticket",
+  "look": {"body": "tall", "head": "round", "weapon": "knife", "offhand": "tome"},
+  "unlocked": false, "unlock": "croupier"},
+ {"id": "mourner", "name": "Mourner", "blurb": "Came for a funeral in 1987. Stayed for all the others.", "hp": 30, "hp_level": 7, "defense": 14, "speed": 4,
+  "attrs": {"might": 2, "grace": 0, "wits": 0, "nerve": 2}, "res_name": "Grief", "res_max": 6, "res_start": 0, "res_regen": 0,
+  "start": ["mn_scythe", "mn_keen", "mn_veil", "mn_toll"], "signature": "mn_procession", "learn": ["mn_open_grave", "mn_shared", "mn_dirge", "mn_wreath"],
+  "tags": [],
+  "triggers": [
+   {"event": "damaged", "effects": [{"type": "res", "n": 1, "to": "self"}], "quiet": true},
+   {"event": "kill", "effects": [{"type": "res", "n": 1, "to": "self"}], "quiet": true},
+   {"event": "kill", "listen": true, "effects": [{"type": "res", "n": 1, "to": "self"}], "quiet": true},
+   {"event": "ally_down", "listen": true, "effects": [{"type": "res", "n": 2, "to": "self"}], "quiet": true},
+   {"event": "hero_death", "listen": true, "effects": [{"type": "res", "n": 3, "to": "self"}], "quiet": true}
+  ],
+  "trait": "Grief: nothing regenerates. Gains 1 when hurt, 1 whenever anything dies, 2 when a friend goes down, 3 when one does not get up. Hits harder the worse it gets.",
+  "strengths": "durable, punishes losses, late-fight power", "weaknesses": "starts every fight with nothing", "weapon": "scythe", "palette": ["#1a1a1e", "#6a1a2a"],
+  "icon": "bell", "ai_profile": "brute", "sideline_card": "pact",
+  "look": {"body": "humanoid", "head": "hood", "weapon": "scythe"},
+  "unlocked": false, "unlock": "mourner"}
+],
+"ancestries": [
+ {"id": "cutout", "name": "Cut-Out", "blurb": "A cardboard stand-in from the prize counter. Nobody remembers who it replaced.", "attrs": {"grace": 1}, "hp": -1,
+  "passives": [{"key": "attack_bonus_against", "op": "add", "value": -1, "when": {"ranged": true}}], "immune": ["bleeding", "poisoned"], "vulnerable": ["fire"], "tags": ["construct"],
+  "trait": "Flat: ranged attacks against you get -1. Nothing inside to bleed or poison. Fire is a problem. +1 Grace, -1 HP.", "look": {"skin": "#d8c8a0", "head": "round", "scale": 0.95},
+  "unlocked": false, "unlock": "cutout"},
+ {"id": "damp", "name": "Damp", "blurb": "Came in out of the rain in 1987. Never quite dried.", "attrs": {"might": 1}, "hp": 3,
+  "passives": [{"key": "heal_taken_mult", "op": "mul", "value": 1.2}], "resist": ["fire", "cold"], "immune": ["burning"], "vulnerable": ["shock"],
+  "trait": "Waterlogged: resists fire and cold, cannot burn, healing received +20%. Shock goes straight through. +1 Might, +3 HP.", "look": {"skin": "#8aa09a", "head": "round"},
+  "unlocked": false, "unlock": "damp"}
+],
+"names": [
+ {"id": "cutout", "first": ["Mr Smiles", "Prize Girl", "Captain Value", "Sale Ends", "Lucky Lenny", "Two-For-One", "Miss Bingo 1979", "Spare"], "last": []},
+ {"id": "damp", "first": ["Marsh", "Ebb", "Fenella", "Silt", "Drip", "Wren", "Puddle", "Lowry"], "last": ["Undertow", "of the Car Park", "Mildew", "Gutteridge", "Wetherby", "Downpipe"]}
+],
+"statuses": [
+ {"id": "haunted", "name": "Haunted", "kind": "debuff", "icon": "candle", "stack": "refresh", "dot": {"dice": "1d4", "dtype": "psychic"}, "mods": [{"key": "save_bonus", "op": "add", "value": -2}],
+  "desc": "Someone is standing behind it. Takes 1d4 psychic at the start of its turn and -2 to its saves."}
+],
+"enemies": [
+ {"id": "dead_regular", "name": "Dead Regular", "role": "summon", "hp": 10, "defense": 12, "speed": 4, "might": 1, "nerve": 2, "abilities": ["s_chill_touch"], "ai": "brute",
+  "tags": ["summon", "flying", "unholy", "ghost"], "immune": ["poisoned", "bleeding"], "tier": 0,
+  "model": {"body": "humanoid", "color": "#7a7468", "accent": "#4a4438", "head": "ball", "number": 13, "ghost": true, "h": 0.85, "hunch": 0.35},
+  "desc": "Sat at table nine every Thursday. Still does. Cold to the touch."}
+],
+"traits": [
+ {"id": "t_md_guide", "name": "Spirit Guide", "class": "medium", "desc": "Start every fight with a dead regular already beside you.", "triggers": [{"event": "combat_start", "effects": [{"type": "summon", "unit": "dead_regular", "to": "self"}], "quiet": true}]},
+ {"id": "t_md_veil", "name": "Thin Veil", "class": "medium", "desc": "+1 maximum Echo. Statuses you apply last 1 turn longer.", "res_max": 1, "mods": [{"key": "status_turns_add", "op": "add", "value": 1}]},
+ {"id": "t_ck_skeleton", "name": "Skeleton Key", "class": "caretaker", "desc": "+1 maximum Key and +1 speed. You know the back corridors.", "res_max": 1, "speed": 1},
+ {"id": "t_ck_seen_worse", "name": "Seen Worse", "class": "caretaker", "desc": "+1 defense and you resist poison. You have cleaned up after all of it.", "defense": 1, "resist": ["poison"]},
+ {"id": "t_cp_sleight", "name": "Sleight of Hand", "class": "croupier", "desc": "Start every fight with full Chips.", "triggers": [{"event": "combat_start", "effects": [{"type": "res", "n": 9, "to": "self"}], "quiet": true}]},
+ {"id": "t_cp_high_roller", "name": "High Roller", "class": "croupier", "desc": "You crit on 19-20.", "mods": [{"key": "crit_threshold", "op": "set", "value": 19}]},
+ {"id": "t_mn_weeds", "name": "Widow's Weeds", "class": "mourner", "desc": "+6 max HP and you resist psychic damage.", "hp": 6, "resist": ["psychic"]},
+ {"id": "t_mn_vigil", "name": "Long Vigil", "class": "mourner", "desc": "Gain 1 Grief at the start of each of your turns.", "triggers": [{"event": "turn_start", "effects": [{"type": "res", "n": 1, "to": "self"}], "quiet": true}]}
+],
+"upgrades": [
+ {"id": "u_md_whisper", "ability": "md_whisper", "name": "Cold Whisper+: a name", "desc": "1d10 psychic.", "set": {"effects": [{"type": "damage", "dice": "1d10", "dtype": "psychic"}], "desc": "Range 6, Nerve save: 1d10 psychic. It hears its own name."}},
+ {"id": "u_md_call", "ability": "md_call", "name": "Call a Regular+: a full table", "desc": "Costs 1 Echo, three times a fight.", "set": {"res": 1, "uses": 3}},
+ {"id": "u_md_haunt", "ability": "md_haunt", "name": "Haunt+: lingering", "desc": "Lasts 5 turns.", "set": {"effects": [{"type": "status", "id": "haunted", "turns": 5}]}},
+ {"id": "u_ck_mop", "ability": "ck_mop", "name": "Mop Handle+: wrung out", "desc": "1d8 and shove 2.", "set": {"effects": [{"type": "damage", "dice": "1d8", "stat": "might", "dtype": "physical"}, {"type": "push", "n": 2}], "desc": "1d8 + Might and shove 2."}},
+ {"id": "u_ck_lock", "ability": "ck_lock", "name": "Lock Up+: deadbolt", "desc": "Cooldown 1.", "set": {"cooldown": 1}},
+ {"id": "u_ck_wet", "ability": "ck_wet_floor", "name": "Wet Floor+: free", "desc": "Costs no Keys.", "set": {"res": 0}},
+ {"id": "u_cp_deal", "ability": "cp_deal", "name": "Deal+: the ace", "desc": "1d8 + Grace.", "set": {"effects": [{"type": "damage", "dice": "1d8", "stat": "grace", "dtype": "physical"}], "desc": "Range 5. 1d8 + Grace."}},
+ {"id": "u_cp_loaded", "ability": "cp_loaded", "name": "Loaded Die+: heavier", "desc": "Shows at least 17.", "set": {"effects": [{"type": "rig", "side": "hero", "floor": 17}], "desc": "Spend 1 Chip: the next d20 a hero rolls shows at least 17."}},
+ {"id": "u_cp_cold", "ability": "cp_cold", "name": "Cold Dice+: colder", "desc": "Shows no more than 4.", "set": {"effects": [{"type": "rig", "side": "enemy", "cap": 4}], "desc": "Spend 1 Chip: the next d20 an enemy rolls, to hit or to save, shows no more than 4."}},
+ {"id": "u_mn_scythe", "ability": "mn_scythe", "name": "Scythe+: honed", "desc": "1d12 and bleeding.", "set": {"effects": [{"type": "damage", "dice": "1d12", "stat": "might", "dtype": "physical"}, {"type": "status", "id": "bleeding", "turns": 2}], "desc": "1d12 + Might and a bleeding wound."}},
+ {"id": "u_mn_keen", "ability": "mn_keen", "name": "Keening+: cheaper", "desc": "Costs 1 Grief.", "set": {"res": 1}},
+ {"id": "u_mn_toll", "ability": "mn_toll", "name": "Toll+: for whom", "desc": "Hunted instead of marked, for 3 turns.", "set": {"effects": [{"type": "status", "id": "hunted", "turns": 3}], "desc": "The bell tolls for an enemy: hunted (+1 to hit, +3 damage from every hit) for 3 turns. Gain 1 Grief."}}
+],
+"unlocks": [
+ {"id": "medium", "name": "The Medium", "kind": "class", "ref": "medium", "desc": "A new class sits down at the table. Someone sits down with her.", "hint": "Hold a séance.", "condition": {"type": "seances_ge", "n": 1}},
+ {"id": "croupier", "name": "The Croupier", "kind": "class", "ref": "croupier", "desc": "A new class sits down at the table. Shuffles. Waits.", "hint": "Reach Book III.", "condition": {"type": "best_book_ge", "n": 3}},
+ {"id": "mourner", "name": "The Mourner", "kind": "class", "ref": "mourner", "desc": "A new class sits down at the table. In black.", "hint": "Bury six heroes.", "condition": {"type": "deaths_ge", "n": 6}},
+ {"id": "cutout", "name": "Cut-Outs", "kind": "ancestry", "ref": "cutout", "desc": "A new ancestry for your heroes. Flat. Smiling.", "hint": "Complete 3 optional objectives.", "condition": {"type": "optional_ge", "n": 3}},
+ {"id": "damp", "name": "The Damp", "kind": "ancestry", "ref": "damp", "desc": "A new ancestry for your heroes. Leaves a puddle on the chair.", "hint": "Defeat two different bosses.", "condition": {"type": "bosses_ge", "n": 2}}
+]
+}

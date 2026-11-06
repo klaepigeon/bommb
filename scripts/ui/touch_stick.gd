@@ -5,7 +5,7 @@ extends Control
 var value := Vector2.ZERO
 var _touch := -2
 var _origin := Vector2.ZERO
-const RADIUS := 44.0
+const RADIUS := 84.0
 
 
 func _init() -> void:
@@ -49,4 +49,4 @@ func _draw() -> void:
 	var c := size / 2
 	draw_circle(c, RADIUS + 6, Color(0, 0, 0, 0.35))
 	draw_arc(c, RADIUS + 6, 0, TAU, 24, UiKit.GOLD, 2.0)
-	draw_circle(c + value * RADIUS, 20, Color(UiKit.HOT, 0.9))
+	draw_circle(c + value * RADIUS, 36, Color(UiKit.HOT, 0.9))

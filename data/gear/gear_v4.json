@@ -1,0 +1,1143 @@
+{
+ "_note": "v4 gear drop: bleed, loner, gold and dice-face pieces.",
+ "gear": [
+  {
+   "id": "g4_dabber_spike",
+   "name": "Dabber Spike",
+   "slot": "weapon",
+   "rarity": "common",
+   "icon": "nail",
+   "desc": "Sharpened dabber. Hits bleed. A little. Then more.",
+   "price": 40,
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "bleeding",
+       "turns": 2,
+       "to": "target",
+       "stacks": 1
+      }
+     ],
+     "label": "Dabber Spike",
+     "quiet": true,
+     "when": {
+      "melee": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "g4_glass_ashtray",
+   "name": "Heavy Glass Ashtray",
+   "slot": "weapon",
+   "rarity": "common",
+   "icon": "tray",
+   "desc": "+2 damage to dazed targets. Hits daze, 1 in 4.",
+   "price": 40,
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "target_status": "dazed"
+     }
+    }
+   ],
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "dazed",
+       "turns": 1,
+       "to": "target",
+       "chance": 0.25
+      }
+     ],
+     "label": "Ashtray",
+     "quiet": true,
+     "when": {
+      "melee": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "g4_ball_chain",
+   "name": "Bingo Ball on a Chain",
+   "slot": "weapon",
+   "rarity": "common",
+   "icon": "ball",
+   "desc": "Card: Swing the Ball. Number forty-four. Round and round.",
+   "price": 40,
+   "ability": "g4_swing_ball"
+  },
+  {
+   "id": "g4_ticket_spindle",
+   "name": "Spindle of Old Tickets",
+   "slot": "weapon",
+   "rarity": "uncommon",
+   "icon": "nail",
+   "desc": "+3 damage to bleeding targets. Every losing ticket. Kept.",
+   "price": 70,
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 3,
+     "when": {
+      "target_status": "bleeding"
+     }
+    }
+   ]
+  },
+  {
+   "id": "g4_cage_crank",
+   "name": "Cage Crank",
+   "slot": "weapon",
+   "rarity": "uncommon",
+   "icon": "cog",
+   "desc": "Card: Crank. Off his own head. He wants it back.",
+   "price": 70,
+   "ability": "g4_crank"
+  },
+  {
+   "id": "g4_callers_tooth",
+   "name": "The Caller's Tooth",
+   "slot": "weapon",
+   "rarity": "rare",
+   "icon": "fang",
+   "desc": "Crit on 19-20. Hits on 19+ bleed 3. He has others.",
+   "price": 110,
+   "mods": [
+    {
+     "key": "crit_threshold",
+     "op": "set",
+     "value": 19
+    }
+   ],
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "bleeding",
+       "turns": 3,
+       "to": "target",
+       "stacks": 3
+      }
+     ],
+     "label": "Tooth",
+     "quiet": true,
+     "when": {
+      "natural_ge": 19
+     }
+    }
+   ]
+  },
+  {
+   "id": "g4_peg_leg",
+   "name": "Somebody's Peg Leg",
+   "slot": "weapon",
+   "rarity": "common",
+   "icon": "foot",
+   "desc": "+1 to hit. +2 damage flanking. They won't need it.",
+   "price": 40,
+   "mods": [
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 1
+    },
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "flanking": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "g4_pint_glass",
+   "name": "Broken Pint Glass",
+   "slot": "weapon",
+   "rarity": "common",
+   "icon": "glass",
+   "desc": "+2 melee damage. -1 defense. Hits bleed, 1 in 2.",
+   "price": 40,
+   "defense": -1,
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "melee": true
+     }
+    }
+   ],
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "bleeding",
+       "turns": 2,
+       "to": "target",
+       "stacks": 1,
+       "chance": 0.5
+      }
+     ],
+     "label": "Pint Glass",
+     "quiet": true,
+     "when": {
+      "melee": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "g4_marker",
+   "name": "Permanent Marker",
+   "slot": "weapon",
+   "rarity": "uncommon",
+   "icon": "pencil",
+   "desc": "Card: Scrawl. Writes on anything. Skin. Mostly skin.",
+   "price": 70,
+   "ability": "g4_scrawl"
+  },
+  {
+   "id": "g4_coin_sock",
+   "name": "Sock Full of Coins",
+   "slot": "weapon",
+   "rarity": "uncommon",
+   "icon": "coin",
+   "desc": "+1 damage. Kills pay 3 gold. Spend it. Swing it.",
+   "price": 70,
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 1
+    }
+   ],
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 3
+      }
+     ],
+     "label": "Coin Sock",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "g4_cleaver",
+   "name": "Kitchen Cleaver",
+   "slot": "weapon",
+   "rarity": "uncommon",
+   "icon": "knife",
+   "desc": "Hits on bloodied targets bleed 2. Sunday roast.",
+   "price": 70,
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "bleeding",
+       "turns": 2,
+       "to": "target",
+       "stacks": 2,
+       "if_target_bloodied": true
+      }
+     ],
+     "label": "Cleaver",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "g4_hymn_pole",
+   "name": "Hymn-Board Pole",
+   "slot": "weapon",
+   "rarity": "uncommon",
+   "icon": "staff",
+   "desc": "Card: Hymn Hook. Number 666. Not in the book.",
+   "price": 70,
+   "ability": "g4_hymn_hook"
+  },
+  {
+   "id": "g4_pub_darts",
+   "name": "Pub Darts",
+   "slot": "weapon",
+   "rarity": "common",
+   "icon": "target",
+   "desc": "Card: Darts. Treble twenty. Never once.",
+   "price": 40,
+   "ability": "g4_darts"
+  },
+  {
+   "id": "g4_bread_knife",
+   "name": "Widow's Bread Knife",
+   "slot": "weapon",
+   "rarity": "rare",
+   "icon": "knife",
+   "desc": "Alone: +2 to hit, +3 damage. She cut for one. For years.",
+   "price": 110,
+   "mods": [
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "alone": true
+     }
+    },
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 3,
+     "when": {
+      "alone": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "g4_dice_bag",
+   "name": "Dice Bag on a String",
+   "slot": "weapon",
+   "rarity": "rare",
+   "icon": "die",
+   "desc": "+1 to hit. A hit on a 7: another action. Once a turn.",
+   "price": 110,
+   "mods": [
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 1
+    }
+   ],
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "extra_action",
+       "kind": "action",
+       "to": "self"
+      }
+     ],
+     "label": "Dice Bag",
+     "quiet": true,
+     "when": {
+      "natural": 7
+     },
+     "once": "turn"
+    }
+   ]
+  },
+  {
+   "id": "g4_trowel",
+   "name": "Gravedigger's Trowel",
+   "slot": "weapon",
+   "rarity": "common",
+   "icon": "spikes",
+   "desc": "Hits root, 1 in 3. Stay. Stay down.",
+   "price": 40,
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "rooted",
+       "turns": 1,
+       "to": "target",
+       "chance": 0.33
+      }
+     ],
+     "label": "Trowel",
+     "quiet": true,
+     "when": {
+      "melee": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "g4_bone_saw",
+   "name": "Bone Saw",
+   "slot": "weapon",
+   "rarity": "rare",
+   "icon": "brokenblade",
+   "desc": "Hits bleed 2, then the saw finds every stack: +1 each.",
+   "price": 110,
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "bleeding",
+       "turns": 2,
+       "to": "target",
+       "stacks": 2
+      },
+      {
+       "type": "damage",
+       "dice": "0",
+       "dtype": "blood",
+       "per_stack": "bleeding",
+       "to": "target"
+      }
+     ],
+     "label": "Bone Saw",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "g4_cardigan",
+   "name": "Moth-Eaten Cardigan",
+   "slot": "armour",
+   "rarity": "common",
+   "icon": "coat",
+   "desc": "+6 HP. Resists cold. Smells of her.",
+   "price": 40,
+   "hp": 6,
+   "resist": [
+    "cold"
+   ]
+  },
+  {
+   "id": "g4_tabard",
+   "name": "Caller's Tabard",
+   "slot": "armour",
+   "rarity": "uncommon",
+   "icon": "banner",
+   "desc": "+1 defense. +1 to saves. His colours. Wear them.",
+   "price": 70,
+   "defense": 1,
+   "mods": [
+    {
+     "key": "save_bonus",
+     "op": "add",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "g4_rain_mac",
+   "name": "Plastic Rain Mac",
+   "slot": "armour",
+   "rarity": "common",
+   "icon": "cloak",
+   "desc": "+1 defense. Resists rot. Wipe clean.",
+   "price": 40,
+   "defense": 1,
+   "resist": [
+    "rot"
+   ]
+  },
+  {
+   "id": "g4_money_apron",
+   "name": "Change Apron",
+   "slot": "armour",
+   "rarity": "uncommon",
+   "icon": "coin",
+   "desc": "+4 HP. Hurt: gain 2 gold. Once a turn. Pain pays.",
+   "price": 70,
+   "hp": 4,
+   "triggers": [
+    {
+     "event": "damaged",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 2
+      }
+     ],
+     "label": "Change Apron",
+     "quiet": true,
+     "once": "turn"
+    }
+   ]
+  },
+  {
+   "id": "g4_plaster_vest",
+   "name": "Vest of Sticking Plasters",
+   "slot": "armour",
+   "rarity": "common",
+   "icon": "heart",
+   "desc": "+3 HP. Heal 1 each turn. Barely.",
+   "price": 40,
+   "hp": 3,
+   "triggers": [
+    {
+     "event": "turn_start",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "1",
+       "to": "self"
+      }
+     ],
+     "label": "Plasters",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "g4_coat_of_somebody",
+   "name": "Coat of Somebody",
+   "slot": "armour",
+   "rarity": "rare",
+   "icon": "mask",
+   "desc": "+10 HP. Hurt: everything next to you bleeds 2. It fits. It always. Fits.",
+   "price": 110,
+   "hp": 10,
+   "triggers": [
+    {
+     "event": "damaged",
+     "effects": [
+      {
+       "type": "status",
+       "id": "bleeding",
+       "turns": 2,
+       "stacks": 2,
+       "to": "adjacent_foes"
+      }
+     ],
+     "label": "Somebody",
+     "quiet": true,
+     "once": "turn"
+    }
+   ]
+  },
+  {
+   "id": "g4_xray_apron",
+   "name": "X-Ray Apron",
+   "slot": "armour",
+   "rarity": "uncommon",
+   "icon": "shield",
+   "desc": "+2 defense. -1 speed. Resists force. Lead-lined.",
+   "price": 70,
+   "defense": 2,
+   "speed": -1,
+   "resist": [
+    "force"
+   ]
+  },
+  {
+   "id": "g4_widows_shawl",
+   "name": "Widow's Shawl",
+   "slot": "armour",
+   "rarity": "uncommon",
+   "icon": "cloak",
+   "desc": "Alone: +3 defense. Nobody to hold you.",
+   "price": 70,
+   "mods": [
+    {
+     "key": "defense",
+     "op": "add",
+     "value": 3,
+     "when": {
+      "alone": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "g4_pew_cushion",
+   "name": "Pew Cushion, Strapped On",
+   "slot": "armour",
+   "rarity": "common",
+   "icon": "chair",
+   "desc": "+1 defense. 4 temporary HP each fight.",
+   "price": 40,
+   "defense": 1,
+   "mods": [
+    {
+     "key": "temp_hp_combat",
+     "op": "add",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": "g4_red_coat",
+   "name": "Coat Dyed Red",
+   "slot": "armour",
+   "rarity": "rare",
+   "icon": "drop",
+   "desc": "+2 defense. Can't bleed. +2 damage to the bleeding. Dyed with what.",
+   "price": 110,
+   "defense": 2,
+   "immune": [
+    "bleeding"
+   ],
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "target_status": "bleeding"
+     }
+    }
+   ]
+  },
+  {
+   "id": "g4_funeral_suit",
+   "name": "Funeral Suit",
+   "slot": "armour",
+   "rarity": "uncommon",
+   "icon": "cross",
+   "desc": "+1 defense. Resists psychic. Can't be feared. Dressed for it.",
+   "price": 70,
+   "defense": 1,
+   "resist": [
+    "psychic"
+   ],
+   "immune": [
+    "feared"
+   ]
+  },
+  {
+   "id": "g4_seven_die",
+   "name": "Seven-Spotted Die",
+   "slot": "trinket",
+   "rarity": "common",
+   "icon": "die",
+   "desc": "A hit on a natural 7: +1d6. Seven spots. Count them.",
+   "price": 40,
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "damage",
+       "dice": "1d6",
+       "dtype": "force",
+       "to": "target"
+      }
+     ],
+     "label": "Seven",
+     "quiet": true,
+     "when": {
+      "natural": 7
+     }
+    }
+   ]
+  },
+  {
+   "id": "g4_pen_lid",
+   "name": "Chewed Pen Lid",
+   "slot": "trinket",
+   "rarity": "common",
+   "icon": "pencil",
+   "desc": "+1 range. Someone chewed it. To the end.",
+   "price": 40,
+   "mods": [
+    {
+     "key": "range_add",
+     "op": "add",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "g4_gold_tooth",
+   "name": "Gold Tooth",
+   "slot": "trinket",
+   "rarity": "uncommon",
+   "icon": "coin",
+   "desc": "Kills pay 4 gold. Pulled. Not by you.",
+   "price": 70,
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 4
+      }
+     ],
+     "label": "Gold Tooth",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "g4_hairpin",
+   "name": "Grandma's Hairpin",
+   "slot": "trinket",
+   "rarity": "common",
+   "icon": "nail",
+   "desc": "Hits bleed, 1 in 3. She was. Particular.",
+   "price": 40,
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "bleeding",
+       "turns": 2,
+       "to": "target",
+       "stacks": 1,
+       "chance": 0.33
+      }
+     ],
+     "label": "Hairpin",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "g4_lighter",
+   "name": "Dead Man's Lighter",
+   "slot": "trinket",
+   "rarity": "uncommon",
+   "icon": "flame",
+   "desc": "Fire damage +2. Still lights. First time.",
+   "price": 70,
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "dtype": "fire"
+     }
+    }
+   ]
+  },
+  {
+   "id": "g4_glass_eye",
+   "name": "Glass Eye",
+   "slot": "trinket",
+   "rarity": "uncommon",
+   "icon": "eye",
+   "desc": "Hits mark the target. It watches for you.",
+   "price": 70,
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "marked",
+       "turns": 1,
+       "to": "target"
+      }
+     ],
+     "label": "Glass Eye",
+     "quiet": true,
+     "once": "turn"
+    }
+   ]
+  },
+  {
+   "id": "g4_mint",
+   "name": "Extra-Strong Mint",
+   "slot": "trinket",
+   "rarity": "common",
+   "icon": "wafer",
+   "desc": "+1 to saves. Can't be dazed. Eyes. Watering.",
+   "price": 40,
+   "mods": [
+    {
+     "key": "save_bonus",
+     "op": "add",
+     "value": 1
+    }
+   ],
+   "immune": [
+    "dazed"
+   ]
+  },
+  {
+   "id": "g4_two_rings",
+   "name": "Two Wedding Rings",
+   "slot": "trinket",
+   "rarity": "rare",
+   "icon": "heart",
+   "desc": "+8 HP. Alone: +2 damage. One of them. Is spare.",
+   "price": 110,
+   "hp": 8,
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "alone": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "g4_name_badge",
+   "name": "Name Badge, Not Yours",
+   "slot": "trinket",
+   "rarity": "common",
+   "icon": "token",
+   "desc": "+3 initiative. HELLO MY NAME IS. Scratched out.",
+   "price": 40,
+   "mods": [
+    {
+     "key": "initiative_bonus",
+     "op": "add",
+     "value": 3
+    }
+   ]
+  },
+  {
+   "id": "g4_bus_pass",
+   "name": "Expired Bus Pass",
+   "slot": "trinket",
+   "rarity": "common",
+   "icon": "ticket",
+   "desc": "+1 speed. The last bus. Left.",
+   "price": 40,
+   "speed": 1
+  },
+  {
+   "id": "g4_teaspoon",
+   "name": "Bent Teaspoon",
+   "slot": "trinket",
+   "rarity": "common",
+   "icon": "cup",
+   "desc": "Healing on you +25%. Stir. Stir.",
+   "price": 40,
+   "mods": [
+    {
+     "key": "heal_taken_mult",
+     "op": "add",
+     "value": 0.25
+    }
+   ]
+  },
+  {
+   "id": "g4_rosette",
+   "name": "Prize Rosette",
+   "slot": "trinket",
+   "rarity": "uncommon",
+   "icon": "star",
+   "desc": "Kills: inspired. First prize. Nobody clapped.",
+   "price": 70,
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "status",
+       "id": "inspired",
+       "turns": 2,
+       "to": "self"
+      }
+     ],
+     "label": "Rosette",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "g4_dabber_cap",
+   "name": "Dabber Cap",
+   "slot": "trinket",
+   "rarity": "uncommon",
+   "icon": "dauber",
+   "desc": "+2 damage to marked targets. Click.",
+   "price": 70,
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "target_status": "marked"
+     }
+    }
+   ]
+  },
+  {
+   "id": "g4_dice_rosary",
+   "name": "Rosary of Dice",
+   "slot": "trinket",
+   "rarity": "rare",
+   "icon": "die",
+   "desc": "Crit on 19-20. Reroll 1s and 2s, once. Pray. Roll.",
+   "price": 110,
+   "mods": [
+    {
+     "key": "crit_threshold",
+     "op": "set",
+     "value": 19
+    },
+    {
+     "key": "reroll_naturals",
+     "op": "set",
+     "value": 2
+    }
+   ]
+  },
+  {
+   "id": "g4_wet_hourglass",
+   "name": "Hourglass, Sand Wet",
+   "slot": "trinket",
+   "rarity": "uncommon",
+   "icon": "hourglass",
+   "desc": "+1 resource each turn. -1 speed. Time drags.",
+   "price": 70,
+   "speed": -1,
+   "mods": [
+    {
+     "key": "res_regen",
+     "op": "add",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "g4_matchbox_finger",
+   "name": "Finger in a Matchbox",
+   "slot": "trinket",
+   "rarity": "uncommon",
+   "icon": "box",
+   "desc": "Start each fight empowered. Don't open it. You did.",
+   "price": 70,
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "empowered",
+       "turns": 2,
+       "to": "self"
+      }
+     ],
+     "label": "Matchbox",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "g4_raffle_book",
+   "name": "Book of Raffle Tickets",
+   "slot": "trinket",
+   "rarity": "common",
+   "icon": "ticket",
+   "desc": "Start each fight hidden. Nobody checks the stubs.",
+   "price": 40,
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "hidden",
+       "turns": 1,
+       "to": "self"
+      }
+     ],
+     "label": "Raffle Book",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "g4_ear_trumpet",
+   "name": "Ear Trumpet",
+   "slot": "trinket",
+   "rarity": "uncommon",
+   "icon": "bell",
+   "desc": "Missed: you're hasted for a turn. You heard it coming.",
+   "price": 70,
+   "triggers": [
+    {
+     "event": "missed_by",
+     "effects": [
+      {
+       "type": "status",
+       "id": "hasted",
+       "turns": 1,
+       "to": "self"
+      }
+     ],
+     "label": "Ear Trumpet",
+     "quiet": true,
+     "once": "turn"
+    }
+   ]
+  }
+ ],
+ "abilities": [
+  {
+   "id": "g4_swing_ball",
+   "name": "Swing the Ball",
+   "icon": "ball",
+   "desc": "Everything next to you: 1d6 + Might, shoved 1.",
+   "tags": [
+    "gear",
+    "attack",
+    "melee",
+    "area"
+   ],
+   "cost": "action",
+   "cooldown": 2,
+   "range": 0,
+   "target": "self",
+   "area": {
+    "shape": "around_self",
+    "n": 1
+   },
+   "affects": "enemies",
+   "roll": "attack",
+   "stat": "might",
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "stat": "might",
+     "dtype": "physical"
+    },
+    {
+     "type": "push",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "g4_crank",
+   "name": "Crank",
+   "icon": "cog",
+   "desc": "1d8 + Might. On a crit: stunned.",
+   "tags": [
+    "gear",
+    "attack",
+    "melee"
+   ],
+   "cost": "action",
+   "cooldown": 1,
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "stat": "might",
+     "dtype": "physical"
+    },
+    {
+     "type": "status",
+     "id": "stunned",
+     "turns": 1,
+     "on": "crit"
+    }
+   ]
+  },
+  {
+   "id": "g4_scrawl",
+   "name": "Scrawl",
+   "icon": "pencil",
+   "desc": "Range 4: 1d6 + Grace psychic. Marked 2 turns.",
+   "tags": [
+    "gear",
+    "attack"
+   ],
+   "cost": "action",
+   "cooldown": 1,
+   "range": 4,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "grace",
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "stat": "grace",
+     "dtype": "psychic"
+    },
+    {
+     "type": "status",
+     "id": "marked",
+     "turns": 2
+    }
+   ]
+  },
+  {
+   "id": "g4_hymn_hook",
+   "name": "Hymn Hook",
+   "icon": "staff",
+   "desc": "Reach 2: 1d8 holy, drag 1 closer.",
+   "tags": [
+    "gear",
+    "attack",
+    "melee",
+    "control"
+   ],
+   "cost": "action",
+   "cooldown": 1,
+   "range": 2,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "stat": "might",
+     "dtype": "holy"
+    },
+    {
+     "type": "pull",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "g4_darts",
+   "name": "Darts",
+   "icon": "target",
+   "desc": "Bonus, range 5: 1d4 + Grace.",
+   "tags": [
+    "gear",
+    "attack"
+   ],
+   "cost": "bonus",
+   "cooldown": 1,
+   "range": 5,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "grace",
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d4",
+     "stat": "grace",
+     "dtype": "physical"
+    }
+   ]
+  }
+ ]
+}

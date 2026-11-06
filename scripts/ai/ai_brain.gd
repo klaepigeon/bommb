@@ -155,6 +155,5 @@ func _wants_door(v: Dictionary) -> bool:
 			waiting += 1
 	var known: Dictionary = v.shared_code.duplicate()
 	known.merge(v.players[seat].clues)
-	if known.size() >= 3 and (key_seen or coop >= 0.7):
-		return true
-	return key_seen and waiting >= 1 and coop >= 0.6 and known.size() >= 2
+	# keep looking for numbers until all three are known; then everyone to the door
+	return known.size() >= 3 and (key_seen or coop >= 0.7)

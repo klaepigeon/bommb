@@ -1,0 +1,182 @@
+{
+"encounters": [
+ {"id": "sec_backstage", "name": "Backstage", "kind": "secret", "setting": "any", "difficulty": 3, "layout": "long_hall",
+  "enemies": ["understudy", "paper_knight", "unfinished_mini"], "desc": "Behind the scenery, where the props wait. The understudy is rehearsing your part.",
+  "intro": "You weren't supposed to come back here.", "optional": [{"type": "no_downs", "text": "Nobody goes down", "gold": 40}]},
+ {"id": "sec_old_party", "name": "The Previous Party", "kind": "secret", "setting": "any", "difficulty": 3, "layout": "ambush_ring",
+  "enemies": [{"id": "unfinished_mini", "elite": true}, {"id": "unfinished_mini", "elite": true}, "failed_mini", "failed_mini"], "desc": "The miniatures of the last party to sit at this table. They have been waiting for a rematch.",
+  "intro": "You remember them? No. But they remember the table.", "optional": [{"type": "no_deaths", "text": "Nobody dies", "gold": 40}]},
+ {"id": "sec_caller_hand", "name": "The Caller's Hand", "kind": "secret", "setting": "any", "difficulty": 3, "layout": "big_die",
+  "enemies": [{"id": "loaded_die_enemy", "elite": true}, "rules_lawyer", "mask_echo", "mask_echo"], "desc": "His own dice, his own lawyer, two of his faces. A private game.",
+  "intro": "Just between us. Nobody needs to know.", "optional": [{"type": "crits_ge", "n": 2, "text": "Score 2 critical hits", "gold": 40}]}
+],
+"events": [
+ {"id": "if_ev_timeclock", "title": "The Time Clock", "persona": "foreman", "setting": "iron", "text": "A time clock and a rack of cards with your names on them. 'Clock in. Everybody clocks in.'",
+  "options": [
+   {"label": "Clock in", "effects": [{"type": "gold", "n": 45}, {"type": "rule_card", "id": "rc_overtime"}], "result": "Wages, paid in advance. A new rule: Overtime."},
+   {"label": "Punch someone else's card", "check": {"stat": "grace", "dc": 13, "pass": [{"type": "gold", "n": 30}, {"type": "xp", "n": 8, "target": "all"}], "pass_text": "Somebody else's wages. Somebody else's experience.", "fail": [{"type": "status_next", "id": "rooted", "turns": 1, "side": "hero"}], "fail_text": "The Foreman docks you. Next fight your party starts rooted."}},
+   {"label": "Smash the clock", "effects": [{"type": "relic", "id": "pocket_watch"}, {"type": "elite_next"}], "result": "A pocket watch falls out of it. The line stops. Somebody important is coming. Next fight is an elite."}]},
+ {"id": "if_ev_prospector", "title": "The Prospector", "persona": "prospector", "setting": "iron", "text": "An old prospector with a pan full of gravel. 'Gold in these hills. Gold in everything, if you look hard enough.'",
+  "options": [
+   {"label": "Pan for gold (Nerve)", "check": {"stat": "nerve", "dc": 11, "pass": [{"type": "gold", "n": 55}], "pass_text": "Patience pays.", "fail": [{"type": "gold", "n": 10}], "fail_text": "Mostly gravel."}},
+   {"label": "Buy his claim (40 gold)", "cost_gold": 40, "effects": [{"type": "relic", "id": "tip_jar"}], "result": "The claim comes with a jar he keeps the gold dust in."},
+   {"label": "Ask about the machines", "effects": [{"type": "xp", "n": 12, "target": "all"}, {"type": "reveal"}], "result": "He knows where they sleep."}]},
+ {"id": "if_ev_spare_parts", "title": "Spare Parts", "persona": "foreman", "setting": "iron", "text": "A bin of spare parts: gears, valves, a hand that still twitches.",
+  "options": [
+   {"label": "Bolt something on", "who": true, "effects": [{"type": "max_hp", "n": 6, "target": "chosen"}, {"type": "attr", "stat": "grace", "n": -1, "target": "chosen"}], "result": "Sturdier. Clunkier."},
+   {"label": "Take the twitching hand", "effects": [{"type": "relic", "id": "second_helping"}], "result": "It wants to do things twice."},
+   {"label": "Sell the scrap", "effects": [{"type": "gold", "n": 30}], "result": "The tinkers pay by the pound."}]},
+ {"id": "if_ev_rail_cart", "title": "The Runaway Cart", "persona": "caller", "setting": "iron", "text": "A mine cart rattles toward you down the rails, full of ore, with nobody driving.",
+  "options": [
+   {"label": "Jump on", "check": {"stat": "grace", "dc": 13, "pass": [{"type": "gold", "n": 40}, {"type": "status_next", "id": "hasted", "turns": 2, "side": "hero"}], "pass_text": "A wild ride. Everyone arrives early and rich.", "fail": [{"type": "damage", "n": 8, "target": "random"}, {"type": "injure", "target": "random"}], "fail_text": "Not everyone jumped well."}},
+   {"label": "Stop it (Might)", "who": true, "check": {"stat": "might", "dc": 15, "pass": [{"type": "gold", "n": 60}, {"type": "trait", "id": "t_thick", "target": "chosen"}], "pass_text": "You stop it dead. Your ribs complain. The ore is yours.", "fail": [{"type": "damage", "n": 14, "target": "chosen"}], "fail_text": "It does not stop."}},
+   {"label": "Step aside", "leave": true, "effects": [{"type": "nothing"}]}]},
+ {"id": "if_ev_strike", "title": "The Strike", "persona": "foreman", "setting": "iron", "text": "Machines standing in a silent picket line. A sign: NO MORE SHIFTS. The Foreman is shouting at them.",
+  "options": [
+   {"label": "Join the picket", "effects": [{"type": "enemy_hp_next", "mult": 0.8}, {"type": "flag", "key": "joined_strike"}], "result": "The machines remember who stood with them. Next fight, enemies have 20% less HP."},
+   {"label": "Break the strike", "effects": [{"type": "gold", "n": 60}, {"type": "elite_next"}], "result": "The Foreman pays well. The machines remember you too. Next fight is an elite."},
+   {"label": "Stay out of it", "leave": true, "effects": [{"type": "nothing"}]}]},
+ {"id": "if_ev_canary", "title": "The Canary", "persona": "prospector", "setting": "iron", "text": "A canary in a cage, very still, at the mouth of a mine. The air smells of almonds.",
+  "options": [
+   {"label": "Go in anyway", "effects": [{"type": "damage", "n": 6, "target": "all"}, {"type": "relic", "id": "random", "rarity": ["uncommon", "rare"]}], "result": "You find what killed the canary. And what it was guarding."},
+   {"label": "Take the cage", "effects": [{"type": "consumable", "id": "c_antidote", "count": 2}], "result": "Under the cage, two antidotes. Somebody planned ahead."},
+   {"label": "Leave", "leave": true, "effects": [{"type": "nothing"}]}]},
+ {"id": "if_ev_automaton_fortune", "title": "Mechanical Fortune", "persona": "caller", "setting": "iron", "text": "A fortune-telling machine in a glass box. INSERT COIN. Its painted eyes follow you.",
+  "options": [
+   {"label": "Insert a coin (10 gold)", "cost_gold": 10, "effects": [{"type": "random", "rows": [{"w": 1, "text": "YOU WILL FIND WHAT YOU LOST.", "effects": [{"type": "relic", "id": "random", "rarity": ["common"]}]}, {"w": 1, "text": "YOU WILL BE TESTED.", "effects": [{"type": "elite_next"}, {"type": "xp", "n": 10, "target": "all"}]}, {"w": 1, "text": "YOU WILL REST SOON.", "effects": [{"type": "heal_pct", "pct": 0.3, "target": "all"}]}]}]},
+   {"label": "Break the glass", "effects": [{"type": "gold", "n": 25}, {"type": "status_next", "id": "cursed", "turns": 2, "side": "hero"}], "result": "Coins spill out. The machine says one last thing. Next fight your party starts cursed."},
+   {"label": "Move on", "leave": true, "effects": [{"type": "nothing"}]}]},
+ {"id": "if_ev_furnace", "title": "The Furnace Door", "persona": "foreman", "setting": "iron", "text": "A furnace that never goes out. The Foreman offers you a shovel. 'Feed it, and it'll feed you.'",
+  "options": [
+   {"label": "Feed it a relic", "requires": {"relics_ge": 1}, "effects": [{"type": "remove_relic"}, {"type": "upgrade_card", "target": "all"}], "result": "It melts. Every hero's best card is reforged."},
+   {"label": "Feed it gold (30)", "cost_gold": 30, "effects": [{"type": "relic", "id": "matchbook"}, {"type": "status_next", "id": "empowered", "turns": 2, "side": "hero"}], "result": "Hot work. Next fight your party starts empowered."},
+   {"label": "Warm your hands", "effects": [{"type": "heal_pct", "pct": 0.2, "target": "all"}], "result": "Just that."}]},
+ {"id": "if_ev_inventor", "title": "The Inventor", "persona": "prospector", "setting": "iron", "text": "An inventor with a contraption that may be a weapon, a stove, or a third thing. 'Try it! Please. Nobody ever tries it.'",
+  "options": [
+   {"label": "Try it", "who": true, "effects": [{"type": "random", "rows": [{"w": 2, "text": "It works! It's a weapon.", "effects": [{"type": "attr", "stat": "might", "n": 1, "target": "chosen"}]}, {"w": 1, "text": "It works! It's a stove.", "effects": [{"type": "heal_pct", "pct": 0.4, "target": "all"}]}, {"w": 1, "text": "It's the third thing.", "effects": [{"type": "damage", "n": 10, "target": "chosen"}]}]}]},
+   {"label": "Buy it (35 gold)", "cost_gold": 35, "effects": [{"type": "consumable", "id": "c_thunder", "count": 2}], "result": "Two thunderstones. He's thrilled."},
+   {"label": "Encourage him", "effects": [{"type": "xp", "n": 6, "target": "all"}], "result": "He cries a little. So do you."}]},
+ {"id": "if_ev_saloon", "title": "The Saloon", "persona": "prospector", "setting": "iron", "text": "A saloon with one customer, a piano that plays itself, and a bartender made of brass.",
+  "options": [
+   {"label": "Buy a round (20 gold)", "cost_gold": 20, "effects": [{"type": "heal_pct", "pct": 0.35, "target": "all"}, {"type": "xp", "n": 4, "target": "all"}], "result": "Strong stuff. Everyone feels better and slightly worse."},
+   {"label": "Play cards with the customer (Wits)", "check": {"stat": "wits", "dc": 13, "pass": [{"type": "gold", "n": 55}], "pass_text": "You take his money. He seems relieved.", "fail": [{"type": "gold", "n": -30}], "fail_text": "He takes yours. He seems sorry about it."}},
+   {"label": "Hire the piano player", "requires": {"party_le": 3}, "effects": [{"type": "recruit", "class": "bard"}], "result": "The piano stops playing itself. Someone stands up from behind it."}]},
+ {"id": "if_ev_cog_altar", "title": "The Cog Altar", "persona": "foreman", "setting": "iron", "text": "The machines have built an altar out of gears. They pray to it. It turns.",
+  "options": [
+   {"label": "Pray with them", "effects": [{"type": "status_next", "id": "guarded", "turns": 2, "side": "hero"}, {"type": "flag", "key": "cog_prayer"}], "result": "Next fight your party starts guarded."},
+   {"label": "Steal a gear", "effects": [{"type": "relic", "id": "castors"}, {"type": "status_next", "id": "marked", "turns": 2, "side": "hero"}], "result": "The machines see. Next fight your party starts marked."},
+   {"label": "Jam it", "check": {"stat": "might", "dc": 12, "pass": [{"type": "enemy_hp_next", "mult": 0.85}], "pass_text": "The altar stops. Next fight the machines are dispirited (15% less HP).", "fail": [{"type": "damage", "n": 8, "target": "random"}], "fail_text": "It doesn't jam. Fingers do."}}]},
+ {"id": "if_ev_telegraph", "title": "The Telegraph Office", "persona": "receptionist", "setting": "iron", "text": "A telegraph clattering on its own. The operator hands you a slip: it's addressed to your party.",
+  "options": [
+   {"label": "Read it", "effects": [{"type": "reveal"}, {"type": "xp", "n": 8, "target": "all"}], "result": "STOP. THE WAY AHEAD IS AS FOLLOWS. STOP."},
+   {"label": "Send a reply", "cost_gold": 15, "effects": [{"type": "consumable", "id": "random", "count": 2}], "result": "A parcel arrives almost immediately."},
+   {"label": "Cut the wire", "effects": [{"type": "remove_rule"}], "result": "Somewhere, a rule stops being transmitted."}]},
+ {"id": "if_ev_dynamite", "title": "A Crate of Dynamite", "persona": "caller", "setting": "iron", "text": "A crate stencilled DANGER. The sticks inside are sweating.",
+  "options": [
+   {"label": "Take some, carefully (Grace)", "check": {"stat": "grace", "dc": 12, "pass": [{"type": "consumable", "id": "c_bomb", "count": 2}], "pass_text": "Two sticks, wrapped in a handkerchief.", "fail": [{"type": "damage", "n": 12, "target": "all"}], "fail_text": "One of them was very sweaty."}},
+   {"label": "Blow the tunnel ahead", "effects": [{"type": "enemy_hp_next", "mult": 0.75}, {"type": "damage", "n": 4, "target": "all"}], "result": "A lot of the enemy under a lot of rock. Next fight, 25% less HP."},
+   {"label": "Leave it well alone", "leave": true, "effects": [{"type": "nothing"}]}]},
+ {"id": "if_ev_widow", "title": "The Engineer's Widow", "persona": "nurse", "setting": "iron", "text": "A widow polishing a machine shaped like her husband. 'He's in there somewhere. Would you help me wind him?'",
+  "options": [
+   {"label": "Help her wind him", "effects": [{"type": "relic", "id": "cardboard_soldier"}, {"type": "xp", "n": 5, "target": "all"}], "result": "He takes one step, salutes, and stops. She gives you a cut-out of him to keep."},
+   {"label": "Take his parts", "effects": [{"type": "gold", "n": 45}, {"type": "status_next", "id": "cursed", "turns": 2, "side": "hero"}], "result": "She doesn't stop you. She just watches."},
+   {"label": "Sit with her", "effects": [{"type": "heal_pct", "pct": 0.3, "target": "all"}], "result": "She makes tea. It is very good tea."}]},
+ {"id": "if_ev_lottery_wheel", "title": "The Wheel of Fortune", "persona": "auctioneer", "setting": "iron", "text": "A great iron wheel with prizes painted on the segments. 'Spin it! Everyone wins something!'",
+  "options": [
+   {"label": "Spin (15 gold)", "cost_gold": 15, "effects": [{"type": "random", "rows": [{"w": 2, "text": "GOLD!", "effects": [{"type": "gold", "n": 40}]}, {"w": 2, "text": "A CARD!", "effects": [{"type": "consumable", "id": "random"}]}, {"w": 1, "text": "A RULE!", "effects": [{"type": "rule_card", "id": "random"}]}, {"w": 1, "text": "THE JACKPOT!", "effects": [{"type": "relic", "id": "random", "rarity": ["rare"]}]}]}]},
+   {"label": "Rig it (Wits)", "check": {"stat": "wits", "dc": 15, "pass": [{"type": "relic", "id": "random", "rarity": ["rare"]}], "pass_text": "Jackpot. The Auctioneer applauds slowly.", "fail": [{"type": "rule_card", "id": "rc_house_ties"}], "fail_text": "He adds a rule about ties."}},
+   {"label": "Walk past", "leave": true, "effects": [{"type": "nothing"}]}]},
+ {"id": "if_ev_brass_band", "title": "The Brass Band", "persona": "caller", "setting": "iron", "text": "A band of brass automatons playing a march for nobody. They stop when they see you, and wait.",
+  "options": [
+   {"label": "Ask for a march", "effects": [{"type": "status_next", "id": "hasted", "turns": 2, "side": "hero"}, {"type": "status_next", "id": "blessed", "turns": 1, "side": "hero"}], "result": "Next fight your party starts hasted and blessed."},
+   {"label": "Ask for a dirge", "effects": [{"type": "status_next", "id": "feared", "turns": 2, "side": "enemy"}], "result": "Next fight the enemy starts frightened."},
+   {"label": "Steal a trumpet", "effects": [{"type": "relic", "id": "fright_mask"}], "result": "Not a trumpet, it turns out. A mask that was hanging inside it."}]},
+
+ {"id": "et_ev_unpainted", "title": "The Unpainted Page", "persona": "understudy", "setting": "table", "text": "Here the board is bare wood and pencil lines. The Understudy is sketching something that looks like your party.",
+  "options": [
+   {"label": "Let it finish the sketch", "who": true, "effects": [{"type": "attr", "stat": "wits", "n": 1, "target": "chosen"}, {"type": "attr", "stat": "nerve", "n": 1, "target": "chosen"}, {"type": "injure", "target": "chosen"}], "result": "You feel more defined. Some details are wrong."},
+   {"label": "Take the pencil", "effects": [{"type": "relic", "id": "the_eraser"}], "result": "There's an eraser on the other end."},
+   {"label": "Draw something yourself (Wits)", "check": {"stat": "wits", "dc": 13, "pass": [{"type": "relic", "id": "random", "rarity": ["uncommon", "rare"]}], "pass_text": "You draw a relic. It becomes one.", "fail": [{"type": "status_next", "id": "confused", "turns": 1, "side": "hero"}], "fail_text": "You draw something you can't stop looking at."}}]},
+ {"id": "et_ev_box_lid", "title": "The Box Lid", "persona": "caller", "setting": "table", "text": "You've reached the edge of the board. Beyond it is the lid of the game box, enormous, with the title on it. It's a different game.",
+  "options": [
+   {"label": "Read the rules on the back", "effects": [{"type": "xp", "n": 15, "target": "all"}, {"type": "remove_rule"}], "result": "Different rules. You remember some of them."},
+   {"label": "Climb in the box", "effects": [{"type": "random", "rows": [{"w": 1, "text": "Spare pieces.", "effects": [{"type": "consumable", "id": "random", "count": 3}]}, {"w": 1, "text": "Someone else's relic.", "effects": [{"type": "relic", "id": "random", "rarity": ["uncommon"]}]}, {"w": 1, "text": "Something packed away for a reason.", "effects": [{"type": "combat", "kind": "elite"}]}]}]},
+   {"label": "Go back to the board", "leave": true, "effects": [{"type": "nothing"}]}]},
+ {"id": "et_ev_rewrite", "title": "The Rewrite", "persona": "caller", "setting": "table", "text": "The Caller crosses out a paragraph of the campaign. 'I don't like how this bit went. Shall I do it again?'",
+  "options": [
+   {"label": "Yes, redo it", "effects": [{"type": "heal_pct", "pct": 0.5, "target": "all"}, {"type": "rule_card", "id": "random"}], "result": "The last few pages never happened, mostly. One rule did."},
+   {"label": "No, keep it", "effects": [{"type": "xp", "n": 15, "target": "all"}], "result": "He looks at you for a long time. 'Very well. You earned it.'"},
+   {"label": "Ask to rewrite something yourself", "who": true, "effects": [{"type": "level_offer", "target": "chosen"}, {"type": "status_next", "id": "marked", "turns": 2, "side": "hero"}], "result": "He hands you the pen. It's heavier than it looks. Next fight, your party starts marked."}]},
+ {"id": "et_ev_stand_ins", "title": "Stand-Ins", "persona": "understudy", "setting": "table", "text": "Four grey miniatures in your poses. 'In case you don't make it,' the Understudy explains. 'Nothing personal.'",
+  "options": [
+   {"label": "Break them", "effects": [{"type": "status_next", "id": "empowered", "turns": 3, "side": "hero"}], "result": "Next fight your party starts empowered."},
+   {"label": "Keep one", "requires": {"party_le": 3}, "effects": [{"type": "recruit", "level": 3}], "result": "It stands up. It has your face. It's on your side, for now."},
+   {"label": "Take their paint", "effects": [{"type": "max_hp", "n": 3, "target": "all"}], "result": "A fresh coat for everyone."}]},
+ {"id": "et_ev_die_god", "title": "The Die That Watches", "persona": "caller", "setting": "table", "text": "An enormous die stands on one corner, impossibly. Every face shows a different number of eyes.",
+  "options": [
+   {"label": "Roll it", "effects": [{"type": "random", "rows": [{"w": 1, "text": "One eye. It blinks at you.", "effects": [{"type": "status_next", "id": "dazed", "turns": 1, "side": "hero"}]}, {"w": 2, "text": "Twenty eyes. Every one approves.", "effects": [{"type": "relic", "id": "golden_d20"}]}, {"w": 2, "text": "Seven eyes.", "effects": [{"type": "relic", "id": "lucky_seven"}]}]}]},
+   {"label": "Ask it a question (Nerve)", "check": {"stat": "nerve", "dc": 14, "pass": [{"type": "reveal"}, {"type": "level_offer", "target": "all"}], "pass_text": "It answers, in numbers. Everyone understands a little more.", "fail": [{"type": "status_next", "id": "feared", "turns": 2, "side": "hero"}], "fail_text": "It answers. You wish it hadn't."}},
+   {"label": "Look away", "leave": true, "effects": [{"type": "nothing"}]}]},
+ {"id": "et_ev_cast_list", "title": "The Cast List", "persona": "receptionist", "setting": "table", "text": "A cast list pinned to the edge of the world. Your heroes are on it. Next to two of the names, in pencil: (understudy).",
+  "options": [
+   {"label": "Rub out the pencil", "effects": [{"type": "max_hp", "n": 4, "target": "all"}], "result": "Leading roles again."},
+   {"label": "Add your own name", "effects": [{"type": "xp", "n": 20, "target": "all"}, {"type": "rule_card", "id": "random"}], "result": "The Caller notices. A new rule appears below your name."},
+   {"label": "Leave it", "leave": true, "effects": [{"type": "nothing"}]}]},
+ {"id": "et_ev_tea_break", "title": "Tea Break", "persona": "nurse", "setting": "table", "text": "The Night Nurse sets down a tray at the edge of the board. 'Last tea break. After this it's straight through.'",
+  "options": [
+   {"label": "Drink up", "effects": [{"type": "heal_pct", "pct": 0.5, "target": "all"}], "result": "The last good cup of tea in the campaign."},
+   {"label": "Bandage up", "effects": [{"type": "cure", "target": "all"}, {"type": "consumable", "id": "c_salts"}], "result": "Injuries seen to. A spare bottle of salts."},
+   {"label": "Ask her what's next", "effects": [{"type": "reveal"}, {"type": "status_next", "id": "warded", "turns": 2, "side": "hero"}], "result": "She tells you. Next fight your party starts warded."}]},
+ {"id": "et_ev_mask_rack", "title": "The Masks", "persona": "caller", "setting": "table", "text": "A rack of the Caller's masks, out here at the end of the table. He isn't wearing one. 'Go on. Try one.'",
+  "options": [
+   {"label": "Try the Receptionist", "who": true, "effects": [{"type": "trait", "id": "t_tough_death", "target": "chosen"}], "result": "You feel expected. Hard to get rid of."},
+   {"label": "Try the Auctioneer", "who": true, "effects": [{"type": "gold", "n": 50}, {"type": "rule_card", "id": "random"}], "result": "You sell yourself a rule. Good price."},
+   {"label": "Try the empty one", "who": true, "effects": [{"type": "attr", "stat": "nerve", "n": 2, "target": "chosen"}, {"type": "max_hp", "n": -5, "target": "chosen"}], "result": "There's nobody behind it. There's nobody behind it."}]},
+ {"id": "et_ev_last_shop", "title": "Closing-Down Sale", "persona": "prize_clerk", "setting": "table", "text": "The prize counter, at the end of everything. 'EVERYTHING MUST GO.' She means it.",
+  "options": [
+   {"label": "Browse", "effects": [{"type": "shop"}], "result": "Final reductions."},
+   {"label": "Take what's left", "effects": [{"type": "consumable", "id": "random", "count": 2}, {"type": "gold", "n": 20}], "result": "She doesn't stop you. Nothing matters now, she says."},
+   {"label": "Thank her", "effects": [{"type": "heal_pct", "pct": 0.2, "target": "all"}, {"type": "xp", "n": 6, "target": "all"}], "result": "She looks surprised. Nobody thanks the prize counter."}]},
+ {"id": "et_ev_footnote", "title": "A Footnote", "persona": "caller", "setting": "table", "text": "A tiny footnote at the bottom of the page, in the Caller's hand: *The heroes may skip the next fight, at a cost.",
+  "options": [
+   {"label": "Skip it (lose a relic)", "requires": {"relics_ge": 1}, "effects": [{"type": "remove_relic"}, {"type": "xp", "n": 10, "target": "all"}, {"type": "heal_pct", "pct": 0.2, "target": "all"}], "result": "He crosses out the next fight. And something of yours."},
+   {"label": "Skip it (lose a hero's level of experience)", "effects": [{"type": "damage", "n": 6, "target": "all"}, {"type": "gold", "n": 30}], "result": "He takes it out of your hide instead."},
+   {"label": "Ignore footnotes", "effects": [{"type": "xp", "n": 5, "target": "all"}], "result": "Nobody reads footnotes. He sighs."}]},
+ {"id": "et_ev_curtain", "title": "The Curtain", "persona": "understudy", "setting": "table", "text": "A red curtain hangs across the end of the table. Behind it, something is waiting to come on.",
+  "options": [
+   {"label": "Peek (Nerve)", "check": {"stat": "nerve", "dc": 14, "pass": [{"type": "status_next", "id": "inspired", "turns": 3, "side": "hero"}, {"type": "reveal"}], "pass_text": "You see the ending. It could go either way. Next fight, your party starts inspired.", "fail": [{"type": "status_next", "id": "feared", "turns": 2, "side": "hero"}], "fail_text": "It sees you."}},
+   {"label": "Pull it down", "effects": [{"type": "combat", "kind": "elite"}, {"type": "relic", "id": "random", "rarity": ["rare"]}], "result": "The understudy was standing right behind it."},
+   {"label": "Wait for your cue", "effects": [{"type": "heal_pct", "pct": 0.25, "target": "all"}], "result": "Your cue comes. Everyone is rested."}]},
+
+ {"id": "sec_ev_backstage", "secret": true, "title": "A Door Behind the Scenery", "persona": "understudy", "setting": "any", "text": "A painted door that opens. Backstage, the understudy is learning your lines from a script with your names in it.",
+  "options": [
+   {"label": "Confront it", "effects": [{"type": "combat", "id": "sec_backstage"}, {"type": "unlock", "id": "caller_tape"}], "result": "It looks up. It has your face."},
+   {"label": "Steal the script", "check": {"stat": "grace", "dc": 15, "pass": [{"type": "relic", "id": "random", "rarity": ["rare"]}, {"type": "reveal"}], "pass_text": "You know how this ends. Mostly.", "fail": [{"type": "combat", "id": "sec_backstage"}], "fail_text": "It notices."}},
+   {"label": "Close the door", "leave": true, "effects": [{"type": "nothing"}]}]},
+ {"id": "sec_ev_old_party", "secret": true, "title": "Initials in the Wood", "persona": "caller", "setting": "any", "text": "Carved into the board: four sets of initials. The previous party. Their miniatures are standing in the margin, facing you.",
+  "options": [
+   {"label": "Challenge them", "effects": [{"type": "combat", "id": "sec_old_party"}], "result": "They raise their weapons. They've been waiting a long time."},
+   {"label": "Add your own initials", "effects": [{"type": "max_hp", "n": 5, "target": "all"}, {"type": "flag", "key": "initials"}], "result": "You belong to the table now. That isn't entirely good news."},
+   {"label": "Leave them be", "effects": [{"type": "xp", "n": 10, "target": "all"}], "result": "They nod as you pass."}]},
+ {"id": "sec_ev_private_game", "secret": true, "title": "A Private Game", "persona": "caller", "setting": "any", "text": "The Caller puts a finger to the place his lips would be. 'Just between us. A side game. High stakes.'",
+  "options": [
+   {"label": "Play", "effects": [{"type": "combat", "id": "sec_caller_hand"}, {"type": "gold", "n": 50}], "result": "He deals you in. He takes the gold off the table up front, as your stake. Win it back."},
+   {"label": "Ask about the hall", "effects": [{"type": "xp", "n": 15, "target": "all"}, {"type": "unlock", "id": "caller_tape"}], "result": "He tells you something. You will find it later, in the hall, on a tape."},
+   {"label": "Decline", "leave": true, "effects": [{"type": "nothing"}]}]},
+ {"id": "sec_ev_cage", "secret": true, "title": "Inside the Cage", "persona": "caller", "setting": "any", "text": "For a moment the page shows the inside of a bingo cage. Numbered balls tumble around you. One of them has your party's number.",
+  "options": [
+   {"label": "Catch your ball", "check": {"stat": "grace", "dc": 14, "pass": [{"type": "relic", "id": "lucky_seven"}, {"type": "level_offer", "target": "all"}], "pass_text": "You catch it. Everyone learns something.", "fail": [{"type": "damage", "n": 7, "target": "all"}], "fail_text": "The balls are heavier than they look."}},
+   {"label": "Catch somebody else's", "effects": [{"type": "relic", "id": "random", "rarity": ["rare"]}, {"type": "rule_card", "id": "random"}], "result": "A prize and a rule. Somebody else is going to be very confused."},
+   {"label": "Wait to be called", "effects": [{"type": "heal_pct", "pct": 0.4, "target": "all"}], "result": "You are called. You come back rested."}]},
+ {"id": "sec_ev_reception", "secret": true, "title": "The Reception Desk", "persona": "receptionist", "setting": "any", "requires": {"fallen_ge": 1}, "text": "The page shows the hall's reception desk. The drawer marked FALLEN is open. One of your dead is sitting on the desk, swinging their legs.",
+  "options": [
+   {"label": "Bring them back", "requires": {"party_le": 3}, "effects": [{"type": "recruit", "level": 2}], "result": "Somebody sits down at the table. Not quite the same somebody."},
+   {"label": "Ask them what they saw", "effects": [{"type": "xp", "n": 20, "target": "all"}], "result": "They tell you. You don't sleep well."},
+   {"label": "Close the drawer", "effects": [{"type": "heal_pct", "pct": 0.25, "target": "all"}], "result": "It closes softly."}]},
+ {"id": "sec_ev_clock", "secret": true, "title": "The Clock at Seven", "persona": "caller", "setting": "any", "text": "The hall clock, stopped at seven, is lying on the page. The hands can be moved.",
+  "options": [
+   {"label": "Move them forward", "effects": [{"type": "xp", "n": 25, "target": "all"}, {"type": "damage", "n": 5, "target": "all"}], "result": "Time passes. You are older and wiser and a little worn."},
+   {"label": "Move them back", "effects": [{"type": "heal_pct", "pct": 1.0, "target": "all"}, {"type": "cure", "target": "all"}, {"type": "rule_card", "id": "random"}], "result": "As if nothing happened. Nearly. He noticed."},
+   {"label": "Leave it at seven", "effects": [{"type": "relic", "id": "pocket_watch"}], "result": "You take the watch from its back. It has also stopped at seven."}]}
+]
+}

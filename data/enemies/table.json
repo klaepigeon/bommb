@@ -1,0 +1,1314 @@
+{
+ "enemies": [
+  {
+   "id": "unfinished_mini",
+   "name": "Unfinished Miniature",
+   "role": "melee",
+   "setting": "table",
+   "hp": 16,
+   "defense": 12,
+   "speed": 4,
+   "might": 2,
+   "abilities": [
+    "e_grey_strike"
+   ],
+   "ai": "brute",
+   "tags": [
+    "table",
+    "zoc",
+    "failure"
+   ],
+   "tier": 1,
+   "gold": 3,
+   "xp": 2,
+   "model": {
+    "body": "humanoid",
+    "color": "#9a968c",
+    "accent": "#7a766c",
+    "head": "round",
+    "weapon": "sword",
+    "h": 1.0
+   },
+   "death": "crumble",
+   "desc": "Nobody painted it. When it hits you it learns one of your cards and keeps it."
+  },
+  {
+   "id": "eraser_wraith",
+   "name": "Eraser Wraith",
+   "role": "controller",
+   "setting": "table",
+   "hp": 12,
+   "defense": 13,
+   "speed": 5,
+   "wits": 2,
+   "abilities": [
+    "e_rub_out",
+    "e_smudge"
+   ],
+   "ai": "controller",
+   "tags": [
+    "table",
+    "flying"
+   ],
+   "resist": [
+    "physical"
+   ],
+   "vulnerable": [
+    "fire"
+   ],
+   "tier": 2,
+   "gold": 4,
+   "xp": 3,
+   "model": {
+    "body": "floating",
+    "color": "#d8a0a0",
+    "accent": "#e8e0d8",
+    "head": "none",
+    "h": 0.9
+   },
+   "death": "crumble",
+   "desc": "Rubs the board out. Erased tiles are gone for good; anything shoved into them is gone too."
+  },
+  {
+   "id": "rules_lawyer",
+   "name": "Rules Lawyer",
+   "role": "rules",
+   "setting": "table",
+   "hp": 13,
+   "defense": 12,
+   "speed": 4,
+   "wits": 3,
+   "nerve": 1,
+   "abilities": [
+    "e_objection",
+    "e_amendment",
+    "e_precedent"
+   ],
+   "ai": "controller",
+   "tags": [
+    "table"
+   ],
+   "tier": 2,
+   "gold": 6,
+   "xp": 3,
+   "model": {
+    "body": "humanoid",
+    "color": "#2a2a2a",
+    "accent": "#e8e0d0",
+    "head": "wig",
+    "weapon": "tome",
+    "h": 0.95
+   },
+   "death": "collapse",
+   "desc": "Adds rules while it lives: its side crits more easily, your feet get heavier. Kill it and its amendments lapse in time."
+  },
+  {
+   "id": "loaded_die_enemy",
+   "name": "Loaded Die",
+   "role": "unusual",
+   "setting": "table",
+   "hp": 20,
+   "defense": 13,
+   "speed": 3,
+   "might": 2,
+   "abilities": [
+    "e_tumble"
+   ],
+   "ai": "brute",
+   "tags": [
+    "table",
+    "construct"
+   ],
+   "tier": 2,
+   "gold": 6,
+   "xp": 3,
+   "triggers": [
+    {
+     "event": "turn_start",
+     "effects": [
+      {
+       "type": "table",
+       "rows": [
+        {
+         "text": "One: it hides behind its own pips.",
+         "effects": [
+          {
+           "type": "status",
+           "id": "guarded",
+           "turns": 1,
+           "to": "self"
+          }
+         ]
+        },
+        {
+         "text": "Two: it sulks.",
+         "effects": [
+          {
+           "type": "status",
+           "id": "warded",
+           "turns": 1,
+           "to": "self"
+          }
+         ]
+        },
+        {
+         "text": "Three: it rolls toward you.",
+         "effects": [
+          {
+           "type": "status",
+           "id": "hasted",
+           "turns": 1,
+           "to": "self"
+          }
+         ]
+        },
+        {
+         "text": "Four: it is feeling lucky.",
+         "effects": [
+          {
+           "type": "status",
+           "id": "empowered",
+           "turns": 1,
+           "stacks": 2,
+           "to": "self"
+          }
+         ]
+        },
+        {
+         "text": "Five: it bounces off the nearest hero.",
+         "effects": [
+          {
+           "type": "damage",
+           "dice": "2d6",
+           "dtype": "physical",
+           "to": "near_foes"
+          }
+         ]
+        },
+        {
+         "text": "Six: it explodes into numbers.",
+         "effects": [
+          {
+           "type": "damage",
+           "dice": "3d6",
+           "dtype": "force",
+           "to": "near_foes"
+          },
+          {
+           "type": "self_damage",
+           "n": 8
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "label": "The Loaded Die rolls itself"
+    }
+   ],
+   "model": {
+    "body": "die",
+    "color": "#e8e0c8",
+    "accent": "#8a1a12",
+    "head": "eye",
+    "h": 0.95
+   },
+   "death": "crumble",
+   "desc": "At the start of each of its turns it rolls itself on a d6 and does whatever comes up. A six hurts everyone near it, itself included."
+  },
+  {
+   "id": "paper_knight",
+   "name": "Paper Knight",
+   "role": "melee",
+   "setting": "table",
+   "hp": 14,
+   "defense": 15,
+   "speed": 4,
+   "might": 3,
+   "abilities": [
+    "e_paper_cut",
+    "e_fold"
+   ],
+   "ai": "brute",
+   "tags": [
+    "table",
+    "zoc"
+   ],
+   "vulnerable": [
+    "fire"
+   ],
+   "resist": [
+    "force"
+   ],
+   "tier": 2,
+   "gold": 5,
+   "xp": 3,
+   "passives": [
+    {
+     "key": "crit_threshold",
+     "op": "set",
+     "value": 18
+    }
+   ],
+   "model": {
+    "body": "paper",
+    "color": "#e8e0c8",
+    "accent": "#5a3a2a",
+    "head": "helm",
+    "weapon": "sword",
+    "h": 1.1
+   },
+   "death": "crumble",
+   "desc": "Hard to hit edge-on, crits on 18-20, and burns like paper."
+  },
+  {
+   "id": "margin_scribbler",
+   "name": "Margin Scribbler",
+   "role": "ranged",
+   "setting": "table",
+   "hp": 11,
+   "defense": 12,
+   "speed": 4,
+   "grace": 2,
+   "abilities": [
+    "e_jab_pencil",
+    "e_doodle"
+   ],
+   "ai": "archer",
+   "tags": [
+    "table"
+   ],
+   "tier": 1,
+   "gold": 3,
+   "xp": 2,
+   "model": {
+    "body": "tall",
+    "color": "#c8c0a8",
+    "accent": "#2a2a2a",
+    "head": "round",
+    "weapon": "pencil",
+    "h": 0.95
+   },
+   "death": "collapse",
+   "desc": "Throws pencils, marks targets for its friends, and doodles over the board until nothing is finished."
+  },
+  {
+   "id": "understudy",
+   "name": "The Understudy",
+   "role": "elite",
+   "elite": true,
+   "setting": "table",
+   "hp": 50,
+   "defense": 15,
+   "speed": 5,
+   "might": 2,
+   "grace": 2,
+   "wits": 2,
+   "nerve": 2,
+   "abilities": [
+    "e_upstage"
+   ],
+   "ai": "brute",
+   "tags": [
+    "table",
+    "elite"
+   ],
+   "tier": 3,
+   "gold": 15,
+   "xp": 6,
+   "triggers": [
+    {
+     "event": "turn_start",
+     "effects": [
+      {
+       "type": "copy_ability",
+       "to": "random_foe"
+      }
+     ],
+     "label": "The Understudy learns a part"
+    }
+   ],
+   "model": {
+    "body": "humanoid",
+    "color": "#c8c8c0",
+    "accent": "#5a5a5a",
+    "head": "mask",
+    "weapon": "sword",
+    "h": 1.15
+   },
+   "death": "collapse",
+   "desc": "Every turn it learns one of your heroes' cards and can use it against you. The longer it lives, the more of your act it knows."
+  },
+  {
+   "id": "failed_mini",
+   "name": "Failed Miniature",
+   "role": "swarm",
+   "setting": "table",
+   "hp": 7,
+   "defense": 10,
+   "speed": 3,
+   "might": 1,
+   "abilities": [
+    "e_grey_strike"
+   ],
+   "ai": "brute",
+   "tags": [
+    "table",
+    "failure",
+    "summon"
+   ],
+   "tier": 0,
+   "gold": 0,
+   "xp": 0,
+   "model": {
+    "body": "humanoid",
+    "color": "#8a867c",
+    "accent": "#6a665c",
+    "head": "round",
+    "h": 0.8,
+    "hunch": 0.4
+   },
+   "death": "crumble",
+   "desc": "A miniature somebody gave up on."
+  },
+  {
+   "id": "mask_echo",
+   "name": "A Spare Face",
+   "role": "summon",
+   "setting": "table",
+   "hp": 12,
+   "defense": 13,
+   "speed": 4,
+   "nerve": 3,
+   "abilities": [
+    "e_mask_gaze"
+   ],
+   "ai": "archer",
+   "tags": [
+    "table",
+    "summon",
+    "flying"
+   ],
+   "tier": 0,
+   "gold": 0,
+   "xp": 1,
+   "model": {
+    "body": "floating",
+    "color": "#e8dcc0",
+    "accent": "#8a1a12",
+    "head": "mask",
+    "h": 0.9
+   },
+   "death": "crumble",
+   "desc": "One of his faces, without him behind it."
+  }
+ ],
+ "bosses": [
+  {
+   "id": "heap_of_failures",
+   "name": "The Heap of Failures",
+   "boss": true,
+   "setting": "table",
+   "size": 2,
+   "hp": 130,
+   "defense": 12,
+   "speed": 2,
+   "might": 4,
+   "abilities": [
+    "e_heap_crush",
+    "e_shed",
+    "e_reabsorb"
+   ],
+   "ai": "boss",
+   "tags": [
+    "table",
+    "boss",
+    "immovable"
+   ],
+   "vulnerable": [
+    "fire"
+   ],
+   "gold": 60,
+   "xp": 16,
+   "triggers": [
+    {
+     "event": "kill",
+     "listen": true,
+     "when": {
+      "killed_tag": "failure"
+     },
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "6",
+       "to": "self"
+      }
+     ],
+     "quiet": true,
+     "label": "It takes the pieces back"
+    }
+   ],
+   "model": {
+    "body": "blob",
+    "color": "#8a867c",
+    "accent": "#5a3a2a",
+    "head": "round",
+    "h": 1.9
+   },
+   "death": "crumble",
+   "intro": "Every miniature I ever gave up on. I kept them. Of course I kept them.",
+   "desc": "Sheds failed miniatures every turn and heals whenever one of them dies near it. Kill the little ones when it can't reach them, or burn the heap.",
+   "phases": [
+    {
+     "below": 0.5,
+     "name": "Falling Apart",
+     "say": "It is coming apart. Every piece wants to be something.",
+     "on_enter": [
+      {
+       "type": "summon",
+       "unit": "failed_mini",
+       "count": 3
+      },
+      {
+       "type": "status",
+       "id": "hasted",
+       "turns": -1,
+       "to": "self"
+      }
+     ]
+    }
+   ],
+   "reward": "relic_glue",
+   "persona": "heap"
+  },
+  {
+   "id": "the_house",
+   "name": "THE HOUSE",
+   "boss": true,
+   "setting": "table",
+   "size": 2,
+   "hp": 170,
+   "defense": 16,
+   "speed": 3,
+   "might": 3,
+   "grace": 2,
+   "wits": 3,
+   "nerve": 4,
+   "abilities": [
+    "e_call_number",
+    "e_eyes_down",
+    "e_house_rule"
+   ],
+   "ai": "boss",
+   "tags": [
+    "table",
+    "boss",
+    "immovable",
+    "zoc"
+   ],
+   "resist": [
+    "psychic"
+   ],
+   "gold": 0,
+   "xp": 30,
+   "triggers": [
+    {
+     "event": "round_start",
+     "listen": true,
+     "effects": [
+      {
+       "type": "table",
+       "rows": [
+        {
+         "text": "House rule: nobody heals this round.",
+         "effects": [
+          {
+           "type": "rule",
+           "rounds": 1,
+           "source": "The House",
+           "mod": {
+            "key": "no_heal",
+            "op": "set",
+            "value": true,
+            "label": "House rule: no healing"
+           }
+          }
+         ]
+        },
+        {
+         "text": "House rule: the house crits on 17.",
+         "effects": [
+          {
+           "type": "rule",
+           "rounds": 1,
+           "source": "The House",
+           "mod": {
+            "key": "crit_threshold",
+            "op": "set",
+            "value": 17,
+            "priority": 4,
+            "when": {
+             "side": "enemy"
+            },
+            "label": "House rule: enemies crit on 17-20"
+           }
+          }
+         ]
+        },
+        {
+         "text": "House rule: ties go to the house.",
+         "effects": [
+          {
+           "type": "rule",
+           "rounds": 1,
+           "source": "The House",
+           "mod": {
+            "key": "tie_wins",
+            "op": "set",
+            "value": false,
+            "priority": 4,
+            "when": {
+             "side": "hero"
+            },
+            "label": "House rule: hero ties fail"
+           }
+          }
+         ]
+        },
+        {
+         "text": "House rule: everyone moves one less.",
+         "effects": [
+          {
+           "type": "rule",
+           "rounds": 1,
+           "source": "The House",
+           "mod": {
+            "key": "speed",
+            "op": "add",
+            "value": -1,
+            "when": {
+             "side": "hero"
+            },
+            "label": "House rule: heroes move 1 less"
+           }
+          }
+         ]
+        },
+        {
+         "text": "House rule: free space. Your cards cost nothing this round.",
+         "effects": [
+          {
+           "type": "rule",
+           "rounds": 1,
+           "source": "The House",
+           "mod": {
+            "key": "res_cost_add",
+            "op": "add",
+            "value": -9,
+            "when": {
+             "side": "hero"
+            },
+            "label": "Free space: hero cards cost nothing"
+           }
+          }
+         ]
+        },
+        {
+         "text": "House rule: eyes down. Nobody may roll above 15.",
+         "effects": [
+          {
+           "type": "rule",
+           "rounds": 1,
+           "source": "The House",
+           "mod": {
+            "key": "natural_cap",
+            "op": "cap",
+            "value": 15,
+            "label": "Eyes down: no d20 above 15"
+           }
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "label": "The House calls a rule"
+    }
+   ],
+   "model": {
+    "body": "humanoid",
+    "color": "#7a3a24",
+    "accent": "#e8e0d0",
+    "head": "cage",
+    "weapon": "staff",
+    "h": 2.0
+   },
+   "death": "crumble",
+   "intro": "You have played everything I wrote. There is one piece left on the board. It is mine.",
+   "desc": "The Caller's own piece. Every round it rolls a new house rule (watch the rack). Below 60% it puts its spare faces on the board. Below 30% it calls Last Call: the board around him starts to go dark, three tiles at a time.",
+   "phases": [
+    {
+     "below": 0.6,
+     "name": "Every Face Is His",
+     "say": "He takes the masks off their pegs. All of them.",
+     "abilities": [
+      "e_call_number",
+      "e_eyes_down",
+      "e_house_rule",
+      "e_every_face"
+     ],
+     "on_enter": [
+      {
+       "type": "summon",
+       "unit": "mask_echo",
+       "count": 3
+      }
+     ]
+    },
+    {
+     "below": 0.3,
+     "name": "Last Call",
+     "say": "Last call. Eyes down. This is the last number.",
+     "abilities": [
+      "e_call_number",
+      "e_last_number",
+      "e_eat_board",
+      "e_every_face"
+     ],
+     "on_enter": [
+      {
+       "type": "consume_tiles",
+       "n": 6,
+       "tile": "void"
+      },
+      {
+       "type": "status",
+       "id": "hasted",
+       "turns": -1,
+       "to": "self"
+      }
+     ]
+    }
+   ],
+   "persona": "caller"
+  }
+ ],
+ "abilities": [
+  {
+   "id": "e_grey_strike",
+   "name": "Grey Strike",
+   "icon": "sword",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "stat": "might",
+     "dtype": "physical"
+    },
+    {
+     "type": "copy_ability",
+     "chance": 0.5
+    }
+   ],
+   "desc": "1d8 + Might. May learn one of the target's cards."
+  },
+  {
+   "id": "e_rub_out",
+   "name": "Rub Out",
+   "icon": "eraser",
+   "cost": "action",
+   "cooldown": 1,
+   "range": 5,
+   "target": "tile",
+   "roll": "none",
+   "tags": [
+    "terrain"
+   ],
+   "tile_effects": [
+    {
+     "type": "terrain",
+     "tile": "void",
+     "shape": "cross",
+     "only_on": "floor"
+    }
+   ],
+   "effects": [],
+   "ai_bonus": 4,
+   "desc": "Erases a cross of empty floor. Erased tiles are gone."
+  },
+  {
+   "id": "e_smudge",
+   "name": "Smudge",
+   "icon": "spiral",
+   "cost": "action",
+   "range": 4,
+   "target": "enemy",
+   "roll": "save",
+   "save": "wits",
+   "stat": "wits",
+   "tags": [
+    "basic",
+    "spell"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "dtype": "psychic"
+    },
+    {
+     "type": "status",
+     "id": "confused",
+     "turns": 1
+    }
+   ],
+   "desc": "Wits save: 1d8 psychic and confused."
+  },
+  {
+   "id": "e_objection",
+   "name": "Objection!",
+   "icon": "mouth",
+   "cost": "action",
+   "range": 6,
+   "target": "enemy",
+   "roll": "save",
+   "save": "nerve",
+   "stat": "wits",
+   "tags": [
+    "basic",
+    "spell"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "dtype": "psychic"
+    },
+    {
+     "type": "status",
+     "id": "silenced",
+     "turns": 1
+    }
+   ],
+   "desc": "Nerve save: 1d6 psychic and silenced (no spells) for a turn."
+  },
+  {
+   "id": "e_amendment",
+   "name": "Amendment",
+   "icon": "scroll",
+   "cost": "bonus",
+   "cooldown": 3,
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "rules"
+   ],
+   "self_effects": [
+    {
+     "type": "rule",
+     "rounds": 2,
+     "source": "Rules Lawyer",
+     "mod": {
+      "key": "crit_threshold",
+      "op": "set",
+      "value": 18,
+      "priority": 1,
+      "when": {
+       "side": "enemy"
+      },
+      "label": "Amendment: enemies crit on 18-20"
+     }
+    }
+   ],
+   "effects": [],
+   "ai_bonus": 5,
+   "desc": "For 2 rounds its side crits on 18-20."
+  },
+  {
+   "id": "e_precedent",
+   "name": "Precedent",
+   "icon": "tome",
+   "cost": "bonus",
+   "cooldown": 3,
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "rules"
+   ],
+   "self_effects": [
+    {
+     "type": "rule",
+     "rounds": 1,
+     "source": "Rules Lawyer",
+     "mod": {
+      "key": "move_cost",
+      "op": "add",
+      "value": 1,
+      "when": {
+       "side": "hero"
+      },
+      "label": "Precedent: every tile costs heroes 1 more"
+     }
+    }
+   ],
+   "effects": [],
+   "ai_bonus": 4,
+   "desc": "For a round every tile costs your heroes 1 more movement."
+  },
+  {
+   "id": "e_tumble",
+   "name": "Tumble Into",
+   "icon": "die",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "2d6",
+     "stat": "might",
+     "dtype": "physical"
+    }
+   ],
+   "desc": "Rolls into you: 2d6 + Might."
+  },
+  {
+   "id": "e_paper_cut",
+   "name": "Paper Cut",
+   "icon": "sword",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d10",
+     "stat": "might",
+     "dtype": "physical"
+    },
+    {
+     "type": "status",
+     "id": "bleeding",
+     "turns": 2
+    }
+   ],
+   "desc": "1d10 + Might and bleeding. Crits on 18-20."
+  },
+  {
+   "id": "e_fold",
+   "name": "Fold",
+   "icon": "scroll",
+   "cost": "bonus",
+   "cooldown": 3,
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "defense"
+   ],
+   "self_effects": [
+    {
+     "type": "status",
+     "id": "guarded",
+     "turns": 1
+    },
+    {
+     "type": "status",
+     "id": "hidden",
+     "turns": 1
+    }
+   ],
+   "effects": [],
+   "ai_when": {
+    "hp_below": 0.6
+   },
+   "desc": "Folds itself edge-on: guarded and hidden."
+  },
+  {
+   "id": "e_jab_pencil",
+   "name": "Pencil",
+   "icon": "spear",
+   "cost": "action",
+   "range": 6,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "grace",
+   "tags": [
+    "basic",
+    "attack",
+    "ranged"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "stat": "grace",
+     "dtype": "physical"
+    },
+    {
+     "type": "status",
+     "id": "marked",
+     "turns": 2
+    }
+   ],
+   "desc": "Range 6. 1d8 + Grace and marks the target."
+  },
+  {
+   "id": "e_doodle",
+   "name": "Doodle",
+   "icon": "spiral",
+   "cost": "bonus",
+   "cooldown": 2,
+   "range": 5,
+   "target": "tile",
+   "roll": "none",
+   "tags": [
+    "terrain"
+   ],
+   "tile_effects": [
+    {
+     "type": "terrain",
+     "tile": "unpainted",
+     "radius": 1,
+     "only_on": "floor"
+    }
+   ],
+   "effects": [],
+   "ai_bonus": 2,
+   "desc": "Scribbles over a 3x3 patch: unpainted tiles daze whoever ends a turn there."
+  },
+  {
+   "id": "e_upstage",
+   "name": "Upstage",
+   "icon": "mask",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d10",
+     "stat": "might",
+     "dtype": "physical"
+    }
+   ],
+   "desc": "1d10 + Might."
+  },
+  {
+   "id": "e_mask_gaze",
+   "name": "Blank Stare",
+   "icon": "mask",
+   "cost": "action",
+   "range": 5,
+   "target": "enemy",
+   "roll": "save",
+   "save": "nerve",
+   "stat": "nerve",
+   "tags": [
+    "basic",
+    "spell"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "dtype": "psychic"
+    },
+    {
+     "type": "status",
+     "id": "feared",
+     "turns": 1,
+     "chance": 0.4
+    }
+   ],
+   "desc": "Nerve save: 1d8 psychic, may frighten."
+  },
+  {
+   "id": "e_heap_crush",
+   "name": "Crush",
+   "icon": "fist",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "2d10",
+     "stat": "might",
+     "dtype": "physical"
+    },
+    {
+     "type": "push",
+     "n": 1
+    }
+   ],
+   "desc": "2d10 + Might and a shove."
+  },
+  {
+   "id": "e_shed",
+   "name": "Shed",
+   "icon": "skull",
+   "cost": "bonus",
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "summon"
+   ],
+   "self_effects": [
+    {
+     "type": "summon",
+     "unit": "failed_mini",
+     "count": 1
+    }
+   ],
+   "effects": [],
+   "ai_when": {
+    "summons_below": 5
+   },
+   "desc": "A failed miniature falls off it."
+  },
+  {
+   "id": "e_reabsorb",
+   "name": "Reabsorb",
+   "icon": "mouth",
+   "cost": "action",
+   "cooldown": 2,
+   "range": 0,
+   "target": "self",
+   "area": {
+    "shape": "around_self",
+    "n": 2
+   },
+   "affects": "enemies",
+   "roll": "save",
+   "save": "might",
+   "stat": "might",
+   "tags": [
+    "area",
+    "control"
+   ],
+   "effects": [
+    {
+     "type": "pull",
+     "n": 1
+    },
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "dtype": "physical",
+     "half_on_save": true
+    }
+   ],
+   "desc": "Everything within 2 is dragged 1 closer and takes 1d8 (Might save halves)."
+  },
+  {
+   "id": "e_call_number",
+   "name": "Call a Number",
+   "icon": "ball",
+   "cost": "action",
+   "range": 7,
+   "target": "enemy",
+   "roll": "save",
+   "save": "nerve",
+   "stat": "nerve",
+   "tags": [
+    "basic",
+    "spell",
+    "ranged"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "2d10",
+     "dtype": "psychic"
+    }
+   ],
+   "desc": "Range 7, Nerve save: 2d10 psychic. He reads your number off you."
+  },
+  {
+   "id": "e_eyes_down",
+   "name": "Eyes Down",
+   "icon": "eye",
+   "cost": "action",
+   "cooldown": 3,
+   "range": 0,
+   "target": "self",
+   "area": {
+    "shape": "around_self",
+    "n": 4
+   },
+   "affects": "enemies",
+   "roll": "save",
+   "save": "nerve",
+   "stat": "nerve",
+   "tags": [
+    "area",
+    "control"
+   ],
+   "effects": [
+    {
+     "type": "status",
+     "id": "dazed",
+     "turns": 2
+    },
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "dtype": "psychic"
+    }
+   ],
+   "desc": "Everything within 4: Nerve save or dazed for 2 turns; 1d6 psychic regardless."
+  },
+  {
+   "id": "e_house_rule",
+   "name": "House Rule",
+   "icon": "scroll",
+   "cost": "bonus",
+   "cooldown": 2,
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "rules"
+   ],
+   "self_effects": [
+    {
+     "type": "rule",
+     "rounds": 2,
+     "source": "The House",
+     "mod": {
+      "key": "damage_taken_mult",
+      "op": "mul",
+      "value": 0.7,
+      "when": {
+       "side": "enemy"
+      },
+      "label": "House rule: the house takes 30% less damage"
+     }
+    }
+   ],
+   "effects": [],
+   "ai_bonus": 4,
+   "desc": "For 2 rounds his side takes 30% less damage."
+  },
+  {
+   "id": "e_every_face",
+   "name": "Every Face",
+   "icon": "mask",
+   "cost": "bonus",
+   "cooldown": 2,
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "summon"
+   ],
+   "self_effects": [
+    {
+     "type": "summon",
+     "unit": "mask_echo",
+     "count": 1
+    }
+   ],
+   "effects": [],
+   "ai_when": {
+    "summons_below": 4
+   },
+   "desc": "Another of his faces joins the board."
+  },
+  {
+   "id": "e_last_number",
+   "name": "The Last Number",
+   "icon": "ball",
+   "cost": "action",
+   "cooldown": 2,
+   "windup": 1,
+   "range": 7,
+   "target": "enemy",
+   "area": {
+    "shape": "radius",
+    "n": 2
+   },
+   "affects": "enemies",
+   "roll": "save",
+   "save": "nerve",
+   "stat": "nerve",
+   "tags": [
+    "area",
+    "telegraph"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "5d8",
+     "dtype": "psychic",
+     "half_on_save": true
+    }
+   ],
+   "desc": "Telegraphed: a 5x5 area takes 5d8 psychic next turn."
+  },
+  {
+   "id": "e_eat_board",
+   "name": "Closing Time",
+   "icon": "mouth",
+   "cost": "bonus",
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "terrain"
+   ],
+   "self_effects": [
+    {
+     "type": "consume_tiles",
+     "n": 3,
+     "tile": "void"
+    }
+   ],
+   "effects": [],
+   "ai_bonus": 5,
+   "desc": "Three more tiles of the board go dark."
+  }
+ ]
+}

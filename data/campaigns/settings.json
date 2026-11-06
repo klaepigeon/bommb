@@ -1,0 +1,20 @@
+{
+"settings": [
+ {"id": "drowned", "name": "The Drowned Kingdom", "act_title": "Book I", "desc": "A kingdom that went under with its oaths still on. Wet stone, dark water, broken crowns.",
+  "intro": "Book One. The Drowned Kingdom. Mind the water; it remembers who was standing in it.",
+  "palette": {"floor": "#4a4a42", "floor2": "#3a3e38", "wall": "#2e3430", "accent": "#5a7a6a", "fog": "#0e1614", "light": "#9ab0a0"},
+  "bosses": ["rust_tide_knight", "bloated_magistrate", "v3_the_ferryman"], "elites": ["leech_matron"], "order": 1},
+ {"id": "cathedral", "name": "The Flesh Cathedral", "act_title": "Book II", "desc": "A church that kept growing after the congregation stopped. Bone ribs, warm floors, terrible hymns.",
+  "intro": "Book Two. The Flesh Cathedral. Everything in here heals. That is the problem.",
+  "palette": {"floor": "#5a3a34", "floor2": "#4a2e2a", "wall": "#3a2420", "accent": "#c8b89a", "fog": "#180c0a", "light": "#c89080"},
+  "bosses": ["fraudulent_saint", "choir_of_one", "v3_the_confessor"], "elites": ["weeping_reliquary"], "order": 2},
+ {"id": "iron", "name": "The Iron Frontier", "act_title": "Book III", "desc": "A frontier of failed machines. Rust, rails, steam and things that still clock in.",
+  "intro": "Book Three. The Iron Frontier. The machines still keep shifts. You are not on the rota.",
+  "palette": {"floor": "#4a4038", "floor2": "#3a322c", "wall": "#2a2420", "accent": "#b08a3a", "fog": "#120e0a", "light": "#d0a060"},
+  "bosses": ["duelist_engine", "clockwork_foreman", "v3_the_prospector"], "elites": ["iron_deputy"], "order": 3},
+ {"id": "table", "name": "The End of the Table", "act_title": "Book IV", "desc": "Where the campaign runs out of world and the table starts showing through.",
+  "intro": "Book Four. The End of the Table. I did not finish painting this part. You will forgive me.",
+  "palette": {"floor": "#7a6a52", "floor2": "#6a5a44", "wall": "#3a3026", "accent": "#e8e0c8", "fog": "#0a0806", "light": "#e8d8b0"},
+  "bosses": ["the_house"], "optional_boss": "heap_of_failures", "elites": ["understudy"], "order": 4}
+]
+}

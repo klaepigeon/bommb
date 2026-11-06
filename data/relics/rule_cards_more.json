@@ -1,0 +1,683 @@
+{
+ "rule_cards": [
+  {
+   "id": "rc_blind_mans_bluff",
+   "name": "Blind Man's Bluff",
+   "fights": 3,
+   "desc": "For 3 fights he watches 30% less, but every cheat adds twice as much to the FILE.",
+   "mods": [
+    {
+     "key": "watch_mult",
+     "op": "mul",
+     "value": 0.7
+    },
+    {
+     "key": "cheat_suspicion",
+     "op": "mul",
+     "value": 2.0
+    }
+   ]
+  },
+  {
+   "id": "rc_open_hand",
+   "name": "Open Hand",
+   "fights": 2,
+   "desc": "For 2 fights no cheat can be caught. The FILE fills twice as fast.",
+   "mods": [
+    {
+     "key": "cheat_safe",
+     "op": "set",
+     "value": true
+    },
+    {
+     "key": "cheat_suspicion",
+     "op": "mul",
+     "value": 2.0
+    }
+   ]
+  },
+  {
+   "id": "rc_drinking_game",
+   "name": "Drinking Game",
+   "fights": 3,
+   "desc": "For 3 fights every sip heals every hero 3 and adds 2 to the FILE.",
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "3",
+       "to": "all_heroes"
+      },
+      {
+       "type": "suspicion",
+       "n": 2
+      }
+     ],
+     "label": "Drinking Game",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "rc_even_steven",
+   "name": "Even Steven",
+   "fights": 3,
+   "desc": "For 3 fights a hero's natural 10 empowers them; a natural 5 or lower weakens them.",
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "status",
+       "id": "empowered",
+       "turns": 1,
+       "to": "self"
+      }
+     ],
+     "when": {
+      "side": "hero",
+      "natural": 10
+     },
+     "label": "Even Steven",
+     "quiet": true
+    },
+    {
+     "event": "natural",
+     "when": {
+      "side": "hero",
+      "natural_le": 5
+     },
+     "effects": [
+      {
+       "type": "status",
+       "id": "weakened",
+       "turns": 1,
+       "to": "self"
+      }
+     ],
+     "label": "Even Steven",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "rc_last_mini_standing",
+   "name": "Last Mini Standing",
+   "fights": -1,
+   "desc": "For the rest of the campaign: a hero with no allies next to them deals +3 damage. Heroes next to each other take +1.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 3,
+     "when": {
+      "side": "hero",
+      "alone": true
+     }
+    },
+    {
+     "key": "damage_taken_add",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero",
+      "alone": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "rc_tax_the_house",
+   "name": "Tax the House",
+   "fights": 3,
+   "desc": "For 3 fights every enemy kill pays 6 gold, and every enemy hits 1 harder.",
+   "mods": [
+    {
+     "key": "enemy_damage_add",
+     "op": "add",
+     "value": 1
+    }
+   ],
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 6
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "label": "Taxed",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "rc_no_mercy",
+   "name": "No Mercy",
+   "fights": 2,
+   "desc": "For 2 fights nobody can be healed. Heroes deal +3 damage.",
+   "mods": [
+    {
+     "key": "no_heal",
+     "op": "set",
+     "value": true
+    },
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 3,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rc_slow_dance",
+   "name": "Slow Dance",
+   "fights": 2,
+   "desc": "For 2 fights everyone moves 2 less. Heroes have +2 defense.",
+   "mods": [
+    {
+     "key": "speed",
+     "op": "add",
+     "value": -2
+    },
+    {
+     "key": "defense",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rc_quick_draw",
+   "name": "Quick Draw",
+   "fights": 3,
+   "desc": "For 3 fights heroes get an extra bonus action every turn, and enemies start every fight hasted.",
+   "mods": [
+    {
+     "key": "bonus_actions",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "hasted",
+       "turns": 1,
+       "to": "all_enemies"
+      }
+     ],
+     "label": "Quick Draw",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "rc_lucky_number",
+   "name": "Lucky Number",
+   "fights": -1,
+   "desc": "For the rest of the campaign: a hero's natural 7 is a crit.",
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "extra_action",
+       "kind": "bonus",
+       "to": "self"
+      },
+      {
+       "type": "status",
+       "id": "empowered",
+       "turns": 1,
+       "to": "self"
+      }
+     ],
+     "when": {
+      "side": "hero",
+      "natural": 7
+     },
+     "label": "Lucky Number"
+    }
+   ]
+  },
+  {
+   "id": "rc_bad_light",
+   "name": "Bad Light",
+   "fights": 2,
+   "desc": "For 2 fights everyone has -2 to hit at range. He can't see your hands as well: he watches 20% less.",
+   "mods": [
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": -2,
+     "when": {
+      "ranged": true
+     }
+    },
+    {
+     "key": "watch_mult",
+     "op": "mul",
+     "value": 0.8
+    }
+   ]
+  },
+  {
+   "id": "rc_hand_of_god",
+   "name": "Hand of God",
+   "fights": 2,
+   "desc": "For 2 fights your first roll every turn is a natural 20. Every round he gains 6 FILE.",
+   "triggers": [
+    {
+     "event": "hero_turn",
+     "effects": [
+      {
+       "type": "rig",
+       "side": "hero",
+       "natural": 20
+      },
+      {
+       "type": "suspicion",
+       "n": 6
+      }
+     ],
+     "label": "Hand of God",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "rc_mirror_match",
+   "name": "Mirror Match",
+   "fights": 3,
+   "desc": "For 3 fights enemies have +2 to hit, and so do heroes.",
+   "mods": [
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 2
+    }
+   ]
+  },
+  {
+   "id": "rc_paper_thin",
+   "name": "Paper Thin",
+   "fights": 2,
+   "desc": "For 2 fights everyone has 4 less defense.",
+   "mods": [
+    {
+     "key": "defense",
+     "op": "add",
+     "value": -4
+    }
+   ]
+  },
+  {
+   "id": "rc_heavy_dice",
+   "name": "Heavy Dice",
+   "fights": 3,
+   "desc": "For 3 fights everyone rolls with disadvantage. Crits deal triple dice.",
+   "mods": [
+    {
+     "key": "advantage",
+     "op": "add",
+     "value": -1
+    },
+    {
+     "key": "crit_mult",
+     "op": "set",
+     "value": 3
+    }
+   ]
+  },
+  {
+   "id": "rc_feather_dice",
+   "name": "Feather Dice",
+   "fights": 3,
+   "desc": "For 3 fights everyone rolls with advantage. Nobody crits on less than a natural 20.",
+   "mods": [
+    {
+     "key": "advantage",
+     "op": "add",
+     "value": 1
+    },
+    {
+     "key": "crit_threshold",
+     "op": "set",
+     "value": 20
+    }
+   ]
+  },
+  {
+   "id": "rc_communion",
+   "name": "Communion",
+   "fights": -1,
+   "desc": "For the rest of the campaign: heals heal 50% more. Heroes deal 10% less damage.",
+   "mods": [
+    {
+     "key": "heal_dealt_mult",
+     "op": "add",
+     "value": 0.5
+    },
+    {
+     "key": "damage_dealt_mult",
+     "op": "mul",
+     "value": 0.9,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rc_sudden_rules",
+   "name": "House Rules Are Law",
+   "fights": 3,
+   "desc": "For 3 fights no house rule can be swapped off the rack, but every hero has +1 to hit and saves.",
+   "mods": [
+    {
+     "key": "cheat_suspicion",
+     "op": "set",
+     "value": 999,
+     "when": {
+      "cheat": "swap_rule"
+     }
+    },
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    },
+    {
+     "key": "save_bonus",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rc_first_blood",
+   "name": "First Blood",
+   "fights": 3,
+   "desc": "For 3 fights the first hit each fight deals +10 damage and makes everyone bleed.",
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "damage",
+       "dice": "10",
+       "dtype": "blood",
+       "to": "target"
+      },
+      {
+       "type": "status",
+       "id": "bleeding",
+       "turns": 2,
+       "to": "all_enemies"
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "once": "combat",
+     "label": "First Blood"
+    }
+   ]
+  },
+  {
+   "id": "rc_dead_weight",
+   "name": "Dead Weight",
+   "fights": 3,
+   "desc": "For 3 fights heroes have +2 defense, but every hero who goes down costs 25 gold.",
+   "triggers": [
+    {
+     "event": "ally_down",
+     "effects": [
+      {
+       "type": "gold",
+       "n": -25
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "label": "Dead Weight",
+     "quiet": true
+    }
+   ],
+   "mods": [
+    {
+     "key": "defense",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rc_last_orders",
+   "name": "Last Orders, Please",
+   "fights": 2,
+   "desc": "For 2 fights heroes deal +4 from round 4 on, and nothing before.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 4,
+     "when": {
+      "side": "hero",
+      "round_ge": 4
+     }
+    },
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": -2,
+     "when": {
+      "side": "hero",
+      "round_le": 3
+     }
+    }
+   ]
+  },
+  {
+   "id": "rc_shuffle",
+   "name": "The Shuffle",
+   "fights": 3,
+   "desc": "For 3 fights every round starts with a random enemy and a random hero dazed.",
+   "triggers": [
+    {
+     "event": "round_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "dazed",
+       "turns": 1,
+       "to": "random_enemy"
+      },
+      {
+       "type": "status",
+       "id": "dazed",
+       "turns": 1,
+       "to": "random_hero"
+      }
+     ],
+     "label": "Shuffle",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "rc_iron_rules",
+   "name": "Iron Rules",
+   "fights": -1,
+   "desc": "For the rest of the campaign: every status anyone applies lasts a turn longer.",
+   "mods": [
+    {
+     "key": "status_turns_add",
+     "op": "add",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "rc_whisper",
+   "name": "The Whisper",
+   "fights": 2,
+   "desc": "For 2 fights, peeking can't be caught and costs nothing.",
+   "mods": [
+    {
+     "key": "cheat_safe",
+     "op": "set",
+     "value": true,
+     "when": {
+      "cheat": "peek"
+     }
+    },
+    {
+     "key": "cheat_suspicion",
+     "op": "set",
+     "value": 0,
+     "when": {
+      "cheat": "peek"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rc_bigger_sleeves",
+   "name": "Bigger Sleeves",
+   "fights": -1,
+   "desc": "For the rest of the campaign: two more dice up your sleeve. Palming adds 5 more to the FILE.",
+   "mods": [
+    {
+     "key": "sleeve_size",
+     "op": "add",
+     "value": 2
+    },
+    {
+     "key": "cheat_suspicion",
+     "op": "add",
+     "value": 5,
+     "when": {
+      "cheat": "palm"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rc_ringer",
+   "name": "The Ringer",
+   "fights": 3,
+   "desc": "For 3 fights a cardboard stand-in joins every fight. Enemies have 10% more HP.",
+   "mods": [
+    {
+     "key": "enemy_hp_mult",
+     "op": "mul",
+     "value": 1.1
+    }
+   ],
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "summon",
+       "unit": "cardboard_ally",
+       "side": "hero",
+       "near": "random_hero"
+      }
+     ],
+     "label": "The Ringer",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "rc_glass_jaw",
+   "name": "Glass Jaw",
+   "fights": 2,
+   "desc": "For 2 fights everyone's crits deal no extra dice. Heroes crit on 18-20.",
+   "mods": [
+    {
+     "key": "crit_mult",
+     "op": "set",
+     "value": 1
+    },
+    {
+     "key": "crit_threshold",
+     "op": "set",
+     "value": 18,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rc_double_or_nothing_dice",
+   "name": "Double or Nothing",
+   "fights": 3,
+   "desc": "For 3 fights a hero's natural 20 pays 8 gold; a natural 1 costs 4.",
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 8
+      }
+     ],
+     "when": {
+      "side": "hero",
+      "natural": 20
+     },
+     "label": "Double",
+     "quiet": true
+    },
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "gold",
+       "n": -4
+      }
+     ],
+     "when": {
+      "side": "hero",
+      "natural": 1
+     },
+     "label": "Nothing",
+     "quiet": true
+    }
+   ]
+  }
+ ]
+}

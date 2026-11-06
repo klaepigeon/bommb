@@ -39,82 +39,81 @@ func _ready() -> void:
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
-	var top := UiKit.hbox(4)
-	top.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	top.offset_left = 4
-	top.offset_right = -4
-	top.offset_top = 4
-	top.alignment = BoxContainer.ALIGNMENT_CENTER
-	root.add_child(top)
+	# the character sheets, down the left like his
+	var left := UiKit.vbox(6)
+	left.position = Vector2(12, 96)
+	left.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(left)
 	for i in 4:
 		var c := _card_ui()
-		top.add_child(c.root)
+		left.add_child(c.root)
 		cards.append(c)
-	status_line = UiKit.label("", 12, UiKit.GOLD)
-	status_line.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	status_line.offset_top = 70
-	status_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	# what he says, across the top of the room
+	dialog_text = UiKit.voice("", 34)
+	dialog_text.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	dialog_text.offset_left = -520
+	dialog_text.offset_right = 520
+	dialog_text.offset_top = 14
+	dialog_text.offset_bottom = 110
+	root.add_child(dialog_text)
+	dialog = PanelContainer.new()   # (kept for API; the voice has no box)
+	status_line = UiKit.label("", 12, UiKit.CREAM)
+	status_line.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	status_line.offset_left = -360
+	status_line.offset_right = -16
+	status_line.offset_top = 10
+	status_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	status_line.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+	status_line.add_theme_constant_override("outline_size", 6)
 	status_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(status_line)
-	dialog = UiKit.panel()
-	dialog.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
-	dialog.offset_left = 6
-	dialog.offset_bottom = -6
-	dialog.offset_top = -74
-	dialog.offset_right = 380
-	root.add_child(dialog)
-	var dv := UiKit.vbox(2)
-	dialog.add_child(dv)
-	dv.add_child(UiKit.label("THE CALLER", 11, UiKit.HOT, true))
-	dialog_text = UiKit.label("", 14)
-	dialog_text.custom_minimum_size = Vector2(360, 40)
-	dv.add_child(dialog_text)
-	toast_box = UiKit.vbox(3)
+	toast_box = UiKit.vbox(4)
 	toast_box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	toast_box.offset_top = 88
-	toast_box.offset_left = -200
-	toast_box.offset_right = 200
+	toast_box.offset_top = 118
+	toast_box.offset_left = -330
+	toast_box.offset_right = 330
 	toast_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(toast_box)
 	actions = UiKit.vbox(6)
 	actions.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
-	actions.offset_right = -8
-	actions.offset_bottom = -8
-	actions.offset_left = -190
-	actions.offset_top = -240
+	actions.offset_right = -14
+	actions.offset_bottom = -14
+	actions.offset_left = -330
+	actions.offset_top = -470
 	actions.alignment = BoxContainer.ALIGNMENT_END
 	root.add_child(actions)
-	chambers = UiKit.label("", 18, UiKit.GOLD, true)
+	chambers = UiKit.voice("", 30)
 	chambers.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	chambers.offset_top = -110
-	chambers.offset_left = -120
-	chambers.offset_right = 120
-	chambers.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	chambers.offset_top = -120
+	chambers.offset_bottom = -20
+	chambers.offset_left = -260
+	chambers.offset_right = 260
 	root.add_child(chambers)
 	stick = TouchStick.new()
+	stick.custom_minimum_size = Vector2(220, 220)
 	stick.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
-	stick.offset_left = 20
-	stick.offset_top = -210
-	stick.offset_bottom = -90
-	stick.offset_right = 140
+	stick.offset_left = 30
+	stick.offset_top = -260
+	stick.offset_bottom = -40
+	stick.offset_right = 250
 	stick.visible = false
 	root.add_child(stick)
 	modal = UiKit.panel()
 	modal.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	modal.offset_left = -170
-	modal.offset_right = 170
-	modal.offset_top = -100
-	modal.offset_bottom = 60
+	modal.offset_left = -320
+	modal.offset_right = 320
+	modal.offset_top = -160
+	modal.offset_bottom = 120
 	modal.visible = false
 	root.add_child(modal)
-	modal_box = UiKit.vbox(6)
+	modal_box = UiKit.vbox(8)
 	modal.add_child(modal_box)
 	card = UiKit.panel()
 	card.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	card.offset_left = -210
-	card.offset_right = 210
-	card.offset_top = -120
-	card.offset_bottom = 90
+	card.offset_left = -360
+	card.offset_right = 360
+	card.offset_top = -200
+	card.offset_bottom = 180
 	card.visible = false
 	root.add_child(card)
 	card_box = UiKit.vbox(6)
@@ -122,13 +121,13 @@ func _ready() -> void:
 
 
 func _card_ui() -> Dictionary:
-	var p := UiKit.panel()
-	p.custom_minimum_size = Vector2(150, 60)
+	var p := UiKit.card()
+	p.custom_minimum_size = Vector2(290, 0)
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var h := UiKit.hbox(4)
+	var h := UiKit.hbox(8)
 	p.add_child(h)
 	var face := TextureRect.new()
-	face.custom_minimum_size = Vector2(32, 40)
+	face.custom_minimum_size = Vector2(40, 50)
 	face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	face.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	face.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -136,14 +135,12 @@ func _card_ui() -> Dictionary:
 	var v := UiKit.vbox(0)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	h.add_child(v)
-	var nm := UiKit.label("", 12, UiKit.INK)
-	nm.autowrap_mode = TextServer.AUTOWRAP_OFF
+	var nm := UIKit.label("", 21, UiKit.HOT, true)
 	nm.clip_text = true
-	var line := UiKit.label("", 11, UiKit.GOLD)
-	line.autowrap_mode = TextServer.AUTOWRAP_OFF
-	var hurt := UiKit.label("", 9, Color("ff8a8a"))
-	hurt.autowrap_mode = TextServer.AUTOWRAP_OFF
+	var line := UIKit.label("", 15, UiKit.INK)
+	var hurt := UIKit.label("", 13, Color("7a1a12"))
 	hurt.clip_text = true
+	hurt.custom_minimum_size = Vector2(200, 0)
 	v.add_child(nm)
 	v.add_child(line)
 	v.add_child(hurt)
@@ -171,14 +168,14 @@ func _fill_card(c: Dictionary, p: Dictionary, v: Dictionary) -> void:
 	(c.face as TextureRect).texture = Assets.face_texture(int(p.face))
 	var turn: bool = int(v.turn.get("seat", -1)) == int(p.seat) and v.phase == "turn"
 	c.name.text = ("> " if turn else "") + str(p.name) + ("  (YOU)" if local.has(int(p.seat)) and local.size() == 1 else "")
-	c.name.add_theme_color_override("font_color", (p.color as Color).lightened(0.35) if p.alive else UiKit.DIM)
+	c.name.add_theme_color_override("font_color", UiKit.HOT if p.alive else UiKit.DIM)
 	if not p.alive:
 		c.line.text = "OUT (%s)" % str(p.death).to_upper()
 		c.hurt.text = ""
 		(c.root as Control).modulate = Color(0.6, 0.6, 0.6)
 		return
 	(c.root as Control).modulate = Color.WHITE
-	var bits := ["T %d" % int(p.tickets), "items %d" % int(p.item_count)]
+	var bits := ["%d tickets" % int(p.tickets), "%d items" % int(p.item_count)]
 	if p.has_key:
 		bits.append("KEY")
 	if p.helmet:
@@ -192,8 +189,8 @@ func _fill_card(c: Dictionary, p: Dictionary, v: Dictionary) -> void:
 	for part in Body.PARTS:
 		var s: String = p.body[part].s
 		if s != "ok":
-			hurts.append(_short(part) + ":" + s.substr(0, 4))
-	c.hurt.text = " ".join(hurts) if not hurts.is_empty() else "in one piece"
+			hurts.append(_short(part) + " " + s.substr(0, 4))
+	c.hurt.text = ("pins: " + ", ".join(hurts)) if not hurts.is_empty() else "not a pin in it"
 
 
 func _short(part: String) -> String:
@@ -227,7 +224,7 @@ func _status(v: Dictionary) -> void:
 		var row := ""
 		for i in int(mg.chambers):
 			row += ("x " if i < int(mg.clicks) else "o ")
-		chambers.text = row + "\n%d IN THE DRUM" % int(mg.loaded)
+		chambers.text = row + "\n%d in the drum" % int(mg.loaded)
 
 
 ## Who on this device has something to do right now, and the buttons for it.
@@ -241,7 +238,7 @@ func _actions(v: Dictionary) -> void:
 	modal.visible = false
 	var phase := str(v.phase)
 	if phase in ["intro", "mg_intro", "mg_results"]:
-		actions.add_child(UiKit.button("READY", func():
+		actions.add_child(UiKit.primary("READY", func():
 			for s in local:
 				act.emit(s, {"t": "ready"})))
 		return
@@ -312,7 +309,7 @@ func _board_actions(s: int, me: Dictionary, v: Dictionary) -> void:
 		actions.add_child(UiKit.button("GIVE ITEM", func(): menu_mode = "give_item"))
 	if int(me.clue_count) > 0:
 		actions.add_child(UiKit.button("TELL EVERYONE", func(): act.emit(s, {"t": "share"})))
-	var b := UiKit.button("ROLL  (1-%d)" % Body.dice_max(me.body, int(me.painkillers) > 0), func(): act.emit(s, {"t": "roll"}), 56)
+	var b := UiKit.primary("ROLL  (1-%d)" % Body.dice_max(me.body, int(me.painkillers) > 0), func(): act.emit(s, {"t": "roll"}), 52)
 	actions.add_child(b)
 	b.grab_focus.call_deferred()
 
@@ -338,7 +335,7 @@ func _roulette_actions(s: int, v: Dictionary) -> void:
 	var me: Dictionary = v.players[s]
 	var mg: Dictionary = v.mg
 	if mg.peeks.has(s):
-		actions.add_child(UiKit.label("YOU PEEKED: " + ("IT'S LOADED" if mg.peeks[s] else "EMPTY"), 14, UiKit.GOLD))
+		actions.add_child(UiKit.label("YOU PEEKED: " + ("IT'S LOADED" if mg.peeks[s] else "EMPTY"), 14, UiKit.CREAM))
 	if menu_mode == "mirror":
 		for p in v.players:
 			if p.alive and int(p.seat) != s:
@@ -354,7 +351,7 @@ func _roulette_actions(s: int, v: Dictionary) -> void:
 			else:
 				actions.add_child(UiKit.button(Items.name_of(it), func(): act.emit(s, {"t": "mg", "do": "item", "id": it})))
 	actions.add_child(UiKit.button("put it down", func(): act.emit(s, {"t": "mg", "do": "lower"}), 32))
-	var b := UiKit.button("PULL THE STRING", func(): act.emit(s, {"t": "mg", "do": "pull"}), 56)
+	var b := UiKit.primary("PULL THE STRING", func(): act.emit(s, {"t": "mg", "do": "pull"}), 52)
 	actions.add_child(b)
 	b.grab_focus.call_deferred()
 
@@ -386,14 +383,14 @@ func _cards(v: Dictionary) -> void:
 		"mg_intro":
 			var mg: Dictionary = v.mg
 			card.visible = true
-			card_box.add_child(UiKit.label(str(mg.title), 26, UiKit.GOLD, true))
+			card_box.add_child(UiKit.label(str(mg.title), 26, UiKit.HOT, true))
 			for line in mg.instructions:
 				card_box.add_child(UiKit.label("- " + str(line), 15))
 			if v.mg_id == "musical_chairs":
 				card_box.add_child(UiKit.label("Move: stick / WASD / arrows / d-pad", 11, UiKit.DIM))
 		"mg_results":
 			card.visible = true
-			card_box.add_child(UiKit.label("RESULTS", 24, UiKit.GOLD, true))
+			card_box.add_child(UiKit.label("RESULTS", 24, UiKit.HOT, true))
 			for p in v.players:
 				var won := int(v.mg.get("tickets", {}).get(int(p.seat), 0))
 				card_box.add_child(UiKit.label("%s   %s   tickets %d (%+d)" % [p.name, "ALIVE" if p.alive else "OUT", int(p.tickets), won], 14,
@@ -402,8 +399,8 @@ func _cards(v: Dictionary) -> void:
 			pass
 		"ending":
 			card.visible = true
-			card.offset_top = -150
-			card.offset_bottom = 140
+			card.offset_top = -250
+			card.offset_bottom = 230
 			var esc: bool = v.ending == "escape"
 			card_box.add_child(UiKit.label("YOU GOT OUT" if esc else "TOTAL ELIMINATION", 28, UiKit.TEAL if esc else UiKit.HOT, true))
 			card_box.add_child(UiKit.label("The door was never painted on." if esc else "Nobody went home. Nobody ever does.", 15))
@@ -430,8 +427,10 @@ func say(text: String) -> void:
 
 
 func toast(text: String, private := false) -> void:
-	var l := UiKit.label(text, 13, UiKit.TEAL if private else UiKit.INK)
-	var p := UiKit.panel()
+	var l := UIKit.label(text, 17, UiKit.CREAM if not private else Color("e8c060"), false, true)
+	l.add_theme_font_override("font", UIKit.ital_font)
+	l.custom_minimum_size = Vector2(600, 0)
+	var p := UiKit.dark()
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	p.add_child(l)
 	toast_box.add_child(p)
@@ -439,6 +438,6 @@ func toast(text: String, private := false) -> void:
 		toast_box.get_child(0).queue_free()
 		toast_box.remove_child(toast_box.get_child(0))
 	var tw := p.create_tween()
-	tw.tween_interval(5.0 if private else 3.5)
+	tw.tween_interval(6.0 if private else 4.0)
 	tw.tween_property(p, "modulate:a", 0.0, 0.5)
 	tw.tween_callback(p.queue_free)

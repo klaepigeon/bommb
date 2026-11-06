@@ -15,6 +15,8 @@ func _ready() -> void:
 	Audio.muted = true
 	var t0 := Time.get_ticks_msec()
 	var tests := ["body", "items", "full_matches", "hot_potato_defuse", "roulette_void", "chairs_hazards", "escape_path", "disconnect", "views_hide_secrets"]
+	if args.has("only") and not tests.has(args.only):
+		tests = [args.only]
 	for t in tests:
 		if args.has("only") and args.only != t:
 			continue
@@ -218,7 +220,7 @@ func test_chairs_hazards() -> void:
 func test_escape_path() -> void:
 	# Everyone cooperative: the escape should be reachable by the AI on its own.
 	var escapes := 0
-	var n := int(args.get("seeds", "40"))
+	var n := maxi(40, int(args.get("seeds", "40")))   # seeded: the same 40 tables every run
 	for i in n:
 		var core := MatchCore.new()
 		core.fast = true
@@ -257,3 +259,42 @@ func test_views_hide_secrets() -> void:
 	check(int(v.players[1].clue_count) == 1, "but you can see that they found something")
 	var v1 := core.view_for([1])
 	check(v1.players[1].clues.has(0), "your own clues are yours")
+
+
+## Where cooperative tables get stuck on the way out (diagnostic: --only=escape_funnel).
+func test_escape_funnel() -> void:
+	var n := int(args.get("seeds", "40"))
+	var st := {"defused": 0, "code_shared": 0, "key_alive": 0, "all_at_door": 0, "door_phase": 0, "escape": 0}
+	for i in n:
+		var core := MatchCore.new()
+		core.fast = true
+		var s := seats4()
+		for k in 4:
+			s[k].ai = {"coop": 0.95, "perception": 0.9}
+		core.setup(s, 5000 + i)
+		var seen := {}
+		var t := 0.0
+		while core.ending == "" and t < 3000.0:
+			core.tick(0.05)
+			for e in core.take_events():
+				if e.e == "mg" and e.get("k", "") == "defused":
+					seen.defused = true
+				if e.e == "door":
+					seen.door_phase = true
+			if core.shared_code.size() == 3:
+				seen.code_shared = true
+			for p in core.players:
+				if p.alive and p.has_key:
+					seen.key_alive = true
+			var everyone := core.living().size() >= 2
+			for q in core.living():
+				if not core.p(q).at_door:
+					everyone = false
+			if everyone:
+				seen.all_at_door = true
+			t += 0.05
+		if core.ending == "escape":
+			seen.escape = true
+		for k in seen:
+			st[k] += 1
+	print("escape funnel over %d cooperative tables: %s" % [n, st])

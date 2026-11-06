@@ -1,0 +1,1092 @@
+{
+ "enemies": [
+  {
+   "id": "choir_echo",
+   "name": "Echo",
+   "role": "summon",
+   "setting": "cathedral",
+   "hp": 8,
+   "defense": 11,
+   "speed": 4,
+   "nerve": 2,
+   "abilities": [
+    "e_echo_shriek"
+   ],
+   "ai": "archer",
+   "tags": [
+    "cathedral",
+    "summon",
+    "explosive"
+   ],
+   "tier": 0,
+   "gold": 0,
+   "xp": 0,
+   "on_death": [
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "dtype": "psychic",
+     "to": "adjacent_foes"
+    }
+   ],
+   "model": {
+    "body": "robed",
+    "color": "#c8c0b0",
+    "accent": "#5a1a1a",
+    "head": "mask",
+    "h": 0.85,
+    "ghost": true
+   },
+   "death": "burst",
+   "desc": "One part of the choir. Bursts into noise when it dies, hurting whoever is next to it."
+  },
+  {
+   "id": "rivet_hound",
+   "name": "Rivet Hound",
+   "role": "melee",
+   "setting": "iron",
+   "hp": 13,
+   "defense": 13,
+   "speed": 6,
+   "might": 2,
+   "grace": 2,
+   "abilities": [
+    "e_rivet_bite"
+   ],
+   "ai": "ambusher",
+   "tags": [
+    "iron",
+    "construct"
+   ],
+   "resist": [
+    "poison"
+   ],
+   "vulnerable": [
+    "shock"
+   ],
+   "immune": [
+    "bleeding",
+    "poisoned"
+   ],
+   "tier": 1,
+   "gold": 3,
+   "xp": 2,
+   "model": {
+    "body": "quadruped",
+    "color": "#5a5450",
+    "accent": "#b08a3a",
+    "h": 0.6
+   },
+   "death": "crumble",
+   "desc": "Fast. Hunts whoever stands alone. Machines don't bleed."
+  },
+  {
+   "id": "steam_gunner",
+   "name": "Steam Gunner",
+   "role": "ranged",
+   "setting": "iron",
+   "hp": 13,
+   "defense": 13,
+   "speed": 3,
+   "grace": 2,
+   "abilities": [
+    "e_steam_shot",
+    "e_full_pressure"
+   ],
+   "ai": "archer",
+   "tags": [
+    "iron",
+    "construct"
+   ],
+   "immune": [
+    "bleeding",
+    "poisoned"
+   ],
+   "vulnerable": [
+    "shock"
+   ],
+   "tier": 1,
+   "gold": 4,
+   "xp": 2,
+   "model": {
+    "body": "construct",
+    "color": "#6a5a4a",
+    "accent": "#3a3a36",
+    "head": "bucket",
+    "weapon": "gun",
+    "h": 1.0
+   },
+   "death": "crumble",
+   "desc": "Shoots. Every few rounds it builds up Full Pressure: a telegraphed blast down a line. Get out of the line."
+  },
+  {
+   "id": "boiler_golem",
+   "name": "Boiler Golem",
+   "role": "defender",
+   "setting": "iron",
+   "hp": 28,
+   "defense": 15,
+   "speed": 3,
+   "might": 3,
+   "abilities": [
+    "e_boiler_slam",
+    "e_vent"
+   ],
+   "ai": "defender",
+   "tags": [
+    "iron",
+    "construct",
+    "zoc",
+    "explosive"
+   ],
+   "resist": [
+    "physical",
+    "fire"
+   ],
+   "vulnerable": [
+    "cold"
+   ],
+   "immune": [
+    "bleeding",
+    "poisoned"
+   ],
+   "tier": 2,
+   "gold": 5,
+   "xp": 3,
+   "on_death": [
+    {
+     "type": "damage",
+     "dice": "2d6",
+     "dtype": "fire",
+     "to": "near_foes"
+    },
+    {
+     "type": "terrain",
+     "tile": "steam",
+     "radius": 1,
+     "only_on": "floor"
+    }
+   ],
+   "model": {
+    "body": "hulk",
+    "color": "#5a3a2a",
+    "accent": "#b08a3a",
+    "head": "bucket",
+    "h": 1.2
+   },
+   "death": "burst",
+   "desc": "Armoured and hot. Resists blades and fire; cold cracks it. It explodes when it dies, scalding anyone within 2."
+  },
+  {
+   "id": "lamp_tinker",
+   "name": "Lamp Tinker",
+   "role": "controller",
+   "setting": "iron",
+   "hp": 12,
+   "defense": 12,
+   "speed": 4,
+   "wits": 2,
+   "abilities": [
+    "e_spark",
+    "e_build_cover",
+    "e_live_wire"
+   ],
+   "ai": "controller",
+   "tags": [
+    "iron"
+   ],
+   "tier": 2,
+   "gold": 5,
+   "xp": 3,
+   "model": {
+    "body": "humanoid",
+    "color": "#4a4a3a",
+    "accent": "#e8c060",
+    "head": "bucket",
+    "weapon": "wrench",
+    "h": 0.9
+   },
+   "death": "collapse",
+   "desc": "Builds crates for its friends to hide behind and electrifies the floor."
+  },
+  {
+   "id": "counting_machine",
+   "name": "Counting Machine",
+   "role": "rules",
+   "setting": "iron",
+   "hp": 20,
+   "defense": 14,
+   "speed": 0,
+   "might": 3,
+   "abilities": [
+    "e_tally"
+   ],
+   "ai": "static",
+   "tags": [
+    "iron",
+    "construct",
+    "immovable"
+   ],
+   "vulnerable": [
+    "shock"
+   ],
+   "immune": [
+    "bleeding",
+    "poisoned"
+   ],
+   "tier": 2,
+   "gold": 6,
+   "xp": 3,
+   "triggers": [
+    {
+     "event": "die_rolled",
+     "listen": true,
+     "effects": [
+      {
+       "type": "step",
+       "n": 1,
+       "to": "self"
+      }
+     ],
+     "quiet": true,
+     "label": "Click"
+    }
+   ],
+   "model": {
+    "body": "construct",
+    "color": "#8a7a5a",
+    "accent": "#2a2a2a",
+    "head": "eye",
+    "h": 0.9
+   },
+   "death": "crumble",
+   "desc": "It never moves on its own. Every time anyone rolls a die, it clicks one tile closer. Every roll. Yours too."
+  },
+  {
+   "id": "scrap_mite",
+   "name": "Scrap Mite",
+   "role": "explosive",
+   "setting": "iron",
+   "hp": 6,
+   "defense": 12,
+   "speed": 5,
+   "grace": 2,
+   "abilities": [
+    "e_mite_pop"
+   ],
+   "ai": "bomber",
+   "tags": [
+    "iron",
+    "construct",
+    "explosive"
+   ],
+   "immune": [
+    "bleeding",
+    "poisoned"
+   ],
+   "tier": 1,
+   "gold": 1,
+   "xp": 1,
+   "model": {
+    "body": "crawler",
+    "color": "#7a6a5a",
+    "accent": "#e8582a",
+    "h": 0.45
+   },
+   "death": "burst",
+   "desc": "Runs at you and goes off. Shoot it first."
+  },
+  {
+   "id": "iron_deputy",
+   "name": "The Iron Deputy",
+   "role": "elite",
+   "elite": true,
+   "setting": "iron",
+   "hp": 52,
+   "defense": 15,
+   "speed": 4,
+   "grace": 3,
+   "might": 2,
+   "abilities": [
+    "e_deputy_shot",
+    "e_high_noon",
+    "e_lasso"
+   ],
+   "ai": "archer",
+   "tags": [
+    "iron",
+    "construct",
+    "elite"
+   ],
+   "resist": [
+    "physical"
+   ],
+   "vulnerable": [
+    "shock"
+   ],
+   "immune": [
+    "bleeding",
+    "poisoned"
+   ],
+   "tier": 3,
+   "gold": 15,
+   "xp": 6,
+   "model": {
+    "body": "knight",
+    "color": "#5a5a52",
+    "accent": "#c8a040",
+    "head": "greathelm",
+    "weapon": "gun",
+    "h": 1.25
+   },
+   "death": "crumble",
+   "desc": "Draws slowly and never misses the appointment: High Noon is announced three turns ahead and hits every tile in a cross. Be elsewhere."
+  }
+ ],
+ "bosses": [
+  {
+   "id": "duelist_engine",
+   "name": "The Duelist Engine",
+   "boss": true,
+   "setting": "iron",
+   "size": 2,
+   "hp": 115,
+   "defense": 16,
+   "speed": 4,
+   "grace": 4,
+   "might": 2,
+   "abilities": [
+    "e_quickdraw",
+    "e_fan_hammer",
+    "e_step_back"
+   ],
+   "ai": "boss",
+   "tags": [
+    "iron",
+    "boss",
+    "construct",
+    "immovable"
+   ],
+   "resist": [
+    "physical"
+   ],
+   "vulnerable": [
+    "shock"
+   ],
+   "immune": [
+    "bleeding",
+    "poisoned"
+   ],
+   "gold": 40,
+   "xp": 14,
+   "triggers": [
+    {
+     "event": "round_start",
+     "listen": true,
+     "effects": [
+      {
+       "type": "save_or",
+       "save": "grace",
+       "dc": 14,
+       "label": "The Duel (Grace save)",
+       "to": "random_hero",
+       "fail": [
+        {
+         "type": "damage",
+         "dice": "2d8",
+         "dtype": "physical"
+        }
+       ],
+       "pass": [
+        {
+         "type": "status",
+         "id": "exposed",
+         "turns": 1,
+         "to": "self"
+        },
+        {
+         "type": "status",
+         "id": "inspired",
+         "turns": 2
+        }
+       ]
+      }
+     ],
+     "label": "The Duelist calls someone out"
+    }
+   ],
+   "model": {
+    "body": "tall",
+    "color": "#4a3a2a",
+    "accent": "#c8a040",
+    "head": "bucket",
+    "weapon": "gun",
+    "h": 1.8
+   },
+   "death": "crumble",
+   "intro": "It has been waiting at the end of the street since the street was built. It only ever wants one thing.",
+   "desc": "Every round it calls out a random hero: a Grace save (DC 14). Fail and take 2d8. Win and the Engine is exposed for a round and your hero is inspired.",
+   "phases": [
+    {
+     "below": 0.5,
+     "name": "Best of Three",
+     "say": "It reloads. It has decided this will go to three.",
+     "on_enter": [
+      {
+       "type": "rule",
+       "rounds": 99,
+       "source": "The Duelist",
+       "mod": {
+        "key": "crit_threshold",
+        "op": "set",
+        "value": 18,
+        "priority": 2,
+        "when": {
+         "side": "enemy"
+        },
+        "label": "Best of Three: the Duelist crits on 18-20"
+       }
+      }
+     ]
+    }
+   ],
+   "reward": "relic_glove",
+   "persona": "duelist"
+  },
+  {
+   "id": "clockwork_foreman",
+   "name": "The Clockwork Foreman",
+   "boss": true,
+   "setting": "iron",
+   "size": 2,
+   "hp": 125,
+   "defense": 15,
+   "speed": 3,
+   "might": 4,
+   "wits": 2,
+   "abilities": [
+    "e_foreman_hammer",
+    "e_overtime",
+    "e_clock_out",
+    "e_call_shift"
+   ],
+   "ai": "boss",
+   "tags": [
+    "iron",
+    "boss",
+    "construct",
+    "immovable",
+    "zoc"
+   ],
+   "resist": [
+    "physical",
+    "fire"
+   ],
+   "vulnerable": [
+    "cold"
+   ],
+   "immune": [
+    "bleeding",
+    "poisoned"
+   ],
+   "gold": 40,
+   "xp": 14,
+   "model": {
+    "body": "hulk",
+    "color": "#6a4a2a",
+    "accent": "#e8c060",
+    "head": "bucket",
+    "weapon": "hammer",
+    "h": 1.9
+   },
+   "death": "burst",
+   "intro": "He runs the line. He decides when you clock in and when you clock out. He decides how many hands you get.",
+   "desc": "Rewrites the action economy: Overtime gives every enemy an extra action next round; Clock Out takes your heroes' bonus actions for a round. He calls in shifts of workers.",
+   "phases": [
+    {
+     "below": 0.5,
+     "name": "Double Shift",
+     "say": "The whistle blows twice. Everyone on his side works through lunch.",
+     "on_enter": [
+      {
+       "type": "rule",
+       "rounds": 99,
+       "source": "The Foreman",
+       "mod": {
+        "key": "speed",
+        "op": "add",
+        "value": 1,
+        "when": {
+         "side": "enemy"
+        },
+        "label": "Double Shift: enemies move 1 further"
+       }
+      },
+      {
+       "type": "summon",
+       "unit": "scrap_mite",
+       "count": 2
+      }
+     ]
+    }
+   ],
+   "reward": "relic_timecard",
+   "persona": "foreman"
+  }
+ ],
+ "abilities": [
+  {
+   "id": "e_rivet_bite",
+   "name": "Rivet Bite",
+   "icon": "fang",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "stat": "might",
+     "dtype": "physical"
+    }
+   ],
+   "desc": "1d8 + Might. Extra keen on isolated targets."
+  },
+  {
+   "id": "e_steam_shot",
+   "name": "Steam Shot",
+   "icon": "bolt",
+   "cost": "action",
+   "range": 6,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "grace",
+   "tags": [
+    "basic",
+    "attack",
+    "ranged"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "stat": "grace",
+     "dtype": "physical"
+    }
+   ],
+   "desc": "Range 6. 1d8 + Grace."
+  },
+  {
+   "id": "e_full_pressure",
+   "name": "Full Pressure",
+   "icon": "wave",
+   "cost": "action",
+   "cooldown": 3,
+   "windup": 1,
+   "range": 7,
+   "target": "enemy",
+   "area": {
+    "shape": "line",
+    "n": 7
+   },
+   "affects": "all",
+   "roll": "save",
+   "save": "grace",
+   "stat": "grace",
+   "tags": [
+    "area",
+    "telegraph"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "3d6",
+     "dtype": "fire",
+     "half_on_save": true
+    },
+    {
+     "type": "push",
+     "n": 1
+    }
+   ],
+   "desc": "Telegraphed: a scalding blast down a 7-tile line next turn."
+  },
+  {
+   "id": "e_boiler_slam",
+   "name": "Boiler Slam",
+   "icon": "fist",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d10",
+     "stat": "might",
+     "dtype": "physical"
+    },
+    {
+     "type": "push",
+     "n": 1
+    }
+   ],
+   "desc": "1d10 + Might and a shove."
+  },
+  {
+   "id": "e_vent",
+   "name": "Vent",
+   "icon": "wave",
+   "cost": "bonus",
+   "cooldown": 3,
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "terrain"
+   ],
+   "tile_effects": [
+    {
+     "type": "terrain",
+     "tile": "steam",
+     "radius": 1,
+     "only_on": "floor"
+    }
+   ],
+   "self_effects": [
+    {
+     "type": "status",
+     "id": "guarded",
+     "turns": 1
+    }
+   ],
+   "effects": [],
+   "ai_bonus": 2,
+   "desc": "Vents steam onto the floor around it and braces."
+  },
+  {
+   "id": "e_spark",
+   "name": "Spark",
+   "icon": "bolt",
+   "cost": "action",
+   "range": 5,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "wits",
+   "tags": [
+    "basic",
+    "attack",
+    "ranged",
+    "spell"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d8",
+     "dtype": "shock"
+    }
+   ],
+   "desc": "Range 5. 1d8 shock."
+  },
+  {
+   "id": "e_build_cover",
+   "name": "Knock Up a Crate",
+   "icon": "wall",
+   "cost": "action",
+   "cooldown": 2,
+   "range": 3,
+   "target": "empty",
+   "roll": "none",
+   "tags": [
+    "terrain"
+   ],
+   "tile_effects": [
+    {
+     "type": "terrain",
+     "tile": "crate"
+    }
+   ],
+   "effects": [],
+   "ai_bonus": 3,
+   "desc": "Builds a crate on an empty tile: cover for its friends."
+  },
+  {
+   "id": "e_live_wire",
+   "name": "Live Wire",
+   "icon": "bolt",
+   "cost": "action",
+   "cooldown": 3,
+   "range": 5,
+   "target": "tile",
+   "roll": "none",
+   "tags": [
+    "terrain"
+   ],
+   "tile_effects": [
+    {
+     "type": "terrain",
+     "tile": "shock",
+     "shape": "cross",
+     "only_on": "floor"
+    }
+   ],
+   "effects": [],
+   "ai_bonus": 3,
+   "desc": "Electrifies a cross of floor tiles."
+  },
+  {
+   "id": "e_tally",
+   "name": "Tally",
+   "icon": "cog",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "2d6",
+     "stat": "might",
+     "dtype": "physical"
+    }
+   ],
+   "desc": "2d6 + Might to anything it has counted its way up to."
+  },
+  {
+   "id": "e_mite_pop",
+   "name": "Pop",
+   "icon": "skull",
+   "cost": "action",
+   "range": 0,
+   "target": "self",
+   "area": {
+    "shape": "around_self",
+    "n": 1
+   },
+   "affects": "all",
+   "roll": "save",
+   "save": "grace",
+   "stat": "grace",
+   "tags": [
+    "area"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "2d6",
+     "dtype": "fire",
+     "half_on_save": true
+    }
+   ],
+   "self_effects": [
+    {
+     "type": "self_damage",
+     "n": 999
+    }
+   ],
+   "self_ok": true,
+   "ai_bonus": 4,
+   "desc": "Explodes: 2d6 fire to everything adjacent (Grace save halves)."
+  },
+  {
+   "id": "e_deputy_shot",
+   "name": "Six-Shooter",
+   "icon": "bolt",
+   "cost": "action",
+   "range": 7,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "grace",
+   "tags": [
+    "basic",
+    "attack",
+    "ranged"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d10",
+     "stat": "grace",
+     "dtype": "physical"
+    }
+   ],
+   "desc": "Range 7. 1d10 + Grace."
+  },
+  {
+   "id": "e_high_noon",
+   "name": "High Noon",
+   "icon": "sun",
+   "cost": "action",
+   "cooldown": 4,
+   "windup": 3,
+   "range": 7,
+   "target": "tile",
+   "area": {
+    "shape": "cross",
+    "n": 1
+   },
+   "affects": "enemies",
+   "roll": "save",
+   "save": "grace",
+   "stat": "grace",
+   "tags": [
+    "area",
+    "telegraph"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "6d6",
+     "dtype": "physical",
+     "half_on_save": true
+    }
+   ],
+   "desc": "Announced three turns ahead: 6d6 on a cross of tiles."
+  },
+  {
+   "id": "e_lasso",
+   "name": "Lasso",
+   "icon": "hook",
+   "cost": "bonus",
+   "cooldown": 2,
+   "range": 4,
+   "target": "enemy",
+   "roll": "save",
+   "save": "might",
+   "stat": "grace",
+   "tags": [
+    "control"
+   ],
+   "effects": [
+    {
+     "type": "pull",
+     "n": 2
+    },
+    {
+     "type": "status",
+     "id": "rooted",
+     "turns": 1
+    }
+   ],
+   "desc": "Might save or dragged 2 closer and rooted."
+  },
+  {
+   "id": "e_quickdraw",
+   "name": "Quickdraw",
+   "icon": "bolt",
+   "cost": "action",
+   "range": 7,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "grace",
+   "bonus": 1,
+   "tags": [
+    "basic",
+    "attack",
+    "ranged",
+    "point_blank"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "2d8",
+     "stat": "grace",
+     "dtype": "physical"
+    }
+   ],
+   "desc": "Range 7. 2d8 + Grace. No penalty up close."
+  },
+  {
+   "id": "e_fan_hammer",
+   "name": "Fan the Hammer",
+   "icon": "bolt",
+   "cost": "action",
+   "cooldown": 2,
+   "range": 5,
+   "target": "enemy",
+   "area": {
+    "shape": "cone",
+    "n": 5
+   },
+   "affects": "enemies",
+   "roll": "attack",
+   "stat": "grace",
+   "tags": [
+    "attack",
+    "ranged",
+    "area"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d10",
+     "dtype": "physical"
+    }
+   ],
+   "desc": "Every enemy in a cone: 1d10."
+  },
+  {
+   "id": "e_step_back",
+   "name": "Ten Paces",
+   "icon": "feather",
+   "cost": "bonus",
+   "cooldown": 2,
+   "range": 4,
+   "target": "empty",
+   "roll": "none",
+   "tags": [
+    "move"
+   ],
+   "tile_effects": [
+    {
+     "type": "teleport"
+    }
+   ],
+   "effects": [],
+   "ai_bonus": 1,
+   "desc": "Steps back to a better distance."
+  },
+  {
+   "id": "e_foreman_hammer",
+   "name": "Rivet Hammer",
+   "icon": "mace",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack",
+    "melee"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "2d8",
+     "stat": "might",
+     "dtype": "physical"
+    },
+    {
+     "type": "status",
+     "id": "dazed",
+     "turns": 1
+    }
+   ],
+   "desc": "2d8 + Might and dazed."
+  },
+  {
+   "id": "e_overtime",
+   "name": "Overtime",
+   "icon": "bell",
+   "cost": "bonus",
+   "cooldown": 3,
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "rules"
+   ],
+   "self_effects": [
+    {
+     "type": "rule",
+     "rounds": 2,
+     "source": "The Foreman",
+     "mod": {
+      "key": "actions",
+      "op": "add",
+      "value": 1,
+      "when": {
+       "side": "enemy"
+      },
+      "label": "Overtime: enemies take an extra action"
+     }
+    }
+   ],
+   "effects": [],
+   "ai_bonus": 6,
+   "desc": "Next round every enemy takes an extra action."
+  },
+  {
+   "id": "e_clock_out",
+   "name": "Clock Out",
+   "icon": "hourglass",
+   "cost": "bonus",
+   "cooldown": 3,
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "rules"
+   ],
+   "self_effects": [
+    {
+     "type": "rule",
+     "rounds": 2,
+     "source": "The Foreman",
+     "mod": {
+      "key": "bonus_actions",
+      "op": "add",
+      "value": -1,
+      "when": {
+       "side": "hero"
+      },
+      "label": "Clock Out: heroes get no bonus action"
+     }
+    }
+   ],
+   "effects": [],
+   "ai_bonus": 5,
+   "desc": "Next round your heroes get no bonus action."
+  },
+  {
+   "id": "e_call_shift",
+   "name": "Call the Next Shift",
+   "icon": "bell",
+   "cost": "action",
+   "cooldown": 3,
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "summon"
+   ],
+   "self_effects": [
+    {
+     "type": "summon",
+     "unit": "steam_gunner",
+     "count": 1
+    },
+    {
+     "type": "summon",
+     "unit": "rivet_hound",
+     "count": 1
+    }
+   ],
+   "effects": [],
+   "ai_when": {
+    "summons_below": 3
+   },
+   "desc": "A gunner and a hound clock on."
+  }
+ ]
+}

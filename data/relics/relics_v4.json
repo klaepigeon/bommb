@@ -1,0 +1,1281 @@
+{
+ "_note": "v4 relic drop. New families live in families_v4.json.",
+ "relics": [
+  {
+   "id": "r4_paper_cut",
+   "name": "Paper Cut",
+   "rarity": "common",
+   "icon": "page_cards",
+   "family": "v4_red",
+   "desc": "Bingo cards are sharp. A hero's first hit each turn: bleed 1.",
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "bleeding",
+       "turns": 2,
+       "to": "target",
+       "stacks": 1
+      }
+     ],
+     "label": "Paper Cut",
+     "quiet": true,
+     "when": {
+      "side": "hero"
+     },
+     "once": "turn"
+    }
+   ],
+   "tags": [
+    "bleed"
+   ]
+  },
+  {
+   "id": "r4_red_biro",
+   "name": "Red Biro",
+   "rarity": "common",
+   "icon": "pencil",
+   "family": "v4_red",
+   "desc": "He marks the losers in red. Heroes +2 damage to the bleeding.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero",
+      "target_status": "bleeding"
+     }
+    }
+   ],
+   "tags": [
+    "bleed"
+   ]
+  },
+  {
+   "id": "r4_ledger_hook",
+   "name": "Butcher's Ledger Hook",
+   "rarity": "uncommon",
+   "icon": "hook",
+   "family": "v4_red",
+   "desc": "Hung. Weighed. Written down. Statuses heroes apply last 1 turn longer.",
+   "mods": [
+    {
+     "key": "status_turns_add",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "bleed",
+    "status"
+   ]
+  },
+  {
+   "id": "r4_open_vein",
+   "name": "Open Vein",
+   "rarity": "uncommon",
+   "icon": "drop",
+   "family": "v4_red",
+   "desc": "Find it. Press. A hero's hit on a bleeding foe: +1 per stack.",
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "damage",
+       "dice": "0",
+       "dtype": "blood",
+       "per_stack": "bleeding",
+       "to": "target"
+      }
+     ],
+     "label": "Open Vein",
+     "quiet": true,
+     "when": {
+      "side": "hero",
+      "target_status": "bleeding"
+     }
+    }
+   ],
+   "tags": [
+    "bleed"
+   ]
+  },
+  {
+   "id": "r4_pink_bucket",
+   "name": "Mop Bucket, Pink Water",
+   "rarity": "uncommon",
+   "icon": "jar",
+   "family": "v4_red",
+   "desc": "Never empties. A bleeding foe dies: a random foe bleeds 3.",
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "status",
+       "id": "bleeding",
+       "turns": 2,
+       "to": "random_foe",
+       "stacks": 3
+      }
+     ],
+     "label": "Pink Water",
+     "quiet": true,
+     "when": {
+      "side": "hero",
+      "target_status": "bleeding"
+     }
+    }
+   ],
+   "tags": [
+    "bleed",
+    "kills"
+   ]
+  },
+  {
+   "id": "r4_leech_jar",
+   "name": "Jar of Leeches",
+   "rarity": "rare",
+   "icon": "maggot",
+   "family": "v4_red",
+   "desc": "Hungry. Grateful. Hero hits on the bleeding heal the hero 2.",
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "2",
+       "to": "self"
+      }
+     ],
+     "label": "Leeches",
+     "quiet": true,
+     "when": {
+      "side": "hero",
+      "target_status": "bleeding"
+     }
+    }
+   ],
+   "tags": [
+    "bleed",
+    "healing"
+   ]
+  },
+  {
+   "id": "r4_haemophile",
+   "name": "The Haemophile's Card",
+   "rarity": "rare",
+   "icon": "page_combat",
+   "family": "v4_red",
+   "desc": "Full house. It never clotted. Bleeding enemies take 2 more from everything.",
+   "mods": [
+    {
+     "key": "damage_taken_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "enemy",
+      "self_status": "bleeding"
+     }
+    }
+   ],
+   "tags": [
+    "bleed"
+   ]
+  },
+  {
+   "id": "r4_red_tide",
+   "name": "The Red Tide",
+   "rarity": "cursed",
+   "icon": "wave",
+   "family": "v4_red",
+   "desc": "Cursed. Everything bleeds. Every hit, either side: bleed 1. Everything.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero",
+      "target_status": "bleeding"
+     }
+    }
+   ],
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "bleeding",
+       "turns": 2,
+       "to": "target",
+       "stacks": 1
+      }
+     ],
+     "label": "The Red Tide",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "bleed",
+    "risk"
+   ]
+  },
+  {
+   "id": "r4_table_for_one",
+   "name": "Table for One",
+   "rarity": "common",
+   "icon": "chair",
+   "family": "v4_last",
+   "desc": "Reserved. Always. Heroes alone deal +2.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero",
+      "alone": true
+     }
+    }
+   ],
+   "tags": [
+    "alone"
+   ]
+  },
+  {
+   "id": "r4_widows_veil",
+   "name": "Widow's Veil",
+   "rarity": "common",
+   "icon": "mask",
+   "family": "v4_last",
+   "desc": "Black lace. Heroes alone: +2 defense. Nobody sees you cry.",
+   "mods": [
+    {
+     "key": "defense",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero",
+      "alone": true
+     }
+    }
+   ],
+   "tags": [
+    "alone",
+    "defense"
+   ]
+  },
+  {
+   "id": "r4_empty_seats",
+   "name": "Row of Empty Seats",
+   "rarity": "uncommon",
+   "icon": "chair",
+   "family": "v4_last",
+   "desc": "Keep them. They're coming back. +1 damage per fallen hero this run (up to +4).",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 1,
+     "per_fallen": 1,
+     "scale_cap": 4,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "fallen"
+   ]
+  },
+  {
+   "id": "r4_last_ticket",
+   "name": "The Last Ticket",
+   "rarity": "uncommon",
+   "icon": "ticket",
+   "family": "v4_last",
+   "desc": "One left. A hero goes down: the rest are empowered and hasted. 2 turns.",
+   "triggers": [
+    {
+     "event": "ally_down",
+     "effects": [
+      {
+       "type": "status",
+       "id": "empowered",
+       "turns": 2,
+       "to": "all_heroes"
+      },
+      {
+       "type": "status",
+       "id": "hasted",
+       "turns": 2,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "The Last Ticket",
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "alone",
+    "downs"
+   ]
+  },
+  {
+   "id": "r4_black_armband",
+   "name": "Black Armband",
+   "rarity": "uncommon",
+   "icon": "banner",
+   "family": "v4_last",
+   "desc": "Wear it. It fits. A hero dies: the rest heal 10. Blessed. 3 turns.",
+   "triggers": [
+    {
+     "event": "hero_death",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "10",
+       "to": "all_heroes"
+      },
+      {
+       "type": "status",
+       "id": "blessed",
+       "turns": 3,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Black Armband",
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "fallen",
+    "healing"
+   ]
+  },
+  {
+   "id": "r4_last_one_out",
+   "name": "Last One Out",
+   "rarity": "rare",
+   "icon": "door",
+   "family": "v4_last",
+   "desc": "Turn off the lights. A hero under a quarter HP gets an extra action.",
+   "mods": [
+    {
+     "key": "actions",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero",
+      "hp_below": 0.25
+     }
+    }
+   ],
+   "tags": [
+    "alone"
+   ]
+  },
+  {
+   "id": "r4_one_candle",
+   "name": "One Candle, One Chair",
+   "rarity": "rare",
+   "icon": "candle",
+   "family": "v4_last",
+   "desc": "Heroes alone crit on 18-20. Start a turn alone: 3 temporary HP.",
+   "mods": [
+    {
+     "key": "crit_threshold",
+     "op": "set",
+     "value": 18,
+     "when": {
+      "side": "hero",
+      "alone": true
+     }
+    }
+   ],
+   "triggers": [
+    {
+     "event": "turn_start",
+     "effects": [
+      {
+       "type": "temp_hp",
+       "dice": "3",
+       "to": "self"
+      }
+     ],
+     "label": "One Candle",
+     "quiet": true,
+     "when": {
+      "side": "hero",
+      "alone": true
+     }
+    }
+   ],
+   "tags": [
+    "alone",
+    "crits"
+   ]
+  },
+  {
+   "id": "r4_quiet_hall",
+   "name": "The Quiet Hall",
+   "rarity": "cursed",
+   "icon": "skull",
+   "family": "v4_last",
+   "desc": "Cursed. Heroes alone: +2 hit, +3 damage. Huddled together: they take +2. Spread out. Die apart.",
+   "mods": [
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero",
+      "alone": true
+     }
+    },
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 3,
+     "when": {
+      "side": "hero",
+      "alone": true
+     }
+    },
+    {
+     "key": "damage_taken_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero",
+      "alone": false
+     }
+    }
+   ],
+   "tags": [
+    "alone",
+    "risk"
+   ]
+  },
+  {
+   "id": "r4_till_drawer",
+   "name": "Till Drawer",
+   "rarity": "common",
+   "icon": "box",
+   "family": "v4_hoard",
+   "desc": "Jammed open. 60 gold. +1 damage per 150 gold you hold (up to +3).",
+   "on_gain": [
+    {
+     "type": "gold",
+     "n": 60
+    }
+   ],
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 1,
+     "per_gold": 150,
+     "scale_cap": 3,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "money"
+   ]
+  },
+  {
+   "id": "r4_heavy_purse",
+   "name": "Purse, Too Heavy",
+   "rarity": "common",
+   "icon": "coin",
+   "family": "v4_hoard",
+   "desc": "Weighs you down. Holds you up. +1 defense per 150 gold (up to +2).",
+   "mods": [
+    {
+     "key": "defense",
+     "op": "add",
+     "value": 1,
+     "per_gold": 150,
+     "scale_cap": 2,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "money",
+    "defense"
+   ]
+  },
+  {
+   "id": "r4_tithe_box",
+   "name": "Tithe Box",
+   "rarity": "uncommon",
+   "icon": "box",
+   "family": "v4_hoard",
+   "desc": "Give. Give. Kills pay 3 gold. +15% gold.",
+   "mods": [
+    {
+     "key": "gold_mult",
+     "op": "add",
+     "value": 0.15
+    }
+   ],
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 3
+      }
+     ],
+     "label": "Tithe",
+     "quiet": true,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "money",
+    "kills"
+   ]
+  },
+  {
+   "id": "r4_gold_dabber",
+   "name": "Gold-Plated Dabber",
+   "rarity": "uncommon",
+   "icon": "dauber",
+   "family": "v4_hoard",
+   "desc": "Ink like honey. +1 to hit per 120 gold you hold (up to +3).",
+   "mods": [
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 1,
+     "per_gold": 120,
+     "scale_cap": 3,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "money"
+   ]
+  },
+  {
+   "id": "r4_pawn_ticket",
+   "name": "Pawnbroker's Ticket",
+   "rarity": "uncommon",
+   "icon": "ticket",
+   "family": "v4_hoard",
+   "desc": "Something of yours. In his window. Heroes start fights with 2 temporary HP per 100 gold (up to 10).",
+   "mods": [
+    {
+     "key": "temp_hp_combat",
+     "op": "add",
+     "value": 2,
+     "per_gold": 100,
+     "scale_cap": 10,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "money",
+    "defense"
+   ]
+  },
+  {
+   "id": "r4_porcelain_pig",
+   "name": "Porcelain Pig",
+   "rarity": "rare",
+   "icon": "egg",
+   "family": "v4_hoard",
+   "desc": "Shake it. 100 gold. +20% gold. Wins pay 10.",
+   "on_gain": [
+    {
+     "type": "gold",
+     "n": 100
+    }
+   ],
+   "mods": [
+    {
+     "key": "gold_mult",
+     "op": "add",
+     "value": 0.2
+    }
+   ],
+   "triggers": [
+    {
+     "event": "combat_won",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 10
+      }
+     ],
+     "label": "Pig",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "money"
+   ]
+  },
+  {
+   "id": "r4_golden_hand",
+   "name": "His Golden Hand",
+   "rarity": "rare",
+   "icon": "hand",
+   "family": "v4_hoard",
+   "desc": "It still grips. Heroes +10% damage per 200 gold held (up to +30%).",
+   "mods": [
+    {
+     "key": "damage_dealt_mult",
+     "op": "add",
+     "value": 0.1,
+     "per_gold": 200,
+     "scale_cap": 0.3,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "money",
+    "damage"
+   ]
+  },
+  {
+   "id": "r4_the_debt",
+   "name": "The Debt",
+   "rarity": "cursed",
+   "icon": "scroll",
+   "family": "v4_hoard",
+   "desc": "Cursed. Sign here. 250 gold. Shops charge half again. Enemies 15% tougher. It compounds.",
+   "on_gain": [
+    {
+     "type": "gold",
+     "n": 250
+    }
+   ],
+   "mods": [
+    {
+     "key": "shop_price_mult",
+     "op": "mul",
+     "value": 1.5
+    },
+    {
+     "key": "enemy_hp_mult",
+     "op": "mul",
+     "value": 1.15
+    }
+   ],
+   "tags": [
+    "money",
+    "risk"
+   ]
+  },
+  {
+   "id": "r4_counting_scales",
+   "name": "Counting-House Scales",
+   "rarity": "cursed",
+   "icon": "cage",
+   "family": "v4_hoard",
+   "desc": "Cursed. +1 damage per 60 gold (up to +5). Heroes take +1 from everything. Weigh it.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 1,
+     "per_gold": 60,
+     "scale_cap": 5,
+     "when": {
+      "side": "hero"
+     }
+    },
+    {
+     "key": "damage_taken_add",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "money",
+    "risk"
+   ]
+  },
+  {
+   "id": "r4_snake_eyes",
+   "name": "Snake Eyes",
+   "rarity": "common",
+   "icon": "eye",
+   "family": "v4_faces",
+   "desc": "One. Two little eyes. A hero's natural 1: 5 temporary HP.",
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "temp_hp",
+       "dice": "5",
+       "to": "self"
+      }
+     ],
+     "label": "Snake Eyes",
+     "quiet": true,
+     "when": {
+      "side": "hero",
+      "natural": 1
+     }
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "r4_lucky_seven",
+   "name": "Lucky Seven",
+   "rarity": "common",
+   "icon": "die",
+   "family": "v4_faces",
+   "desc": "Seven. A hero's natural 7: a bonus action. Once a turn.",
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "extra_action",
+       "kind": "bonus",
+       "to": "self"
+      }
+     ],
+     "label": "Lucky Seven",
+     "when": {
+      "side": "hero",
+      "natural": 7
+     },
+     "once": "turn"
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "r4_two_fat_ladies",
+   "name": "Two Fat Ladies",
+   "rarity": "uncommon",
+   "icon": "ball",
+   "family": "v4_faces",
+   "desc": "Eighty-eight. Close enough. A hero's natural 8: heal 8.",
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "8",
+       "to": "self"
+      }
+     ],
+     "label": "Two Fat Ladies",
+     "quiet": true,
+     "when": {
+      "side": "hero",
+      "natural": 8
+     }
+    }
+   ],
+   "tags": [
+    "dice",
+    "healing"
+   ]
+  },
+  {
+   "id": "r4_unlucky_13",
+   "name": "Unlucky for Some",
+   "rarity": "uncommon",
+   "icon": "crack",
+   "family": "v4_faces",
+   "desc": "Thirteen. Unlucky for them. A hero's natural 13 hexes the target.",
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "status",
+       "id": "hexed",
+       "turns": 2,
+       "to": "target"
+      }
+     ],
+     "label": "Unlucky for Some",
+     "quiet": true,
+     "when": {
+      "side": "hero",
+      "natural": 13
+     }
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "r4_low_balls",
+   "name": "Low Balls",
+   "rarity": "uncommon",
+   "icon": "ball",
+   "family": "v4_faces",
+   "desc": "Bottom of the cage. A hero's natural 5 or less: 1d6 force to a random foe.",
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "damage",
+       "dice": "1d6",
+       "dtype": "force",
+       "to": "random_foe"
+      }
+     ],
+     "label": "Low Balls",
+     "quiet": true,
+     "when": {
+      "side": "hero",
+      "natural_le": 5
+     }
+    }
+   ],
+   "tags": [
+    "dice",
+    "low"
+   ]
+  },
+  {
+   "id": "r4_kellys_eye",
+   "name": "Kelly's Eye",
+   "rarity": "rare",
+   "icon": "eye",
+   "family": "v4_faces",
+   "desc": "Number one. Kelly's watching. Heroes never fumble.",
+   "mods": [
+    {
+     "key": "fumble_threshold",
+     "op": "set",
+     "value": 0,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "r4_top_of_shop",
+   "name": "Top of the Shop",
+   "rarity": "rare",
+   "icon": "up",
+   "family": "v4_faces",
+   "desc": "Ninety. Up there. A hero's natural 17+: 2 squares and 1 resource.",
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "extra_move",
+       "n": 2,
+       "to": "self"
+      },
+      {
+       "type": "res",
+       "n": 1,
+       "to": "self"
+      }
+     ],
+     "label": "Top of the Shop",
+     "quiet": true,
+     "when": {
+      "side": "hero",
+      "natural_ge": 17
+     }
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "r4_teeth_dice",
+   "name": "Dice Cut from His Teeth",
+   "rarity": "cursed",
+   "icon": "fang",
+   "family": "v4_faces",
+   "desc": "Cursed. Heroes +2 to hit. Their dice never show above 15. Low rolls bite: 5 or less, 1d8 to a random foe.",
+   "mods": [
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero"
+     }
+    },
+    {
+     "key": "natural_cap",
+     "op": "cap",
+     "value": 15,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "damage",
+       "dice": "1d8",
+       "dtype": "psychic",
+       "to": "random_foe"
+      }
+     ],
+     "label": "His Teeth",
+     "quiet": true,
+     "when": {
+      "side": "hero",
+      "natural_le": 5
+     }
+    }
+   ],
+   "tags": [
+    "dice",
+    "risk",
+    "low"
+   ]
+  },
+  {
+   "id": "r4_pickled_eggs",
+   "name": "Jar of Pickled Eggs",
+   "rarity": "common",
+   "icon": "jar",
+   "family": "drink",
+   "desc": "Behind the bar since '81. Every sip: a random hero gets 3 temporary HP.",
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "temp_hp",
+       "dice": "3",
+       "to": "random_hero"
+      }
+     ],
+     "label": "Pickled Eggs",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "drink"
+   ]
+  },
+  {
+   "id": "r4_bus_timetable",
+   "name": "Last Bus Timetable",
+   "rarity": "common",
+   "icon": "watch",
+   "family": "clocks",
+   "desc": "11:42. Missed it. Round 1: heroes +2 speed.",
+   "mods": [
+    {
+     "key": "speed",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero",
+      "round_le": 1
+     }
+    },
+    {
+     "key": "initiative_bonus",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "tempo"
+   ]
+  },
+  {
+   "id": "r4_order_of_service",
+   "name": "Order of Service",
+   "rarity": "common",
+   "icon": "scroll",
+   "family": "dead",
+   "desc": "Your name. Spelled wrong. Death saves are 2 easier.",
+   "mods": [
+    {
+     "key": "death_save_dc",
+     "op": "add",
+     "value": -2
+    }
+   ],
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "id": "r4_raffle_drum",
+   "name": "Raffle Drum",
+   "rarity": "uncommon",
+   "icon": "wheel",
+   "family": "money",
+   "desc": "Turn it. Two things for the table now. Something always comes out.",
+   "on_gain": [
+    {
+     "type": "table_item",
+     "n": 2
+    }
+   ],
+   "mods": [
+    {
+     "key": "gold_mult",
+     "op": "add",
+     "value": 0.1
+    }
+   ],
+   "tags": [
+    "table"
+   ]
+  },
+  {
+   "id": "r4_spare_minis",
+   "name": "Bag of Spare Minis",
+   "rarity": "uncommon",
+   "icon": "soldier",
+   "family": "minis",
+   "desc": "Unpainted. Faceless. Waiting. A piece of gear. Heroes +4 max HP.",
+   "on_gain": [
+    {
+     "type": "gear"
+    }
+   ],
+   "mods": [
+    {
+     "key": "max_hp_add",
+     "op": "add",
+     "value": 4,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "gear",
+    "defense"
+   ]
+  },
+  {
+   "id": "r4_hymn_numbers",
+   "name": "Hymn Board Numbers",
+   "rarity": "uncommon",
+   "icon": "note",
+   "family": "faithful",
+   "desc": "Sing up. Heroes heal 25% more.",
+   "mods": [
+    {
+     "key": "heal_dealt_mult",
+     "op": "add",
+     "value": 0.25,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "healing"
+   ]
+  },
+  {
+   "id": "r4_altar_stub",
+   "name": "Stub of Altar Candle",
+   "rarity": "common",
+   "icon": "candle",
+   "family": "candles",
+   "desc": "Lit for someone. Heroes +2 damage to the burning.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero",
+      "target_status": "burning"
+     }
+    }
+   ],
+   "tags": [
+    "fire"
+   ]
+  },
+  {
+   "id": "r4_paper_crown",
+   "name": "Paper Crown",
+   "rarity": "common",
+   "icon": "halo",
+   "family": "paper",
+   "desc": "From a cracker. Nobody pulled it with you. A totem piece. Heroes +1 to saves.",
+   "on_gain": [
+    {
+     "type": "totem"
+    }
+   ],
+   "mods": [
+    {
+     "key": "save_bonus",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "totem"
+   ]
+  },
+  {
+   "id": "r4_flashboard_bulb",
+   "name": "Flashboard Bulb",
+   "rarity": "uncommon",
+   "icon": "sun",
+   "desc": "Still warm. Each fight starts: a random enemy marked and exposed.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "marked",
+       "turns": 3,
+       "to": "random_enemy"
+      },
+      {
+       "type": "status",
+       "id": "exposed",
+       "turns": 2,
+       "to": "random_enemy"
+      }
+     ],
+     "label": "Flashboard",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "marks"
+   ]
+  },
+  {
+   "id": "r4_crying_doll",
+   "name": "Doll That Cries at Night",
+   "rarity": "cursed",
+   "icon": "pawn",
+   "desc": "Cursed. Heroes +2 to hit. Every round a random hero is dazed. Shh. Shh.",
+   "mods": [
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "triggers": [
+    {
+     "event": "round_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "dazed",
+       "turns": 1,
+       "to": "random_hero"
+      }
+     ],
+     "label": "The Doll",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "risk"
+   ]
+  },
+  {
+   "id": "r4_his_spare_eye",
+   "name": "His Spare Eye",
+   "rarity": "cursed",
+   "icon": "eye",
+   "family": "cheats",
+   "desc": "Cursed. It sees for you. Heroes +3 damage. Each fight starts with 10 in his FILE.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 3,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": 10
+      }
+     ],
+     "label": "His Spare Eye",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "risk",
+    "cheats"
+   ]
+  }
+ ]
+}

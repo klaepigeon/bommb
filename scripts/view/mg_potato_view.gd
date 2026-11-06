@@ -143,4 +143,4 @@ func on_event(e: Dictionary) -> void:
 
 
 func camera() -> Array:
-	return [center + Vector3(0, 7.0, 7.0), center + Vector3(0, 0.8, 0)]
+	return [center + Vector3(0, 7.0, 7.0), center + Vector3(0, 0.8, 0), 0.8]

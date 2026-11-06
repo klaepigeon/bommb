@@ -1,0 +1,3560 @@
+{
+ "relics": [
+  {
+   "id": "tr_long_sleeves",
+   "name": "Long Sleeves",
+   "rarity": "common",
+   "icon": "sleeve",
+   "family": "cheats",
+   "desc": "Room for one more palmed die.",
+   "mods": [
+    {
+     "key": "sleeve_size",
+     "op": "add",
+     "value": 1
+    }
+   ],
+   "tags": [
+    "cheats"
+   ]
+  },
+  {
+   "id": "tr_card_sharp_ring",
+   "name": "Card Sharp's Ring",
+   "rarity": "uncommon",
+   "icon": "palm",
+   "family": "cheats",
+   "desc": "Palming adds 6 less to the FILE.",
+   "mods": [
+    {
+     "key": "cheat_suspicion",
+     "op": "add",
+     "value": -6,
+     "when": {
+      "cheat": "palm"
+     }
+    }
+   ],
+   "tags": [
+    "cheats"
+   ]
+  },
+  {
+   "id": "tr_hand_mirror",
+   "name": "Hand Mirror",
+   "rarity": "common",
+   "icon": "eye",
+   "family": "cheats",
+   "desc": "Teaches PEEK: lean over his screen and see what his pieces will do.",
+   "mods": [
+    {
+     "key": "cheat_suspicion",
+     "op": "add",
+     "value": -2,
+     "when": {
+      "cheat": "peek"
+     }
+    }
+   ],
+   "cheats": [
+    "peek"
+   ],
+   "tags": [
+    "cheats"
+   ]
+  },
+  {
+   "id": "tr_pencil_stub",
+   "name": "Pencil Stub",
+   "rarity": "common",
+   "icon": "pencil",
+   "family": "cheats",
+   "desc": "Teaches FUDGE: rub out pencil on your own sheet and a hero heals.",
+   "cheats": [
+    "fudge"
+   ],
+   "tags": [
+    "cheats"
+   ],
+   "on_gain": [
+    {
+     "type": "nothing"
+    }
+   ]
+  },
+  {
+   "id": "tr_soft_eraser",
+   "name": "Soft Eraser",
+   "rarity": "common",
+   "icon": "eraser",
+   "family": "cheats",
+   "desc": "Teaches SHAVE: rub out his tally marks and an enemy takes damage.",
+   "cheats": [
+    "shave"
+   ],
+   "tags": [
+    "cheats"
+   ],
+   "on_gain": [
+    {
+     "type": "nothing"
+    }
+   ]
+  },
+  {
+   "id": "tr_tweezers",
+   "name": "Rule Lawyer's Tweezers",
+   "rarity": "uncommon",
+   "icon": "card",
+   "family": "cheats",
+   "desc": "Teaches SWAP: slide a house rule off his rack.",
+   "mods": [
+    {
+     "key": "cheat_suspicion",
+     "op": "add",
+     "value": -3,
+     "when": {
+      "cheat": "swap_rule"
+     }
+    }
+   ],
+   "cheats": [
+    "swap_rule"
+   ],
+   "tags": [
+    "cheats"
+   ]
+  },
+  {
+   "id": "tr_sticky_fingers",
+   "name": "Sticky Fingers",
+   "rarity": "uncommon",
+   "icon": "steal",
+   "family": "cheats",
+   "desc": "Teaches STEAL: pinch one of his dice, and his next roll shows 5 or less.",
+   "mods": [
+    {
+     "key": "cheat_suspicion",
+     "op": "add",
+     "value": -3,
+     "when": {
+      "cheat": "steal"
+     }
+    }
+   ],
+   "cheats": [
+    "steal"
+   ],
+   "tags": [
+    "cheats"
+   ]
+  },
+  {
+   "id": "tr_magnet",
+   "name": "Magnet in the Table Leg",
+   "rarity": "rare",
+   "icon": "cog",
+   "family": "cheats",
+   "desc": "Your loaded die shows at least 15.",
+   "mods": [
+    {
+     "key": "load_floor",
+     "op": "set",
+     "value": 15
+    }
+   ],
+   "tags": [
+    "cheats"
+   ]
+  },
+  {
+   "id": "tr_spare_hands",
+   "name": "A Spare Pair of Hands",
+   "rarity": "rare",
+   "icon": "hand",
+   "family": "cheats",
+   "desc": "Once a turn, a cheat that works gives the hero a bonus action.",
+   "triggers": [
+    {
+     "event": "cheat",
+     "effects": [
+      {
+       "type": "extra_action",
+       "kind": "bonus",
+       "to": "self"
+      }
+     ],
+     "once": "turn",
+     "label": "Spare Hands"
+    }
+   ],
+   "tags": [
+    "cheats"
+   ]
+  },
+  {
+   "id": "tr_marked_deck",
+   "name": "Marked Deck",
+   "rarity": "uncommon",
+   "icon": "card",
+   "family": "cheats",
+   "desc": "Every cheat that works: 1d6 force to a random enemy.",
+   "triggers": [
+    {
+     "event": "cheat",
+     "effects": [
+      {
+       "type": "damage",
+       "dice": "1d6",
+       "dtype": "force",
+       "to": "random_foe"
+      }
+     ],
+     "label": "Marked Deck"
+    }
+   ],
+   "tags": [
+    "cheats"
+   ]
+  },
+  {
+   "id": "tr_alibi",
+   "name": "The Alibi",
+   "rarity": "rare",
+   "icon": "scroll",
+   "family": "cheats",
+   "desc": "The first time you're caught each fight, you were somewhere else.",
+   "mods": [
+    {
+     "key": "caught_forgiven",
+     "op": "set",
+     "value": true
+    }
+   ],
+   "tags": [
+    "cheats"
+   ]
+  },
+  {
+   "id": "tr_two_faced_coin",
+   "name": "Two-Faced Coin",
+   "rarity": "uncommon",
+   "icon": "coin",
+   "family": "cheats",
+   "desc": "Palm a 15 or higher: 10 gold.",
+   "triggers": [
+    {
+     "event": "palmed",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 10
+      }
+     ],
+     "when": {
+      "natural_ge": 15
+     },
+     "label": "Two-Faced Coin"
+    }
+   ],
+   "tags": [
+    "cheats"
+   ]
+  },
+  {
+   "id": "tr_mr_fingers",
+   "name": "Mr. Fingers",
+   "rarity": "cursed",
+   "icon": "hand",
+   "family": "cheats",
+   "desc": "Cursed. Cheats add half as much to the FILE, but when you're caught the slap is twice as hard.",
+   "mods": [
+    {
+     "key": "cheat_suspicion",
+     "op": "mul",
+     "value": 0.5
+    },
+    {
+     "key": "caught_damage_mult",
+     "op": "mul",
+     "value": 2.0
+    }
+   ],
+   "tags": [
+    "cheats"
+   ]
+  },
+  {
+   "id": "tr_bone_dice",
+   "name": "Bone Dice",
+   "rarity": "common",
+   "icon": "die",
+   "family": "dice",
+   "desc": "A natural 13: 13 damage to a random enemy.",
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "damage",
+       "dice": "13",
+       "dtype": "force",
+       "to": "random_foe"
+      }
+     ],
+     "when": {
+      "side": "hero",
+      "natural": 13
+     },
+     "label": "Thirteen"
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "tr_even_money",
+   "name": "Even Money",
+   "rarity": "common",
+   "icon": "coin",
+   "family": "dice",
+   "desc": "A natural 10: 10 gold. A natural 20: 20 gold.",
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 10
+      }
+     ],
+     "when": {
+      "side": "hero",
+      "natural": 10
+     },
+     "label": "Even Money"
+    },
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 20
+      }
+     ],
+     "when": {
+      "side": "hero",
+      "natural": 20
+     },
+     "label": "Even Money"
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "tr_rabbit_foot",
+   "name": "Rabbit's Foot (Left)",
+   "rarity": "uncommon",
+   "icon": "fang",
+   "family": "dice",
+   "desc": "Heroes reroll natural 1s and 2s once.",
+   "mods": [
+    {
+     "key": "reroll_naturals",
+     "op": "set",
+     "value": 2,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "tr_hot_dice",
+   "name": "Hot Dice",
+   "rarity": "uncommon",
+   "icon": "flame",
+   "family": "dice",
+   "desc": "After a hero crits, their next roll shows at least 10.",
+   "triggers": [
+    {
+     "event": "crit",
+     "effects": [
+      {
+       "type": "rig",
+       "side": "hero",
+       "floor": 10
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "label": "Hot Dice"
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "tr_cold_dice",
+   "name": "Cold Dice",
+   "rarity": "uncommon",
+   "icon": "frost",
+   "family": "dice",
+   "desc": "After a hero fumbles, the next roll is a natural 20.",
+   "triggers": [
+    {
+     "event": "fumble",
+     "effects": [
+      {
+       "type": "rig",
+       "side": "hero",
+       "natural": 20
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "label": "Cold Dice"
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "tr_percentile",
+   "name": "Percentile Die",
+   "rarity": "rare",
+   "icon": "die",
+   "family": "dice",
+   "desc": "Heroes crit on 17-20 but fumble on 1-4.",
+   "mods": [
+    {
+     "key": "crit_threshold",
+     "op": "set",
+     "value": 17,
+     "when": {
+      "side": "hero"
+     }
+    },
+    {
+     "key": "fumble_threshold",
+     "op": "set",
+     "value": 4,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "tr_snake_charmer",
+   "name": "Snake Charmer",
+   "rarity": "rare",
+   "icon": "spiral",
+   "family": "dice",
+   "desc": "A hero's natural 1 gives them an extra action and inspires them.",
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "extra_action",
+       "kind": "action",
+       "to": "self"
+      },
+      {
+       "type": "status",
+       "id": "inspired",
+       "turns": 2,
+       "to": "self"
+      }
+     ],
+     "when": {
+      "side": "hero",
+      "natural": 1
+     },
+     "label": "Snake Charmer"
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "tr_die_in_glass",
+   "name": "A Die Set in Glass",
+   "rarity": "uncommon",
+   "icon": "ward",
+   "family": "dice",
+   "desc": "Enemies can't roll a natural 20.",
+   "mods": [
+    {
+     "key": "natural_cap",
+     "op": "set",
+     "value": 19,
+     "when": {
+      "side": "enemy"
+     }
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "tr_house_dice",
+   "name": "The House's Own Dice",
+   "rarity": "rare",
+   "icon": "die",
+   "family": "dice",
+   "desc": "Enemies fumble on 1-3.",
+   "mods": [
+    {
+     "key": "fumble_threshold",
+     "op": "set",
+     "value": 3,
+     "when": {
+      "side": "enemy"
+     }
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "tr_velvet_bag",
+   "name": "Velvet Dice Bag",
+   "rarity": "common",
+   "icon": "sleeve",
+   "family": "dice",
+   "desc": "Every fight starts with a 12 up your sleeve.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "sleeve",
+       "n": 12
+      }
+     ],
+     "label": "Velvet Bag",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "tr_dice_tower",
+   "name": "Dice Tower",
+   "rarity": "uncommon",
+   "icon": "cage",
+   "family": "dice",
+   "desc": "Your first roll each turn shows at least 8.",
+   "triggers": [
+    {
+     "event": "hero_turn",
+     "effects": [
+      {
+       "type": "rig",
+       "side": "hero",
+       "floor": 8
+      }
+     ],
+     "label": "Dice Tower",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "tr_lucky_eleven",
+   "name": "Ball Number Eleven",
+   "rarity": "common",
+   "icon": "ball",
+   "family": "dice",
+   "desc": "A natural 11: heal 11.",
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "11",
+       "to": "self"
+      }
+     ],
+     "when": {
+      "side": "hero",
+      "natural": 11
+     },
+     "label": "Legs Eleven"
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "tr_pair_of_sixes",
+   "name": "Pair of Sixes",
+   "rarity": "uncommon",
+   "icon": "die",
+   "family": "dice",
+   "desc": "A natural 6 or 16: an extra bonus action.",
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "extra_action",
+       "kind": "bonus",
+       "to": "self"
+      }
+     ],
+     "when": {
+      "side": "hero",
+      "natural": 6
+     },
+     "label": "Sixes"
+    },
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "extra_action",
+       "kind": "bonus",
+       "to": "self"
+      }
+     ],
+     "when": {
+      "side": "hero",
+      "natural": 16
+     },
+     "label": "Sixes"
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "tr_dice_jail",
+   "name": "Dice Jail",
+   "rarity": "common",
+   "icon": "net",
+   "family": "dice",
+   "desc": "His natural 1s stun the piece that rolled them.",
+   "triggers": [
+    {
+     "event": "fumble",
+     "effects": [
+      {
+       "type": "status",
+       "id": "stunned",
+       "turns": 1,
+       "to": "self"
+      }
+     ],
+     "when": {
+      "side": "enemy"
+     },
+     "label": "Dice Jail"
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "tr_bottomless_pint",
+   "name": "Bottomless Pint",
+   "rarity": "rare",
+   "icon": "glass",
+   "family": "drink",
+   "desc": "Every sip: every hero regains 1 class resource.",
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "res",
+       "n": 1,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Bottomless"
+    }
+   ],
+   "tags": [
+    "drink"
+   ]
+  },
+  {
+   "id": "tr_beer_mat",
+   "name": "Beer Mat",
+   "rarity": "common",
+   "icon": "ticket",
+   "family": "drink",
+   "desc": "Every sip: the FILE drops 3.",
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": -3
+      }
+     ],
+     "label": "Beer Mat",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "drink"
+   ]
+  },
+  {
+   "id": "tr_pickled_egg",
+   "name": "Pickled Egg",
+   "rarity": "common",
+   "icon": "egg",
+   "family": "drink",
+   "desc": "Every sip: a random hero heals 4.",
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "4",
+       "to": "random_hero"
+      }
+     ],
+     "label": "Pickled Egg"
+    }
+   ],
+   "tags": [
+    "drink"
+   ]
+  },
+  {
+   "id": "tr_spit_take",
+   "name": "Spit Take",
+   "rarity": "uncommon",
+   "icon": "drop",
+   "family": "drink",
+   "desc": "Every sip: 1d8 to a random enemy.",
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "damage",
+       "dice": "1d8",
+       "dtype": "force",
+       "to": "random_enemy"
+      }
+     ],
+     "label": "Spit Take"
+    }
+   ],
+   "tags": [
+    "drink"
+   ]
+  },
+  {
+   "id": "tr_dutch_courage",
+   "name": "Dutch Courage",
+   "rarity": "common",
+   "icon": "glass",
+   "family": "drink",
+   "desc": "Every sip: every hero gains 3 temporary HP.",
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "temp_hp",
+       "dice": "3",
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Dutch Courage",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "drink"
+   ]
+  },
+  {
+   "id": "tr_last_orders",
+   "name": "Last Orders",
+   "rarity": "uncommon",
+   "icon": "bell",
+   "family": "drink",
+   "desc": "From round 4, every sip empowers every hero.",
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "status",
+       "id": "empowered",
+       "turns": 1,
+       "to": "all_heroes"
+      }
+     ],
+     "when": {
+      "round_ge": 4
+     },
+     "label": "Last Orders"
+    }
+   ],
+   "tags": [
+    "drink"
+   ]
+  },
+  {
+   "id": "tr_salt_rim",
+   "name": "Salt on the Rim",
+   "rarity": "common",
+   "icon": "drop",
+   "family": "drink",
+   "desc": "Every sip: a random enemy starts bleeding.",
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "status",
+       "id": "bleeding",
+       "turns": 2,
+       "stacks": 1,
+       "to": "random_enemy"
+      }
+     ],
+     "label": "Salt"
+    }
+   ],
+   "tags": [
+    "drink"
+   ]
+  },
+  {
+   "id": "tr_drinking_song",
+   "name": "Drinking Song",
+   "rarity": "uncommon",
+   "icon": "note",
+   "family": "drink",
+   "desc": "Every sip inspires every hero for a turn.",
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "status",
+       "id": "inspired",
+       "turns": 1,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Drinking Song",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "drink"
+   ]
+  },
+  {
+   "id": "tr_hair_of_dog",
+   "name": "Hair of the Dog",
+   "rarity": "uncommon",
+   "icon": "wolf",
+   "family": "drink",
+   "desc": "After every victory, every standing hero heals 6.",
+   "triggers": [
+    {
+     "event": "combat_won",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "6",
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Hair of the Dog"
+    }
+   ],
+   "tags": [
+    "drink"
+   ]
+  },
+  {
+   "id": "tr_bar_tab",
+   "name": "The Tab",
+   "rarity": "rare",
+   "icon": "scroll",
+   "family": "drink",
+   "desc": "Every sip: 4 gold.",
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 4
+      }
+     ],
+     "label": "The Tab",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "drink"
+   ]
+  },
+  {
+   "id": "tr_ice_bucket",
+   "name": "Ice Bucket",
+   "rarity": "common",
+   "icon": "frost",
+   "family": "drink",
+   "desc": "Every sip slows a random enemy.",
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "status",
+       "id": "slowed",
+       "turns": 1,
+       "to": "random_enemy"
+      }
+     ],
+     "label": "Ice Bucket",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "drink"
+   ]
+  },
+  {
+   "id": "tr_lager_lout",
+   "name": "Lager Lout",
+   "rarity": "cursed",
+   "icon": "glass",
+   "family": "drink",
+   "desc": "Cursed. Heroes deal +2 damage, but every sip adds 3 to the FILE.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": 3
+      }
+     ],
+     "label": "Lager Lout",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "drink"
+   ]
+  },
+  {
+   "id": "tr_rounds_on_me",
+   "name": "Round's On Me",
+   "rarity": "rare",
+   "icon": "glass",
+   "family": "drink",
+   "desc": "Every sip weakens every enemy for a turn.",
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "status",
+       "id": "weakened",
+       "turns": 1,
+       "to": "all_enemies"
+      }
+     ],
+     "label": "Round's On Me"
+    }
+   ],
+   "tags": [
+    "drink"
+   ]
+  },
+  {
+   "id": "tr_piggy_bank",
+   "name": "Piggy Bank",
+   "rarity": "common",
+   "icon": "coin",
+   "family": "money",
+   "desc": "40 gold now, and 5 after every fight.",
+   "triggers": [
+    {
+     "event": "combat_won",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 5
+      }
+     ],
+     "label": "Piggy Bank",
+     "quiet": true
+    }
+   ],
+   "on_gain": [
+    {
+     "type": "gold",
+     "n": 40
+    }
+   ],
+   "tags": [
+    "money"
+   ]
+  },
+  {
+   "id": "tr_loan_shark_tooth",
+   "name": "Loan Shark's Tooth",
+   "rarity": "uncommon",
+   "icon": "fang",
+   "family": "money",
+   "desc": "+1 damage for every 100 gold you hold (up to +5).",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     },
+     "per_gold": 100,
+     "scale_cap": 5
+    }
+   ],
+   "tags": [
+    "money"
+   ]
+  },
+  {
+   "id": "tr_roll_of_quarters",
+   "name": "Roll of Quarters",
+   "rarity": "common",
+   "icon": "coin",
+   "family": "money",
+   "desc": "Melee hits +1 damage. 15 gold.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero",
+      "melee": true
+     }
+    }
+   ],
+   "on_gain": [
+    {
+     "type": "gold",
+     "n": 15
+    }
+   ],
+   "tags": [
+    "money"
+   ]
+  },
+  {
+   "id": "tr_tax_return",
+   "name": "Tax Return",
+   "rarity": "uncommon",
+   "icon": "scroll",
+   "family": "money",
+   "desc": "Every kill: 3 gold.",
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 3
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "label": "Tax Return",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "money"
+   ]
+  },
+  {
+   "id": "tr_envelope",
+   "name": "Envelope of Cash",
+   "rarity": "uncommon",
+   "icon": "ticket",
+   "family": "money",
+   "desc": "Caught? Pay 15 gold instead of the slap.",
+   "mods": [
+    {
+     "key": "caught_fine",
+     "op": "set",
+     "value": 15
+    }
+   ],
+   "tags": [
+    "money"
+   ]
+  },
+  {
+   "id": "tr_gold_tooth",
+   "name": "Gold Tooth",
+   "rarity": "rare",
+   "icon": "fang",
+   "family": "money",
+   "desc": "Every crit: 10 gold.",
+   "triggers": [
+    {
+     "event": "crit",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 10
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "label": "Gold Tooth"
+    }
+   ],
+   "tags": [
+    "money"
+   ]
+  },
+  {
+   "id": "tr_insurance",
+   "name": "Insurance Policy",
+   "rarity": "uncommon",
+   "icon": "scroll",
+   "family": "money",
+   "desc": "When a hero goes down: 20 gold.",
+   "triggers": [
+    {
+     "event": "ally_down",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 20
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "label": "Insurance"
+    }
+   ],
+   "tags": [
+    "money"
+   ]
+  },
+  {
+   "id": "tr_purse_of_ears",
+   "name": "Purse Made of Ears",
+   "rarity": "cursed",
+   "icon": "coin",
+   "family": "money",
+   "desc": "Cursed. +60% gold, but prizes cost 30% more.",
+   "mods": [
+    {
+     "key": "gold_mult",
+     "op": "add",
+     "value": 0.6
+    },
+    {
+     "key": "shop_price_mult",
+     "op": "mul",
+     "value": 1.3
+    }
+   ],
+   "tags": [
+    "money"
+   ]
+  },
+  {
+   "id": "tr_compound_interest",
+   "name": "Compound Interest",
+   "rarity": "rare",
+   "icon": "coin",
+   "family": "money",
+   "desc": "+1 to hit for every 150 gold you hold (up to +3).",
+   "mods": [
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     },
+     "per_gold": 150,
+     "scale_cap": 3
+    }
+   ],
+   "tags": [
+    "money"
+   ]
+  },
+  {
+   "id": "tr_coupon_book",
+   "name": "Coupon Book",
+   "rarity": "common",
+   "icon": "ticket",
+   "family": "money",
+   "desc": "Prizes cost 15% less.",
+   "mods": [
+    {
+     "key": "shop_price_mult",
+     "op": "mul",
+     "value": 0.85
+    }
+   ],
+   "tags": [
+    "money"
+   ]
+  },
+  {
+   "id": "tr_tip_bowl",
+   "name": "Tip Bowl",
+   "rarity": "common",
+   "icon": "coin",
+   "family": "money",
+   "desc": "Every fight: 6 gold when it starts.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 6
+      }
+     ],
+     "label": "Tip Bowl",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "money"
+   ]
+  },
+  {
+   "id": "tr_debt_ledger",
+   "name": "Debt Collector's Ledger",
+   "rarity": "uncommon",
+   "icon": "tome",
+   "family": "money",
+   "desc": "Beat an elite: 40 gold. Beat a boss: 80.",
+   "triggers": [
+    {
+     "event": "combat_won",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 40
+      }
+     ],
+     "when": {
+      "elite": true
+     },
+     "label": "Debts Collected"
+    },
+    {
+     "event": "combat_won",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 80
+      }
+     ],
+     "when": {
+      "boss": true
+     },
+     "label": "Debts Collected"
+    }
+   ],
+   "tags": [
+    "money"
+   ]
+  },
+  {
+   "id": "tr_coffin_nail",
+   "name": "Coffin Nail",
+   "rarity": "common",
+   "icon": "spikes",
+   "family": "dead",
+   "desc": "Death saves are 2 easier.",
+   "mods": [
+    {
+     "key": "death_save_dc",
+     "op": "add",
+     "value": -2
+    }
+   ],
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "id": "tr_grave_dirt",
+   "name": "Grave Dirt",
+   "rarity": "common",
+   "icon": "root",
+   "family": "dead",
+   "desc": "When a hero goes down, the others are empowered for 2 turns.",
+   "triggers": [
+    {
+     "event": "ally_down",
+     "effects": [
+      {
+       "type": "status",
+       "id": "empowered",
+       "turns": 2,
+       "to": "all_heroes"
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "label": "Grave Dirt"
+    }
+   ],
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "id": "tr_obituary",
+   "name": "Obituary Clipping",
+   "rarity": "uncommon",
+   "icon": "scroll",
+   "family": "dead",
+   "desc": "Every kill frightens the enemies next to the killer.",
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "status",
+       "id": "feared",
+       "turns": 1,
+       "to": "adjacent_foes"
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "label": "Obituary"
+    }
+   ],
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "id": "tr_mourning_band",
+   "name": "Mourning Band",
+   "rarity": "uncommon",
+   "icon": "banner",
+   "family": "dead",
+   "desc": "When a hero dies, the rest are inspired and regain 2 resource.",
+   "triggers": [
+    {
+     "event": "hero_death",
+     "effects": [
+      {
+       "type": "status",
+       "id": "inspired",
+       "turns": 3,
+       "to": "all_heroes"
+      },
+      {
+       "type": "res",
+       "n": 2,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Mourning Band"
+    }
+   ],
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "id": "tr_bone_saw",
+   "name": "Bone Saw",
+   "rarity": "uncommon",
+   "icon": "knife",
+   "family": "dead",
+   "desc": "Every kill: a random enemy bleeds (2 stacks).",
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "status",
+       "id": "bleeding",
+       "turns": 2,
+       "stacks": 2,
+       "to": "random_foe"
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "label": "Bone Saw"
+    }
+   ],
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "id": "tr_death_rattle",
+   "name": "Death Rattle",
+   "rarity": "rare",
+   "icon": "skull",
+   "family": "dead",
+   "desc": "Once a fight, when a hero goes down: 3d6 rot to every enemy.",
+   "triggers": [
+    {
+     "event": "ally_down",
+     "effects": [
+      {
+       "type": "damage",
+       "dice": "3d6",
+       "dtype": "rot",
+       "to": "all_enemies"
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "once": "combat",
+     "label": "Death Rattle",
+     "once_key": "rattle"
+    }
+   ],
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "id": "tr_planchette",
+   "name": "Planchette",
+   "rarity": "rare",
+   "icon": "spiral",
+   "family": "dead",
+   "desc": "A dead player's cardboard stand-in joins every fight.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "summon",
+       "unit": "cardboard_ally",
+       "side": "hero",
+       "near": "random_hero"
+      }
+     ],
+     "label": "Planchette",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "id": "tr_embalming_fluid",
+   "name": "Embalming Fluid",
+   "rarity": "common",
+   "icon": "potion",
+   "family": "dead",
+   "desc": "Heroes below 30% HP take 2 less damage.",
+   "mods": [
+    {
+     "key": "damage_taken_add",
+     "op": "add",
+     "value": -2,
+     "when": {
+      "side": "hero",
+      "hp_below": 0.3
+     }
+    }
+   ],
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "id": "tr_the_wake",
+   "name": "The Wake",
+   "rarity": "uncommon",
+   "icon": "candle",
+   "family": "dead",
+   "desc": "When a hero dies: 50 gold, and the rest heal 10.",
+   "triggers": [
+    {
+     "event": "hero_death",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 50
+      },
+      {
+       "type": "heal",
+       "dice": "10",
+       "to": "all_heroes"
+      }
+     ],
+     "label": "The Wake"
+    }
+   ],
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "id": "tr_skull_cup",
+   "name": "Skull Cup",
+   "rarity": "common",
+   "icon": "skull",
+   "family": "dead",
+   "desc": "Every kill: the killer gains 4 temporary HP.",
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "temp_hp",
+       "dice": "4",
+       "to": "self"
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "label": "Skull Cup",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "id": "tr_photograph",
+   "name": "Photograph of the Fallen",
+   "rarity": "rare",
+   "icon": "mask",
+   "family": "dead",
+   "desc": "+2 damage for every hero who has died this run (up to +8).",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero"
+     },
+     "per_fallen": 1,
+     "scale_cap": 8
+    }
+   ],
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "id": "tr_dead_ringer",
+   "name": "Dead Ringer",
+   "rarity": "uncommon",
+   "icon": "bell",
+   "family": "dead",
+   "desc": "When a hero goes down, he looks away for 4 seconds.",
+   "triggers": [
+    {
+     "event": "ally_down",
+     "effects": [
+      {
+       "type": "blind",
+       "seconds": 4
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "label": "Dead Ringer",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "dead"
+   ]
+  },
+  {
+   "id": "tr_rosary_teeth",
+   "name": "Rosary of Teeth",
+   "rarity": "common",
+   "icon": "fang",
+   "family": "faithful",
+   "desc": "Healing +20%.",
+   "mods": [
+    {
+     "key": "heal_dealt_mult",
+     "op": "add",
+     "value": 0.2,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "faithful"
+   ]
+  },
+  {
+   "id": "tr_votive",
+   "name": "Votive Candle",
+   "rarity": "common",
+   "icon": "candle",
+   "family": "faithful",
+   "desc": "Every fight starts with your heroes blessed for a turn.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "blessed",
+       "turns": 1,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Votive",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "faithful"
+   ]
+  },
+  {
+   "id": "tr_hymn_sheet",
+   "name": "Hymn Sheet",
+   "rarity": "common",
+   "icon": "note",
+   "family": "faithful",
+   "desc": "Heroes +1 to saving throws.",
+   "mods": [
+    {
+     "key": "save_bonus",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "faithful"
+   ]
+  },
+  {
+   "id": "tr_saints_finger",
+   "name": "Saint's Finger",
+   "rarity": "rare",
+   "icon": "hand",
+   "family": "faithful",
+   "desc": "At the start of your turn every hero heals 3.",
+   "triggers": [
+    {
+     "event": "hero_turn",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "3",
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Saint's Finger",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "faithful"
+   ]
+  },
+  {
+   "id": "tr_confession_slip",
+   "name": "Confession Slip",
+   "rarity": "uncommon",
+   "icon": "scroll",
+   "family": "faithful",
+   "desc": "Caught? The hero he slapped heals 8 afterwards.",
+   "triggers": [
+    {
+     "event": "caught",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "8",
+       "to": "self"
+      }
+     ],
+     "label": "Confession"
+    }
+   ],
+   "tags": [
+    "faithful"
+   ]
+  },
+  {
+   "id": "tr_incense",
+   "name": "Incense",
+   "rarity": "uncommon",
+   "icon": "cloak",
+   "family": "faithful",
+   "desc": "At the start of your turn a random enemy is hexed.",
+   "triggers": [
+    {
+     "event": "hero_turn",
+     "effects": [
+      {
+       "type": "status",
+       "id": "hexed",
+       "turns": 1,
+       "to": "random_enemy"
+      }
+     ],
+     "label": "Incense",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "faithful"
+   ]
+  },
+  {
+   "id": "tr_halo_wire",
+   "name": "Halo Wire",
+   "rarity": "rare",
+   "icon": "halo",
+   "family": "faithful",
+   "desc": "Statuses your heroes apply last a turn longer.",
+   "mods": [
+    {
+     "key": "status_turns_add",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "faithful"
+   ]
+  },
+  {
+   "id": "tr_prayer_bones",
+   "name": "Prayer Bones",
+   "rarity": "common",
+   "icon": "cross",
+   "family": "faithful",
+   "desc": "A hero's natural 20 heals every hero 5.",
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "5",
+       "to": "all_heroes"
+      }
+     ],
+     "when": {
+      "side": "hero",
+      "natural": 20
+     },
+     "label": "Prayer Bones"
+    }
+   ],
+   "tags": [
+    "faithful"
+   ]
+  },
+  {
+   "id": "tr_communion_wine",
+   "name": "Communion Wine",
+   "rarity": "uncommon",
+   "icon": "glass",
+   "family": "faithful",
+   "desc": "Every sip cleanses a random hero.",
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "cleanse",
+       "to": "random_hero"
+      }
+     ],
+     "label": "Communion",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "faithful"
+   ]
+  },
+  {
+   "id": "tr_church_key",
+   "name": "Church Key",
+   "rarity": "common",
+   "icon": "cross",
+   "family": "faithful",
+   "desc": "Heroes' holy damage +2.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero",
+      "dtype": "holy"
+     }
+    }
+   ],
+   "tags": [
+    "faithful"
+   ]
+  },
+  {
+   "id": "tr_absolution",
+   "name": "Absolution",
+   "rarity": "rare",
+   "icon": "halo",
+   "family": "faithful",
+   "desc": "His FILE on you drops 10 more after every fight.",
+   "mods": [
+    {
+     "key": "suspicion_decay",
+     "op": "add",
+     "value": 10
+    }
+   ],
+   "tags": [
+    "faithful"
+   ]
+  },
+  {
+   "id": "tr_martyrs_nail",
+   "name": "Martyr's Nail",
+   "rarity": "uncommon",
+   "icon": "spikes",
+   "family": "faithful",
+   "desc": "When a hero is hurt, they're blessed for a turn (once a turn).",
+   "triggers": [
+    {
+     "event": "damaged",
+     "effects": [
+      {
+       "type": "status",
+       "id": "blessed",
+       "turns": 1,
+       "to": "self"
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "once": "turn",
+     "label": "Martyr"
+    }
+   ],
+   "tags": [
+    "faithful"
+   ]
+  },
+  {
+   "id": "tr_errata",
+   "name": "Errata Sheet",
+   "rarity": "uncommon",
+   "icon": "scroll",
+   "family": "paper",
+   "desc": "Teaches SWAP, and swapping adds 8 less to the FILE.",
+   "mods": [
+    {
+     "key": "cheat_suspicion",
+     "op": "add",
+     "value": -8,
+     "when": {
+      "cheat": "swap_rule"
+     }
+    }
+   ],
+   "cheats": [
+    "swap_rule"
+   ],
+   "tags": [
+    "paper"
+   ]
+  },
+  {
+   "id": "tr_fine_print",
+   "name": "Fine Print",
+   "rarity": "common",
+   "icon": "scroll",
+   "family": "paper",
+   "desc": "Your cards' save DCs +1.",
+   "mods": [
+    {
+     "key": "save_dc",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "paper"
+   ]
+  },
+  {
+   "id": "tr_dog_eared_page",
+   "name": "Dog-Eared Page",
+   "rarity": "common",
+   "icon": "tome",
+   "family": "paper",
+   "desc": "Heroes roll with advantage in the first round.",
+   "mods": [
+    {
+     "key": "advantage",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero",
+      "round_le": 1
+     }
+    }
+   ],
+   "tags": [
+    "paper"
+   ]
+  },
+  {
+   "id": "tr_red_pen",
+   "name": "Red Pen",
+   "rarity": "uncommon",
+   "icon": "pencil",
+   "family": "paper",
+   "desc": "Every swapped rule exposes every enemy for 2 turns.",
+   "triggers": [
+    {
+     "event": "cheat",
+     "effects": [
+      {
+       "type": "status",
+       "id": "exposed",
+       "turns": 2,
+       "to": "all_enemies"
+      }
+     ],
+     "when": {
+      "cheat": "swap_rule"
+     },
+     "label": "Red Pen"
+    }
+   ],
+   "tags": [
+    "paper"
+   ]
+  },
+  {
+   "id": "tr_unsigned_contract",
+   "name": "Unsigned Contract",
+   "rarity": "rare",
+   "icon": "scroll",
+   "family": "paper",
+   "desc": "Heroes get an extra bonus action every turn. His pieces hit +1.",
+   "mods": [
+    {
+     "key": "bonus_actions",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    },
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "enemy"
+     }
+    }
+   ],
+   "tags": [
+    "paper"
+   ]
+  },
+  {
+   "id": "tr_footnote",
+   "name": "Footnote",
+   "rarity": "common",
+   "icon": "note",
+   "family": "paper",
+   "desc": "Spells recharge a round faster.",
+   "mods": [
+    {
+     "key": "cooldown_add",
+     "op": "add",
+     "value": -1,
+     "when": {
+      "side": "hero",
+      "tag": "spell"
+     }
+    }
+   ],
+   "tags": [
+    "paper"
+   ]
+  },
+  {
+   "id": "tr_index_card",
+   "name": "Index Card",
+   "rarity": "common",
+   "icon": "card",
+   "family": "paper",
+   "desc": "Every fight starts with a 10 up your sleeve.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "sleeve",
+       "n": 10
+      }
+     ],
+     "label": "Index Card",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "paper"
+   ]
+  },
+  {
+   "id": "tr_blank_rule",
+   "name": "Blank Rule Card",
+   "rarity": "rare",
+   "icon": "card",
+   "family": "paper",
+   "desc": "Write your own: gain a rule card now. Heroes +1 to hit.",
+   "mods": [
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "on_gain": [
+    {
+     "type": "rule_card",
+     "id": "random"
+    }
+   ],
+   "tags": [
+    "paper"
+   ]
+  },
+  {
+   "id": "tr_rubber_stamp",
+   "name": "Rubber Stamp",
+   "rarity": "uncommon",
+   "icon": "target",
+   "family": "paper",
+   "desc": "APPROVED. Repeating a card: +4 damage instead of a penalty.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 4,
+     "when": {
+      "side": "hero",
+      "repeat": true
+     }
+    }
+   ],
+   "tags": [
+    "paper"
+   ]
+  },
+  {
+   "id": "tr_carbon_copy",
+   "name": "Carbon Copy",
+   "rarity": "rare",
+   "icon": "scroll",
+   "family": "paper",
+   "desc": "A hero's first card each fight can be used twice: they start with an extra action.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "extra_action",
+       "kind": "action",
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Carbon Copy",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "paper"
+   ]
+  },
+  {
+   "id": "tr_paperweight",
+   "name": "Paperweight",
+   "rarity": "common",
+   "icon": "ward",
+   "family": "paper",
+   "desc": "Heroes can't be shoved for the first 2 turns.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "steadfast",
+       "turns": 2,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Paperweight",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "paper"
+   ]
+  },
+  {
+   "id": "tr_kazoo",
+   "name": "Kazoo",
+   "rarity": "common",
+   "icon": "note",
+   "family": "mouths",
+   "desc": "Distractions recharge 40% faster.",
+   "mods": [
+    {
+     "key": "distract_cooldown",
+     "op": "mul",
+     "value": 0.6
+    }
+   ],
+   "tags": [
+    "mouths"
+   ]
+  },
+  {
+   "id": "tr_windup_mouse",
+   "name": "Wind-Up Mouse",
+   "rarity": "uncommon",
+   "icon": "wolf",
+   "family": "mouths",
+   "desc": "Every fight starts with him chasing it for 4 seconds.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "blind",
+       "seconds": 4
+      }
+     ],
+     "label": "Wind-Up Mouse",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "mouths"
+   ]
+  },
+  {
+   "id": "tr_whoopee",
+   "name": "Whoopee Cushion",
+   "rarity": "common",
+   "icon": "mouth",
+   "family": "mouths",
+   "desc": "Every distraction gives a random hero a bonus action.",
+   "triggers": [
+    {
+     "event": "distracted",
+     "effects": [
+      {
+       "type": "extra_action",
+       "kind": "bonus",
+       "to": "random_hero"
+      }
+     ],
+     "label": "Whoopee"
+    }
+   ],
+   "tags": [
+    "mouths"
+   ]
+  },
+  {
+   "id": "tr_ventriloquist",
+   "name": "Ventriloquist's Doll",
+   "rarity": "rare",
+   "icon": "mask",
+   "family": "mouths",
+   "desc": "Distractions turn his head almost at once.",
+   "mods": [
+    {
+     "key": "distract_cut",
+     "op": "set",
+     "value": 0.05
+    }
+   ],
+   "tags": [
+    "mouths"
+   ]
+  },
+  {
+   "id": "tr_chatter_teeth",
+   "name": "Chattering Teeth",
+   "rarity": "common",
+   "icon": "mouth",
+   "family": "mouths",
+   "desc": "His tells come half a second earlier.",
+   "mods": [
+    {
+     "key": "tell_time",
+     "op": "add",
+     "value": 0.5
+    }
+   ],
+   "tags": [
+    "mouths"
+   ]
+  },
+  {
+   "id": "tr_heckler_badge",
+   "name": "Heckler's Badge",
+   "rarity": "uncommon",
+   "icon": "banner",
+   "family": "mouths",
+   "desc": "Every distraction dazes a random enemy.",
+   "triggers": [
+    {
+     "event": "distracted",
+     "effects": [
+      {
+       "type": "status",
+       "id": "dazed",
+       "turns": 1,
+       "to": "random_enemy"
+      }
+     ],
+     "label": "Heckle"
+    }
+   ],
+   "tags": [
+    "mouths"
+   ]
+  },
+  {
+   "id": "tr_ear_trumpet",
+   "name": "Ear Trumpet",
+   "rarity": "uncommon",
+   "icon": "bell",
+   "family": "mouths",
+   "desc": "His tells never lie.",
+   "mods": [
+    {
+     "key": "no_fakeouts",
+     "op": "set",
+     "value": true
+    }
+   ],
+   "tags": [
+    "mouths"
+   ]
+  },
+  {
+   "id": "tr_lipstick",
+   "name": "Lipstick Kiss",
+   "rarity": "rare",
+   "icon": "mouth",
+   "family": "mouths",
+   "desc": "He looks away 35% longer.",
+   "mods": [
+    {
+     "key": "away_mult",
+     "op": "mul",
+     "value": 1.35
+    }
+   ],
+   "tags": [
+    "mouths"
+   ]
+  },
+  {
+   "id": "tr_spare_eye",
+   "name": "His Spare Eye",
+   "rarity": "rare",
+   "icon": "eye",
+   "family": "mouths",
+   "desc": "You keep it in your pocket. He watches 25% less.",
+   "mods": [
+    {
+     "key": "watch_mult",
+     "op": "mul",
+     "value": 0.75
+    }
+   ],
+   "tags": [
+    "mouths"
+   ]
+  },
+  {
+   "id": "tr_party_popper",
+   "name": "Party Popper",
+   "rarity": "common",
+   "icon": "star",
+   "family": "mouths",
+   "desc": "Every fight starts with 2 seconds of him looking at the ceiling.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "blind",
+       "seconds": 2
+      }
+     ],
+     "label": "Party Popper",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "mouths"
+   ]
+  },
+  {
+   "id": "tr_bad_joke",
+   "name": "A Very Bad Joke",
+   "rarity": "common",
+   "icon": "mouth",
+   "family": "mouths",
+   "desc": "Distractions add nothing to the FILE.",
+   "mods": [
+    {
+     "key": "cheat_suspicion",
+     "op": "set",
+     "value": 0,
+     "when": {
+      "cheat": "distract"
+     }
+    }
+   ],
+   "tags": [
+    "mouths"
+   ]
+  },
+  {
+   "id": "tr_loud_shirt",
+   "name": "Loud Shirt",
+   "rarity": "cursed",
+   "icon": "cloak",
+   "family": "mouths",
+   "desc": "Cursed. He watches 40% less, but his pieces hit +1.",
+   "mods": [
+    {
+     "key": "watch_mult",
+     "op": "mul",
+     "value": 0.6
+    },
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "enemy"
+     }
+    }
+   ],
+   "tags": [
+    "mouths"
+   ]
+  },
+  {
+   "id": "tr_egg_timer2",
+   "name": "Kitchen Timer",
+   "rarity": "common",
+   "icon": "cog",
+   "family": "clocks",
+   "desc": "From round 3, heroes deal +2 damage.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero",
+      "round_ge": 3
+     }
+    }
+   ],
+   "tags": [
+    "clocks"
+   ]
+  },
+  {
+   "id": "tr_stopped_watch",
+   "name": "Stopped Watch",
+   "rarity": "rare",
+   "icon": "cog",
+   "family": "clocks",
+   "desc": "In the first round, every hero gets an extra action.",
+   "mods": [
+    {
+     "key": "actions",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero",
+      "round_le": 1
+     }
+    }
+   ],
+   "tags": [
+    "clocks"
+   ]
+  },
+  {
+   "id": "tr_metronome",
+   "name": "Metronome",
+   "rarity": "uncommon",
+   "icon": "note",
+   "family": "clocks",
+   "desc": "Every round, every hero regains 1 resource.",
+   "triggers": [
+    {
+     "event": "round_start",
+     "effects": [
+      {
+       "type": "res",
+       "n": 1,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Metronome",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "clocks"
+   ]
+  },
+  {
+   "id": "tr_cuckoo",
+   "name": "Cuckoo",
+   "rarity": "uncommon",
+   "icon": "wing",
+   "family": "clocks",
+   "desc": "From round 4, every round dazes a random enemy.",
+   "triggers": [
+    {
+     "event": "round_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "dazed",
+       "turns": 1,
+       "to": "random_enemy"
+      }
+     ],
+     "when": {
+      "round_ge": 4
+     },
+     "label": "Cuckoo"
+    }
+   ],
+   "tags": [
+    "clocks"
+   ]
+  },
+  {
+   "id": "tr_alarm_clock",
+   "name": "Alarm Clock",
+   "rarity": "common",
+   "icon": "bell",
+   "family": "clocks",
+   "desc": "Every fight starts with your heroes hasted for a turn.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "hasted",
+       "turns": 1,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Alarm Clock",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "clocks"
+   ]
+  },
+  {
+   "id": "tr_sundial",
+   "name": "Sundial",
+   "rarity": "common",
+   "icon": "sun",
+   "family": "clocks",
+   "desc": "From round 3, cards recharge a round faster.",
+   "mods": [
+    {
+     "key": "cooldown_add",
+     "op": "add",
+     "value": -1,
+     "when": {
+      "side": "hero",
+      "round_ge": 3
+     }
+    }
+   ],
+   "tags": [
+    "clocks"
+   ]
+  },
+  {
+   "id": "tr_hourglass_sand",
+   "name": "Hourglass Sand",
+   "rarity": "uncommon",
+   "icon": "drop",
+   "family": "clocks",
+   "desc": "Every round end: every hero gains 2 temporary HP.",
+   "triggers": [
+    {
+     "event": "round_end",
+     "effects": [
+      {
+       "type": "temp_hp",
+       "dice": "2",
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Sand",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "clocks"
+   ]
+  },
+  {
+   "id": "tr_clock_hands",
+   "name": "Clock Hands",
+   "rarity": "rare",
+   "icon": "cog",
+   "family": "clocks",
+   "desc": "From round 5, every hero gets an extra action.",
+   "mods": [
+    {
+     "key": "actions",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero",
+      "round_ge": 5
+     }
+    }
+   ],
+   "tags": [
+    "clocks"
+   ]
+  },
+  {
+   "id": "tr_overtime",
+   "name": "Overtime Slip",
+   "rarity": "uncommon",
+   "icon": "ticket",
+   "family": "clocks",
+   "desc": "From round 6, heroes deal +3 damage.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 3,
+     "when": {
+      "side": "hero",
+      "round_ge": 6
+     }
+    }
+   ],
+   "tags": [
+    "clocks"
+   ]
+  },
+  {
+   "id": "tr_pendulum",
+   "name": "Pendulum",
+   "rarity": "common",
+   "icon": "spiral",
+   "family": "clocks",
+   "desc": "Heroes +1 speed in the first two rounds.",
+   "mods": [
+    {
+     "key": "speed",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero",
+      "round_le": 2
+     }
+    }
+   ],
+   "tags": [
+    "clocks"
+   ]
+  },
+  {
+   "id": "tr_jar_of_teeth",
+   "name": "Jar of Teeth",
+   "rarity": "common",
+   "icon": "fang",
+   "family": "flesh",
+   "desc": "Crits open bleeding wounds (2 stacks).",
+   "triggers": [
+    {
+     "event": "crit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "bleeding",
+       "turns": 3,
+       "stacks": 2,
+       "to": "target"
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "label": "Teeth"
+    }
+   ],
+   "tags": [
+    "flesh"
+   ]
+  },
+  {
+   "id": "tr_flesh_hook",
+   "name": "Flesh Hook",
+   "rarity": "uncommon",
+   "icon": "hook",
+   "family": "flesh",
+   "desc": "Once a turn, a melee hit drags the target a tile closer.",
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "pull",
+       "n": 1,
+       "to": "target"
+      }
+     ],
+     "when": {
+      "side": "hero",
+      "melee": true
+     },
+     "once": "turn",
+     "label": "Flesh Hook",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "flesh"
+   ]
+  },
+  {
+   "id": "tr_tongue_ribbon",
+   "name": "A Tongue on a Ribbon",
+   "rarity": "rare",
+   "icon": "mouth",
+   "family": "flesh",
+   "desc": "Every kill: the killer heals 6 and is empowered.",
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "6",
+       "to": "self"
+      },
+      {
+       "type": "status",
+       "id": "empowered",
+       "turns": 1,
+       "to": "self"
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "label": "Tongue"
+    }
+   ],
+   "tags": [
+    "flesh"
+   ]
+  },
+  {
+   "id": "tr_skin_glove",
+   "name": "Skin Glove",
+   "rarity": "uncommon",
+   "icon": "hand",
+   "family": "flesh",
+   "desc": "Heroes below half HP deal +2 damage.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero",
+      "hp_below": 0.5
+     }
+    }
+   ],
+   "tags": [
+    "flesh"
+   ]
+  },
+  {
+   "id": "tr_marrow_spoon",
+   "name": "Marrow Spoon",
+   "rarity": "common",
+   "icon": "drop",
+   "family": "flesh",
+   "desc": "Every kill: the killer regains 1 resource.",
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "res",
+       "n": 1,
+       "to": "self"
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "label": "Marrow",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "flesh"
+   ]
+  },
+  {
+   "id": "tr_butchers_twine",
+   "name": "Butcher's Twine",
+   "rarity": "common",
+   "icon": "net",
+   "family": "flesh",
+   "desc": "Bleeding enemies take +2 from everything.",
+   "mods": [
+    {
+     "key": "damage_taken_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "enemy",
+      "self_status": "bleeding"
+     }
+    }
+   ],
+   "tags": [
+    "flesh"
+   ]
+  },
+  {
+   "id": "tr_sutures",
+   "name": "Sutures",
+   "rarity": "common",
+   "icon": "cross",
+   "family": "flesh",
+   "desc": "At the start of your turn every hero heals 1.",
+   "triggers": [
+    {
+     "event": "hero_turn",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "1",
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Sutures",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "flesh"
+   ]
+  },
+  {
+   "id": "tr_eye_in_jar",
+   "name": "Eye in a Jar",
+   "rarity": "uncommon",
+   "icon": "eye",
+   "family": "flesh",
+   "desc": "+2 to hit bleeding targets.",
+   "mods": [
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero",
+      "target_status": "bleeding"
+     }
+    }
+   ],
+   "tags": [
+    "flesh"
+   ]
+  },
+  {
+   "id": "tr_raw_heart",
+   "name": "Raw Heart",
+   "rarity": "rare",
+   "icon": "heart",
+   "family": "flesh",
+   "desc": "Heroes start every fight with 8 temporary HP.",
+   "mods": [
+    {
+     "key": "temp_hp_combat",
+     "op": "add",
+     "value": 8,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "flesh"
+   ]
+  },
+  {
+   "id": "tr_bloodletting",
+   "name": "Bloodletting Cup",
+   "rarity": "uncommon",
+   "icon": "drop",
+   "family": "flesh",
+   "desc": "Once a turn, a hero who's hurt is empowered for a turn.",
+   "triggers": [
+    {
+     "event": "damaged",
+     "effects": [
+      {
+       "type": "status",
+       "id": "empowered",
+       "turns": 1,
+       "to": "self"
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "once": "turn",
+     "label": "Bloodletting",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "flesh"
+   ]
+  },
+  {
+   "id": "tr_gut_string",
+   "name": "Gut-String Lute",
+   "rarity": "common",
+   "icon": "note",
+   "family": "flesh",
+   "desc": "Every kill inspires every hero for a turn.",
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "status",
+       "id": "inspired",
+       "turns": 1,
+       "to": "all_heroes"
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "label": "Gut String",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "flesh"
+   ]
+  },
+  {
+   "id": "tr_meat_mask",
+   "name": "Meat Mask",
+   "rarity": "cursed",
+   "icon": "mask",
+   "family": "flesh",
+   "desc": "Cursed. Heroes deal +3 damage, but healing on them is halved.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 3,
+     "when": {
+      "side": "hero"
+     }
+    },
+    {
+     "key": "heal_taken_mult",
+     "op": "mul",
+     "value": 0.5,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "flesh"
+   ]
+  },
+  {
+   "id": "tr_paint_pot",
+   "name": "Pot of Red Paint",
+   "rarity": "common",
+   "icon": "drop",
+   "family": "minis",
+   "desc": "Nudges move a miniature one square further.",
+   "mods": [
+    {
+     "key": "nudge_squares",
+     "op": "add",
+     "value": 1
+    }
+   ],
+   "tags": [
+    "minis"
+   ]
+  },
+  {
+   "id": "tr_base_magnets",
+   "name": "Base Magnets",
+   "rarity": "uncommon",
+   "icon": "cog",
+   "family": "minis",
+   "desc": "Nudges can't be caught.",
+   "mods": [
+    {
+     "key": "cheat_safe",
+     "op": "set",
+     "value": true,
+     "when": {
+      "cheat": "nudge"
+     }
+    }
+   ],
+   "tags": [
+    "minis"
+   ]
+  },
+  {
+   "id": "tr_felt_cape",
+   "name": "Tiny Felt Cape",
+   "rarity": "common",
+   "icon": "cloak",
+   "family": "minis",
+   "desc": "Flanking heroes roll with advantage.",
+   "mods": [
+    {
+     "key": "advantage",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero",
+      "flanking": true
+     }
+    }
+   ],
+   "tags": [
+    "minis"
+   ]
+  },
+  {
+   "id": "tr_glue_pot",
+   "name": "Glue Pot",
+   "rarity": "uncommon",
+   "icon": "drop",
+   "family": "minis",
+   "desc": "Enemies -1 speed.",
+   "mods": [
+    {
+     "key": "speed",
+     "op": "add",
+     "value": -1,
+     "when": {
+      "side": "enemy"
+     }
+    }
+   ],
+   "tags": [
+    "minis"
+   ]
+  },
+  {
+   "id": "tr_mini_ladder",
+   "name": "Miniature Ladder",
+   "rarity": "common",
+   "icon": "wall",
+   "family": "minis",
+   "desc": "Every kill: the killer gets 2 extra squares of movement.",
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "extra_move",
+       "n": 2,
+       "to": "self"
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "label": "Ladder",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "minis"
+   ]
+  },
+  {
+   "id": "tr_spare_mini",
+   "name": "Spare Miniature",
+   "rarity": "rare",
+   "icon": "mask",
+   "family": "minis",
+   "desc": "A spare cardboard ally joins every fight.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "summon",
+       "unit": "cardboard_ally",
+       "side": "hero",
+       "near": "random_hero"
+      }
+     ],
+     "label": "Spare Mini",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "minis"
+   ]
+  },
+  {
+   "id": "tr_pewter_soldier",
+   "name": "Pewter Soldier",
+   "rarity": "common",
+   "icon": "shield",
+   "family": "minis",
+   "desc": "A hero with no ally next to them has +2 defense.",
+   "mods": [
+    {
+     "key": "defense",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero",
+      "alone": true
+     }
+    }
+   ],
+   "tags": [
+    "minis"
+   ]
+  },
+  {
+   "id": "tr_dented_base",
+   "name": "Dented Base",
+   "rarity": "common",
+   "icon": "target",
+   "family": "minis",
+   "desc": "Flanking heroes +1 to hit.",
+   "mods": [
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero",
+      "flanking": true
+     }
+    }
+   ],
+   "tags": [
+    "minis"
+   ]
+  },
+  {
+   "id": "tr_display_case",
+   "name": "Display Case",
+   "rarity": "rare",
+   "icon": "ward",
+   "family": "minis",
+   "desc": "Heroes take 1 less damage from everything.",
+   "mods": [
+    {
+     "key": "damage_taken_add",
+     "op": "add",
+     "value": -1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "minis"
+   ]
+  },
+  {
+   "id": "tr_dust_brush",
+   "name": "Dust Brush",
+   "rarity": "common",
+   "icon": "feather",
+   "family": "minis",
+   "desc": "At the start of your turn, a random hero is cleansed.",
+   "triggers": [
+    {
+     "event": "hero_turn",
+     "effects": [
+      {
+       "type": "cleanse",
+       "to": "random_hero"
+      }
+     ],
+     "label": "Dust Brush",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "minis"
+   ]
+  },
+  {
+   "id": "tr_lead_base",
+   "name": "Lead Base",
+   "rarity": "uncommon",
+   "icon": "shield",
+   "family": "minis",
+   "desc": "Heroes +1 defense.",
+   "mods": [
+    {
+     "key": "defense",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "minis"
+   ]
+  },
+  {
+   "id": "tr_wax_drip",
+   "name": "Wax Drip",
+   "rarity": "common",
+   "icon": "candle",
+   "family": "candles",
+   "desc": "Heroes' fire damage +2.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero",
+      "dtype": "fire"
+     }
+    }
+   ],
+   "tags": [
+    "candles"
+   ]
+  },
+  {
+   "id": "tr_wick_trimmer",
+   "name": "Wick Trimmer",
+   "rarity": "common",
+   "icon": "flame",
+   "family": "candles",
+   "desc": "Kill a burning enemy: the ones next to the killer catch fire.",
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "status",
+       "id": "burning",
+       "turns": 2,
+       "to": "adjacent_foes"
+      }
+     ],
+     "when": {
+      "side": "hero",
+      "target_status": "burning"
+     },
+     "label": "Wick Trimmer"
+    }
+   ],
+   "tags": [
+    "candles"
+   ]
+  },
+  {
+   "id": "tr_birthday_candles",
+   "name": "Birthday Candles",
+   "rarity": "uncommon",
+   "icon": "candle",
+   "family": "candles",
+   "desc": "Every enemy starts every fight burning.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "burning",
+       "turns": 1,
+       "to": "all_enemies"
+      }
+     ],
+     "label": "Make a Wish"
+    }
+   ],
+   "tags": [
+    "candles"
+   ]
+  },
+  {
+   "id": "tr_match_tin",
+   "name": "Tin of Matches",
+   "rarity": "common",
+   "icon": "flame",
+   "family": "candles",
+   "desc": "A hero's natural 20 sets a random enemy burning for 2 turns.",
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "status",
+       "id": "burning",
+       "turns": 2,
+       "to": "random_foe"
+      }
+     ],
+     "when": {
+      "side": "hero",
+      "natural": 20
+     },
+     "label": "Matches"
+    }
+   ],
+   "tags": [
+    "candles"
+   ]
+  },
+  {
+   "id": "tr_lantern_oil",
+   "name": "Lantern Oil",
+   "rarity": "uncommon",
+   "icon": "potion",
+   "family": "candles",
+   "desc": "Spells that hit set the target burning.",
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "burning",
+       "turns": 1,
+       "to": "target"
+      }
+     ],
+     "when": {
+      "side": "hero",
+      "tag": "spell"
+     },
+     "label": "Lantern Oil",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "candles"
+   ]
+  },
+  {
+   "id": "tr_snuffer",
+   "name": "Candle Snuffer",
+   "rarity": "rare",
+   "icon": "candle",
+   "family": "candles",
+   "desc": "Every kill: his FILE drops 3.",
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": -3
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "label": "Snuffer",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "candles"
+   ]
+  },
+  {
+   "id": "tr_tallow",
+   "name": "Tallow",
+   "rarity": "common",
+   "icon": "candle",
+   "family": "candles",
+   "desc": "Heroes take 2 less fire damage.",
+   "mods": [
+    {
+     "key": "damage_taken_add",
+     "op": "add",
+     "value": -2,
+     "when": {
+      "side": "hero",
+      "dtype": "fire"
+     }
+    }
+   ],
+   "tags": [
+    "candles"
+   ]
+  },
+  {
+   "id": "tr_ember_ring",
+   "name": "Ember Ring",
+   "rarity": "uncommon",
+   "icon": "flame",
+   "family": "candles",
+   "desc": "Whoever hurts a hero catches fire (once a turn).",
+   "triggers": [
+    {
+     "event": "damaged",
+     "effects": [
+      {
+       "type": "status",
+       "id": "burning",
+       "turns": 1,
+       "to": "target"
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "once": "turn",
+     "label": "Ember Ring",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "candles"
+   ]
+  },
+  {
+   "id": "tr_black_candle",
+   "name": "Black Candle",
+   "rarity": "cursed",
+   "icon": "candle",
+   "family": "candles",
+   "desc": "Cursed. Heroes' fire damage +5, but every round burns every hero for 1.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 5,
+     "when": {
+      "side": "hero",
+      "dtype": "fire"
+     }
+    }
+   ],
+   "triggers": [
+    {
+     "event": "round_start",
+     "effects": [
+      {
+       "type": "damage",
+       "dice": "1",
+       "dtype": "fire",
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Black Candle",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "candles"
+   ]
+  },
+  {
+   "id": "tr_wick_of_hair",
+   "name": "Wick of Hair",
+   "rarity": "rare",
+   "icon": "flame",
+   "family": "candles",
+   "desc": "Crits add 2d6 fire.",
+   "triggers": [
+    {
+     "event": "crit",
+     "effects": [
+      {
+       "type": "damage",
+       "dice": "2d6",
+       "dtype": "fire",
+       "to": "target"
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "label": "Wick of Hair"
+    }
+   ],
+   "tags": [
+    "candles"
+   ]
+  },
+  {
+   "id": "tr_flare",
+   "name": "Flare",
+   "rarity": "common",
+   "icon": "star",
+   "family": "candles",
+   "desc": "A hero's first hit each fight sets the target burning for 3 turns.",
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "burning",
+       "turns": 3,
+       "to": "target"
+      }
+     ],
+     "when": {
+      "side": "hero"
+     },
+     "once": "combat",
+     "label": "Flare"
+    }
+   ],
+   "tags": [
+    "candles"
+   ]
+  }
+ ]
+}

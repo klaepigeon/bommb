@@ -16,7 +16,7 @@ const ANIMS := ["talk", "point", "point_up", "spread", "reach", "tap", "slam", "
 	"beckon", "conduct", "salute", "wave", "thumbs_up", "cover_eyes", "facepalm", "shush", "head_spin", "hatch",
 	"countdown", "scuttle", "sob", "malfunction", "drum", "tip_hat", "look_door", "stare"]
 
-var fig: LcCallerFigure
+var fig    # LcCallerFigure (RATFORMER's port) or CallerFigure (the campaign's own, in its hall)
 var hatch: Node3D
 var piston: Node3D
 var hat: Node3D
@@ -31,10 +31,18 @@ var _walk_phase := 0.0
 var current := ""
 
 
+## Drive a Caller who's already standing somewhere (the campaign hall's own).
+static func wrap(figure: Node3D) -> CallerActor:
+	var a := CallerActor.new()
+	a.fig = figure
+	return a
+
+
 func _ready() -> void:
 	process_priority = 10   # after the figure has posed its head this frame
-	fig = LcCallerFigure.new()
-	add_child(fig)
+	if fig == null:
+		fig = LcCallerFigure.new()
+		add_child(fig)
 	_build_extras()
 	set_mood("calm")
 
@@ -126,7 +134,7 @@ func look(target: Variant) -> void:
 	if target is String:
 		fig.set_attention(target == "you", target)
 	elif target is Vector3:
-		var local := to_local(target)
+		var local: Vector3 = (fig as Node3D).to_local(target)
 		fig.look_yaw = atan2(local.x, local.z)
 		fig.look_pitch = -atan2(local.y - 2.2, Vector2(local.x, local.z).length()) * 0.5
 
@@ -137,8 +145,8 @@ func speak(seconds: float) -> void:
 
 # --- the animation library ---------------------------------------------------------------
 
-const AR := LcCallerFigure.ARM_REST
-const FR := LcCallerFigure.FORE_REST
+const AR := Vector3(-0.7, 0, 0.1)
+const FR := Vector3(-0.55, 0, 0)
 
 
 func play(anim: String) -> void:
@@ -152,11 +160,11 @@ func play(anim: String) -> void:
 	_tw = create_tween()
 	fig.gesture_tween = _tw
 	var tw := _tw
-	var L := fig.arm_l
-	var R := fig.arm_r
-	var fl := fig.fore_l
-	var fr := fig.fore_r
-	var T := fig.torso
+	var L: Node3D = fig.arm_l
+	var R: Node3D = fig.arm_r
+	var fl: Node3D = fig.fore_l
+	var fr: Node3D = fig.fore_r
+	var T: Node3D = fig.torso
 	match anim:
 		"talk":
 			_p(tw, [R, Vector3(-1.0, 0, 0.3), fr, Vector3(-0.9, 0, 0)], 0.3)
@@ -417,6 +425,8 @@ func _process(delta: float) -> void:
 	if unrest >= 2.0:
 		fig.cage.set_suspicion(1.0)
 	_scuttle = maxf(0.0, _scuttle - delta)
+	if not fig.has_method("walk"):
+		return
 	if _scuttle > 0.0:
 		_walk_phase += delta * 2.5
 		fig.walk(_walk_phase, 1.0)

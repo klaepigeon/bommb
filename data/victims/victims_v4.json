@@ -1,0 +1,711 @@
+{
+ "_note": "More people who sat in your seat before you (v4). Same shape as victims.json: signature cards and traits live here too, traits at min_level 99.",
+ "victims": [
+  {
+   "id": "v_eileen",
+   "name": "Eileen",
+   "seat": 1,
+   "year": 1984,
+   "class": "warlock",
+   "ancestry": "human",
+   "story": "Read the tea leaves at every interval. Told each of them how they would go. Got every one right. She never read her own cup. The Caller drank it.",
+   "quirk": "turns your cup upside down when you are not looking",
+   "start": [
+    "k_blast",
+    "k_hex",
+    "v_tea_leaves",
+    "k_grasp"
+   ],
+   "traits": [
+    "vt_second_sight"
+   ],
+   "attrs": {
+    "wits": 1
+   },
+   "hp_bonus": -1
+  },
+  {
+   "id": "v_barry",
+   "name": "Barry",
+   "seat": 3,
+   "year": 1991,
+   "class": "fighter",
+   "ancestry": "human",
+   "story": "Bought a round every time he lost. He lost every round. The tab behind the bar is still open. It is still in his name.",
+   "quirk": "pats his pockets for a wallet that is not there",
+   "start": [
+    "f_strike",
+    "f_shield_wall",
+    "v_my_round",
+    "f_guard"
+   ],
+   "traits": [
+    "vt_on_the_tab"
+   ],
+   "attrs": {
+    "might": 1
+   },
+   "hp_bonus": 3
+  },
+  {
+   "id": "v_sheila",
+   "name": "Sheila",
+   "seat": 4,
+   "year": 1980,
+   "class": "cleric",
+   "ancestry": "human",
+   "story": "Did the church flowers and the hall raffle. Prayed for a full house every Friday. The Caller answered. He is the only one who ever did.",
+   "quirk": "crosses herself whenever a number is called",
+   "start": [
+    "c_mace",
+    "c_mend",
+    "v_answered_prayer",
+    "c_ward"
+   ],
+   "traits": [
+    "vt_kneeler"
+   ],
+   "attrs": {
+    "nerve": 1
+   }
+  },
+  {
+   "id": "v_keith",
+   "name": "Keith",
+   "seat": 2,
+   "year": 2004,
+   "class": "ranger",
+   "ancestry": "human",
+   "story": "Walked his dog round the car park every interval. One night he came back without the dog. The dog came back later. Without Keith.",
+   "quirk": "whistles for something that never comes",
+   "start": [
+    "g_shot",
+    "g_mark",
+    "v_whistle",
+    "g_snare"
+   ],
+   "traits": [
+    "vt_dog_lead"
+   ],
+   "attrs": {
+    "grace": 1
+   }
+  },
+  {
+   "id": "v_lorraine",
+   "name": "Lorraine",
+   "seat": 1,
+   "year": 2010,
+   "class": "bard",
+   "ancestry": "human",
+   "story": "Sang karaoke at the interval. The same song, every week. The Caller asked for an encore. Then another. She is on her four thousandth.",
+   "quirk": "hums the same eight bars, then starts again",
+   "start": [
+    "d_rapier",
+    "d_mock",
+    "v_one_more_song",
+    "d_jinx"
+   ],
+   "traits": [
+    "vt_hoarse"
+   ],
+   "attrs": {
+    "nerve": 1
+   },
+   "hp_bonus": -1
+  },
+  {
+   "id": "v_bernard",
+   "name": "Bernard",
+   "seat": 3,
+   "year": 1976,
+   "class": "wizard",
+   "ancestry": "human",
+   "story": "Taught maths at the school. Said the odds in the cage were wrong. He was right. The Caller had him check every ball by hand. Every week. He is still checking.",
+   "quirk": "counts under his breath, always to ninety, never past",
+   "start": [
+    "w_bolt",
+    "v_check_the_odds",
+    "w_frost",
+    "w_blink"
+   ],
+   "traits": [
+    "vt_maths_teacher"
+   ],
+   "attrs": {
+    "wits": 1
+   }
+  },
+  {
+   "id": "v_gwen",
+   "name": "Gwen",
+   "seat": 2,
+   "year": 1994,
+   "class": "rogue",
+   "ancestry": "human",
+   "story": "Worked the prize counter. Swapped the good prizes for cheap ones and sold the good ones in the car park. The Caller found the boot of her car. Then the boot found her.",
+   "quirk": "checks the price on everything, including you",
+   "start": [
+    "r_stab",
+    "r_knife",
+    "v_five_finger",
+    "r_vanish"
+   ],
+   "traits": [
+    "vt_price_tag"
+   ],
+   "attrs": {
+    "grace": 1
+   },
+   "hp_bonus": -2
+  },
+  {
+   "id": "v_stan",
+   "name": "Stan",
+   "seat": 1,
+   "year": 1987,
+   "class": "barbarian",
+   "ancestry": "human",
+   "story": "Brought his own darts. Threw them at the dartboard when his numbers did not come. Then at the number board. Then at the Caller. The Caller kept the darts.",
+   "quirk": "flicks the flight of a dart he is not holding",
+   "start": [
+    "b_hew",
+    "b_rage",
+    "v_one_eighty",
+    "b_reckless"
+   ],
+   "traits": [
+    "vt_oche"
+   ],
+   "attrs": {
+    "might": 1
+   },
+   "hp_bonus": 2
+  },
+  {
+   "id": "v_irene",
+   "name": "Irene",
+   "seat": 3,
+   "year": 2013,
+   "class": "cleric",
+   "ancestry": "human",
+   "story": "Kept the first aid box. Plasters, paracetamol, a defibrillator nobody knew how to use. She learned. On herself. The Caller watched her practise.",
+   "quirk": "asks if you are all right, then asks again",
+   "start": [
+    "c_mace",
+    "c_mend",
+    "v_plasters",
+    "c_ward"
+   ],
+   "traits": [
+    "vt_first_aider"
+   ],
+   "hp_bonus": 4
+  }
+ ],
+ "abilities": [
+  {
+   "id": "v_tea_leaves",
+   "name": "Tea Leaves",
+   "class": "warlock",
+   "victim": "v_eileen",
+   "icon": "drop",
+   "cost": "bonus",
+   "cooldown": 3,
+   "range": 6,
+   "target": "enemy",
+   "roll": "none",
+   "tags": [
+    "curse",
+    "support"
+   ],
+   "effects": [
+    {
+     "type": "status",
+     "id": "hexed",
+     "turns": 2
+    },
+    {
+     "type": "status",
+     "id": "vulnerable",
+     "turns": 1
+    }
+   ],
+   "desc": "No Pact. An enemy within 6 is hexed for 2 turns (2 extra damage from everything, -2 to saves) and vulnerable until its next turn (50% more damage)."
+  },
+  {
+   "id": "v_my_round",
+   "name": "My Round",
+   "class": "fighter",
+   "victim": "v_barry",
+   "icon": "glass",
+   "cost": "bonus",
+   "uses": 1,
+   "range": 0,
+   "target": "self",
+   "area": {
+    "shape": "around_self",
+    "n": 2
+   },
+   "affects": "allies",
+   "roll": "none",
+   "tags": [
+    "heal",
+    "support"
+   ],
+   "effects": [
+    {
+     "type": "heal",
+     "dice": "1d6",
+     "stat": "might"
+    },
+    {
+     "type": "status",
+     "id": "empowered",
+     "turns": 2
+    }
+   ],
+   "self_effects": [
+    {
+     "type": "status",
+     "id": "dazed",
+     "turns": 1
+    }
+   ],
+   "desc": "Once per fight: allies within 2 heal 1d6 + Might and gain 1 Empowered (+3 damage) for 2 turns. You are dazed for a turn. He had one too."
+  },
+  {
+   "id": "v_answered_prayer",
+   "name": "Answered Prayer",
+   "class": "cleric",
+   "victim": "v_sheila",
+   "icon": "candle",
+   "cost": "action",
+   "res": 1,
+   "cooldown": 1,
+   "range": 4,
+   "target": "ally_or_downed",
+   "roll": "none",
+   "tags": [
+    "heal"
+   ],
+   "effects": [
+    {
+     "type": "heal",
+     "dice": "1d8",
+     "stat": "nerve"
+    },
+    {
+     "type": "status",
+     "id": "blessed",
+     "turns": 2
+    }
+   ],
+   "desc": "Spend 1 Faith: an ally within 4 heals 1d8 + Nerve and is blessed (+2 to attacks and saves) for 2 turns. Lifts the downed."
+  },
+  {
+   "id": "v_whistle",
+   "name": "Here, Boy",
+   "class": "ranger",
+   "victim": "v_keith",
+   "icon": "target",
+   "cost": "bonus",
+   "cooldown": 2,
+   "range": 6,
+   "target": "enemy",
+   "roll": "none",
+   "tags": [
+    "support",
+    "move"
+   ],
+   "effects": [
+    {
+     "type": "status",
+     "id": "marked",
+     "turns": 2
+    }
+   ],
+   "self_effects": [
+    {
+     "type": "extra_move",
+     "n": 2
+    }
+   ],
+   "desc": "Something answers the whistle. An enemy within 6 is marked for 2 turns (+2 to hit it), and you gain 2 movement."
+  },
+  {
+   "id": "v_one_more_song",
+   "name": "One More Song",
+   "class": "bard",
+   "victim": "v_lorraine",
+   "icon": "note",
+   "cost": "action",
+   "res": 1,
+   "cooldown": 2,
+   "range": 0,
+   "target": "self",
+   "area": {
+    "shape": "around_self",
+    "n": 3
+   },
+   "affects": "allies",
+   "roll": "none",
+   "tags": [
+    "support",
+    "spell"
+   ],
+   "effects": [
+    {
+     "type": "status",
+     "id": "inspired",
+     "turns": 2
+    }
+   ],
+   "self_effects": [
+    {
+     "type": "status",
+     "id": "inspired",
+     "turns": 2
+    }
+   ],
+   "desc": "Spend 1 Verse: you and every ally within 3 are inspired (+4 to the next d20 roll)."
+  },
+  {
+   "id": "v_check_the_odds",
+   "name": "Check the Odds",
+   "class": "wizard",
+   "victim": "v_bernard",
+   "icon": "pencil",
+   "cost": "action",
+   "res": 1,
+   "range": 6,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "wits",
+   "tags": [
+    "attack",
+    "spell"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d10",
+     "dtype": "psychic"
+    },
+    {
+     "type": "status",
+     "id": "jinxed",
+     "turns": 1
+    }
+   ],
+   "desc": "Spend 1 Mana: range 6, 1d10 psychic, and the target is jinxed (its d20 shows nothing above 12) for a turn."
+  },
+  {
+   "id": "v_five_finger",
+   "name": "Five-Finger Discount",
+   "class": "rogue",
+   "victim": "v_gwen",
+   "icon": "hand",
+   "cost": "action",
+   "cooldown": 1,
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "grace",
+   "tags": [
+    "attack",
+    "melee",
+    "cheat"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d6",
+     "stat": "grace",
+     "dtype": "physical"
+    },
+    {
+     "type": "gold",
+     "n": 6
+    },
+    {
+     "type": "suspicion",
+     "n": 5
+    }
+   ],
+   "desc": "Attack an adjacent enemy for 1d6 + Grace and pocket 6 gold. Adds 5 to his FILE on you."
+  },
+  {
+   "id": "v_one_eighty",
+   "name": "One Hundred and Eighty",
+   "class": "barbarian",
+   "victim": "v_stan",
+   "icon": "target",
+   "cost": "action",
+   "cooldown": 2,
+   "range": 5,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "attack",
+    "ranged"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "3d4",
+     "stat": "might",
+     "dtype": "physical"
+    },
+    {
+     "type": "status",
+     "id": "bleeding",
+     "turns": 2
+    }
+   ],
+   "desc": "Three darts. Range 5: 3d4 + Might and the target bleeds (2 damage a turn) for 2 turns."
+  },
+  {
+   "id": "v_plasters",
+   "name": "Plasters",
+   "class": "cleric",
+   "victim": "v_irene",
+   "icon": "heart",
+   "cost": "bonus",
+   "cooldown": 1,
+   "range": 1,
+   "target": "ally_other",
+   "roll": "none",
+   "tags": [
+    "heal",
+    "support"
+   ],
+   "effects": [
+    {
+     "type": "heal",
+     "dice": "1d4"
+    },
+    {
+     "type": "status",
+     "id": "regenerating",
+     "turns": 2
+    }
+   ],
+   "desc": "No Faith. An adjacent ally heals 1d4 and regenerates 3 HP at the start of its next 2 turns."
+  }
+ ],
+ "traits": [
+  {
+   "id": "vt_second_sight",
+   "name": "Second Sight",
+   "victim": "v_eileen",
+   "min_level": 99,
+   "desc": "Start every fight inspired (+4 to your next d20 roll). +1 to saving throws.",
+   "mods": [
+    {
+     "key": "save_bonus",
+     "op": "add",
+     "value": 1
+    }
+   ],
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "inspired",
+       "turns": -1,
+       "to": "self"
+      }
+     ],
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "vt_on_the_tab",
+   "name": "On the Tab",
+   "victim": "v_barry",
+   "min_level": 99,
+   "desc": "+2 damage. -2 defense: he is never quite steady.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2
+    },
+    {
+     "key": "defense",
+     "op": "add",
+     "value": -2
+    }
+   ]
+  },
+  {
+   "id": "vt_kneeler",
+   "name": "On Her Knees",
+   "victim": "v_sheila",
+   "min_level": 99,
+   "desc": "Whenever another hero goes down, every hero is blessed (+2 to attacks and saves) for 2 turns. -1 speed.",
+   "speed": -1,
+   "triggers": [
+    {
+     "event": "ally_down",
+     "listen": true,
+     "effects": [
+      {
+       "type": "status",
+       "id": "blessed",
+       "turns": 2,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "She prays"
+    }
+   ]
+  },
+  {
+   "id": "vt_dog_lead",
+   "name": "Dog Lead",
+   "victim": "v_keith",
+   "min_level": 99,
+   "desc": "+1 speed. Whenever you kill, gain 1 Focus.",
+   "speed": 1,
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "res",
+       "n": 1,
+       "to": "self"
+      }
+     ],
+     "label": "Good boy"
+    }
+   ]
+  },
+  {
+   "id": "vt_hoarse",
+   "name": "Hoarse",
+   "victim": "v_lorraine",
+   "min_level": 99,
+   "desc": "Gain 1 Verse at the start of each of your turns. -1 defense.",
+   "mods": [
+    {
+     "key": "defense",
+     "op": "add",
+     "value": -1
+    }
+   ],
+   "triggers": [
+    {
+     "event": "turn_start",
+     "effects": [
+      {
+       "type": "res",
+       "n": 1,
+       "to": "self"
+      }
+     ],
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "vt_maths_teacher",
+   "name": "Knows the Odds",
+   "victim": "v_bernard",
+   "min_level": 99,
+   "desc": "+1 to attack rolls. Your d20 never shows lower than 2. -1 to saving throws.",
+   "mods": [
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 1
+    },
+    {
+     "key": "natural_floor",
+     "op": "floor",
+     "value": 2
+    },
+    {
+     "key": "save_bonus",
+     "op": "add",
+     "value": -1
+    }
+   ]
+  },
+  {
+   "id": "vt_price_tag",
+   "name": "Price Tag",
+   "victim": "v_gwen",
+   "min_level": 99,
+   "desc": "Once a turn, a hit marks the target for 2 turns (+2 to hit it). While his FILE on you is 50 or more, attacks against you get +2.",
+   "mods": [
+    {
+     "key": "attack_bonus_against",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "suspicion_ge": 50
+     }
+    }
+   ],
+   "triggers": [
+    {
+     "event": "hit",
+     "once": "turn",
+     "effects": [
+      {
+       "type": "status",
+       "id": "marked",
+       "turns": 2,
+       "to": "target"
+      }
+     ],
+     "label": "Priced up"
+    }
+   ]
+  },
+  {
+   "id": "vt_oche",
+   "name": "On the Oche",
+   "victim": "v_stan",
+   "min_level": 99,
+   "desc": "+1 range on your ranged cards. Hecklers: attacks against you get +1.",
+   "mods": [
+    {
+     "key": "range_add",
+     "op": "add",
+     "value": 1
+    },
+    {
+     "key": "attack_bonus_against",
+     "op": "add",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "vt_first_aider",
+   "name": "First Aider",
+   "victim": "v_irene",
+   "min_level": 99,
+   "desc": "You cannot be poisoned or made to bleed. -1 to attack rolls: you are always looking at someone else's wound.",
+   "immune_statuses": [
+    "poisoned",
+    "bleeding"
+   ],
+   "mods": [
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": -1
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,35 @@
+{
+"enemies": [
+ {"id": "cardboard_ally", "name": "Cardboard Soldier", "role": "summon", "hp": 9, "defense": 11, "speed": 4, "might": 1, "abilities": ["s_poke"], "ai": "brute", "tags": ["summon", "construct", "persist"], "vulnerable": ["fire"], "tier": 0,
+  "model": {"body": "paper", "color": "#b8a888", "accent": "#5a3a2a", "head": "round", "weapon": "spear", "h": 0.9}, "desc": "A flimsy cut-out soldier. Better than nobody."}
+],
+"abilities": [
+ {"id": "s_poke", "name": "Poke", "icon": "spear", "cost": "action", "range": 1, "target": "enemy", "roll": "attack", "stat": "might", "tags": ["basic", "attack", "melee"], "effects": [{"type": "damage", "dice": "1d6", "stat": "might", "dtype": "physical"}], "desc": "1d6 + Might."}
+],
+"unlocks": [
+ {"id": "ranger", "name": "The Ranger", "kind": "class", "ref": "ranger", "desc": "A new class sits down at the table.", "hint": "Finish your first campaign, win or lose.", "condition": {"type": "runs_ge", "n": 1}},
+ {"id": "barbarian", "name": "The Barbarian", "kind": "class", "ref": "barbarian", "desc": "A new class sits down at the table.", "hint": "Reach Book II.", "condition": {"type": "best_book_ge", "n": 2}},
+ {"id": "bard", "name": "The Bard", "kind": "class", "ref": "bard", "desc": "A new class sits down at the table.", "hint": "Resolve 15 events across your campaigns.", "condition": {"type": "events_ge", "n": 15}},
+ {"id": "warlock", "name": "The Warlock", "kind": "class", "ref": "warlock", "desc": "A new class sits down at the table.", "hint": "Lose three heroes. The Caller remembers them.", "condition": {"type": "deaths_ge", "n": 3}},
+ {"id": "goblin", "name": "Goblins", "kind": "ancestry", "ref": "goblin", "desc": "A new ancestry for your heroes.", "hint": "Play two campaigns.", "condition": {"type": "runs_ge", "n": 2}},
+ {"id": "undead", "name": "The Hollow", "kind": "ancestry", "ref": "undead", "desc": "A new ancestry for your heroes.", "hint": "Have a Fallen card in the reception drawer.", "condition": {"type": "fallen_ge", "n": 1}},
+ {"id": "regular", "name": "Regulars", "kind": "ancestry", "ref": "regular", "desc": "A perfectly normal ancestry, the Caller insists.", "hint": "Read three pages of lore in the hall.", "condition": {"type": "lore_ge", "n": 3}},
+ {"id": "diff_hard", "name": "Tournament Rules", "kind": "difficulty", "ref": "hard", "desc": "A harder difficulty.", "hint": "Defeat any boss.", "condition": {"type": "bosses_ge", "n": 1}},
+ {"id": "diff_last_call", "name": "Last Call", "kind": "difficulty", "ref": "last_call", "desc": "The Caller's own rules.", "hint": "Win a campaign on Tournament Rules.", "condition": {"type": "difficulty_win", "id": "hard"}},
+ {"id": "u_glass_eye", "name": "Glass Eye", "kind": "relic", "ref": "glass_eye", "desc": "A relic joins the pool.", "hint": "Complete 5 optional objectives.", "condition": {"type": "optional_ge", "n": 5}},
+ {"id": "u_dauber", "name": "Bingo Dauber", "kind": "relic", "ref": "bingo_dauber", "desc": "A relic joins the pool.", "hint": "Play three campaigns.", "condition": {"type": "runs_ge", "n": 3}},
+ {"id": "u_free_space", "name": "The Free Space", "kind": "relic", "ref": "free_space", "desc": "A relic joins the pool.", "hint": "Defeat three different bosses.", "condition": {"type": "bosses_ge", "n": 3}},
+ {"id": "u_full_house", "name": "Full House", "kind": "relic", "ref": "full_house", "desc": "A relic joins the pool.", "hint": "Win a campaign.", "condition": {"type": "wins_ge", "n": 1}},
+ {"id": "u_cage_key", "name": "Key to the Cage", "kind": "relic", "ref": "cage_key", "desc": "A relic joins the pool.", "hint": "Read six pages of lore.", "condition": {"type": "lore_ge", "n": 6}},
+ {"id": "u_ashtray", "name": "Overflowing Ashtray", "kind": "relic", "ref": "ashtray", "desc": "A relic joins the pool.", "hint": "Reach Book III.", "condition": {"type": "best_book_ge", "n": 3}},
+ {"id": "u_rusted_bell", "name": "Rusted Bell", "kind": "relic", "ref": "rusted_bell", "desc": "A relic joins the pool.", "hint": "Resolve 30 events.", "condition": {"type": "events_ge", "n": 30}},
+ {"id": "u_seance_candle", "name": "Séance Candle", "kind": "relic", "ref": "seance_candle", "desc": "A relic joins the pool.", "hint": "Hold a séance.", "condition": {"type": "seances_ge", "n": 1}},
+ {"id": "seance", "name": "The Séance", "kind": "feature", "ref": "seance", "desc": "At reception you can stitch two Fallen cards into one.", "hint": "Have two Fallen cards.", "condition": {"type": "fallen_ge", "n": 2}},
+ {"id": "short_campaign", "name": "Short Campaign", "kind": "feature", "ref": "short", "desc": "Play a shorter campaign: two Books and the End of the Table.", "hint": "Finish your first campaign.", "condition": {"type": "runs_ge", "n": 1}},
+ {"id": "dice_bone", "name": "Bone Dice", "kind": "cosmetic", "ref": "dice_bone", "desc": "Yellowed bone dice with black pips.", "hint": "Lose five heroes.", "condition": {"type": "deaths_ge", "n": 5}},
+ {"id": "dice_brass", "name": "Brass Dice", "kind": "cosmetic", "ref": "dice_brass", "desc": "Heavy brass dice from the prize counter.", "hint": "Defeat five bosses.", "condition": {"type": "bosses_ge", "n": 5}},
+ {"id": "dice_blood", "name": "Oxblood Dice", "kind": "cosmetic", "ref": "dice_blood", "desc": "Dark red dice. They feel warm.", "hint": "Win on Last Call.", "condition": {"type": "difficulty_win", "id": "last_call"}},
+ {"id": "start_relic", "name": "A Gift at the Door", "kind": "feature", "ref": "start_relic", "desc": "Begin each campaign by choosing one of three common relics.", "hint": "Reach Book IV.", "condition": {"type": "best_book_ge", "n": 4}},
+ {"id": "caller_tape", "name": "The Cassette", "kind": "lore", "ref": "caller_tape", "desc": "A tape at the prize counter. Something the Caller recorded.", "hint": "Win a campaign.", "condition": {"type": "wins_ge", "n": 1}}
+]
+}

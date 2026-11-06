@@ -1,0 +1,521 @@
+{
+ "_doc": "The building, apart from the six rooms (rooms.json places those against the hall wall). See docs/WORLD.md for how to add areas, doors, locks, things and triggers. Rects are [x, z, width, depth] in metres; the game table is at the origin and the stage is toward -z.",
+ "areas": [
+  {
+   "id": "hall",
+   "name": "The hall",
+   "rect": [
+    -7.5,
+    -10.0,
+    15.0,
+    17.0
+   ],
+   "height": 3.6,
+   "custom_shell": true,
+   "persona": "caller",
+   "platforms": [
+    {
+     "rect": [
+      -3.5,
+      -7.5,
+      7.0,
+      3.0
+     ],
+     "y": 0.3,
+     "name": "the stage"
+    }
+   ],
+   "obstacles": [
+    {
+     "rect": [
+      -1.6,
+      -2.3,
+      3.2,
+      3.6
+     ],
+     "name": "the game table and his chair"
+    },
+    {
+     "rect": [
+      -6.75,
+      4.8,
+      3.1,
+      0.8
+     ],
+     "name": "reception desk"
+    },
+    {
+     "rect": [
+      3.65,
+      4.8,
+      3.1,
+      0.8
+     ],
+     "name": "prize counter"
+    },
+    {
+     "rect": [
+      3.6,
+      5.95,
+      3.2,
+      0.4
+     ],
+     "name": "prize shelves"
+    },
+    {
+     "rect": [
+      -0.5,
+      -6.8,
+      1.0,
+      0.8
+     ],
+     "name": "the old cage"
+    },
+    {
+     "rect": [
+      -3.5,
+      -7.5,
+      7.0,
+      0.15
+     ],
+     "name": "the curtain"
+    },
+    {
+     "rect": [
+      6.85,
+      -1.3,
+      0.65,
+      1.6
+     ],
+     "name": "trophy cabinet"
+    },
+    {
+     "rect": [
+      -5.45,
+      2.2,
+      1.7,
+      1.6
+     ],
+     "name": "a table"
+    },
+    {
+     "rect": [
+      -5.45,
+      -0.2,
+      1.7,
+      1.6
+     ],
+     "name": "a table"
+    },
+    {
+     "rect": [
+      -5.45,
+      -2.6,
+      1.7,
+      1.6
+     ],
+     "name": "a table"
+    },
+    {
+     "rect": [
+      3.75,
+      2.2,
+      1.7,
+      1.6
+     ],
+     "name": "a table"
+    },
+    {
+     "rect": [
+      3.75,
+      -0.2,
+      1.7,
+      1.6
+     ],
+     "name": "a table"
+    },
+    {
+     "rect": [
+      3.75,
+      -2.6,
+      1.7,
+      1.6
+     ],
+     "name": "a table"
+    },
+    {
+     "rect": [
+      -2.9,
+      -3.65,
+      5.8,
+      0.5
+     ],
+     "name": "the front row"
+    },
+    {
+     "rect": [
+      -5.7,
+      -7.3,
+      0.2,
+      0.2
+     ],
+     "name": "pillar"
+    },
+    {
+     "rect": [
+      5.5,
+      -7.3,
+      0.2,
+      0.2
+     ],
+     "name": "pillar"
+    },
+    {
+     "rect": [
+      -5.7,
+      3.9,
+      0.2,
+      0.2
+     ],
+     "name": "pillar"
+    },
+    {
+     "rect": [
+      5.5,
+      3.9,
+      0.2,
+      0.2
+     ],
+     "name": "pillar"
+    }
+   ]
+  },
+  {
+   "id": "stairs",
+   "name": "The cellar stairs",
+   "rect": [
+    -6.2,
+    -14.0,
+    2.0,
+    4.0
+   ],
+   "height": 3.0,
+   "slope": {
+    "axis": "z",
+    "from": -10.6,
+    "to": -13.4,
+    "y0": 0.0,
+    "y1": -2.8
+   },
+   "style": {
+    "wall": "#3a3430",
+    "floor": "#2a2420",
+    "light": "#c8a878",
+    "energy": 3.4
+   },
+   "persona": "caller"
+  },
+  {
+   "id": "corridor",
+   "name": "The back corridor",
+   "rect": [
+    1.5,
+    -12.5,
+    6.0,
+    2.5
+   ],
+   "height": 2.8,
+   "style": {
+    "wall": "#4a5048",
+    "floor": "#24221e",
+    "light": "#b8c8a8",
+    "tiles": true
+   },
+   "persona": "caller"
+  }
+ ],
+ "portals": [
+  {
+   "id": "door:stairs",
+   "a": "hall",
+   "b": "stairs",
+   "at": [
+    -5.2,
+    -10.0
+   ],
+   "width": 1.0,
+   "name": "The cellar door",
+   "label": "CELLAR",
+   "lock": {
+    "item": "cellar_key",
+    "locked_text": "Locked. A big old lock, and cold coming under the door.",
+    "unlock_text": "The manager's key turns. Something below hears it."
+   }
+  },
+  {
+   "id": "door:corridor",
+   "a": "hall",
+   "b": "corridor",
+   "at": [
+    5.8,
+    -10.0
+   ],
+   "width": 1.0,
+   "name": "The exit",
+   "label": "EXIT",
+   "sign": "exit"
+  },
+  {
+   "id": "door:fire",
+   "a": "corridor",
+   "b": "",
+   "at": [
+    1.5,
+    -11.25
+   ],
+   "width": 1.1,
+   "name": "The fire door",
+   "kind": "fire_door",
+   "lock": {
+    "code": "1158",
+    "thing": "fire_padlock",
+    "locked_text": "Chained. A padlock with four little wheels of numbers.",
+    "on_open": [
+     {
+      "do": "flag",
+      "id": "fire_door_open"
+     },
+     {
+      "do": "sfx",
+      "id": "chain"
+     },
+     {
+      "do": "open",
+      "portal": "door:fire"
+     },
+     {
+      "do": "wait",
+      "t": 1.2
+     },
+     {
+      "do": "aside",
+      "text": "Bricks."
+     },
+     {
+      "do": "scare",
+      "kind": "behind",
+      "persona": "caller",
+      "text": "*Where* were you going?"
+     }
+    ]
+   },
+   "beyond": "bricks"
+  }
+ ],
+ "windows": [
+  {
+   "id": "booth_window",
+   "area": "booth",
+   "other": "hall",
+   "at": [
+    -1.3,
+    7.0
+   ],
+   "width": 0.8,
+   "sill": 1.2,
+   "head": 1.75
+  }
+ ],
+ "things": [
+  {
+   "id": "office_keys",
+   "area": "office",
+   "local": true,
+   "at": [
+    -1.1,
+    1.45,
+    2.42
+   ],
+   "name": "A ring of keys",
+   "model": "keys",
+   "hide_if": {
+    "item": "cellar_key"
+   },
+   "look": "A ring of keys on a hook by the door. One is old and long and black, for a big old lock.",
+   "use": [
+    {
+     "do": "give",
+     "item": "cellar_key"
+    },
+    {
+     "do": "sfx",
+     "id": "keys"
+    },
+    {
+     "do": "aside",
+     "text": "You take the long black key."
+    },
+    {
+     "do": "say",
+     "persona": "manager",
+     "text": "Those are *mine*. Bring them back. Nobody brings them back."
+    }
+   ]
+  },
+  {
+   "id": "fire_note",
+   "area": "corridor",
+   "at": [
+    1.53,
+    1.55,
+    -12.2
+   ],
+   "name": "A note on the fire door",
+   "model": "note",
+   "look": "Pinned to the fire door, in red: WE CLOSE AT"
+  },
+  {
+   "id": "fire_padlock",
+   "area": "corridor",
+   "at": [
+    1.56,
+    1.1,
+    -11.1
+   ],
+   "name": "The padlock",
+   "model": "padlock",
+   "hide_if": {
+    "flag": "fire_door_open"
+   },
+   "look": "Four little wheels of numbers. The chain is through the push bar twice.",
+   "use": [
+    {
+     "do": "dial",
+     "lock": "door:fire"
+    }
+   ]
+  },
+  {
+   "id": "bricks",
+   "area": "corridor",
+   "at": [
+    1.55,
+    1.3,
+    -11.25
+   ],
+   "name": "Behind the fire door",
+   "when": {
+    "flag": "fire_door_open"
+   },
+   "look": "Bricks. Fresh mortar, still wet. Somebody bricked up the way out from the outside, and then came back in."
+  },
+  {
+   "id": "corridor_coats",
+   "area": "corridor",
+   "at": [
+    4.2,
+    1.5,
+    -12.45
+   ],
+   "name": "Hooks",
+   "model": "hooks",
+   "look": "Coat hooks with nothing on them, numbered. Number seven has a scrap of plaid caught on it."
+  },
+  {
+   "id": "stair_bulb",
+   "area": "stairs",
+   "at": [
+    -5.2,
+    2.2,
+    -11.6
+   ],
+   "name": "The bulb",
+   "look": "A bare bulb on a flex. The switch is at the bottom of the stairs, which is the wrong end."
+  }
+ ],
+ "triggers": [
+  {
+   "id": "stairs_down",
+   "area": "stairs",
+   "once": "profile",
+   "actions": [
+    {
+     "do": "lights",
+     "area": "stairs",
+     "mode": "flicker",
+     "time": 1.4
+    },
+    {
+     "do": "sfx",
+     "id": "drip"
+    },
+    {
+     "do": "aside",
+     "text": "It's colder with every step. It smells like the sea."
+    }
+   ]
+  },
+  {
+   "id": "cellar_first",
+   "area": "cellar",
+   "once": "profile",
+   "actions": [
+    {
+     "do": "wait",
+     "t": 0.6
+    },
+    {
+     "do": "sfx",
+     "id": "whisper"
+    },
+    {
+     "do": "say",
+     "persona": "drowned_king",
+     "text": "Mind the water. It's deeper than it looks. *Everything* is."
+    }
+   ]
+  },
+  {
+   "id": "backstage",
+   "area": "hall",
+   "rect": [
+    -7.5,
+    -10.0,
+    15.0,
+    2.3
+   ],
+   "once": "walk",
+   "actions": [
+    {
+     "do": "sfx",
+     "id": "breath"
+    },
+    {
+     "do": "aside",
+     "text": "Behind the curtain. A folding chair, still warm, facing the back of the curtain."
+    }
+   ]
+  },
+  {
+   "id": "corridor_walk",
+   "area": "corridor",
+   "once": "walk",
+   "when": {
+    "not_flag": "fire_door_open"
+   },
+   "actions": [
+    {
+     "do": "lights",
+     "area": "corridor",
+     "mode": "flicker",
+     "time": 0.8
+    },
+    {
+     "do": "say",
+     "persona": "caller",
+     "text": "There's no way out down there. I'd know. I *checked*."
+    }
+   ]
+  }
+ ]
+}

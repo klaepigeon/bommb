@@ -1,0 +1,2238 @@
+{
+ "relics": [
+  {
+   "id": "loaded_d20",
+   "name": "The Loaded Die",
+   "rarity": "uncommon",
+   "icon": "die",
+   "desc": "Your heroes' d20s never show 1 or 2: anything lower counts as a 3. No hero can fumble.",
+   "mods": [
+    {
+     "key": "natural_floor",
+     "op": "set",
+     "value": 3,
+     "when": {
+      "side": "hero"
+     },
+     "label": "Loaded Die: hero d20s show at least 3"
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "cracked_die",
+   "name": "Cracked Die",
+   "rarity": "rare",
+   "icon": "die",
+   "desc": "Heroes crit on 18-20, but also fumble on 1-3.",
+   "mods": [
+    {
+     "key": "crit_threshold",
+     "op": "set",
+     "value": 18,
+     "when": {
+      "side": "hero"
+     }
+    },
+    {
+     "key": "fumble_threshold",
+     "op": "set",
+     "value": 3,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "dice",
+    "risk"
+   ]
+  },
+  {
+   "id": "snake_eyes",
+   "name": "Snake Eyes Charm",
+   "rarity": "common",
+   "icon": "skull",
+   "desc": "When a hero rolls a natural 1, they laugh it off: heal 4 and gain 1 class resource.",
+   "triggers": [
+    {
+     "event": "natural",
+     "when": {
+      "side": "hero",
+      "natural": 1
+     },
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "4",
+       "to": "self"
+      },
+      {
+       "type": "res",
+       "n": 1,
+       "to": "self"
+      }
+     ],
+     "label": "Snake Eyes"
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "lucky_seven",
+   "name": "Ball Number Seven",
+   "rarity": "common",
+   "icon": "ball",
+   "desc": "When a hero rolls a natural 7, they get an extra bonus action.",
+   "triggers": [
+    {
+     "event": "natural",
+     "when": {
+      "side": "hero",
+      "natural": 7
+     },
+     "effects": [
+      {
+       "type": "extra_action",
+       "kind": "bonus",
+       "n": 1,
+       "to": "self"
+      }
+     ],
+     "label": "Lucky Seven"
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "dice_cup",
+   "name": "Leather Dice Cup",
+   "rarity": "uncommon",
+   "icon": "cup",
+   "desc": "Heroes reroll natural 1s once.",
+   "mods": [
+    {
+     "key": "reroll_naturals",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "page_41",
+   "name": "Rulebook Page 41",
+   "rarity": "common",
+   "icon": "scroll",
+   "desc": "A torn page about ties. When an enemy's roll exactly meets its target, it fails.",
+   "mods": [
+    {
+     "key": "tie_wins",
+     "op": "set",
+     "value": false,
+     "priority": 2,
+     "when": {
+      "side": "enemy"
+     },
+     "label": "Page 41: enemy ties fail"
+    }
+   ],
+   "tags": [
+    "rules"
+   ]
+  },
+  {
+   "id": "broken_die",
+   "name": "Broken Die",
+   "rarity": "rare",
+   "icon": "die",
+   "desc": "Heroes reroll any natural 5 or lower once. Enemies have 15% more HP.",
+   "mods": [
+    {
+     "key": "reroll_naturals",
+     "op": "add",
+     "value": 5,
+     "when": {
+      "side": "hero"
+     }
+    },
+    {
+     "key": "enemy_hp_mult",
+     "op": "add",
+     "value": 0.15
+    }
+   ],
+   "tags": [
+    "dice",
+    "risk"
+   ]
+  },
+  {
+   "id": "house_edge",
+   "name": "The House Edge",
+   "rarity": "uncommon",
+   "icon": "coin",
+   "desc": "Enemies fumble on a natural 1 or 2.",
+   "mods": [
+    {
+     "key": "fumble_threshold",
+     "op": "set",
+     "value": 2,
+     "when": {
+      "side": "enemy"
+     }
+    }
+   ],
+   "tags": [
+    "dice"
+   ]
+  },
+  {
+   "id": "golden_d20",
+   "name": "Golden Twenty",
+   "rarity": "rare",
+   "icon": "die",
+   "desc": "Heroes' critical hits roll triple damage dice.",
+   "mods": [
+    {
+     "key": "crit_mult",
+     "op": "set",
+     "value": 3,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "dice",
+    "offense"
+   ]
+  },
+  {
+   "id": "whetstone",
+   "name": "Whetstone",
+   "rarity": "common",
+   "icon": "sword",
+   "desc": "Heroes deal +1 damage with melee attacks.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero",
+      "melee": true
+     }
+    }
+   ],
+   "tags": [
+    "offense"
+   ]
+  },
+  {
+   "id": "fletching",
+   "name": "Grey Goose Fletching",
+   "rarity": "common",
+   "icon": "bow",
+   "desc": "Heroes' ranged abilities reach 1 tile further.",
+   "mods": [
+    {
+     "key": "range_add",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "offense"
+   ]
+  },
+  {
+   "id": "red_ribbon",
+   "name": "Bloodied Ribbon",
+   "rarity": "uncommon",
+   "icon": "drop",
+   "desc": "Heroes deal +3 damage to targets at half HP or less.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 3,
+     "when": {
+      "side": "hero",
+      "bloodied_target": true
+     }
+    }
+   ],
+   "tags": [
+    "offense"
+   ]
+  },
+  {
+   "id": "executioner_coin",
+   "name": "Executioner's Coin",
+   "rarity": "uncommon",
+   "icon": "coin",
+   "desc": "When a hero kills, they heal 3 and gain 1 class resource.",
+   "triggers": [
+    {
+     "event": "kill",
+     "when": {
+      "side": "hero"
+     },
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "3",
+       "to": "self"
+      },
+      {
+       "type": "res",
+       "n": 1,
+       "to": "self"
+      }
+     ],
+     "label": "Executioner's Coin"
+    }
+   ],
+   "tags": [
+    "offense",
+    "healing"
+   ]
+  },
+  {
+   "id": "second_helping",
+   "name": "Second Helping Token",
+   "rarity": "rare",
+   "icon": "token",
+   "desc": "The first time each turn a hero kills, they get another action.",
+   "triggers": [
+    {
+     "event": "kill",
+     "when": {
+      "side": "hero"
+     },
+     "once": "turn",
+     "once_key": "second_helping",
+     "effects": [
+      {
+       "type": "extra_action",
+       "n": 1,
+       "to": "self"
+      }
+     ],
+     "label": "Second Helping"
+    }
+   ],
+   "tags": [
+    "offense"
+   ]
+  },
+  {
+   "id": "the_pattern",
+   "name": "The Pattern",
+   "rarity": "uncommon",
+   "icon": "spiral",
+   "desc": "Predictability pays: +3 damage when a hero uses the same card twice in a row.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 3,
+     "when": {
+      "side": "hero",
+      "repeat": true
+     }
+    }
+   ],
+   "tags": [
+    "offense",
+    "rules"
+   ]
+  },
+  {
+   "id": "knucklebones",
+   "name": "Sharpened Knucklebones",
+   "rarity": "common",
+   "icon": "bone",
+   "desc": "Heroes' critical hits open bleeding wounds (2 stacks).",
+   "triggers": [
+    {
+     "event": "crit",
+     "when": {
+      "side": "hero"
+     },
+     "effects": [
+      {
+       "type": "status",
+       "id": "bleeding",
+       "turns": 3,
+       "stacks": 2,
+       "to": "target"
+      }
+     ],
+     "label": "Knucklebones"
+    }
+   ],
+   "tags": [
+    "offense",
+    "status"
+   ]
+  },
+  {
+   "id": "matchbook",
+   "name": "Matchbook from the Bar",
+   "rarity": "common",
+   "icon": "flame",
+   "desc": "Heroes' fire damage +3.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 3,
+     "when": {
+      "side": "hero",
+      "dtype": "fire"
+     }
+    }
+   ],
+   "tags": [
+    "offense"
+   ]
+  },
+  {
+   "id": "holy_water",
+   "name": "Holy Water (Tap)",
+   "rarity": "common",
+   "icon": "drop",
+   "desc": "Heroes' holy damage +3.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 3,
+     "when": {
+      "side": "hero",
+      "dtype": "holy"
+     }
+    }
+   ],
+   "tags": [
+    "offense"
+   ]
+  },
+  {
+   "id": "rusty_nail",
+   "name": "Rusty Nail",
+   "rarity": "common",
+   "icon": "nail",
+   "desc": "Each hero's first hit in a fight poisons the target.",
+   "triggers": [
+    {
+     "event": "hit",
+     "when": {
+      "side": "hero"
+     },
+     "once": "combat",
+     "effects": [
+      {
+       "type": "status",
+       "id": "poisoned",
+       "turns": 3,
+       "to": "target"
+      }
+     ],
+     "label": "Rusty Nail"
+    }
+   ],
+   "tags": [
+    "status"
+   ]
+  },
+  {
+   "id": "tin_cup",
+   "name": "Tin Cup",
+   "rarity": "common",
+   "icon": "cup",
+   "desc": "Heroes have +1 defense.",
+   "mods": [
+    {
+     "key": "defense",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "defense"
+   ]
+  },
+  {
+   "id": "lead_boots",
+   "name": "Lead Boots",
+   "rarity": "common",
+   "icon": "boot",
+   "desc": "Heroes start every fight steadfast for 3 turns: they cannot be shoved.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "steadfast",
+       "turns": 3,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Lead Boots",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "defense"
+   ]
+  },
+  {
+   "id": "warm_coat",
+   "name": "Somebody's Warm Coat",
+   "rarity": "common",
+   "icon": "coat",
+   "desc": "Heroes start every fight with 4 temporary HP.",
+   "mods": [
+    {
+     "key": "temp_hp_combat",
+     "op": "add",
+     "value": 4,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "defense"
+   ]
+  },
+  {
+   "id": "bandage_roll",
+   "name": "Bandage Roll",
+   "rarity": "common",
+   "icon": "cross",
+   "desc": "After every victory, every standing hero heals 4.",
+   "triggers": [
+    {
+     "event": "combat_won",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "4",
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Bandage Roll"
+    }
+   ],
+   "tags": [
+    "healing"
+   ]
+  },
+  {
+   "id": "left_foot",
+   "name": "Rabbit's Foot (Left)",
+   "rarity": "uncommon",
+   "icon": "foot",
+   "desc": "Death saves are 4 easier.",
+   "mods": [
+    {
+     "key": "death_save_dc",
+     "op": "add",
+     "value": -4
+    }
+   ],
+   "tags": [
+    "defense"
+   ]
+  },
+  {
+   "id": "iron_rations",
+   "name": "Iron Rations",
+   "rarity": "common",
+   "icon": "tin",
+   "desc": "Resting heals 50% more.",
+   "mods": [
+    {
+     "key": "rest_heal_mult",
+     "op": "add",
+     "value": 0.5
+    }
+   ],
+   "tags": [
+    "healing",
+    "economy"
+   ]
+  },
+  {
+   "id": "pewter_halo",
+   "name": "Pewter Halo",
+   "rarity": "rare",
+   "icon": "halo",
+   "desc": "Once per fight, the first hero to go down gets straight back up with a quarter of their HP.",
+   "triggers": [
+    {
+     "event": "ally_down",
+     "when": {
+      "side": "hero"
+     },
+     "once": "combat",
+     "once_key": "halo",
+     "effects": [
+      {
+       "type": "revive",
+       "pct": 0.25,
+       "to": "self"
+      }
+     ],
+     "label": "Pewter Halo"
+    }
+   ],
+   "tags": [
+    "defense",
+    "healing"
+   ]
+  },
+  {
+   "id": "thimble",
+   "name": "Thimble",
+   "rarity": "common",
+   "icon": "cup",
+   "desc": "Heroes are warded (half damage) during the first round of every fight.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "warded",
+       "turns": 1,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Thimble",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "defense"
+   ]
+  },
+  {
+   "id": "the_feast",
+   "name": "The Feast",
+   "rarity": "uncommon",
+   "icon": "pie",
+   "desc": "After beating an elite or boss, every standing hero heals 30% of their max HP.",
+   "triggers": [
+    {
+     "event": "combat_won",
+     "when": {
+      "elite": true
+     },
+     "effects": [
+      {
+       "type": "heal",
+       "pct": 0.3,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "The Feast"
+    },
+    {
+     "event": "combat_won",
+     "when": {
+      "boss": true
+     },
+     "effects": [
+      {
+       "type": "heal",
+       "pct": 0.3,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "The Feast"
+    }
+   ],
+   "tags": [
+    "healing"
+   ]
+  },
+  {
+   "id": "leech_jar",
+   "name": "Leech in a Jar",
+   "rarity": "uncommon",
+   "icon": "jar",
+   "desc": "Heroes heal 1 whenever they hit.",
+   "triggers": [
+    {
+     "event": "hit",
+     "when": {
+      "side": "hero"
+     },
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "1",
+       "to": "self"
+      }
+     ],
+     "quiet": true,
+     "label": "Leech Jar"
+    }
+   ],
+   "tags": [
+    "healing"
+   ]
+  },
+  {
+   "id": "sacrament",
+   "name": "Stale Sacrament",
+   "rarity": "common",
+   "icon": "wafer",
+   "desc": "Healing from heroes is 25% stronger.",
+   "mods": [
+    {
+     "key": "heal_dealt_mult",
+     "op": "mul",
+     "value": 1.25,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "healing"
+   ]
+  },
+  {
+   "id": "ghost_slippers",
+   "name": "Ghost Slippers",
+   "rarity": "rare",
+   "icon": "boot",
+   "desc": "Heroes may move through occupied tiles, friend or foe.",
+   "mods": [
+    {
+     "key": "pass_through",
+     "op": "set",
+     "value": true,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "movement",
+    "rules"
+   ]
+  },
+  {
+   "id": "castors",
+   "name": "Brass Castors",
+   "rarity": "common",
+   "icon": "wheel",
+   "desc": "Someone put wheels on the bases. Heroes +1 speed.",
+   "mods": [
+    {
+     "key": "speed",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "movement"
+   ]
+  },
+  {
+   "id": "hourglass",
+   "name": "Egg Timer",
+   "rarity": "uncommon",
+   "icon": "hourglass",
+   "desc": "Heroes get an extra bonus action every turn of the first round.",
+   "mods": [
+    {
+     "key": "bonus_actions",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero",
+      "round_le": 1
+     }
+    }
+   ],
+   "tags": [
+    "movement"
+   ]
+  },
+  {
+   "id": "tally_counter",
+   "name": "Tally Counter",
+   "rarity": "common",
+   "icon": "counter",
+   "desc": "Heroes regain 1 extra class resource each turn (Faith, Mana, Focus, Verse).",
+   "mods": [
+    {
+     "key": "res_regen",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "resource"
+   ]
+  },
+  {
+   "id": "inkwell",
+   "name": "Bottomless Inkwell",
+   "rarity": "rare",
+   "icon": "ink",
+   "desc": "Heroes' cards cost 1 less resource (minimum 0).",
+   "mods": [
+    {
+     "key": "res_cost_add",
+     "op": "add",
+     "value": -1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "resource"
+   ]
+  },
+  {
+   "id": "pocket_watch",
+   "name": "Stopped Pocket Watch",
+   "rarity": "uncommon",
+   "icon": "watch",
+   "desc": "Heroes' cards recharge 1 round faster.",
+   "mods": [
+    {
+     "key": "cooldown_add",
+     "op": "add",
+     "value": -1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "resource"
+   ]
+  },
+  {
+   "id": "cardboard_soldier",
+   "name": "Cardboard Soldier",
+   "rarity": "uncommon",
+   "icon": "soldier",
+   "desc": "A flimsy cut-out ally joins every fight.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "summon",
+       "unit": "cardboard_ally",
+       "side": "hero",
+       "near": "random_hero"
+      }
+     ],
+     "label": "Cardboard Soldier",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "summon"
+   ]
+  },
+  {
+   "id": "snuff_box",
+   "name": "Snuff Box",
+   "rarity": "common",
+   "icon": "box",
+   "desc": "Every enemy starts the fight poisoned for 2 turns.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "poisoned",
+       "turns": 2,
+       "to": "all_enemies"
+      }
+     ],
+     "label": "Snuff Box",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "status"
+   ]
+  },
+  {
+   "id": "fright_mask",
+   "name": "Fright Mask",
+   "rarity": "uncommon",
+   "icon": "mask",
+   "desc": "Every enemy is dazed for the first round.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "dazed",
+       "turns": 1,
+       "to": "all_enemies"
+      }
+     ],
+     "label": "Fright Mask",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "status"
+   ]
+  },
+  {
+   "id": "tip_jar",
+   "name": "Tip Jar",
+   "rarity": "common",
+   "icon": "jar",
+   "desc": "+25% gold from every source.",
+   "mods": [
+    {
+     "key": "gold_mult",
+     "op": "add",
+     "value": 0.25
+    }
+   ],
+   "tags": [
+    "economy"
+   ]
+  },
+  {
+   "id": "coupon",
+   "name": "Expired Coupon",
+   "rarity": "common",
+   "icon": "ticket",
+   "desc": "The prize counter honours it anyway: 20% off.",
+   "mods": [
+    {
+     "key": "shop_price_mult",
+     "op": "mul",
+     "value": 0.8
+    }
+   ],
+   "tags": [
+    "economy"
+   ]
+  },
+  {
+   "id": "prize_ticket",
+   "name": "Fistful of Prize Tickets",
+   "rarity": "common",
+   "icon": "ticket",
+   "desc": "Gain 60 gold when found.",
+   "on_gain": [
+    {
+     "type": "gold",
+     "n": 60
+    }
+   ],
+   "tags": [
+    "economy"
+   ]
+  },
+  {
+   "id": "the_eraser",
+   "name": "The Eraser",
+   "rarity": "rare",
+   "icon": "eraser",
+   "desc": "When found, strike out one of the Caller's rules. You can carry 2 more cards.",
+   "on_gain": [
+    {
+     "type": "remove_rule"
+    }
+   ],
+   "mods": [
+    {
+     "key": "hand_size",
+     "op": "add",
+     "value": 2
+    }
+   ],
+   "tags": [
+    "rules"
+   ]
+  },
+  {
+   "id": "dead_mans_hand",
+   "name": "Dead Man's Hand",
+   "rarity": "cursed",
+   "icon": "hand",
+   "desc": "Cursed. Every time a hero goes down, every other hero is empowered (+3 damage) for 3 turns. When a hero dies, the whole party heals 10.",
+   "triggers": [
+    {
+     "event": "ally_down",
+     "when": {
+      "side": "hero"
+     },
+     "effects": [
+      {
+       "type": "status",
+       "id": "empowered",
+       "turns": 3,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Dead Man's Hand"
+    },
+    {
+     "event": "hero_death",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "10",
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Dead Man's Hand"
+    }
+   ],
+   "tags": [
+    "risk"
+   ]
+  },
+  {
+   "id": "cursed_miniature",
+   "name": "Painted Miniature of You",
+   "rarity": "cursed",
+   "icon": "soldier",
+   "desc": "Cursed. Heroes deal +2 damage, but enemies deal +1 too.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero"
+     }
+    },
+    {
+     "key": "enemy_damage_add",
+     "op": "add",
+     "value": 1
+    }
+   ],
+   "tags": [
+    "risk"
+   ]
+  },
+  {
+   "id": "glass_eye",
+   "name": "Glass Eye",
+   "rarity": "uncommon",
+   "icon": "eye",
+   "desc": "Heroes' attacks ignore cover.",
+   "mods": [
+    {
+     "key": "ignore_cover",
+     "op": "set",
+     "value": true,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "offense"
+   ],
+   "locked": true
+  },
+  {
+   "id": "bingo_dauber",
+   "name": "Bingo Dauber",
+   "rarity": "uncommon",
+   "icon": "dauber",
+   "desc": "At the start of each round, a random enemy is marked (+2 to hit it).",
+   "triggers": [
+    {
+     "event": "round_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "marked",
+       "turns": 1,
+       "to": "random_enemy"
+      }
+     ],
+     "label": "Bingo Dauber",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "offense"
+   ],
+   "locked": true
+  },
+  {
+   "id": "free_space",
+   "name": "The Free Space",
+   "rarity": "rare",
+   "icon": "star",
+   "desc": "Heroes start every fight with 3 extra class resource (up to their maximum).",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "res",
+       "n": 3,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Free Space",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "resource"
+   ],
+   "locked": true
+  },
+  {
+   "id": "full_house",
+   "name": "Full House",
+   "rarity": "rare",
+   "icon": "card",
+   "desc": "Heroes get +1 to attack rolls and saving throws.",
+   "mods": [
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    },
+    {
+     "key": "save_bonus",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "defense"
+   ],
+   "locked": true
+  },
+  {
+   "id": "cage_key",
+   "name": "Key to the Cage",
+   "rarity": "rare",
+   "icon": "key",
+   "desc": "Heroes get +2 to saving throws. The Caller insists it opens nothing.",
+   "mods": [
+    {
+     "key": "save_bonus",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "rules"
+   ],
+   "locked": true
+  },
+  {
+   "id": "ashtray",
+   "name": "Overflowing Ashtray",
+   "rarity": "uncommon",
+   "icon": "tray",
+   "desc": "Burning enemies take 2 extra damage from everything.",
+   "mods": [
+    {
+     "key": "damage_taken_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "enemy",
+      "self_status": "burning"
+     }
+    }
+   ],
+   "tags": [
+    "status"
+   ],
+   "locked": true
+  },
+  {
+   "id": "rusted_bell",
+   "name": "Rusted Bell",
+   "rarity": "uncommon",
+   "icon": "bell",
+   "desc": "When an enemy dies, the enemies next to it are dazed.",
+   "triggers": [
+    {
+     "event": "kill",
+     "when": {
+      "side": "hero"
+     },
+     "effects": [
+      {
+       "type": "status",
+       "id": "dazed",
+       "turns": 1,
+       "to": "near_foes"
+      }
+     ],
+     "label": "Rusted Bell"
+    }
+   ],
+   "tags": [
+    "status"
+   ],
+   "locked": true
+  },
+  {
+   "id": "seance_candle",
+   "name": "Séance Candle",
+   "rarity": "rare",
+   "icon": "candle",
+   "desc": "Every fight, heroes start blessed (+2 to attacks and saves) for 2 turns.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "blessed",
+       "turns": 2,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Séance Candle",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "fallen"
+   ],
+   "locked": true
+  },
+  {
+   "id": "relic_oath_shard",
+   "name": "Shard of the Drowned Oath",
+   "rarity": "boss",
+   "icon": "shield",
+   "desc": "From the Rust-Tide Knight. Heroes have +1 defense and cannot be shoved.",
+   "mods": [
+    {
+     "key": "defense",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "steadfast",
+       "turns": 99,
+       "to": "all_heroes"
+      }
+     ],
+     "quiet": true,
+     "label": "Drowned Oath"
+    }
+   ],
+   "tags": [
+    "boss"
+   ]
+  },
+  {
+   "id": "relic_gavel",
+   "name": "The Magistrate's Gavel",
+   "rarity": "boss",
+   "icon": "mace",
+   "desc": "Order in the court: every enemy is rooted for the first round.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "rooted",
+       "turns": 1,
+       "to": "all_enemies"
+      }
+     ],
+     "label": "Gavel",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "boss"
+   ]
+  },
+  {
+   "id": "relic_false_halo",
+   "name": "The False Halo",
+   "rarity": "boss",
+   "icon": "halo",
+   "desc": "From the Fraudulent Saint. Whenever a hero heals, every adjacent ally heals 2 as well.",
+   "triggers": [
+    {
+     "event": "healed",
+     "when": {
+      "side": "hero"
+     },
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "2",
+       "to": "adjacent_allies"
+      }
+     ],
+     "quiet": true,
+     "label": "False Halo"
+    }
+   ],
+   "tags": [
+    "boss"
+   ]
+  },
+  {
+   "id": "relic_hymnal",
+   "name": "The Choir's Hymnal",
+   "rarity": "boss",
+   "icon": "tome",
+   "desc": "From the Choir of One. Heroes' abilities get +1 to their save DC.",
+   "mods": [
+    {
+     "key": "save_dc",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "boss"
+   ]
+  },
+  {
+   "id": "relic_glove",
+   "name": "The Duelist's Glove",
+   "rarity": "boss",
+   "icon": "hand",
+   "desc": "From the Duelist Engine. Heroes crit on 19-20.",
+   "mods": [
+    {
+     "key": "crit_threshold",
+     "op": "set",
+     "value": 19,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "boss"
+   ]
+  },
+  {
+   "id": "relic_timecard",
+   "name": "The Foreman's Timecard",
+   "rarity": "boss",
+   "icon": "card",
+   "desc": "From the Clockwork Foreman. Heroes get an extra bonus action every turn.",
+   "mods": [
+    {
+     "key": "bonus_actions",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "boss"
+   ]
+  },
+  {
+   "id": "relic_glue",
+   "name": "Pot of Modelling Glue",
+   "rarity": "boss",
+   "icon": "jar",
+   "desc": "From the Heap of Failures. Heroes regenerate 2 HP at the start of every turn.",
+   "triggers": [
+    {
+     "event": "turn_start",
+     "when": {
+      "side": "hero"
+     },
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "2",
+       "to": "self"
+      }
+     ],
+     "quiet": true,
+     "label": "Glue"
+    }
+   ],
+   "tags": [
+    "boss"
+   ]
+  }
+ ],
+ "consumables": [
+  {
+   "id": "c_draught",
+   "name": "Healing Draught",
+   "ability": "x_draught",
+   "price": 20,
+   "weight": 14,
+   "desc": "Bonus action: you or an adjacent ally heal 2d6 + 2. Lifts the downed."
+  },
+  {
+   "id": "c_fire_flask",
+   "name": "Bottle of Lamp Oil",
+   "ability": "x_fire_flask",
+   "price": 25,
+   "weight": 10,
+   "desc": "Throw range 4: 3x3 blast, Grace save, 2d6 fire and burning."
+  },
+  {
+   "id": "c_smoke",
+   "name": "Smoke Pellet",
+   "ability": "x_smoke",
+   "price": 18,
+   "weight": 8,
+   "desc": "Bonus action: you and adjacent allies become hidden."
+  },
+  {
+   "id": "c_salts",
+   "name": "Smelling Salts",
+   "ability": "x_salts",
+   "price": 22,
+   "weight": 8,
+   "desc": "Bonus action: a downed ally within 2 stands with a third of their HP."
+  },
+  {
+   "id": "c_oil",
+   "name": "Weapon Oil",
+   "ability": "x_oil",
+   "price": 15,
+   "weight": 10,
+   "desc": "Bonus action: an ally within 2 is empowered (+3 damage) for 2 turns."
+  },
+  {
+   "id": "c_antidote",
+   "name": "Antidote",
+   "ability": "x_antidote",
+   "price": 12,
+   "weight": 10,
+   "desc": "Bonus action: an ally within 3 loses every debuff."
+  },
+  {
+   "id": "c_wafer",
+   "name": "Blessed Wafer",
+   "ability": "x_wafer",
+   "price": 20,
+   "weight": 8,
+   "desc": "Bonus action: an ally within 3 is warded (half damage) for 2 turns."
+  },
+  {
+   "id": "c_caltrops",
+   "name": "Caltrops",
+   "ability": "x_caltrops",
+   "price": 14,
+   "weight": 8,
+   "desc": "Scatter spikes on a 3x3 patch of floor within 3."
+  },
+  {
+   "id": "c_net",
+   "name": "Fishing Net",
+   "ability": "x_net",
+   "price": 14,
+   "weight": 8,
+   "desc": "Range 3, Grace save: rooted and dazed for 2 turns."
+  },
+  {
+   "id": "c_lucky_ticket",
+   "name": "Lucky Raffle Ticket",
+   "ability": "x_ticket",
+   "price": 15,
+   "weight": 8,
+   "desc": "Bonus action: inspired (+4 to your next roll) and gain 2 class resource."
+  },
+  {
+   "id": "c_dauber",
+   "name": "Dauber of Red Ink",
+   "ability": "x_dauber",
+   "price": 10,
+   "weight": 8,
+   "desc": "Bonus action, range 6: the enemy is marked (+2 to hit) for 3 turns."
+  },
+  {
+   "id": "c_thunder",
+   "name": "Thunderstone",
+   "ability": "x_thunder",
+   "price": 22,
+   "weight": 6,
+   "desc": "Every adjacent enemy is shoved 2 and dazed."
+  },
+  {
+   "id": "c_tonic",
+   "name": "Nerve Tonic",
+   "ability": "x_tonic",
+   "price": 16,
+   "weight": 8,
+   "desc": "Bonus action: hasted (+2 speed, +1 defense) for 3 turns."
+  },
+  {
+   "id": "c_bomb",
+   "name": "Bingo Bomb",
+   "ability": "x_bomb",
+   "price": 30,
+   "weight": 5,
+   "desc": "Range 5: 3x3 blast, Grace save, 3d6 force. Hits everyone."
+  }
+ ],
+ "abilities": [
+  {
+   "id": "x_draught",
+   "name": "Healing Draught",
+   "icon": "potion",
+   "cost": "bonus",
+   "range": 1,
+   "target": "ally_or_downed",
+   "roll": "none",
+   "tags": [
+    "heal",
+    "item"
+   ],
+   "effects": [
+    {
+     "type": "heal",
+     "dice": "2d6+2"
+    }
+   ],
+   "desc": "Heal 2d6 + 2."
+  },
+  {
+   "id": "x_fire_flask",
+   "name": "Lamp Oil",
+   "icon": "flame",
+   "cost": "action",
+   "range": 4,
+   "target": "tile",
+   "area": {
+    "shape": "radius",
+    "n": 1
+   },
+   "affects": "all",
+   "roll": "save",
+   "save": "grace",
+   "stat": "grace",
+   "tags": [
+    "attack",
+    "item",
+    "area"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "2d6",
+     "dtype": "fire",
+     "half_on_save": true
+    },
+    {
+     "type": "status",
+     "id": "burning",
+     "turns": 2,
+     "on": "save_fail"
+    }
+   ],
+   "desc": "3x3 blast, 2d6 fire."
+  },
+  {
+   "id": "x_smoke",
+   "name": "Smoke Pellet",
+   "icon": "cloak",
+   "cost": "bonus",
+   "range": 0,
+   "target": "self",
+   "area": {
+    "shape": "around_self",
+    "n": 1
+   },
+   "affects": "allies",
+   "roll": "none",
+   "tags": [
+    "stealth",
+    "item"
+   ],
+   "keeps_hidden": true,
+   "effects": [
+    {
+     "type": "status",
+     "id": "hidden",
+     "turns": 2
+    }
+   ],
+   "self_effects": [
+    {
+     "type": "status",
+     "id": "hidden",
+     "turns": 2
+    }
+   ],
+   "desc": "You and adjacent allies hide."
+  },
+  {
+   "id": "x_salts",
+   "name": "Smelling Salts",
+   "icon": "potion",
+   "cost": "bonus",
+   "range": 2,
+   "target": "downed_ally",
+   "roll": "none",
+   "tags": [
+    "heal",
+    "item"
+   ],
+   "effects": [
+    {
+     "type": "revive",
+     "pct": 0.33
+    }
+   ],
+   "desc": "Stand a downed ally back up."
+  },
+  {
+   "id": "x_oil",
+   "name": "Weapon Oil",
+   "icon": "drop",
+   "cost": "bonus",
+   "range": 2,
+   "target": "ally",
+   "roll": "none",
+   "tags": [
+    "support",
+    "item"
+   ],
+   "effects": [
+    {
+     "type": "status",
+     "id": "empowered",
+     "turns": 2
+    }
+   ],
+   "desc": "+3 damage for 2 turns."
+  },
+  {
+   "id": "x_antidote",
+   "name": "Antidote",
+   "icon": "potion",
+   "cost": "bonus",
+   "range": 3,
+   "target": "ally",
+   "roll": "none",
+   "tags": [
+    "heal",
+    "item"
+   ],
+   "effects": [
+    {
+     "type": "cleanse"
+    }
+   ],
+   "desc": "Remove every debuff."
+  },
+  {
+   "id": "x_wafer",
+   "name": "Blessed Wafer",
+   "icon": "halo",
+   "cost": "bonus",
+   "range": 3,
+   "target": "ally",
+   "roll": "none",
+   "tags": [
+    "defense",
+    "item"
+   ],
+   "effects": [
+    {
+     "type": "status",
+     "id": "warded",
+     "turns": 2
+    }
+   ],
+   "desc": "Half damage for 2 turns."
+  },
+  {
+   "id": "x_caltrops",
+   "name": "Caltrops",
+   "icon": "spikes",
+   "cost": "action",
+   "range": 3,
+   "target": "tile",
+   "roll": "none",
+   "tags": [
+    "terrain",
+    "item"
+   ],
+   "tile_effects": [
+    {
+     "type": "terrain",
+     "tile": "spikes",
+     "radius": 1,
+     "only_on": "floor"
+    }
+   ],
+   "effects": [],
+   "desc": "Spikes on a 3x3 patch."
+  },
+  {
+   "id": "x_net",
+   "name": "Fishing Net",
+   "icon": "net",
+   "cost": "action",
+   "range": 3,
+   "target": "enemy",
+   "roll": "save",
+   "save": "grace",
+   "stat": "grace",
+   "tags": [
+    "control",
+    "item"
+   ],
+   "effects": [
+    {
+     "type": "status",
+     "id": "rooted",
+     "turns": 2
+    },
+    {
+     "type": "status",
+     "id": "dazed",
+     "turns": 2
+    }
+   ],
+   "desc": "Rooted and dazed."
+  },
+  {
+   "id": "x_ticket",
+   "name": "Lucky Ticket",
+   "icon": "ticket",
+   "cost": "bonus",
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "item"
+   ],
+   "effects": [
+    {
+     "type": "status",
+     "id": "inspired",
+     "turns": 3
+    },
+    {
+     "type": "res",
+     "n": 2
+    }
+   ],
+   "desc": "Inspired and +2 resource."
+  },
+  {
+   "id": "x_dauber",
+   "name": "Red Dauber",
+   "icon": "dauber",
+   "cost": "bonus",
+   "range": 6,
+   "target": "enemy",
+   "roll": "none",
+   "tags": [
+    "mark",
+    "item"
+   ],
+   "effects": [
+    {
+     "type": "status",
+     "id": "marked",
+     "turns": 3
+    }
+   ],
+   "desc": "Marked for 3 turns."
+  },
+  {
+   "id": "x_thunder",
+   "name": "Thunderstone",
+   "icon": "bolt",
+   "cost": "action",
+   "range": 0,
+   "target": "self",
+   "area": {
+    "shape": "around_self",
+    "n": 1
+   },
+   "affects": "enemies",
+   "roll": "none",
+   "tags": [
+    "control",
+    "item"
+   ],
+   "effects": [
+    {
+     "type": "push",
+     "n": 2
+    },
+    {
+     "type": "status",
+     "id": "dazed",
+     "turns": 1
+    }
+   ],
+   "desc": "Shove adjacent enemies 2 and daze them."
+  },
+  {
+   "id": "x_tonic",
+   "name": "Nerve Tonic",
+   "icon": "potion",
+   "cost": "bonus",
+   "range": 0,
+   "target": "self",
+   "roll": "none",
+   "tags": [
+    "item"
+   ],
+   "effects": [
+    {
+     "type": "status",
+     "id": "hasted",
+     "turns": 3
+    }
+   ],
+   "desc": "Hasted for 3 turns."
+  },
+  {
+   "id": "x_bomb",
+   "name": "Bingo Bomb",
+   "icon": "ball",
+   "cost": "action",
+   "range": 5,
+   "target": "tile",
+   "area": {
+    "shape": "radius",
+    "n": 1
+   },
+   "affects": "all",
+   "roll": "save",
+   "save": "grace",
+   "stat": "grace",
+   "tags": [
+    "attack",
+    "item",
+    "area"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "3d6",
+     "dtype": "force",
+     "half_on_save": true
+    }
+   ],
+   "desc": "3d6 force in a 3x3 blast."
+  }
+ ],
+ "rule_cards": [
+  {
+   "id": "rc_sudden_death",
+   "name": "Sudden Death",
+   "fights": 3,
+   "desc": "For 3 fights, everyone crits on 18-20. Heroes earn 30% more experience.",
+   "mods": [
+    {
+     "key": "crit_threshold",
+     "op": "set",
+     "value": 18
+    },
+    {
+     "key": "xp_mult",
+     "op": "add",
+     "value": 0.3
+    }
+   ]
+  },
+  {
+   "id": "rc_lights_out",
+   "name": "Lights Out",
+   "fights": 2,
+   "desc": "For 2 fights, every ranged ability has 2 less range. Your attacks ignore cover.",
+   "mods": [
+    {
+     "key": "range_add",
+     "op": "add",
+     "value": -2
+    },
+    {
+     "key": "ignore_cover",
+     "op": "set",
+     "value": true,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rc_overtime",
+   "name": "Overtime",
+   "fights": 3,
+   "desc": "For 3 fights, heroes take an extra action in the first round, and enemies move 2 further.",
+   "mods": [
+    {
+     "key": "actions",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero",
+      "round_le": 1
+     }
+    },
+    {
+     "key": "speed",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "enemy"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rc_blood_money",
+   "name": "Blood Money",
+   "fights": -1,
+   "desc": "For the rest of the campaign: +50% gold, but enemies hit 1 harder.",
+   "mods": [
+    {
+     "key": "gold_mult",
+     "op": "add",
+     "value": 0.5
+    },
+    {
+     "key": "enemy_damage_add",
+     "op": "add",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "rc_double_nothing",
+   "name": "Double or Nothing",
+   "fights": 3,
+   "desc": "For 3 fights, heroes deal 30% more damage and take 30% more.",
+   "mods": [
+    {
+     "key": "damage_dealt_mult",
+     "op": "mul",
+     "value": 1.3,
+     "when": {
+      "side": "hero"
+     }
+    },
+    {
+     "key": "damage_taken_mult",
+     "op": "mul",
+     "value": 1.3,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rc_sundays",
+   "name": "No Healing on Sundays",
+   "fights": 2,
+   "desc": "For 2 fights, all healing is halved. Heroes earn 50% more experience.",
+   "mods": [
+    {
+     "key": "heal_taken_mult",
+     "op": "mul",
+     "value": 0.5
+    },
+    {
+     "key": "xp_mult",
+     "op": "add",
+     "value": 0.5
+    }
+   ]
+  },
+  {
+   "id": "rc_hot_seat",
+   "name": "The Hot Seat",
+   "fights": 3,
+   "desc": "For 3 fights, a random hero is marked every round, but every hero deals +2 damage.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "triggers": [
+    {
+     "event": "round_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "marked",
+       "turns": 1,
+       "to": "random_hero"
+      }
+     ],
+     "label": "Hot Seat"
+    }
+   ]
+  },
+  {
+   "id": "rc_ante",
+   "name": "Ante Up",
+   "fights": 3,
+   "desc": "For 3 fights, every hero pays 3 HP when the fight starts and is empowered for 2 turns.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "damage",
+       "dice": "3",
+       "dtype": "blood",
+       "to": "all_heroes"
+      },
+      {
+       "type": "status",
+       "id": "empowered",
+       "turns": 2,
+       "stacks": 1,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Ante Up"
+    }
+   ]
+  },
+  {
+   "id": "rc_house_ties",
+   "name": "Ties Go to the House",
+   "fights": -1,
+   "desc": "For the rest of the campaign, a hero's roll that exactly meets its target fails. +30% gold.",
+   "mods": [
+    {
+     "key": "tie_wins",
+     "op": "set",
+     "value": false,
+     "priority": 1,
+     "when": {
+      "side": "hero"
+     }
+    },
+    {
+     "key": "gold_mult",
+     "op": "add",
+     "value": 0.3
+    }
+   ]
+  },
+  {
+   "id": "rc_short_fuse",
+   "name": "Short Fuse",
+   "fights": 3,
+   "desc": "For 3 fights, every status anyone applies lasts a turn longer.",
+   "mods": [
+    {
+     "key": "status_turns_add",
+     "op": "add",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "rc_glass_table",
+   "name": "Glass Table",
+   "fights": 2,
+   "desc": "For 2 fights, everyone deals 3 more damage.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 3
+    }
+   ]
+  },
+  {
+   "id": "rc_silence",
+   "name": "Silence in the Hall",
+   "fights": 2,
+   "desc": "For 2 fights, every card costs 1 more resource. Heroes have +2 defense.",
+   "mods": [
+    {
+     "key": "res_cost_add",
+     "op": "add",
+     "value": 1
+    },
+    {
+     "key": "defense",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rc_bounty",
+   "name": "Bounty",
+   "fights": 3,
+   "desc": "For 3 fights, every kill pays 4 gold, but enemies have 15% more HP.",
+   "mods": [
+    {
+     "key": "enemy_hp_mult",
+     "op": "add",
+     "value": 0.15
+    }
+   ],
+   "triggers": [
+    {
+     "event": "kill",
+     "when": {
+      "side": "hero"
+     },
+     "effects": [
+      {
+       "type": "gold",
+       "n": 4
+      }
+     ],
+     "label": "Bounty",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "rc_mercy",
+   "name": "Mercy Rule",
+   "fights": -1,
+   "desc": "For the rest of the campaign, death saves are 5 easier, but heroes receive 20% less healing.",
+   "mods": [
+    {
+     "key": "death_save_dc",
+     "op": "add",
+     "value": -5
+    },
+    {
+     "key": "heal_taken_mult",
+     "op": "mul",
+     "value": 0.8,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rc_house_dice",
+   "name": "House Dice",
+   "fights": 3,
+   "desc": "For 3 fights, nobody's d20 can show above 17 or below 4. No crits, no fumbles, no surprises.",
+   "mods": [
+    {
+     "key": "natural_cap",
+     "op": "cap",
+     "value": 17
+    },
+    {
+     "key": "natural_floor",
+     "op": "set",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": "rc_crowded",
+   "name": "Crowded Room",
+   "fights": 2,
+   "desc": "For 2 fights, everyone moves 1 less. Heroes regain 1 extra resource each turn.",
+   "mods": [
+    {
+     "key": "speed",
+     "op": "add",
+     "value": -1
+    },
+    {
+     "key": "res_regen",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ]
+  }
+ ]
+}

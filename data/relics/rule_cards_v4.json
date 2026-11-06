@@ -1,0 +1,327 @@
+{
+ "_note": "v4 Auctioneer rule cards.",
+ "rule_cards": [
+  {
+   "id": "rc4_two_little_ducks",
+   "name": "Two Little Ducks",
+   "fights": 3,
+   "desc": "For 3 fights everyone crits on 19-20. Everyone.",
+   "mods": [
+    {
+     "key": "crit_threshold",
+     "op": "set",
+     "value": 19
+    }
+   ]
+  },
+  {
+   "id": "rc4_house_bleeds",
+   "name": "The House Bleeds",
+   "fights": 3,
+   "desc": "For 3 fights every hit bleeds 1. Heroes +1 damage. Mop's in the back.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "bleeding",
+       "turns": 2,
+       "stacks": 1,
+       "to": "target"
+      }
+     ],
+     "label": "The House Bleeds",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "rc4_last_standing",
+   "name": "Last One Standing",
+   "fights": 2,
+   "desc": "For 2 fights a hero alone deals +3. Huddled: -1 to hit.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 3,
+     "when": {
+      "side": "hero",
+      "alone": true
+     }
+    },
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": -1,
+     "when": {
+      "side": "hero",
+      "alone": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "rc4_bingo_tax",
+   "name": "Bingo Tax",
+   "fights": -1,
+   "desc": "For the rest of the campaign: kills pay 2 gold. Shops charge 20% more.",
+   "mods": [
+    {
+     "key": "shop_price_mult",
+     "op": "mul",
+     "value": 1.2
+    }
+   ],
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 2
+      }
+     ],
+     "label": "Bingo Tax",
+     "quiet": true,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rc4_quiet_please",
+   "name": "Quiet, Please",
+   "fights": 3,
+   "desc": "For 3 fights he watches 20% less. Every sip: 2 in the FILE.",
+   "mods": [
+    {
+     "key": "watch_mult",
+     "op": "mul",
+     "value": 0.8
+    }
+   ],
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": 2
+      }
+     ],
+     "label": "Quiet, Please",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "rc4_double_nothing",
+   "name": "Double or Nothing",
+   "fights": 2,
+   "desc": "For 2 fights everyone deals 50% more. Heroes start with 5 temporary HP.",
+   "mods": [
+    {
+     "key": "damage_dealt_mult",
+     "op": "mul",
+     "value": 1.5
+    },
+    {
+     "key": "temp_hp_combat",
+     "op": "add",
+     "value": 5,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rc4_early_bird",
+   "name": "Early Bird",
+   "fights": 3,
+   "desc": "For 3 fights, round 1: heroes +2 speed, +2 to hit. From round 5 enemies hit 2 harder.",
+   "mods": [
+    {
+     "key": "speed",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero",
+      "round_le": 1
+     }
+    },
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero",
+      "round_le": 1
+     }
+    },
+    {
+     "key": "enemy_damage_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "round_ge": 5
+     }
+    }
+   ]
+  },
+  {
+   "id": "rc4_full_house",
+   "name": "Full House",
+   "fights": 3,
+   "desc": "For 3 fights enemies have 15% more HP. 40% more XP. 20% more gold.",
+   "mods": [
+    {
+     "key": "enemy_hp_mult",
+     "op": "mul",
+     "value": 1.15
+    },
+    {
+     "key": "xp_mult",
+     "op": "add",
+     "value": 0.4
+    },
+    {
+     "key": "gold_mult",
+     "op": "add",
+     "value": 0.2
+    }
+   ]
+  },
+  {
+   "id": "rc4_snakes_ladders",
+   "name": "Snakes and Ladders",
+   "fights": 3,
+   "desc": "For 3 fights a hero's natural 3 or less costs 2 HP. 18 or more: 3 free squares.",
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "self_damage",
+       "n": 2
+      }
+     ],
+     "label": "Snake",
+     "quiet": true,
+     "when": {
+      "side": "hero",
+      "natural_le": 3
+     }
+    },
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "extra_move",
+       "n": 3,
+       "to": "self"
+      }
+     ],
+     "label": "Ladder",
+     "quiet": true,
+     "when": {
+      "side": "hero",
+      "natural_ge": 18
+     }
+    }
+   ]
+  },
+  {
+   "id": "rc4_mercy_rule",
+   "name": "Mercy Rule",
+   "fights": 2,
+   "desc": "For 2 fights death saves are 3 easier. His pieces +1 to hit.",
+   "mods": [
+    {
+     "key": "death_save_dc",
+     "op": "add",
+     "value": -3
+    },
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "enemy"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rc4_hands_on_table",
+   "name": "Hands on the Table",
+   "fights": 2,
+   "desc": "For 2 fights cheats add 50% more to the FILE. Heroes act twice in round 1.",
+   "mods": [
+    {
+     "key": "cheat_suspicion",
+     "op": "mul",
+     "value": 1.5
+    },
+    {
+     "key": "actions",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero",
+      "round_le": 1
+     }
+    }
+   ]
+  },
+  {
+   "id": "rc4_the_wake",
+   "name": "The Wake",
+   "fights": -1,
+   "desc": "For the rest of the campaign: a hero dies, the rest heal 15, empowered 3. Enemies 5% tougher.",
+   "mods": [
+    {
+     "key": "enemy_hp_mult",
+     "op": "mul",
+     "value": 1.05
+    }
+   ],
+   "triggers": [
+    {
+     "event": "hero_death",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "15",
+       "to": "all_heroes"
+      },
+      {
+       "type": "status",
+       "id": "empowered",
+       "turns": 3,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "The Wake",
+     "quiet": true,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ]
+  }
+ ]
+}

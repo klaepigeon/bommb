@@ -1,0 +1,715 @@
+{
+ "relics": [
+  {
+   "id": "v2_steves_dice",
+   "name": "Steve's Dice",
+   "rarity": "uncommon",
+   "icon": "die",
+   "family": "dice",
+   "desc": "Steve rolled eleven ones in a row and laughed at every one. A hero's natural 1: 4d4 force to a random enemy, and 1 resource back.",
+   "triggers": [
+    {
+     "event": "natural",
+     "effects": [
+      {
+       "type": "damage",
+       "dice": "4d4",
+       "dtype": "force",
+       "to": "random_foe"
+      },
+      {
+       "type": "res",
+       "n": 1,
+       "to": "self"
+      }
+     ],
+     "label": "Steve Laughs",
+     "when": {
+      "side": "hero",
+      "natural": 1
+     }
+    }
+   ],
+   "tags": [
+    "dice",
+    "victim"
+   ]
+  },
+  {
+   "id": "v2_janets_sleeve",
+   "name": "Janet's Sleeve",
+   "rarity": "rare",
+   "icon": "sleeve",
+   "family": "cheats",
+   "desc": "One more die up your sleeve. Palm a 15 or higher and the FILE drops 4. Get caught and the hand bleeds, the way hers did.",
+   "mods": [
+    {
+     "key": "sleeve_size",
+     "op": "add",
+     "value": 1
+    }
+   ],
+   "triggers": [
+    {
+     "event": "palmed",
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": -4
+      }
+     ],
+     "label": "Janet's Sleeve",
+     "when": {
+      "natural_ge": 15
+     },
+     "quiet": true
+    },
+    {
+     "event": "caught",
+     "effects": [
+      {
+       "type": "status",
+       "id": "bleeding",
+       "turns": 2,
+       "stacks": 2,
+       "to": "self"
+      }
+     ],
+     "label": "Janet's Sleeve"
+    }
+   ],
+   "tags": [
+    "cheats",
+    "victim"
+   ]
+  },
+  {
+   "id": "v2_maureens_list",
+   "name": "Maureen's List",
+   "rarity": "common",
+   "icon": "scroll",
+   "family": "dead",
+   "desc": "Everyone who ever wronged her. When a hero goes down, every enemy goes on the list: marked for 2 turns.",
+   "triggers": [
+    {
+     "event": "ally_down",
+     "effects": [
+      {
+       "type": "status",
+       "id": "marked",
+       "turns": 2,
+       "to": "all_enemies"
+      }
+     ],
+     "label": "Maureen's List",
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "tags": [
+    "dead",
+    "victim"
+   ]
+  },
+  {
+   "id": "v2_sandras_tab",
+   "name": "Sandra's Tab",
+   "rarity": "uncommon",
+   "icon": "note",
+   "family": "money",
+   "desc": "Sandra ran a tab. The tab came due. Now it's yours. Cheats add 2 more to the FILE, but every time you're caught: 15 gold.",
+   "mods": [
+    {
+     "key": "cheat_suspicion",
+     "op": "add",
+     "value": 2
+    }
+   ],
+   "triggers": [
+    {
+     "event": "caught",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 15
+      }
+     ],
+     "label": "Sandra's Tab"
+    }
+   ],
+   "tags": [
+    "money",
+    "cheats",
+    "victim"
+   ]
+  },
+  {
+   "id": "v2_collection_tin",
+   "name": "Collection Tin",
+   "rarity": "rare",
+   "icon": "tin",
+   "family": "money",
+   "desc": "Rattles when you walk. Heroes +1 defense for every 150 gold you hold (up to +3).",
+   "mods": [
+    {
+     "key": "defense",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     },
+     "per_gold": 150,
+     "scale_cap": 3
+    }
+   ],
+   "tags": [
+    "money",
+    "defense"
+   ]
+  },
+  {
+   "id": "v2_gold_filling",
+   "name": "Gold Filling",
+   "rarity": "common",
+   "icon": "fang",
+   "family": "money",
+   "desc": "Kill an elite: 20 gold, pulled from the jaw.",
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 20
+      }
+     ],
+     "label": "Gold Filling",
+     "when": {
+      "side": "hero",
+      "killed_tag": "elite"
+     }
+    }
+   ],
+   "tags": [
+    "money"
+   ]
+  },
+  {
+   "id": "v2_closing_time",
+   "name": "Closing Time",
+   "rarity": "rare",
+   "icon": "bell",
+   "family": "drink",
+   "desc": "From round 3, every sip hastes every hero for a turn. Drink up. Drink up.",
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "status",
+       "id": "hasted",
+       "turns": 1,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Closing Time",
+     "when": {
+      "round_ge": 3
+     }
+    }
+   ],
+   "tags": [
+    "drink",
+    "movement"
+   ]
+  },
+  {
+   "id": "v2_dregs",
+   "name": "The Dregs",
+   "rarity": "common",
+   "icon": "cup",
+   "family": "drink",
+   "desc": "Every sip marks a random enemy for a turn (+2 to hit it).",
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "status",
+       "id": "marked",
+       "turns": 1,
+       "to": "random_enemy"
+      }
+     ],
+     "label": "The Dregs",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "drink",
+    "offense"
+   ]
+  },
+  {
+   "id": "v2_wet_ring",
+   "name": "Wet Ring on the Table",
+   "rarity": "uncommon",
+   "icon": "glass",
+   "family": "drink",
+   "desc": "Somebody's can sat here for years. Every sip: a random hero regenerates for 2 turns.",
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "status",
+       "id": "regenerating",
+       "turns": 2,
+       "to": "random_hero"
+      }
+     ],
+     "label": "Wet Ring",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "drink",
+    "healing"
+   ]
+  },
+  {
+   "id": "v2_hymn_to_nobody",
+   "name": "Hymn to Nobody",
+   "rarity": "uncommon",
+   "icon": "note",
+   "family": "faithful",
+   "desc": "Once a turn, a hero's critical hit blesses every hero for a turn.",
+   "triggers": [
+    {
+     "event": "crit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "blessed",
+       "turns": 1,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Hymn to Nobody",
+     "when": {
+      "side": "hero"
+     },
+     "once": "turn",
+     "once_key": "v2_hymn"
+    }
+   ],
+   "tags": [
+    "faithful",
+    "dice"
+   ]
+  },
+  {
+   "id": "v2_knucklebone_rosary",
+   "name": "Knucklebone Rosary",
+   "rarity": "common",
+   "icon": "bone",
+   "family": "faithful",
+   "desc": "A prayer for the last few hit points. Once a fight, each hero hurt below 30% heals 8.",
+   "triggers": [
+    {
+     "event": "damaged",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "8",
+       "to": "self"
+      }
+     ],
+     "label": "Knucklebone Rosary",
+     "when": {
+      "side": "hero",
+      "hp_below": 0.3
+     },
+     "once": "combat",
+     "once_key": "v2_rosary"
+    }
+   ],
+   "tags": [
+    "faithful",
+    "healing"
+   ]
+  },
+  {
+   "id": "v2_butchers_receipt",
+   "name": "Butcher's Receipt",
+   "rarity": "uncommon",
+   "icon": "hook",
+   "family": "flesh",
+   "desc": "Itemised. Heroes heal 2 whenever they hit an enemy at half HP or less.",
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "2",
+       "to": "self"
+      }
+     ],
+     "label": "Butcher's Receipt",
+     "when": {
+      "side": "hero",
+      "bloodied_target": true
+     },
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "flesh",
+    "healing"
+   ]
+  },
+  {
+   "id": "v2_meat_raffle",
+   "name": "Meat Raffle Ticket",
+   "rarity": "common",
+   "icon": "ticket",
+   "family": "flesh",
+   "desc": "Once a turn, a hero hurt while below half HP gains 4 temporary HP.",
+   "triggers": [
+    {
+     "event": "damaged",
+     "effects": [
+      {
+       "type": "temp_hp",
+       "dice": "4",
+       "to": "self"
+      }
+     ],
+     "label": "Meat Raffle",
+     "when": {
+      "side": "hero",
+      "hp_below": 0.5
+     },
+     "once": "turn",
+     "once_key": "v2_meat",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "flesh",
+    "defense"
+   ]
+  },
+  {
+   "id": "v2_open_wound",
+   "name": "An Open Wound",
+   "rarity": "rare",
+   "icon": "drop",
+   "family": "flesh",
+   "desc": "It wants to be worn. Heroes below half HP crit on 18-20.",
+   "mods": [
+    {
+     "key": "crit_threshold",
+     "op": "set",
+     "value": 18,
+     "when": {
+      "side": "hero",
+      "hp_below": 0.5
+     }
+    }
+   ],
+   "tags": [
+    "flesh",
+    "dice",
+    "risk"
+   ]
+  },
+  {
+   "id": "v2_marginalia",
+   "name": "Marginalia",
+   "rarity": "common",
+   "icon": "pencil",
+   "family": "paper",
+   "desc": "Notes in a dead player's hand. Your cards' save DCs +2 in the first two rounds.",
+   "mods": [
+    {
+     "key": "save_dc",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero",
+      "round_le": 2
+     }
+    }
+   ],
+   "tags": [
+    "paper"
+   ]
+  },
+  {
+   "id": "v2_redaction_marker",
+   "name": "Redaction Marker",
+   "rarity": "uncommon",
+   "icon": "ink",
+   "family": "paper",
+   "desc": "Black out a line of his. Every fight, a random enemy starts silenced for 2 turns, and another is exposed for 1.",
+   "triggers": [
+    {
+     "event": "combat_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "silenced",
+       "turns": 2,
+       "to": "random_enemy"
+      },
+      {
+       "type": "status",
+       "id": "exposed",
+       "turns": 1,
+       "to": "random_enemy"
+      }
+     ],
+     "label": "Redaction",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "paper",
+    "status"
+   ]
+  },
+  {
+   "id": "v2_paper_megaphone",
+   "name": "Paper Megaphone",
+   "rarity": "uncommon",
+   "icon": "scream",
+   "family": "mouths",
+   "desc": "Every distraction: 1d4 psychic to every enemy.",
+   "triggers": [
+    {
+     "event": "distracted",
+     "effects": [
+      {
+       "type": "damage",
+       "dice": "1d4",
+       "dtype": "psychic",
+       "to": "all_enemies"
+      }
+     ],
+     "label": "Paper Megaphone"
+    }
+   ],
+   "tags": [
+    "mouths",
+    "offense"
+   ]
+  },
+  {
+   "id": "v2_hearing_aid",
+   "name": "His Hearing Aid",
+   "rarity": "rare",
+   "icon": "mouth",
+   "family": "mouths",
+   "desc": "It whistles when he turns. Distractions recharge 30% faster, and every distraction gives a random hero 1 resource.",
+   "mods": [
+    {
+     "key": "distract_cooldown",
+     "op": "mul",
+     "value": 0.7
+    }
+   ],
+   "triggers": [
+    {
+     "event": "distracted",
+     "effects": [
+      {
+       "type": "res",
+       "n": 1,
+       "to": "random_hero"
+      }
+     ],
+     "label": "Hearing Aid",
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "mouths",
+    "resource"
+   ]
+  },
+  {
+   "id": "v2_kevins_watch",
+   "name": "Kevin's Wristwatch",
+   "rarity": "rare",
+   "icon": "watch",
+   "family": "clocks",
+   "desc": "Stopped at 9:14. Nobody noticed Kevin had stopped too. From round 4, heroes' cards cost 1 less resource.",
+   "mods": [
+    {
+     "key": "res_cost_add",
+     "op": "add",
+     "value": -1,
+     "when": {
+      "side": "hero",
+      "round_ge": 4
+     }
+    }
+   ],
+   "tags": [
+    "clocks",
+    "resource",
+    "victim"
+   ]
+  },
+  {
+   "id": "v2_velvet_glove",
+   "name": "Velvet Glove",
+   "rarity": "common",
+   "icon": "palm",
+   "family": "minis",
+   "desc": "Every nudge leaves the nudged miniature guarded (+3 defense) for a turn.",
+   "triggers": [
+    {
+     "event": "cheat",
+     "effects": [
+      {
+       "type": "status",
+       "id": "guarded",
+       "turns": 1,
+       "to": "self"
+      }
+     ],
+     "label": "Velvet Glove",
+     "when": {
+      "cheat": "nudge"
+     },
+     "quiet": true
+    }
+   ],
+   "tags": [
+    "minis",
+    "cheats",
+    "defense"
+   ]
+  },
+  {
+   "id": "v2_paulines_dauber",
+   "name": "Pauline's Dauber",
+   "rarity": "uncommon",
+   "icon": "dauber",
+   "family": "dice",
+   "desc": "Raised for nineteen years, waiting for one number. Heroes deal +2 damage to marked, hunted or doomed enemies.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero",
+      "target_status": "marked"
+     }
+    },
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero",
+      "target_status": "hunted"
+     }
+    },
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "hero",
+      "target_status": "doomed"
+     }
+    }
+   ],
+   "tags": [
+    "offense"
+   ]
+  },
+  {
+   "id": "v2_daves_candle",
+   "name": "Dave's Candle",
+   "rarity": "uncommon",
+   "icon": "candle",
+   "family": "candles",
+   "desc": "From table four. It agreed with Dave about fireball. Heroes get +2 to hit burning enemies.",
+   "mods": [
+    {
+     "key": "attack_bonus_against",
+     "op": "add",
+     "value": 2,
+     "when": {
+      "side": "enemy",
+      "self_status": "burning"
+     }
+    }
+   ],
+   "tags": [
+    "candles",
+    "offense",
+    "victim"
+   ]
+  },
+  {
+   "id": "v2_empty_chair",
+   "name": "The Empty Chair",
+   "rarity": "cursed",
+   "icon": "chair",
+   "family": "dead",
+   "desc": "Cursed. Linda's chair, with the dust sheet still on. It follows you to every table. Heroes deal +3 damage, but death saves are 4 harder.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 3,
+     "when": {
+      "side": "hero"
+     }
+    },
+    {
+     "key": "death_save_dc",
+     "op": "add",
+     "value": 4
+    }
+   ],
+   "tags": [
+    "dead",
+    "risk",
+    "victim"
+   ]
+  },
+  {
+   "id": "v2_his_file",
+   "name": "His File on You",
+   "rarity": "rare",
+   "icon": "scroll",
+   "family": "cheats",
+   "desc": "You took it off his desk. Heroes deal +1 damage for every 20 points in his FILE when a fight starts (up to +4).",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     },
+     "per_suspicion": 20,
+     "scale_cap": 4
+    }
+   ],
+   "tags": [
+    "cheats",
+    "risk"
+   ]
+  }
+ ]
+}

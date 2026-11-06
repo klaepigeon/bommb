@@ -44,12 +44,14 @@ crack in the rules, and he gets stranger every time (`unrest`).
 - [x] Headless rules tests (thousands of checks over whole matches); multi-process net tests
 - [~] Local multiplayer: device per seat (WASD/arrows/IJKL/pads/touch) for Chairs; turn
       games are hot-seat on shared buttons. Not tried with real pads or a tablet
-- [~] Android/Windows/Linux export presets written; no export done here (no templates/SDK)
+- [x] Android APK builds and signs (apk/MEAT_PARTY.apk); [ ] not yet run on a device
+- [x] LAST CALL: The Campaign's look: its hall, Stage, post shader, Caller, fonts, card stock
+- [x] Voodoo dolls: photo faces, sacking, pins for injuries, thread for lost parts
+- [~] Windows/Linux export presets written; not exported (templates not installed here)
 - [ ] Real-device and real-internet networking tests (docs/NETWORKING.md)
 - [ ] Deployed relay server (needs a public host: blocker for internet play)
 - [ ] Voice lines (placeholders: babble from the hum; drop files into assets.json "voice")
 - [ ] Per-seat corner pads for 4 people around one tablet
 - [ ] Graphics profiling on actual Android hardware
 - [ ] The other seven minigames (framework ready)
-- [ ] Ports from LAST CALL itself: only RATFORMER's copy of the Caller was available
-      (the original LAST CALL project isn't in any repo this session can see)
+- [x] LAST CALL: The Campaign found (Video-Game, branch claude/new-session-rc175w)

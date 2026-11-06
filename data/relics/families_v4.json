@@ -1,0 +1,227 @@
+{
+ "families": [
+  {
+   "id": "v4_red",
+   "name": "The Red",
+   "desc": "Everything bleeds. Eventually.",
+   "2": {
+    "desc": "Heroes +2 damage to bleeding foes.",
+    "mods": [
+     {
+      "key": "damage_dealt_add",
+      "op": "add",
+      "value": 2,
+      "when": {
+       "side": "hero",
+       "target_status": "bleeding"
+      }
+     }
+    ]
+   },
+   "3": {
+    "desc": "A hero's kill: foes near the killer bleed 2.",
+    "triggers": [
+     {
+      "event": "kill",
+      "effects": [
+       {
+        "type": "status",
+        "id": "bleeding",
+        "turns": 2,
+        "to": "near_foes",
+        "stacks": 2
+       }
+      ],
+      "label": "The Red",
+      "when": {
+       "side": "hero"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "v4_last",
+   "name": "The Last",
+   "desc": "Someone has to turn the lights off.",
+   "2": {
+    "desc": "Heroes alone: +1 to hit, +1 damage.",
+    "mods": [
+     {
+      "key": "attack_bonus",
+      "op": "add",
+      "value": 1,
+      "when": {
+       "side": "hero",
+       "alone": true
+      }
+     },
+     {
+      "key": "damage_dealt_add",
+      "op": "add",
+      "value": 1,
+      "when": {
+       "side": "hero",
+       "alone": true
+      }
+     }
+    ]
+   },
+   "3": {
+    "desc": "A hero goes down: the rest are warded and hasted. Once a fight.",
+    "triggers": [
+     {
+      "event": "ally_down",
+      "effects": [
+       {
+        "type": "status",
+        "id": "warded",
+        "turns": 1,
+        "to": "all_heroes"
+       },
+       {
+        "type": "status",
+        "id": "hasted",
+        "turns": 2,
+        "to": "all_heroes"
+       }
+      ],
+      "label": "The Last",
+      "when": {
+       "side": "hero"
+      },
+      "once": "combat"
+     }
+    ]
+   }
+  },
+  {
+   "id": "v4_hoard",
+   "name": "The Hoard",
+   "desc": "Count it. Again.",
+   "2": {
+    "desc": "Heroes +1 defense per 200 gold (up to +2).",
+    "mods": [
+     {
+      "key": "defense",
+      "op": "add",
+      "value": 1,
+      "per_gold": 200,
+      "scale_cap": 2,
+      "when": {
+       "side": "hero"
+      }
+     }
+    ]
+   },
+   "3": {
+    "desc": "Kills pay 4 gold. +1 damage per 100 gold (up to +4).",
+    "mods": [
+     {
+      "key": "damage_dealt_add",
+      "op": "add",
+      "value": 1,
+      "per_gold": 100,
+      "scale_cap": 4,
+      "when": {
+       "side": "hero"
+      }
+     }
+    ],
+    "triggers": [
+     {
+      "event": "kill",
+      "effects": [
+       {
+        "type": "gold",
+        "n": 4
+       }
+      ],
+      "label": "The Hoard",
+      "quiet": true,
+      "when": {
+       "side": "hero"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "v4_faces",
+   "name": "The Faces",
+   "desc": "Every number means something. To him.",
+   "2": {
+    "desc": "A hero's natural 5 or less: inspired.",
+    "triggers": [
+     {
+      "event": "natural",
+      "effects": [
+       {
+        "type": "status",
+        "id": "inspired",
+        "turns": 2,
+        "to": "self"
+       }
+      ],
+      "label": "The Faces",
+      "quiet": true,
+      "when": {
+       "side": "hero",
+       "natural_le": 5
+      }
+     }
+    ]
+   },
+   "3": {
+    "desc": "A hero's natural 7, 8 or 13: refresh that hero's cards. Once a turn.",
+    "triggers": [
+     {
+      "event": "natural",
+      "effects": [
+       {
+        "type": "refresh_cooldowns",
+        "to": "self"
+       }
+      ],
+      "label": "The Faces",
+      "when": {
+       "side": "hero",
+       "natural": 7
+      },
+      "once": "turn"
+     },
+     {
+      "event": "natural",
+      "effects": [
+       {
+        "type": "refresh_cooldowns",
+        "to": "self"
+       }
+      ],
+      "label": "The Faces",
+      "when": {
+       "side": "hero",
+       "natural": 8
+      },
+      "once": "turn"
+     },
+     {
+      "event": "natural",
+      "effects": [
+       {
+        "type": "refresh_cooldowns",
+        "to": "self"
+       }
+      ],
+      "label": "The Faces",
+      "when": {
+       "side": "hero",
+       "natural": 13
+      },
+      "once": "turn"
+     }
+    ]
+   }
+  }
+ ]
+}

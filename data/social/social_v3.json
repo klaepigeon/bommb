@@ -1,0 +1,1368 @@
+{
+ "_doc": "Third batch of social encounters (npcs) and towns. See scripts/campaign/social.gd.",
+ "npcs": [
+  {
+   "id": "v3_npc_tide_clerk",
+   "name": "The Tide Clerk",
+   "persona": "prize_clerk",
+   "setting": "drowned",
+   "tags": [
+    "tide",
+    "dock"
+   ],
+   "dc": 13,
+   "goal": 3,
+   "patience": 4,
+   "likes": [
+    "bribe",
+    "lie"
+   ],
+   "hates": [
+    "plead"
+   ],
+   "bribe": 18,
+   "greeting": "Name. Boat. Weight. Of the dead. Aboard.",
+   "tell": "Forms. Fees. Anything. That fits a box. Tears. Smudge. The ink.",
+   "lines": {
+    "hit": [
+     "Stamped.",
+     "Box ticked."
+    ],
+    "miss": [
+     "Wrong form.",
+     "Back of the queue."
+    ],
+    "like": [
+     "Fee received. Fee. Received.",
+     "That. Fits the box. Nicely."
+    ],
+    "hate": [
+     "Do not. Drip. On my desk.",
+     "Tears are. Not a currency."
+    ],
+    "bribe": [
+     "Processing. Processing. Done."
+    ]
+   },
+   "win": {
+    "text": "He stamps your hands. The tide reads it and lets you through dry.",
+    "effects": [
+     {
+      "type": "reveal"
+     },
+     {
+      "type": "gold",
+      "n": 20
+     }
+    ]
+   },
+   "lose": {
+    "text": "He files you under LOST AT SEA. The sea takes the hint.",
+    "effects": [
+     {
+      "type": "damage",
+      "n": 6,
+      "target": "all"
+     },
+     {
+      "type": "suspicion",
+      "n": 5
+     }
+    ]
+   }
+  },
+  {
+   "id": "v3_npc_salt_widower",
+   "name": "The Salt Widower",
+   "persona": "drowned_king",
+   "setting": "drowned",
+   "tags": [
+    "tide",
+    "town"
+   ],
+   "dc": 12,
+   "goal": 3,
+   "patience": 4,
+   "likes": [
+    "plead",
+    "charm"
+   ],
+   "hates": [
+    "bribe",
+    "threaten"
+   ],
+   "greeting": "She went. Paddling. Thirty years ago. Kettle's. Still on.",
+   "tell": "He keeps. Her cup. Warm. Be kind. Be sorry. Money. Is what. The sea paid.",
+   "lines": {
+    "hit": [
+     "Sit. Sit. Her chair. She won't mind.",
+     "Hm. Tea?"
+    ],
+    "miss": [
+     "The kettle. Clicks off."
+    ],
+    "like": [
+     "You talk. Like her.",
+     "Stay. Stay a bit."
+    ],
+    "hate": [
+     "The sea. Paid me too. Keep it.",
+     "Shout. Shout then. She can't hear."
+    ],
+    "bribe": [
+     "He drops it in the sink. Plink."
+    ]
+   },
+   "win": {
+    "text": "He gives you her swimming cap. It is still wet. It always will be.",
+    "effects": [
+     {
+      "type": "relic",
+      "id": "random",
+      "rarity": "uncommon"
+     }
+    ]
+   },
+   "lose": {
+    "text": "He opens the door to the sea and waits for you to go out it.",
+    "effects": [
+     {
+      "type": "damage",
+      "n": 8,
+      "target": "weakest"
+     },
+     {
+      "type": "status_next",
+      "id": "slowed",
+      "side": "hero",
+      "turns": 2
+     }
+    ]
+   }
+  },
+  {
+   "id": "v3_npc_stone_mason",
+   "name": "The Mason",
+   "persona": "foreman",
+   "setting": "cathedral",
+   "tags": [
+    "masonry",
+    "church"
+   ],
+   "dc": 13,
+   "goal": 3,
+   "patience": 4,
+   "likes": [
+    "threaten",
+    "bribe"
+   ],
+   "hates": [
+    "charm"
+   ],
+   "greeting": "Gargoyle. Number. Four hundred. Same face. Every time. Mine.",
+   "tell": "Hard words. Hard coin. He carves. Hard things. Sweet talk. Crumbles.",
+   "lines": {
+    "hit": [
+     "Chip.",
+     "That'll. Hold."
+    ],
+    "miss": [
+     "Soft stone. Soft. You."
+    ],
+    "like": [
+     "Ha. Granite. You're granite.",
+     "Now. We talk."
+    ],
+    "hate": [
+     "Smiles. Smiles weather. Badly.",
+     "Don't. Flatter. The chisel."
+    ],
+    "bribe": [
+     "Paid. Like a guild man."
+    ]
+   },
+   "win": {
+    "text": "He carves your faces on the next gargoyle. It watches your back.",
+    "effects": [
+     {
+      "type": "status_next",
+      "id": "protected",
+      "side": "hero",
+      "turns": 2
+     },
+     {
+      "type": "max_hp",
+      "n": 3,
+      "target": "all"
+     }
+    ]
+   },
+   "lose": {
+    "text": "He drops the scaffold. Accident. Accident. Write it down.",
+    "effects": [
+     {
+      "type": "damage",
+      "n": 7,
+      "target": "random"
+     },
+     {
+      "type": "injure",
+      "target": "random"
+     }
+    ],
+    "fight": "combat"
+   }
+  },
+  {
+   "id": "v3_npc_candle_girl",
+   "name": "The Candle Girl",
+   "persona": "choir",
+   "setting": "cathedral",
+   "tags": [
+    "candles",
+    "church"
+   ],
+   "dc": 12,
+   "goal": 3,
+   "patience": 4,
+   "likes": [
+    "charm",
+    "lie"
+   ],
+   "hates": [
+    "bribe",
+    "threaten"
+   ],
+   "greeting": "One candle. One wish. One person. Who isn't. Coming back.",
+   "tell": "She likes. Pretty words. Pretty lies. Coins are. For the dead.",
+   "lines": {
+    "hit": [
+     "The flame. Leans to you.",
+     "Mm."
+    ],
+    "miss": [
+     "Out. It went out."
+    ],
+    "like": [
+     "Say it. Again. Prettier.",
+     "You'd be. A lovely. Candle."
+    ],
+    "hate": [
+     "Coins. On eyes. Not in hands.",
+     "Shh. Shh. You'll. Wake them."
+    ],
+    "bribe": [
+     "She lights a candle with it. For you. Early."
+    ]
+   },
+   "win": {
+    "text": "She lights one for each of you. Yours burn very slowly.",
+    "effects": [
+     {
+      "type": "status_next",
+      "id": "blessed",
+      "side": "hero",
+      "turns": 2
+     },
+     {
+      "type": "heal_pct",
+      "pct": 0.2,
+      "target": "all"
+     }
+    ]
+   },
+   "lose": {
+    "text": "She lights one for each of you. Yours are already short.",
+    "effects": [
+     {
+      "type": "damage",
+      "n": 5,
+      "target": "all"
+     }
+    ]
+   }
+  },
+  {
+   "id": "v3_npc_ossuary_keeper",
+   "name": "The Ossuary Keeper",
+   "persona": "deacon",
+   "setting": "cathedral",
+   "tags": [
+    "crypt",
+    "church"
+   ],
+   "dc": 14,
+   "goal": 3,
+   "patience": 3,
+   "likes": [
+    "plead"
+   ],
+   "hates": [
+    "lie",
+    "charm"
+   ],
+   "greeting": "Every skull. Has a number. Numbers. Get. Called.",
+   "tell": "He only. Trusts. The begging. The dead beg. Liars. Smile. Like skulls.",
+   "lines": {
+    "hit": [
+     "Noted.",
+     "Shelf. Seven."
+    ],
+    "miss": [
+     "Back. Back on the shelf."
+    ],
+    "like": [
+     "Yes. Kneel. Kneel. Good.",
+     "Honest. Honest bones."
+    ],
+    "hate": [
+     "A skull. Grins. Like that.",
+     "Liar's teeth. Rattle."
+    ],
+    "bribe": [
+     "He tucks it in an eye socket."
+    ]
+   },
+   "win": {
+    "text": "He lends you a skull. It knows the way through. It clicks when you go wrong.",
+    "effects": [
+     {
+      "type": "reveal"
+     },
+     {
+      "type": "xp",
+      "n": 10,
+      "target": "all"
+     }
+    ]
+   },
+   "lose": {
+    "text": "He gives one of you a number. Shelf space is. Available.",
+    "effects": [
+     {
+      "type": "injure",
+      "target": "weakest"
+     },
+     {
+      "type": "suspicion",
+      "n": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "v3_npc_tally_man",
+   "name": "The Tally Man",
+   "persona": "foreman",
+   "setting": "iron",
+   "tags": [
+    "tally",
+    "works"
+   ],
+   "dc": 13,
+   "goal": 3,
+   "patience": 4,
+   "likes": [
+    "threaten",
+    "bribe"
+   ],
+   "hates": [
+    "plead"
+   ],
+   "bribe": 20,
+   "greeting": "Tally. Tally. Tokens in. Men out. Count. Doesn't. Match.",
+   "tell": "He likes. Weight. In a fist. In a palm. Begging. Wastes. Shift time.",
+   "lines": {
+    "hit": [
+     "Counted.",
+     "Fair. Weight."
+    ],
+    "miss": [
+     "Short. You're short."
+    ],
+    "like": [
+     "Now that's. A foreman's voice.",
+     "Right. Right. Sign here."
+    ],
+    "hate": [
+     "Whining. Docked.",
+     "Beg. On your own. Time."
+    ],
+    "bribe": [
+     "Into the tin. Clink. Clink."
+    ]
+   },
+   "win": {
+    "text": "He crosses your names off the missing list. Somebody else goes on it.",
+    "effects": [
+     {
+      "type": "suspicion",
+      "n": -10
+     },
+     {
+      "type": "gold",
+      "n": 25
+     }
+    ]
+   },
+   "lose": {
+    "text": "He docks you. Wages. Then blood.",
+    "effects": [
+     {
+      "type": "gold",
+      "n": -20
+     },
+     {
+      "type": "damage",
+      "n": 5,
+      "target": "random"
+     }
+    ],
+    "fight": "combat"
+   }
+  },
+  {
+   "id": "v3_npc_canary_keeper",
+   "name": "The Canary Keeper",
+   "persona": "prospector",
+   "setting": "iron",
+   "tags": [
+    "canary",
+    "works"
+   ],
+   "dc": 12,
+   "goal": 3,
+   "patience": 4,
+   "likes": [
+    "plead",
+    "charm"
+   ],
+   "hates": [
+    "threaten",
+    "lie"
+   ],
+   "greeting": "Shh. Shh. They stopped. Singing. Tuesday.",
+   "tell": "Gentle. Gentle. Like. With birds. Loud. Kills them. So does. Fibbing.",
+   "lines": {
+    "hit": [
+     "Tweet.",
+     "One. Hopped."
+    ],
+    "miss": [
+     "Silent. Still. Silent."
+    ],
+    "like": [
+     "Oh. Oh, one sang.",
+     "Soft. Soft voice. Yes."
+    ],
+    "hate": [
+     "You've. Killed. Another.",
+     "They know. When you lie. They drop."
+    ],
+    "bribe": [
+     "He buys seed. For birds that don't eat."
+    ]
+   },
+   "win": {
+    "text": "He gives you one bird. It sings before the bad air. And before the bad things.",
+    "effects": [
+     {
+      "type": "relic",
+      "id": "random",
+      "rarity": "common"
+     },
+     {
+      "type": "status_next",
+      "id": "inspired",
+      "side": "hero",
+      "turns": 1
+     }
+    ]
+   },
+   "lose": {
+    "text": "The bird stops singing. So does your breath, for a bit.",
+    "effects": [
+     {
+      "type": "damage",
+      "n": 6,
+      "target": "all"
+     },
+     {
+      "type": "status_next",
+      "id": "poisoned",
+      "side": "hero",
+      "turns": 2
+     }
+    ]
+   }
+  },
+  {
+   "id": "v3_npc_lamp_man",
+   "name": "The Lamp Man",
+   "persona": "projectionist",
+   "setting": "iron",
+   "tags": [
+    "lamps",
+    "works"
+   ],
+   "dc": 13,
+   "goal": 3,
+   "patience": 4,
+   "likes": [
+    "lie",
+    "charm"
+   ],
+   "hates": [
+    "bribe"
+   ],
+   "greeting": "Lamp. Number. Yours? No. That's. A dead man's.",
+   "tell": "He likes. Stories. True ones. Bore him. Money. Is what. The lamps cost. Lives.",
+   "lines": {
+    "hit": [
+     "Flicker.",
+     "Brighter."
+    ],
+    "miss": [
+     "Dim.",
+     "Wick. Trimmed."
+    ],
+    "like": [
+     "Ha. Tell. Another.",
+     "Light. Light. That's. A good one."
+    ],
+    "hate": [
+     "Paid. For light. With men.",
+     "Put it. Away."
+    ],
+    "bribe": [
+     "The flame takes it. Coldly."
+    ]
+   },
+   "win": {
+    "text": "He hands you a lamp. On its tag, a number from a bingo card. It never goes out.",
+    "effects": [
+     {
+      "type": "status_next",
+      "id": "hasted",
+      "side": "hero",
+      "turns": 1
+     },
+     {
+      "type": "reveal"
+     }
+    ]
+   },
+   "lose": {
+    "text": "He turns your lamps down. The dark down there has teeth.",
+    "effects": [
+     {
+      "type": "elite_next"
+     }
+    ]
+   }
+  },
+  {
+   "id": "v3_npc_seat_fourteen",
+   "name": "Seat Fourteen",
+   "persona": "receptionist",
+   "setting": "table",
+   "tags": [
+    "regulars",
+    "hall"
+   ],
+   "dc": 13,
+   "goal": 3,
+   "patience": 4,
+   "likes": [
+    "listen",
+    "plead"
+   ],
+   "hates": [
+    "lie",
+    "threaten"
+   ],
+   "greeting": "Eyes down. Eyes. Down. I'm waiting. On one number. Since. Since.",
+   "tell": "She sat. With Pauline. With Steve. Nobody asks. About them. Ask. Lies. She marks. In red.",
+   "lines": {
+    "hit": [
+     "Dab.",
+     "Hm. Close."
+    ],
+    "miss": [
+     "Not. My number."
+    ],
+    "like": [
+     "Pauline. Would've. Liked you.",
+     "Nobody. Asks. Thank you."
+    ],
+    "hate": [
+     "Red pen. RED PEN.",
+     "He shouts. Too. Up there."
+    ],
+    "bribe": [
+     "She puts it under her card. For bus fare. Home."
+    ]
+   },
+   "win": {
+    "text": "She gives you her lucky dauber. 'I won't. Be needing it. He never calls it.'",
+    "effects": [
+     {
+      "type": "table_item",
+      "id": "random"
+     },
+     {
+      "type": "suspicion",
+      "n": -8
+     }
+    ]
+   },
+   "lose": {
+    "text": "She calls him over. 'This one's. Talking. During the call.'",
+    "effects": [
+     {
+      "type": "suspicion",
+      "n": 15
+     }
+    ]
+   }
+  },
+  {
+   "id": "v3_npc_raffle_woman",
+   "name": "The Raffle Woman",
+   "persona": "auctioneer",
+   "setting": "table",
+   "tags": [
+    "raffle",
+    "hall"
+   ],
+   "dc": 12,
+   "goal": 3,
+   "patience": 4,
+   "likes": [
+    "bribe",
+    "lie"
+   ],
+   "hates": [
+    "threaten"
+   ],
+   "bribe": 12,
+   "greeting": "Pink ticket? Blue? Blue's. Better. Blue. Wins.",
+   "tell": "Buy a strip. Tell her. You feel lucky. Shouting. Spoils. The draw.",
+   "lines": {
+    "hit": [
+     "Ooh.",
+     "Pink. Hm."
+    ],
+    "miss": [
+     "Blank."
+    ],
+    "like": [
+     "That's. The spirit.",
+     "Lucky. Lucky. You."
+    ],
+    "hate": [
+     "Manners. Manners. At the raffle.",
+     "Rigged? RIGGED?"
+    ],
+    "bribe": [
+     "A strip of five. And one. For luck."
+    ]
+   },
+   "win": {
+    "text": "Your number comes up. The prize is from the back of the cupboard. It's warm.",
+    "effects": [
+     {
+      "type": "gear",
+      "id": "random"
+     },
+     {
+      "type": "cheat",
+      "id": "random"
+     }
+    ]
+   },
+   "lose": {
+    "text": "Your number comes up. The prize is you.",
+    "effects": [
+     {
+      "type": "gold",
+      "n": -15
+     },
+     {
+      "type": "suspicion",
+      "n": 10
+     }
+    ]
+   }
+  },
+  {
+   "id": "v3_npc_last_regular",
+   "name": "The Last Regular",
+   "persona": "heap",
+   "setting": "any",
+   "tags": [
+    "regulars",
+    "road"
+   ],
+   "weight": 6,
+   "dc": 14,
+   "goal": 4,
+   "patience": 5,
+   "likes": [
+    "plead",
+    "listen"
+   ],
+   "hates": [
+    "bribe",
+    "threaten"
+   ],
+   "greeting": "Coat. On the chair. Card. Half done. Bus. Was at ten. What. Year.",
+   "tell": "He just. Wants. To be. Let go home. Ask him. Nicely. Money. Means. Nothing. Now.",
+   "lines": {
+    "hit": [
+     "The bus. Is that. The bus?",
+     "Ten past. Ten past. Still."
+    ],
+    "miss": [
+     "House. Nobody. Calls house."
+    ],
+    "like": [
+     "Home. Yes. Home.",
+     "You'll. Tell my wife. I tried."
+    ],
+    "hate": [
+     "Money. Money. I had. A pound. A pound for. The bus.",
+     "Don't. He hears. He always. Hears."
+    ],
+    "bribe": [
+     "He tucks it in his card. Like a bookmark. For later."
+    ]
+   },
+   "win": {
+    "text": "He stands. First time in years. Somewhere a chair scrapes. He leaves his card. Every number marked but one.",
+    "effects": [
+     {
+      "type": "relic",
+      "id": "random",
+      "rarity": "rare"
+     },
+     {
+      "type": "suspicion",
+      "n": 12
+     }
+    ]
+   },
+   "lose": {
+    "text": "He sits back down. 'Eyes down,' he says. You find you have sat down too.",
+    "effects": [
+     {
+      "type": "damage",
+      "n": 9,
+      "target": "random"
+     },
+     {
+      "type": "status_next",
+      "id": "slowed",
+      "side": "hero",
+      "turns": 2
+     }
+    ]
+   }
+  },
+  {
+   "id": "v3_npc_debt_collector",
+   "name": "The Debt Collector",
+   "persona": "magistrate",
+   "setting": "any",
+   "tags": [
+    "court",
+    "road"
+   ],
+   "dc": 13,
+   "goal": 3,
+   "patience": 3,
+   "likes": [
+    "bribe",
+    "threaten"
+   ],
+   "hates": [
+    "plead",
+    "lie"
+   ],
+   "bribe": 25,
+   "greeting": "Outstanding. Balance. Yours. Your. Parents'. Further back.",
+   "tell": "Pay. Or. Stand firm. He respects. A ledger. Excuses. Compound.",
+   "lines": {
+    "hit": [
+     "Partial. Payment.",
+     "Noted."
+    ],
+    "miss": [
+     "Interest. Accrues."
+    ],
+    "like": [
+     "Settled. Settled.",
+     "Firm. Like. A contract."
+    ],
+    "hate": [
+     "Excuses. Ten percent.",
+     "False. Statement. Twenty percent."
+    ],
+    "bribe": [
+     "Receipt. In triplicate."
+    ]
+   },
+   "win": {
+    "text": "He tears up the page. Underneath, an older page. Also yours. He tears that too.",
+    "effects": [
+     {
+      "type": "suspicion",
+      "n": -15
+     }
+    ]
+   },
+   "lose": {
+    "text": "He collects. Not gold. Gold is. Easier.",
+    "effects": [
+     {
+      "type": "injure",
+      "target": "random"
+     },
+     {
+      "type": "gold",
+      "n": -10
+     }
+    ],
+    "fight": "elite"
+   }
+  },
+  {
+   "id": "v3_npc_the_second",
+   "name": "The Second",
+   "persona": "duelist",
+   "setting": "any",
+   "tags": [
+    "duel",
+    "inn"
+   ],
+   "dc": 13,
+   "goal": 3,
+   "patience": 4,
+   "likes": [
+    "threaten",
+    "charm"
+   ],
+   "hates": [
+    "lie",
+    "bribe"
+   ],
+   "greeting": "My principal. Is dead. I still. Owe him. A duel.",
+   "tell": "Courage. Courtesy. A second. Lives for them. Cheats. Die. At dawn.",
+   "lines": {
+    "hit": [
+     "Touché.",
+     "Acceptable."
+    ],
+    "miss": [
+     "Parry. Parried."
+    ],
+    "like": [
+     "Ah. Steel. In the voice.",
+     "Gracious. My compliments."
+    ],
+    "hate": [
+     "Lies. Behind. My back. Twice.",
+     "Purses. Are for. Cowards."
+    ],
+    "bribe": [
+     "He flips it. Calls it. Wrong. Keeps it."
+    ]
+   },
+   "win": {
+    "text": "He teaches you the thing his principal never learned. Too late, for him.",
+    "effects": [
+     {
+      "type": "status_next",
+      "id": "inspired",
+      "side": "hero",
+      "turns": 2
+     },
+     {
+      "type": "xp",
+      "n": 10,
+      "target": "all"
+     }
+    ]
+   },
+   "lose": {
+    "text": "He throws a glove. Dawn comes early.",
+    "effects": [
+     {
+      "type": "status_next",
+      "id": "marked",
+      "turns": 2,
+      "side": "hero"
+     }
+    ],
+    "fight": "combat"
+   }
+  },
+  {
+   "id": "v3_npc_night_nurse",
+   "name": "The Night Nurse",
+   "persona": "nurse",
+   "setting": "any",
+   "tags": [
+    "ward",
+    "inn"
+   ],
+   "dc": 12,
+   "goal": 3,
+   "patience": 4,
+   "likes": [
+    "lie",
+    "plead"
+   ],
+   "hates": [
+    "threaten"
+   ],
+   "greeting": "Visiting hours. Ended. In nineteen. Eighty. Something.",
+   "tell": "Tell her. You're family. Or beg. Like family. Raise. Your voice. And.",
+   "lines": {
+    "hit": [
+     "Five minutes.",
+     "Fine. Fine."
+    ],
+    "miss": [
+     "No. Not family."
+    ],
+    "like": [
+     "Oh. Oh, you're his. Son. Of course.",
+     "Poor love. Come in."
+    ],
+    "hate": [
+     "Sedation. Is. Available.",
+     "We don't. Shout. On this ward."
+    ],
+    "bribe": [
+     "She pockets it. Writes you in. As next of kin."
+    ]
+   },
+   "win": {
+    "text": "She lets you sleep in the empty beds. They're still warm.",
+    "effects": [
+     {
+      "type": "heal_pct",
+      "pct": 0.4,
+      "target": "all"
+     },
+     {
+      "type": "cure",
+      "target": "all"
+     }
+    ]
+   },
+   "lose": {
+    "text": "She gives you something. To help you. Rest.",
+    "effects": [
+     {
+      "type": "status_next",
+      "id": "slowed",
+      "side": "hero",
+      "turns": 2
+     },
+     {
+      "type": "damage",
+      "n": 4,
+      "target": "all"
+     }
+    ]
+   }
+  }
+ ],
+ "towns": [
+  {
+   "id": "v3_town_saltmarsh",
+   "name": "Saltmarsh Wake",
+   "setting": "drowned",
+   "persona": "ferryman",
+   "visits": 2,
+   "intro": "Saltmarsh. Houses. On stilts. The tide comes. Into. The kitchens. Two bells.",
+   "places": [
+    {
+     "name": "The Tide Office",
+     "kind": "social",
+     "npc": "v3_npc_tide_clerk",
+     "icon": "scroll",
+     "desc": "A desk. In the water. Up to the drawers."
+    },
+    {
+     "name": "The Widower's Porch",
+     "kind": "social",
+     "npc": "v3_npc_salt_widower",
+     "icon": "cup",
+     "desc": "Two cups. One is warm."
+    },
+    {
+     "name": "The Net Loft",
+     "kind": "shop",
+     "stock": [
+      "consumable",
+      "gear"
+     ],
+     "icon": "net",
+     "desc": "Nets. Hooks. What the nets caught."
+    },
+    {
+     "name": "The Drying Racks",
+     "kind": "effects",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.25,
+       "target": "all"
+      },
+      {
+       "type": "cure",
+       "target": "all"
+      }
+     ],
+     "icon": "sun",
+     "desc": "Hang up. Dry out.",
+     "text": "You dry. Mostly. Your boots never will."
+    },
+    {
+     "name": "The Wreck Chapel",
+     "kind": "effects",
+     "cost_gold": 10,
+     "effects": [
+      {
+       "type": "status_next",
+       "id": "blessed",
+       "side": "hero",
+       "turns": 2
+      }
+     ],
+     "icon": "anchor",
+     "desc": "A hull turned over. Pews inside. 10 gold.",
+     "text": "The hymn numbers on the board are bingo numbers. Somebody has dabbed them.",
+     "poor_text": "The collection plate. Looks at you."
+    }
+   ]
+  },
+  {
+   "id": "v3_town_callums_close",
+   "name": "Saint Callum's Close",
+   "setting": "cathedral",
+   "persona": "deacon",
+   "visits": 2,
+   "intro": "The Close. Little houses. In the cathedral's. Shadow. It's always. Shadow. Two bells.",
+   "places": [
+    {
+     "name": "The Mason's Yard",
+     "kind": "social",
+     "tag": "masonry",
+     "icon": "nail",
+     "desc": "Hammering. Same face. Over and over."
+    },
+    {
+     "name": "The Candle Stall",
+     "kind": "social",
+     "tag": "candles",
+     "icon": "candle",
+     "desc": "A girl. A thousand flames."
+    },
+    {
+     "name": "The Ossuary",
+     "kind": "social",
+     "tag": "crypt",
+     "icon": "skull",
+     "desc": "Shelves. Numbered."
+    },
+    {
+     "name": "The Relic Seller's Barrow",
+     "kind": "shop",
+     "stock": [
+      "relic",
+      "consumable"
+     ],
+     "icon": "tray",
+     "desc": "Finger bones. Mostly. Chicken."
+    },
+    {
+     "name": "The Font",
+     "kind": "effects",
+     "effects": [
+      {
+       "type": "xp",
+       "n": 10,
+       "target": "all"
+      },
+      {
+       "type": "suspicion",
+       "n": -5
+      }
+     ],
+     "icon": "drop",
+     "desc": "Holy water. Cloudy.",
+     "text": "Your reflections are wearing paper faces. Then they aren't."
+    },
+    {
+     "name": "The Lych Gate",
+     "kind": "effects",
+     "effects": [
+      {
+       "type": "bounty",
+       "goal": "crits_ge",
+       "n": 2,
+       "text": "Bounty: land two critical hits next fight",
+       "gold": 40
+      }
+     ],
+     "icon": "door",
+     "desc": "A notice. Nailed to the gate.",
+     "text": "Under the bounty, older notices. MISSING. MISSING. The faces are regulars."
+    }
+   ]
+  },
+  {
+   "id": "v3_town_pithead_row",
+   "name": "Pithead Row",
+   "setting": "iron",
+   "persona": "foreman",
+   "visits": 2,
+   "intro": "Pithead Row. Terraced. Soot. The cage. Goes down. Comes up. Lighter. Two bells.",
+   "places": [
+    {
+     "name": "The Tally Office",
+     "kind": "social",
+     "tag": "tally",
+     "icon": "token",
+     "desc": "Brass tokens. On hooks. Some hooks empty."
+    },
+    {
+     "name": "The Canary Shed",
+     "kind": "social",
+     "tag": "canary",
+     "icon": "wing",
+     "desc": "Cages. Quiet ones."
+    },
+    {
+     "name": "The Lamp Room",
+     "kind": "social",
+     "tag": "lamps",
+     "icon": "flame",
+     "desc": "Rows of lamps. Numbered."
+    },
+    {
+     "name": "The Company Store",
+     "kind": "shop",
+     "stock": [
+      "gear",
+      "consumable"
+     ],
+     "icon": "page_shop",
+     "desc": "Prices. In scrip. Scrip. In blood."
+    },
+    {
+     "name": "The Pithead Baths",
+     "kind": "effects",
+     "cost_gold": 8,
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.45,
+       "target": "all"
+      }
+     ],
+     "icon": "drop",
+     "desc": "Hot water. 8 gold.",
+     "text": "The water runs black. Then clear. Then black again.",
+     "poor_text": "Cold tap. Only. For you."
+    },
+    {
+     "name": "The Winding Gear",
+     "kind": "effects",
+     "effects": [
+      {
+       "type": "gear",
+       "id": "random"
+      },
+      {
+       "type": "damage",
+       "n": 5,
+       "target": "random"
+      }
+     ],
+     "icon": "cog",
+     "desc": "Somebody's left something. In the teeth.",
+     "text": "You pull it out. The cog bites back."
+    }
+   ]
+  },
+  {
+   "id": "v3_town_the_annex",
+   "name": "The Annex",
+   "setting": "table",
+   "persona": "receptionist",
+   "visits": 2,
+   "intro": "The Annex. Behind the hall. Where the regulars. Wait. For their lift. Home. Two bells.",
+   "places": [
+    {
+     "name": "Seat Fourteen",
+     "kind": "social",
+     "npc": "v3_npc_seat_fourteen",
+     "icon": "chair",
+     "desc": "Her coat. Her card. Her."
+    },
+    {
+     "name": "The Raffle Table",
+     "kind": "social",
+     "tag": "raffle",
+     "icon": "ticket",
+     "desc": "Strips. Of five."
+    },
+    {
+     "name": "The Prize Cupboard",
+     "kind": "shop",
+     "stock": [
+      "table_item",
+      "relic"
+     ],
+     "icon": "box",
+     "desc": "A bear. A radio. A ham. Reserved."
+    },
+    {
+     "name": "Lost Property",
+     "kind": "effects",
+     "effects": [
+      {
+       "type": "table_item",
+       "id": "random"
+      },
+      {
+       "type": "suspicion",
+       "n": 6
+      }
+     ],
+     "icon": "coat",
+     "desc": "Coats. Dozens. Nobody. Came back.",
+     "text": "In every pocket: a bus ticket. Same night. Same bus."
+    },
+    {
+     "name": "The Car Park",
+     "kind": "effects",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 30
+      },
+      {
+       "type": "damage",
+       "n": 4,
+       "target": "random"
+      }
+     ],
+     "icon": "key",
+     "desc": "Cars. Parked. Since. Since.",
+     "text": "Keys in every ignition. Moss on every seat. You take the change from the ashtrays."
+    },
+    {
+     "name": "The Tea Hatch",
+     "kind": "effects",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.2,
+       "target": "all"
+      },
+      {
+       "type": "xp",
+       "n": 6,
+       "target": "all"
+      }
+     ],
+     "icon": "cup",
+     "desc": "Tea. Stewed. Forever.",
+     "text": "The urn is full. It has been. Full. Since the last night."
+    }
+   ]
+  },
+  {
+   "id": "v3_town_all_night",
+   "name": "The All-Night Stop",
+   "setting": "any",
+   "persona": "nurse",
+   "visits": 2,
+   "weight": 6,
+   "intro": "Lights. On the road. A stop. That's. Open. All night. Every night. Two bells.",
+   "places": [
+    {
+     "name": "The Clinic Door",
+     "kind": "social",
+     "npc": "v3_npc_night_nurse",
+     "icon": "ward",
+     "desc": "A bell. A sign. VISITORS."
+    },
+    {
+     "name": "The Back Booth",
+     "kind": "social",
+     "tag": "duel",
+     "icon": "swords",
+     "desc": "A man. Two glasses. One full."
+    },
+    {
+     "name": "The Bus Shelter",
+     "kind": "social",
+     "npc": "v3_npc_last_regular",
+     "icon": "hourglass",
+     "desc": "Somebody. Waiting. For the ten o'clock."
+    },
+    {
+     "name": "The Vending Machine",
+     "kind": "shop",
+     "stock": [
+      "consumable"
+     ],
+     "icon": "tin",
+     "desc": "Humming. Hungry."
+    },
+    {
+     "name": "The Payphone",
+     "kind": "effects",
+     "effects": [
+      {
+       "type": "status_next",
+       "id": "steadfast",
+       "side": "hero",
+       "turns": 2
+      },
+      {
+       "type": "suspicion",
+       "n": 5
+      }
+     ],
+     "icon": "note",
+     "desc": "Ringing. It's. For you.",
+     "text": "A woman's voice. 'Is Pauline there? She said. Ten. She said.' Then numbers. Read slowly."
+    },
+    {
+     "name": "A Room",
+     "kind": "effects",
+     "cost_gold": 12,
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.5,
+       "target": "all"
+      }
+     ],
+     "icon": "page_rest",
+     "desc": "A bed. 12 gold.",
+     "text": "The wallpaper is a bingo card. Big. Your bed. Is on a number.",
+     "poor_text": "The desk clerk. Doesn't. Look up."
+    }
+   ]
+  }
+ ]
+}

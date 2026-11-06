@@ -8,6 +8,24 @@ minigames, collect items, lose limbs. Or notice that the door isn't painted on.
 Android and PC, the same game on both: single-player against AI, local party (2-4 on one
 device), and online (phones and PCs in the same room by room code).
 
+**The look is LAST CALL: The Campaign's**, taken from its source in `klaepigeon/Video-Game`
+(branch `claude/new-session-rc175w`, `last-call-campaign/`): you sit at the Caller's
+table in his bingo hall (its rooms, doors, lamps, candles, pint, flashboard and red
+curtain), rendered at low resolution through his ink post-process, with his card stock,
+IM Fell English and Special Elite for every word on screen. His figure is the campaign's
+own. Those scripts are in `scripts/lcc/`, its shaders in `shaders/`, its sounds in
+`assets/audio/`, its paper and pen-work in `assets/ink/`, its building data in `data/`.
+
+**The figures on the table are voodoo dolls of the players**: sacking, yarn hair, the
+player's photograph sewn on for a face, a stitched heart. What happens to the doll
+happens to them: every injury goes in as a pin, a lost limb is cut off and the thread
+left hanging, a prosthetic is brass screwed on in its place.
+
+## Android
+
+`apk/MEAT_PARTY.apk` (arm64, Android 7.0+). Allow installs from unknown sources, install,
+play landscape. To rebuild: [docs/BUILDING.md](docs/BUILDING.md).
+
 ## Run
 
 ```
@@ -37,7 +55,9 @@ scripts/minigames/  Minigame base, MinigameRegistry, musical_chairs, roulette, h
 scripts/ai/         AiBrain: plays through the same actions humans do, sees only their view
 scripts/net/        Net (the match link for every mode), RelayPeer, LanBeacon
 server/             relay_server.gd: rooms + packet relay for internet play
-scripts/view/       GameView, Venue (hall + board), Contestant (injuries, deaths), minigame views
+scripts/view/       GameView (sat at his table), TableBoard (the board on it), Contestant
+                    (the voodoo dolls: pins, deaths), minigame views
+scripts/lcc/        LAST CALL: The Campaign's Stage, Hall, CallerFigure, building and UI kit
 scripts/visual/     CallerActor (40 animations), Ps1Human, lastcall/ (the Caller's figure,
                     dice cage, textures, mesh builder), the ink shader's lamps, RetroScreen
 scripts/ui/         App (menus, lobby), Hud, UiKit, TouchStick

@@ -10,12 +10,15 @@ var _last_phase := ""
 var _t := 0.0
 var _mg_shot := 0.0
 var app: Node
+var _max := 60
 
 
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
 			out = a.substr(6)
+		if a.begins_with("--max="):
+			_max = int(a.substr(6))
 	DirAccess.make_dir_recursive_absolute(out)
 	Audio.muted = true
 	Engine.time_scale = 2.0
@@ -61,7 +64,7 @@ func _process(delta: float) -> void:
 	if ph == "ending" and _t > 0 and n > 0 and str(v.ending) != "":
 		set_process(false)
 		get_tree().create_timer(6.0).timeout.connect(func(): get_tree().quit())
-	if n > 60:
+	if n > _max:
 		get_tree().quit()
 
 

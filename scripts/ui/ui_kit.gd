@@ -1,108 +1,88 @@
 class_name UiKit
 extends RefCounted
-## One look for every screen: the pixel fonts from the series, a party palette on a dark
-## plum ground, and big buttons (touch first: nothing a thumb can't hit).
+## MEAT PARTY's screens in LAST CALL: The Campaign's hand: his card stock (the ink-bordered
+## paper from assets/ink/paper), IM Fell English for what he says and for headings, Special
+## Elite for the typewritten bits. A thin layer over the campaign's own UIKit.
 
-const BG := Color("1e1028")
-const PANEL := Color("2e1a3a")
-const INK := Color("f8ecd8")
-const HOT := Color("e8402a")
-const GOLD := Color("f0c020")
-const TEAL := Color("2ac0b0")
-const DIM := Color("8a7a90")
-
-static var _theme: Theme
-static var _font: Font
-static var _title: Font
+const INK := Color("3a0e0a")       # dried blood, on paper
+const HOT := Color("9a1a12")       # fresh red ink
+const GOLD := Color("8a6420")      # brass, on paper
+const CREAM := Color("f0e6cc")     # for text over the dark room
+const TEAL := Color("1e4a3a")      # what only you know
+const DIM := Color("6a5a4a")
+const BG := Color("0a0806")
 
 
 static func font() -> Font:
-	if _font == null:
-		_font = load("res://assets/fonts/pixelify-sans.ttf")
-	return _font
+	UIKit.fonts()
+	return UIKit.body_font
 
 
 static func title_font() -> Font:
-	if _title == null:
-		_title = load("res://assets/fonts/silkscreen.ttf")
-	return _title
+	UIKit.fonts()
+	return UIKit.title_font
+
+
+static func voice_font() -> Font:
+	UIKit.fonts()
+	return UIKit.voice_font
 
 
 static func theme() -> Theme:
-	if _theme:
-		return _theme
-	var t := Theme.new()
-	t.default_font = font()
-	t.default_font_size = 14
-	var sb := func(c: Color, border: Color, bw := 2) -> StyleBoxFlat:
-		var s := StyleBoxFlat.new()
-		s.bg_color = c
-		s.border_color = border
-		s.set_border_width_all(bw)
-		s.set_corner_radius_all(0)
-		s.content_margin_left = 8
-		s.content_margin_right = 8
-		s.content_margin_top = 4
-		s.content_margin_bottom = 4
-		s.shadow_color = Color(0, 0, 0, 0.5)
-		s.shadow_size = 0
-		s.shadow_offset = Vector2(3, 3)
-		return s
-	t.set_stylebox("normal", "Button", sb.call(Color("4a2058"), GOLD))
-	t.set_stylebox("hover", "Button", sb.call(Color("6a2a78"), GOLD))
-	t.set_stylebox("pressed", "Button", sb.call(HOT, GOLD))
-	t.set_stylebox("focus", "Button", sb.call(Color("6a2a78"), Color.WHITE, 3))
-	t.set_stylebox("disabled", "Button", sb.call(Color("2a1a30"), DIM))
-	t.set_color("font_color", "Button", INK)
-	t.set_color("font_disabled_color", "Button", DIM)
-	t.set_font_size("font_size", "Button", 16)
-	t.set_stylebox("panel", "PanelContainer", sb.call(Color(PANEL, 0.94), Color("8a4aa0")))
-	t.set_stylebox("panel", "Panel", sb.call(Color(PANEL, 0.94), Color("8a4aa0")))
-	t.set_color("font_color", "Label", INK)
-	t.set_stylebox("normal", "LineEdit", sb.call(Color("140a1a"), GOLD))
-	t.set_color("font_color", "LineEdit", INK)
-	t.set_font_size("font_size", "LineEdit", 18)
-	t.set_stylebox("slider", "HSlider", sb.call(Color("140a1a"), DIM, 1))
-	_theme = t
-	return t
+	return UIKit.theme()
 
 
 static func button(text: String, cb: Callable, min_h := 40, min_w := 120) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.custom_minimum_size = Vector2(min_w, min_h)
-	b.focus_mode = Control.FOCUS_ALL
-	b.pressed.connect(func():
-		Audio.sfx("tick", 0.05, -6.0, 1.3)
-		cb.call())
+	var b := UIKit.button(text, cb, false, Vector2(min_w * 1.5, min_h * 1.3))
 	return b
 
 
+static func primary(text: String, cb: Callable, min_h := 48, min_w := 160) -> Button:
+	return UIKit.button(text, cb, true, Vector2(min_w * 1.5, min_h * 1.3))
+
+
 static func label(text: String, size := 14, color := INK, title := false) -> Label:
+	var l := UIKit.label(text, int(size * 1.45), color, title, true)
+	return l
+
+
+## What he says: IM Fell, cream, outlined, over the room.
+static func voice(text: String, size := 34) -> Label:
+	UIKit.fonts()
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_size_override("font_size", size)
-	l.add_theme_color_override("font_color", color)
-	if title:
-		l.add_theme_font_override("font", title_font())
+	l.add_theme_font_override("font", UIKit.voice_font)
+	l.add_theme_font_size_override("font_size", UIKit.px(size))
+	l.add_theme_color_override("font_color", CREAM)
+	l.add_theme_color_override("font_outline_color", Color(0.04, 0.02, 0.02, 0.95))
+	l.add_theme_constant_override("outline_size", 12)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return l
 
 
 static func panel() -> PanelContainer:
-	return PanelContainer.new()
+	return UIKit.paper(10)
+
+
+## A small card (a character sheet, a note).
+static func card() -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", UIKit.ink_box("res://assets/ink/paper/card.png", Color.WHITE, 18, 12))
+	return p
+
+
+static func dark() -> PanelContainer:
+	return UIKit.dark(14)
 
 
 static func vbox(sep := 6) -> VBoxContainer:
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", sep)
-	return v
+	return UIKit.vbox(sep)
 
 
 static func hbox(sep := 6) -> HBoxContainer:
-	var h := HBoxContainer.new()
-	h.add_theme_constant_override("separation", sep)
-	return h
+	return UIKit.hbox(sep)
 
 
 static func bg(parent: Control) -> ColorRect:

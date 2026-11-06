@@ -1,0 +1,264 @@
+{
+ "rule_cards": [
+  {
+   "id": "rcbh_eyes_down",
+   "name": "Eyes Down, Look In",
+   "fights": 3,
+   "desc": "For 3 fights nobody speaks. Heroes +1 to hit. Every sip adds 3 to the FILE.",
+   "mods": [
+    {
+     "key": "attack_bonus",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "side": "hero"
+     }
+    }
+   ],
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "suspicion",
+       "n": 3
+      }
+     ],
+     "label": "Eyes Down",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "rcbh_one_card_only",
+   "name": "One Card Only",
+   "fights": 2,
+   "desc": "For 2 fights a hero alone deals +4. A hero beside an ally deals 2 less.",
+   "mods": [
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": 4,
+     "when": {
+      "side": "hero",
+      "alone": true
+     }
+    },
+    {
+     "key": "damage_dealt_add",
+     "op": "add",
+     "value": -2,
+     "when": {
+      "side": "hero",
+      "alone": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "rcbh_no_talking",
+   "name": "No Talking During the Call",
+   "fights": 3,
+   "desc": "For 3 fights every distraction adds 6 to the FILE. He watches 25% less.",
+   "mods": [
+    {
+     "key": "watch_mult",
+     "op": "mul",
+     "value": 0.75
+    },
+    {
+     "key": "cheat_suspicion",
+     "op": "add",
+     "value": 6,
+     "when": {
+      "cheat": "distract"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rcbh_raffle",
+   "name": "The Raffle",
+   "fights": 3,
+   "desc": "For 3 fights every round, 1 in 4: a random hero is empowered. Or a random enemy.",
+   "triggers": [
+    {
+     "event": "round_start",
+     "effects": [
+      {
+       "type": "status",
+       "id": "empowered",
+       "turns": 1,
+       "to": "random_hero",
+       "chance": 0.25
+      },
+      {
+       "type": "status",
+       "id": "empowered",
+       "turns": 1,
+       "to": "random_enemy",
+       "chance": 0.25
+      }
+     ],
+     "label": "The Raffle",
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "rcbh_full_card",
+   "name": "Full Card",
+   "fights": -1,
+   "desc": "For the rest of the campaign: kills pay 3 gold. Enemies have 10% more HP.",
+   "mods": [
+    {
+     "key": "enemy_hp_mult",
+     "op": "mul",
+     "value": 1.1
+    }
+   ],
+   "triggers": [
+    {
+     "event": "kill",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 3
+      }
+     ],
+     "label": "Full Card",
+     "when": {
+      "side": "hero"
+     },
+     "quiet": true
+    }
+   ]
+  },
+  {
+   "id": "rcbh_cold_tea",
+   "name": "Tea's Gone Cold",
+   "fights": 2,
+   "desc": "For 2 fights every sip hastes every hero. All healing is 20% weaker.",
+   "triggers": [
+    {
+     "event": "sip",
+     "effects": [
+      {
+       "type": "status",
+       "id": "hasted",
+       "turns": 1,
+       "to": "all_heroes"
+      }
+     ],
+     "label": "Cold Tea",
+     "quiet": true
+    }
+   ],
+   "mods": [
+    {
+     "key": "heal_dealt_mult",
+     "op": "mul",
+     "value": 0.8
+    }
+   ]
+  },
+  {
+   "id": "rcbh_lights_down",
+   "name": "Lights Down",
+   "fights": 2,
+   "desc": "For 2 fights every attack at range has disadvantage. Melee crits on 19-20.",
+   "mods": [
+    {
+     "key": "advantage",
+     "op": "add",
+     "value": -1,
+     "when": {
+      "ranged": true
+     }
+    },
+    {
+     "key": "crit_threshold",
+     "op": "set",
+     "value": 19,
+     "when": {
+      "melee": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "rcbh_house_rules",
+   "name": "Two Calls a Night",
+   "fights": 3,
+   "desc": "For 3 fights heroes get an extra action on round 1. Enemies do too.",
+   "mods": [
+    {
+     "key": "actions",
+     "op": "add",
+     "value": 1,
+     "when": {
+      "first_turn": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "rcbh_quiet_room",
+   "name": "The Quiet Room",
+   "fights": -1,
+   "desc": "For the rest of the campaign: the FILE drops 5 more after a fight. Gold gained -10%.",
+   "mods": [
+    {
+     "key": "suspicion_decay",
+     "op": "add",
+     "value": 5
+    },
+    {
+     "key": "gold_mult",
+     "op": "add",
+     "value": -0.1
+    }
+   ]
+  },
+  {
+   "id": "rcbh_dabbers_out",
+   "name": "Dabbers Out",
+   "fights": 3,
+   "desc": "For 3 fights every hero's hit marks the target. Every enemy's hit marks the hero.",
+   "triggers": [
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "marked",
+       "turns": 1,
+       "to": "target"
+      }
+     ],
+     "label": "Dabbers Out",
+     "when": {
+      "side": "hero"
+     },
+     "quiet": true
+    },
+    {
+     "event": "hit",
+     "effects": [
+      {
+       "type": "status",
+       "id": "marked",
+       "turns": 1,
+       "to": "target"
+      }
+     ],
+     "label": "Dabbers Out",
+     "when": {
+      "side": "enemy"
+     },
+     "quiet": true
+    }
+   ]
+  }
+ ]
+}

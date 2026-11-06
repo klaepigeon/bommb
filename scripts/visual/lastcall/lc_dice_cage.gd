@@ -267,7 +267,7 @@ func _update_eyes() -> void:
 		gm.scale = Vector3.ONE * (0.8 + suspicion * 0.5) * pulse
 		var m: ShaderMaterial = gm.material_override
 		if m:
-			m.set_shader_parameter("emission_color", red)
+			m.set_shader_parameter("albedo", red)
 	var target := (0.9 + suspicion * 1.6) if lit else 0.0
 	eye_light.energy = lerpf(eye_light.energy, target, 0.15)
 	eye_light.color = Color(1.0, 0.3 - suspicion * 0.2, 0.15)

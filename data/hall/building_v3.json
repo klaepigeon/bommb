@@ -1,0 +1,423 @@
+{
+ "_doc": "Three more rooms off the building (see docs/WORLD.md). The walk-in freezer off the kitchen's north wall, the staff room off the back corridor, and the cage room off the cellar's east wall. The chain: the plaid scrap on corridor hook 7 -> Coat No. 7 in the cloakroom (staff_key) -> the staff room timesheet (digits) + the freezer stock sheet in the kitchen (order) = 1063 -> the freezer, where a frozen hand holds the cage crank -> the cage room (which also needs the cellar key from the office).",
+ "personas": [
+  {
+   "id": "steward",
+   "name": "The Steward",
+   "desc": "Keeps the rota. Knows who's on. Knows who's off.",
+   "voice": {"style": "cold", "pitch": 1.1},
+   "mask": {"skin": "#d0c8b8", "hair": "#6a6a62", "fringe": 3, "iris": "#5a5a4a", "brow": -1, "lips": "#7a5a50",
+    "mouth_w": 8, "smile": 0, "tired": true, "glasses": true}
+  }
+ ],
+ "rooms": [
+  {
+   "id": "freezer",
+   "name": "The Walk-in Freezer",
+   "persona": "cook",
+   "label": "COLD ROOM",
+   "door": {
+    "at": [-11.6, -9.5],
+    "from": "kitchen",
+    "width": 0.9,
+    "lock": {
+     "code": "1063",
+     "thing": "freezer_padlock",
+     "locked_text": "A steel door, furred with frost round the seal. A padlock with four wheels of numbers. The wheels are too cold to hold for long.",
+     "on_open": [
+      {"do": "flag", "id": "freezer_open"},
+      {"do": "sfx", "id": "chain"},
+      {"do": "open", "portal": "door:freezer"},
+      {"do": "aside", "text": "The cold comes out like a held breath."},
+      {"do": "say", "persona": "cook", "text": "Who told you. Who *told* you the order."}
+     ]
+    }
+   },
+   "style": {"wall": "#9aa8ac", "floor": "#3a4446", "light": "#b8d8f0", "tiles": true, "energy": 1.9},
+   "size": [5.0, 4.0],
+   "props": [
+    {"kind": "chain", "at": [-1.7, -1.2], "size": [0.1, 0.9, 0.1], "color": "#5a5a58", "name": "hook chain"},
+    {"kind": "chain", "at": [-0.7, -1.2], "size": [0.1, 0.9, 0.1], "color": "#5a5a58", "name": "hook chain"},
+    {"kind": "chain", "at": [0.3, -1.2], "size": [0.1, 0.9, 0.1], "color": "#5a5a58", "name": "hook chain"},
+    {"kind": "box", "at": [-1.7, -1.2], "y": 0.7, "size": [0.45, 1.3, 0.35], "color": "#8a5048", "name": "a side of something"},
+    {"kind": "box", "at": [-0.7, -1.2], "y": 0.6, "size": [0.45, 1.4, 0.35], "color": "#7a4440", "name": "a side of something"},
+    {"kind": "box", "at": [0.3, -1.2], "y": 0.75, "size": [0.4, 1.25, 0.32], "color": "#94584c", "name": "a side of something"},
+    {"kind": "shelf", "at": [1.6, -1.75], "size": [1.6, 1.9, 0.4], "color": "#7a868a", "name": "frosted shelves"},
+    {"kind": "box", "at": [1.9, 0.6], "size": [0.9, 0.9, 1.4], "color": "#c8d4d8", "name": "chest freezer"},
+    {"kind": "box", "at": [-1.9, 0.9], "size": [0.5, 0.35, 1.6], "color": "#a8b4bc", "name": "something wrapped in plastic"},
+    {"kind": "box", "at": [0.4, 1.97], "y": 1.0, "size": [0.6, 0.6, 0.03], "color": "#d8e0e4", "name": "scratched frost"}
+   ],
+   "spots": [
+    {
+     "id": "hooks",
+     "name": "The hooks",
+     "at": [-0.7, 1.4, -1.2],
+     "unique": "rr_meat_hook",
+     "look": "Sides of meat on hooks, frosted white. Too long for pig. Too long for anything they ever sold in here. One of them is wearing a wristwatch.",
+     "found": "One hook comes off its chain in your hand. The thing that was hanging on it stays exactly where it was. Standing.",
+     "search": [
+      {"w": 3, "text": "A wallet frozen into the fat. You thaw it open with your breath.", "effects": [{"type": "gold", "n": 18}]},
+      {"w": 2, "text": "The wristwatch. It's still ticking. It's running backwards.", "effects": [{"type": "table_item", "id": "random"}]},
+      {"w": 1, "text": "Your hand freezes to the meat. It takes skin to get it back.", "effects": [{"type": "damage", "n": 4, "target": "random"}]}
+     ]
+    },
+    {
+     "id": "chest",
+     "name": "The chest freezer",
+     "at": [1.9, 1.0, 0.6],
+     "unique": "rr_frozen_ring",
+     "look": "A chest freezer, humming a note too low to hear. The lid is held down with a brick, from the outside. Something inside has scratched the paint off the lid. From the inside.",
+     "found": "Under the frost, packed in like peas: a hand. A ring on it. The ring won't come off the finger, so the finger comes too.",
+     "search": [
+      {"w": 3, "text": "Bags of something, labelled in biro with names and dates. You take the one that isn't meat.", "effects": [{"type": "table_item", "id": "random"}]},
+      {"w": 2, "text": "Ice. Ice. An eye in the ice, looking up.", "effects": [{"type": "nothing"}]}
+     ]
+    },
+    {
+     "id": "shelves",
+     "name": "The frosted shelves",
+     "at": [1.6, 1.2, -1.75],
+     "look": "Tubs and tins, frozen together into one grey shelf of everything. The labels say PEAS and LARD and STAFF.",
+     "search": [
+      {"w": 3, "text": "A tin that rattles. You chip it free.", "effects": [{"type": "table_item", "id": "random"}]},
+      {"w": 2, "text": "A tub marked STAFF. You don't open it. You take the coins frozen to its lid.", "effects": [{"type": "gold", "n": 12}]},
+      {"w": 1, "text": "A carved stopper, white with frost, in the shape of a head with its mouth open.", "effects": [{"type": "totem", "id": "random"}]}
+     ]
+    }
+   ],
+   "caller": [-0.2, -0.3, 0.0],
+   "place": {"centre": [-11.0, -11.5], "rot": 0.0}
+  },
+  {
+   "id": "staffroom",
+   "name": "The Staff Room",
+   "persona": "steward",
+   "label": "STAFF ONLY",
+   "door": {
+    "at": [6.5, -12.5],
+    "from": "corridor",
+    "width": 0.9,
+    "lock": {
+     "item": "staff_key",
+     "locked_text": "STAFF ONLY. Locked. Caught in the frame at shoulder height: a thread of plaid, still wet.",
+     "unlock_text": "The STAFF key turns. Behind the door, a kettle clicks off, as if somebody just made a cup."
+    }
+   },
+   "style": {"wall": "#6a6248", "floor": "#3a3428", "light": "#e0d0a0", "tiles": true, "energy": 2.0},
+   "size": [6.0, 4.0],
+   "props": [
+    {"kind": "box", "at": [-2.7, -1.2], "size": [0.5, 1.9, 0.55], "color": "#4a5a5a", "name": "a locker"},
+    {"kind": "box", "at": [-2.7, -0.6], "size": [0.5, 1.9, 0.55], "color": "#465656", "name": "a locker"},
+    {"kind": "box", "at": [-2.7, 0.0], "size": [0.5, 1.9, 0.55], "color": "#4a5a5a", "name": "a locker"},
+    {"kind": "box", "at": [-2.7, 0.6], "size": [0.5, 1.9, 0.55], "color": "#3e4e4e", "name": "a locker"},
+    {"kind": "box", "at": [-0.8, -0.2], "size": [1.6, 0.75, 0.9], "color": "#5a4a3a", "name": "the staff table"},
+    {"kind": "chair", "at": [-1.3, -1.05], "size": [0.45, 0.95, 0.45], "color": "#6a5a40", "name": "a chair"},
+    {"kind": "chair", "at": [-0.3, -1.05], "size": [0.45, 0.95, 0.45], "color": "#5e4e38", "name": "a chair"},
+    {"kind": "box", "at": [1.2, -1.5], "size": [1.4, 0.6, 0.7], "color": "#6a3a3a", "name": "a sagging sofa"},
+    {"kind": "frame", "at": [0.8, -1.97], "y": 1.55, "size": [1.2, 0.8, 0.04], "color": "#6a4a2a", "name": "the notice board"},
+    {"kind": "box", "at": [2.6, -1.0], "size": [0.7, 0.9, 1.6], "color": "#6a6a5a", "name": "the counter"},
+    {"kind": "cyl", "at": [2.6, -1.3], "y": 0.9, "r": 0.1, "h": 0.22, "color": "#b8b8b0", "name": "the kettle"},
+    {"kind": "cyl", "at": [2.55, -0.6], "y": 0.9, "r": 0.05, "h": 0.1, "color": "#e8e0d0", "name": "a mug"},
+    {"kind": "box", "at": [0.3, 1.85], "y": 1.1, "size": [0.4, 0.5, 0.25], "color": "#7a6a4a", "name": "the clock-in machine"},
+    {"kind": "box", "at": [0.95, 1.93], "y": 1.0, "size": [0.6, 0.7, 0.1], "color": "#4a3a2a", "name": "the card rack"}
+   ],
+   "spots": [
+    {
+     "id": "lockers",
+     "name": "The lockers",
+     "at": [-2.6, 1.2, -0.3],
+     "unique": "rr_blank_badge",
+     "look": "Four lockers with names on tape: DAVE. MARGARET. TOMMY. MAUREEN. All four padlocks are open, hanging from the hasps, as if their owners were coming straight back.",
+     "found": "Pinned inside TOMMY's door: a staff badge. HELLO MY NAME IS, and then a groove where the name was scratched out, so hard the pin bent.",
+     "search": [
+      {"w": 3, "text": "MARGARET's locker: a handbag, a lipstick, a weapon wrapped in a cardigan.", "effects": [{"type": "gear", "id": "random"}]},
+      {"w": 2, "text": "DAVE's locker: a pay packet, never opened.", "effects": [{"type": "gold", "n": 22}]},
+      {"w": 2, "text": "MAUREEN's locker is full of hair. Just hair. Neatly folded.", "effects": [{"type": "nothing"}]}
+     ]
+    },
+    {
+     "id": "counter",
+     "name": "The kettle",
+     "at": [2.6, 1.0, -1.0],
+     "unique": "rr_staff_mug",
+     "look": "A kettle, a jar of teabags, a row of mugs on hooks with names on them. The kettle is warm. Nobody has been in here for years. The kettle is warm.",
+     "found": "One mug isn't on a hook. It's on the counter, half full, still steaming. WORLD'S BEST, it says, and the rest has been rubbed off by a thumb.",
+     "search": [
+      {"w": 3, "text": "In the teabag jar, under the teabags: something better than tea.", "effects": [{"type": "table_item", "id": "random"}]},
+      {"w": 1, "text": "You lift the kettle lid. It's not water.", "effects": [{"type": "damage", "n": 3, "target": "random"}]}
+     ]
+    },
+    {
+     "id": "sofa",
+     "name": "The sofa",
+     "at": [1.2, 0.6, -1.5],
+     "look": "A brown sofa with a dent in it the shape of somebody who sat there every break for twenty years. The dent is still warm.",
+     "search": [
+      {"w": 3, "text": "Down the back of the sofa: coins, a hair grip, a tooth.", "effects": [{"type": "gold", "n": 14}]},
+      {"w": 2, "text": "Down the back of the sofa: something somebody hid from the manager.", "effects": [{"type": "table_item", "id": "random"}]},
+      {"w": 1, "text": "Down the back of the sofa, something takes your hand, very gently, and holds it.", "effects": [{"type": "nothing"}]}
+     ]
+    },
+    {
+     "id": "table",
+     "name": "The staff table",
+     "at": [-0.8, 0.9, -0.2],
+     "look": "A formica table with a game of cards laid out on it, never finished. Four hands. One chair pushed back, as if somebody got up to answer the door.",
+     "search": [
+      {"w": 2, "text": "Under the ashtray: a weapon somebody kept for the walk home.", "effects": [{"type": "gear", "id": "random"}]},
+      {"w": 3, "text": "You pick up the fourth hand. It's a good hand. Whoever held it never got to play it.", "effects": [{"type": "table_item", "id": "random"}]}
+     ]
+    }
+   ],
+   "caller": [1.0, 0.9, 0.0],
+   "place": {"centre": [4.5, -14.5], "rot": 0.0}
+  },
+  {
+   "id": "cageroom",
+   "name": "The Cage Room",
+   "persona": "caller",
+   "label": "CAGES",
+   "door": {
+    "at": [-1.7, -17.5],
+    "from": "cellar",
+    "width": 0.9,
+    "lock": {
+     "item": "cage_crank",
+     "locked_text": "A low iron door with no handle. Where the handle should be, a square hole, worn smooth, the size of a crank.",
+     "unlock_text": "The crank fits. You turn it, and somewhere behind the door a hundred little cages turn with it."
+    }
+   },
+   "style": {"wall": "#3a3024", "floor": "#1e1a14", "light": "#e0b878", "tiles": false, "energy": 2.6},
+   "size": [3.5, 4.5],
+   "props": [
+    {"kind": "box", "at": [0.0, -1.95], "size": [3.2, 0.9, 0.5], "color": "#3a2a1a", "name": "a long bench"},
+    {"kind": "cage", "at": [-1.1, -1.95], "y": 0.9, "r": 0.3, "color": "#8a6a2a", "name": "a cage"},
+    {"kind": "cage", "at": [0.0, -1.95], "y": 0.9, "r": 0.32, "color": "#8a6a2a", "name": "a cage"},
+    {"kind": "cage", "at": [1.1, -1.95], "y": 0.9, "r": 0.28, "color": "#8a6a2a", "name": "a cage"},
+    {"kind": "box", "at": [-1.5, -0.2], "size": [0.5, 0.9, 1.6], "color": "#33261a", "name": "a side bench"},
+    {"kind": "cage", "at": [-1.5, -0.6], "y": 0.9, "r": 0.22, "color": "#7a5a22", "name": "a cage"},
+    {"kind": "cage", "at": [-1.5, 0.25], "y": 0.9, "r": 0.22, "color": "#7a5a22", "name": "a cage"},
+    {"kind": "cage", "at": [0.7, -0.2], "r": 0.55, "color": "#9a7a32", "name": "the big one"},
+    {"kind": "box", "at": [-1.2, 1.5], "size": [0.6, 0.5, 0.6], "color": "#5a4a30", "name": "a crate of balls"},
+    {"kind": "box", "at": [1.73, 1.3], "y": 1.2, "size": [0.03, 0.35, 0.25], "color": "#c8b890", "name": "a card nailed up"}
+   ],
+   "spots": [
+    {
+     "id": "big_cage",
+     "name": "The big one",
+     "at": [0.7, 0.9, -0.2],
+     "unique": "rr_ball_number_one",
+     "look": "A cage as big as a head. Bigger. The wire is bent outward, as if something pushed its way out from the inside. A brass tag wired to the handle: MK I.",
+     "found": "At the bottom, under a lifetime of dust, one ball. Number one. The first number ever called in this hall. It's warm.",
+     "search": [
+      {"w": 2, "text": "Dust. Hair. A ball with no number on it, which is worse.", "effects": [{"type": "nothing"}]},
+      {"w": 2, "text": "A tooth wedged in the wire. Not human. Not his. He doesn't have teeth. Does he.", "effects": [{"type": "table_item", "id": "random"}]}
+     ]
+    },
+    {
+     "id": "bench",
+     "name": "The long bench",
+     "at": [-0.4, 1.3, -1.95],
+     "unique": "rr_head_mk_iv",
+     "look": "Cages on a bench, numbered on brass tags: MK II, MK III, MK IV. They are not spares. They're heads. His. MK IV is turning, very slowly, on its own.",
+     "found": "You lift MK IV down. It stops turning when you hold it. When you look away, you can feel it start again.",
+     "search": [
+      {"w": 3, "text": "Inside MK III, rattling with the balls: something that bit the last one who reached in.", "effects": [{"type": "table_item", "id": "random"}]},
+      {"w": 1, "text": "MK II snaps shut on your fingers.", "effects": [{"type": "damage", "n": 5, "target": "random"}]}
+     ]
+    },
+    {
+     "id": "side_bench",
+     "name": "The side bench",
+     "at": [-1.5, 1.1, -0.2],
+     "look": "Two little cages, child-sized, side by side. A tag on the bench between them: PROTOTYPES. DO NOT FEED.",
+     "search": [
+      {"w": 2, "text": "A tiny carved head, wedged between the cages, its mouth full of tiny balls.", "effects": [{"type": "totem", "id": "random"}]},
+      {"w": 2, "text": "A screwdriver, sharpened down to a point. Somebody used it to open him up once.", "effects": [{"type": "gear", "id": "random"}]}
+     ]
+    },
+    {
+     "id": "crate",
+     "name": "The crate of balls",
+     "at": [-1.2, 0.7, 1.5],
+     "look": "A crate full of old bingo balls, yellowed like teeth. You hear them settle when you aren't looking at them.",
+     "search": [
+      {"w": 3, "text": "Old coins at the bottom, mixed in with the balls. Some of the balls are coins.", "effects": [{"type": "gold", "n": 16}]},
+      {"w": 2, "text": "A ball that isn't a ball.", "effects": [{"type": "table_item", "id": "random"}]},
+      {"w": 1, "text": "One ball is as hot as a coal. It's already been called.", "effects": [{"type": "damage", "n": 4, "target": "random"}]}
+     ]
+    }
+   ],
+   "caller": [1.3, -1.1, 1.5708],
+   "place": {"centre": [0.55, -18.25], "rot": -1.5708, "floor": -2.8}
+  }
+ ],
+ "things": [
+  {
+   "id": "coat_seven",
+   "area": "cloakroom",
+   "local": true,
+   "at": [-0.35, 1.3, -1.9],
+   "name": "Coat No. 7",
+   "look": "A plaid coat on the end of the rail, ticket seven. Every other coat is dusty. This one is wet at the hem, as if somebody wore it out in the rain tonight. There's a tear at the shoulder, the size of a scrap.",
+   "use": [
+    {"do": "if", "test": {"not_item": "staff_key"},
+     "then": [
+      {"do": "give", "item": "staff_key"},
+      {"do": "sfx", "id": "keys"},
+      {"do": "aside", "text": "In the pocket: a key on a fob that says STAFF. And a fingernail."},
+      {"do": "say", "persona": "receptionist", "text": "No ticket. No coat. *Keep* the key. He won't need it. He left."}
+     ],
+     "else": [
+      {"do": "aside", "text": "The pockets are empty now. The coat is still wet. It's wetter."}
+     ]}
+   ]
+  },
+  {
+   "id": "freezer_log",
+   "area": "kitchen",
+   "at": [-12.45, 1.3, -9.45],
+   "name": "The stock sheet",
+   "look": "A clipboard on a nail beside the cold room door. FREEZER STOCK. IN: Dave. Margaret. Tommy. Maureen. OUT: nothing. Never anything. Initialled by the Cook, in something that isn't ink."
+  },
+  {
+   "id": "freezer_padlock",
+   "area": "kitchen",
+   "at": [-11.45, 1.1, -9.44],
+   "name": "The cold room padlock",
+   "hide_if": {"flag": "freezer_open"},
+   "look": "Four wheels of numbers, rimed with frost. Your fingers stick to it.",
+   "use": [{"do": "dial", "lock": "door:freezer"}]
+  },
+  {
+   "id": "freezer_tally",
+   "area": "freezer",
+   "local": true,
+   "at": [0.4, 1.3, 1.94],
+   "name": "The inside of the door",
+   "look": "Scratched into the frost on the inside of the wall by the door: tally marks. Dozens of them, in fives. Then just the word LET. Then nothing."
+  },
+  {
+   "id": "frozen_hand",
+   "area": "freezer",
+   "local": true,
+   "at": [-1.9, 0.45, 0.9],
+   "name": "The wrapped thing",
+   "look": "Something long, wrapped in plastic, on the floor. Through the frost, a hand pressed flat against the inside of the plastic. It's holding something iron, with a square end, very tightly.",
+   "use": [
+    {"do": "if", "test": {"not_item": "cage_crank"},
+     "then": [
+      {"do": "give", "item": "cage_crank"},
+      {"do": "sfx", "id": "keys"},
+      {"do": "aside", "text": "You break the fingers one at a time. They snap like breadsticks. An iron crank, cold enough to burn."},
+      {"do": "lights", "area": "freezer", "mode": "flicker", "time": 0.6},
+      {"do": "say", "persona": "cook", "text": "He was *holding* that. For the cages. Downstairs. He always held it."}
+     ],
+     "else": [
+      {"do": "aside", "text": "The hand is empty now. The fingers have closed again. Round nothing."}
+     ]}
+   ]
+  },
+  {
+   "id": "staff_timesheet",
+   "area": "staffroom",
+   "local": true,
+   "at": [0.95, 1.35, 1.86],
+   "name": "The timesheet",
+   "look": "The timesheet in the card rack. Four names have LEFT written beside them in red, and one number circled on each row: MAUREEN 3. DAVE 1. MARGARET 0. TOMMY 6. Across the bottom, in the manager's hand: 'For the cold room. In the order they went in.'"
+  },
+  {
+   "id": "clock_machine",
+   "area": "staffroom",
+   "local": true,
+   "at": [0.3, 1.4, 1.8],
+   "name": "The clock-in machine",
+   "look": "A clocking-in machine. A card is already in the slot with your name typed on it. It has been punched IN every night for years. It has never been punched OUT.",
+   "use": [
+    {"do": "sfx", "id": "stamp"},
+    {"do": "aside", "text": "You pull the lever to punch out. The machine bites the card and won't give it back."},
+    {"do": "wait", "t": 0.8},
+    {"do": "sfx", "id": "bell", "db": -10},
+    {"do": "say", "persona": "steward", "text": "Not your shift. Not *yet*. Your shift ends when the game does."}
+   ]
+  },
+  {
+   "id": "staff_notice",
+   "area": "staffroom",
+   "local": true,
+   "at": [0.8, 1.6, -1.93],
+   "name": "The notice board",
+   "look": "STAFF NOTICES. The rota, with the same four names crossed through. A memo: 'Whoever is on the cage Friday, do NOT oil it. It doesn't like oil. It likes to be held.' Under the memo, pinned flat, a child's crayon drawing."
+  },
+  {
+   "id": "cage_card",
+   "area": "cageroom",
+   "local": true,
+   "at": [1.71, 1.4, 1.3],
+   "name": "A maintenance card",
+   "look": "A maintenance card, nailed up, in neat capitals. MK I: TOO SLOW. MK II: WOULD NOT STOP. MK III: BIT THE CALLER. MK IV: FINE. MK V: FINE. MK VI: FINE. MK VII: IN SERVICE. Beside MK VII, in a different hand, shakier: 'he asked for this.'"
+  }
+ ],
+ "triggers": [
+  {
+   "id": "freezer_shut",
+   "area": "freezer",
+   "rect": [-13.5, -13.5, 5.0, 3.0],
+   "once": "profile",
+   "actions": [
+    {"do": "wait", "t": 0.4},
+    {"do": "close", "portal": "door:freezer"},
+    {"do": "sfx", "id": "slam", "db": -2},
+    {"do": "lights", "area": "freezer", "mode": "flicker", "time": 1.4},
+    {"do": "aside", "text": "The door swings shut behind you. There's no handle on this side. There is a handle on this side. There wasn't a second ago."},
+    {"do": "wait", "t": 1.6},
+    {"do": "scare", "kind": "lights", "persona": "cook", "text": "In. Or out. You're letting the *warm* in."}
+   ]
+  },
+  {
+   "id": "staff_lockers",
+   "area": "staffroom",
+   "rect": [1.5, -16.5, 1.9, 4.0],
+   "once": "profile",
+   "actions": [
+    {"do": "sfx", "id": "knock", "db": -4},
+    {"do": "aside", "text": "Something knocks inside the locker marked TOMMY. Twice. Politely. Like it's been taught."},
+    {"do": "wait", "t": 1.2},
+    {"do": "sfx", "id": "knock", "db": -2},
+    {"do": "scare", "kind": "behind", "persona": "steward", "text": "He's not in there. He *left*. They all left. Check the sheet."}
+   ]
+  },
+  {
+   "id": "staff_walk",
+   "area": "staffroom",
+   "once": "walk",
+   "actions": [
+    {"do": "lights", "area": "staffroom", "mode": "flicker", "time": 0.5},
+    {"do": "say", "persona": "steward", "text": "Staff only. Are you staff. You will be."}
+   ]
+  },
+  {
+   "id": "cages_turn",
+   "area": "cageroom",
+   "rect": [-0.6, -20.0, 3.4, 3.5],
+   "once": "profile",
+   "actions": [
+    {"do": "sfx", "id": "cage_spin", "db": -3},
+    {"do": "aside", "text": "Every cage on the bench begins to turn. Together. Slowly. Like heads following you across a room."},
+    {"do": "lights", "area": "cageroom", "mode": "flicker", "time": 1.2},
+    {"do": "wait", "t": 1.6},
+    {"do": "sfx", "id": "cage_shudder", "db": -2},
+    {"do": "scare", "kind": "behind", "persona": "caller", "text": "Those. Are. *Mine*. Old faces. You do not. Try on. A man's old faces."}
+   ]
+  },
+  {
+   "id": "cageroom_walk",
+   "area": "cageroom",
+   "once": "walk",
+   "actions": [
+    {"do": "sfx", "id": "ball_roll", "db": -10},
+    {"do": "aside", "text": "Dry air. Brass. The smell inside his head."}
+   ]
+  }
+ ]
+}

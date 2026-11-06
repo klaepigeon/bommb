@@ -1,0 +1,3094 @@
+{
+ "_doc": "The coach trip (see docs/WORLD.md). Five more rooms and two stairs. The Lounge Bar opens off the hall's front wall behind reception; from it the beer cellar steps go down to the Beer Cellar, and the yard door opens on the Car Park, where the outing coach still stands with its doors open among the cars that never left. A private stair goes up from the back of the Manager's Office to his Flat, and the Boiler Room is at the end of the back corridor. The chain: the outing poster in the bar (lore: Saturday the 9th of August) -> the yard key on a nail in the beer cellar -> the car park, where seat 14 of the coach holds Ruth's birthday card (lore: her birthday is outing day) -> the card on the PRIVATE door in the office says the code is her birthday, day then month = 0908 -> the flat, where the bedside drawer holds the boiler key -> the boiler room, where the tannoy amplifier calls the last number. The car park gates are chained from outside and never open.",
+ "personas": [
+  {
+   "id": "barman",
+   "name": "The Barman",
+   "desc": "Pulls a pint. Pulls another. Nobody's drinking.",
+   "voice": {
+    "style": "warm",
+    "pitch": 0.85
+   },
+   "mask": {
+    "skin": "#d8a890",
+    "hair": "#3a2a1a",
+    "iris": "#4a2a1a",
+    "brow": 0,
+    "lips": "#9a4a3a",
+    "mouth_w": 14,
+    "smile": 1,
+    "mustache": true,
+    "blush": true,
+    "tired": true
+   }
+  },
+  {
+   "id": "driver",
+   "name": "The Driver",
+   "desc": "Engine's running. Always running. Tickets, please.",
+   "voice": {
+    "style": "cold",
+    "pitch": 0.75
+   },
+   "mask": {
+    "skin": "#c8c0b0",
+    "hair": "#5a5a5a",
+    "fringe": 2,
+    "iris": "#3a4a5a",
+    "brow": -1,
+    "lips": "#6a5a5a",
+    "mouth_w": 10,
+    "smile": 0,
+    "tired": true,
+    "glasses": true
+   }
+  },
+  {
+   "id": "caretaker",
+   "name": "The Caretaker",
+   "desc": "Keeps the fire lit. Keeps the pipes knocking.",
+   "voice": {
+    "style": "gross",
+    "pitch": 0.7
+   },
+   "mask": {
+    "skin": "#b8a090",
+    "hair": "#2a2a26",
+    "iris": "#2a2a1a",
+    "brow": -2,
+    "lips": "#5a3a30",
+    "mouth_w": 12,
+    "smile": -1,
+    "stain": true,
+    "tired": true
+   }
+  }
+ ],
+ "areas": [
+  {
+   "id": "bar_stairs",
+   "name": "The beer cellar steps",
+   "rect": [
+    -12.0,
+    6.6,
+    2.02,
+    5.3
+   ],
+   "height": 3.0,
+   "slope": {
+    "axis": "z",
+    "from": 10.8,
+    "to": 8.0,
+    "y0": 0.0,
+    "y1": -2.8
+   },
+   "style": {
+    "wall": "#4a3426",
+    "floor": "#2a1e16",
+    "light": "#d8a868",
+    "energy": 3.0
+   },
+   "persona": "barman"
+  },
+  {
+   "id": "flat_stairs",
+   "name": "The stair to the flat",
+   "rect": [
+    12.58,
+    -6.8,
+    1.92,
+    6.4
+   ],
+   "height": 2.8,
+   "slope": {
+    "axis": "z",
+    "from": -1.6,
+    "to": -5.0,
+    "y0": 3.2,
+    "y1": 0.0
+   },
+   "style": {
+    "wall": "#6a5a4a",
+    "floor": "#4a2a2a",
+    "light": "#e8d0a8",
+    "energy": 2.8
+   },
+   "persona": "manager"
+  }
+ ],
+ "rooms": [
+  {
+   "id": "bar",
+   "name": "The Lounge Bar",
+   "persona": "barman",
+   "label": "LOUNGE BAR",
+   "door": {
+    "at": [
+     -3.2,
+     7.04
+    ],
+    "from": "hall",
+    "width": 1.0
+   },
+   "style": {
+    "wall": "#5a2a24",
+    "floor": "#2e1e16",
+    "light": "#f0b878",
+    "tiles": false,
+    "energy": 2.2
+   },
+   "size": [
+    7.3,
+    4.82
+   ],
+   "props": [
+    {
+     "kind": "box",
+     "at": [
+      -1.5,
+      -0.6
+     ],
+     "size": [
+      3.4,
+      1.05,
+      0.6
+     ],
+     "color": "#4a2a1a",
+     "name": "the bar"
+    },
+    {
+     "kind": "box",
+     "at": [
+      -1.5,
+      -0.6
+     ],
+     "y": 1.05,
+     "size": [
+      3.6,
+      0.06,
+      0.75
+     ],
+     "color": "#6a4028",
+     "name": "the bar top"
+    },
+    {
+     "kind": "shelf",
+     "at": [
+      -1.5,
+      -2.2
+     ],
+     "size": [
+      3.0,
+      1.8,
+      0.35
+     ],
+     "color": "#3a2418",
+     "name": "the back bar"
+    },
+    {
+     "kind": "frame",
+     "at": [
+      -1.5,
+      -2.37
+     ],
+     "y": 2.3,
+     "size": [
+      2.6,
+      0.5,
+      0.04
+     ],
+     "color": "#8a6a3a",
+     "name": "the bar mirror"
+    },
+    {
+     "kind": "cyl",
+     "at": [
+      -1.4,
+      -0.6
+     ],
+     "y": 1.1,
+     "r": 0.035,
+     "h": 0.35,
+     "color": "#c8a050",
+     "name": "a pump"
+    },
+    {
+     "kind": "cyl",
+     "at": [
+      -1.0,
+      -0.6
+     ],
+     "y": 1.1,
+     "r": 0.035,
+     "h": 0.35,
+     "color": "#c8a050",
+     "name": "a pump"
+    },
+    {
+     "kind": "cyl",
+     "at": [
+      -0.6,
+      -0.6
+     ],
+     "y": 1.1,
+     "r": 0.035,
+     "h": 0.35,
+     "color": "#c8a050",
+     "name": "a pump"
+    },
+    {
+     "kind": "cyl",
+     "at": [
+      -1.0,
+      -0.45
+     ],
+     "y": 1.08,
+     "r": 0.05,
+     "h": 0.15,
+     "color": "#c89838",
+     "name": "a full pint"
+    },
+    {
+     "kind": "box",
+     "at": [
+      -2.7,
+      -0.6
+     ],
+     "y": 1.11,
+     "size": [
+      0.45,
+      0.3,
+      0.4
+     ],
+     "color": "#2a2a2a",
+     "name": "the till"
+    },
+    {
+     "kind": "cyl",
+     "at": [
+      -2.4,
+      0.1
+     ],
+     "r": 0.18,
+     "h": 0.75,
+     "color": "#5a2a2a",
+     "name": "a bar stool"
+    },
+    {
+     "kind": "cyl",
+     "at": [
+      -1.2,
+      0.1
+     ],
+     "r": 0.18,
+     "h": 0.75,
+     "color": "#5a2a2a",
+     "name": "a bar stool"
+    },
+    {
+     "kind": "box",
+     "at": [
+      -1.6,
+      1.6
+     ],
+     "size": [
+      0.8,
+      0.72,
+      0.8
+     ],
+     "color": "#3a2618",
+     "name": "a table"
+    },
+    {
+     "kind": "chair",
+     "at": [
+      -2.4,
+      1.6
+     ],
+     "size": [
+      0.45,
+      0.9,
+      0.45
+     ],
+     "color": "#6a3a2a",
+     "name": "a chair"
+    },
+    {
+     "kind": "box",
+     "at": [
+      0.9,
+      1.4
+     ],
+     "size": [
+      0.8,
+      0.72,
+      0.8
+     ],
+     "color": "#3a2618",
+     "name": "a table"
+    },
+    {
+     "kind": "chair",
+     "at": [
+      0.9,
+      2.15
+     ],
+     "size": [
+      0.45,
+      0.9,
+      0.45
+     ],
+     "color": "#6a3a2a",
+     "name": "a chair"
+    },
+    {
+     "kind": "chair",
+     "at": [
+      1.65,
+      1.4
+     ],
+     "size": [
+      0.45,
+      0.9,
+      0.45
+     ],
+     "color": "#5e3424",
+     "name": "a chair"
+    },
+    {
+     "kind": "cyl",
+     "at": [
+      0.75,
+      1.3
+     ],
+     "y": 0.72,
+     "r": 0.04,
+     "h": 0.14,
+     "color": "#d8b860",
+     "name": "a drink"
+    },
+    {
+     "kind": "cyl",
+     "at": [
+      1.05,
+      1.5
+     ],
+     "y": 0.72,
+     "r": 0.04,
+     "h": 0.14,
+     "color": "#d8b860",
+     "name": "a drink"
+    },
+    {
+     "kind": "box",
+     "at": [
+      3.3,
+      0.4
+     ],
+     "size": [
+      0.6,
+      1.5,
+      0.55
+     ],
+     "color": "#7a2a3a",
+     "name": "the jukebox"
+    },
+    {
+     "kind": "box",
+     "at": [
+      3.3,
+      -0.5
+     ],
+     "size": [
+      0.6,
+      1.6,
+      0.5
+     ],
+     "color": "#3a5a8a",
+     "name": "a fruit machine"
+    },
+    {
+     "kind": "frame",
+     "at": [
+      3.63,
+      -1.6
+     ],
+     "y": 1.6,
+     "size": [
+      0.04,
+      0.8,
+      0.6
+     ],
+     "color": "#c8b070",
+     "name": "a poster"
+    }
+   ],
+   "spots": [
+    {
+     "id": "taps",
+     "name": "The pumps",
+     "at": [
+      -1.0,
+      1.2,
+      -0.6
+     ],
+     "unique": "rr_bottomless_pint",
+     "look": "Three pumps. The middle one is running. Nobody is pulling it. A pint glass sits under the spout, full, overflowing, and has been overflowing for years. The drip tray is full of something darker than beer.",
+     "found": "You turn the tap off. It turns itself back on. You take the glass instead. It stays full. It stays full all the way back to your seat.",
+     "search": [
+      {
+       "w": 3,
+       "text": "Under the drip tray: coins, stuck down with the slop. You prise them up.",
+       "effects": [
+        {
+         "type": "gold",
+         "n": 15
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "You taste it. Salt. Sand in your teeth. The sea, pulled through a beer line.",
+       "effects": [
+        {
+         "type": "damage",
+         "n": 3,
+         "target": "random"
+        }
+       ]
+      },
+      {
+       "w": 1,
+       "text": "Somebody's left their winnings on the bar. Somebody isn't coming back for them.",
+       "effects": [
+        {
+         "type": "table_item",
+         "id": "random"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "back_bar",
+     "name": "The back bar",
+     "at": [
+      -1.5,
+      1.4,
+      -2.2
+     ],
+     "unique": "rr_last_orders_bell",
+     "look": "Optics, all full. Glasses, all clean, all upside down on the shelf. In the mirror behind them the lounge is full of people in their coats, waiting to go out. You turn round. Chairs.",
+     "found": "Behind the optics, wrapped in a bar towel: the last orders bell, its clapper tied down with string. Somebody didn't want it rung. You untie it. It rings once, by itself.",
+     "search": [
+      {
+       "w": 3,
+       "text": "A whisky bottle with a pound note rolled up inside it.",
+       "effects": [
+        {
+         "type": "gold",
+         "n": 20
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "A bottle with no label. It's warm. You keep it.",
+       "effects": [
+        {
+         "type": "table_item",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 1,
+       "text": "A cosh, under the bar, where the barman kept it for closing time.",
+       "effects": [
+        {
+         "type": "gear",
+         "id": "random"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "jukebox",
+     "name": "The jukebox",
+     "at": [
+      3.3,
+      1.0,
+      0.4
+     ],
+     "look": "A jukebox, lit from inside. Every record on the list is the same song, typed out fifty-two times. Whatever it was, people sang it on coaches.",
+     "search": [
+      {
+       "w": 3,
+       "text": "Coins in the reject slot, a fistful, all from the same year.",
+       "effects": [
+        {
+         "type": "gold",
+         "n": 12
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "A carved stopper from the back of the machine, shaped like a mouth singing.",
+       "effects": [
+        {
+         "type": "totem",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 1,
+       "text": "It plays. Fifty-one voices sing along, very close to your ear. One voice is late.",
+       "effects": [
+        {
+         "type": "nothing"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "tables",
+     "name": "The lounge tables",
+     "at": [
+      0.9,
+      0.8,
+      1.4
+     ],
+     "look": "Drinks on the tables, poured and untouched, with coats over the backs of the chairs. Everybody stepped out for a minute. Everybody stepped out to get on the coach.",
+     "search": [
+      {
+       "w": 3,
+       "text": "A handbag on a chair. Inside, a purse, a lipstick, a return coach ticket.",
+       "effects": [
+        {
+         "type": "gold",
+         "n": 16
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "Under a beer mat: something somebody palmed off the table and forgot.",
+       "effects": [
+        {
+         "type": "table_item",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 1,
+       "text": "The beer is still cold. The glasses are sweating. So are you.",
+       "effects": [
+        {
+         "type": "nothing"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "caller": [
+    -1.5,
+    -1.5,
+    0.0
+   ],
+   "place": {
+    "centre": [
+     -6.25,
+     9.49
+    ],
+    "rot": 0.0
+   }
+  },
+  {
+   "id": "barcellar",
+   "name": "The Beer Cellar",
+   "persona": "barman",
+   "label": "CELLAR",
+   "door": {
+    "at": [
+     -12.04,
+     7.3
+    ],
+    "from": "bar_stairs",
+    "width": 0.9
+   },
+   "style": {
+    "wall": "#3a3430",
+    "floor": "#1a1c1a",
+    "light": "#c8b088",
+    "tiles": true,
+    "energy": 2.2
+   },
+   "size": [
+    4.92,
+    4.92
+   ],
+   "props": [
+    {
+     "kind": "barrel",
+     "at": [
+      -1.9,
+      -1.9
+     ],
+     "r": 0.4,
+     "h": 1.0,
+     "color": "#5a3a20",
+     "name": "a barrel"
+    },
+    {
+     "kind": "barrel",
+     "at": [
+      -1.0,
+      -1.95
+     ],
+     "r": 0.4,
+     "h": 1.0,
+     "color": "#4a2e18",
+     "name": "a barrel"
+    },
+    {
+     "kind": "barrel",
+     "at": [
+      -0.1,
+      -1.95
+     ],
+     "r": 0.4,
+     "h": 1.0,
+     "color": "#5a3a20",
+     "name": "a barrel"
+    },
+    {
+     "kind": "barrel",
+     "at": [
+      -1.9,
+      -1.0
+     ],
+     "r": 0.4,
+     "h": 1.0,
+     "color": "#4a2a18",
+     "name": "a barrel"
+    },
+    {
+     "kind": "barrel",
+     "at": [
+      -1.45,
+      -1.95
+     ],
+     "y": 1.0,
+     "r": 0.36,
+     "h": 0.85,
+     "color": "#5a3a20",
+     "name": "a barrel"
+    },
+    {
+     "kind": "box",
+     "at": [
+      -2.2,
+      1.0
+     ],
+     "size": [
+      0.5,
+      0.4,
+      1.6
+     ],
+     "color": "#3a2a1a",
+     "name": "the stillage"
+    },
+    {
+     "kind": "barrel",
+     "at": [
+      -2.15,
+      0.6
+     ],
+     "y": 0.4,
+     "r": 0.3,
+     "h": 0.7,
+     "color": "#6a6a66",
+     "name": "a keg"
+    },
+    {
+     "kind": "barrel",
+     "at": [
+      -2.15,
+      1.4
+     ],
+     "y": 0.4,
+     "r": 0.3,
+     "h": 0.7,
+     "color": "#6a6a66",
+     "name": "a keg"
+    },
+    {
+     "kind": "box",
+     "at": [
+      1.0,
+      -1.9
+     ],
+     "size": [
+      0.9,
+      1.1,
+      0.8
+     ],
+     "color": "#8a8a84",
+     "name": "the cooler"
+    },
+    {
+     "kind": "box",
+     "at": [
+      1.7,
+      -2.35
+     ],
+     "y": 0.9,
+     "size": [
+      0.06,
+      2.0,
+      0.06
+     ],
+     "color": "#8a2a2a",
+     "name": "a beer line"
+    },
+    {
+     "kind": "box",
+     "at": [
+      1.85,
+      -2.35
+     ],
+     "y": 0.9,
+     "size": [
+      0.06,
+      2.0,
+      0.06
+     ],
+     "color": "#2a4a8a",
+     "name": "a beer line"
+    },
+    {
+     "kind": "box",
+     "at": [
+      2.0,
+      -2.35
+     ],
+     "y": 0.9,
+     "size": [
+      0.06,
+      2.0,
+      0.06
+     ],
+     "color": "#8a8a2a",
+     "name": "a beer line"
+    },
+    {
+     "kind": "frame",
+     "at": [
+      0.0,
+      2.42
+     ],
+     "y": 2.2,
+     "size": [
+      1.2,
+      0.9,
+      0.04
+     ],
+     "color": "#4a3a2a",
+     "name": "the drop hatch"
+    },
+    {
+     "kind": "box",
+     "at": [
+      0.3,
+      0.3
+     ],
+     "size": [
+      0.45,
+      0.02,
+      0.45
+     ],
+     "color": "#0a0e0e",
+     "name": "a drain",
+     "walk_over": true
+    },
+    {
+     "kind": "box",
+     "at": [
+      0.6,
+      0.9
+     ],
+     "size": [
+      1.6,
+      0.02,
+      1.2
+     ],
+     "color": "#141e1e",
+     "name": "a puddle",
+     "walk_over": true
+    }
+   ],
+   "spots": [
+    {
+     "id": "barrels",
+     "name": "The barrels",
+     "at": [
+      -1.0,
+      1.0,
+      -1.95
+     ],
+     "unique": "rr_sea_keg",
+     "look": "Barrels, chalked with dates. All the same date. One of them is sloshing. One of them is sloshing in time with the drain.",
+     "found": "The sloshing one is light enough to lift. You knock the shive out. It's full of seawater, and something in it is still swimming round and round, very slowly, looking for the way out.",
+     "search": [
+      {
+       "w": 3,
+       "text": "A cash bag tucked between two barrels, for the drayman. Never collected.",
+       "effects": [
+        {
+         "type": "gold",
+         "n": 18
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "Sand in the bung hole. Shells. A false tooth.",
+       "effects": [
+        {
+         "type": "table_item",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 1,
+       "text": "A barrel rolls. Onto your foot. It was standing upright a second ago.",
+       "effects": [
+        {
+         "type": "damage",
+         "n": 4,
+         "target": "random"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "cooler",
+     "name": "The cooler",
+     "at": [
+      1.0,
+      1.0,
+      -1.9
+     ],
+     "unique": "rr_spile_mallet",
+     "look": "The line cooler, humming, dripping, furred with salt. The beer lines go up through the ceiling to the pumps. One line goes down, into the floor. Nobody pipes beer into a floor.",
+     "found": "Hung on the cooler by a loop of string: the cellarman's spile mallet, the head worn into a dent by forty years of knocking things in. It's wet. It's been used tonight.",
+     "search": [
+      {
+       "w": 3,
+       "text": "Tools in a tray: a spanner, a knife, a thing for clearing lines.",
+       "effects": [
+        {
+         "type": "gear",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "A spare key. Not to anything here. You keep it anyway.",
+       "effects": [
+        {
+         "type": "table_item",
+         "id": "random"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "stillage",
+     "name": "The stillage",
+     "at": [
+      -2.15,
+      1.0,
+      1.0
+     ],
+     "look": "Two kegs on a wooden cradle, tapped and waiting. The labels say MILD and SPECIAL OUTING ALE. The second one is dated tomorrow.",
+     "search": [
+      {
+       "w": 3,
+       "text": "A tin box under the cradle: the cellarman's float.",
+       "effects": [
+        {
+         "type": "gold",
+         "n": 14
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "A little carved figure wedged under the cradle to stop it rocking. It has a bus driver's cap.",
+       "effects": [
+        {
+         "type": "totem",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 1,
+       "text": "The SPECIAL is warm, and it smells of diesel.",
+       "effects": [
+        {
+         "type": "nothing"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "caller": [
+    0.6,
+    -0.4,
+    1.5708
+   ],
+   "place": {
+    "centre": [
+     -14.54,
+     7.04
+    ],
+    "rot": 0.0,
+    "floor": -2.8
+   }
+  },
+  {
+   "id": "carpark",
+   "name": "The Car Park",
+   "persona": "driver",
+   "label": "YARD",
+   "height": 4.5,
+   "door": {
+    "at": [
+     -4.0,
+     11.94
+    ],
+    "from": "bar",
+    "width": 1.0,
+    "lock": {
+     "item": "yard_key",
+     "locked_text": "The yard door. Bolted, and the bolt is padlocked. On the glass, painted backwards so you'd read it from the outside: NO ADMITTANCE AFTER MIDNIGHT. Outside, an engine is idling.",
+     "unlock_text": "The yard key turns. The cold comes in, and diesel, and the sound of an engine that has been ticking over for a very long time."
+    }
+   },
+   "style": {
+    "wall": "#4a3a34",
+    "floor": "#1c1c1e",
+    "light": "#e8a050",
+    "tiles": true,
+    "energy": 3.6,
+    "sky": true
+   },
+   "size": [
+    16.0,
+    10.02
+   ],
+   "props": [
+    {
+     "kind": "box",
+     "at": [
+      -1.5,
+      -1.2
+     ],
+     "y": 0.35,
+     "size": [
+      9.0,
+      2.7,
+      2.5
+     ],
+     "color": "#c8c0a8",
+     "name": "the coach"
+    },
+    {
+     "kind": "box",
+     "at": [
+      -1.5,
+      -2.46
+     ],
+     "y": 1.0,
+     "size": [
+      9.0,
+      0.25,
+      0.03
+     ],
+     "color": "#8a1a1a",
+     "name": "the coach's stripe"
+    },
+    {
+     "kind": "frame",
+     "at": [
+      -5.0,
+      -2.47
+     ],
+     "y": 2.1,
+     "size": [
+      1.3,
+      0.8,
+      0.04
+     ],
+     "color": "#1a1e22",
+     "name": "a coach window"
+    },
+    {
+     "kind": "frame",
+     "at": [
+      -3.5,
+      -2.47
+     ],
+     "y": 2.1,
+     "size": [
+      1.3,
+      0.8,
+      0.04
+     ],
+     "color": "#1a1e22",
+     "name": "a coach window"
+    },
+    {
+     "kind": "frame",
+     "at": [
+      -2.0,
+      -2.47
+     ],
+     "y": 2.1,
+     "size": [
+      1.3,
+      0.8,
+      0.04
+     ],
+     "color": "#1a1e22",
+     "name": "a coach window"
+    },
+    {
+     "kind": "frame",
+     "at": [
+      -0.5,
+      -2.47
+     ],
+     "y": 2.1,
+     "size": [
+      1.3,
+      0.8,
+      0.04
+     ],
+     "color": "#1a1e22",
+     "name": "a coach window"
+    },
+    {
+     "kind": "frame",
+     "at": [
+      1.0,
+      -2.47
+     ],
+     "y": 2.1,
+     "size": [
+      1.3,
+      0.8,
+      0.04
+     ],
+     "color": "#1a1e22",
+     "name": "a coach window"
+    },
+    {
+     "kind": "box",
+     "at": [
+      2.2,
+      -2.47
+     ],
+     "y": 0.35,
+     "size": [
+      0.9,
+      2.2,
+      0.03
+     ],
+     "color": "#0a0a0a",
+     "name": "the open door"
+    },
+    {
+     "kind": "box",
+     "at": [
+      2.75,
+      -2.68
+     ],
+     "y": 0.35,
+     "size": [
+      0.06,
+      2.0,
+      0.4
+     ],
+     "color": "#b8b0a0",
+     "name": "the door, folded back"
+    },
+    {
+     "kind": "frame",
+     "at": [
+      3.02,
+      -1.2
+     ],
+     "y": 2.0,
+     "size": [
+      0.04,
+      1.1,
+      2.2
+     ],
+     "color": "#1a1e22",
+     "name": "the windscreen"
+    },
+    {
+     "kind": "box",
+     "at": [
+      3.03,
+      -1.2
+     ],
+     "y": 2.75,
+     "size": [
+      0.04,
+      0.25,
+      1.8
+     ],
+     "color": "#d8c070",
+     "name": "the destination blind"
+    },
+    {
+     "kind": "box",
+     "at": [
+      -4.8,
+      -2.47
+     ],
+     "size": [
+      1.0,
+      0.6,
+      0.06
+     ],
+     "color": "#101010",
+     "name": "a wheel"
+    },
+    {
+     "kind": "box",
+     "at": [
+      1.2,
+      -2.47
+     ],
+     "size": [
+      1.0,
+      0.6,
+      0.06
+     ],
+     "color": "#101010",
+     "name": "a wheel"
+    },
+    {
+     "kind": "box",
+     "at": [
+      -6.0,
+      3.1
+     ],
+     "y": 0.25,
+     "size": [
+      1.8,
+      0.8,
+      3.6
+     ],
+     "color": "#5a2a2a",
+     "name": "a car"
+    },
+    {
+     "kind": "box",
+     "at": [
+      -6.0,
+      3.3
+     ],
+     "y": 1.05,
+     "size": [
+      1.6,
+      0.55,
+      1.9
+     ],
+     "color": "#2a2a2e",
+     "name": "a car"
+    },
+    {
+     "kind": "box",
+     "at": [
+      -3.4,
+      3.1
+     ],
+     "y": 0.25,
+     "size": [
+      1.8,
+      0.8,
+      3.6
+     ],
+     "color": "#2a3a4a",
+     "name": "a car"
+    },
+    {
+     "kind": "box",
+     "at": [
+      -3.4,
+      3.3
+     ],
+     "y": 1.05,
+     "size": [
+      1.6,
+      0.55,
+      1.9
+     ],
+     "color": "#24282e",
+     "name": "a car"
+    },
+    {
+     "kind": "box",
+     "at": [
+      -0.8,
+      3.1
+     ],
+     "y": 0.25,
+     "size": [
+      1.8,
+      0.8,
+      3.6
+     ],
+     "color": "#3a4a2a",
+     "name": "a car"
+    },
+    {
+     "kind": "box",
+     "at": [
+      -0.8,
+      3.3
+     ],
+     "y": 1.05,
+     "size": [
+      1.6,
+      0.55,
+      1.9
+     ],
+     "color": "#26282a",
+     "name": "a car"
+    },
+    {
+     "kind": "box",
+     "at": [
+      5.6,
+      2.3
+     ],
+     "y": 0.2,
+     "size": [
+      2.0,
+      2.1,
+      4.4
+     ],
+     "color": "#d8d8d0",
+     "name": "the caretaker's van"
+    },
+    {
+     "kind": "box",
+     "at": [
+      4.55,
+      -0.35
+     ],
+     "y": 0.3,
+     "size": [
+      0.06,
+      1.8,
+      0.9
+     ],
+     "color": "#c8c8c0",
+     "name": "a van door, open"
+    },
+    {
+     "kind": "box",
+     "at": [
+      6.65,
+      -0.35
+     ],
+     "y": 0.3,
+     "size": [
+      0.06,
+      1.8,
+      0.9
+     ],
+     "color": "#c8c8c0",
+     "name": "a van door, open"
+    },
+    {
+     "kind": "box",
+     "at": [
+      -4.5,
+      -3.9
+     ],
+     "size": [
+      3.0,
+      0.02,
+      1.6
+     ],
+     "color": "#0e0e12",
+     "name": "an oil puddle",
+     "walk_over": true
+    },
+    {
+     "kind": "box",
+     "at": [
+      -7.5,
+      0.0
+     ],
+     "size": [
+      0.12,
+      4.2,
+      0.12
+     ],
+     "color": "#3a3a3a",
+     "name": "a lamp post"
+    },
+    {
+     "kind": "box",
+     "at": [
+      6.2,
+      -4.0
+     ],
+     "size": [
+      0.9,
+      1.1,
+      0.7
+     ],
+     "color": "#2a3a2a",
+     "name": "the bins"
+    }
+   ],
+   "spots": [
+    {
+     "id": "coach",
+     "name": "The coach",
+     "at": [
+      0.6,
+      1.4,
+      -2.47
+     ],
+     "unique": "rr_seat_fourteen",
+     "look": "A cream coach with a red stripe, doors folded open. The windows are fogged from the inside, and in the fog: handprints, dozens, small and large, all pressed flat at the same height. As if everybody stood up at once.",
+     "found": "Wedged in the rubber of the door seal, a ticket. COACH OUTING. SEAT 14. ADMIT ONE. It's been punched. It's been punched so many times there's nothing left in the middle.",
+     "search": [
+      {
+       "w": 3,
+       "text": "Down the side of a seat: a purse, a pension book, a bag of boiled sweets, all wet.",
+       "effects": [
+        {
+         "type": "gold",
+         "n": 17
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "A raffle prize nobody claimed, still in its cellophane, on the parcel shelf.",
+       "effects": [
+        {
+         "type": "table_item",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 1,
+       "text": "The door folds shut on your arm, hard, and opens again, politely.",
+       "effects": [
+        {
+         "type": "damage",
+         "n": 4,
+         "target": "random"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "cars",
+     "name": "The cars",
+     "at": [
+      -3.4,
+      1.0,
+      1.25
+     ],
+     "unique": "rr_st_christopher",
+     "look": "Three cars nose to the coach, frosted over though it isn't cold. Keys in all three ignitions. Coats on the back seats. Their owners parked up for a day trip and never came back to drive them home.",
+     "found": "Hanging from the middle car's mirror: a St Christopher, patron of travellers, swinging very slightly, though the car hasn't moved in years. You take it. The car settles on its springs, like someone just got out.",
+     "search": [
+      {
+       "w": 3,
+       "text": "A glovebox: maps, mints, money for the car park.",
+       "effects": [
+        {
+         "type": "gold",
+         "n": 13
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "A tyre iron in a boot, the kind you keep for the drive home at night.",
+       "effects": [
+        {
+         "type": "gear",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 1,
+       "text": "A child's car seat in the back. Buckled. Empty. Buckled.",
+       "effects": [
+        {
+         "type": "nothing"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "van",
+     "name": "The caretaker's van",
+     "at": [
+      5.6,
+      1.0,
+      -0.1
+     ],
+     "look": "A white van with its back doors open. A coil of cable on the floor, thick as a wrist, running out of the van and across the tarmac to the coach. It's been cut. Inside the van, a dent in the floor where somebody lay down.",
+     "search": [
+      {
+       "w": 3,
+       "text": "A toolbag. Something heavy in it.",
+       "effects": [
+        {
+         "type": "gear",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "A jar of screws, washers, and one bingo ball, number 14, rattling round with them.",
+       "effects": [
+        {
+         "type": "table_item",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 1,
+       "text": "Coins in the ashtray, ash on the coins.",
+       "effects": [
+        {
+         "type": "gold",
+         "n": 9
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "caller": [
+    2.2,
+    -3.6,
+    3.1416
+   ],
+   "place": {
+    "centre": [
+     -6.0,
+     16.99
+    ],
+    "rot": 0.0
+   }
+  },
+  {
+   "id": "flat",
+   "name": "The Manager's Flat",
+   "persona": "manager",
+   "label": "PRIVATE",
+   "height": 2.6,
+   "door": {
+    "at": [
+     13.5,
+     -0.36
+    ],
+    "from": "flat_stairs",
+    "width": 0.9
+   },
+   "style": {
+    "wall": "#8a7a6a",
+    "floor": "#3a2424",
+    "light": "#f0d8b0",
+    "tiles": false,
+    "energy": 1.8
+   },
+   "size": [
+    5.92,
+    5.42
+   ],
+   "props": [
+    {
+     "kind": "box",
+     "at": [
+      1.9,
+      1.5
+     ],
+     "size": [
+      1.4,
+      0.55,
+      2.1
+     ],
+     "color": "#e8e0d0",
+     "name": "the bed"
+    },
+    {
+     "kind": "box",
+     "at": [
+      1.9,
+      2.6
+     ],
+     "size": [
+      1.5,
+      1.0,
+      0.1
+     ],
+     "color": "#5a3a2a",
+     "name": "the headboard"
+    },
+    {
+     "kind": "box",
+     "at": [
+      1.9,
+      2.2
+     ],
+     "y": 0.55,
+     "size": [
+      1.1,
+      0.14,
+      0.4
+     ],
+     "color": "#f0ece0",
+     "name": "the pillow"
+    },
+    {
+     "kind": "box",
+     "at": [
+      1.9,
+      1.2
+     ],
+     "y": 0.55,
+     "size": [
+      1.42,
+      0.06,
+      0.6
+     ],
+     "color": "#d8b8c8",
+     "name": "the turned-down sheet"
+    },
+    {
+     "kind": "box",
+     "at": [
+      0.75,
+      2.35
+     ],
+     "size": [
+      0.45,
+      0.55,
+      0.45
+     ],
+     "color": "#5a3a2a",
+     "name": "the bedside table"
+    },
+    {
+     "kind": "cyl",
+     "at": [
+      0.75,
+      2.35
+     ],
+     "y": 0.55,
+     "r": 0.08,
+     "h": 0.3,
+     "color": "#e8d8b0",
+     "name": "a bedside lamp"
+    },
+    {
+     "kind": "box",
+     "at": [
+      1.9,
+      2.68
+     ],
+     "y": 1.75,
+     "size": [
+      1.6,
+      0.22,
+      0.02
+     ],
+     "color": "#d86a8a",
+     "name": "a birthday banner"
+    },
+    {
+     "kind": "box",
+     "at": [
+      1.9,
+      0.2
+     ],
+     "size": [
+      0.4,
+      0.3,
+      0.4
+     ],
+     "color": "#6a8ad8",
+     "name": "a present"
+    },
+    {
+     "kind": "box",
+     "at": [
+      1.35,
+      0.18
+     ],
+     "size": [
+      0.3,
+      0.25,
+      0.3
+     ],
+     "color": "#d8c04a",
+     "name": "a present"
+    },
+    {
+     "kind": "box",
+     "at": [
+      2.4,
+      -2.3
+     ],
+     "size": [
+      1.0,
+      2.0,
+      0.6
+     ],
+     "color": "#4a3020",
+     "name": "the wardrobe"
+    },
+    {
+     "kind": "box",
+     "at": [
+      -2.6,
+      1.2
+     ],
+     "size": [
+      0.6,
+      0.75,
+      1.1
+     ],
+     "color": "#5a3a2a",
+     "name": "the dressing table"
+    },
+    {
+     "kind": "frame",
+     "at": [
+      -2.91,
+      1.2
+     ],
+     "y": 1.3,
+     "size": [
+      0.04,
+      0.7,
+      0.7
+     ],
+     "color": "#8a7a5a",
+     "name": "the mirror"
+    },
+    {
+     "kind": "chair",
+     "at": [
+      -0.8,
+      -0.3
+     ],
+     "size": [
+      0.7,
+      1.0,
+      0.7
+     ],
+     "color": "#5a4a3a",
+     "name": "his armchair"
+    },
+    {
+     "kind": "box",
+     "at": [
+      -0.8,
+      -2.45
+     ],
+     "size": [
+      0.9,
+      0.5,
+      0.45
+     ],
+     "color": "#3a2a1a",
+     "name": "the television cabinet"
+    },
+    {
+     "kind": "box",
+     "at": [
+      -0.8,
+      -2.45
+     ],
+     "y": 0.5,
+     "size": [
+      0.7,
+      0.55,
+      0.45
+     ],
+     "color": "#2a2a26",
+     "name": "the television"
+    },
+    {
+     "kind": "cyl",
+     "at": [
+      -2.6,
+      -0.6
+     ],
+     "r": 0.15,
+     "h": 1.5,
+     "color": "#6a5a3a",
+     "name": "a standard lamp"
+    },
+    {
+     "kind": "frame",
+     "at": [
+      0.3,
+      2.68
+     ],
+     "y": 1.6,
+     "size": [
+      0.4,
+      0.5,
+      0.04
+     ],
+     "color": "#8a6a30",
+     "name": "a photograph"
+    }
+   ],
+   "spots": [
+    {
+     "id": "bed",
+     "name": "Her bed",
+     "at": [
+      1.9,
+      0.7,
+      1.5
+     ],
+     "unique": "rr_hot_water_bottle",
+     "look": "A single bed, made up tight, corners folded the way they teach in hospitals. The sheet turned down. Presents at the foot, still wrapped. HAPPY 21ST across the headboard. It has been made up every night for a long time. The sheets are new.",
+     "found": "Under the covers, where her feet would go: a hot water bottle in a knitted cover. It's warm. It's always been filled, every night, at quarter to twelve.",
+     "search": [
+      {
+       "w": 3,
+       "text": "Under the pillow: a purse with her first wage packet in it, never spent.",
+       "effects": [
+        {
+         "type": "gold",
+         "n": 21
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "A present, opened by somebody else. Inside, something she'd have liked.",
+       "effects": [
+        {
+         "type": "table_item",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 1,
+       "text": "You sit on the bed. It's the wrong thing to do. The room tells you so.",
+       "effects": [
+        {
+         "type": "damage",
+         "n": 3,
+         "target": "random"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "wardrobe",
+     "name": "The wardrobe",
+     "at": [
+      2.4,
+      1.2,
+      -2.3
+     ],
+     "unique": "rr_birthday_candle",
+     "look": "Her clothes on one side. His on the other. His side is all the same suit, ten times over, pressed. Her side is a coat for the coach trip and nothing else.",
+     "found": "In the pocket of the coach coat: a birthday candle, the number 21, never lit. The wick is white. He kept it for when she got back.",
+     "search": [
+      {
+       "w": 3,
+       "text": "A shoebox of his wages, in envelopes, all addressed to her.",
+       "effects": [
+        {
+         "type": "gold",
+         "n": 19
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "Behind the suits: a walking stick with a lead weight in the handle.",
+       "effects": [
+        {
+         "type": "gear",
+         "id": "random"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "armchair",
+     "name": "His armchair",
+     "at": [
+      -0.8,
+      0.6,
+      -0.3
+     ],
+     "look": "An armchair turned to face the door, not the television. A clock on the arm. A cushion worn through where a man sat up every night, waiting for a key in the lock.",
+     "search": [
+      {
+       "w": 3,
+       "text": "Down the side of the cushion: loose change and a wedding ring.",
+       "effects": [
+        {
+         "type": "gold",
+         "n": 11
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "A remote control for a television that has never been switched on. One button is worn to nothing: CHANNEL 14.",
+       "effects": [
+        {
+         "type": "table_item",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 1,
+       "text": "A little carved man in a suit, sitting, facing a door.",
+       "effects": [
+        {
+         "type": "totem",
+         "id": "random"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "caller": [
+    -0.8,
+    0.3,
+    3.1416
+   ],
+   "place": {
+    "centre": [
+     15.54,
+     2.39
+    ],
+    "rot": 0.0,
+    "floor": 3.2
+   }
+  },
+  {
+   "id": "boiler",
+   "name": "The Boiler Room",
+   "persona": "caretaker",
+   "label": "BOILER",
+   "height": 3.0,
+   "door": {
+    "at": [
+     7.54,
+     -11.25
+    ],
+    "from": "corridor",
+    "width": 0.9,
+    "lock": {
+     "item": "boiler_key",
+     "locked_text": "BOILER ROOM. KEEP CLEAR. Locked. The door is hot to the touch, and something on the other side knocks on the pipes in answer when you try the handle.",
+     "unlock_text": "The boiler key turns. Heat comes out at you like an open mouth."
+    }
+   },
+   "style": {
+    "wall": "#5a4a3a",
+    "floor": "#22201c",
+    "light": "#ff9a4a",
+    "tiles": true,
+    "energy": 2.6
+   },
+   "size": [
+    4.92,
+    5.42
+   ],
+   "props": [
+    {
+     "kind": "cyl",
+     "at": [
+      1.2,
+      -1.4
+     ],
+     "r": 0.8,
+     "h": 2.3,
+     "color": "#5a3a2a",
+     "name": "the boiler"
+    },
+    {
+     "kind": "cyl",
+     "at": [
+      1.2,
+      -1.4
+     ],
+     "y": 2.3,
+     "r": 0.18,
+     "h": 0.7,
+     "color": "#3a3a36",
+     "name": "the flue"
+    },
+    {
+     "kind": "box",
+     "at": [
+      1.2,
+      -0.58
+     ],
+     "y": 0.25,
+     "size": [
+      0.55,
+      0.5,
+      0.04
+     ],
+     "color": "#1a0a04",
+     "name": "the firebox door"
+    },
+    {
+     "kind": "box",
+     "at": [
+      1.2,
+      -0.56
+     ],
+     "y": 0.38,
+     "size": [
+      0.4,
+      0.12,
+      0.03
+     ],
+     "color": "#ff8a3a",
+     "name": "the fire, through the grille"
+    },
+    {
+     "kind": "box",
+     "at": [
+      -0.3,
+      -2.6
+     ],
+     "size": [
+      0.12,
+      3.0,
+      0.12
+     ],
+     "color": "#6a5a4a",
+     "name": "a pipe"
+    },
+    {
+     "kind": "box",
+     "at": [
+      2.35,
+      0.5
+     ],
+     "size": [
+      0.12,
+      3.0,
+      0.12
+     ],
+     "color": "#6a5a4a",
+     "name": "a pipe"
+    },
+    {
+     "kind": "box",
+     "at": [
+      0.6,
+      -2.6
+     ],
+     "y": 2.5,
+     "size": [
+      3.6,
+      0.12,
+      0.12
+     ],
+     "color": "#6a5a4a",
+     "name": "a pipe"
+    },
+    {
+     "kind": "box",
+     "at": [
+      1.7,
+      1.95
+     ],
+     "size": [
+      1.4,
+      0.7,
+      1.1
+     ],
+     "color": "#1a1a1a",
+     "name": "the coke bunker"
+    },
+    {
+     "kind": "box",
+     "at": [
+      1.5,
+      1.05
+     ],
+     "size": [
+      0.8,
+      0.2,
+      0.5
+     ],
+     "color": "#141414",
+     "name": "spilled coke",
+     "walk_over": true
+    },
+    {
+     "kind": "box",
+     "at": [
+      -1.3,
+      2.45
+     ],
+     "size": [
+      1.1,
+      1.8,
+      0.45
+     ],
+     "color": "#2a2e2a",
+     "name": "the tannoy amplifier"
+    },
+    {
+     "kind": "cyl",
+     "at": [
+      -1.3,
+      2.45
+     ],
+     "y": 1.8,
+     "r": 0.2,
+     "h": 0.3,
+     "color": "#5a5a50",
+     "name": "a tannoy horn"
+    },
+    {
+     "kind": "chair",
+     "at": [
+      -1.4,
+      1.3
+     ],
+     "size": [
+      0.5,
+      0.9,
+      0.5
+     ],
+     "color": "#4a3a2a",
+     "name": "the caretaker's chair"
+    },
+    {
+     "kind": "box",
+     "at": [
+      -1.9,
+      -2.3
+     ],
+     "size": [
+      1.1,
+      0.9,
+      0.6
+     ],
+     "color": "#4a3a28",
+     "name": "the workbench"
+    }
+   ],
+   "spots": [
+    {
+     "id": "boiler",
+     "name": "The boiler",
+     "at": [
+      1.2,
+      0.6,
+      -0.6
+     ],
+     "unique": "rr_pilot_light",
+     "look": "A coke boiler as big as a wardrobe, lagged in something grey. Through the grille, the fire. It has never gone out. The caretaker's chalk on the casing: KEEP IT LIT. THEY FEEL THE COLD.",
+     "found": "You open the firebox. In the back, behind the coals, a pilot flame on a little brass jet, blue and steady, and in its light, for a second, a coach window full of faces. You take the flame. It goes in your pocket. It doesn't burn. It's waiting.",
+     "search": [
+      {
+       "w": 3,
+       "text": "Coins in the ash pan. Melted together into one hot lump.",
+       "effects": [
+        {
+         "type": "gold",
+         "n": 16
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "The firebox door burns your palm with the maker's name, backwards.",
+       "effects": [
+        {
+         "type": "damage",
+         "n": 4,
+         "target": "random"
+        }
+       ]
+      },
+      {
+       "w": 1,
+       "text": "In the ash: something that didn't burn.",
+       "effects": [
+        {
+         "type": "table_item",
+         "id": "random"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "bunker",
+     "name": "The coke bunker",
+     "at": [
+      1.7,
+      0.8,
+      1.95
+     ],
+     "unique": "rr_coke_shovel",
+     "look": "A bunker of coke, black and glittering. The shovel is standing up in it, as if somebody was halfway through. There's a shape in the coke, at the bottom, the size of a man curled up. It's warm.",
+     "found": "You pull the shovel out. The blade is worn bright on one edge from fifty years of feeding the fire. The handle is worn into the shape of the caretaker's hands. Your hands fit.",
+     "search": [
+      {
+       "w": 3,
+       "text": "Buried in the coke: the caretaker's tin, his wages, his teeth.",
+       "effects": [
+        {
+         "type": "gold",
+         "n": 14
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "A carved head made of coke, hard and shiny, its mouth open, singing.",
+       "effects": [
+        {
+         "type": "totem",
+         "id": "random"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "bench",
+     "name": "The workbench",
+     "at": [
+      -1.9,
+      1.0,
+      -2.3
+     ],
+     "look": "A workbench: valves, solder, a soldering iron still warm, a drawer of bingo balls with wires coming out of them. Somebody was trying to make them talk.",
+     "search": [
+      {
+       "w": 3,
+       "text": "A heavy spanner, sharpened down one side.",
+       "effects": [
+        {
+         "type": "gear",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 2,
+       "text": "A wired-up ball that whispers a number when you squeeze it.",
+       "effects": [
+        {
+         "type": "table_item",
+         "id": "random"
+        }
+       ]
+      },
+      {
+       "w": 1,
+       "text": "The soldering iron is on. You find out by picking it up.",
+       "effects": [
+        {
+         "type": "damage",
+         "n": 3,
+         "target": "random"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "caller": [
+    0.0,
+    0.6,
+    0.0
+   ],
+   "place": {
+    "centre": [
+     10.04,
+     -10.29
+    ],
+    "rot": 0.0
+   }
+  }
+ ],
+ "portals": [
+  {
+   "id": "door:bar_stairs",
+   "a": "bar",
+   "b": "bar_stairs",
+   "at": [
+    -9.94,
+    11.3
+   ],
+   "width": 0.9,
+   "name": "The cellar steps",
+   "label": "CELLAR"
+  },
+  {
+   "id": "door:flat_stairs",
+   "a": "office",
+   "b": "flat_stairs",
+   "at": [
+    12.54,
+    -5.75
+   ],
+   "width": 0.9,
+   "name": "The private door",
+   "label": "PRIVATE",
+   "lock": {
+    "code": "0908",
+    "thing": "flat_padlock",
+    "locked_text": "A narrow door behind the desk, PRIVATE, with a padlock of four brass wheels. Through the keyhole, a stair going up, and the smell of birthday candles blown out.",
+    "on_open": [
+     {
+      "do": "flag",
+      "id": "flat_open"
+     },
+     {
+      "do": "sfx",
+      "id": "chain"
+     },
+     {
+      "do": "open",
+      "portal": "door:flat_stairs"
+     },
+     {
+      "do": "aside",
+      "text": "Behind the door, a narrow stair going up. Carpet. Somebody hoovered it. Tonight."
+     },
+     {
+      "do": "say",
+      "persona": "manager",
+      "text": "Her birthday. You *read* her card. Nobody reads her card. Wipe your feet."
+     }
+    ]
+   }
+  },
+  {
+   "id": "door:carpark_gate",
+   "a": "carpark",
+   "b": "",
+   "at": [
+    -4.0,
+    22.0
+   ],
+   "width": 1.8,
+   "height": 2.4,
+   "name": "The gates",
+   "lock": {
+    "item": "the_way_home",
+    "locked_text": "The car park gates. Chained, from the outside, with new chain. Through the bars: no road. Fog, and the lights of a coach a long way off, coming back. They never get any closer."
+   }
+  }
+ ],
+ "things": [
+  {
+   "id": "outing_poster",
+   "area": "bar",
+   "local": true,
+   "at": [
+    3.6,
+    1.6,
+    -1.6
+   ],
+   "name": "A poster",
+   "look": "A poster on the lounge wall, curled at the corners, red and yellow: THE LUCKY DIP OUTING. A coach drawn with a smiling face. Seats drawn from the cage."
+  },
+  {
+   "id": "bar_slate",
+   "area": "bar",
+   "local": true,
+   "at": [
+    -3.0,
+    2.0,
+    -2.35
+   ],
+   "name": "The slate",
+   "look": "A chalk slate above the back bar, the regulars' tabs. Every name has the same thing chalked after it, in the same hand: ON THE COACH. SETTLE UP AFTER."
+  },
+  {
+   "id": "delivery_note",
+   "area": "barcellar",
+   "local": true,
+   "at": [
+    2.4,
+    1.5,
+    -1.0
+   ],
+   "name": "A note by the steps",
+   "look": "A note for the drayman, pinned by the steps, gone soft with damp. The ink has run. The last line has been gone over and over in biro until it tore the paper."
+  },
+  {
+   "id": "yard_nail",
+   "area": "barcellar",
+   "local": true,
+   "at": [
+    1.3,
+    1.5,
+    2.4
+   ],
+   "name": "A key on a nail",
+   "model": "keys",
+   "hide_if": {
+    "item": "yard_key"
+   },
+   "look": "A key on a nail by the drop hatch, on a wooden tag: YARD. The tag has teeth marks in it.",
+   "use": [
+    {
+     "do": "if",
+     "test": {
+      "not_item": "yard_key"
+     },
+     "then": [
+      {
+       "do": "give",
+       "item": "yard_key"
+      },
+      {
+       "do": "sfx",
+       "id": "keys"
+      },
+      {
+       "do": "aside",
+       "text": "You take the YARD key. The drain in the floor swallows, loudly, like a throat."
+      },
+      {
+       "do": "lights",
+       "area": "barcellar",
+       "mode": "flicker",
+       "time": 0.8
+      },
+      {
+       "do": "say",
+       "persona": "barman",
+       "text": "That's for the drays. Thursdays. Don't let anyone. *In*. They'll say they've come back for their coats."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "coach_door",
+   "area": "carpark",
+   "local": true,
+   "at": [
+    2.2,
+    1.3,
+    -2.55
+   ],
+   "name": "The coach door",
+   "look": "The door folded open, the step worn hollow in the middle. On the dashboard, under the windscreen, the driver's sheet in a clipboard: names, seat numbers, ticks.",
+   "use": [
+    {
+     "do": "if",
+     "test": {
+      "item": "seat_fourteen"
+     },
+     "then": [
+      {
+       "do": "sfx",
+       "id": "stamp"
+      },
+      {
+       "do": "aside",
+       "text": "You hold up the ticket. From the driver's seat, which is empty, the clipper bites it. SEAT 14: PAID."
+      },
+      {
+       "do": "say",
+       "persona": "driver",
+       "text": "All present. All. *Present*. Doors closing."
+      }
+     ],
+     "else": [
+      {
+       "do": "sfx",
+       "id": "breath",
+       "db": -8
+      },
+      {
+       "do": "aside",
+       "text": "You put a foot on the step. The coach dips under you, like it took your weight gladly."
+      },
+      {
+       "do": "say",
+       "persona": "driver",
+       "text": "Ticket. No ticket, no ride. Seat fourteen's still empty, love. Seat fourteen is always empty."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "coach_seat14",
+   "area": "carpark",
+   "local": true,
+   "at": [
+    -0.5,
+    2.1,
+    -2.55
+   ],
+   "name": "Seat 14, through the glass",
+   "hide_if": {
+    "flag": "coach_solved"
+   },
+   "look": "Through the fogged window, seat 14. The only seat without a handprint on the glass beside it. In the net on the back of the seat in front: a birthday card, propped open so you can read it from outside. As if somebody wanted it read."
+  },
+  {
+   "id": "coach_after",
+   "area": "carpark",
+   "local": true,
+   "at": [
+    -0.5,
+    2.1,
+    -2.56
+   ],
+   "name": "Seat 14, through the glass",
+   "when": {
+    "flag": "coach_solved"
+   },
+   "look": "Seat 14 is taken now. Somebody small is sitting very straight, in a good coat, facing the front. There's a handprint on the glass beside her, fresh, on the inside. She doesn't turn round. She's waiting for the driver."
+  },
+  {
+   "id": "coach_cab",
+   "area": "carpark",
+   "local": true,
+   "at": [
+    3.1,
+    1.6,
+    -1.2
+   ],
+   "name": "The driver's cab",
+   "look": "Through the windscreen: the driver's seat, empty, the seat belt done up across nobody. The tachograph is still in its slot. The destination blind says MYSTERY TOUR."
+  },
+  {
+   "id": "car_keys",
+   "area": "carpark",
+   "local": true,
+   "at": [
+    -0.8,
+    1.1,
+    1.22
+   ],
+   "name": "The car windscreens",
+   "look": "Parking tickets under every wiper, the same date, the same time, all expired at two minutes to midnight. The paper hasn't yellowed. Somebody comes and puts new ones on."
+  },
+  {
+   "id": "flat_padlock",
+   "area": "office",
+   "at": [
+    12.44,
+    1.1,
+    -5.45
+   ],
+   "name": "The padlock on the private door",
+   "hide_if": {
+    "flag": "flat_open"
+   },
+   "look": "Four brass wheels, warm, as if a hand has only just let go of them.",
+   "use": [
+    {
+     "do": "dial",
+     "lock": "door:flat_stairs"
+    }
+   ]
+  },
+  {
+   "id": "flat_door_note",
+   "area": "office",
+   "at": [
+    12.45,
+    1.55,
+    -6.45
+   ],
+   "name": "A card on the private door",
+   "look": "A card drawing-pinned to the door, in the manager's careful hand: FOR RUTH. In case I'm asleep when you get in. The code's your birthday, love. Day, then month, the way you always wrote it."
+  },
+  {
+   "id": "ruth_bed",
+   "area": "flat",
+   "local": true,
+   "at": [
+    1.9,
+    0.75,
+    0.85
+   ],
+   "name": "The bed",
+   "look": "Made up, turned down, waiting. There is a dent in the pillow, small, like the back of a girl's head. You didn't see it a moment ago."
+  },
+  {
+   "id": "flat_letter",
+   "area": "flat",
+   "local": true,
+   "at": [
+    -2.6,
+    0.85,
+    1.2
+   ],
+   "name": "A letter, unsent",
+   "look": "On the dressing table, under her hairbrush, a letter in an envelope with no address. It's been opened and closed so many times the flap is soft as cloth."
+  },
+  {
+   "id": "flat_photo",
+   "area": "flat",
+   "local": true,
+   "at": [
+    0.3,
+    1.6,
+    2.66
+   ],
+   "name": "A photograph",
+   "look": "A girl in a good coat on the steps of a coach, laughing, holding up a bingo ball for the camera. The ball has a number on it, but the girl's thumb is over it."
+  },
+  {
+   "id": "bedside_drawer",
+   "area": "flat",
+   "local": true,
+   "at": [
+    0.75,
+    0.5,
+    2.35
+   ],
+   "name": "The bedside drawer",
+   "look": "A little drawer in the bedside table. Something in it rolls when you touch the table. Something metal.",
+   "use": [
+    {
+     "do": "if",
+     "test": {
+      "not_item": "boiler_key"
+     },
+     "then": [
+      {
+       "do": "give",
+       "item": "boiler_key"
+      },
+      {
+       "do": "sfx",
+       "id": "keys"
+      },
+      {
+       "do": "aside",
+       "text": "In the drawer: her library card, a lipstick, and a heavy brass key on a tag that says BOILER — CARETAKER ONLY, in a man's writing, and under it, in a girl's: SORRY DAD."
+      },
+      {
+       "do": "lights",
+       "area": "flat",
+       "mode": "flicker",
+       "time": 1.0
+      },
+      {
+       "do": "say",
+       "persona": "manager",
+       "text": "She took it. To let him in. To run his *cable*. She was only trying to help."
+      }
+     ],
+     "else": [
+      {
+       "do": "aside",
+       "text": "The drawer is empty. It smells of her. You don't know how you know that."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "pa_amp",
+   "area": "boiler",
+   "local": true,
+   "at": [
+    -1.3,
+    1.3,
+    2.17
+   ],
+   "name": "The tannoy amplifier",
+   "look": "A grey steel cabinet of valves, glowing orange through the slots. Switches along the front: HALL. BAR. CORRIDOR. YARD. The YARD switch is taped down. A microphone on a hook, its cable worn through to the copper where somebody held it.",
+   "use": [
+    {
+     "do": "if",
+     "test": {
+      "not_flag": "coach_solved"
+     },
+     "then": [
+      {
+       "do": "sfx",
+       "id": "static",
+       "db": -4
+      },
+      {
+       "do": "aside",
+       "text": "You lift the microphone. The valves brighten. Out in the yard, faintly, the coach's own speakers crackle awake."
+      },
+      {
+       "do": "wait",
+       "t": 1.2
+      },
+      {
+       "do": "sfx",
+       "id": "ball_roll",
+       "db": -6
+      },
+      {
+       "do": "say",
+       "persona": "caller",
+       "text": "On its own. Number. *Fourteen*. Seat fourteen. Last call. Last call for. Ruth."
+      },
+      {
+       "do": "flag",
+       "id": "coach_solved"
+      },
+      {
+       "do": "give",
+       "item": "seat_fourteen"
+      },
+      {
+       "do": "lights",
+       "area": "boiler",
+       "mode": "flicker",
+       "time": 2.0
+      },
+      {
+       "do": "wait",
+       "t": 1.6
+      },
+      {
+       "do": "sfx",
+       "id": "door",
+       "db": -10
+      },
+      {
+       "do": "aside",
+       "text": "Far off, through two walls and a yard: the hiss of a coach door folding shut. On the amplifier's tape, the last number in the column is crossed out now. In your pocket, a ticket that wasn't there."
+      },
+      {
+       "do": "wait",
+       "t": 1.0
+      },
+      {
+       "do": "scare",
+       "kind": "lights",
+       "persona": "manager",
+       "text": "You *called* her. Every night I tried. I haven't got the voice. Only he has the voice. That's what I *bought* him for."
+      }
+     ],
+     "else": [
+      {
+       "do": "sfx",
+       "id": "static",
+       "db": -12
+      },
+      {
+       "do": "aside",
+       "text": "The valves are cooling. The microphone smells of somebody's breath. Out in the yard, an engine idles, patient, full."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "boiler_log",
+   "area": "boiler",
+   "local": true,
+   "at": [
+    -1.9,
+    1.0,
+    -2.25
+   ],
+   "name": "The caretaker's log",
+   "look": "An exercise book on the bench, columns of dates and pressures in pencil. One page has nothing on it but times, written very small, getting shakier."
+  },
+  {
+   "id": "boiler_gauge",
+   "area": "boiler",
+   "local": true,
+   "at": [
+    1.2,
+    1.5,
+    -0.56
+   ],
+   "name": "The pressure gauge",
+   "look": "A brass gauge on the front of the boiler. The needle is right up against the stop. The dial isn't marked in pounds. It's marked in heads, one to fifty-two, and the needle is on fifty-one."
+  }
+ ],
+ "triggers": [
+  {
+   "id": "bar_last_orders",
+   "area": "bar",
+   "rect": [
+    -9.9,
+    10.0,
+    7.3,
+    1.9
+   ],
+   "once": "profile",
+   "actions": [
+    {
+     "do": "sfx",
+     "id": "bell",
+     "db": -2
+    },
+    {
+     "do": "wait",
+     "t": 0.5
+    },
+    {
+     "do": "sfx",
+     "id": "bell",
+     "db": -4
+    },
+    {
+     "do": "aside",
+     "text": "Behind the bar, the bell rings for last orders. Twice. Nobody rang it. In the mirror, every coat in the lounge stands up."
+    },
+    {
+     "do": "lights",
+     "area": "bar",
+     "mode": "flicker",
+     "time": 1.2
+    },
+    {
+     "do": "wait",
+     "t": 1.4
+    },
+    {
+     "do": "scare",
+     "kind": "behind",
+     "persona": "barman",
+     "text": "*Time*. Time, please. Have you got no homes to go to. No. None of you. Not any more."
+    }
+   ]
+  },
+  {
+   "id": "bar_walk",
+   "area": "bar",
+   "once": "walk",
+   "actions": [
+    {
+     "do": "sfx",
+     "id": "pour",
+     "db": -10
+    },
+    {
+     "do": "say",
+     "persona": "barman",
+     "text": "What are you having. Same as everyone. Same as always."
+    }
+   ]
+  },
+  {
+   "id": "bar_steps_down",
+   "area": "bar_stairs",
+   "once": "profile",
+   "actions": [
+    {
+     "do": "lights",
+     "area": "bar_stairs",
+     "mode": "flicker",
+     "time": 1.0
+    },
+    {
+     "do": "sfx",
+     "id": "drip"
+    },
+    {
+     "do": "aside",
+     "text": "The steps are sticky. Beer, years of it. And sand. There's sand on every step, going down, in the shape of feet."
+    }
+   ]
+  },
+  {
+   "id": "barcellar_drain",
+   "area": "barcellar",
+   "rect": [
+    -17.0,
+    4.58,
+    4.92,
+    4.92
+   ],
+   "once": "profile",
+   "actions": [
+    {
+     "do": "wait",
+     "t": 0.8
+    },
+    {
+     "do": "sfx",
+     "id": "drip",
+     "db": -2
+    },
+    {
+     "do": "aside",
+     "text": "The drain in the floor gurgles. It smells of the sea. Something down there breathes out, slowly, through the grate."
+    },
+    {
+     "do": "wait",
+     "t": 1.4
+    },
+    {
+     "do": "sfx",
+     "id": "whisper"
+    },
+    {
+     "do": "scare",
+     "kind": "lights",
+     "persona": "barman",
+     "text": "Mind the *drop*. The drays come down the drop. So did they. All fifty-one. Wet through."
+    }
+   ]
+  },
+  {
+   "id": "coach_engine",
+   "area": "carpark",
+   "rect": [
+    -8.0,
+    12.0,
+    7.0,
+    2.5
+   ],
+   "once": "profile",
+   "actions": [
+    {
+     "do": "wait",
+     "t": 0.6
+    },
+    {
+     "do": "sfx",
+     "id": "caller_hum",
+     "db": -2
+    },
+    {
+     "do": "aside",
+     "text": "The coach's engine turns over, catches, settles to a tick. Its interior lights come on, one by one, all down the aisle. There's nobody in the driver's seat."
+    },
+    {
+     "do": "lights",
+     "area": "carpark",
+     "mode": "flicker",
+     "time": 1.0
+    },
+    {
+     "do": "wait",
+     "t": 1.6
+    },
+    {
+     "do": "sfx",
+     "id": "breath_close"
+    },
+    {
+     "do": "scare",
+     "kind": "behind",
+     "persona": "driver",
+     "text": "Last one on? We're only waiting on *you*. Seat fourteen, is it. Ticket."
+    }
+   ]
+  },
+  {
+   "id": "carpark_walk",
+   "area": "carpark",
+   "once": "walk",
+   "actions": [
+    {
+     "do": "say",
+     "persona": "driver",
+     "text": "Mind the step. Mind the gap. Mind."
+    }
+   ]
+  },
+  {
+   "id": "flat_stairs_up",
+   "area": "flat_stairs",
+   "once": "profile",
+   "actions": [
+    {
+     "do": "lights",
+     "area": "flat_stairs",
+     "mode": "flicker",
+     "time": 0.8
+    },
+    {
+     "do": "sfx",
+     "id": "chair_creak",
+     "db": -6
+    },
+    {
+     "do": "aside",
+     "text": "Twenty-two stairs. You count them going up. You count twenty-three. The extra one creaks."
+    }
+   ]
+  },
+  {
+   "id": "flat_ruth_room",
+   "area": "flat",
+   "rect": [
+    15.54,
+    1.9,
+    2.96,
+    3.2
+   ],
+   "once": "profile",
+   "actions": [
+    {
+     "do": "sfx",
+     "id": "breath",
+     "db": -8
+    },
+    {
+     "do": "aside",
+     "text": "Her side of the room. Somebody has just turned the lamp on for her. The bulb is still ticking as it warms."
+    },
+    {
+     "do": "wait",
+     "t": 1.5
+    },
+    {
+     "do": "sfx",
+     "id": "chair_creak",
+     "db": -2
+    },
+    {
+     "do": "scare",
+     "kind": "behind",
+     "persona": "manager",
+     "text": "Not *there*. That's hers. She'll be back. Midnight, she said. She *promised*."
+    }
+   ]
+  },
+  {
+   "id": "flat_walk",
+   "area": "flat",
+   "once": "walk",
+   "actions": [
+    {
+     "do": "say",
+     "persona": "manager",
+     "text": "Shoes off. Voice down. She's a light sleeper. When she sleeps."
+    }
+   ]
+  },
+  {
+   "id": "boiler_knock",
+   "area": "boiler",
+   "rect": [
+    7.58,
+    -13.0,
+    4.92,
+    5.42
+   ],
+   "once": "profile",
+   "actions": [
+    {
+     "do": "sfx",
+     "id": "knock",
+     "db": -6
+    },
+    {
+     "do": "wait",
+     "t": 0.4
+    },
+    {
+     "do": "sfx",
+     "id": "knock",
+     "db": -5
+    },
+    {
+     "do": "wait",
+     "t": 0.4
+    },
+    {
+     "do": "sfx",
+     "id": "knock",
+     "db": -4
+    },
+    {
+     "do": "aside",
+     "text": "The pipes knock. Then again. They're counting. You count with them. They stop at fifty-one, and wait."
+    },
+    {
+     "do": "lights",
+     "area": "boiler",
+     "mode": "flicker",
+     "time": 1.4
+    },
+    {
+     "do": "wait",
+     "t": 1.6
+    },
+    {
+     "do": "scare",
+     "kind": "lights",
+     "persona": "caretaker",
+     "text": "Keep it *lit*. When it goes out they get cold. When they get cold they come up the pipes, looking for the warm."
+    }
+   ]
+  },
+  {
+   "id": "boiler_walk",
+   "area": "boiler",
+   "once": "walk",
+   "actions": [
+    {
+     "do": "say",
+     "persona": "caretaker",
+     "text": "Shut that door. You're letting the heat out. They need the heat."
+    }
+   ]
+  }
+ ]
+}

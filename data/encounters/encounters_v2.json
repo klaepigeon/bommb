@@ -1,0 +1,431 @@
+{
+ "encounters": [
+  {
+   "id": "v2_dk_lamp_debt",
+   "name": "The Lamplighter's Debt",
+   "kind": "combat",
+   "setting": "drowned",
+   "difficulty": 2,
+   "layout": "flooded_court",
+   "enemies": [
+    "tide_priest",
+    "drowned_footman",
+    "drowned_footman",
+    "brine_crossbow",
+    {
+     "id": "lamplighter",
+     "pos": [
+      6,
+      3
+     ]
+    }
+   ],
+   "desc": "The drowned are holding the old lamplighter in the middle of the court. He doesn't fight. Kill everything else; anything that hits every enemy hits him too.",
+   "intro": "He owes them. Oil. Light. Something. They've come to. Collect.",
+   "optional": [
+    {
+     "type": "spare",
+     "tag": "ward",
+     "text": "The lamplighter lives",
+     "reward": "relic"
+    },
+    {
+     "type": "rounds_le",
+     "n": 5,
+     "text": "Win within 5 rounds",
+     "gold": 20
+    }
+   ]
+  },
+  {
+   "id": "v2_dk_steves_table",
+   "name": "Steve's Last Table",
+   "kind": "combat",
+   "setting": "drowned",
+   "difficulty": 2,
+   "layout": "islands",
+   "enemy_first": true,
+   "enemies": [
+    "bloated_herald",
+    "bloated_herald",
+    "mudlark",
+    "mudlark"
+   ],
+   "triggers": [
+    {
+     "event": "round_end",
+     "effects": [
+      {
+       "type": "random_tiles",
+       "tile": "flood",
+       "n": 2,
+       "only_on": "floor"
+      }
+     ],
+     "label": "The tide comes back for him"
+    }
+   ],
+   "desc": "Islands, rising water, and they move first. Heralds burst; mudlarks hook stragglers. Steve was standing about where you are.",
+   "intro": "This is. Where Steve. Stood. Stand. There. Yes. Exactly.",
+   "optional": [
+    {
+     "type": "crits_ge",
+     "n": 3,
+     "text": "Score 3 critical hits",
+     "reward": "relic"
+    },
+    {
+     "type": "no_downs",
+     "text": "Nobody goes down",
+     "gold": 20
+    }
+   ]
+  },
+  {
+   "id": "v2_dk_e_seawall",
+   "name": "The Seawall",
+   "kind": "elite",
+   "setting": "drowned",
+   "difficulty": 3,
+   "layout": "corridor_pillars",
+   "enemies": [
+    {
+     "id": "barnacle_bulwark",
+     "elite": true
+    },
+    "barnacle_bulwark",
+    "tide_priest",
+    "brine_crossbow"
+   ],
+   "desc": "Two bulwarks hold the wall and a priest keeps them patched. Blades bounce; fire and lightning find the cracks. Kill the priest or you'll be here all night.",
+   "intro": "The wall. Holds. The wall has always. Held. Mostly.",
+   "optional": [
+    {
+     "type": "rounds_le",
+     "n": 6,
+     "text": "Breach it within 6 rounds",
+     "reward": "relic"
+    },
+    {
+     "type": "no_deaths",
+     "text": "Nobody dies",
+     "gold": 30
+    }
+   ]
+  },
+  {
+   "id": "v2_fc_novice",
+   "name": "The Novice in the Nave",
+   "kind": "combat",
+   "setting": "cathedral",
+   "difficulty": 2,
+   "layout": "nave",
+   "enemies": [
+    "flagellant",
+    "flagellant",
+    "choirboy",
+    "wretch",
+    "wretch",
+    {
+     "id": "candle_bearer",
+     "pos": [
+      6,
+      4
+     ]
+    }
+   ],
+   "desc": "The penitents have a novice tied to a pillar, to be saved. The novice doesn't fight. Kill the congregation without killing the novice; area cards will.",
+   "intro": "They're going. To save her. Save. Save her. Whether she. Likes it.",
+   "optional": [
+    {
+     "type": "spare",
+     "tag": "ward",
+     "text": "The novice lives",
+     "reward": "item"
+    },
+    {
+     "type": "ward_full",
+     "text": "The novice isn't even scratched",
+     "gold": 25
+    }
+   ]
+  },
+  {
+   "id": "v2_fc_two_altars",
+   "name": "Two Altars and a Surgeon",
+   "kind": "combat",
+   "setting": "cathedral",
+   "difficulty": 2,
+   "layout": "chapel",
+   "objective": {
+    "type": "destroy"
+   },
+   "enemies": [
+    {
+     "id": "flesh_altar",
+     "tags": [
+      "totem"
+     ]
+    },
+    {
+     "id": "flesh_altar",
+     "tags": [
+      "totem"
+     ]
+    },
+    "surgeon_deacon",
+    "wretch",
+    "wretch"
+   ],
+   "desc": "Two altars heal the congregation every turn and the surgeon stitches up the rest. Smash the altars fast and the fight is yours.",
+   "intro": "Two altars. One surgeon. No. Waiting list.",
+   "optional": [
+    {
+     "type": "no_downs",
+     "text": "Nobody goes down",
+     "gold": 20
+    }
+   ]
+  },
+  {
+   "id": "v2_fc_e_procession",
+   "name": "The Reliquary Procession",
+   "kind": "elite",
+   "setting": "cathedral",
+   "difficulty": 3,
+   "layout": "long_hall",
+   "enemies": [
+    "weeping_reliquary",
+    {
+     "id": "flagellant",
+     "elite": true
+    },
+    "choirboy",
+    "tithe_collector"
+   ],
+   "desc": "The reliquary is carried in procession: a veteran flagellant in front, a collector behind to take your cards. It grows worse every turn nobody hurts it.",
+   "intro": "The saints. On parade. They are carried. By the people. They ate.",
+   "optional": [
+    {
+     "type": "crits_ge",
+     "n": 2,
+     "text": "Score 2 critical hits",
+     "reward": "relic"
+    },
+    {
+     "type": "no_deaths",
+     "text": "Nobody dies",
+     "gold": 30
+    }
+   ]
+  },
+  {
+   "id": "v2_if_payday",
+   "name": "Payday",
+   "kind": "combat",
+   "setting": "iron",
+   "difficulty": 2,
+   "layout": "defend_post",
+   "objective": {
+    "type": "protect"
+   },
+   "enemies": [
+    {
+     "id": "payroll_safe",
+     "side": "hero",
+     "at": "1"
+    },
+    "scrap_mite",
+    "scrap_mite",
+    "rivet_hound"
+   ],
+   "waves": [
+    {
+     "round": 2,
+     "enemies": [
+      "steam_gunner",
+      "scrap_mite"
+     ],
+     "x": 9,
+     "y": 2,
+     "say": "Shift's. Over. Everyone. Wants. Paying."
+    },
+    {
+     "round": 3,
+     "enemies": [
+      "rivet_hound"
+     ],
+     "x": 9,
+     "y": 6
+    }
+   ],
+   "desc": "The wages are in the safe and the machines want them. Mites burst. More arrive in rounds 2 and 3.",
+   "intro": "Payday. Gary. Never. Got paid. Did he.",
+   "optional": [
+    {
+     "type": "ward_full",
+     "text": "The safe takes no damage",
+     "gold": 35
+    },
+    {
+     "type": "rounds_le",
+     "n": 6,
+     "text": "Win within 6 rounds",
+     "gold": 15
+    }
+   ]
+  },
+  {
+   "id": "v2_if_signal_box",
+   "name": "The Signal Box",
+   "kind": "combat",
+   "setting": "iron",
+   "difficulty": 2,
+   "layout": "rail_yard",
+   "objective": {
+    "type": "destroy"
+   },
+   "enemies": [
+    "signal_pylon",
+    "signal_pylon",
+    "lamp_tinker",
+    "steam_gunner"
+   ],
+   "desc": "Two signal pylons keep the yard live. Smash them while the tinker rewires and the gunner covers. Shock rails split the yard.",
+   "intro": "The 9:14. Is. Running. Late. Someone. Has to. Change. The signal.",
+   "optional": [
+    {
+     "type": "crits_ge",
+     "n": 2,
+     "text": "Score 2 critical hits",
+     "gold": 20
+    }
+   ]
+  },
+  {
+   "id": "v2_if_e_deputies",
+   "name": "The Deputy's Posse",
+   "kind": "elite",
+   "setting": "iron",
+   "difficulty": 3,
+   "layout": "hall_open",
+   "enemies": [
+    "iron_deputy",
+    "steam_gunner",
+    "scrap_mite",
+    "scrap_mite"
+   ],
+   "desc": "The iron deputy, a gunner and two mites that run at you and burst. Spread out, or don't.",
+   "intro": "Dead. Or. Dead. The poster. Was very. Clear.",
+   "optional": [
+    {
+     "type": "no_downs",
+     "text": "Nobody goes down",
+     "gold": 35
+    },
+    {
+     "type": "rounds_le",
+     "n": 6,
+     "text": "Win within 6 rounds",
+     "reward": "relic"
+    }
+   ]
+  },
+  {
+   "id": "v2_et_seat_four",
+   "name": "Seat Four's Miniature",
+   "kind": "combat",
+   "setting": "table",
+   "difficulty": 2,
+   "layout": "unfinished",
+   "enemies": [
+    "unfinished_mini",
+    "unfinished_mini",
+    "margin_scribbler",
+    "eraser_wraith",
+    {
+     "id": "prompter",
+     "pos": [
+      5,
+      3
+     ]
+    }
+   ],
+   "desc": "The prompter stands in the middle holding Steve's script. It doesn't fight. Kill the greys without breaking it.",
+   "intro": "Steve's. Script. Don't. Drop it. He's. He's still. Reading.",
+   "optional": [
+    {
+     "type": "spare",
+     "tag": "ward",
+     "text": "The prompter lives",
+     "reward": "table"
+    },
+    {
+     "type": "no_downs",
+     "text": "Nobody goes down",
+     "gold": 20
+    }
+   ]
+  },
+  {
+   "id": "v2_et_committee",
+   "name": "The Rules Committee",
+   "kind": "combat",
+   "setting": "table",
+   "difficulty": 2,
+   "layout": "chapel",
+   "objective": {
+    "type": "assassinate"
+   },
+   "enemies": [
+    {
+     "id": "rules_lawyer",
+     "elite": true,
+     "tags": [
+      "leader"
+     ]
+    },
+    "paper_knight",
+    "paper_knight",
+    "margin_scribbler"
+   ],
+   "desc": "The chair of the committee is the elite rules lawyer. Cut him down early and the knights lose their paperwork.",
+   "intro": "The committee. Has met. You. Are. Overruled.",
+   "optional": [
+    {
+     "type": "no_downs",
+     "text": "Nobody goes down",
+     "gold": 20
+    }
+   ]
+  },
+  {
+   "id": "v2_et_e_doubles",
+   "name": "Doubles",
+   "kind": "elite",
+   "setting": "table",
+   "difficulty": 3,
+   "layout": "big_die",
+   "enemies": [
+    "understudy",
+    "loaded_die_enemy",
+    "eraser_wraith"
+   ],
+   "desc": "The understudy plays your parts better than you do, a loaded die rolls itself at you, and the wraith rubs out the floor.",
+   "intro": "Doubles. Doubles. Roll. Again. Steve rolled. Doubles. Once.",
+   "optional": [
+    {
+     "type": "crits_ge",
+     "n": 3,
+     "text": "Score 3 critical hits",
+     "reward": "relic"
+    },
+    {
+     "type": "no_deaths",
+     "text": "Nobody dies",
+     "gold": 30
+    }
+   ]
+  }
+ ]
+}

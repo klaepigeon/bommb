@@ -1,0 +1,1852 @@
+{
+ "events": [
+  {
+   "id": "dk_ev_petition",
+   "title": "A Petition to the King",
+   "persona": "drowned_king",
+   "setting": "drowned",
+   "text": "The Drowned King sits in a flooded throne room, still hearing petitions. 'You may ask one thing of us. We will ask one thing of you.'",
+   "options": [
+    {
+     "label": "Ask for his blessing",
+     "effects": [
+      {
+       "type": "status_next",
+       "id": "warded",
+       "turns": 2,
+       "side": "hero"
+      },
+      {
+       "type": "flag",
+       "key": "king_owes"
+      }
+     ],
+     "result": "He blesses you. Next fight, your party starts warded. He will remember the debt."
+    },
+    {
+     "label": "Ask for his treasury",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 60
+      },
+      {
+       "type": "rule_card",
+       "id": "rc_blood_money"
+      }
+     ],
+     "result": "He gives you all of it. It was never the gold he cared about. A new rule: Blood Money."
+    },
+    {
+     "label": "Ask for nothing",
+     "effects": [
+      {
+       "type": "xp",
+       "n": 10,
+       "target": "all"
+      }
+     ],
+     "result": "He is surprised. Nobody has asked for nothing in a long time."
+    }
+   ]
+  },
+  {
+   "id": "dk_ev_ferry",
+   "title": "The Ferry",
+   "persona": "ferryman",
+   "setting": "drowned",
+   "text": "A ferry where a street used to be. 'Across is a coin each. Or I can take you under, which is free.'",
+   "options": [
+    {
+     "label": "Pay the fare (20 gold)",
+     "cost_gold": 20,
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.2,
+       "target": "all"
+      }
+     ],
+     "result": "A quiet crossing. You rest on the way."
+    },
+    {
+     "label": "Go under",
+     "effects": [
+      {
+       "type": "damage",
+       "n": 5,
+       "target": "all"
+      },
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "uncommon"
+       ]
+      }
+     ],
+     "result": "Cold and dark and something shiny at the bottom."
+    },
+    {
+     "label": "Swim (Might)",
+     "check": {
+      "stat": "might",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "xp",
+        "n": 10,
+        "target": "all"
+       }
+      ],
+      "pass_text": "Everyone makes it. Character building.",
+      "fail": [
+       {
+        "type": "injure",
+        "target": "random"
+       }
+      ],
+      "fail_text": "Not everyone makes it easily."
+     }
+    }
+   ]
+  },
+  {
+   "id": "dk_ev_bell",
+   "title": "The Sunken Bell",
+   "persona": "caller",
+   "setting": "drowned",
+   "text": "A church bell under the water. When the current moves it, it rings, and every drowned thing for miles looks up.",
+   "options": [
+    {
+     "label": "Ring it",
+     "effects": [
+      {
+       "type": "elite_next"
+      },
+      {
+       "type": "relic",
+       "id": "rusted_bell"
+      }
+     ],
+     "result": "Everything hears. The next fight is an elite. The bell's clapper comes away in your hand."
+    },
+    {
+     "label": "Muffle it",
+     "effects": [
+      {
+       "type": "enemy_hp_next",
+       "mult": 0.85
+      }
+     ],
+     "result": "You pack it with weed. Next fight, the drowned are slower to wake: enemies have 15% less HP."
+    },
+    {
+     "label": "Leave it",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dk_ev_lighthouse",
+   "title": "The Lighthouse Keeper",
+   "persona": "ferryman",
+   "setting": "drowned",
+   "text": "A lighthouse with no sea to warn. The keeper keeps the lamp lit anyway. 'Somebody might need it.'",
+   "options": [
+    {
+     "label": "Help him trim the lamp",
+     "effects": [
+      {
+       "type": "xp",
+       "n": 8,
+       "target": "all"
+      },
+      {
+       "type": "consumable",
+       "id": "c_fire_flask"
+      }
+     ],
+     "result": "He gives you a bottle of lamp oil for your trouble."
+    },
+    {
+     "label": "Take the lens",
+     "effects": [
+      {
+       "type": "relic",
+       "id": "glass_eye"
+      },
+      {
+       "type": "flag",
+       "key": "lighthouse_dark"
+      }
+     ],
+     "result": "The light goes out. He doesn't say anything. He just sits in the dark."
+    },
+    {
+     "label": "Sleep in the lamp room",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.35,
+       "target": "all"
+      }
+     ],
+     "result": "The warmest place in the kingdom."
+    }
+   ]
+  },
+  {
+   "id": "dk_ev_oath",
+   "title": "An Oath Stone",
+   "persona": "drowned_king",
+   "setting": "drowned",
+   "text": "A stone where the drowned knights swore their oaths. Fresh water drips off it, though it is high and dry.",
+   "options": [
+    {
+     "label": "Swear an oath of protection",
+     "who": true,
+     "effects": [
+      {
+       "type": "trait",
+       "id": "t_bulwark",
+       "target": "chosen"
+      },
+      {
+       "type": "max_hp",
+       "n": -3,
+       "target": "chosen"
+      }
+     ],
+     "result": "You feel the oath settle. It is heavy."
+    },
+    {
+     "label": "Swear an oath of vengeance",
+     "who": true,
+     "effects": [
+      {
+       "type": "trait",
+       "id": "t_brute",
+       "target": "chosen"
+      },
+      {
+       "type": "injure",
+       "target": "chosen"
+      }
+     ],
+     "result": "You will make someone pay. It has already cost you."
+    },
+    {
+     "label": "Break an old oath",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 40
+      },
+      {
+       "type": "status_next",
+       "id": "cursed",
+       "turns": 2,
+       "side": "hero"
+      }
+     ],
+     "result": "Somebody's broken promise pays out. It follows you."
+    }
+   ]
+  },
+  {
+   "id": "dk_ev_market",
+   "title": "The Floating Market",
+   "persona": "prize_clerk",
+   "setting": "drowned",
+   "text": "Rafts tied together into a market. Everything is a little wet and a little cheaper.",
+   "options": [
+    {
+     "label": "Shop",
+     "effects": [
+      {
+       "type": "shop"
+      }
+     ],
+     "result": "Damp bargains."
+    },
+    {
+     "label": "Trade a card for fish",
+     "requires": {
+      "consumables_ge": 1
+     },
+     "effects": [
+      {
+       "type": "lose_consumable"
+      },
+      {
+       "type": "heal_pct",
+       "pct": 0.4,
+       "target": "all"
+      }
+     ],
+     "result": "Very fresh fish."
+    },
+    {
+     "label": "Cut a raft loose (Grace)",
+     "check": {
+      "stat": "grace",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "gold",
+        "n": 45
+       },
+       {
+        "type": "consumable",
+        "id": "random"
+       }
+      ],
+      "pass_text": "Somebody's stall floats away with you.",
+      "fail": [
+       {
+        "type": "combat",
+        "kind": "combat"
+       }
+      ],
+      "fail_text": "The stallholders take it personally."
+     }
+    }
+   ]
+  },
+  {
+   "id": "dk_ev_drowned_child",
+   "title": "The Child in the Window",
+   "persona": "caller",
+   "setting": "drowned",
+   "text": "A drowned child waves from an upstairs window, under the water. It wants you to come in and play.",
+   "options": [
+    {
+     "label": "Wave back",
+     "effects": [
+      {
+       "type": "status_next",
+       "id": "blessed",
+       "turns": 2,
+       "side": "hero"
+      }
+     ],
+     "result": "It smiles and swims away. You feel watched over. Next fight your party starts blessed."
+    },
+    {
+     "label": "Go in",
+     "who": true,
+     "check": {
+      "stat": "nerve",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "relic",
+        "id": "random",
+        "rarity": [
+         "uncommon",
+         "rare"
+        ]
+       }
+      ],
+      "pass_text": "It shows you its toys. One of them it lets you keep.",
+      "fail": [
+       {
+        "type": "lose_hero",
+        "target": "chosen",
+        "cause": "stayed to play under the water"
+       }
+      ],
+      "fail_text": "It wanted to play for a very long time."
+     }
+    },
+    {
+     "label": "Look away",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dk_ev_eels",
+   "title": "The Eel Pit",
+   "persona": "caller",
+   "setting": "drowned",
+   "text": "A pit full of eels and, at the bottom, a sword with a crown on the pommel.",
+   "options": [
+    {
+     "label": "Reach for the sword (Grace)",
+     "who": true,
+     "check": {
+      "stat": "grace",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "attr",
+        "stat": "might",
+        "n": 1,
+        "target": "chosen"
+       },
+       {
+        "type": "gold",
+        "n": 20
+       }
+      ],
+      "pass_text": "You get it. The crown on the pommel was gold.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 10,
+        "target": "chosen"
+       }
+      ],
+      "fail_text": "Eels. So many eels."
+     }
+    },
+    {
+     "label": "Feed the eels",
+     "requires": {
+      "consumables_ge": 1
+     },
+     "effects": [
+      {
+       "type": "lose_consumable"
+      },
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "common"
+       ]
+      }
+     ],
+     "result": "Distracted, they let you take a smaller prize from the edge."
+    },
+    {
+     "label": "Leave the sword",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dk_ev_tide_tables",
+   "title": "Tide Tables",
+   "persona": "ferryman",
+   "setting": "drowned",
+   "text": "A soaked book of tide tables. Someone has circled tomorrow's high water in red.",
+   "options": [
+    {
+     "label": "Study it",
+     "who": true,
+     "effects": [
+      {
+       "type": "attr",
+       "stat": "wits",
+       "n": 1,
+       "target": "chosen"
+      }
+     ],
+     "result": "You understand the water better now."
+    },
+    {
+     "label": "Plan around it",
+     "effects": [
+      {
+       "type": "status_next",
+       "id": "hasted",
+       "turns": 2,
+       "side": "hero"
+      }
+     ],
+     "result": "Next fight your party starts hasted, moving with the tide."
+    },
+    {
+     "label": "Burn it for warmth",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.2,
+       "target": "all"
+      }
+     ],
+     "result": "Soggy, but it burns eventually."
+    }
+   ]
+  },
+  {
+   "id": "dk_ev_shipwreck",
+   "title": "The Wreck",
+   "persona": "caller",
+   "setting": "drowned",
+   "text": "A ship wrecked in a ballroom. Its cargo is still sealed.",
+   "options": [
+    {
+     "label": "Open the cargo",
+     "effects": [
+      {
+       "type": "random",
+       "rows": [
+        {
+         "w": 2,
+         "text": "Rum and gold.",
+         "effects": [
+          {
+           "type": "gold",
+           "n": 50
+          }
+         ]
+        },
+        {
+         "w": 1,
+         "text": "Something alive in a barrel.",
+         "effects": [
+          {
+           "type": "combat",
+           "kind": "combat"
+          }
+         ]
+        },
+        {
+         "w": 1,
+         "text": "A captain's relic.",
+         "effects": [
+          {
+           "type": "relic",
+           "id": "random",
+           "rarity": [
+            "uncommon"
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Salvage the timber",
+     "effects": [
+      {
+       "type": "max_hp",
+       "n": 2,
+       "target": "all"
+      }
+     ],
+     "result": "You patch your armour with ship's oak."
+    },
+    {
+     "label": "Search the captain's cabin (Wits)",
+     "check": {
+      "stat": "wits",
+      "dc": 12,
+      "pass": [
+       {
+        "type": "reveal"
+       },
+       {
+        "type": "consumable",
+        "id": "random",
+        "count": 2
+       }
+      ],
+      "pass_text": "Charts, and supplies.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 6,
+        "target": "random"
+       }
+      ],
+      "fail_text": "The cabin floor gives way."
+     }
+    }
+   ]
+  },
+  {
+   "id": "dk_ev_choir_of_frogs",
+   "title": "The Frog Choir",
+   "persona": "caller",
+   "setting": "drowned",
+   "text": "A choir of frogs on lily pads, singing something you almost recognise. The Caller hums along.",
+   "options": [
+    {
+     "label": "Listen to the end",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.25,
+       "target": "all"
+      },
+      {
+       "type": "xp",
+       "n": 4,
+       "target": "all"
+      }
+     ],
+     "result": "It's a lullaby. It works."
+    },
+    {
+     "label": "Join in (Nerve)",
+     "check": {
+      "stat": "nerve",
+      "dc": 12,
+      "pass": [
+       {
+        "type": "trait",
+        "id": "t_iron_will",
+        "target": "chosen"
+       }
+      ],
+      "pass_text": "They accept you into the choir. Something steadies in you.",
+      "fail": [
+       {
+        "type": "status_next",
+        "id": "dazed",
+        "turns": 1,
+        "side": "hero"
+       }
+      ],
+      "fail_text": "Wrong key. The frogs are very disappointed."
+     },
+     "who": true
+    },
+    {
+     "label": "Catch frogs",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 15
+      }
+     ],
+     "result": "Someone at the market will buy them."
+    }
+   ]
+  },
+  {
+   "id": "dk_ev_crown",
+   "title": "The Crown in the Mud",
+   "persona": "drowned_king",
+   "setting": "drowned",
+   "requires": {
+    "act_le": 1
+   },
+   "text": "A crown, half buried in the mud. The Drowned King's voice: 'That is mine. I would like it back. I would like it very much.'",
+   "options": [
+    {
+     "label": "Return it to him",
+     "effects": [
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "rare"
+       ]
+      },
+      {
+       "type": "flag",
+       "key": "crown_returned"
+      }
+     ],
+     "result": "He gives you something from his treasury, and the drowned are quieter for a while."
+    },
+    {
+     "label": "Wear it",
+     "who": true,
+     "effects": [
+      {
+       "type": "attr",
+       "stat": "nerve",
+       "n": 2,
+       "target": "chosen"
+      },
+      {
+       "type": "elite_next"
+      },
+      {
+       "type": "rename",
+       "text": "King {name}",
+       "target": "chosen"
+      }
+     ],
+     "result": "It fits. The drowned come for their king. The next fight is an elite."
+    },
+    {
+     "label": "Sell it",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 90
+      },
+      {
+       "type": "status_next",
+       "id": "marked",
+       "turns": 3,
+       "side": "hero"
+      }
+     ],
+     "result": "A lot of gold. The drowned are looking for you now."
+    }
+   ]
+  },
+  {
+   "id": "dk_ev_leech_doctor",
+   "title": "The Leech Doctor",
+   "persona": "nurse",
+   "setting": "drowned",
+   "text": "A doctor with a jar of leeches. 'Old remedy. Takes the bad blood out. Also some of the good.'",
+   "options": [
+    {
+     "label": "Treat everyone",
+     "effects": [
+      {
+       "type": "cure",
+       "target": "all"
+      },
+      {
+       "type": "damage",
+       "n": 4,
+       "target": "all"
+      }
+     ],
+     "result": "Injuries drawn out. A little blood with them."
+    },
+    {
+     "label": "Buy the jar (35 gold)",
+     "cost_gold": 35,
+     "effects": [
+      {
+       "type": "relic",
+       "id": "leech_jar"
+      }
+     ],
+     "result": "They seem happy to come with you."
+    },
+    {
+     "label": "No thank you",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dk_ev_mermaid",
+   "title": "The Singer on the Rock",
+   "persona": "confessor",
+   "setting": "drowned",
+   "text": "Someone singing on a rock. The song is about you. It knows things it shouldn't.",
+   "options": [
+    {
+     "label": "Swim out to her (Nerve)",
+     "who": true,
+     "check": {
+      "stat": "nerve",
+      "dc": 15,
+      "pass": [
+       {
+        "type": "level_offer",
+        "target": "chosen"
+       },
+       {
+        "type": "level_offer",
+        "target": "chosen"
+       }
+      ],
+      "pass_text": "She teaches you two verses of something old.",
+      "fail": [
+       {
+        "type": "lose_hero",
+        "target": "chosen",
+        "cause": "swam out to the singer"
+       }
+      ],
+      "fail_text": "You don't come back."
+     }
+    },
+    {
+     "label": "Block your ears and pass",
+     "effects": [
+      {
+       "type": "status_next",
+       "id": "dazed",
+       "turns": 1,
+       "side": "hero"
+      },
+      {
+       "type": "xp",
+       "n": 6,
+       "target": "all"
+      }
+     ],
+     "result": "It rings in your ears for a while. Next fight your party starts dazed."
+    },
+    {
+     "label": "Sing back",
+     "effects": [
+      {
+       "type": "random",
+       "rows": [
+        {
+         "w": 1,
+         "text": "She likes it. She throws you a shell full of pearls.",
+         "effects": [
+          {
+           "type": "gold",
+           "n": 50
+          }
+         ]
+        },
+        {
+         "w": 1,
+         "text": "She doesn't. She throws you a curse.",
+         "effects": [
+          {
+           "type": "status_next",
+           "id": "cursed",
+           "turns": 2,
+           "side": "hero"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dk_ev_flood_gate",
+   "title": "The Flood Gate",
+   "persona": "caller",
+   "setting": "drowned",
+   "text": "A great sluice gate, holding back the water. A wheel to open it. Downstream, the drowned are marching toward you.",
+   "options": [
+    {
+     "label": "Open the gate",
+     "effects": [
+      {
+       "type": "enemy_hp_next",
+       "mult": 0.7
+      },
+      {
+       "type": "damage",
+       "n": 5,
+       "target": "all"
+      }
+     ],
+     "result": "The water takes them and nearly takes you. Next fight, enemies have 30% less HP."
+    },
+    {
+     "label": "Jam the wheel",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 20
+      },
+      {
+       "type": "xp",
+       "n": 5,
+       "target": "all"
+      }
+     ],
+     "result": "The gate stays shut. You strip the brass fittings for gold."
+    },
+    {
+     "label": "Leave it",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dk_ev_drowned_library",
+   "title": "The Drowned Library",
+   "persona": "ferryman",
+   "setting": "drowned",
+   "text": "A library where the books have swollen into blocks. A few at the top are still dry.",
+   "options": [
+    {
+     "label": "Read the dry books",
+     "effects": [
+      {
+       "type": "xp",
+       "n": 14,
+       "target": "all"
+      }
+     ],
+     "result": "History, mostly. The kingdom was not what it claimed."
+    },
+    {
+     "label": "Dive for the restricted section (Might)",
+     "who": true,
+     "check": {
+      "stat": "might",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "upgrade_card",
+        "target": "chosen"
+       },
+       {
+        "type": "upgrade_card",
+        "target": "chosen"
+       }
+      ],
+      "pass_text": "A waterproof grimoire. Two lessons.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 9,
+        "target": "chosen"
+       }
+      ],
+      "fail_text": "The books are heavier than you."
+     }
+    },
+    {
+     "label": "Burn some to dry the rest",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.25,
+       "target": "all"
+      }
+     ],
+     "result": "Warm, at least."
+    }
+   ]
+  },
+  {
+   "id": "fc_ev_confession",
+   "title": "Confession",
+   "persona": "confessor",
+   "setting": "cathedral",
+   "text": "A confession box with a veiled figure inside. 'Tell me something true, and I'll take it away from you.'",
+   "options": [
+    {
+     "label": "Confess a wound",
+     "effects": [
+      {
+       "type": "cure",
+       "target": "all"
+      }
+     ],
+     "result": "Every injury in the party is taken away. Something else is too, but you can't say what."
+    },
+    {
+     "label": "Confess a fear",
+     "who": true,
+     "effects": [
+      {
+       "type": "trait",
+       "id": "t_iron_will",
+       "target": "chosen"
+      },
+      {
+       "type": "damage",
+       "n": 5,
+       "target": "chosen"
+      }
+     ],
+     "result": "Lighter. Braver. It cost a little blood to say out loud."
+    },
+    {
+     "label": "Lie",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 35
+      },
+      {
+       "type": "rule_card",
+       "id": "random"
+      }
+     ],
+     "result": "She knows. She pays you for the effort and adds a rule."
+    }
+   ]
+  },
+  {
+   "id": "fc_ev_relics",
+   "title": "Holy Relics",
+   "persona": "deacon",
+   "setting": "cathedral",
+   "text": "A deacon guards a table of relics. 'Fingers, knuckles, teeth. All holy. All for sale. Or for faith.'",
+   "options": [
+    {
+     "label": "Buy a holy relic (45 gold)",
+     "cost_gold": 45,
+     "effects": [
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "uncommon"
+       ]
+      }
+     ],
+     "result": "Wrapped in velvet. Still warm."
+    },
+    {
+     "label": "Prove your faith (Nerve)",
+     "who": true,
+     "check": {
+      "stat": "nerve",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "relic",
+        "id": "holy_water"
+       },
+       {
+        "type": "status_next",
+        "id": "blessed",
+        "turns": 2,
+        "side": "hero"
+       }
+      ],
+      "pass_text": "Your faith is found adequate. Holy water and a blessing.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 8,
+        "target": "chosen"
+       }
+      ],
+      "fail_text": "Your faith is found wanting. The test involved knives."
+     }
+    },
+    {
+     "label": "Walk on",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fc_ev_surgery",
+   "title": "Elective Surgery",
+   "persona": "deacon",
+   "setting": "cathedral",
+   "text": "'One small improvement,' says the surgeon-priest, sharpening something. 'Nothing you'd miss.'",
+   "options": [
+    {
+     "label": "Accept the improvement",
+     "who": true,
+     "effects": [
+      {
+       "type": "attr",
+       "stat": "might",
+       "n": 2,
+       "target": "chosen"
+      },
+      {
+       "type": "max_hp",
+       "n": -6,
+       "target": "chosen"
+      }
+     ],
+     "result": "Stronger arms. Less of the rest of you."
+    },
+    {
+     "label": "Ask for the other improvement",
+     "who": true,
+     "effects": [
+      {
+       "type": "max_hp",
+       "n": 10,
+       "target": "chosen"
+      },
+      {
+       "type": "attr",
+       "stat": "grace",
+       "n": -1,
+       "target": "chosen"
+      }
+     ],
+     "result": "More of you. It is harder to move it all."
+    },
+    {
+     "label": "Leave before he finishes sharpening",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fc_ev_font",
+   "title": "The Font",
+   "persona": "saint",
+   "setting": "cathedral",
+   "text": "A font of warm red water. 'Everything here heals,' says a gentle voice. 'That is the problem.'",
+   "options": [
+    {
+     "label": "Bathe",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.6,
+       "target": "all"
+      },
+      {
+       "type": "status_next",
+       "id": "mutating",
+       "turns": 3,
+       "side": "hero",
+       "stacks": 2
+      }
+     ],
+     "result": "Fully healed. Next fight your party starts mutating: stronger, softer."
+    },
+    {
+     "label": "Bottle some",
+     "effects": [
+      {
+       "type": "consumable",
+       "id": "c_draught",
+       "count": 2
+      }
+     ],
+     "result": "Two draughts. They pulse slightly."
+    },
+    {
+     "label": "Don't touch it",
+     "effects": [
+      {
+       "type": "xp",
+       "n": 6,
+       "target": "all"
+      }
+     ],
+     "result": "Wise. Probably."
+    }
+   ]
+  },
+  {
+   "id": "fc_ev_pilgrims",
+   "title": "Pilgrims",
+   "persona": "deacon",
+   "setting": "cathedral",
+   "text": "Pilgrims crawl toward the altar on their knees. One of them looks up at you. 'Carry me. Please.'",
+   "options": [
+    {
+     "label": "Carry them",
+     "effects": [
+      {
+       "type": "damage",
+       "n": 4,
+       "target": "all"
+      },
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "uncommon"
+       ]
+      }
+     ],
+     "result": "At the altar they press something into your hand, and crumble."
+    },
+    {
+     "label": "Join them",
+     "effects": [
+      {
+       "type": "status_next",
+       "id": "sanctified",
+       "turns": 2,
+       "side": "hero"
+      },
+      {
+       "type": "heal_pct",
+       "pct": 0.15,
+       "target": "all"
+      }
+     ],
+     "result": "On your knees. Next fight your party starts sanctified: immune to new debuffs."
+    },
+    {
+     "label": "Rob them",
+     "effects": [
+      {
+       "type": "gold",
+       "n": 40
+      },
+      {
+       "type": "status_next",
+       "id": "cursed",
+       "turns": 3,
+       "side": "hero"
+      }
+     ],
+     "result": "Easy money. Expensive money."
+    }
+   ]
+  },
+  {
+   "id": "fc_ev_hymnbook",
+   "title": "A Hymn Book",
+   "persona": "caller",
+   "setting": "cathedral",
+   "text": "A hymn book open on a lectern. Most of the hymns are about you.",
+   "options": [
+    {
+     "label": "Sing one",
+     "who": true,
+     "effects": [
+      {
+       "type": "trait",
+       "id": "t_crowd",
+       "target": "chosen"
+      }
+     ],
+     "result": "The cathedral sings back."
+    },
+    {
+     "label": "Tear out your page",
+     "effects": [
+      {
+       "type": "remove_rule"
+      },
+      {
+       "type": "status_next",
+       "id": "feared",
+       "turns": 1,
+       "side": "hero"
+      }
+     ],
+     "result": "A rule goes with it. Something in the walls is upset."
+    },
+    {
+     "label": "Read the last hymn",
+     "check": {
+      "stat": "wits",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "reveal"
+       },
+       {
+        "type": "xp",
+        "n": 12,
+        "target": "all"
+       }
+      ],
+      "pass_text": "It describes what's ahead. Accurately.",
+      "fail": [
+       {
+        "type": "status_next",
+        "id": "confused",
+        "turns": 1,
+        "side": "hero"
+       }
+      ],
+      "fail_text": "It describes something that hasn't happened. Yet."
+     }
+    }
+   ]
+  },
+  {
+   "id": "fc_ev_womb",
+   "title": "The Warm Room",
+   "persona": "caller",
+   "setting": "cathedral",
+   "text": "A round room with soft walls and a heartbeat. It would be very easy to sleep here.",
+   "options": [
+    {
+     "label": "Sleep",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.5,
+       "target": "all"
+      },
+      {
+       "type": "random",
+       "rows": [
+        {
+         "w": 2,
+         "text": "You wake up fine.",
+         "effects": [
+          {
+           "type": "nothing"
+          }
+         ]
+        },
+        {
+         "w": 1,
+         "text": "You wake up with something new in you.",
+         "effects": [
+          {
+           "type": "max_hp",
+           "n": 4,
+           "target": "random"
+          }
+         ]
+        },
+        {
+         "w": 1,
+         "text": "One of you doesn't wake up straight away.",
+         "effects": [
+          {
+           "type": "injure",
+           "target": "random"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Cut your way through",
+     "effects": [
+      {
+       "type": "combat",
+       "kind": "combat"
+      }
+     ],
+     "result": "The room objects."
+    },
+    {
+     "label": "Back out quietly",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fc_ev_saint_statue",
+   "title": "The Saint's Statue",
+   "persona": "saint",
+   "setting": "cathedral",
+   "text": "A statue of a smiling saint, arms open. The plaque is scratched out. Her hands are wet.",
+   "options": [
+    {
+     "label": "Take her hand",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.3,
+       "target": "all"
+      },
+      {
+       "type": "flag",
+       "key": "held_saints_hand"
+      }
+     ],
+     "result": "Warm. She doesn't let go for a moment too long."
+    },
+    {
+     "label": "Take her halo",
+     "effects": [
+      {
+       "type": "relic",
+       "id": "pewter_halo"
+      },
+      {
+       "type": "elite_next"
+      }
+     ],
+     "result": "It comes away easily. Something notices. The next fight is an elite."
+    },
+    {
+     "label": "Scrape the plaque (Wits)",
+     "check": {
+      "stat": "wits",
+      "dc": 12,
+      "pass": [
+       {
+        "type": "xp",
+        "n": 15,
+        "target": "all"
+       }
+      ],
+      "pass_text": "SAINT OF NOBODY IN PARTICULAR. HEALS ANYWAY. You understand her better.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 4,
+        "target": "all"
+       }
+      ],
+      "fail_text": "Your fingers bleed. The statue drinks it."
+     }
+    }
+   ]
+  },
+  {
+   "id": "fc_ev_collection_plate",
+   "title": "The Collection Plate",
+   "persona": "deacon",
+   "setting": "cathedral",
+   "text": "A brass plate comes down the aisle on its own, stopping in front of you. It waits.",
+   "options": [
+    {
+     "label": "Give generously (40 gold)",
+     "cost_gold": 40,
+     "effects": [
+      {
+       "type": "relic",
+       "id": "sacrament"
+      },
+      {
+       "type": "status_next",
+       "id": "blessed",
+       "turns": 2,
+       "side": "hero"
+      }
+     ],
+     "result": "The cathedral approves."
+    },
+    {
+     "label": "Give a card",
+     "requires": {
+      "consumables_ge": 1
+     },
+     "effects": [
+      {
+       "type": "lose_consumable"
+      },
+      {
+       "type": "heal_pct",
+       "pct": 0.3,
+       "target": "all"
+      }
+     ],
+     "result": "It accepts the card. You feel looked after."
+    },
+    {
+     "label": "Give nothing",
+     "effects": [
+      {
+       "type": "status_next",
+       "id": "marked",
+       "turns": 2,
+       "side": "hero"
+      }
+     ],
+     "result": "The plate moves on. Next fight, the cathedral remembers you: your party starts marked."
+    }
+   ]
+  },
+  {
+   "id": "fc_ev_bone_organ",
+   "title": "The Bone Organ",
+   "persona": "caller",
+   "setting": "cathedral",
+   "text": "An organ built from long bones. The keys are teeth. It plays when you look at it.",
+   "options": [
+    {
+     "label": "Play a chord (Wits)",
+     "who": true,
+     "check": {
+      "stat": "wits",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "status_next",
+        "id": "stunned",
+        "turns": 1,
+        "side": "enemy"
+       },
+       {
+        "type": "xp",
+        "n": 6,
+        "target": "chosen"
+       }
+      ],
+      "pass_text": "A chord so wrong it stuns. Next fight, enemies start stunned for a turn.",
+      "fail": [
+       {
+        "type": "damage",
+        "n": 6,
+        "target": "all"
+       }
+      ],
+      "fail_text": "The organ plays you back."
+     }
+    },
+    {
+     "label": "Take a pipe",
+     "effects": [
+      {
+       "type": "relic",
+       "id": "knucklebones"
+      }
+     ],
+     "result": "A short pipe of sharpened bone. Useful."
+    },
+    {
+     "label": "Smash it",
+     "effects": [
+      {
+       "type": "combat",
+       "kind": "combat"
+      },
+      {
+       "type": "gold",
+       "n": 20
+      }
+     ],
+     "result": "The congregation comes running."
+    }
+   ]
+  },
+  {
+   "id": "fc_ev_mirror_saint",
+   "title": "The Mirror Saint",
+   "persona": "saint",
+   "setting": "cathedral",
+   "text": "A saint made of mirror. She heals whatever she reflects. She is reflecting your enemies.",
+   "options": [
+    {
+     "label": "Turn her around",
+     "check": {
+      "stat": "might",
+      "dc": 14,
+      "pass": [
+       {
+        "type": "heal_pct",
+        "pct": 0.4,
+        "target": "all"
+       },
+       {
+        "type": "enemy_hp_next",
+        "mult": 0.85
+       }
+      ],
+      "pass_text": "She reflects you now. Healed, and the enemy is weaker next fight.",
+      "fail": [
+       {
+        "type": "injure",
+        "target": "chosen"
+       }
+      ],
+      "fail_text": "She is very heavy and very sharp."
+     },
+     "who": true
+    },
+    {
+     "label": "Break her",
+     "effects": [
+      {
+       "type": "damage",
+       "n": 5,
+       "target": "all"
+      },
+      {
+       "type": "relic",
+       "id": "random",
+       "rarity": [
+        "rare"
+       ]
+      }
+     ],
+     "result": "Shards everywhere. One of them is worth keeping."
+    },
+    {
+     "label": "Leave her be",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fc_ev_baptism",
+   "title": "Baptism",
+   "persona": "deacon",
+   "setting": "cathedral",
+   "text": "'Every newcomer is baptised,' says the deacon, rolling up his sleeves. The water is thick.",
+   "options": [
+    {
+     "label": "Submit",
+     "who": true,
+     "effects": [
+      {
+       "type": "trait",
+       "id": "t_thick",
+       "target": "chosen"
+      },
+      {
+       "type": "rename",
+       "text": "{name} the Baptised",
+       "target": "chosen"
+      }
+     ],
+     "result": "You come up changed. Thicker-skinned, and newly named."
+    },
+    {
+     "label": "Baptise the deacon instead (Might)",
+     "check": {
+      "stat": "might",
+      "dc": 13,
+      "pass": [
+       {
+        "type": "gold",
+        "n": 35
+       },
+       {
+        "type": "xp",
+        "n": 8,
+        "target": "all"
+       }
+      ],
+      "pass_text": "He comes up spluttering and pays you to go away.",
+      "fail": [
+       {
+        "type": "combat",
+        "kind": "combat"
+       }
+      ],
+      "fail_text": "He has friends."
+     }
+    },
+    {
+     "label": "Politely decline",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fc_ev_reliquary_child",
+   "title": "The Small Reliquary",
+   "persona": "confessor",
+   "setting": "cathedral",
+   "text": "A small box of bones that cries when you walk away from it.",
+   "options": [
+    {
+     "label": "Carry it",
+     "effects": [
+      {
+       "type": "relic",
+       "id": "dead_mans_hand"
+      }
+     ],
+     "result": "It stops crying. It is very heavy for its size."
+    },
+    {
+     "label": "Comfort it",
+     "effects": [
+      {
+       "type": "xp",
+       "n": 10,
+       "target": "all"
+      },
+      {
+       "type": "heal_pct",
+       "pct": 0.15,
+       "target": "all"
+      }
+     ],
+     "result": "It goes quiet. So does something in you."
+    },
+    {
+     "label": "Walk away fast",
+     "effects": [
+      {
+       "type": "status_next",
+       "id": "feared",
+       "turns": 1,
+       "side": "hero"
+      }
+     ],
+     "result": "It cries for a long time. Next fight your party starts frightened."
+    }
+   ]
+  },
+  {
+   "id": "fc_ev_stitchwork",
+   "title": "Stitchwork",
+   "persona": "deacon",
+   "setting": "cathedral",
+   "requires": {
+    "injured": true
+   },
+   "text": "A seamstress who sews people. 'I can close those wounds. My stitches are permanent.'",
+   "options": [
+    {
+     "label": "Let her stitch everyone",
+     "effects": [
+      {
+       "type": "cure",
+       "target": "all"
+      },
+      {
+       "type": "max_hp",
+       "n": -2,
+       "target": "all"
+      }
+     ],
+     "result": "No more injuries. The stitches pull a little, forever."
+    },
+    {
+     "label": "Pay for her best work (40 gold)",
+     "cost_gold": 40,
+     "effects": [
+      {
+       "type": "cure",
+       "target": "all"
+      },
+      {
+       "type": "heal_pct",
+       "pct": 0.3,
+       "target": "all"
+      }
+     ],
+     "result": "Neat, clean, painless. Expensive."
+    },
+    {
+     "label": "Keep your wounds",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fc_ev_last_rites",
+   "title": "Last Rites",
+   "persona": "confessor",
+   "setting": "cathedral",
+   "requires": {
+    "fallen_ge": 1
+   },
+   "text": "A priest offers to say last rites for your dead. 'It helps the living more than the dead. It always has.'",
+   "options": [
+    {
+     "label": "Hear them",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.3,
+       "target": "all"
+      },
+      {
+       "type": "status_next",
+       "id": "blessed",
+       "turns": 2,
+       "side": "hero"
+      }
+     ],
+     "result": "Next fight your party starts blessed."
+    },
+    {
+     "label": "Ask him to bring one back",
+     "cost_gold": 80,
+     "effects": [
+      {
+       "type": "recruit",
+       "level": 2
+      }
+     ],
+     "result": "He brings back somebody. Not who you asked for.",
+     "requires": {
+      "party_le": 3
+     }
+    },
+    {
+     "label": "Refuse",
+     "leave": true,
+     "effects": [
+      {
+       "type": "nothing"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fc_ev_incense",
+   "title": "The Thurible",
+   "persona": "deacon",
+   "setting": "cathedral",
+   "text": "A censer swinging on its own, filling the nave with sweet smoke. It smells like something you used to love.",
+   "options": [
+    {
+     "label": "Breathe deep",
+     "effects": [
+      {
+       "type": "heal_pct",
+       "pct": 0.3,
+       "target": "all"
+      },
+      {
+       "type": "status_next",
+       "id": "dazed",
+       "turns": 1,
+       "side": "hero"
+      }
+     ],
+     "result": "Lovely. Next fight your party starts dazed."
+    },
+    {
+     "label": "Take the censer",
+     "effects": [
+      {
+       "type": "consumable",
+       "id": "c_smoke",
+       "count": 2
+      }
+     ],
+     "result": "Two smoke pellets from the coals."
+    },
+    {
+     "label": "Hold your breath and run",
+     "effects": [
+      {
+       "type": "xp",
+       "n": 6,
+       "target": "all"
+      }
+     ],
+     "result": "Out the other side, gasping."
+    }
+   ]
+  }
+ ]
+}

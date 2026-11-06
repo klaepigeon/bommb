@@ -65,6 +65,18 @@ func sfx(id: String, pitch_jitter: float = 0.06, volume_db: float = 0.0, pitch: 
 	p.play()
 
 
+## A stream that isn't in the manifest (the campaign's sound set, via Sfx).
+func play_stream(s: AudioStream, volume_db: float = 0.0, pitch_jitter: float = 0.05, pitch: float = 1.0) -> void:
+	if muted or s == null:
+		return
+	var p := _pool[_next]
+	_next = (_next + 1) % _pool.size()
+	p.stream = s
+	p.volume_db = volume_db
+	p.pitch_scale = maxf(0.05, pitch * (1.0 + randf_range(-pitch_jitter, pitch_jitter)))
+	p.play()
+
+
 ## Positional sound for a world point (chairs humming, the bomb ticking).
 func sfx_at(parent: Node3D, id: String, volume_db: float = 0.0, pitch: float = 1.0) -> AudioStreamPlayer3D:
 	if muted or parent == null:

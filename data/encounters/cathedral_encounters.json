@@ -1,0 +1,710 @@
+{
+ "enemies": [
+  {
+   "id": "candle_bearer",
+   "name": "Candle-Bearer",
+   "role": "ward",
+   "hp": 20,
+   "defense": 10,
+   "speed": 0,
+   "abilities": [
+    "w_trim_wick"
+   ],
+   "ai": "static",
+   "tags": [
+    "ward",
+    "harmless"
+   ],
+   "tier": 0,
+   "model": {
+    "body": "robed",
+    "color": "#e8e0d0",
+    "accent": "#e8c860",
+    "head": "halo",
+    "weapon": "staff",
+    "h": 0.85
+   },
+   "desc": "A novice holding the last clean candle in the cathedral. If it goes out, they all do."
+  },
+  {
+   "id": "flesh_altar",
+   "name": "Flesh Altar",
+   "role": "totem",
+   "hp": 20,
+   "defense": 8,
+   "speed": 0,
+   "abilities": [
+    "e_altar_pulse"
+   ],
+   "ai": "static",
+   "tags": [
+    "totem",
+    "immovable",
+    "cathedral"
+   ],
+   "tier": 1,
+   "triggers": [
+    {
+     "event": "turn_start",
+     "effects": [
+      {
+       "type": "heal",
+       "dice": "1d6",
+       "to": "all_enemies"
+      }
+     ],
+     "quiet": true,
+     "label": "The altar pulses"
+    }
+   ],
+   "model": {
+    "body": "mound",
+    "color": "#a84a40",
+    "accent": "#e8d0b0",
+    "head": "eye",
+    "h": 0.7
+   },
+   "desc": "Heals every enemy at the start of their turn. Destroy them all."
+  }
+ ],
+ "abilities": [
+  {
+   "id": "e_altar_pulse",
+   "name": "Pulse",
+   "icon": "heart",
+   "cost": "action",
+   "range": 1,
+   "target": "enemy",
+   "roll": "attack",
+   "stat": "might",
+   "tags": [
+    "basic",
+    "attack"
+   ],
+   "effects": [
+    {
+     "type": "damage",
+     "dice": "1d4",
+     "dtype": "rot"
+    }
+   ],
+   "desc": "1d4 rot to anything touching it."
+  }
+ ],
+ "encounters": [
+  {
+   "id": "fc_penitents",
+   "name": "The Penitents",
+   "kind": "combat",
+   "setting": "cathedral",
+   "difficulty": 1,
+   "layout": "nave",
+   "enemies": [
+    "flagellant",
+    "flagellant",
+    "wretch",
+    "wretch"
+   ],
+   "desc": "Flagellants grow stronger every time they are hurt. Finish them in one go.",
+   "intro": "They hurt themselves so you don't have to. They would still like to help.",
+   "optional": [
+    {
+     "type": "rounds_le",
+     "n": 4,
+     "text": "Win within 4 rounds",
+     "gold": 15
+    }
+   ]
+  },
+  {
+   "id": "fc_choir_practice",
+   "name": "Choir Practice",
+   "kind": "combat",
+   "setting": "cathedral",
+   "difficulty": 1,
+   "layout": "chapel",
+   "enemies": [
+    "choirboy",
+    "choirboy",
+    "flagellant"
+   ],
+   "desc": "While the choir sings, using the same card twice in a row hurts. Vary your play, or silence them first.",
+   "intro": "Choir practice. Don't sing along, and don't repeat yourself.",
+   "optional": [
+    {
+     "type": "no_downs",
+     "text": "Nobody goes down",
+     "gold": 15
+    }
+   ]
+  },
+  {
+   "id": "fc_swarm",
+   "name": "Out of the Walls",
+   "kind": "combat",
+   "setting": "cathedral",
+   "difficulty": 1,
+   "layout": "hall_open",
+   "enemies": [
+    "wretch",
+    "wretch",
+    "wretch",
+    "wretch",
+    "wretch"
+   ],
+   "desc": "A swarm of wretches. Weak alone. Area attacks shine.",
+   "intro": "The walls have been breeding again.",
+   "optional": [
+    {
+     "type": "rounds_le",
+     "n": 3,
+     "text": "Win within 3 rounds",
+     "gold": 15
+    }
+   ]
+  },
+  {
+   "id": "fc_collection",
+   "name": "The Collection",
+   "kind": "combat",
+   "setting": "cathedral",
+   "difficulty": 1,
+   "layout": "barricade",
+   "enemies": [
+    "tithe_collector",
+    "wretch",
+    "wretch"
+   ],
+   "desc": "The tithe collector steals cards for two rounds at a time and carries a lot of gold.",
+   "intro": "Time for the collection. Give generously. It will take the rest.",
+   "optional": [
+    {
+     "type": "kill_tag",
+     "tag": "collector",
+     "text": "Kill the collector",
+     "gold": 15
+    }
+   ]
+  },
+  {
+   "id": "fc_surgery",
+   "name": "Theatre of Surgery",
+   "kind": "combat",
+   "setting": "cathedral",
+   "difficulty": 2,
+   "layout": "nave",
+   "enemies": [
+    "surgeon_deacon",
+    "flagellant",
+    "flagellant",
+    "choirboy"
+   ],
+   "desc": "The surgeon-deacon keeps stitching flagellants back together. Every patient comes back mutated: stronger, but softer.",
+   "intro": "The surgeon will see you now. The surgeon will see you whether you like it or not.",
+   "optional": [
+    {
+     "type": "rounds_le",
+     "n": 5,
+     "text": "Win within 5 rounds",
+     "gold": 20
+    }
+   ]
+  },
+  {
+   "id": "fc_tumour",
+   "name": "The Growth in the Pulpit",
+   "kind": "combat",
+   "setting": "cathedral",
+   "difficulty": 2,
+   "layout": "chapel",
+   "objective": {
+    "type": "destroy"
+   },
+   "enemies": [
+    "pulpit_tumor",
+    "wretch",
+    "wretch",
+    "choirboy"
+   ],
+   "desc": "Destroy the tumour. It buds wretches and grows stronger every turn nobody hurts it. The rest don't matter.",
+   "intro": "It started as a sermon. It got out of hand.",
+   "optional": [
+    {
+     "type": "rounds_le",
+     "n": 4,
+     "text": "Destroy it within 4 rounds",
+     "gold": 20
+    }
+   ]
+  },
+  {
+   "id": "fc_altars",
+   "name": "Three Altars",
+   "kind": "combat",
+   "setting": "cathedral",
+   "difficulty": 2,
+   "layout": "nave",
+   "objective": {
+    "type": "destroy"
+   },
+   "enemies": [
+    {
+     "id": "flesh_altar",
+     "tags": [
+      "totem"
+     ]
+    },
+    {
+     "id": "flesh_altar",
+     "tags": [
+      "totem"
+     ]
+    },
+    {
+     "id": "flesh_altar",
+     "tags": [
+      "totem"
+     ]
+    },
+    "flagellant",
+    "surgeon_deacon"
+   ],
+   "desc": "Three altars heal every enemy each turn. Destroy all three to win; the congregation can be ignored.",
+   "intro": "Three altars. Three times the healing. Three times the problem.",
+   "optional": [
+    {
+     "type": "no_downs",
+     "text": "Nobody goes down",
+     "gold": 20
+    }
+   ]
+  },
+  {
+   "id": "fc_candle",
+   "name": "The Last Clean Candle",
+   "kind": "combat",
+   "setting": "cathedral",
+   "difficulty": 2,
+   "layout": "defend_post",
+   "objective": {
+    "type": "protect"
+   },
+   "enemies": [
+    {
+     "id": "candle_bearer",
+     "side": "hero",
+     "at": "1"
+    },
+    "flagellant",
+    "wretch",
+    "wretch"
+   ],
+   "waves": [
+    {
+     "round": 2,
+     "enemies": [
+      "tithe_collector",
+      "wretch"
+     ],
+     "x": 9,
+     "y": 3
+    },
+    {
+     "round": 3,
+     "enemies": [
+      "flagellant",
+      "choirboy"
+     ],
+     "x": 9,
+     "y": 6
+    }
+   ],
+   "desc": "Keep the candle-bearer alive. Enemies arrive in rounds 2 and 3.",
+   "intro": "Somebody here is still praying properly. Keep them at it.",
+   "optional": [
+    {
+     "type": "ward_full",
+     "text": "The candle-bearer takes no damage",
+     "gold": 30
+    }
+   ]
+  },
+  {
+   "id": "fc_pews",
+   "name": "Between the Pews",
+   "kind": "combat",
+   "setting": "cathedral",
+   "difficulty": 2,
+   "layout": "chapel",
+   "enemy_first": true,
+   "enemies": [
+    "tithe_collector",
+    "flagellant",
+    "wretch",
+    "wretch",
+    "wretch"
+   ],
+   "desc": "They were waiting in the pews and they move first.",
+   "intro": "They were already sitting down when you came in. Rude to interrupt.",
+   "optional": [
+    {
+     "type": "no_downs",
+     "text": "Nobody goes down",
+     "gold": 25
+    }
+   ]
+  },
+  {
+   "id": "fc_hymnal",
+   "name": "Hymn Number Six",
+   "kind": "combat",
+   "setting": "cathedral",
+   "difficulty": 2,
+   "layout": "corridor_pillars",
+   "enemies": [
+    "choirboy",
+    "choirboy",
+    "choirboy",
+    "surgeon_deacon"
+   ],
+   "desc": "Three choirboys behind pillars and a surgeon. Psychic damage from range, and repeating a card hurts.",
+   "intro": "Hymn number six. All the verses. Even the ones nobody sings.",
+   "optional": [
+    {
+     "type": "rounds_le",
+     "n": 5,
+     "text": "Win within 5 rounds",
+     "gold": 20
+    }
+   ]
+  },
+  {
+   "id": "fc_sanctuary",
+   "name": "Claim Sanctuary",
+   "kind": "combat",
+   "setting": "cathedral",
+   "difficulty": 2,
+   "layout": "crossroads",
+   "objective": {
+    "type": "survive",
+    "rounds": 4
+   },
+   "enemies": [
+    "flagellant",
+    "wretch",
+    "wretch"
+   ],
+   "waves": [
+    {
+     "round": 2,
+     "enemies": [
+      "flagellant",
+      "choirboy"
+     ],
+     "x": 9,
+     "y": 3
+    },
+    {
+     "round": 3,
+     "enemies": [
+      "wretch",
+      "wretch",
+      "wretch"
+     ],
+     "x": 8,
+     "y": 7
+    }
+   ],
+   "desc": "Survive 4 rounds until the bells stop. The holy ground in the middle heals heroes who start their turn on it.",
+   "rules": [],
+   "intro": "Four rounds. Then the bells stop and everyone goes home. Mostly.",
+   "optional": [
+    {
+     "type": "no_deaths",
+     "text": "Nobody dies",
+     "gold": 20
+    }
+   ],
+   "patches": [
+    {
+     "tile": "sanctum",
+     "cells": [
+      [
+       4,
+       3
+      ],
+      [
+       5,
+       3
+      ],
+      [
+       4,
+       4
+      ],
+      [
+       5,
+       4
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fc_bishop",
+   "name": "The Deacon's Escort",
+   "kind": "combat",
+   "setting": "cathedral",
+   "difficulty": 2,
+   "layout": "long_hall",
+   "objective": {
+    "type": "assassinate"
+   },
+   "enemies": [
+    {
+     "id": "surgeon_deacon",
+     "elite": true,
+     "tags": [
+      "leader"
+     ]
+    },
+    "flagellant",
+    "flagellant",
+    "choirboy"
+   ],
+   "desc": "Kill the senior surgeon (the elite deacon) and the rest lose heart.",
+   "intro": "The senior surgeon is passing through. With an escort.",
+   "optional": [
+    {
+     "type": "rounds_le",
+     "n": 4,
+     "text": "Kill the surgeon within 4 rounds",
+     "gold": 25
+    }
+   ]
+  },
+  {
+   "id": "fc_ossuary",
+   "name": "The Ossuary",
+   "kind": "combat",
+   "setting": "cathedral",
+   "difficulty": 3,
+   "layout": "pit_room",
+   "min_act": 1,
+   "enemies": [
+    "flagellant",
+    "flagellant",
+    "choirboy",
+    "surgeon_deacon",
+    "wretch"
+   ],
+   "desc": "Bones and a pit. Shoving flagellants into the pit is one way to stop them growing.",
+   "intro": "Mind the pit. Everyone else did, eventually.",
+   "optional": [
+    {
+     "type": "no_downs",
+     "text": "Nobody goes down",
+     "gold": 25
+    }
+   ]
+  },
+  {
+   "id": "fc_feast_day",
+   "name": "Feast Day",
+   "kind": "combat",
+   "setting": "cathedral",
+   "difficulty": 3,
+   "layout": "nave",
+   "min_act": 1,
+   "enemies": [
+    "pulpit_tumor",
+    "surgeon_deacon",
+    "tithe_collector",
+    "flagellant"
+   ],
+   "desc": "A feast with a growing tumour, a surgeon and a collector. Kill the tumour early or drown in wretches.",
+   "triggers": [
+    {
+     "event": "round_end",
+     "effects": [
+      {
+       "type": "random_tiles",
+       "tile": "flesh",
+       "n": 2,
+       "only_on": "floor"
+      }
+     ],
+     "label": "The floor grows"
+    }
+   ],
+   "intro": "Feast day. Everyone brings something. The floor brings itself.",
+   "optional": [
+    {
+     "type": "rounds_le",
+     "n": 6,
+     "text": "Win within 6 rounds",
+     "gold": 25
+    }
+   ]
+  },
+  {
+   "id": "fc_e_reliquary",
+   "name": "The Weeping Reliquary",
+   "kind": "elite",
+   "setting": "cathedral",
+   "difficulty": 3,
+   "layout": "chapel",
+   "enemies": [
+    "weeping_reliquary",
+    "choirboy",
+    "wretch",
+    "wretch"
+   ],
+   "desc": "It grows more dangerous every turn nobody hurts it, and winds up a Lamentation around itself. Keep it busy, step out when it winds up.",
+   "intro": "A box of saints. They are not resting.",
+   "optional": [
+    {
+     "type": "rounds_le",
+     "n": 6,
+     "text": "Win within 6 rounds",
+     "gold": 30
+    }
+   ]
+  },
+  {
+   "id": "fc_e_martyrs",
+   "name": "The Martyrs' Procession",
+   "kind": "elite",
+   "setting": "cathedral",
+   "difficulty": 3,
+   "layout": "long_hall",
+   "enemies": [
+    {
+     "id": "flagellant",
+     "elite": true
+    },
+    {
+     "id": "flagellant",
+     "elite": true
+    },
+    "surgeon_deacon",
+    "choirboy"
+   ],
+   "desc": "Two veteran flagellants and a surgeon. Every blow makes them stronger.",
+   "intro": "The martyrs. They have practised suffering until it became a skill.",
+   "optional": [
+    {
+     "type": "no_downs",
+     "text": "Nobody goes down",
+     "gold": 30
+    }
+   ]
+  },
+  {
+   "id": "fc_e_tithe",
+   "name": "Tithe Day",
+   "kind": "elite",
+   "setting": "cathedral",
+   "difficulty": 3,
+   "layout": "barricade",
+   "enemies": [
+    {
+     "id": "tithe_collector",
+     "elite": true
+    },
+    "tithe_collector",
+    "choirboy",
+    "wretch"
+   ],
+   "desc": "The collectors are out in force. Expect to lose cards for a while.",
+   "intro": "Tithe day. They take ten percent. Of you.",
+   "optional": [
+    {
+     "type": "rounds_le",
+     "n": 5,
+     "text": "Win within 5 rounds",
+     "gold": 30
+    }
+   ]
+  },
+  {
+   "id": "fc_e_grafted",
+   "name": "The Grafted",
+   "kind": "elite",
+   "setting": "cathedral",
+   "difficulty": 3,
+   "layout": "nave",
+   "enemies": [
+    {
+     "id": "surgeon_deacon",
+     "elite": true
+    },
+    {
+     "id": "surgeon_deacon",
+     "elite": true
+    },
+    "flagellant",
+    "flagellant"
+   ],
+   "desc": "Two master surgeons heal each other and everyone else. Split them up.",
+   "intro": "Two surgeons who have operated on each other for a very long time.",
+   "optional": [
+    {
+     "type": "rounds_le",
+     "n": 6,
+     "text": "Win within 6 rounds",
+     "gold": 30
+    }
+   ]
+  },
+  {
+   "id": "fc_boss_saint",
+   "name": "The Fraudulent Saint",
+   "kind": "boss",
+   "setting": "cathedral",
+   "difficulty": 4,
+   "layout": "cathedral_arena",
+   "enemies": [
+    {
+     "id": "fraudulent_saint",
+     "at": "1"
+    },
+    "flagellant",
+    "choirboy"
+   ],
+   "desc": "She heals her congregation. Below 60% she inverts healing for two rounds at a time: healing your heroes then hurts them. Check the rule rack before you heal.",
+   "intro": "She heals everyone. She has never once been asked to.",
+   "optional": [
+    {
+     "type": "no_deaths",
+     "text": "Nobody dies",
+     "gold": 40
+    }
+   ]
+  },
+  {
+   "id": "fc_boss_choir",
+   "name": "The Choir of One",
+   "kind": "boss",
+   "setting": "cathedral",
+   "difficulty": 4,
+   "layout": "cathedral_arena",
+   "enemies": [
+    {
+     "id": "choir_of_one",
+     "at": "1"
+    },
+    "choir_echo"
+   ],
+   "desc": "It sings echoes of itself onto the board; its Crescendo grows with every echo standing, and echoes burst when they die. Repeating a card hurts while it sings.",
+   "intro": "One voice. It sings every part.",
+   "optional": [
+    {
+     "type": "rounds_le",
+     "n": 7,
+     "text": "Win within 7 rounds",
+     "gold": 40
+    }
+   ]
+  }
+ ]
+}
