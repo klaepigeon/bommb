@@ -35,7 +35,7 @@ function resolve(pos, c, r) {
   const lx = dx * cs - dz * sn, lz = dx * sn + dz * cs;
   const qx = Math.max(-c.hx, Math.min(c.hx, lx)), qz = Math.max(-c.hz, Math.min(c.hz, lz));
   let ox = lx - qx, oz = lz - qz; const d2 = ox * ox + oz * oz;
-  if (d2 > r * r) return null;
+  if (d2 >= r * r - 1e-7) return null;
   let px, pz;
   if (d2 > 1e-9) { const d = Math.sqrt(d2), k = (r - d) / d; px = ox * k; pz = oz * k; }
   else { // centre inside: out along the shallowest axis
@@ -68,7 +68,7 @@ export function updatePlayer(dt, camera) {
   fwd.set(-Math.sin(P.yaw), 0, -Math.cos(P.yaw)); right.set(-fwd.z, 0, fwd.x);
   wish.set(0, 0, 0).addScaledVector(fwd, mz).addScaledVector(right, mx);
   if (wish.lengthSq() > 1) wish.normalize();
-  wish.multiplyScalar(maxV * (P.pushing ? 0.45 : 1));
+  wish.multiplyScalar(maxV * (P.pushing ? P.pushing : 1));
   const acc = wish.lengthSq() > 0 ? 9 : 11;
   P.vel.x += (wish.x - P.vel.x) * Math.min(1, acc * dt);
   P.vel.z += (wish.z - P.vel.z) * Math.min(1, acc * dt);
@@ -93,9 +93,9 @@ export function updatePlayer(dt, camera) {
       const len = Math.hypot(push[0], push[1]) || 1;
       if (p.push) {
         if (p.body.sleepState) p.body.wakeUp();
-        const v = Math.hypot(P.vel.x, P.vel.z), k2 = Math.min(1, 14 / p.mass);
-        p.body.velocity.x = -push[0] / len * v * k2 * 1.6; p.body.velocity.z = -push[1] / len * v * k2 * 1.6;
-        P.pushing = true;
+        const v = Math.hypot(P.vel.x, P.vel.z), k2 = Math.min(1, 20 / p.mass);
+        p.body.velocity.x = -push[0] / len * v * k2 * 2.0; p.body.velocity.z = -push[1] / len * v * k2 * 2.0;
+        P.pushing = Math.max(0.35, Math.min(1, 1.2 - p.mass / 60));
         if (!p.scrapeT || performance.now() - p.scrapeT > 600) { p.scrapeT = performance.now(); if (v > 0.2) sfx(p.mass > 30 ? 'drag' : 'doorScrape', p.mesh.position, { vol: Math.min(0.7, v * 0.4) }); }
       } else {
         p.body.wakeUp();

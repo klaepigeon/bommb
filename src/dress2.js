@@ -440,15 +440,23 @@ function bath() {
       if (level < 0.16) shoe.visible = true;
       if (level <= 0.105) { water.visible = false; G.ui.toast('At the bottom, in the silt: the other red shoe. Right foot.'); pickable(shoe, { name: "Child's shoe", desc: 'A girl’s red buckle shoe, right foot. The pair to the one in the hall.', mass: 0.2, sound: 'soft' }); }
     });
-    interactive(chain, {
-      prompt: () => (drain ? 'The plug chain' : 'Pull the plug'), range: 1.6,
+    // the overflow plate the chain hangs from: easier to find with a cold hand than the chain
+    const plateO = cyl(0.03, 0.03, 0.01, 12, M.chrome, { x: -0.8, y: 0.56, z: 0, rz: Math.PI / 2, parent: g, static: false });
+    const pull = () => {
+      if (drain) { G.ui.toast('It’s draining. Slowly.'); return; }
+      drain = true; sfx('plug', V(6.6, 0.3, 7.62), { vol: 1 }); setTimeout(() => sfx('plug', V(6.6, 0.3, 7.62), { vol: 0.8, rate: 0.8 }), 2600); setTimeout(() => sfx('plug', V(6.6, -1, 7.62), { vol: 0.6, rate: 0.6 }), 7000);
+      G.ui.toast('You put your arm into the cold to the elbow and find the chain. Something gives. The water begins to turn.');
+    };
+    let looked = false;
+    interactive([...chain, plateO], { prompt: () => (drain ? 'The plug chain' : 'Pull the plug'), range: 1.6, use: pull });
+    interactive(water, {
+      range: 1.8,
+      prompt: () => (drain ? 'The bath' : looked ? 'Reach into the water' : 'Look at the bath'),
       use: () => {
-        if (drain) { G.ui.toast('It’s draining. Slowly.'); return; }
-        drain = true; sfx('plug', V(6.6, 0.3, 7.62), { vol: 1 }); setTimeout(() => sfx('plug', V(6.6, 0.3, 7.62), { vol: 0.8, rate: 0.8 }), 2600); setTimeout(() => sfx('plug', V(6.6, -1, 7.62), { vol: 0.6, rate: 0.6 }), 7000);
-        G.ui.toast('You put your arm into the cold to the elbow and find the chain. Something gives. The water begins to turn.');
+        if (!looked) { looked = true; G.ui.toast('Full, to a hand’s width from the rim. Black and perfectly still. You can’t see the bottom. Someone filled it before the water went off — that’s what you did, here, when they warned you.', 7); return; }
+        pull();
       },
     });
-    examine(water, 'Bath', 'Full, to a hand’s width from the rim. Black and perfectly still. You can’t see the bottom. Someone filled it before the water went off — that’s what you did, here, when they warned you.');
   }
   // basin, mirror cabinet, and on the mirror, drawn in soap: ||| |||
   {

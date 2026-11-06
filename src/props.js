@@ -24,7 +24,7 @@ export function makeProp(mesh, o = {}) {
   mesh.quaternion.copy(q0); mesh.updateMatrixWorld(true);
   mergeInto(mesh);
   const mass = o.mass ?? 1;
-  const body = new CANNON.Body({ mass, material: G.phys.propMatl, linearDamping: o.damp ?? 0.12, angularDamping: o.adamp ?? 0.25, allowSleep: true, sleepSpeedLimit: 0.12, sleepTimeLimit: 0.6 });
+  const body = new CANNON.Body({ mass, material: (o.push ?? mass > 4) && mass >= 20 ? G.phys.slideMatl : G.phys.propMatl, linearDamping: o.damp ?? 0.12, angularDamping: o.adamp ?? 0.25, allowSleep: true, sleepSpeedLimit: 0.12, sleepTimeLimit: 0.6 });
   const off = new CANNON.Vec3(centre.x, centre.y, centre.z);
   if (o.shape === 'sphere') body.addShape(new CANNON.Sphere(o.radius || Math.max(size.x, size.y, size.z) / 2), off);
   else if (o.shape === 'cyl') {

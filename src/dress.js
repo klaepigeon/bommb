@@ -32,7 +32,7 @@ export function examine(meshes, name, desc, o = {}) {
 
 export function dressFlat() {
   G.surfaceSpots = [
-    { x: 0.95, z: 4.35, r: 0.75, kind: 'debris' }, { x: 7.75, z: 6.3, r: 0.85, kind: 'debris' },
+    { x: 2.6, z: 3.9, r: 0.75, kind: 'debris' }, { x: 7.75, z: 6.3, r: 0.85, kind: 'debris' },
     { x: 1.65, z: 0.35, r: 0.8, kind: 'glass' }, { x: 6.2, z: 0.25, r: 0.4, kind: 'glass' },
   ];
   torch();
@@ -201,43 +201,46 @@ function living() {
     const rug = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 2.7, 12, 12), M.rug); rug.rotation.x = -Math.PI / 2; rug.position.set(1.65, 0.006, 2.4); rug.receiveShadow = true;
     const p = rug.geometry.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i); if (y > 1.0) p.setZ(i, Math.max(0, (y - 1.0) * 0.25 * (Math.sin(x * 4) + 1))); } // one end rucked up
     rug.geometry.computeVertexNormals(); G.scene.add(rug); rug.userData.static = true;
-    const g = group({ x: 1.6, z: 2.4, ry: Math.PI / 2 });
-    box(1.0, 0.03, 0.5, M.veneer, { y: 0.43, parent: g });
-    for (const sx of [-0.45, 0.45]) for (const sz of [-0.2, 0.2]) box(0.04, 0.42, 0.04, M.veneer, { x: sx, y: 0, base: true, z: sz, parent: g });
-    box(0.92, 0.015, 0.42, M.veneerDull, { y: 0.12, parent: g });
-    solid(1.6, 0, 2.4, 0.5, 0.45, 1.0, 0, { noPlayer: false });
-    const np = sheet(D.paperFront, 0.32, 0.43, { x: 1.55, y: 0.448, z: 2.2, rx: -Math.PI / 2, rz: 0.3, name: 'Newspaper' }); void np;
-    const ash = lathe([[0, 0], [0.06, 0], [0.065, 0.025], [0.05, 0.025], [0.045, 0.008], [0, 0.008]], 14, mat('ashtray', { color: 0x4a5a4a, roughness: 0.2, metalness: 0.1 }), { x: 1.72, y: 0.445, z: 2.7, static: false });
+    const g = group({ x: 1.62, z: 2.6, ry: Math.PI / 2 });
+    box(0.9, 0.03, 0.46, M.veneer, { y: 0.43, parent: g });
+    for (const sx of [-0.4, 0.4]) for (const sz of [-0.18, 0.18]) box(0.04, 0.42, 0.04, M.veneer, { x: sx, y: 0, base: true, z: sz, parent: g });
+    box(0.82, 0.015, 0.38, M.veneerDull, { y: 0.12, parent: g });
+    solid(1.62, 0, 2.6, 0.46, 0.45, 0.9);
+    staticBox(1.62, 0.445, 2.6, 0.46, 0.02, 0.9);
+    const np = sheet(D.paperFront, 0.32, 0.43, { x: 1.58, y: 0.448, z: 2.4, rx: -Math.PI / 2, rz: 0.3, name: 'Newspaper' }); void np;
+    const ash = lathe([[0, 0], [0.06, 0], [0.065, 0.025], [0.05, 0.025], [0.045, 0.008], [0, 0.008]], 14, mat('ashtray', { color: 0x4a5a4a, roughness: 0.2, metalness: 0.1 }), { x: 1.7, y: 0.445, z: 2.85, static: false });
     for (let i = 0; i < 6; i++) cyl(0.004, 0.004, 0.03, 5, mat('butt', { color: 0xc8b890, roughness: 0.9 }), { x: (r() - 0.5) * 0.06, y: 0.015, z: (r() - 0.5) * 0.06, rz: 1.5, ry: r() * 3, parent: ash, static: false });
     makeProp(ash, { mass: 0.5, name: 'Ashtray', desc: 'Belomorkanal, the cardboard tubes pinched flat. Twenty or thirty. Somebody sat up a long time.', sound: 'glassTink' });
-    const gl = lathe([[0, 0], [0.03, 0], [0.034, 0.1], [0.031, 0.1], [0.027, 0.004], [0, 0.004]], 12, M.glass, { x: 1.45, y: 0.445, z: 2.62, static: false });
+    const gl = lathe([[0, 0], [0.03, 0], [0.034, 0.1], [0.031, 0.1], [0.027, 0.004], [0, 0.004]], 12, M.glass, { x: 1.5, y: 0.445, z: 2.75, static: false });
     makeProp(gl, { mass: 0.2, name: 'Glass', desc: 'A dried brown ring a third of the way up. It smells of nothing now.', sound: 'glassTink', breakable: true });
   }
   // the wall unit ("stenka"): veneer, glass, the good china, the television
   stenka(4.1, 2.1);
   // dining table by the window: dinner for three, never eaten; one chair thrown over
   {
-    const g = group({ x: 2.95, z: 1.5 });
+    const tx = 2.4, tz = 1.35;
+    const g = group({ x: tx, z: tz, ry: Math.PI / 2 });
     box(1.1, 0.035, 0.78, M.veneer, { y: 0.74, parent: g });
     for (const sx of [-0.5, 0.5]) for (const sz of [-0.33, 0.33]) box(0.05, 0.72, 0.05, M.veneer, { x: sx, y: 0, base: true, z: sz, parent: g });
-    drape(1.5, 1.2, [{ x0: -0.55, x1: 0.55, z0: -0.39, z1: 0.39, top: 0.762 }], mat('tablecloth', { map: fabricTex('#d8d0b8', 141, 1).map, roughness: 1 }), { x: 2.95, z: 1.5, y: 0, seed: 4, wrinkle: 0.01, fall: 5, nx: 30, nz: 24 });
-    solid(2.95, 0, 1.5, 1.1, 0.78, 0.78);
+    drape(1.2, 1.5, [{ x0: -0.39, x1: 0.39, z0: -0.55, z1: 0.55, top: 0.762 }], mat('tablecloth', { map: fabricTex('#d8d0b8', 141, 1).map, roughness: 1 }), { x: tx, z: tz, y: 0, seed: 4, wrinkle: 0.01, fall: 5, nx: 24, nz: 30 });
+    solid(tx, 0, tz, 0.78, 0.78, 1.1);
+    staticBox(tx, 0.765, tz, 0.78, 0.02, 1.1);
     const food = M.mould;
-    plate(2.65, 0.765, 1.3, food, { bone: true }); plate(3.25, 0.765, 1.3, food); plate(2.95, 0.765, 1.78, food);
-    for (const [x, z] of [[2.5, 1.3], [3.1, 1.3], [2.8, 1.78]]) box(0.012, 0.004, 0.17, M.chrome, { x, y: 0.768, z, static: true });
-    const pot = cyl(0.1, 0.09, 0.12, 14, M.enamelCream, { x: 2.95, y: 0.765, base: true, z: 1.5, static: false });
+    plate(tx, 0.765, tz - 0.38, food, { bone: true }); plate(tx + 0.2, 0.765, tz + 0.12, food); plate(tx, 0.765, tz + 0.4, food);
+    for (const [x, z] of [[tx - 0.15, tz - 0.38], [tx + 0.2, tz - 0.05], [tx - 0.15, tz + 0.4]]) box(0.17, 0.004, 0.012, M.chrome, { x, y: 0.768, z });
+    const pot = cyl(0.1, 0.09, 0.12, 14, M.enamelCream, { x: tx - 0.15, y: 0.765, base: true, z: tz, static: false });
     cyl(0.1, 0.1, 0.012, 14, M.enamelCream, { y: 0.07, parent: pot, static: false });
     makeProp(pot, { mass: 1.2, name: 'Saucepan', desc: 'Buckwheat, set like cement. The lid was left on.', sound: 'metal' });
-    const b = bottle(3.3, 0.765, 1.62, M.greenGlass, { label: labelMat('mineral', '#d8d0a8', '#3a4a8a', 'BORJOMI', 'mineral water') });
+    const b = bottle(tx + 0.25, 0.765, tz + 0.42, M.greenGlass, { label: labelMat('mineral', '#d8d0a8', '#3a4a8a', 'BORJOMI', 'mineral water') });
     makeProp(b, { mass: 0.5, name: 'Bottle of mineral water', desc: 'Sealed. Water from a bottle, kept for the table. Nobody opened it.', sound: 'glassTink', breakable: true });
-    const bread = rbox(0.18, 0.08, 0.1, 0.03, mat('bread', { color: 0x3a3a2a, roughness: 1, map: fabricTex('#4c4630', 142, 0).map }), { x: 2.75, y: 0.765, base: true, z: 1.55, ry: 0.3, static: false });
+    const bread = rbox(0.18, 0.08, 0.1, 0.03, mat('bread', { color: 0x3a3a2a, roughness: 1, map: fabricTex('#4c4630', 142, 0).map }), { x: tx - 0.2, y: 0.765, base: true, z: tz + 0.15, ry: 1.3, static: false });
     makeProp(bread, { mass: 0.2, name: 'Bread', desc: 'Grey-green and light as pumice.', sound: 'soft' });
-    // three chairs: two pushed back from the table, one on its back
-    chair(2.3, 1.5, Math.PI / 2 + 0.2, false);
-    chair(3.0, 2.25, Math.PI + 0.15, false);
-    chair(3.3, 0.6, -0.3, true);
-    // the cup from the fourth place: washed, upside-down, newer — someone came back and ate here
-    const c4 = cup(3.38, 0.765, 1.82, { mat: mat('cupBlue', { color: 0x3a5a8a, roughness: 0.3 }) }); c4.rotation.x = Math.PI; c4.position.y = 0.85;
+    // three chairs: two pushed back from the table, one thrown down by the window
+    chair(tx + 0.62, tz + 0.1, -Math.PI / 2 + 0.25, false);
+    chair(tx + 0.05, tz + 0.85, Math.PI + 0.15, false);
+    chair(tx - 0.05, tz - 0.95, 0.4, true);
+    // the cup from a fourth place: washed, upside-down, newer — someone came back and ate here
+    const c4 = cup(tx + 0.25, 0.765, tz - 0.32, { mat: mat('cupBlue', { color: 0x3a5a8a, roughness: 0.3 }) }); c4.rotation.x = Math.PI; c4.position.y = 0.855;
     makeProp(c4, { mass: 0.25, name: 'Cup', desc: 'Clean. Turned upside down to keep the dust out. It’s not from this set.', sound: 'glassTink' });
   }
   // the bookcase that went over: lying across the floor, books spilled out of it
@@ -268,7 +271,7 @@ function living() {
   }
   // the armchair under the collapse, smashed into the floor by the falling ceiling
   {
-    const g = group({ x: 0.9, z: 4.4, ry: 0.6 });
+    const g = group({ x: 2.55, z: 3.85, ry: -2.4 });
     rbox(0.75, 0.3, 0.7, 0.06, M.chairFab, { y: 0.0, base: true, parent: g, rz: 0.12 });
     rbox(0.75, 0.5, 0.18, 0.06, M.chairFab, { y: 0.15, z: -0.3, base: true, parent: g, rx: -0.5 });
     rbox(0.14, 0.35, 0.7, 0.05, M.chairFab, { x: -0.36, y: 0.05, base: true, parent: g, rz: -0.3 });
@@ -573,7 +576,7 @@ function hall() {
     void m;
   }
   // a single chair by the door, facing it
-  chair(8.4, 4.75, -Math.PI / 2 - 0.1, false);
+  chair(8.3, 4.93, Math.PI / 2 - 0.15, false);
   // a candle stub on the floor in the corner, a box of matches
   const c = candle(9.85, 0, 5.0, 0.03); void c;
   const matches = box(0.05, 0.015, 0.035, mat('matchbox', { color: 0xa88a4a, roughness: 0.9, map: labelMat('match', '#c8a050', '#2a2a2a', 'СПИЧКИ', '').map }), { x: 9.7, y: 0.008, z: 5.0, ry: 0.5, static: false });

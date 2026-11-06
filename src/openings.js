@@ -143,10 +143,10 @@ function makeDoor(spec) {
     sync();
   });
   interactive(leaf, {
-    prompt: () => (door.locked ? door.locked.prompt() : door.target > 0.05 ? 'Close' : 'Open'),
+    prompt: () => (door.locked ? door.locked.prompt() : door.target > 0.15 ? 'Close' : door.unstuck && door.target > 0 ? 'Shove it open' : 'Open'),
     use: () => {
       if (door.locked && door.locked.use()) return;
-      if (door.target > 0.05) { door.target = 0; sfx(spec.creak || 'doorCreak', door.world, { rate: 1.1 }); }
+      if (door.target > 0.15) { door.target = 0; sfx(spec.creak || 'doorCreak', door.world, { rate: 1.1 }); }
       else {
         door.target = door.max;
         if (spec.stuckOnce && !door.unstuck) { door.unstuck = true; door.target = 0.12; sfx('doorStuck', door.world); setTimeout(() => G.ui.toast(spec.stuckOnce), 50); return; }
@@ -239,10 +239,10 @@ export function buildOpenings() {
   shards(5.9, 6.7, 0.05, 0.3, 6, 4);
 
   // interior doors
-  makeDoor({ id: 'dLiving', hinge: 'a0', swing: -1, open: 1.35, max: 1.5, glazed: true, color: '#cfc6ae', seed: 3 });
+  makeDoor({ id: 'dLiving', hinge: 'a1', swing: -1, open: 1.45, max: 1.55, glazed: true, color: '#cfc6ae', seed: 3 });
   makeDoor({ id: 'dBed', hinge: 'a1', swing: -1, open: 0.55, max: 1.6, color: '#cbc2aa', seed: 4 });
   makeDoor({ id: 'dChild', hinge: 'a0', swing: 1, open: 0, max: 1.5, color: '#c7c8bd', seed: 5, scratches: false, text: null });
-  makeDoor({ id: 'dBath', hinge: 'a1', swing: 1, open: 0, max: 1.15, color: '#d6d2c2', seed: 6, stiff: true, stuckOnce: 'Swollen with damp. It gives a little.', creak: 'doorScrape' });
+  makeDoor({ id: 'dBath', hinge: 'a1', swing: 1, open: 0, max: 1.45, color: '#d6d2c2', seed: 6, stiff: true, stuckOnce: 'Swollen with damp. It gives a little.', creak: 'doorScrape' });
   // the box-room door: bolted on the living-room side
   const store = makeDoor({ id: 'dStore', hinge: 'a1', swing: 1, open: 0, max: 1.45, color: '#b9ad94', seed: 7 });
   {
@@ -267,7 +267,7 @@ export function buildOpenings() {
     void plate;
   }
   // balcony door: half-glazed, opens inward toward the room
-  makeDoor({ id: 'balDoor', hinge: 'a1', swing: 1, open: 0.25, max: 1.4, glazed: true, color: '#d9d3c2', seed: 8, plane: -0.1 });
+  makeDoor({ id: 'balDoor', hinge: 'a1', swing: 1, open: 1.5, max: 1.6, glazed: true, color: '#d9d3c2', seed: 8, plane: -0.1 });
 
   // the kitchen door: off its hinges, leaning in the hall. the lining and hinges remain
   {

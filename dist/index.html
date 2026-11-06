@@ -40575,6 +40575,10 @@ void main() {
     w.addContactMaterial(new ContactMaterial(staticMatl, propMatl, { friction: 0.45, restitution: 0.15 }));
     w.addContactMaterial(new ContactMaterial(propMatl, propMatl, { friction: 0.4, restitution: 0.1 }));
     w.propMatl = propMatl;
+    const slide = new Material2("slide");
+    w.addContactMaterial(new ContactMaterial(staticMatl, slide, { friction: 0, restitution: 0 }));
+    w.addContactMaterial(new ContactMaterial(propMatl, slide, { friction: 0, restitution: 0 }));
+    w.slideMatl = slide;
     G.phys = w;
     return w;
   }
@@ -41678,8 +41682,10 @@ void main() {
       case "bath": {
         plasterWall(s, "#b9bcb0", 61);
         s.rough(0.85);
-        tilesWall(s, 1.65, 0.15, side === "n" || side === "s" ? "#c8d6d4" : "#cbd8d6", "#6b6a60", 62);
-        s.falling(0.6, [40, 45, 35], 0.45);
+        tilesWall(s, 1.65, 0.15, side === "n" || side === "s" ? "#b4bcb2" : "#b8c0b4", "#5b5a50", 62);
+        s.noise(0.45, 1.2, "multiply", 8, 64).noise(0.25, 0.4, "multiply", 3, 65);
+        s.falling(0.6, [40, 45, 35], 0.45).rising(0.9, [55, 50, 30], 0.45);
+        for (let i = 0; i < 6; i++) s.mould(s.r() * W, 0.2 + s.r() * 1.3, 0.2 + s.r() * 0.4, 0.15 + s.r() * 0.3, 0.8);
         s.mould(0.15, 2.3, 0.6, 1.4, 1.6).mould(W - 0.15, 2.3, 0.6, 1.4, 1.6).mould(W * 0.5, H - 0.1, W * 0.7, 0.5, 1.1);
         s.waterStain(W * 0.4, H - 0.05, 1.4, 1.6, 1.5);
         if (side === "s") {
@@ -41716,8 +41722,8 @@ void main() {
         puddle(s, 3.6, 0.5, 1, 0.6, [70, 66, 56], 0.5, false);
         puddle(s, 1.6, 0.35, 1.4, 0.35, [60, 56, 48], 0.4, false);
         s.noise(0.35, 0.4, "source-over", 2, 13, "h");
-        worn(s, [[4.3, 4.6], [3, 3.6], [2.2, 2.4], [1.4, 2.6]], 0.6, 0.18);
-        debrisDust(s, 0.95, 4.35, 1.3, 0.55);
+        worn(s, [[4.3, 4.7], [4, 3.5], [3.5, 3], [3.5, 1.4], [3.2, 0.2]], 0.6, 0.18);
+        debrisDust(s, 2.6, 3.9, 1.3, 0.55);
         s.g.fillStyle = "rgba(40,30,20,0.4)";
         s.g.fill(blobPath(s.px(2.5), s.px(1.9), s.px(0.2), s.px(0.12), s.r));
         break;
@@ -41785,7 +41791,7 @@ void main() {
     s.fill(room === "kitchen" ? "#bdb6a2" : room === "bath" ? "#a9aa9c" : "#c6c0ae");
     s.noise(0.3, 1.5, "multiply", 10, seedN).noise(0.15, 0.5, "overlay", 4, seedN + 1).grain(0.05);
     const g = s.g;
-    for (let i = 0; i < 5; i++) s.crack(s.r() * W, s.r() * D, 1 + s.r() * 2, s.r() * 6.28, 2, 1);
+    for (let i = 0; i < 5; i++) s.crack(s.r() * W, s.r() * D, 1 + s.r() * 2, s.r() * 6.28, 2, 0.5);
     const stain = (x, y, rx, ry, k = 1) => {
       for (let ring = 0; ring < 5; ring++) {
         const p = blobPath(s.px(x), s.px(y), s.px(rx) * (1 - ring * 0.17), s.px(ry) * (1 - ring * 0.17), s.r, 0.2, 40);
@@ -41807,7 +41813,7 @@ void main() {
       }
     };
     if (room === "living") {
-      stain(1, 4.3, 1.5, 1.1, 1.4);
+      stain(2.5, 3.85, 1.5, 1.1, 1.4);
       stain(1.6, 0.6, 1.4, 0.6, 1.2);
       mouldC(0.3, 0.2, 0.8, 0.4);
     }
@@ -41892,7 +41898,7 @@ void main() {
     return pts;
   }
   var CEILING_HOLES = {
-    living: { pts: jagged(0.95, 4.35, 0.62, 0.5, 3), cx: 0.95, cz: 4.35 },
+    living: { pts: jagged(2.6, 3.9, 0.62, 0.5, 3), cx: 2.6, cz: 3.9 },
     bath: { pts: jagged(7.75, 6.3, 0.72, 0.55, 8), cx: 7.75, cz: 6.3 }
   };
   var FLOOR_HOLES = {
@@ -42132,8 +42138,13 @@ void main() {
         const m = box(0.5 + r() * 0.5, 8e-3, 0.035, lath, { x: cx + (r() - 0.5) * 1.2, y: 0.03 + r() * 0.08, z: cz + (r() - 0.5) * 1, parent: heap });
         m.rotation.set((r() - 0.5) * 0.3, r() * 3, (r() - 0.5) * 0.3);
       }
-      collider({ x: cx, z: cz, hx: 0.45, hz: 0.38, y0: 0, y1: 0.25, heap: true });
-      staticBox(cx, 0.06, cz, 1, 0.12, 0.8);
+      collider({ x: cx, z: cz, hx: 0.32, hz: 0.27, y0: 0, y1: 0.25, heap: true });
+      if (key === "living") {
+        const l = new PointLight(9082536, 0.3, 3.5, 2);
+        l.position.set(cx, H + 0.2, cz);
+        G.scene.add(l);
+      }
+      staticBox(cx, 0.05, cz, 0.7, 0.1, 0.56);
       void key;
     }
     const f = FLOOR_HOLES.living;
@@ -43132,10 +43143,10 @@ void main() {
       sync();
     });
     interactive(leaf, {
-      prompt: () => door.locked ? door.locked.prompt() : door.target > 0.05 ? "Close" : "Open",
+      prompt: () => door.locked ? door.locked.prompt() : door.target > 0.15 ? "Close" : door.unstuck && door.target > 0 ? "Shove it open" : "Open",
       use: () => {
         if (door.locked && door.locked.use()) return;
-        if (door.target > 0.05) {
+        if (door.target > 0.15) {
           door.target = 0;
           sfx(spec.creak || "doorCreak", door.world, { rate: 1.1 });
         } else {
@@ -43156,7 +43167,7 @@ void main() {
   }
   var frameMat = () => mat("winFrame", { map: woodTex("#e2dccb", 41, 1).map, color: 14275263, roughness: 0.8 });
   function glassMat(dirt = 0) {
-    return mat("glass" + dirt, { color: dirt ? 10134164 : 12108996, roughness: dirt ? 0.4 : 0.08, metalness: 0.1, transparent: true, opacity: dirt ? 0.42 : 0.16, depthWrite: false, envMapIntensity: 1 });
+    return mat("glass" + dirt, { color: dirt ? 12106928 : 13160656, roughness: dirt ? 0.5 : 0.1, metalness: 0, transparent: true, opacity: dirt ? 0.22 : 0.1, depthWrite: false, emissive: 3159614, emissiveIntensity: 0.4 });
   }
   function pane(parent, x, y, w, h, broken, seed) {
     const r = rng(seed);
@@ -43239,10 +43250,10 @@ void main() {
     makeWindow("childWin", {});
     shards(0.8, 2.5, 0.05, 0.6, 26, 3);
     shards(5.9, 6.7, 0.05, 0.3, 6, 4);
-    makeDoor({ id: "dLiving", hinge: "a0", swing: -1, open: 1.35, max: 1.5, glazed: true, color: "#cfc6ae", seed: 3 });
+    makeDoor({ id: "dLiving", hinge: "a1", swing: -1, open: 1.45, max: 1.55, glazed: true, color: "#cfc6ae", seed: 3 });
     makeDoor({ id: "dBed", hinge: "a1", swing: -1, open: 0.55, max: 1.6, color: "#cbc2aa", seed: 4 });
     makeDoor({ id: "dChild", hinge: "a0", swing: 1, open: 0, max: 1.5, color: "#c7c8bd", seed: 5, scratches: false, text: null });
-    makeDoor({ id: "dBath", hinge: "a1", swing: 1, open: 0, max: 1.15, color: "#d6d2c2", seed: 6, stiff: true, stuckOnce: "Swollen with damp. It gives a little.", creak: "doorScrape" });
+    makeDoor({ id: "dBath", hinge: "a1", swing: 1, open: 0, max: 1.45, color: "#d6d2c2", seed: 6, stiff: true, stuckOnce: "Swollen with damp. It gives a little.", creak: "doorScrape" });
     const store = makeDoor({ id: "dStore", hinge: "a1", swing: 1, open: 0, max: 1.45, color: "#b9ad94", seed: 7 });
     {
       const o = openById.dStore, l = lineById[o.line], zf = l.p0 - 0.012;
@@ -43265,7 +43276,7 @@ void main() {
       };
       void plate2;
     }
-    makeDoor({ id: "balDoor", hinge: "a1", swing: 1, open: 0.25, max: 1.4, glazed: true, color: "#d9d3c2", seed: 8, plane: -0.1 });
+    makeDoor({ id: "balDoor", hinge: "a1", swing: 1, open: 1.5, max: 1.6, glazed: true, color: "#d9d3c2", seed: 8, plane: -0.1 });
     {
       const o = openById.dKit, l = lineById[o.line];
       lining(o, l, mat("lining", {}));
@@ -43746,7 +43757,7 @@ void main() {
     mesh.updateMatrixWorld(true);
     mergeInto(mesh);
     const mass = o.mass ?? 1;
-    const body = new Body({ mass, material: G.phys.propMatl, linearDamping: o.damp ?? 0.12, angularDamping: o.adamp ?? 0.25, allowSleep: true, sleepSpeedLimit: 0.12, sleepTimeLimit: 0.6 });
+    const body = new Body({ mass, material: (o.push ?? mass > 4) && mass >= 20 ? G.phys.slideMatl : G.phys.propMatl, linearDamping: o.damp ?? 0.12, angularDamping: o.adamp ?? 0.25, allowSleep: true, sleepSpeedLimit: 0.12, sleepTimeLimit: 0.6 });
     const off = new Vec3(centre2.x, centre2.y, centre2.z);
     if (o.shape === "sphere") body.addShape(new Sphere2(o.radius || Math.max(size.x, size.y, size.z) / 2), off);
     else if (o.shape === "cyl") {
@@ -45421,22 +45432,32 @@ void main() {
           pickable(shoe, { name: "Child's shoe", desc: "A girl\u2019s red buckle shoe, right foot. The pair to the one in the hall.", mass: 0.2, sound: "soft" });
         }
       });
-      interactive(chain2, {
-        prompt: () => drain ? "The plug chain" : "Pull the plug",
-        range: 1.6,
+      const plateO = cyl(0.03, 0.03, 0.01, 12, M.chrome, { x: -0.8, y: 0.56, z: 0, rz: Math.PI / 2, parent: g, static: false });
+      const pull = () => {
+        if (drain) {
+          G.ui.toast("It\u2019s draining. Slowly.");
+          return;
+        }
+        drain = true;
+        sfx("plug", V(6.6, 0.3, 7.62), { vol: 1 });
+        setTimeout(() => sfx("plug", V(6.6, 0.3, 7.62), { vol: 0.8, rate: 0.8 }), 2600);
+        setTimeout(() => sfx("plug", V(6.6, -1, 7.62), { vol: 0.6, rate: 0.6 }), 7e3);
+        G.ui.toast("You put your arm into the cold to the elbow and find the chain. Something gives. The water begins to turn.");
+      };
+      let looked = false;
+      interactive([...chain2, plateO], { prompt: () => drain ? "The plug chain" : "Pull the plug", range: 1.6, use: pull });
+      interactive(water, {
+        range: 1.8,
+        prompt: () => drain ? "The bath" : looked ? "Reach into the water" : "Look at the bath",
         use: () => {
-          if (drain) {
-            G.ui.toast("It\u2019s draining. Slowly.");
+          if (!looked) {
+            looked = true;
+            G.ui.toast("Full, to a hand\u2019s width from the rim. Black and perfectly still. You can\u2019t see the bottom. Someone filled it before the water went off \u2014 that\u2019s what you did, here, when they warned you.", 7);
             return;
           }
-          drain = true;
-          sfx("plug", V(6.6, 0.3, 7.62), { vol: 1 });
-          setTimeout(() => sfx("plug", V(6.6, 0.3, 7.62), { vol: 0.8, rate: 0.8 }), 2600);
-          setTimeout(() => sfx("plug", V(6.6, -1, 7.62), { vol: 0.6, rate: 0.6 }), 7e3);
-          G.ui.toast("You put your arm into the cold to the elbow and find the chain. Something gives. The water begins to turn.");
+          pull();
         }
       });
-      examine(water, "Bath", "Full, to a hand\u2019s width from the rim. Black and perfectly still. You can\u2019t see the bottom. Someone filled it before the water went off \u2014 that\u2019s what you did, here, when they warned you.");
     }
     {
       const g = group({ x: 9.75, z: 6.55, ry: -Math.PI / 2 });
@@ -45663,7 +45684,7 @@ void main() {
   }
   function dressFlat() {
     G.surfaceSpots = [
-      { x: 0.95, z: 4.35, r: 0.75, kind: "debris" },
+      { x: 2.6, z: 3.9, r: 0.75, kind: "debris" },
       { x: 7.75, z: 6.3, r: 0.85, kind: "debris" },
       { x: 1.65, z: 0.35, r: 0.8, kind: "glass" },
       { x: 6.2, z: 0.25, r: 0.4, kind: "glass" }
@@ -45886,44 +45907,47 @@ void main() {
       rug.geometry.computeVertexNormals();
       G.scene.add(rug);
       rug.userData.static = true;
-      const g = group({ x: 1.6, z: 2.4, ry: Math.PI / 2 });
-      box(1, 0.03, 0.5, M.veneer, { y: 0.43, parent: g });
-      for (const sx of [-0.45, 0.45]) for (const sz of [-0.2, 0.2]) box(0.04, 0.42, 0.04, M.veneer, { x: sx, y: 0, base: true, z: sz, parent: g });
-      box(0.92, 0.015, 0.42, M.veneerDull, { y: 0.12, parent: g });
-      solid(1.6, 0, 2.4, 0.5, 0.45, 1, 0, { noPlayer: false });
-      const np = sheet(paperFront, 0.32, 0.43, { x: 1.55, y: 0.448, z: 2.2, rx: -Math.PI / 2, rz: 0.3, name: "Newspaper" });
+      const g = group({ x: 1.62, z: 2.6, ry: Math.PI / 2 });
+      box(0.9, 0.03, 0.46, M.veneer, { y: 0.43, parent: g });
+      for (const sx of [-0.4, 0.4]) for (const sz of [-0.18, 0.18]) box(0.04, 0.42, 0.04, M.veneer, { x: sx, y: 0, base: true, z: sz, parent: g });
+      box(0.82, 0.015, 0.38, M.veneerDull, { y: 0.12, parent: g });
+      solid(1.62, 0, 2.6, 0.46, 0.45, 0.9);
+      staticBox(1.62, 0.445, 2.6, 0.46, 0.02, 0.9);
+      const np = sheet(paperFront, 0.32, 0.43, { x: 1.58, y: 0.448, z: 2.4, rx: -Math.PI / 2, rz: 0.3, name: "Newspaper" });
       void np;
-      const ash = lathe([[0, 0], [0.06, 0], [0.065, 0.025], [0.05, 0.025], [0.045, 8e-3], [0, 8e-3]], 14, mat("ashtray", { color: 4872778, roughness: 0.2, metalness: 0.1 }), { x: 1.72, y: 0.445, z: 2.7, static: false });
+      const ash = lathe([[0, 0], [0.06, 0], [0.065, 0.025], [0.05, 0.025], [0.045, 8e-3], [0, 8e-3]], 14, mat("ashtray", { color: 4872778, roughness: 0.2, metalness: 0.1 }), { x: 1.7, y: 0.445, z: 2.85, static: false });
       for (let i = 0; i < 6; i++) cyl(4e-3, 4e-3, 0.03, 5, mat("butt", { color: 13154448, roughness: 0.9 }), { x: (r() - 0.5) * 0.06, y: 0.015, z: (r() - 0.5) * 0.06, rz: 1.5, ry: r() * 3, parent: ash, static: false });
       makeProp(ash, { mass: 0.5, name: "Ashtray", desc: "Belomorkanal, the cardboard tubes pinched flat. Twenty or thirty. Somebody sat up a long time.", sound: "glassTink" });
-      const gl = lathe([[0, 0], [0.03, 0], [0.034, 0.1], [0.031, 0.1], [0.027, 4e-3], [0, 4e-3]], 12, M.glass, { x: 1.45, y: 0.445, z: 2.62, static: false });
+      const gl = lathe([[0, 0], [0.03, 0], [0.034, 0.1], [0.031, 0.1], [0.027, 4e-3], [0, 4e-3]], 12, M.glass, { x: 1.5, y: 0.445, z: 2.75, static: false });
       makeProp(gl, { mass: 0.2, name: "Glass", desc: "A dried brown ring a third of the way up. It smells of nothing now.", sound: "glassTink", breakable: true });
     }
     stenka(4.1, 2.1);
     {
-      const g = group({ x: 2.95, z: 1.5 });
+      const tx = 2.4, tz = 1.35;
+      const g = group({ x: tx, z: tz, ry: Math.PI / 2 });
       box(1.1, 0.035, 0.78, M.veneer, { y: 0.74, parent: g });
       for (const sx of [-0.5, 0.5]) for (const sz of [-0.33, 0.33]) box(0.05, 0.72, 0.05, M.veneer, { x: sx, y: 0, base: true, z: sz, parent: g });
-      drape(1.5, 1.2, [{ x0: -0.55, x1: 0.55, z0: -0.39, z1: 0.39, top: 0.762 }], mat("tablecloth", { map: fabricTex("#d8d0b8", 141, 1).map, roughness: 1 }), { x: 2.95, z: 1.5, y: 0, seed: 4, wrinkle: 0.01, fall: 5, nx: 30, nz: 24 });
-      solid(2.95, 0, 1.5, 1.1, 0.78, 0.78);
+      drape(1.2, 1.5, [{ x0: -0.39, x1: 0.39, z0: -0.55, z1: 0.55, top: 0.762 }], mat("tablecloth", { map: fabricTex("#d8d0b8", 141, 1).map, roughness: 1 }), { x: tx, z: tz, y: 0, seed: 4, wrinkle: 0.01, fall: 5, nx: 24, nz: 30 });
+      solid(tx, 0, tz, 0.78, 0.78, 1.1);
+      staticBox(tx, 0.765, tz, 0.78, 0.02, 1.1);
       const food = M.mould;
-      plate(2.65, 0.765, 1.3, food, { bone: true });
-      plate(3.25, 0.765, 1.3, food);
-      plate(2.95, 0.765, 1.78, food);
-      for (const [x, z] of [[2.5, 1.3], [3.1, 1.3], [2.8, 1.78]]) box(0.012, 4e-3, 0.17, M.chrome, { x, y: 0.768, z, static: true });
-      const pot = cyl(0.1, 0.09, 0.12, 14, M.enamelCream, { x: 2.95, y: 0.765, base: true, z: 1.5, static: false });
+      plate(tx, 0.765, tz - 0.38, food, { bone: true });
+      plate(tx + 0.2, 0.765, tz + 0.12, food);
+      plate(tx, 0.765, tz + 0.4, food);
+      for (const [x, z] of [[tx - 0.15, tz - 0.38], [tx + 0.2, tz - 0.05], [tx - 0.15, tz + 0.4]]) box(0.17, 4e-3, 0.012, M.chrome, { x, y: 0.768, z });
+      const pot = cyl(0.1, 0.09, 0.12, 14, M.enamelCream, { x: tx - 0.15, y: 0.765, base: true, z: tz, static: false });
       cyl(0.1, 0.1, 0.012, 14, M.enamelCream, { y: 0.07, parent: pot, static: false });
       makeProp(pot, { mass: 1.2, name: "Saucepan", desc: "Buckwheat, set like cement. The lid was left on.", sound: "metal" });
-      const b2 = bottle(3.3, 0.765, 1.62, M.greenGlass, { label: labelMat("mineral", "#d8d0a8", "#3a4a8a", "BORJOMI", "mineral water") });
+      const b2 = bottle(tx + 0.25, 0.765, tz + 0.42, M.greenGlass, { label: labelMat("mineral", "#d8d0a8", "#3a4a8a", "BORJOMI", "mineral water") });
       makeProp(b2, { mass: 0.5, name: "Bottle of mineral water", desc: "Sealed. Water from a bottle, kept for the table. Nobody opened it.", sound: "glassTink", breakable: true });
-      const bread = rbox(0.18, 0.08, 0.1, 0.03, mat("bread", { color: 3815978, roughness: 1, map: fabricTex("#4c4630", 142, 0).map }), { x: 2.75, y: 0.765, base: true, z: 1.55, ry: 0.3, static: false });
+      const bread = rbox(0.18, 0.08, 0.1, 0.03, mat("bread", { color: 3815978, roughness: 1, map: fabricTex("#4c4630", 142, 0).map }), { x: tx - 0.2, y: 0.765, base: true, z: tz + 0.15, ry: 1.3, static: false });
       makeProp(bread, { mass: 0.2, name: "Bread", desc: "Grey-green and light as pumice.", sound: "soft" });
-      chair(2.3, 1.5, Math.PI / 2 + 0.2, false);
-      chair(3, 2.25, Math.PI + 0.15, false);
-      chair(3.3, 0.6, -0.3, true);
-      const c4 = cup(3.38, 0.765, 1.82, { mat: mat("cupBlue", { color: 3824266, roughness: 0.3 }) });
+      chair(tx + 0.62, tz + 0.1, -Math.PI / 2 + 0.25, false);
+      chair(tx + 0.05, tz + 0.85, Math.PI + 0.15, false);
+      chair(tx - 0.05, tz - 0.95, 0.4, true);
+      const c4 = cup(tx + 0.25, 0.765, tz - 0.32, { mat: mat("cupBlue", { color: 3824266, roughness: 0.3 }) });
       c4.rotation.x = Math.PI;
-      c4.position.y = 0.85;
+      c4.position.y = 0.855;
       makeProp(c4, { mass: 0.25, name: "Cup", desc: "Clean. Turned upside down to keep the dust out. It\u2019s not from this set.", sound: "glassTink" });
     }
     {
@@ -45959,7 +45983,7 @@ void main() {
       G.flags.barricade = p;
     }
     {
-      const g = group({ x: 0.9, z: 4.4, ry: 0.6 });
+      const g = group({ x: 2.55, z: 3.85, ry: -2.4 });
       rbox(0.75, 0.3, 0.7, 0.06, M.chairFab, { y: 0, base: true, parent: g, rz: 0.12 });
       rbox(0.75, 0.5, 0.18, 0.06, M.chairFab, { y: 0.15, z: -0.3, base: true, parent: g, rx: -0.5 });
       rbox(0.14, 0.35, 0.7, 0.05, M.chairFab, { x: -0.36, y: 0.05, base: true, parent: g, rz: -0.3 });
@@ -46389,7 +46413,7 @@ void main() {
       const m = sheet(notice, 0.36, 0.5, { x: 0.45, y: 1.25, z: 0.037, parent: d.pivot, name: "Notice" });
       void m;
     }
-    chair(8.4, 4.75, -Math.PI / 2 - 0.1, false);
+    chair(8.3, 4.93, Math.PI / 2 - 0.15, false);
     const c2 = candle(9.85, 0, 5, 0.03);
     void c2;
     const matches = box(0.05, 0.015, 0.035, mat("matchbox", { color: 11045450, roughness: 0.9, map: labelMat("match", "#c8a050", "#2a2a2a", "\u0421\u041F\u0418\u0427\u041A\u0418", "").map }), { x: 9.7, y: 8e-3, z: 5, ry: 0.5, static: false });
@@ -47135,7 +47159,7 @@ void main() {
     const qx = Math.max(-c2.hx, Math.min(c2.hx, lx)), qz = Math.max(-c2.hz, Math.min(c2.hz, lz));
     let ox = lx - qx, oz = lz - qz;
     const d2 = ox * ox + oz * oz;
-    if (d2 > r * r) return null;
+    if (d2 >= r * r - 1e-7) return null;
     let px2, pz2;
     if (d2 > 1e-9) {
       const d = Math.sqrt(d2), k = (r - d) / d;
@@ -47181,7 +47205,7 @@ void main() {
     right.set(-fwd2.z, 0, fwd2.x);
     wish.set(0, 0, 0).addScaledVector(fwd2, mz).addScaledVector(right, mx);
     if (wish.lengthSq() > 1) wish.normalize();
-    wish.multiplyScalar(maxV * (P2.pushing ? 0.45 : 1));
+    wish.multiplyScalar(maxV * (P2.pushing ? P2.pushing : 1));
     const acc = wish.lengthSq() > 0 ? 9 : 11;
     P2.vel.x += (wish.x - P2.vel.x) * Math.min(1, acc * dt);
     P2.vel.z += (wish.z - P2.vel.z) * Math.min(1, acc * dt);
@@ -47204,10 +47228,10 @@ void main() {
         const len = Math.hypot(push[0], push[1]) || 1;
         if (p.push) {
           if (p.body.sleepState) p.body.wakeUp();
-          const v = Math.hypot(P2.vel.x, P2.vel.z), k2 = Math.min(1, 14 / p.mass);
-          p.body.velocity.x = -push[0] / len * v * k2 * 1.6;
-          p.body.velocity.z = -push[1] / len * v * k2 * 1.6;
-          P2.pushing = true;
+          const v = Math.hypot(P2.vel.x, P2.vel.z), k2 = Math.min(1, 20 / p.mass);
+          p.body.velocity.x = -push[0] / len * v * k2 * 2;
+          p.body.velocity.z = -push[1] / len * v * k2 * 2;
+          P2.pushing = Math.max(0.35, Math.min(1, 1.2 - p.mass / 60));
           if (!p.scrapeT || performance.now() - p.scrapeT > 600) {
             p.scrapeT = performance.now();
             if (v > 0.2) sfx(p.mass > 30 ? "drag" : "doorScrape", p.mesh.position, { vol: Math.min(0.7, v * 0.4) });
@@ -47337,6 +47361,7 @@ void main() {
   function updateInteract(dt, camera2) {
     if (I.inspecting) return updateInspect(dt, camera2);
     if (I.held) holdUpdate(dt, camera2);
+    camera2.updateMatrixWorld();
     ray.setFromCamera(centre, camera2);
     const hits = ray.intersectObjects([...candidates(), ...I.blockers], true);
     I.target = null;
@@ -47550,7 +47575,7 @@ void main() {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = PCFShadowMap;
     renderer.toneMapping = ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1;
+    renderer.toneMappingExposure = 1.15;
     renderer.outputColorSpace = SRGBColorSpace;
     $2("app").appendChild(renderer.domElement);
     scene = new Scene();
@@ -47882,6 +47907,109 @@ void main() {
     composer.render();
   };
   window.__roomAt = roomAt;
+  window.__use = use;
+  window.__throw = throwHeld;
+  window.__inspect = beginInspect;
+  window.__endInspect = endInspect;
+  window.__aim = (x, y, z) => {
+    const dx = x - camera.position.x, dy = y - camera.position.y, dz = z - camera.position.z;
+    P2.yaw = Math.atan2(-dx, -dz);
+    P2.pitch = Math.atan2(dy, Math.hypot(dx, dz));
+    updatePlayer(0.016, camera);
+    updateInteract(0.016, camera);
+    const t = I.target;
+    return t ? t.kind === "use" ? typeof t.it.prompt === "function" ? t.it.prompt() : t.it.prompt : t.kind + ":" + (t.spec?.name || t.prop?.name) : null;
+  };
+  window.__goto = (tx, tz, maxSec = 20) => {
+    const R = 0.245, x0 = -0.4, z0 = -1.8, W = 112, Hh = 102, S = 0.1;
+    const blocked = new Uint8Array(W * Hh);
+    const foots = [...G.colliders.filter((c2) => c2.on && c2.y1 > 0.2 && c2.y0 < 1.6), ...G.props.filter((p) => p.push && !p.dead).map((p) => propFootprint(p))];
+    for (let j = 0; j < Hh; j++) for (let i = 0; i < W; i++) {
+      const x = x0 + i * S, z = z0 + j * S;
+      for (const c2 of foots) {
+        const dx = x - c2.x, dz = z - c2.z, cs = Math.cos(c2.rot), sn = Math.sin(c2.rot);
+        const lx = dx * cs - dz * sn, lz = dx * sn + dz * cs;
+        const qx = Math.max(-c2.hx, Math.min(c2.hx, lx)), qz = Math.max(-c2.hz, Math.min(c2.hz, lz));
+        if ((lx - qx) ** 2 + (lz - qz) ** 2 < R * R) {
+          blocked[j * W + i] = 1;
+          break;
+        }
+      }
+    }
+    const idx = (x, z) => [Math.round((x - x0) / S), Math.round((z - z0) / S)];
+    const [si, sj] = idx(P2.pos.x, P2.pos.z), [ti, tj] = idx(tx, tz);
+    const open = [[si, sj, 0]], came = /* @__PURE__ */ new Map(), cost = /* @__PURE__ */ new Map([[sj * W + si, 0]]);
+    let found = false;
+    while (open.length) {
+      open.sort((a2, b2) => a2[2] - b2[2]);
+      const [i, j] = open.shift();
+      if (i === ti && j === tj) {
+        found = true;
+        break;
+      }
+      for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+        const ni = i + di, nj = j + dj;
+        if (ni < 0 || nj < 0 || ni >= W || nj >= Hh) continue;
+        const k = nj * W + ni;
+        if (blocked[k] && !(ni === ti && nj === tj)) continue;
+        const c2 = cost.get(j * W + i) + Math.hypot(di, dj);
+        if (c2 < (cost.get(k) ?? Infinity)) {
+          cost.set(k, c2);
+          came.set(k, j * W + i);
+          open.push([ni, nj, c2 + Math.hypot(ti - ni, tj - nj)]);
+        }
+      }
+    }
+    if (!found) {
+      if (window.__mapDump) {
+        let o = "";
+        for (let j = 0; j < Hh; j += 2) {
+          for (let i = 0; i < W; i++) o += i === si && j === sj ? "S" : blocked[j * W + i] ? "#" : ".";
+          o += "\n";
+        }
+        return o;
+      }
+      return "no path";
+    }
+    const path = [];
+    for (let k = tj * W + ti; k !== void 0; k = came.get(k)) path.unshift([x0 + k % W * S, z0 + Math.floor(k / W) * S]);
+    for (let n = 0; n < path.length; n += 3) window.__walk(path[n][0], path[n][1], 1);
+    window.__walk(tx, tz, 1);
+    void maxSec;
+    return [P2.pos.x.toFixed(2), P2.pos.z.toFixed(2), P2.room];
+  };
+  window.__reach = (x, y, z) => {
+    for (let k = 0; k < 6; k++) {
+      window.__step(1);
+      const a2 = window.__aim(x, y, z);
+      if (a2) return a2;
+      const dx = x - P2.pos.x, dz = z - P2.pos.z, d = Math.hypot(dx, dz);
+      if (d < 0.5) break;
+      window.__walk(P2.pos.x + dx / d * 0.25, P2.pos.z + dz / d * 0.25, 0.5);
+    }
+    return null;
+  };
+  window.__hits = (x, y, z) => {
+    window.__aim(x, y, z);
+    const r = new Raycaster();
+    r.setFromCamera(new Vector2(), camera);
+    return r.intersectObjects(scene.children, true).filter((h) => !h.object.isPoints && !h.object.isSprite).slice(0, 6).map((h) => [h.object.name || h.object.type, h.object.userData.it ? "IT" : "", h.object.userData.blocker ? "BLK" : "", h.distance.toFixed(2), h.object.visible]);
+  };
+  window.__walk = (x, z, sec = 2) => {
+    const n = Math.round(sec * 60);
+    for (let i = 0; i < n; i++) {
+      const dx = x - P2.pos.x, dz = z - P2.pos.z;
+      if (Math.hypot(dx, dz) < 0.1) break;
+      P2.yaw = Math.atan2(-dx, -dz);
+      P2.keys.KeyW = true;
+      G.time += 1 / 60;
+      updatePlayer(1 / 60, camera);
+      G.phys.step(1 / 60);
+      for (const f of G.updates) f(1 / 60, G.time);
+    }
+    P2.keys.KeyW = false;
+    return [P2.pos.x.toFixed(2), P2.pos.z.toFixed(2), P2.room];
+  };
   boot().catch((e) => {
     msg("Something went wrong: " + e.message);
     console.error(e);

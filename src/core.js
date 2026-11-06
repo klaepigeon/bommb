@@ -113,6 +113,12 @@ export function initPhysics() {
   w.addContactMaterial(new CANNON.ContactMaterial(staticMatl, propMatl, { friction: 0.45, restitution: 0.15 }));
   w.addContactMaterial(new CANNON.ContactMaterial(propMatl, propMatl, { friction: 0.4, restitution: 0.1 }));
   w.propMatl = propMatl;
+  // heavy furniture slides (cannon sums friction over every contact point, so a box on a floor
+  // otherwise sticks like glue)
+  const slide = new CANNON.Material('slide');
+  w.addContactMaterial(new CANNON.ContactMaterial(staticMatl, slide, { friction: 0, restitution: 0 }));
+  w.addContactMaterial(new CANNON.ContactMaterial(propMatl, slide, { friction: 0, restitution: 0 }));
+  w.slideMatl = slide;
   G.phys = w;
   return w;
 }

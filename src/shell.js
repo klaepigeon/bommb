@@ -40,7 +40,7 @@ function jagged(cx, cz, rx, rz, seed) {
 }
 
 export const CEILING_HOLES = {
-  living: { pts: jagged(0.95, 4.35, 0.62, 0.5, 3), cx: 0.95, cz: 4.35 },
+  living: { pts: jagged(2.6, 3.9, 0.62, 0.5, 3), cx: 2.6, cz: 3.9 },
   bath: { pts: jagged(7.75, 6.3, 0.72, 0.55, 8), cx: 7.75, cz: 6.3 },
 };
 export const FLOOR_HOLES = {
@@ -248,10 +248,10 @@ function buildCollapses() {
       m.rotation.set((r() - 0.5) * 0.3, r() * 3, (r() - 0.5) * 0.3);
     }
     // the heap's a low obstacle
-    collider({ x: cx, z: cz, hx: 0.45, hz: 0.38, y0: 0, y1: 0.25, heap: true });
+    collider({ x: cx, z: cz, hx: 0.32, hz: 0.27, y0: 0, y1: 0.25, heap: true });
     // a little grey light from the flat above, where its own window is out
     if (key === 'living') { const l = new THREE.PointLight(0x8a96a8, 0.3, 3.5, 2); l.position.set(cx, H + 0.2, cz); G.scene.add(l); }
-    staticBox(cx, 0.06, cz, 1.0, 0.12, 0.8);
+    staticBox(cx, 0.05, cz, 0.7, 0.1, 0.56);
     void key;
   }
 

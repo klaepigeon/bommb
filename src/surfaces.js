@@ -289,8 +289,8 @@ export function paintFloor(room, W, D) {
       puddle(s, 3.6, 0.5, 1.0, 0.6, [70, 66, 56], 0.5, false);
       puddle(s, 1.6, 0.35, 1.4, 0.35, [60, 56, 48], 0.4, false);
       s.noise(0.35, 0.4, 'source-over', 2, 13, 'h');
-      worn(s, [[4.3, 4.6], [3.0, 3.6], [2.2, 2.4], [1.4, 2.6]], 0.6, 0.18);
-      debrisDust(s, 0.95, 4.35, 1.3, 0.55);
+      worn(s, [[4.3, 4.7], [4.0, 3.5], [3.5, 3.0], [3.5, 1.4], [3.2, 0.2]], 0.6, 0.18);
+      debrisDust(s, 2.6, 3.9, 1.3, 0.55);
       s.g.fillStyle = 'rgba(40,30,20,0.4)'; s.g.fill(blobPath(s.px(2.5), s.px(1.9), s.px(0.2), s.px(0.12), s.r)); // something spilled off the table
       break;
     case 'bedroom':
@@ -351,7 +351,7 @@ export function paintCeiling(room, W, D) {
     }
   };
   const mouldC = (x, y, rx, ry) => { const n = 220; for (let i = 0; i < n; i++) { const a = s.r() * 6.28, d = Math.pow(s.r(), 0.6); g.fillStyle = rgba(30, 35, 25, (1 - d) * 0.4 + 0.05); g.beginPath(); g.arc(s.px(x + Math.cos(a) * rx * d), s.px(y + Math.sin(a) * ry * d), 1 + (1 - d) * 3, 0, 6.28); g.fill(); } };
-  if (room === 'living') { stain(1.0, 4.3, 1.5, 1.1, 1.4); stain(1.6, 0.6, 1.4, 0.6, 1.2); mouldC(0.3, 0.2, 0.8, 0.4); }
+  if (room === 'living') { stain(2.5, 3.85, 1.5, 1.1, 1.4); stain(1.6, 0.6, 1.4, 0.6, 1.2); mouldC(0.3, 0.2, 0.8, 0.4); }
   if (room === 'bedroom') { stain(W - 0.5, 0.5, 0.8, 0.6, 1); mouldC(W - 0.2, 0.15, 0.6, 0.3); }
   if (room === 'kitchen') { // soot over the stove
     const grd = g.createRadialGradient(s.px(W - 0.3), s.px(2.6), 0, s.px(W - 0.3), s.px(2.6), s.px(1.3));

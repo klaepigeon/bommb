@@ -53,6 +53,7 @@ function resolveTarget(obj) {
 export function updateInteract(dt, camera) {
   if (I.inspecting) return updateInspect(dt, camera);
   if (I.held) holdUpdate(dt, camera);
+  camera.updateMatrixWorld();
   ray.setFromCamera(centre, camera);
   const hits = ray.intersectObjects([...candidates(), ...I.blockers], true);
   I.target = null;

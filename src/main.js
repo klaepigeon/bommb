@@ -14,6 +14,7 @@ import { dressFlat } from './dress.js';
 import { buildExterior } from './exterior.js';
 import { buildDust } from './particles.js';
 import { P, initPlayer, updatePlayer, look } from './player.js';
+import { propFootprint } from './props.js';
 import { I, UI, updateInteract, use, throwHeld, beginInspect, endInspect, inspectLook, inspectRead } from './interact.js';
 import { initAudio, updateAudio, setMasterVolume } from './audio.js';
 import { ROOMS, roomAt } from './plan.js';
@@ -233,5 +234,41 @@ window.__G = G; window.__P = P; window.__I = I;
 window.__view = (x, z, yaw, pitch = 0, crouch = false) => { P.pos.set(x, 0, z); P.yaw = yaw; P.pitch = pitch; P.crouch = crouch; P.height = crouch ? 1.05 : 1.62; for (let i = 0; i < 3; i++) { updatePlayer(0.016, camera); } };
 window.__step = (n = 30) => { renderer.info.autoReset = false; for (let i = 0; i < n; i++) { G.time += 1 / 60; updatePlayer(1 / 60, camera); G.phys.step(1 / 60); for (const f of G.updates) f(1 / 60, G.time); updateLights(1 / 60); updateInteract(1 / 60, camera); } renderer.info.reset(); composer.render(); };
 window.__roomAt = roomAt;
+window.__use = use; window.__throw = throwHeld; window.__inspect = beginInspect; window.__endInspect = endInspect;
+window.__aim = (x, y, z) => { const dx = x - camera.position.x, dy = y - camera.position.y, dz = z - camera.position.z; P.yaw = Math.atan2(-dx, -dz); P.pitch = Math.atan2(dy, Math.hypot(dx, dz)); updatePlayer(0.016, camera); updateInteract(0.016, camera); const t = I.target; return t ? (t.kind === 'use' ? (typeof t.it.prompt === 'function' ? t.it.prompt() : t.it.prompt) : t.kind + ':' + (t.spec?.name || t.prop?.name)) : null; };
+// test helper: A* over a 10 cm grid of the walkable floor, then walk the path
+window.__goto = (tx, tz, maxSec = 20) => {
+  const R = 0.245, x0 = -0.4, z0 = -1.8, W = 112, Hh = 102, S = 0.1;
+  const blocked = new Uint8Array(W * Hh);
+  const foots = [...G.colliders.filter((c) => c.on && c.y1 > 0.2 && c.y0 < 1.6), ...G.props.filter((p) => p.push && !p.dead).map((p) => propFootprint(p))];
+  for (let j = 0; j < Hh; j++) for (let i = 0; i < W; i++) {
+    const x = x0 + i * S, z = z0 + j * S;
+    for (const c of foots) { const dx = x - c.x, dz = z - c.z, cs = Math.cos(c.rot), sn = Math.sin(c.rot); const lx = dx * cs - dz * sn, lz = dx * sn + dz * cs; const qx = Math.max(-c.hx, Math.min(c.hx, lx)), qz = Math.max(-c.hz, Math.min(c.hz, lz)); if ((lx - qx) ** 2 + (lz - qz) ** 2 < R * R) { blocked[j * W + i] = 1; break; } }
+  }
+  const idx = (x, z) => [Math.round((x - x0) / S), Math.round((z - z0) / S)];
+  const [si, sj] = idx(P.pos.x, P.pos.z), [ti, tj] = idx(tx, tz);
+  const open = [[si, sj, 0]], came = new Map(), cost = new Map([[sj * W + si, 0]]);
+  let found = false;
+  while (open.length) {
+    open.sort((a, b) => a[2] - b[2]); const [i, j] = open.shift();
+    if (i === ti && j === tj) { found = true; break; }
+    for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+      const ni = i + di, nj = j + dj; if (ni < 0 || nj < 0 || ni >= W || nj >= Hh) continue;
+      const k = nj * W + ni; if (blocked[k] && !(ni === ti && nj === tj)) continue;
+      const c = cost.get(j * W + i) + Math.hypot(di, dj);
+      if (c < (cost.get(k) ?? Infinity)) { cost.set(k, c); came.set(k, j * W + i); open.push([ni, nj, c + Math.hypot(ti - ni, tj - nj)]); }
+    }
+  }
+  if (!found) { if (window.__mapDump) { let o = ''; for (let j = 0; j < Hh; j += 2) { for (let i = 0; i < W; i++) o += (i === si && j === sj) ? 'S' : blocked[j * W + i] ? '#' : '.'; o += '\n'; } return o; } return 'no path'; }
+  const path = []; for (let k = tj * W + ti; k !== undefined; k = came.get(k)) path.unshift([x0 + (k % W) * S, z0 + Math.floor(k / W) * S]);
+  for (let n = 0; n < path.length; n += 3) window.__walk(path[n][0], path[n][1], 1);
+  window.__walk(tx, tz, 1);
+  void maxSec;
+  return [P.pos.x.toFixed(2), P.pos.z.toFixed(2), P.room];
+};
+// aim at a point; if nothing's targeted, edge toward it and try again
+window.__reach = (x, y, z) => { for (let k = 0; k < 6; k++) { window.__step(1); const a = window.__aim(x, y, z); if (a) return a; const dx = x - P.pos.x, dz = z - P.pos.z, d = Math.hypot(dx, dz); if (d < 0.5) break; window.__walk(P.pos.x + dx / d * 0.25, P.pos.z + dz / d * 0.25, 0.5); } return null; };
+window.__hits = (x, y, z) => { window.__aim(x, y, z); const r = new THREE.Raycaster(); r.setFromCamera(new THREE.Vector2(), camera); return r.intersectObjects(scene.children, true).filter((h) => !h.object.isPoints && !h.object.isSprite).slice(0, 6).map((h) => [h.object.name || h.object.type, h.object.userData.it ? 'IT' : '', h.object.userData.blocker ? 'BLK' : '', h.distance.toFixed(2), h.object.visible]); };
+window.__walk = (x, z, sec = 2) => { const n = Math.round(sec * 60); for (let i = 0; i < n; i++) { const dx = x - P.pos.x, dz = z - P.pos.z; if (Math.hypot(dx, dz) < 0.1) break; P.yaw = Math.atan2(-dx, -dz); P.keys.KeyW = true; G.time += 1 / 60; updatePlayer(1 / 60, camera); G.phys.step(1 / 60); for (const f of G.updates) f(1 / 60, G.time); } P.keys.KeyW = false; return [P.pos.x.toFixed(2), P.pos.z.toFixed(2), P.room]; };
 
 boot().catch((e) => { msg('Something went wrong: ' + e.message); console.error(e); });
