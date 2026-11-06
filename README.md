@@ -26,6 +26,38 @@ headphones. Click **Enter** to lock the mouse.
 | **Left mouse** (holding something) | throw it |
 | **Esc** | pause: sensitivity, volume, quality, invert |
 
+### Controller
+
+Any standard gamepad (Xbox, PlayStation, 8BitDo, Android controllers…), in a desktop
+browser or the Android app. The prompts switch to controller glyphs as soon as you
+touch it.
+
+| | |
+|---|---|
+| **Left stick** | move (**RB** or **L3** to hurry) |
+| **Right stick** | look; turns the held object while inspecting |
+| **A** | use · open · take · read |
+| **B** | back: close what you're reading, put the object down, leave the peephole |
+| **X** | torch |
+| **Y** | crouch |
+| **LT** / **RT** | inspect / throw what you're holding |
+| **Start** | pause (D-pad / stick to move through the menu, **A** to choose, **B** to resume) |
+
+Pipe knocks near you rumble the controller.
+
+### Android
+
+`dist/Flat47.apk` installs directly (allow installs from unknown sources). It's the same
+game in a full-screen landscape WebView, with touch controls (stick + buttons), or
+plug in / pair a controller. The app reads the controller through Android's input
+system itself and passes it to the game, so it doesn't depend on WebView's own gamepad
+support; it also routes rumble to the controller (never the phone), pauses when you
+leave the app, and maps the back gesture to pause. It starts on low quality.
+
+Build it with `android/build.sh` (Android SDK with build-tools 35 and platform 35, JDK
+17+; no Gradle). It's signed with the project's own debug key in `android/`, so each
+build installs over the last.
+
 URL options: `?q=high|medium|low` sets quality (shadow detail, render scale; point-light
 shadows only on high). Touch screens get a stick and buttons and start on low.
 
@@ -104,6 +136,8 @@ src/
   audio.js       synthesised sounds, positional chains, occlusion, the ambience director
   particles.js   dust that only shows where light catches it
   post.js        film grain and vignette
+  gamepad.js     controllers: Gamepad API or the Android bridge, menus by pad, rumble
+android/         the Android app: manifest, MainActivity (WebView + controller bridge), build.sh
 ```
 
 Performance notes: static meshes are merged by material after load (and each prop's
@@ -122,6 +156,8 @@ node build.mjs --dev      # unminified, readable stack traces
 node build.mjs --watch
 node tools/smoke.mjs      # boot headless, save screenshots of ~20 viewpoints to shots/
 node tools/play.mjs       # scripted playthrough: walks the flat (A*), uses ~30 things, fails on any error
+node tools/pad.mjs        # drives the game with a fake controller through the Android bridge
+android/build.sh          # → dist/Flat47.apk
 ```
 
 The tools need Playwright with a Chromium (`NODE_PATH=$(npm root -g)` if it's installed

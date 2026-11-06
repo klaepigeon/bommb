@@ -15,10 +15,11 @@ import { buildExterior } from './exterior.js';
 import { buildDust } from './particles.js';
 import { P, initPlayer, updatePlayer, look } from './player.js';
 import { propFootprint } from './props.js';
-import { I, UI, updateInteract, use, throwHeld, beginInspect, endInspect, inspectLook, inspectRead } from './interact.js';
+import { I, UI, updateInteract, use, throwHeld, beginInspect, endInspect, inspectLook, inspectRead, drop } from './interact.js';
 import { initAudio, updateAudio, setMasterVolume } from './audio.js';
 import { ROOMS, roomAt } from './plan.js';
 import { grainShader } from './post.js';
+import { PAD, updatePad } from './gamepad.js';
 
 const params = new URLSearchParams(location.search);
 const $ = (id) => document.getElementById(id);
@@ -152,9 +153,10 @@ let last = 0, roomName = '', frameN = 0;
 function loop(now) {
   requestAnimationFrame(loop);
   clock.update(now); const dt = Math.min(0.05, clock.getDelta());
-  if (!G.running && !params.has('shots')) { composer.render(); return; }
+  if (!G.running && !params.has('shots')) { updatePad(dt, padH); composer.render(); return; }
   G.time += dt;
   P.frozen = I.inspecting || !!G.peeping;
+  updatePad(dt, padH);
   updatePlayer(dt, camera);
   G.phys.step(1 / 60, dt, 3);
   for (const f of G.updates) f(dt, G.time);
@@ -181,11 +183,12 @@ function loop(now) {
 
 // ---------------------------------------------------------------- input / menus
 function lock() { renderer.domElement.requestPointerLock?.(); }
-$('enter').onclick = () => { initAudio(); G.running = true; $('start').classList.add('hidden'); if (!G.flags.started) { G.flags.started = true; setTimeout(() => UI.toast('The hall bulb is dying. F for the torch.', 5), 2500); } if (matchMedia('(pointer: coarse)').matches) { $('touch').classList.remove('hidden'); P.locked = true; } else lock(); };
-$('resume').onclick = () => { $('pause').classList.add('hidden'); G.running = true; lock(); };
+$('enter').onclick = () => { initAudio(); G.running = true; $('start').classList.add('hidden'); if (!G.flags.started) { G.flags.started = true; setTimeout(() => UI.toast('The hall bulb is dying. F for the torch.', 5), 2500); } if (PAD.using) P.locked = true; else if (matchMedia('(pointer: coarse)').matches) { $('touch').classList.remove('hidden'); P.locked = true; } else lock(); };
+$('resume').onclick = () => resumeGame();
 document.addEventListener('pointerlockchange', () => {
   P.locked = document.pointerLockElement === renderer.domElement;
-  if (!P.locked && G.running && !I.reading) { G.running = false; $('pause').classList.remove('hidden'); P.keys = {}; }
+  if (!P.locked && G.running && !I.reading && !PAD.using) { G.running = false; $('pause').classList.remove('hidden'); P.keys = {}; }
+  if (PAD.using) P.locked = true;
 });
 $('sens').oninput = (e) => { P.sens = +e.target.value; };
 $('vol').oninput = (e) => setMasterVolume(+e.target.value);
@@ -208,6 +211,43 @@ addEventListener('mousedown', (e) => {
 });
 addEventListener('contextmenu', (e) => e.preventDefault());
 addEventListener('mousemove', (e) => { if (I.inspecting && P.locked) inspectLook(e.movementX, e.movementY); });
+
+// ---------------------------------------------------------------- controller
+const focusables = () => {
+  if (!$('start').classList.contains('hidden')) return [$('enter')];
+  if (!$('pause').classList.contains('hidden')) return ['sens', 'vol', 'quality', 'invert', 'resume'].map($);
+  return [];
+};
+let focusI = 0;
+const setFocus = (i) => { const f = focusables(); if (!f.length) return; focusI = (i + f.length) % f.length; f.forEach((el, k) => el.closest('label, button').classList.toggle('padFocus', k === focusI)); f[focusI].focus({ preventScroll: true }); };
+function pauseGame() { if (!G.running) return; G.running = false; P.keys = {}; $('pause').classList.remove('hidden'); document.exitPointerLock?.(); setFocus(focusables().length - 1); }
+function resumeGame() { $('pause').classList.add('hidden'); G.running = true; if (!PAD.using) lock(); }
+const padH = {
+  menuOpen: () => focusables().length > 0,
+  menuMove: (d) => setFocus(focusI + d),
+  menuAdjust: (d) => {
+    const el = focusables()[focusI]; if (!el) return;
+    if (el.type === 'range') { el.value = +el.value + d * (+el.step || 0.05) * 4; el.dispatchEvent(new Event('input')); }
+    else if (el.tagName === 'SELECT') { el.selectedIndex = Math.max(0, Math.min(el.options.length - 1, el.selectedIndex + d)); el.dispatchEvent(new Event('change')); }
+  },
+  menuPress: () => { const el = focusables()[focusI]; if (!el) return; if (el.type === 'checkbox') { el.checked = !el.checked; el.dispatchEvent(new Event('change')); } else if (el.tagName === 'BUTTON' && !el.disabled) el.click(); },
+  menuBack: () => { if (!$('pause').classList.contains('hidden')) resumeGame(); },
+  move: (x, y, run) => { P.padMove.x = x; P.padMove.y = y; P.padRun = run; },
+  look: (dx, dy) => { if (I.inspecting) inspectLook(dx, dy); else if (!G.peeping) look(dx, dy); },
+  use: () => { if (G.peeping) { dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE' })); return; } if (I.inspecting && I.held?.doc && !I.reading) inspectRead(); else use(); },
+  back: () => { if (G.peeping) dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape' })); else if (I.reading) UI.closeRead(); else if (I.inspecting) endInspect(); else if (I.held) drop(0); },
+  torch: () => G.toggleTorch?.(),
+  crouch: () => { P.crouch = !P.crouch; },
+  throw: () => { if (I.inspecting) endInspect(); else if (I.held) throwHeld(); },
+  inspect: () => { if (I.inspecting) endInspect(); else if (I.held) beginInspect(); },
+  pause: pauseGame,
+  onMode: () => { G.glyph = 'A'; $('touch').classList.add('hidden'); document.body.classList.add('pad'); },
+};
+addEventListener('gamepadconnected', () => { if (!$('start').classList.contains('hidden') && !$('enter').disabled) setFocus(0); });
+addEventListener('mousemove', () => { if (PAD.using && performance.now() - PAD.lastUse > 1500) { PAD.using = false; G.glyph = 'E'; document.body.classList.remove('pad'); } });
+// the Android back button
+window.__back = () => { if (I.reading) UI.closeRead(); else if (G.running) pauseGame(); else if (!$('pause').classList.contains('hidden')) resumeGame(); };
+window.__pauseGame = pauseGame;
 
 // touch: left stick moves, drag elsewhere looks
 {

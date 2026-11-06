@@ -16,7 +16,7 @@ export const I = { target: null, held: null, inspecting: false, reading: false, 
 const $ = (id) => document.getElementById(id);
 let toastT = 0;
 export const UI = {
-  prompt(text) { const el = $('prompt'); if (el._t !== text) { el._t = text; el.innerHTML = text ? `<kbd>E</kbd>${text}` : ''; } $('cross').classList.toggle('on', !!text); },
+  prompt(text) { const el = $('prompt'); if (el._t !== text + (G.glyph || '')) { el._t = text + (G.glyph || ''); el.innerHTML = text ? `<kbd>${G.glyph || 'E'}</kbd>${text}` : ''; } $('cross').classList.toggle('on', !!text); },
   toast(text, sec = 4.5) { const el = $('toast'); el.textContent = text; el.classList.add('on'); toastT = sec; },
   room(name) { const el = $('room'); if (el._t === name) return; el._t = name; el.textContent = name || ''; el.classList.toggle('on', !!name); clearTimeout(el._h); el._h = setTimeout(() => el.classList.remove('on'), 2600); },
   read(doc) {

@@ -9,7 +9,7 @@ import { propFootprint } from './props.js';
 export const P = {
   pos: new THREE.Vector3(SPAWN.x, 0, SPAWN.z), vel: new THREE.Vector3(), yaw: SPAWN.yaw, pitch: -0.05,
   height: 1.62, eye: 1.62, crouch: false, radius: 0.24, speed: 0, bob: 0, stepPhase: 0, floorY: 0,
-  keys: {}, sens: 1, invert: false, locked: false, frozen: false, moveTouch: { x: 0, y: 0 },
+  keys: {}, sens: 1, invert: false, locked: false, frozen: false, moveTouch: { x: 0, y: 0 }, padMove: { x: 0, y: 0 }, padRun: false,
   room: 'hall', headClear: 2.75,
 };
 
@@ -61,9 +61,9 @@ export function updatePlayer(dt, camera) {
   if (!P.frozen) {
     if (k.KeyW || k.ArrowUp) mz += 1; if (k.KeyS || k.ArrowDown) mz -= 1;
     if (k.KeyA || k.ArrowLeft) mx -= 1; if (k.KeyD || k.ArrowRight) mx += 1;
-    mx += P.moveTouch.x; mz += P.moveTouch.y;
+    mx += P.moveTouch.x + P.padMove.x; mz += P.moveTouch.y + P.padMove.y;
   }
-  const run = (k.ShiftLeft || k.ShiftRight) && !P.crouch;
+  const run = (k.ShiftLeft || k.ShiftRight || P.padRun) && !P.crouch;
   const maxV = P.crouch ? 0.85 : run ? 2.9 : 1.55;
   fwd.set(-Math.sin(P.yaw), 0, -Math.cos(P.yaw)); right.set(-fwd.z, 0, fwd.x);
   wish.set(0, 0, 0).addScaledVector(fwd, mz).addScaledVector(right, mx);

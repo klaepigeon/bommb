@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { roomAt } from './plan.js';
 
 let ctx = null, master, wet, dry, comp;
+const G_rumble = (s, ms) => window.__G?.rumble?.(s, ms);
 const buffers = {};
 const loops = [];
 export const AUDIO = { ready: false, listenerRoom: null, listener: new THREE.Vector3() };
@@ -244,7 +245,8 @@ export function addTimer(t) { timers.push(t); }
 
 export function knockSeq(pos, groups, vol = 0.6, delay = 0) {
   let t = delay;
-  for (const n of groups) { for (let i = 0; i < n; i++) { sfx('knock', pos, { vol, delay: t, jitter: false, rate: 0.98 + Math.random() * 0.04, room: 'wall' }); t += 0.32; } t += 0.75; }
+  const near = AUDIO.listener.distanceTo(pos) < 5;
+  for (const n of groups) { for (let i = 0; i < n; i++) { sfx('knock', pos, { vol, delay: t, jitter: false, rate: 0.98 + Math.random() * 0.04, room: 'wall' }); if (near) setTimeout(() => G_rumble(0.35, 90), t * 1000); t += 0.32; } t += 0.75; }
   return t;
 }
 function walkAbove() {
