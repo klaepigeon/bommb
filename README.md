@@ -22,10 +22,14 @@ has been leaking, and the chairs pushed in under the tables. The Caller has a ne
 a sequinned dinner jacket the colour of a fresh bruise, black satin lapels, ruffles, a
 gold bow tie and a dead carnation.
 
-**The figures on the table are meat puppets of the players**: cartoon PS1 bodies of
-rotting muscle and fat, stitched together, the player's photograph sewn on for a face,
+**Four people sit at his table**: the players, PS1 humans wearing the players' photos for
+faces (your own seat is the camera; you see your hands). He hosts from the stage.
+
+**The figures on the board are meat puppets of the players**: cartoon PS1 bodies of
+rotting muscle and fat, stitched together, no faces (a stitched slit for a mouth),
 and real eyes (veined, wet, the one thing on them that isn't crude) that follow you. Strings go up
-into the dark; flies. What happens to the puppet happens to them: every injury goes in as
+into the dark; flies. What happens to the puppet happens to its person at the table (casts, bandaged
+sockets, stumps; dead puppet, face-down on the table): on the puppet every injury goes in as
 a pin, a lost limb is cut off with the thread left hanging, a lost eye hangs out on its
 nerve, a prosthetic is brass screwed on in its place.
 
@@ -68,7 +72,9 @@ scripts/core/       MatchCore (phases, deaths, endings), BoardRules, Body (injur
 scripts/minigames/  Minigame base, MinigameRegistry, musical_chairs, roulette, hot_potato
 scripts/ai/         AiBrain: plays through the same actions humans do, sees only their view
 scripts/net/        Net (the match link for every mode), RelayPeer, LanBeacon
-server/             relay_server.gd: rooms + packet relay for internet play
+server/relay/       relay.js: the relay for internet play (Node; deploy: docs/NETWORKING.md)
+server/             relay_server.gd: the same relay in Godot (local testing)
+render.yaml         one-click deploy of the relay on Render
 scripts/view/       GameView (sat at his table), TableBoard (the board on it), Contestant
                     (the voodoo dolls: pins, deaths), minigame views
 scripts/lcc/        LAST CALL: The Campaign's Stage, Hall, CallerFigure, building and UI kit

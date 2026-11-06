@@ -4,6 +4,7 @@
 #   tools/net_test.sh lan 4        # 4 humans, joined by room code over the LAN beacon
 #   tools/net_test.sh ip 3         # 3 humans, joined by address
 #   tools/net_test.sh rejoin 3     # a client drops mid-match and comes back
+#   tools/net_test.sh noderelay 4  # 4 humans through the Node relay (server/relay)
 # This proves the protocol and the match flow; it is NOT the real-device / real-internet
 # test (docs/NETWORKING.md).
 cd "$(dirname "$0")/.." || exit 1
@@ -11,7 +12,13 @@ VIA=${1:-relay}; N=${2:-3}; FAST=${FAST:---fast}
 W=$(mktemp -d); PORT=$((19000 + RANDOM % 1000))
 trap 'kill $(jobs -p) 2>/dev/null' EXIT
 G="godot --headless"
-if [ "$VIA" = relay ] || [ "$VIA" = rejoin ]; then
+if [ "$VIA" = noderelay ]; then
+  # the Node relay (server/relay), as deployed
+  PORT=$PORT node server/relay/relay.js > $W/relay.log 2>&1 &
+  sleep 1.0
+  HVIA=relay
+  VIA=relay
+elif [ "$VIA" = relay ] || [ "$VIA" = rejoin ]; then
   $G --script server/relay_server.gd -- --port=$PORT > $W/relay.log 2>&1 &
   sleep 1.5
   HVIA=relay

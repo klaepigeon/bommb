@@ -1,0 +1,13 @@
+# Render blueprint: the LAST CALL 3 relay as a free web service.
+# Render dashboard > New > Blueprint > pick this repository. It gives you a URL like
+# https://last-call-3-relay.onrender.com; the game's relay address is then
+# wss://last-call-3-relay.onrender.com (Settings > RELAY, or meat_party/net/relay_url).
+services:
+  - type: web
+    name: last-call-3-relay
+    runtime: node
+    rootDir: server/relay
+    buildCommand: npm install --omit=dev
+    startCommand: node relay.js
+    plan: free
+    healthCheckPath: /

@@ -1,0 +1,10 @@
+{
+  "name": "last-call-3-relay",
+  "version": "1.0.0",
+  "description": "LAST CALL 3 relay: room codes and packet forwarding for internet play (same protocol as relay_server.gd)",
+  "main": "relay.js",
+  "scripts": { "start": "node relay.js" },
+  "engines": { "node": ">=18" },
+  "dependencies": { "ws": "^8.18.0" },
+  "license": "MIT"
+}

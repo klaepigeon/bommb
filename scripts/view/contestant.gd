@@ -2,7 +2,7 @@ class_name Contestant
 extends Node3D
 ## A contestant's puppet. The figures on the Caller's table are puppets of the people
 ## playing, made of meat: cartoon PS1 bodies of rotting muscle and fat, stitched together,
-## the player's photograph sewn on for a face, and real eyes (wet, veined, the one thing on
+## no face (just more meat, a stitched slit for a mouth), and real eyes (wet, veined, the one thing on
 ## them that isn't crude) that follow you round the room. Strings go up from them into the
 ## dark. Flies. What is done to the puppet is done to the player: every injury goes in as a
 ## pin, a lost limb is cut off and the thread left hanging, a lost eye hangs out of its
@@ -45,13 +45,15 @@ func setup(s: int, face: int, c: Color, display_name: String) -> void:
 	seat = s
 	color = c
 	var flesh := Meat.flesh(0.25 + 0.18 * s, s + 1)
-	human = Ps1Human.make({"face": face, "skin_tex": flesh,
+	# no face: a meat doll. The front of the head is the same meat as the rest of it.
+	human = Ps1Human.make({"face": face, "face_tex": Meat.flesh(0.35 + 0.15 * s, s + 11), "skin_tex": flesh,
 		"shirt": Color(1.0, 0.92, 0.9), "trousers": Color(0.8, 0.62, 0.62), "shoes": Color(0.35, 0.12, 0.12),
 		"skin": Color(1.0, 0.95, 0.92), "hair": [Color("1a1008"), Color("3a2a1a"), Color("120c0a"), Color("4a3a2a")][s % 4],
-		"long_hair": s == 1, "bald": s % 2 == 0, "face_gain": 1.25})
+		"long_hair": s == 1, "bald": s % 2 == 0})
 	add_child(human)
 	_stitches(c)
 	_eyes()
+	_mouth()
 	# the base: a chipped dinner plate, smeared, with a band of the seat's colour
 	var base := LcMB.new()
 	base.cyl("p", LcMB.mat(LcTex.grime(Color("d8d0c0"), Color("f0ece0"), 16, 13 + s, 0.3)), 0.5, 0.42, 0.06, 12, LcMB.T(Vector3(0, -0.02, 0)), Color(1, 1, 1))
@@ -93,7 +95,21 @@ func _stitches(c: Color) -> void:
 	_pin(human.upper, Vector3(-0.1, 0.45, 0.1), Vector3(0.6, 0.3, 0), c)
 
 
-## Two real eyes, set into the photograph's sockets, a little proud of it.
+## A mouth: a slit with crude stitches across it, and a nose that's just two holes.
+func _mouth() -> void:
+	var mb := LcMB.new()
+	var dark := LcMB.mat(LcTex.solid(Color("1a0406")))
+	mb.box("m", dark, Vector3(0.09, 0.014, 0.012), LcMB.T(Vector3(0, 0.075, 0.125)), Color(1, 1, 1))
+	for k in 4:
+		mb.box("s", LcMB.mat(LcTex.solid(Color("d8c8a8"))), Vector3(0.006, 0.04, 0.008), LcMB.T(Vector3(-0.033 + k * 0.022, 0.075, 0.13), Vector3(0, 0, 0.3)), Color(1, 1, 1))
+	mb.box("n", dark, Vector3(0.012, 0.016, 0.01), LcMB.T(Vector3(-0.012, 0.135, 0.13)), Color(1, 1, 1))
+	mb.box("n", dark, Vector3(0.012, 0.016, 0.01), LcMB.T(Vector3(0.012, 0.135, 0.13)), Color(1, 1, 1))
+	var mi := MeshInstance3D.new()
+	mi.mesh = mb.build()
+	human.head.add_child(mi)
+
+
+## Two real eyes, pushed into the meat where a face would be.
 func _eyes() -> void:
 	eyes.clear()
 	_eye_rest.clear()
@@ -164,7 +180,7 @@ func _strings_setup() -> void:
 	_strings.mesh = _string_mesh
 	var m := StandardMaterial3D.new()
 	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	m.albedo_color = Color(0.85, 0.8, 0.7, 0.55)
+	m.albedo_color = Color(0.85, 0.8, 0.7, 0.35)
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_strings.material_override = m
 	_strings.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -182,7 +198,7 @@ func _draw_strings() -> void:
 			continue
 		var p: Vector3 = inv * (j as Node3D).global_position
 		_string_mesh.surface_add_vertex(p + Vector3(0, 0.05, 0))
-		_string_mesh.surface_add_vertex(p + Vector3(0, 9.0, 0))
+		_string_mesh.surface_add_vertex(p + Vector3(0, 6.0, 0))
 	_string_mesh.surface_end()
 
 

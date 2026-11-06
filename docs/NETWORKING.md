@@ -14,7 +14,42 @@ multiplayer (RPCs on the `Net` autoload) runs over a swappable `MultiplayerPeer`
 `Net.join_code` tries the LAN first (2.5 s), then the relay. Ports and the default relay
 URL are in `project.godot` (`meat_party/net/*`); players can set a relay in Settings.
 
-**The relay** (`server/relay_server.gd`) runs no game logic: rooms of up to four, packets
+## Deploying the relay (for internet play)
+
+The relay is `server/relay/relay.js`: one small Node.js file (the same protocol as the
+Godot version, `server/relay_server.gd`, and tested against the game the same way:
+`tools/net_test.sh noderelay 4`). It needs no Godot and no database. Pick one:
+
+**Render (free, easiest, no card).**
+1. Make an account at render.com and connect your GitHub.
+2. Dashboard > **New > Blueprint**, pick this repository (`klaepigeon/bommb`). It reads
+   `render.yaml` and creates the `last-call-3-relay` web service.
+3. When it's live it has a URL like `https://last-call-3-relay.onrender.com`.
+   The relay address is the same with **wss://**: `wss://last-call-3-relay.onrender.com`.
+4. In the game: Settings > RELAY, paste it. (Or put it in `project.godot` under
+   `meat_party/net/relay_url` and rebuild, so everyone's copy has it.)
+
+Render's free services sleep after 15 minutes idle; the first person to host after that
+waits ~30-60 s while it wakes. A paid instance ($7/month) stays awake.
+
+**Fly.io** (needs a card; small machines are cheap, wakes faster).
+```
+cd server/relay
+fly launch --copy-config --no-deploy    # choose an app name; it rewrites fly.toml
+fly deploy
+```
+Address: `wss://<app-name>.fly.dev`.
+
+**Any VPS** (DigitalOcean, Hetzner, a Raspberry Pi with a public address...):
+```
+cd server/relay && npm install && PORT=9080 node relay.js
+```
+or `docker build -t lc3-relay server/relay && docker run -p 9080:9080 lc3-relay`. Put it
+behind a TLS proxy (Caddy: `relay.example.com { reverse_proxy localhost:9080 }`) and use
+`wss://relay.example.com`. Plain `ws://ip:9080` works too, but some phone networks
+interfere with unencrypted WebSockets.
+
+**The Godot relay** (`server/relay_server.gd`) runs no game logic: rooms of up to four, packets
 forwarded between members, the room closes when its host leaves. Both ends dial out, so
 there's no NAT traversal to do. Run it on any public machine:
 

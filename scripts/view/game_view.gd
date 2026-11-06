@@ -16,7 +16,8 @@ var stage: Stage
 var table: Node3D               # doll units: everything on the board lives under this
 var venue: TableBoard
 var caller: CallerActor
-var contestants: Dictionary = {}    # seat -> Contestant
+var contestants: Dictionary = {}    # seat -> Contestant (the meat puppet on the board)
+var guests: Dictionary = {}         # seat -> TableGuest (the person at the table)
 var hud: Hud
 var mgv: MgView
 var view: Dictionary = {}
@@ -55,6 +56,7 @@ func _ready() -> void:
 		c.setup(int(s.seat), int(s.face), s.color, str(s.name))
 		c.place(venue.stand_pos(0, int(s.seat)))
 		contestants[int(s.seat)] = c
+	_seat_guests()
 	hud = Hud.new()
 	add_child(hud)
 	hud.act.connect(func(seat, a): Net.send_action(seat, a))
@@ -65,6 +67,23 @@ func _ready() -> void:
 	Audio.ambience("hall")
 	if not Net.last_view.is_empty():
 		_on_state(Net.last_view, [])
+
+
+## The people round the table. Whoever's playing on this screen sits where the camera is;
+## everyone else round from there.
+func _seat_guests() -> void:
+	var me: int = int(Net.my_seats[0]) if not Net.my_seats.is_empty() else 0
+	var order: Array = []
+	for k in Seats.MAX:
+		order.append((me + k) % Seats.MAX)
+	for slot in order.size():
+		var s: int = order[slot]
+		if s >= Seats.seats.size():
+			continue
+		var g := TableGuest.new()
+		stage.hall.add_child(g)
+		g.setup(s, slot, int(Seats.seats[s].face), Seats.seats[s].color)
+		guests[s] = g
 
 
 ## The table, in hall coordinates (for the camera).
@@ -106,6 +125,12 @@ func _on_state(v: Dictionary, events: Array) -> void:
 		if c == null:
 			continue
 		c.set_body(p.body, p.helmet)
+		var g: TableGuest = guests.get(int(p.seat))
+		if g:
+			g.set_body(p.body)
+			g.lean_in(v.phase == "turn" and int(v.turn.get("seat", -1)) == int(p.seat))
+			if not p.alive:
+				g.die()
 		if not p.alive and not c.dead and not _deaths_shown.has(int(p.seat)):
 			# joined late or missed it: show them gone
 			_deaths_shown[int(p.seat)] = true
@@ -146,6 +171,8 @@ func _phase_changed(p: String) -> void:
 				for j in [c.human.arm_l, c.human.arm_r]:
 					j.rotation.x = 0.0
 	if p == "ending" and view.ending == "escape":
+		for g in guests.values():
+			g.stand()
 		venue.open_door()
 		Audio.music("sting")
 		for s in contestants:
@@ -261,13 +288,15 @@ func _camera(delta: float) -> void:
 	elif view.phase == "turn":
 		var s := int(view.turn.get("seat", -1))
 		if contestants.has(s):
+			# from your chair, leaning a little toward whose turn it is (the others in view)
 			var p := on_table(contestants[s].position)
-			want_look = Vector3(p.x * 0.75, 0.8, p.z * 0.75)
-			want_pos = want_look + Vector3(0, 0.55, 0.7)
+			want_look = Vector3(0, 0.74, -0.25).lerp(p, 0.35)
+			want_pos = Vector3(want_look.x * 0.4, 1.58, 1.62)
+			fov = 60.0
 	elif view.phase in ["ceremony", "door", "intro"]:
-		want_pos = Vector3(0, 1.32, 1.72)
-		want_look = Vector3(0, 1.75, -1.6)
-		fov = 56.0
+		want_pos = Vector3(0, 1.45, 1.72)
+		want_look = Vector3(0, 2.0, -5.6)
+		fov = 50.0
 	elif view.phase == "ending" and view.ending == "escape":
 		want_look = on_table(venue.door_node.position + Vector3(0.6, 1.0, 0))
 		want_pos = want_look + Vector3(0, 0.25, 0.7)

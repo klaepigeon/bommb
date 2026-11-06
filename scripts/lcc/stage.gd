@@ -9,8 +9,8 @@ signal pose_changed(pose: String)
 const POSES := {
 	"table": [Vector3(0, 1.62, 1.72), Vector3(0, 0.74, -0.12), 52.0],
 	"board": [Vector3(0, 2.0, 1.12), Vector3(0, 0.74, -0.06), 54.0],
-	"up":    [Vector3(0, 1.32, 1.72), Vector3(0, 2.08, -1.6), 56.0],
-	"title": [Vector3(-0.6, 1.5, 2.4), Vector3(0.2, 1.75, -1.7), 58.0],
+	"up":    [Vector3(0, 1.45, 1.72), Vector3(0, 2.0, -5.6), 50.0],
+	"title": [Vector3(-0.6, 1.55, 2.4), Vector3(0.2, 1.95, -5.4), 52.0],
 	"map":   [Vector3(-0.12, 1.85, 0.92), Vector3(-0.12, 0.76, -0.12), 50.0],
 	"deal":  [Vector3(0, 1.62, 1.02), Vector3(0, 0.74, -0.22), 54.0],
 	"walk":  [Vector3(0, 1.6, 3.5), Vector3(0, 1.4, -2.0), 64.0],

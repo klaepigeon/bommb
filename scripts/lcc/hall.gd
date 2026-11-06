@@ -45,8 +45,8 @@ func build() -> void:
 	world.setup(self, building)
 	caller = CallerFigure.new()
 	caller.name = "Caller"
-	caller.position = Vector3(0, 0.0, -1.75)
 	add_child(caller)
+	reset_caller()
 	board_root = Node3D.new()
 	board_root.name = "BoardRoot"
 	board_root.position = Vector3(0, TABLE_Y + 0.005, -0.05)
@@ -465,7 +465,7 @@ func ring_bell() -> void:
 func _scoreboard() -> void:
 	flashboard = Flashboard.new()
 	flashboard.name = "Flashboard"
-	flashboard.position = Vector3(0, 3.02, -3.3)
+	flashboard.position = Vector3(0, 3.0, ROOM_BACK + 0.25)
 	flashboard.scale = Vector3.ONE * 0.8
 	add_child(flashboard)
 
@@ -584,15 +584,24 @@ var pinata: Node3D
 
 
 func _party() -> void:
-	_neon("LAST CALL", Vector3(0, 3.0, ROOM_BACK + 0.08), 0.0, Color("ff2a6a"), 96, "steady")
-	_neon("3", Vector3(2.55, 3.0, ROOM_BACK + 0.08), 0.0, Color("30e0ff"), 120, "stutter")
+	_neon("LAST CALL", Vector3(-0.5, 2.05, ROOM_BACK + 0.08), 0.0, Color("ff2a6a"), 110, "steady")
+	_neon("3", Vector3(2.6, 2.05, ROOM_BACK + 0.08), 0.0, Color("30e0ff"), 140, "stutter")
+	# a spot on him, from the front of the stage
+	var spot := SpotLight3D.new()
+	spot.light_color = Color("ffd8e8")
+	spot.light_energy = 3.0
+	spot.spot_range = 6.0
+	spot.spot_angle = 24.0
+	spot.position = CALLER_SPOT + Vector3(0, 3.0, 2.6)
+	add_child(spot)
+	spot.look_at_from_position(spot.position, CALLER_SPOT + Vector3(0, 1.4, 0), Vector3.UP)
 	_neon("MEAT PARTY", Vector3(-ROOM_W / 2 + 0.06, 2.6, -2.5), PI / 2, Color("ff60e0"), 72, "flicker")
 	_neon("BINGO", Vector3(ROOM_W / 2 - 0.06, 2.6, -3.0), -PI / 2, Color("ffd030"), 72, "steady")
 	_neon("OPEN", Vector3(ROOM_W / 2 - 0.06, 2.4, 2.0), -PI / 2, Color("40ff70"), 56, "dying")
 	_neon("NO ONE LEAVES", Vector3(-ROOM_W / 2 + 0.06, 2.3, 3.0), PI / 2, Color("ff3020"), 40, "stutter")
 	_streamers()
 	_balloons()
-	_pinata(Vector3(2.4, 2.7, -4.6))
+	_pinata(Vector3(2.6, 2.7, -4.8))
 
 
 func _neon(text: String, pos: Vector3, rot_y: float, col: Color, size: int, mode: String) -> void:
@@ -755,9 +764,13 @@ func place_caller(at: Vector3, rot_y: float) -> void:
 	caller.position = at
 	caller.rotation.y = rot_y
 
+## LAST CALL 3: he hosts from the stage, a head taller than he was, under the lights.
+const CALLER_SPOT := Vector3(0, 0.3, -5.6)
+
 func reset_caller() -> void:
-	caller.position = Vector3(0, 0.0, -1.75)
+	caller.position = CALLER_SPOT
 	caller.rotation.y = 0.0
+	caller.scale = Vector3.ONE * 1.12
 
 func setting_mood(pal: Dictionary) -> void:
 	# each Book tints the lamp a little; the hall itself stays the same room
