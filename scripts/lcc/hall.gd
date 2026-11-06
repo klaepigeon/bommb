@@ -36,6 +36,7 @@ func build() -> void:
 	_table()
 	_scoreboard()
 	_lights()
+	_party()
 	HallStations.build(self)
 	ShellBuilder.split_big(self, 3.0)
 	world = WorldView.new()
@@ -170,15 +171,16 @@ func _furniture() -> void:
 			for k in range(3):
 				var cx := tx - 0.5 + k * 0.5
 				var jitter := rng.randf_range(-0.12, 0.12)
-				chairs.append(Transform3D(Basis.from_euler(Vector3(0, PI + jitter, 0)), Vector3(cx, 0, z - 0.55)))
-				chairs.append(Transform3D(Basis.from_euler(Vector3(0, jitter, 0)), Vector3(cx, 0, z + 0.55)))
+				# LAST CALL 3: pushed in under the table, facing it (the chair's front is +Z)
+				chairs.append(Transform3D(Basis.from_euler(Vector3(0, jitter, 0)), Vector3(cx, 0, z - 0.36)))
+				chairs.append(Transform3D(Basis.from_euler(Vector3(0, PI + jitter, 0)), Vector3(cx, 0, z + 0.36)))
 	# the empty front row facing the stage, behind the Caller
 	for k in range(8):
 		var x := -2.6 + k * 0.75
 		if k == 2:
 			wrong_chair_at = Vector3(x, 0, -3.4)
 			continue
-		chairs.append(Transform3D(Basis.from_euler(Vector3(0, rng.randf_range(-0.1, 0.1), 0)), Vector3(x, 0, -3.4)))
+		chairs.append(Transform3D(Basis.from_euler(Vector3(0, PI + rng.randf_range(-0.1, 0.1), 0)), Vector3(x, 0, -3.4)))
 	_multi(chair_mesh, chairs)
 	_multi(tbl_mesh, tables)
 
@@ -573,8 +575,178 @@ func _lights() -> void:
 	# no hall-wide fill lights (they lit every piece of the room at once); the ambient does it
 
 
+# ------------------------------------------------------------------ LAST CALL 3
+## The party: he's had the hall done up. Neon on the walls (some of it doesn't work
+## properly), crepe-paper streamers from the middle of the ceiling to the walls, balloons
+## going soft against the ceiling, and a piñata over the stage, turning on its rope.
+var neons: Array = []          # [{label, tube, light, base_energy, mode, t}]
+var pinata: Node3D
+
+
+func _party() -> void:
+	_neon("LAST CALL", Vector3(0, 3.0, ROOM_BACK + 0.08), 0.0, Color("ff2a6a"), 96, "steady")
+	_neon("3", Vector3(2.55, 3.0, ROOM_BACK + 0.08), 0.0, Color("30e0ff"), 120, "stutter")
+	_neon("MEAT PARTY", Vector3(-ROOM_W / 2 + 0.06, 2.6, -2.5), PI / 2, Color("ff60e0"), 72, "flicker")
+	_neon("BINGO", Vector3(ROOM_W / 2 - 0.06, 2.6, -3.0), -PI / 2, Color("ffd030"), 72, "steady")
+	_neon("OPEN", Vector3(ROOM_W / 2 - 0.06, 2.4, 2.0), -PI / 2, Color("40ff70"), 56, "dying")
+	_neon("NO ONE LEAVES", Vector3(-ROOM_W / 2 + 0.06, 2.3, 3.0), PI / 2, Color("ff3020"), 40, "stutter")
+	_streamers()
+	_balloons()
+	_pinata(Vector3(2.4, 2.7, -4.6))
+
+
+func _neon(text: String, pos: Vector3, rot_y: float, col: Color, size: int, mode: String) -> void:
+	var holder := Node3D.new()
+	holder.position = pos
+	holder.rotation.y = rot_y
+	add_child(holder)
+	# the tube: the same word, unshaded and bright, and a darker glass copy behind it
+	var glow := Label3D.new()
+	glow.text = text
+	glow.font = load("res://assets/fonts/fell_sc.ttf")
+	glow.font_size = size
+	glow.pixel_size = 0.006
+	glow.modulate = col.lightened(0.35)
+	glow.outline_size = 14
+	glow.outline_modulate = Color(col.r, col.g, col.b, 0.45)
+	glow.shaded = false
+	glow.double_sided = false
+	glow.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	holder.add_child(glow)
+	var back := MB.new()
+	var w := text.length() * size * 0.0042 + 0.3
+	back.box("b", MB.mat(Tex.grime(Color("141014"), Color("241a20"), 16, 51, 0.3)), Vector3(w, size * 0.0075, 0.03), MB.T(Vector3(0, 0, -0.03)), Color(1, 1, 1))
+	_mi(back.build(), holder)
+	var l := OmniLight3D.new()
+	l.light_color = col
+	l.light_energy = 1.4
+	l.omni_range = 3.2
+	l.position = Vector3(0, 0, 0.5)
+	holder.add_child(l)
+	neons.append({"label": glow, "light": l, "base": 1.4, "mode": mode, "t": randf() * 10.0, "col": col, "on": true})
+
+
+func _streamers() -> void:
+	var cols := [Color("e83a6a"), Color("f0c020"), Color("30b0e0"), Color("50d060"), Color("b050e0")]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 33
+	var hub := Vector3(0, ROOM_H - 0.08, -1.0)
+	var ends := []
+	for k in 10:
+		var a := TAU * k / 10.0
+		var e := Vector3(cos(a) * 7.0, ROOM_H - 0.15, -1.0 + sin(a) * 7.5)
+		e.x = clampf(e.x, -ROOM_W / 2 + 0.1, ROOM_W / 2 - 0.1)
+		e.z = clampf(e.z, ROOM_BACK + 0.1, ROOM_FRONT - 0.1)
+		ends.append(e)
+	var mb := MB.new()
+	for k in ends.size():
+		var col: Color = cols[k % cols.size()]
+		var m := MB.mat(Tex.grime(col.darkened(0.15), col, 16, 60 + k, 0.4))
+		var a: Vector3 = hub
+		var b: Vector3 = ends[k]
+		var n := 18
+		var sag := rng.randf_range(0.6, 1.1)
+		for i in n:
+			var t0 := float(i) / n
+			var t1 := float(i + 1) / n
+			var p0 := a.lerp(b, t0) + Vector3(0, -sin(t0 * PI) * sag, 0)
+			var p1 := a.lerp(b, t1) + Vector3(0, -sin(t1 * PI) * sag, 0)
+			# a twisted ribbon: the flat side turns as it goes
+			var tw0 := Vector3(0, cos(t0 * 14.0), sin(t0 * 14.0)) * 0.05
+			var tw1 := Vector3(0, cos(t1 * 14.0), sin(t1 * 14.0)) * 0.05
+			var side := (b - a).normalized().cross(Vector3.UP).normalized()
+			tw0 = (side * tw0.z + Vector3.UP * tw0.y)
+			tw1 = (side * tw1.z + Vector3.UP * tw1.y)
+			mb.quad("s%d" % k, m, p0 - tw0, p1 - tw1, p1 + tw1, p0 + tw0, Color(1, 1, 1))
+		# one end has come loose and hangs down
+		if k % 4 == 1:
+			var drop := b + Vector3(0, -0.05, 0)
+			for i in 6:
+				var y0 := drop.y - i * 0.25
+				mb.quad("s%d" % k, m, Vector3(drop.x - 0.05, y0, drop.z), Vector3(drop.x + 0.05, y0, drop.z),
+					Vector3(drop.x + 0.05, y0 - 0.25, drop.z + 0.02 * i), Vector3(drop.x - 0.05, y0 - 0.25, drop.z + 0.02 * i), Color(0.9, 0.9, 0.9))
+	var smi := _mi(mb.build())
+	smi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+
+func _balloons() -> void:
+	var cols := [Color("e83a6a"), Color("f0c020"), Color("30b0e0"), Color("50d060"), Color("b050e0"), Color("f0f0f0")]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var mb := MB.new()
+	for i in 22:
+		var c: Color = cols[rng.randi_range(0, cols.size() - 1)]
+		var at := Vector3(rng.randf_range(-6.5, 6.5), ROOM_H - 0.3 - rng.randf_range(0.0, 0.25), rng.randf_range(-9.0, 5.0))
+		if Vector2(at.x, at.z - 0.0).length() < 1.6:
+			continue
+		var soft := rng.randf_range(0.75, 1.0)
+		mb.sphere("b", MB.mat(Tex.solid(c)), 0.24, 4, 8, MB.T(at), Color(1, 1, 1), Vector3(soft, 1.15 * soft, soft))
+		var slen := rng.randf_range(0.6, 1.8)
+		mb.box("s", MB.mat(Tex.solid(Color("e0e0e0"))), Vector3(0.006, slen, 0.006), MB.T(at + Vector3(0, -0.28 - slen / 2, 0)), Color(1, 1, 1))
+	_mi(mb.build())
+
+
+## A donkey, papier-mâché, tissue-paper fringes in stripes, on a rope over the stage. It
+## has been hit before. Something has been leaking out of the split in its belly.
+func _pinata(at: Vector3) -> void:
+	pinata = Node3D.new()
+	pinata.position = at
+	add_child(pinata)
+	var cols := [Color("e83a6a"), Color("f0c020"), Color("30b0e0"), Color("50d060"), Color("b050e0")]
+	var mb := MB.new()
+	var rope := MB.mat(Tex.grime(Color("8a7050"), Color("b09870"), 16, 70, 0.3))
+	mb.box("r", rope, Vector3(0.02, ROOM_H - at.y, 0.02), MB.T(Vector3(0, (ROOM_H - at.y) / 2, 0)), Color(1, 1, 1))
+	# body in fringed stripes
+	for i in 6:
+		var m := MB.mat(Tex.grime(cols[i % 5].darkened(0.2), cols[i % 5], 16, 80 + i, 0.6))
+		mb.box("f%d" % (i % 5), m, Vector3(0.12, 0.34, 0.32), MB.T(Vector3(-0.3 + i * 0.12, -0.36, 0)), Color(1, 1, 1))
+	# legs, neck, head, ears
+	var lm := MB.mat(Tex.grime(Color("c84a8a"), Color("e86aa8"), 16, 90, 0.6))
+	for p in [Vector3(-0.26, -0.68, 0.1), Vector3(-0.26, -0.68, -0.1), Vector3(0.26, -0.68, 0.1), Vector3(0.26, -0.68, -0.1)]:
+		mb.box("l", lm, Vector3(0.08, 0.32, 0.08), MB.T(p), Color(1, 1, 1))
+	mb.box("l", lm, Vector3(0.12, 0.3, 0.14), MB.T(Vector3(0.38, -0.12, 0), Vector3(0, 0, -0.5)), Color(1, 1, 1))
+	mb.box("h", MB.mat(Tex.grime(Color("f0c020"), Color("f8e070"), 16, 91, 0.5)), Vector3(0.26, 0.14, 0.15), MB.T(Vector3(0.52, 0.02, 0)), Color(1, 1, 1))
+	mb.box("h", lm, Vector3(0.04, 0.16, 0.05), MB.T(Vector3(0.46, 0.15, 0.05), Vector3(0, 0, 0.3)), Color(1, 1, 1))
+	mb.box("h", lm, Vector3(0.04, 0.16, 0.05), MB.T(Vector3(0.46, 0.15, -0.05), Vector3(0, 0, 0.3)), Color(1, 1, 1))
+	mb.box("e", MB.mat(Tex.solid(Color("101010"))), Vector3(0.03, 0.03, 0.16), MB.T(Vector3(0.58, 0.05, 0)), Color(1, 1, 1))
+	# the split, and what's come out of it
+	var red := MB.mat(Tex.grime(Color("3a0606"), Color("7a1010"), 16, 92, 0.3))
+	mb.box("w", red, Vector3(0.3, 0.03, 0.12), MB.T(Vector3(0.0, -0.54, 0)), Color(1, 1, 1))
+	for k in 3:
+		mb.box("w", red, Vector3(0.025, 0.25 + k * 0.15, 0.025), MB.T(Vector3(-0.08 + k * 0.08, -0.68 - k * 0.07, 0.0)), Color(1, 1, 1))
+	_mi(mb.build(), pinata)
+	# the stain on the stage under it
+	var st := MB.new()
+	st.cyl("s", red, 0.32, 0.32, 0.005, 10, MB.T(Vector3(at.x, 0.305, at.z)), Color(1, 1, 1))
+	_mi(st.build())
+
+
+func _party_tick(delta: float) -> void:
+	for n in neons:
+		n.t += delta
+		var on := true
+		match str(n.mode):
+			"flicker":
+				on = randf() > 0.06
+			"stutter":
+				on = fmod(n.t, 4.0) > 0.45 or fmod(n.t * 13.0, 1.0) > 0.5
+			"dying":
+				on = sin(n.t * 1.3) > -0.2 and randf() > 0.15
+		if on != n.on:
+			n.on = on
+			(n.label as Label3D).modulate = (n.col as Color).lightened(0.35) if on else (n.col as Color).darkened(0.75)
+			(n.label as Label3D).outline_modulate = Color(n.col.r, n.col.g, n.col.b, 0.45 if on else 0.0)
+			(n.light as OmniLight3D).light_energy = n.base if on else 0.05
+			if not on and randf() < 0.3 and get_node_or_null("/root/Sfx"):
+				Sfx.play("buzz", -26.0, 0.2)
+	if pinata:
+		pinata.rotation.y += delta * 0.25
+		pinata.rotation.z = sin(t * 0.7) * 0.05
+
+
 func _process(delta: float) -> void:
 	t += delta
+	_party_tick(delta)
 	for l in candle_lights:
 		l.light_energy = 1.25 + 0.18 * sin(t * 11.0) * sin(t * 4.3 + 1.0) + randf_range(-0.04, 0.04)
 

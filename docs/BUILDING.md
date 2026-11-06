@@ -16,7 +16,7 @@ export/android/java_sdk_path = "/usr/lib/jvm/java-21-openjdk-amd64"
 ```
 
 ```
-godot --headless --export-release "Android" build/MEAT_PARTY.apk
+godot --headless --export-release "Android" build/LAST_CALL_3.apk
 ```
 
 Package `com.klaepigeon.meatparty`, arm64-v8a, min SDK 24, landscape, immersive.

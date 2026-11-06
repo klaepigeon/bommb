@@ -42,7 +42,7 @@ func _ready() -> void:
 	hall.board_root.add_child(table)
 	venue = TableBoard.new()
 	table.add_child(venue)
-	venue.build(Assets.load_json("res://assets/data/board.json").get("spaces", []))
+	venue.build(Assets.load_json("res://assets/data/board.json").get("spaces", []), Net.match_seed)
 	caller = CallerActor.wrap(hall.caller)
 	hall.add_child(caller)
 	dice = LcDice3D.new()

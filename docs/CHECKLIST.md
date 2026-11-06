@@ -44,7 +44,10 @@ crack in the rules, and he gets stranger every time (`unrest`).
 - [x] Headless rules tests (thousands of checks over whole matches); multi-process net tests
 - [~] Local multiplayer: device per seat (WASD/arrows/IJKL/pads/touch) for Chairs; turn
       games are hot-seat on shared buttons. Not tried with real pads or a tablet
-- [x] Android APK builds and signs (apk/MEAT_PARTY.apk); [ ] not yet run on a device
+- [x] Android APK builds and signs (apk/LAST_CALL_3.apk); [ ] not yet run on a device
+- [x] LAST CALL 3: the Caller's new suit; the party hall (neon, streamers, balloons, piñata, chairs under tables)
+- [x] The board drawn as a place (meat land), a story told along the road, a different one each match
+- [x] Meat puppets with real eyes (they follow you; a lost one hangs on its nerve), strings, flies
 - [x] LAST CALL: The Campaign's look: its hall, Stage, post shader, Caller, fonts, card stock
 - [x] Voodoo dolls: photo faces, sacking, pins for injuries, thread for lost parts
 - [~] Windows/Linux export presets written; not exported (templates not installed here)

@@ -1,0 +1,41 @@
+{
+ "_comment": "The story the board tells, one per match (picked by the match seed). Eight beats, drawn beside the path in order. 'pic' is a drawing BoardArt knows: house cake woods lake table grave door car tent well church factory clown bed. Add stories freely.",
+ "stories": [
+  {"title": "GARY'S BIRTHDAY", "beats": [
+   ["house", "Gary turns seven."],
+   ["cake", "The cake is as big as Gary."],
+   ["woods", "Hide and seek in the woods!"],
+   ["lake", "Nobody looks in the lake."],
+   ["table", "They eat the cake anyway."],
+   ["cake", "It tastes like Gary."],
+   ["grave", "Gary's mum blows out the candles."],
+   ["door", "Same time next year."]]},
+  {"title": "THE FAMILY HOLIDAY", "beats": [
+   ["car", "Dad packs the car."],
+   ["car", "There were four of them when they left."],
+   ["tent", "The caravan park is very quiet."],
+   ["well", "Mum finds a well."],
+   ["lake", "The water tastes of pennies."],
+   ["house", "Only Dad comes home."],
+   ["table", "He sets four places."],
+   ["door", "He's still setting them."]]},
+  {"title": "GRANDMA'S KITCHEN", "beats": [
+   ["house", "Grandma's house smells of gravy."],
+   ["table", "She feeds everyone who visits."],
+   ["factory", "Nobody ever leaves hungry."],
+   ["woods", "Nobody ever leaves."],
+   ["church", "The vicar came to ask about it."],
+   ["cake", "He was delicious."],
+   ["grave", "Grandma is a hundred and four."],
+   ["door", "Come in. It's open."]]},
+  {"title": "THE CIRCUS COMES TO TOWN", "beats": [
+   ["tent", "The circus came to town."],
+   ["clown", "The clown wanted a volunteer."],
+   ["house", "Every family sent one."],
+   ["tent", "The show was a great success."],
+   ["car", "The circus left in the night."],
+   ["bed", "The volunteers' beds are still made."],
+   ["church", "The town is very tidy now."],
+   ["door", "The circus is back."]]}
+ ]
+}

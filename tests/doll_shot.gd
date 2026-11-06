@@ -28,8 +28,12 @@ func _ready() -> void:
 			b[k].s = hurts[i][k]
 		c.set_body(b, i == 0)
 	var cam_at := table.to_global(Vector3(0, 1.2, 2.0))
-	stage._base_pos = cam_at + Vector3(0, 0.08, 0.42)
-	stage._look_at = cam_at + Vector3(0, -0.02, 0)
+	var close := OS.get_cmdline_user_args().has("--close")
+	if close:
+		stage.set_internal_height(720)
+		cam_at = table.to_global(Vector3(-0.8, 1.62, 2.0))
+	stage._base_pos = cam_at + (Vector3(0.0, 0.0, 0.07) if close else Vector3(0, 0.08, 0.42))
+	stage._look_at = cam_at + (Vector3(0, 0, 0) if close else Vector3(0, -0.02, 0))
 	stage._fov = 50.0
 	stage._apply_camera()
 	await get_tree().create_timer(2.0).timeout

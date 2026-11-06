@@ -1,15 +1,15 @@
 class_name Contestant
 extends Node3D
-## A contestant's doll. The figures on the Caller's table are not game pieces: they're
-## voodoo dolls of the people playing, stitched from sacking, with a photograph of the
-## player's face sewn on, yarn for hair, and a painted base. What is done to the doll is
-## done to them. Every injury goes in as a pin (a bruise is one pin, a break is two and a
-## twist of red thread, a burn is scorched sacking); a lost part is cut off and the thread
-## left hanging; a brass prosthetic is screwed on in its place. Deaths are staged, one
-## animation per way to go (DEATHS), and played once.
+## A contestant's puppet. The figures on the Caller's table are puppets of the people
+## playing, made of meat: cartoon PS1 bodies of rotting muscle and fat, stitched together,
+## the player's photograph sewn on for a face, and real eyes (wet, veined, the one thing on
+## them that isn't crude) that follow you round the room. Strings go up from them into the
+## dark. Flies. What is done to the puppet is done to the player: every injury goes in as a
+## pin, a lost limb is cut off and the thread left hanging, a lost eye hangs out of its
+## socket on the nerve, a brass prosthetic is screwed on in its place.
 ##
-## Built on RATFORMER's PS1 human rig (Ps1Human), in doll units: the table node it stands
-## on is scaled down, so a 1.8-unit doll is a hand's height on the table.
+## Built on RATFORMER's PS1 human rig (Ps1Human), in puppet units: the table node it stands
+## on is scaled down, so a 1.8-unit puppet is a hand's height on the table.
 
 const DEATHS := ["trapdoor", "launch", "zap", "pop", "boom", "jaws", "clapper", "prize"]
 const WALK_SPEED := 3.0
@@ -32,25 +32,36 @@ var _helmet: Node3D
 var _name_tag: Label3D
 
 
-const SACKING := [Color("e0b878"), Color("d4aa6a"), Color("e8c088"), Color("caa060")]
-const YARN := [Color("c83a2a"), Color("2a5ab8"), Color("d8b020"), Color("3a8a48")]
+const IRIS := [Color("4a6a9a"), Color("5a3a1e"), Color("4a7a3a"), Color("7a6030")]
+
+var eyes: Array[Node3D] = []      # [left, right]
+var _eye_rest: Array[Vector3] = []
+var _strings: MeshInstance3D
+var _string_mesh: ImmediateMesh
+var _eye_state := ["ok", "ok"]
 
 
 func setup(s: int, face: int, c: Color, display_name: String) -> void:
 	seat = s
 	color = c
-	var sack: Color = SACKING[s % 4]
-	human = Ps1Human.make({"face": face, "shirt": sack, "trousers": sack.darkened(0.12), "shoes": sack.darkened(0.3),
-		"skin": sack.lightened(0.05), "hair": YARN[s % 4].lerp(c, 0.5), "long_hair": false, "bald": false, "face_gain": 1.9})
+	var flesh := Meat.flesh(0.25 + 0.18 * s, s + 1)
+	human = Ps1Human.make({"face": face, "skin_tex": flesh,
+		"shirt": Color(1.0, 0.92, 0.9), "trousers": Color(0.8, 0.62, 0.62), "shoes": Color(0.35, 0.12, 0.12),
+		"skin": Color(1.0, 0.95, 0.92), "hair": [Color("1a1008"), Color("3a2a1a"), Color("120c0a"), Color("4a3a2a")][s % 4],
+		"long_hair": s == 1, "bald": s % 2 == 0, "face_gain": 1.25})
 	add_child(human)
 	_stitches(c)
-	# the base: a painted wooden disc, the name in his hand on a paper slip
+	_eyes()
+	# the base: a chipped dinner plate, smeared, with a band of the seat's colour
 	var base := LcMB.new()
-	base.cyl("b", LcMB.mat(LcTex.wood(Color("3a2416"), 13 + s, 16, 1)), 0.46, 0.42, 0.1, 10, LcMB.T(Vector3(0, -0.02, 0)), Color(1, 1, 1))
-	base.cyl("r", LcMB.mat(LcTex.solid(c.darkened(0.25))), 0.47, 0.47, 0.03, 10, LcMB.T(Vector3(0, 0.07, 0)), Color(1, 1, 1))
+	base.cyl("p", LcMB.mat(LcTex.grime(Color("d8d0c0"), Color("f0ece0"), 16, 13 + s, 0.3)), 0.5, 0.42, 0.06, 12, LcMB.T(Vector3(0, -0.02, 0)), Color(1, 1, 1))
+	base.cyl("r", LcMB.mat(LcTex.solid(c.darkened(0.15))), 0.5, 0.5, 0.02, 12, LcMB.T(Vector3(0, 0.035, 0)), Color(1, 1, 1))
+	base.cyl("b", LcMB.mat(LcTex.grime(Color("3a0606"), Color("6a1010"), 16, 30 + s, 0.4)), 0.3, 0.26, 0.012, 9, LcMB.T(Vector3(0.05, 0.04, 0.04)), Color(1, 1, 1))
 	var bm := MeshInstance3D.new()
 	bm.mesh = base.build()
 	add_child(bm)
+	_strings_setup()
+	_flies()
 	_name_tag = Label3D.new()
 	_name_tag.text = display_name
 	_name_tag.font = load("res://assets/fonts/fell_sc.ttf")
@@ -65,23 +76,140 @@ func setup(s: int, face: int, c: Color, display_name: String) -> void:
 	add_child(_name_tag)
 
 
-## The doll's make: a ribbon in its seat's colour, a cross-stitched heart, stitching up the
-## sides, two pins already in (one always is).
+## Stitching where it was joined, a party ribbon in the seat's colour round the waist, and
+## one pin already in. (There always is one.)
 func _stitches(c: Color) -> void:
-	var red := LcMB.mat(LcTex.solid(Color("8a1410")))
+	var black := LcMB.mat(LcTex.solid(Color("120606")))
 	var mb := LcMB.new()
-	mb.cyl("r", LcMB.mat(LcTex.solid(c)), 0.16, 0.16, 0.05, 8, LcMB.T(Vector3(0, 0.1, 0), Vector3(0, PI / 8.0, 0), Vector3(1.03, 1, 0.68)), Color(1, 1, 1))
-	# an X over the heart
-	mb.box("x", red, Vector3(0.11, 0.018, 0.01), LcMB.T(Vector3(0.07, 0.42, 0.13), Vector3(0, 0, 0.7)), Color(1, 1, 1))
-	mb.box("x", red, Vector3(0.11, 0.018, 0.01), LcMB.T(Vector3(0.07, 0.42, 0.13), Vector3(0, 0, -0.7)), Color(1, 1, 1))
-	# side seams, big uneven stitches
-	for side in [-1.0, 1.0]:
-		for k in 5:
-			mb.box("s", LcMB.mat(LcTex.solid(Color("2a1a10"))), Vector3(0.012, 0.05, 0.03), LcMB.T(Vector3(0.2 * side, 0.12 + k * 0.09, 0.0), Vector3(0, 0, 0.5 * side)), Color(1, 1, 1))
+	mb.cyl("r", LcMB.mat(LcTex.solid(c)), 0.16, 0.16, 0.04, 8, LcMB.T(Vector3(0, 0.1, 0), Vector3(0, PI / 8.0, 0), Vector3(1.03, 1, 0.68)), Color(1, 1, 1))
+	for k in 6:
+		mb.box("s", black, Vector3(0.05, 0.012, 0.012), LcMB.T(Vector3(0.0, 0.14 + k * 0.08, 0.135), Vector3(0, 0, 0.4 * (1 if k % 2 == 0 else -1))), Color(1, 1, 1))
+	for k in 8:
+		var a := TAU * k / 8.0
+		mb.box("s", black, Vector3(0.012, 0.04, 0.012), LcMB.T(Vector3(sin(a) * 0.08, 0.6, cos(a) * 0.06)), Color(1, 1, 1))
 	var mi := MeshInstance3D.new()
 	mi.mesh = mb.build()
 	human.upper.add_child(mi)
-	_pin(human.upper, Vector3(-0.1, 0.5, 0.1), Vector3(0.6, 0.3, 0), c)
+	_pin(human.upper, Vector3(-0.1, 0.45, 0.1), Vector3(0.6, 0.3, 0), c)
+
+
+## Two real eyes, set into the photograph's sockets, a little proud of it.
+func _eyes() -> void:
+	eyes.clear()
+	_eye_rest.clear()
+	for side in [-1.0, 1.0]:
+		var e := Node3D.new()
+		var rest := Vector3(0.052 * side, 0.2, 0.125)
+		e.position = rest
+		human.head.add_child(e)
+		var mi := MeshInstance3D.new()
+		mi.name = "Ball"
+		mi.mesh = Meat.eyeball(0.05, IRIS[seat % 4], 0.15, seat * 2 + int(side > 0))
+		e.add_child(mi)
+		eyes.append(e)
+		_eye_rest.append(rest)
+
+
+func _set_eye(i: int, state: String) -> void:
+	if _eye_state[i] == state or eyes.size() < 2:
+		return
+	_eye_state[i] = state
+	var e := eyes[i]
+	var ball := e.get_node("Ball") as MeshInstance3D
+	ball.mesh = Meat.eyeball(0.05, IRIS[seat % 4], 1.0 if state in ["bruised", "burned", "broken"] else 0.15, seat * 2 + i)
+	for c in e.get_children():
+		if c.name == "Nerve":
+			c.queue_free()
+	if state == "lost":
+		# out of the socket, hanging on its nerve
+		e.position = _eye_rest[i] + Vector3(0, -0.13, 0.03)
+		var mb := LcMB.new()
+		mb.box("n", LcMB.mat(LcTex.grime(Color("6a1018"), Color("a8303a"), 16, 5, 0.4)), Vector3(0.014, 0.13, 0.014), LcMB.T(Vector3(0, 0.065, -0.02)), Color(1, 1, 1))
+		var n := MeshInstance3D.new()
+		n.name = "Nerve"
+		n.mesh = mb.build()
+		e.add_child(n)
+		var sk := LcMB.new()
+		sk.cyl("s", LcMB.mat(LcTex.solid(Color("140406"))), 0.034, 0.034, 0.01, 8, LcMB.T(_eye_rest[i] + Vector3(0, 0, -0.01), Vector3(PI / 2, 0, 0)), Color(1, 1, 1))
+		var sm := MeshInstance3D.new()
+		sm.mesh = sk.build()
+		human.head.add_child(sm)
+	else:
+		e.position = _eye_rest[i]
+
+
+## The eyes follow whoever's watching (the camera); a lost one just swings.
+func _look_eyes() -> void:
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return
+	for i in eyes.size():
+		var e := eyes[i]
+		if _eye_state[i] == "lost":
+			e.rotation = Vector3(sin(_t * 2.1 + i) * 0.35, 0, sin(_t * 1.7 + i) * 0.4)
+			continue
+		var to := cam.global_position - e.global_position
+		if to.length() < 0.001:
+			continue
+		var local := (e.get_parent() as Node3D).global_transform.basis.orthonormalized().inverse() * to.normalized()
+		var yaw := clampf(atan2(local.x, local.z), -0.7, 0.7)
+		var pitch := clampf(-atan2(local.y, Vector2(local.x, local.z).length()), -0.5, 0.5)
+		e.rotation = Vector3(pitch, yaw, 0)
+
+
+## Strings from the head and both hands, up out of the light.
+func _strings_setup() -> void:
+	_string_mesh = ImmediateMesh.new()
+	_strings = MeshInstance3D.new()
+	_strings.mesh = _string_mesh
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.albedo_color = Color(0.85, 0.8, 0.7, 0.55)
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_strings.material_override = m
+	_strings.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(_strings)
+
+
+func _draw_strings() -> void:
+	if _string_mesh == null or not is_visible_in_tree():
+		return
+	_string_mesh.clear_surfaces()
+	_string_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
+	var inv := global_transform.affine_inverse()
+	for j in [human.head, human.hand_l, human.hand_r]:
+		if (j as Node3D).global_transform.basis.get_scale().x < 0.0005:
+			continue
+		var p: Vector3 = inv * (j as Node3D).global_position
+		_string_mesh.surface_add_vertex(p + Vector3(0, 0.05, 0))
+		_string_mesh.surface_add_vertex(p + Vector3(0, 9.0, 0))
+	_string_mesh.surface_end()
+
+
+func _flies() -> void:
+	var p := CPUParticles3D.new()
+	p.amount = 5
+	p.lifetime = 1.6
+	p.local_coords = true
+	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+	p.emission_sphere_radius = 0.5
+	p.gravity = Vector3.ZERO
+	p.direction = Vector3(1, 0.2, 0)
+	p.spread = 180.0
+	p.initial_velocity_min = 0.6
+	p.initial_velocity_max = 1.4
+	p.orbit_velocity_min = 0.6
+	p.orbit_velocity_max = 1.2
+	var q := QuadMesh.new()
+	q.size = Vector2(0.004, 0.004)   # billboarded: real size, the table's scale doesn't apply
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color(0.05, 0.05, 0.04)
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	q.material = mat
+	p.mesh = q
+	p.position = Vector3(0, 1.6, 0)
+	add_child(p)
 
 
 ## A dressmaker's pin: steel shank, a glass bead on the end.
@@ -129,6 +257,8 @@ func _process(delta: float) -> void:
 		human.walk(_phase, 0.0)
 		human.idle(_t + seat)
 	rotation.y = lerp_angle(rotation.y, face_dir, minf(1.0, delta * 8.0))
+	_look_eyes()
+	_draw_strings()
 	# a limp: one leg short
 	human.hips.rotation.z = sin(_phase) * 0.12 * _limp if moving else 0.0
 	_apply_losses()
@@ -150,6 +280,8 @@ func set_body(b: Dictionary, helmet: bool) -> void:
 	_limp = 1.0 if legs_lost == 1 else 0.0
 	for part in Body.PARTS:
 		_dress(part, str(b[part].s))
+	_set_eye(0, str(b.eye_l.s))
+	_set_eye(1, str(b.eye_r.s))
 	if helmet and _helmet == null:
 		var hb := LcMB.new()
 		hb.sphere("h", LcMB.mat(LcTex.brass()), 0.16, 3, 8, LcMB.T(Vector3(0, 0.22, 0)), Color(1, 1, 1), Vector3(1, 0.8, 1.05))
@@ -224,12 +356,7 @@ func _dress(part: String, s: String) -> void:
 			_add(holder, mb)
 		"lost":
 			if part.begins_with("eye"):
-				# stitched shut, a pin through it
-				var mb := LcMB.new()
-				mb.box("x", LcMB.mat(LcTex.solid(Color("1a0806"))), Vector3(0.07, 0.012, 0.01), LcMB.T(Vector3.ZERO, Vector3(0, 0, 0.7)), Color(1, 1, 1))
-				mb.box("x", LcMB.mat(LcTex.solid(Color("1a0806"))), Vector3(0.07, 0.012, 0.01), LcMB.T(Vector3.ZERO, Vector3(0, 0, -0.7)), Color(1, 1, 1))
-				_add(holder, mb)
-				_pin(holder, Vector3.ZERO, Vector3(1.4, 0, 0), Color("101010"), 0.3)
+				pass   # it hangs out of its socket (_set_eye)
 			else:
 				# cut off; the thread left hanging
 				var mb := LcMB.new()
@@ -238,7 +365,7 @@ func _dress(part: String, s: String) -> void:
 				mb.box("t", LcMB.mat(LcTex.solid(Color("a01410"))), Vector3(0.008, 0.12, 0.008), LcMB.T(Vector3(-0.02, -0.1, 0.0), Vector3(0, 0, -0.4)), Color(1, 1, 1))
 				_add(holder, mb)
 	if part.begins_with("eye") and s in ["bruised", "burned", "broken"]:
-		_pin(holder, Vector3.ZERO, Vector3(1.5, 0, 0), red, 0.28)
+		_pin(holder, Vector3(0.0, 0.04, -0.01), Vector3(1.9, 0, 0.2), red, 0.28)
 	_extras[part] = holder
 
 

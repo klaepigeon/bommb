@@ -1,4 +1,4 @@
-# MEAT PARTY (working title)
+# LAST CALL 3: MEAT PARTY
 
 A four-player survival party game in Godot 4.7, hosted by **THE CALLER**: a plaid-suited
 robot with a brass bingo cage full of dice for a head, ported from *LAST CALL: The
@@ -16,14 +16,28 @@ IM Fell English and Special Elite for every word on screen. His figure is the ca
 own. Those scripts are in `scripts/lcc/`, its shaders in `shaders/`, its sounds in
 `assets/audio/`, its paper and pen-work in `assets/ink/`, its building data in `data/`.
 
-**The figures on the table are voodoo dolls of the players**: sacking, yarn hair, the
-player's photograph sewn on for a face, a stitched heart. What happens to the doll
-happens to them: every injury goes in as a pin, a lost limb is cut off and the thread
-left hanging, a prosthetic is brass screwed on in its place.
+**LAST CALL 3's hall** is done up for a party: flickering neon (some of it dying),
+crepe-paper streamers from the ceiling, balloons going soft, a piñata over the stage that
+has been leaking, and the chairs pushed in under the tables. The Caller has a new suit:
+a sequinned dinner jacket the colour of a fresh bruise, black satin lapels, ruffles, a
+gold bow tie and a dead carnation.
+
+**The figures on the table are meat puppets of the players**: cartoon PS1 bodies of
+rotting muscle and fat, stitched together, the player's photograph sewn on for a face,
+and real eyes (veined, wet, the one thing on them that isn't crude) that follow you. Strings go up
+into the dark; flies. What happens to the puppet happens to them: every injury goes in as
+a pin, a lost limb is cut off with the thread left hanging, a lost eye hangs out on its
+nerve, a prosthetic is brass screwed on in its place.
+
+**The board is a drawing of a place**, like a children's board game: a road of coloured
+squares winding through a sweet little land made of meat (ham hills, a gravy river,
+sausage trees, bone fences, gumdrops with eyes in). Beside the road, eight numbered
+drawings tell a story, a different one each match, and it's always a bad one
+(`assets/data/board_stories.json`: add your own).
 
 ## Android
 
-`apk/MEAT_PARTY.apk` (arm64, Android 7.0+). Allow installs from unknown sources, install,
+`apk/LAST_CALL_3.apk` (arm64, Android 7.0+). Allow installs from unknown sources, install,
 play landscape. To rebuild: [docs/BUILDING.md](docs/BUILDING.md).
 
 ## Run

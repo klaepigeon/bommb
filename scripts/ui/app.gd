@@ -51,8 +51,8 @@ func _ensure_stage(pose := "title") -> void:
 		bg_stage.set_internal_height(Settings.screen_lines() if Settings.screen_lines() > 0 else 540)
 		bg_caller = CallerActor.wrap(bg_stage.hall.caller)
 		bg_stage.hall.add_child(bg_caller)
-		bg_stage.hall.flashboard.set_left("MEAT", "PARTY")
-		bg_stage.hall.flashboard.set_right("FILE", "00")
+		bg_stage.hall.flashboard.set_left("LAST", "CALL")
+		bg_stage.hall.flashboard.set_right("PART", "03")
 		_idle = Timer.new()
 		_idle.wait_time = 3.2
 		_idle.autostart = true
@@ -110,7 +110,7 @@ func menu() -> void:
 	c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_swap(c)
 	bg_stage.set_pose("title", 1.2)
-	var title := UIKit.label("MEAT PARTY", 96, Color("a01a12"), true)
+	var title := UIKit.label("LAST CALL 3", 96, Color("a01a12"), true)
 	title.add_theme_font_override("font", UIKit.voice_font)
 	title.add_theme_color_override("font_outline_color", Color(0.03, 0.01, 0.01))
 	title.add_theme_constant_override("outline_size", 10)
@@ -120,7 +120,7 @@ func menu() -> void:
 	title.offset_top = 24
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	c.add_child(title)
-	var sub := UiKit.voice("hosted by THE CALLER", 30)
+	var sub := UiKit.voice("MEAT PARTY", 40)
 	sub.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 	sub.offset_left = -720
 	sub.offset_right = -46

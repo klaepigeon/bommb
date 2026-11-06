@@ -30,7 +30,10 @@ func _ready() -> void:
 func build() -> void:
 	for c in get_children():
 		c.queue_free()
-	var plaid := MB.mat(Tex.plaid(), Color.WHITE, Vector2(2, 2))
+	# LAST CALL 3: the plaid's gone. For the party he's in a sequinned dinner jacket the
+	# colour of a fresh bruise, black satin lapels, a ruffled shirt, a gold bow tie.
+	var plaid := MB.mat(sequins(), Color.WHITE, Vector2(2, 2))
+	var satin := MB.mat(Tex.grime(Color("08060a"), Color("2a2030"), 16, 41, 0.6))
 	var plain := MB.mat(Tex.grime(Color("d8d0bc"), Color("f0eadc"), 16, 3, 0.3))
 	var brass := MB.mat(Tex.brass())
 	var dark := MB.mat(Tex.grime(Color("1a1612"), Color("2e2620"), 16, 4, 0.3))
@@ -54,15 +57,20 @@ func build() -> void:
 	tb.box("w", plain, Vector3(0.2, 0.62, 0.02), MB.T(Vector3(0, 0.5, 0.2)), Color(1, 1, 1))
 	for i in range(4):
 		tb.box("w", plain, Vector3(0.01, 0.5, 0.025), MB.T(Vector3(-0.06 + i * 0.04, 0.47, 0.205)), Color(0.75, 0.73, 0.7))
-	# lapels
-	tb.box("p", plaid, Vector3(0.12, 0.5, 0.04), MB.T(Vector3(-0.15, 0.55, 0.2), Vector3(0, 0, -0.25)), Color(0.7, 0.7, 0.7))
-	tb.box("p", plaid, Vector3(0.12, 0.5, 0.04), MB.T(Vector3(0.15, 0.55, 0.2), Vector3(0, 0, 0.25)), Color(0.7, 0.7, 0.7))
+	# lapels, black satin, and the ruffles down the shirt
+	tb.box("l", satin, Vector3(0.13, 0.52, 0.04), MB.T(Vector3(-0.15, 0.55, 0.2), Vector3(0, 0, -0.25)), Color(1, 1, 1))
+	tb.box("l", satin, Vector3(0.13, 0.52, 0.04), MB.T(Vector3(0.15, 0.55, 0.2), Vector3(0, 0, 0.25)), Color(1, 1, 1))
+	for i in range(5):
+		tb.box("w", plain, Vector3(0.16 - i * 0.012, 0.03, 0.05), MB.T(Vector3(0, 0.72 - i * 0.1, 0.22), Vector3(0.4, 0, 0)), Color(0.95, 0.93, 0.9))
+	# a carnation, gone brown
+	tb.sphere("c", MB.mat(Tex.grime(Color("5a2a20"), Color("8a4a30"), 16, 43, 0.5)), 0.04, 3, 6, MB.T(Vector3(-0.22, 0.66, 0.22)), Color(1, 1, 1))
 	# breast pocket card (a little white rectangle, like the screenshot)
 	tb.box("w", plain, Vector3(0.08, 0.05, 0.02), MB.T(Vector3(0.22, 0.6, 0.215)), Color(1, 1, 1))
 	# bow tie
-	tb.box("r", red, Vector3(0.07, 0.07, 0.04), MB.T(Vector3(-0.055, 0.8, 0.22), Vector3(0, 0, 0.3)), Color(1, 1, 1))
-	tb.box("r", red, Vector3(0.07, 0.07, 0.04), MB.T(Vector3(0.055, 0.8, 0.22), Vector3(0, 0, -0.3)), Color(1, 1, 1))
-	tb.box("r", red, Vector3(0.03, 0.04, 0.05), MB.T(Vector3(0, 0.8, 0.225)), Color(0.8, 0.8, 0.8))
+	var gold := MB.mat(Tex.grime(Color("a07818"), Color("f0d060"), 16, 42, 0.4))
+	tb.box("r", gold, Vector3(0.08, 0.07, 0.04), MB.T(Vector3(-0.06, 0.8, 0.22), Vector3(0, 0, 0.3)), Color(1, 1, 1))
+	tb.box("r", gold, Vector3(0.08, 0.07, 0.04), MB.T(Vector3(0.06, 0.8, 0.22), Vector3(0, 0, -0.3)), Color(1, 1, 1))
+	tb.box("r", gold, Vector3(0.03, 0.04, 0.05), MB.T(Vector3(0, 0.8, 0.225)), Color(0.8, 0.8, 0.8))
 	# collar
 	tb.box("w", plain, Vector3(0.22, 0.06, 0.18), MB.T(Vector3(0, 0.86, 0.06)), Color(1, 1, 1))
 	_add_mesh(tb.build(), torso)
@@ -86,6 +94,31 @@ func build() -> void:
 	cage.name = "DiceCage"
 	head.add_child(cage)
 	cage.clack.connect(func(k: float): if get_node_or_null("/root/Sfx"): Sfx.play("dice_clack", -26.0 + k * 6.0, 0.25))
+
+## Sequins: a grid of little discs on a bruise-purple ground, each catching the light
+## differently; a few have fallen off.
+static func sequins() -> ImageTexture:
+	return Tex.cached("lc3_sequins", func():
+		var size := 32
+		var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+		var ground := Color("3a0a3a")
+		for y in size:
+			for x in size:
+				img.set_pixel(x, y, ground.darkened(Tex.fbm(x * 0.2, y * 0.2, 7) * 0.3))
+		var rng := RandomNumberGenerator.new()
+		rng.seed = 303
+		for cy in range(1, size, 3):
+			for cx in range((cy / 3) % 2 + 1, size, 3):
+				if rng.randf() < 0.08:
+					continue
+				var b := rng.randf()
+				var c := Color("a8207a").lerp(Color("ff8ad8"), b)
+				if rng.randf() < 0.07:
+					c = Color("f0d060")
+				img.set_pixel(cx, cy, c)
+				if b > 0.75:
+					img.set_pixel(cx + 1 if cx + 1 < size else cx, cy, c.lightened(0.3))
+		return img)
 
 # ------------------------------------------------------------------ masks
 ## Every face at the table is his: for each character he plays, the Caller hangs a painted

@@ -1,10 +1,12 @@
 class_name TableBoard
 extends Node3D
-## The game board on the Caller's table, in doll units (the node it's built under is
-## scaled down to the table). A sheet of his card stock with the loop of spaces inked on
-## it, a line of dots between them, scraps of wallpaper where the clues are, and at the
-## top, where the loop passes nearest him, a little wooden door in a frame, with three
-## brass dials. He says it's painted on.
+## The game board on the Caller's table, in puppet units (the node it's built under is
+## scaled down to the table). LAST CALL 3: a drawing of a place, like a children's board
+## game: a road of coloured squares winding through a sweet little land made of meat
+## (BoardArt), and beside the road, numbered, the drawings of a story that's always a bad
+## one (assets/data/board_stories.json, picked by the match). At the top, where the road
+## passes nearest him, a little wooden door in a frame, with three brass dials. He says
+## it's painted on.
 
 const SIZE := Vector2(21.0, 14.4)
 const DOOR := Vector3(0, 0, -6.4)
@@ -16,17 +18,32 @@ const RING := {"start": Color("2a6a3a"), "tickets": Color("b08a2a"), "item": Col
 const GLYPH := {"start": "GO", "tickets": "$", "item": "?", "hazard": "!", "caller": "C", "steal": "&", "medic": "+"}
 
 var board: Array = []
+var path: Array[Vector2] = []    # each space's (x, z) on the sheet
+var story: Dictionary = {}
+var art_seed := 1
 var tiles: Array[Node3D] = []
 var door_node: Node3D
 var key_marker: Node3D
 var _fell: Font
 
 
-func build(spaces: Array) -> void:
+## The road: a closed loop that winds (the rules walk it in order and wrap round), from
+## the start nearest you, up the right, across the top past the door, and back down the left.
+const ROAD := [Vector2(0, 5.6), Vector2(4.2, 5.0), Vector2(8.6, 5.7), Vector2(9.1, 2.6), Vector2(5.4, 1.4),
+	Vector2(5.8, -1.6), Vector2(9.1, -3.0), Vector2(7.6, -5.9), Vector2(3.2, -5.0), Vector2(0, -6.0),
+	Vector2(-3.2, -5.0), Vector2(-7.6, -5.9), Vector2(-9.1, -3.0), Vector2(-5.8, -1.6), Vector2(-5.4, 1.4),
+	Vector2(-9.1, 2.6), Vector2(-8.6, 5.7), Vector2(-4.2, 5.0)]
+
+
+func build(spaces: Array, match_seed: int = 1) -> void:
 	board = spaces
+	art_seed = match_seed
 	_fell = load("res://assets/fonts/fell_sc.ttf")
+	path = _road(spaces.size())
+	var stories: Array = Assets.load_json("res://assets/data/board_stories.json").get("stories", [])
+	if not stories.is_empty():
+		story = stories[posmod(match_seed, stories.size())]
 	_sheet()
-	_path()
 	_tiles()
 	_door()
 	_your_candle()
@@ -62,25 +79,64 @@ func _label(text: String, at: Vector3, size: int, col: Color, flat := true, pare
 	return l
 
 
+## Catmull-Rom round the ROAD's points, then spaced evenly by length into n spaces.
+func _road(n: int) -> Array[Vector2]:
+	var dense: Array[Vector2] = []
+	var m := ROAD.size()
+	for i in m:
+		var p0: Vector2 = ROAD[(i - 1 + m) % m]
+		var p1: Vector2 = ROAD[i]
+		var p2: Vector2 = ROAD[(i + 1) % m]
+		var p3: Vector2 = ROAD[(i + 2) % m]
+		for k in 20:
+			var t := k / 20.0
+			var t2 := t * t
+			var t3 := t2 * t
+			dense.append(0.5 * ((2.0 * p1) + (-p0 + p2) * t + (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * t2 + (-p0 + 3.0 * p1 - 3.0 * p2 + p3) * t3))
+	var total := 0.0
+	for i in dense.size():
+		total += dense[i].distance_to(dense[(i + 1) % dense.size()])
+	var out: Array[Vector2] = []
+	var step := total / n
+	var want := 0.0
+	var acc := 0.0
+	for i in dense.size():
+		var a := dense[i]
+		var b := dense[(i + 1) % dense.size()]
+		var d := a.distance_to(b)
+		while want <= acc + d and out.size() < n:
+			out.append(a.lerp(b, (want - acc) / maxf(d, 0.0001)))
+			want += step
+		acc += d
+	return out
+
+
 func _sheet() -> void:
+	var art := BoardArt.new(SIZE, art_seed)
+	var beat_spaces := []
+	for k in 8:
+		beat_spaces.append(1 + k * 3)
+	var captions := art.paint(story, path, beat_spaces)
 	var mb := LcMB.new()
-	var paper := LcMB.mat(load("res://assets/ink/paper/map.png"), Color(0.6, 0.53, 0.43))
+	var paper := LcMB.mat(art.texture(), Color(0.78, 0.72, 0.66))
 	mb.box("p", paper, Vector3(SIZE.x, 0.1, SIZE.y), LcMB.T(Vector3(0, -0.04, 0)), Color(1, 1, 1))
 	_mesh(mb)
-	_label("MEAT  PARTY", Vector3(-1.6, 0.03, 1.3), 140, INK_RED)
-	_label("a game for four, and him", Vector3(-1.6, 0.03, 2.4), 64, Color("4a2a1a"))
+	for cap in captions:
+		var l := _label(str(cap.text), Vector3(cap.at.x, 0.03, cap.at.y), 44, Color("3a0a08"))
+		l.font = load("res://assets/fonts/fell_italic.ttf")
+		l.width = 320.0
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.pixel_size = 0.011
+	# the story's title, in his hand, over the middle of the land
+	var t := _label(str(story.get("title", "")), Vector3(0, 0.03, -0.2), 96, INK_RED)
+	t.pixel_size = 0.011
+	var sub := _label("a game for four, and him", Vector3(0, 0.03, 0.9), 48, Color("3a1a10"))
+	sub.font = load("res://assets/fonts/fell_italic.ttf")
 
 
-func _path() -> void:
-	var mb := LcMB.new()
-	var dot := LcMB.mat(LcTex.solid(Color("5a1a10")))
-	for i in board.size():
-		var a := space_pos(i)
-		var b := space_pos(i + 1)
-		for k in range(1, 4):
-			var p := a.lerp(b, k / 4.0)
-			mb.cyl("d", dot, 0.07, 0.07, 0.02, 6, LcMB.T(Vector3(p.x, 0.01, p.z)), Color(1, 1, 1))
-	_mesh(mb)
+const SQUARE := {"start": Color("2a8a4a"), "tickets": Color("e0a820"), "item": Color("3a6ac8"), "hazard": Color("c82a2a"),
+	"note": Color("a07a5a"), "clue": Color("8a6ac0"), "caller": Color("7a2a8a"), "steal": Color("e07020"),
+	"medic": Color("e8e0d8"), "door": Color("5a3a24")}
 
 
 func _tiles() -> void:
@@ -88,21 +144,26 @@ func _tiles() -> void:
 		var sp: Dictionary = board[i]
 		var t := Node3D.new()
 		t.position = space_pos(i)
+		var d := path[(i + 1) % path.size()] - path[(i - 1 + path.size()) % path.size()]
+		t.rotation.y = atan2(d.x, d.y)
 		add_child(t)
-		var ring: Color = RING.get(sp.type, Color("4a3a2a"))
+		var col: Color = SQUARE.get(sp.type, Color("8a7a6a"))
 		var mb := LcMB.new()
-		mb.cyl("e", LcMB.mat(LcTex.solid(ring)), 0.66, 0.66, 0.04, 10, LcMB.T(Vector3(0, -0.06, 0)), Color(1, 1, 1))
-		mb.cyl("t", LcMB.mat(LcTex.paper(Color("b8aa88"), i + 3, 32)), 0.58, 0.56, 0.06, 10, LcMB.T(Vector3(0, -0.05, 0)), Color(1, 1, 1))
+		# a card square, a little proud of the drawing, inked round the edge
+		mb.box("e", LcMB.mat(LcTex.solid(Color("2a0e0a"))), Vector3(1.0, 0.05, 0.86), LcMB.T(Vector3(0, -0.04, 0)), Color(1, 1, 1))
+		mb.box("t", LcMB.mat(LcTex.grime(col.darkened(0.12), col.lightened(0.08), 16, 40 + i, 0.4)), Vector3(0.9, 0.06, 0.76), LcMB.T(Vector3(0, -0.02, 0)), Color(1, 1, 1))
 		_mesh(mb, t)
 		if GLYPH.has(sp.type):
-			_label(GLYPH[sp.type], Vector3(0, 0.02, 0.05), 96, ring.darkened(0.2), true, t)
+			var g := _label(GLYPH[sp.type], Vector3(0, 0.02, 0.0), 80, Color("f8f0e0") if sp.type != "medic" else INK_RED, true, t)
+			g.outline_size = 10
+			g.outline_modulate = Color("2a0e0a")
 		if sp.type in ["clue", "note"]:
-			# a scrap of wallpaper with something written on it
-			var s := LcMB.new()
-			s.box("s", LcMB.mat(LcTex.paper(Color("d8c8a0"), i, 16)), Vector3(0.5, 0.01, 0.36), LcMB.T(Vector3(0.0, 0.02, 0.0), Vector3(0, 0.4, 0)), Color(1, 1, 1))
+			# a scrap of wallpaper on the square, something written on it
+			var s2 := LcMB.new()
+			s2.box("s", LcMB.mat(LcTex.paper(Color("e0d0a8"), i, 16)), Vector3(0.5, 0.01, 0.34), LcMB.T(Vector3(0.0, 0.015, 0.0), Vector3(0, 0.4, 0)), Color(1, 1, 1))
 			for k in 3:
-				s.box("w", LcMB.mat(LcTex.solid(Color("3a1810"))), Vector3(0.3 - k * 0.06, 0.012, 0.025), LcMB.T(Vector3(-0.02, 0.03, -0.08 + k * 0.08), Vector3(0, 0.4, 0)), Color(1, 1, 1))
-			_mesh(s, t)
+				s2.box("w", LcMB.mat(LcTex.solid(Color("3a1810"))), Vector3(0.3 - k * 0.06, 0.012, 0.025), LcMB.T(Vector3(-0.02, 0.025, -0.08 + k * 0.08), Vector3(0, 0.4, 0)), Color(1, 1, 1))
+			_mesh(s2, t)
 		tiles.append(t)
 
 
@@ -156,8 +217,8 @@ var _candle_light: OmniLight3D
 
 
 func space_pos(i: int) -> Vector3:
-	var p: Array = board[posmod(i, board.size())].pos
-	return Vector3(float(p[0]), 0.05, float(p[1]))
+	var p: Vector2 = path[posmod(i, path.size())]
+	return Vector3(p.x, 0.05, p.y)
 
 
 ## Where seat `s`'s doll stands on space i (four can share a space).

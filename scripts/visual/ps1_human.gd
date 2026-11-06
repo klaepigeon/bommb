@@ -110,7 +110,7 @@ func _skin() -> void:
 	var groups := {}
 	var order := []
 	for part in _parts:
-		var mesh: ArrayMesh = flatten(part[0])
+		var mesh: ArrayMesh = flatten(part[0], spec.get("skin_tex") if spec.get("skin_tex") is Texture2D else null)
 		var joint: Node3D = part[1]
 		var bone := _joints.find(joint)
 		var xf := Transform3D.IDENTITY
@@ -203,7 +203,7 @@ static var _cloth_colour: Dictionary = {}
 ## flat colour on the same little weave, so the colour goes into the vertex colours (the ink
 ## shader multiplies by them) and they share one material. Anything else (the face photo)
 ## keeps its own surface. A person was ~20 draw calls; this makes it ~12.
-static func flatten(mesh: ArrayMesh) -> ArrayMesh:
+static func flatten(mesh: ArrayMesh, skin_tex: Texture2D = null) -> ArrayMesh:
 	var out := ArrayMesh.new()
 	var verts := PackedVector3Array()
 	var normals := PackedVector3Array()
@@ -241,7 +241,7 @@ static func flatten(mesh: ArrayMesh) -> ArrayMesh:
 		arrays[Mesh.ARRAY_COLOR] = colors
 		arrays[Mesh.ARRAY_INDEX] = index
 		out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-		out.surface_set_material(out.get_surface_count() - 1, LcMB.mat(cloth(Color.WHITE, 1)))
+		out.surface_set_material(out.get_surface_count() - 1, LcMB.mat(skin_tex if skin_tex else cloth(Color.WHITE, 1)))
 	for i in mesh.get_surface_count():
 		var m := mesh.surface_get_material(i)
 		if m != null and _cloth_colour.has(m.get_instance_id()):
