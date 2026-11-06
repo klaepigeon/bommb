@@ -57,9 +57,9 @@ function tilesWall(s, top, tile = 0.15, col = '#d9dcd6', grout = '#8c8a80', seed
     }
     const k = 0.9 + r() * 0.12;
     const c = col.match(/\w\w/g).map((h) => parseInt(h, 16) * k);
-    g.fillStyle = rgba(c[0], c[1], c[2]); g.fillRect(x + 1.5, yy + 1.5, t - 3, hh - 3);
-    s.rg.fillStyle = '#383838'; s.rg.fillRect(x + 1.5, yy + 1.5, t - 3, hh - 3);
-    s.hg.fillStyle = '#9a9a9a'; s.hg.fillRect(x + 1.5, yy + 1.5, t - 3, hh - 3);
+    g.fillStyle = rgba(c[0], c[1], c[2]); g.fillRect(x + 0.8, yy + 0.8, t - 1.6, hh - 1.6);
+    s.rg.fillStyle = '#383838'; s.rg.fillRect(x + 0.8, yy + 0.8, t - 1.6, hh - 1.6);
+    s.hg.fillStyle = '#9a9a9a'; s.hg.fillRect(x + 0.8, yy + 0.8, t - 1.6, hh - 1.6);
     if (r() < 0.08) { // cracked tile
       g.strokeStyle = 'rgba(30,30,25,0.7)'; g.lineWidth = 1; g.beginPath();
       g.moveTo(x + r() * t, yy); g.lineTo(x + r() * t, yy + hh * 0.5); g.lineTo(x + r() * t, yy + hh); g.stroke();
@@ -212,7 +212,9 @@ export function paintWall(room, side, face) {
       oilPaintDado(s, '#7f9a86', 1.5, '#3d4d40');
       s.falling(0.9, [35, 28, 20], 0.55); // decades of cooking
       if (side === 'e') { // counter wall: tiled splashback over the worktop
-        tilesWall(s, 1.5, 0.15, '#dcdcd2', '#7c7a70', 3);
+        tilesWall(s, 1.5, 0.15, '#c4c2b2', '#5c5a50', 3);
+        s.noise(0.4, 1.0, 'multiply', 8, 34).falling(1.2, [50, 40, 25], 0.35);
+        for (let i = 0; i < 5; i++) s.waterStain(0.3 + s.r() * (W - 0.6), 1.45, 0.3, 0.3, 0.8);
         const g = s.g; g.fillStyle = 'rgba(30,20,10,0.35)'; g.fillRect(s.px(2.3), s.Y(1.5), s.px(0.6), s.px(0.6)); // grease behind the stove
       }
       if (side === 'n') { s.waterStain(0.4, H - 0.1, 0.5, 1.4, 1.2).mould(0.1, 2.5, 0.4, 0.8, 1.2).mould(W - 0.1, 2.4, 0.5, 0.9, 1.4); }
@@ -342,7 +344,7 @@ export function paintCeiling(room, W, D) {
   s.noise(0.3, 1.5, 'multiply', 10, seedN).noise(0.15, 0.5, 'overlay', 4, seedN + 1).grain(0.05);
   const g = s.g;
   // fine craquelure everywhere
-  for (let i = 0; i < 5; i++) s.crack(s.r() * W, s.r() * D, 1 + s.r() * 2, s.r() * 6.28, 2, 0.5);
+  for (let i = 0; i < 7; i++) s.crack(s.r() * W, s.r() * D, 0.3 + s.r() * 0.7, s.r() * 6.28, 2, 0.6);
   const stain = (x, y, rx, ry, k = 1) => { // ceiling coords: x east, y south (metres)
     for (let ring = 0; ring < 5; ring++) {
       const p = blobPath(s.px(x), s.px(y), s.px(rx) * (1 - ring * 0.17), s.px(ry) * (1 - ring * 0.17), s.r, 0.2, 40);

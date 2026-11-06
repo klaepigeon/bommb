@@ -113,7 +113,7 @@ function bedroom() {
     const mg = group({ x: 5.1, y: 1.4, z: 3.72, ry: Math.PI });
     box(0.7, 0.85, 0.03, M.veneer, { parent: mg });
     const mirrorTex = (() => { const c = canvas(256, 320), g2 = c.getContext('2d'); g2.fillStyle = '#ffffff'; g2.fillRect(0, 0, 256, 320); g2.strokeStyle = '#303030'; g2.lineWidth = 2; for (let i = 0; i < 7; i++) { g2.beginPath(); g2.moveTo(230, 30); let x = 230, y = 30; for (let k = 0; k < 6; k++) { x -= 15 + r() * 30; y += (r() - 0.2) * 50; g2.lineTo(x, y); } g2.stroke(); } const gr = g2.createRadialGradient(128, 160, 80, 128, 160, 200); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(1, 'rgba(80,70,50,0.7)'); g2.fillStyle = gr; g2.fillRect(0, 0, 256, 320); return canvasTex(c); })();
-    const mm = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.77), new THREE.MeshStandardMaterial({ color: 0x8a908c, map: mirrorTex, roughness: 0.08, metalness: 1 })); mm.position.z = 0.016; mg.add(mm);
+    const mm = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.77), new THREE.MeshStandardMaterial({ color: 0x3a403c, map: mirrorTex, roughness: 0.3, metalness: 0.9 })); mm.position.z = 0.016; mg.add(mm);
     examine(mm, 'Mirror', 'Silvering gone to grey bloom. Your own shape in it, and the window behind you.');
     // hairbrush and a lipstick on top
     const brush = rbox(0.05, 0.03, 0.2, 0.012, M.bakelite, { x: 4.8, y: 0.86, base: true, z: 3.45, ry: 0.5, static: false });
@@ -157,15 +157,18 @@ function kitchen() {
   const top = mat('worktop', { map: enamelTex('#bab49c', 3, 200).map, roughness: 0.5 });
   const front = M.paintedWood;
   const unit = (z0, z1, kind) => {
-    const w = z1 - z0, c = carcass(w, 0.85, 0.6, front, { x: 9.7, z: (z0 + z1) / 2, ry: -Math.PI / 2, plinth: 0.08 });
-    box(w + 0.01, 0.035, 0.62, top, { y: 0.87, parent: c });
-    if (kind === 'doors') { cabDoor(c, -w / 2 + 0.01, 0.46, w / 2 - 0.012, 0.74, front, 1, { z: 0.31 }); cabDoor(c, w / 2 - 0.01, 0.46, w / 2 - 0.012, 0.74, front, -1, { z: 0.31, open: kind === 'doors' && z0 < 1 ? 0.6 : 0 }); }
+    const w = z1 - z0, c = carcass(w, 0.85, 0.6, front, { x: 9.7, z: (z0 + z1) / 2, ry: -Math.PI / 2, plinth: 0.08, noTop: kind === 'sink' });
+    if (kind === 'sink') { // worktop with a hole cut for the bowl (local x runs along the counter, z out from the wall)
+      for (const [x, ww] of [[-(w / 2 + 0.25) / 2 - 0.005, w / 2 - 0.25 + 0.01], [(w / 2 + 0.25) / 2 + 0.005, w / 2 - 0.25 + 0.01]]) box(ww, 0.035, 0.62, top, { x, y: 0.87, parent: c });
+      box(0.5, 0.035, 0.06, top, { y: 0.87, z: -0.28, parent: c }); box(0.5, 0.035, 0.06, top, { y: 0.87, z: 0.28, parent: c });
+    } else box(w + 0.01, 0.035, 0.62, top, { y: 0.87, parent: c });
+    if (kind === 'doors' || kind === 'sink') { cabDoor(c, -w / 2 + 0.01, 0.46, w / 2 - 0.012, 0.74, front, 1, { z: 0.31 }); cabDoor(c, w / 2 - 0.01, 0.46, w / 2 - 0.012, 0.74, front, -1, { z: 0.31, open: kind === 'doors' && z0 < 1 ? 0.6 : 0 }); }
     if (kind === 'drawers') { [0.72, 0.46, 0.2].forEach((y, i) => drawer(c, 0, y, w - 0.03, 0.22, 0.55, front, { z: 0.3, stuck: i === 1 ? 'Rust has glued the runners. It gives a few centimetres.' : null })); }
     staticBox(9.7, 0.88, (z0 + z1) / 2, 0.6, 0.04, w);
     return c;
   };
   const u1 = unit(0.35, 0.95, 'doors');
-  const sinkU = unit(0.95, 1.75, 'doors');
+  const sinkU = unit(0.95, 1.75, 'sink');
   const drw = unit(1.75, 2.35, 'drawers');
   // contents: in the open cupboard, saucepans and a box of salt; jars of water hoarded everywhere
   jar(0.0, 0.1, 0.0, mat('waterJar', { color: 0x6a7a6a, roughness: 0.1, transparent: true, opacity: 0.5 }), { parent: u1, h: 0.25, r: 0.08, fill: 0.9 });
@@ -472,7 +475,7 @@ function bath() {
     mg.fillStyle = 'rgba(120,120,110,0.9)'; mg.fillRect(0, 0, 256, 300);
     mg.strokeStyle = 'rgba(230,228,215,0.85)'; for (const x of [50, 75, 100, 156, 181, 206]) { mg.beginPath(); mg.moveTo(x, 110); mg.lineTo(x + 3, 190); mg.stroke(); }
     const gr = mg.createRadialGradient(128, 150, 60, 128, 150, 190); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(40,40,30,0.8)'); mg.fillStyle = gr; mg.fillRect(0, 0, 256, 300);
-    const d = cabDoor(cab, -0.24, 0.3, 0.48, 0.58, new THREE.MeshStandardMaterial({ map: canvasTex(mirrorC), roughness: 0.15, metalness: 0.85, color: 0xb0b8b4 }), 1, { z: 0.075 });
+    const d = cabDoor(cab, -0.24, 0.3, 0.48, 0.58, new THREE.MeshStandardMaterial({ map: canvasTex(mirrorC), roughness: 0.3, metalness: 0.85, color: 0x5a605c }), 1, { z: 0.075 });
     void d;
     examine(cab.children[0], 'Mirror', 'Six strokes drawn in soap on the glass: three, a gap, three.', { prompt: 'Look at the mirror' });
     const razor = box(0.1, 0.01, 0.04, M.chrome, { x: -0.1, y: 0.32, z: 0, parent: cab, static: false });

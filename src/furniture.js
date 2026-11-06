@@ -180,7 +180,7 @@ export function carcass(w, h, d, material, o = {}) {
   box(w, h, t, o.backMat || M.chipboard, { x: 0, y: h / 2, z: -d / 2 + t / 2, parent: g });
   box(t, h, d, material, { x: -w / 2 + t / 2, y: h / 2, z: 0, parent: g });
   box(t, h, d, material, { x: w / 2 - t / 2, y: h / 2, z: 0, parent: g });
-  box(w, t, d, material, { x: 0, y: h - t / 2, z: 0, parent: g });
+  if (!o.noTop) box(w, t, d, material, { x: 0, y: h - t / 2, z: 0, parent: g });
   box(w, t, d, material, { x: 0, y: (o.plinth || 0) + t / 2, z: 0, parent: g });
   if (o.plinth) box(w - 0.02, o.plinth, t, material, { x: 0, y: o.plinth / 2, z: d / 2 - 0.03, parent: g });
   for (const sy of o.shelves || []) box(w - t * 2, t, d - t, material, { x: 0, y: sy, z: t / 2, parent: g });

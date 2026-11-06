@@ -55,7 +55,9 @@ async function boot() {
   msg('Building the city outside…'); await frame();
   const before = new Set(scene.children);
   buildExterior();
-  ambientize(scene.children.filter((o) => (!before.has(o) && !o.userData.indoor) || o.userData.outdoor));
+  const outside = scene.children.filter((o) => (!before.has(o) && !o.userData.indoor) || o.userData.outdoor);
+  ambientize(outside);
+  G.outside = outside.filter((o) => !o.userData.outdoor); // the city (not our facade or balcony)
   buildDust();
   if (params.has('bright')) scene.add(new THREE.AmbientLight(0xffffff, +params.get('bright') || 1.5));
   if (params.has('exposure')) renderer.toneMappingExposure = +params.get('exposure');
@@ -161,7 +163,12 @@ function loop(now) {
   updateAudio(camera, dt, P.room);
   UI.tick(dt);
   const rn = P.room === 'balcony' ? 'Balcony' : ROOMS[P.room]?.name || '';
-  if (rn !== roomName) { roomName = rn; UI.room(rn); G.onRoom?.(P.room); }
+  if (rn !== roomName) {
+    roomName = rn; UI.room(rn); G.onRoom?.(P.room);
+    // occlusion by room: from the windowless rooms none of the city can be seen, so don't draw it
+    const sealed = P.room === 'bath' || P.room === 'storage';
+    for (const o of G.outside || []) o.visible = !sealed;
+  }
   // static-ish shadow maps refresh on alternate frames; lights that are dark skip theirs
   frameN++;
   const sky = G.lights.sky?.l; if (sky) { sky.shadow.autoUpdate = false; sky.shadow.needsUpdate = frameN % 3 === 0; }
@@ -174,7 +181,7 @@ function loop(now) {
 
 // ---------------------------------------------------------------- input / menus
 function lock() { renderer.domElement.requestPointerLock?.(); }
-$('enter').onclick = () => { initAudio(); G.running = true; $('start').classList.add('hidden'); if (matchMedia('(pointer: coarse)').matches) { $('touch').classList.remove('hidden'); P.locked = true; } else lock(); };
+$('enter').onclick = () => { initAudio(); G.running = true; $('start').classList.add('hidden'); if (!G.flags.started) { G.flags.started = true; setTimeout(() => UI.toast('The hall bulb is dying. F for the torch.', 5), 2500); } if (matchMedia('(pointer: coarse)').matches) { $('touch').classList.remove('hidden'); P.locked = true; } else lock(); };
 $('resume').onclick = () => { $('pause').classList.add('hidden'); G.running = true; lock(); };
 document.addEventListener('pointerlockchange', () => {
   P.locked = document.pointerLockElement === renderer.domElement;

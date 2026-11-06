@@ -202,7 +202,7 @@ function buildCollapses() {
   const joistM = mat('joist', { map: woodTex('#3e2c1c', 9, 0.8).map, roughness: 0.95 });
   const plasterChunk = solidMat('plasterChunk', 0xb8ae98, 0.95);
   const voidM = solidMat('void', 0x050404, 1);
-  const edgeM = mat('plasterEdge', { color: 0xa89e88, roughness: 1 });
+  const edgeM = mat('plasterEdge', { color: 0x7a7262, roughness: 1 });
   const r = rng(77);
 
   for (const [key, ch] of Object.entries(CEILING_HOLES)) {
@@ -228,8 +228,9 @@ function buildCollapses() {
     for (let i = 0; i < pts.length; i++) {
       const [x, z] = pts[i], [x2, z2] = pts[(i + 1) % pts.length];
       const len = Math.hypot(x2 - x, z2 - z), ang = Math.atan2(z2 - z, x2 - x);
-      const m = box(len + 0.02, 0.03 + r() * 0.03, 0.025, edgeM, { x: (x + x2) / 2, y: H + 0.01, z: (z + z2) / 2, cast: false });
-      m.rotation.y = -ang;
+      const m = box(len + 0.03, 0.04 + r() * 0.05, 0.05 + r() * 0.04, edgeM, { x: (x + x2) / 2, y: H + 0.02 - r() * 0.02, z: (z + z2) / 2, cast: false });
+      m.rotation.y = -ang; m.rotation.x = (r() - 0.5) * 0.4;
+      if (r() < 0.25) { const hang = box(0.04 + r() * 0.08, 0.15 + r() * 0.25, 0.012, lath, { x: (x + x2) / 2, y: H - 0.1, z: (z + z2) / 2, cast: true }); hang.rotation.set((r() - 0.5) * 0.5, r() * 3, (r() - 0.5) * 0.5); }
     }
     // the fall: a heap of plaster slabs, lath and dust below
     const heap = new THREE.Group(); scene.add(heap);
@@ -250,7 +251,7 @@ function buildCollapses() {
     // the heap's a low obstacle
     collider({ x: cx, z: cz, hx: 0.32, hz: 0.27, y0: 0, y1: 0.25, heap: true });
     // a little grey light from the flat above, where its own window is out
-    if (key === 'living') { const l = new THREE.PointLight(0x8a96a8, 0.3, 3.5, 2); l.position.set(cx, H + 0.2, cz); G.scene.add(l); }
+    if (key === 'living') { const l = new THREE.PointLight(0x8a96a8, 0.9, 3.5, 2); l.position.set(cx + 0.3, H + 0.3, cz - 0.2); G.scene.add(l); }
     staticBox(cx, 0.05, cz, 0.7, 0.1, 0.56);
     void key;
   }

@@ -255,9 +255,9 @@ export class Surface {
     // drips
     const w = g.measureText(text).width;
     g.shadowBlur = 0;
-    for (let i = 0; i < text.length * 0.8; i++) {
-      const x = (r() - 0.5) * w, len = this.px(sizeM) * (0.2 + r() * 0.9);
-      g.fillRect(x, this.px(sizeM) * 0.25, 1.6, len);
+    for (let i = 0; i < text.length * 0.5; i++) {
+      const x = (r() - 0.5) * w, len = this.px(sizeM) * (0.1 + r() * r() * 0.8);
+      g.globalAlpha = 0.5; g.fillRect(x, this.px(sizeM) * 0.3, 1.2, len);
     }
     g.restore(); return this;
   }

@@ -260,8 +260,8 @@ function living() {
   // the barricade: a heavy wardrobe pushed across the box-room door
   {
     const g = carcass(1.0, 1.9, 0.55, M.veneerDull, { x: 0, y: 0, z: 0, solid: false, shelves: [1.2] });
-    cabDoor(g, -0.49, 0.95, 0.49, 1.84, M.veneerDull, 1, { z: 0.285, locked: 'Open', lockedMsg: 'Something heavy has slid down inside and wedged the doors.' });
-    cabDoor(g, 0.49, 0.95, 0.49, 1.84, M.veneerDull, -1, { z: 0.285, locked: 'Open', lockedMsg: 'Something heavy has slid down inside and wedged the doors.' });
+    cabDoor(g, -0.49, 0.95, 0.49, 1.84, M.veneerDull, 1, { z: 0.285, locked: 'Open the wardrobe', lockedMsg: 'Something heavy has slid down inside and wedged the doors. The whole thing shifts a little when you lean on it.' });
+    cabDoor(g, 0.49, 0.95, 0.49, 1.84, M.veneerDull, -1, { z: 0.285, locked: 'Open the wardrobe', lockedMsg: 'Something heavy has slid down inside and wedged the doors. The whole thing shifts a little when you lean on it.' });
     g.position.set(1.95, 0.005, 4.84); g.rotation.y = Math.PI;
     const p = makeProp(g, { mass: 70, name: 'Wardrobe', push: true, pick: false, sound: 'woodHeavy', damp: 0.92, adamp: 0.99, size: [1.0, 1.9, 0.55] });
     p.body.fixedRotation = true; p.body.updateMassProperties();
@@ -295,6 +295,9 @@ function living() {
   }
   // the TV in the wall unit is wired in stenka(); rubbish blown in through the window
   for (let i = 0; i < 16; i++) { const leaf = new THREE.Mesh(new THREE.CircleGeometry(0.03 + r() * 0.03, 5), mat('leaf' + (i % 3), { color: [0x4a3a20, 0x5a4020, 0x3a3018][i % 3], roughness: 1, side: THREE.DoubleSide })); leaf.rotation.set(-Math.PI / 2, 0, r() * 6); leaf.scale.y = 0.6; leaf.position.set(0.7 + r() * 2.6, 0.006, 0.15 + r() * 0.9); G.scene.add(leaf); leaf.userData.static = true; }
+  // a stack of magazines by the sofa, swollen into one block; one open on the floor
+  for (let i = 0; i < 7; i++) box(0.21, 0.012, 0.29, mat('mag' + (i % 3), { color: [0x8a6a4a, 0x5a6a7a, 0x9a8a6a][i % 3], roughness: 0.8, map: M.paper.map }), { x: 1.05, y: 0.006 + i * 0.012, z: 3.6, ry: (r() - 0.5) * 0.4 });
+  { const mg = box(0.42, 0.004, 0.29, mat('magOpen', { color: 0xd8d0b8, roughness: 0.9, map: M.paper.map }), { x: 1.25, y: 0.003, z: 3.95, ry: 0.7, static: false }); makeProp(mg, { mass: 0.2, name: 'Magazine', desc: 'Rabotnitsa, the women’s monthly. A knitting pattern for a child’s cardigan, the page corner folded down.', sound: 'paper' }); }
   // the newspaper the wind keeps moving
   crumple(3.6, 3.3, 0.5, 0.4, M.paper, 31, { wrinkle: 0.03 });
   // a light shaft from the broken window, catching dust
