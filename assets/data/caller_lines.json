@@ -74,14 +74,14 @@
    "mood": "calm"
   }
  ],
- "space_Dead Rats": [
+ "space_Teeth": [
   {
-   "text": "DEAD RATS for {name}! Dead Rats are how we know who we love.",
+   "text": "DEAD RATS for {name}! Teeth are how we know who we love.",
    "gesture": "clap",
    "mood": "pleased"
   },
   {
-   "text": "{name} gets {n} Dead Rats. Hold on to those. Tight. With your hands. While you have them.",
+   "text": "{name} gets {n} Teeth. Hold on to those. Tight. With your hands. While you have them.",
    "gesture": "thumbs_up",
    "mood": "pleased"
   }
@@ -178,14 +178,14 @@
  ],
  "caller_tax": [
   {
-   "text": "TAX! {name} gives {n} Dead Rats to the house. The house is me.",
+   "text": "TAX! {name} gives {n} Teeth to the house. The house is me.",
    "gesture": "reach",
    "mood": "calm"
   }
  ],
  "caller_bonus": [
   {
-   "text": "{name}, have {n} Dead Rats. I like your face. I might keep it.",
+   "text": "{name}, have {n} Teeth. I like your face. I might keep it.",
    "gesture": "thumbs_up",
    "mood": "pleased"
   }
@@ -530,7 +530,7 @@
  ],
  "results": [
   {
-   "text": "What a game. What a GAME. Dead Rats for the living!",
+   "text": "What a game. What a GAME. Teeth for the living!",
    "gesture": "spread",
    "mood": "pleased"
   },

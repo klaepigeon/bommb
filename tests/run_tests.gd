@@ -344,10 +344,10 @@ func test_v2_leave_table() -> void:
 	check(core.p(0).suspicion > before, "getting up is suspicious")
 	core.action(0, {"t": "go", "where": "pinata"})
 	check(core.p(0).location == "pinata", "you can go to a hotspot")
-	var rats_before := core.p(0).rats
+	var rats_before := core.p(0).teeth
 	var items_before := core.p(0).items.size()
 	core.action(0, {"t": "room_act", "id": "hit_pinata"})
-	check(core.p(0).rats != rats_before or core.p(0).items.size() != items_before or not core.p(0).statuses.is_empty() or core.p(0).body.hand_l.s != "ok", "the piñata does something")
+	check(core.p(0).teeth != rats_before or core.p(0).items.size() != items_before or not core.p(0).statuses.is_empty() or core.p(0).body.hand_l.s != "ok", "the piñata does something")
 	core.action(0, {"t": "go", "where": "booth"})
 	core.action(0, {"t": "room_act", "id": "read_file"})
 	check(core.p(0).known.has("file"), "his files can be read")
@@ -374,9 +374,9 @@ func test_v2_cheating() -> void:
 	var c2 := _core()
 	_to_turn(c2, 0)
 	_look_away(c2)
-	var r0 := c2.p(0).rats
+	var r0 := c2.p(0).teeth
 	c2.action(0, {"t": "cheat", "id": "palm_rats"})
-	check(c2.p(0).rats == r0 + 2 and c2.p(0).suspicion > 0 and c2.p(0).suspicion < 16, "cheating while he looks away works (a little suspicion)")
+	check(c2.p(0).teeth == r0 + 2 and c2.p(0).suspicion > 0 and c2.p(0).suspicion < 16, "cheating while he looks away works (a little suspicion)")
 	c2.action(0, {"t": "cheat", "id": "load_dice"})
 	c2.action(0, {"t": "roll"})
 	check(c2.rules.roll == Body.dice_max(c2.p(0).body), "a loaded die rolls the most it can")
@@ -467,13 +467,13 @@ func test_v2_ghost_buys_life() -> void:
 		core.rules.next_turn()
 	check(core.rules.sub == "ghost", "ghosts get a turn")
 	core.action(2, {"t": "ghost", "do": "scavenge"})
-	check(core.p(2).rats > 0, "ghosts scavenge Dead Rats")
-	core.p(2).rats = 12
+	check(core.p(2).teeth > 0, "ghosts scavenge Dead Rats")
+	core.p(2).teeth = 12
 	core._start_round()
 	while core.rules.current() != 2 and core.rules.sub != "idle":
 		core.rules.next_turn()
 	core.action(2, {"t": "ghost", "do": "rise"})
-	check(core.p(2).alive and core.p(2).rats == 2, "a ghost with enough Dead Rats buys their way back")
+	check(core.p(2).alive and core.p(2).teeth == 2, "a ghost with enough Dead Rats buys their way back")
 
 
 func test_v2_roulette_social() -> void:
@@ -484,13 +484,13 @@ func test_v2_roulette_social() -> void:
 	mg.start()
 	var me: int = mg.current()
 	var other: int = (me + 1) % 4
-	core.p(me).rats = 10
+	core.p(me).teeth = 10
 	core.action(me, {"t": "mg", "do": "claim", "say": "EMPTY"})
 	check(mg.claims.get(me) == "EMPTY", "you can say what's in it")
-	core.action(me, {"t": "mg", "do": "offer", "target": other, "rats": 4})
-	check(not mg.offer.is_empty(), "you can offer someone rats to take your turn")
+	core.action(me, {"t": "mg", "do": "offer", "target": other, "teeth": 4})
+	check(not mg.offer.is_empty(), "you can offer someone teeth to take your turn")
 	core.action(other, {"t": "mg", "do": "accept"})
-	check(core.p(other).rats == 4 and mg.pulls == 1, "they take the money and the pull")
+	check(core.p(other).teeth == 4 and mg.pulls == 1, "they take the money and the pull")
 	check(mg.last.get("target", -1) == other, "the shot was at the one who took the money")
 	# a cheat while he looks away
 	var c2 := _core()
@@ -506,11 +506,11 @@ func test_v2_roulette_social() -> void:
 
 func test_v2_poison() -> void:
 	var core := _core()
-	core.p(0).rats = 10
+	core.p(0).teeth = 10
 	core.status.apply(0, "rat_fever")
 	core.status.apply(0, "hunger")
 	core.status.tick_turn(0)
-	check(core.p(0).rats == 6, "rat fever and hunger together eat four rats a turn (%d)" % core.p(0).rats)
+	check(core.p(0).teeth == 6, "rat fever and hunger together eat four teeth a turn (%d)" % core.p(0).teeth)
 	core.status.apply(1, "thinner")
 	core.injure(1, "arm_l", "bruised")
 	check(core.p(1).body.arm_l.s == "burned", "blood thinner makes injuries worse")

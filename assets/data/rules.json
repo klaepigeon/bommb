@@ -1,0 +1,22 @@
+{
+ "_comment": "Amendments (RuleManager): the rulebook can change mid-match. 'turns' = how many full rounds a rule lasts (0 = until repealed). 'effects' are keys the rules read through RuleManager.value(key, default). If two active rules set the same key, the higher 'priority' wins; on a tie the newer one. At most 'limit' rules at once: adding one more repeals the oldest temporary one (or the oldest). The win condition (most Dead Rats) can't be amended away.",
+ "limit": 5,
+ "rules": {
+  "double_pay": {"name": "PAY DAY", "desc": "Normal squares pay double.", "turns": 3, "priority": 1, "effects": {"normal_mult": 2}},
+  "austerity": {"name": "AUSTERITY", "desc": "Normal squares pay one Tooth.", "turns": 3, "priority": 2, "effects": {"normal_set": 1}},
+  "inflation": {"name": "INFLATION", "desc": "Shop prices up by half.", "turns": 3, "priority": 1, "effects": {"price_mult": 1.5}},
+  "clearance": {"name": "CLEARANCE SALE", "desc": "Shop prices halved.", "turns": 2, "priority": 1, "effects": {"price_mult": 0.5}},
+  "rat_sale": {"name": "RAT SALE", "desc": "The Dead Rat costs 10 Teeth less.", "turns": 3, "priority": 1, "effects": {"rat_delta": -10}},
+  "rat_tax": {"name": "RAT TAX", "desc": "The Dead Rat costs 10 Teeth more.", "turns": 3, "priority": 1, "effects": {"rat_delta": 10}},
+  "small_dice": {"name": "SMALL DICE", "desc": "Nobody rolls higher than 4.", "turns": 2, "priority": 1, "effects": {"dice_cap": 4}},
+  "big_dice": {"name": "BIG DICE", "desc": "Every roll gets two more.", "turns": 2, "priority": 1, "effects": {"dice_bonus": 2}},
+  "no_items": {"name": "PROHIBITION", "desc": "No items may be used on the board.", "turns": 2, "priority": 3, "effects": {"items_banned": true}},
+  "tax_day": {"name": "TAX DAY", "desc": "Passing START costs 3 Teeth instead of paying.", "turns": 3, "priority": 1, "effects": {"start_pay": -3}},
+  "backwards": {"name": "OPPOSITE DAY", "desc": "Everyone walks the board backwards.", "turns": 1, "priority": 2, "effects": {"reverse": true}},
+  "ghost_rights": {"name": "GHOST RIGHTS", "desc": "Ghosts scavenge double.", "turns": 0, "priority": 1, "effects": {"scavenge_mult": 2}},
+  "short_leash": {"name": "SHORT LEASH", "desc": "Half as long away from the table before he notices.", "turns": 3, "priority": 1, "effects": {"return_mult": 0.5}},
+  "open_bar": {"name": "OPEN BAR", "desc": "Getting up from the table isn't suspicious.", "turns": 2, "priority": 1, "effects": {"leave_suspicion": 0}},
+  "draw_bonus": {"name": "PARTICIPATION TROPHY", "desc": "A draw pays everyone 5 Teeth (and still brings the dead back).", "turns": 0, "priority": 1, "effects": {"draw_teeth": 5}},
+  "bad_luck": {"name": "BAD LUCK CHARTER", "desc": "Bad squares take twice as much.", "turns": 3, "priority": 1, "effects": {"bad_mult": 2}}
+ }
+}

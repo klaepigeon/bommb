@@ -1,57 +1,82 @@
 class_name Items
 extends RefCounted
-## The item catalogue: data, not code paths. `use` says where an item can be used: on
-## the board before you roll ("board"), in Russian Roulette ("roulette"), in the room
-## ("room"), on someone else ("other": a ghost, for the Lazarus Rat). Effects live in
-## BoardRules.use_item, the roulette encounter and RoomInteractionManager.
+## The item catalogue (assets/data/items.json): data, not code paths. Every item has a name,
+## a category, where it's used (`use`: board before you roll, passive while you carry it,
+## a ghost's turn, roulette, the room, or on someone else), what it targets, a price, a
+## rarity, how long it lasts and an icon. What each one DOES is ItemManager. Three slots.
 
-const CATALOGUE := {
-	"first_aid": {"name": "FIRST AID TIN", "desc": "Clears bruises and burns and sets one broken bone.", "use": "board", "weight": 4},
-	"painkillers": {"name": "PAINKILLERS", "desc": "For three rounds, injuries slow you less.", "use": "board", "weight": 3},
-	"prosthetic": {"name": "PROSTHETIC", "desc": "A brass replacement for something you've lost.", "use": "board", "weight": 2},
-	"surgery": {"name": "SURGERY KIT", "desc": "Mends every broken part and cuts out necrosis.", "use": "board", "weight": 1},
-	"antidote": {"name": "ANTIDOTE", "desc": "Cures every poison.", "use": "board", "weight": 3},
-	"helmet": {"name": "PARTY HELMET", "desc": "Wear it: the next thing that would kill you only maims you.", "use": "board", "weight": 2},
-	"alibi": {"name": "ALIBI", "desc": "Someone else did it. Twenty off your suspicion.", "use": "board", "weight": 1},
-	"lucky_foot": {"name": "RABBIT'S FOOT", "desc": "Loosens your Cage a notch.", "use": "board", "weight": 1},
-	"loaded_die": {"name": "LOADED DIE", "desc": "Contraband. Your next roll is a six (if he doesn't see you swap it in).", "use": "board", "weight": 1, "cheat": true},
-	"hairpin": {"name": "HAIRPIN", "desc": "Picks a lock. Away from the table.", "use": "room", "weight": 1},
-	"lazarus_rat": {"name": "LAZARUS RAT", "desc": "Give it to a ghost: they come back.", "use": "other", "weight": 0},
-	"spinner": {"name": "SPINNER", "desc": "Russian Roulette: spin the cylinder again.", "use": "roulette", "weight": 3},
-	"peeker": {"name": "PEEKER", "desc": "Russian Roulette: look into the next chamber (only you see).", "use": "roulette", "weight": 3},
-	"skip": {"name": "SKIP CARD", "desc": "Russian Roulette: pass your turn without pulling.", "use": "roulette", "weight": 2},
-	"mirror": {"name": "HAND MIRROR", "desc": "Russian Roulette: your shot goes at someone else.", "use": "roulette", "weight": 1},
-	"bribe": {"name": "ENVELOPE OF RATS", "desc": "Russian Roulette: pay someone to take your turn (if they'll take it).", "use": "roulette", "weight": 1},
-	"bullet": {"name": "A SPARE ROUND", "desc": "Contraband. Russian Roulette: load another chamber.", "use": "roulette", "weight": 0, "cheat": true},
-}
+const MAX_HELD := 3
+const RARITY_ORDER := ["common", "uncommon", "rare", "contraband"]
 
-const MAX_HELD := 6
+static var _cat: Dictionary = {}
+
+
+static func all() -> Dictionary:
+	if _cat.is_empty():
+		_cat = Assets.load_json("res://assets/data/items.json").get("items", {})
+	return _cat
+
+
+static func def(id: String) -> Dictionary:
+	return all().get(id, {})
+
+
+static func has(id: String) -> bool:
+	return all().has(id)
 
 
 static func name_of(id: String) -> String:
-	return CATALOGUE.get(id, {}).get("name", id.to_upper())
+	return str(def(id).get("name", id.to_upper()))
+
+
+static func desc_of(id: String) -> String:
+	return str(def(id).get("desc", ""))
+
+
+static func use_of(id: String) -> String:
+	return str(def(id).get("use", ""))
+
+
+static func target_of(id: String) -> String:
+	return str(def(id).get("target", "none"))
 
 
 static func usable_on_board(id: String) -> bool:
-	return CATALOGUE.get(id, {}).get("use", "") == "board"
+	return use_of(id) == "board"
 
 
-## A random item. `worse` (the Cage tipping it) draws from the least useful end.
+static func price_of(id: String) -> int:
+	return int(def(id).get("price", 5))
+
+
+static func ids_where(f: Callable) -> Array:
+	var out := []
+	for k in all().keys():
+		if f.call(k, all()[k]):
+			out.append(k)
+	return out
+
+
+## A random item you could find lying about (not ghost-only, not the rigged gift). `pool`:
+## "any", a use ("board", "roulette"...), a category, or a rarity. `worse` (the Cage tipping
+## it): the least useful end.
 static func roll(rng: RandomNumberGenerator, pool := "any", worse := false) -> String:
-	var total := 0
-	var ids := []
-	for k in CATALOGUE.keys():
-		var w := int(CATALOGUE[k].weight)
-		if w <= 0:
-			continue
-		if pool == "any" or CATALOGUE[k].use == pool:
-			ids.append(k)
-			total += w
 	if worse:
-		return ["hairpin", "skip", "painkillers"][rng.randi_range(0, 2)]
+		return ["hairpin", "bandage", "reverse_gear"][rng.randi_range(0, 2)]
+	var w := {"common": 6, "uncommon": 3, "rare": 1, "contraband": 1}
+	var ids := ids_where(func(k, d):
+		if d.get("rarity", "") == "none" or d.get("cat", "") == "ghost" or k == "lazarus_rat":
+			return false
+		return pool == "any" or d.get("use", "") == pool or d.get("cat", "") == pool or d.get("rarity", "") == pool)
+	if ids.is_empty():
+		return "bandage"
+	ids.sort()
+	var total := 0
+	for k in ids:
+		total += int(w.get(str(def(k).get("rarity", "common")), 1))
 	var r := rng.randi_range(0, total - 1)
 	for k in ids:
-		r -= int(CATALOGUE[k].weight)
+		r -= int(w.get(str(def(k).get("rarity", "common")), 1))
 		if r < 0:
 			return k
 	return ids[0]

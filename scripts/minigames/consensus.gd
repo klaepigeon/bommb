@@ -1,7 +1,7 @@
 extends ChoiceGame
 ## THE CONSENSUS (FFA). Three doors. Everyone votes for one. If you all agree, everyone is
 ## rewarded (and that's a draw, everyone equal: you know what a draw does). Every round you
-## don't agree costs more: a bruise each, then Dead Rats and a break, then the minority
+## don't agree costs more: a bruise each, then Teeth and a break, then the minority
 ## lose something for good. Negotiate. Promise. Break the promise.
 
 const DOORS := ["THE RED DOOR", "THE BLUE DOOR", "THE GREEN DOOR"]
@@ -38,7 +38,7 @@ func resolve(revealed: Dictionary) -> bool:
 		agreed = true
 		core.say("consensus_yes")
 		for s in revealed.keys():
-			rats[s] += 4
+			teeth[s] += 4
 		finish(revealed.keys(), true)
 		return true
 	core.say("consensus_no")

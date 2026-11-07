@@ -114,7 +114,7 @@ func _end() -> void:
 			elif core.p(s).alive:
 				core.injure(s, ["leg_l", "leg_r"][rng.randi_range(0, 1)], "broken" if diff == 1 else "lost", "the plate")
 	for s in right:
-		rats[s] += 3
+		teeth[s] += 3
 	finish(right, right.is_empty() or wrong.is_empty())
 
 

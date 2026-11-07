@@ -44,8 +44,10 @@ func attempt(seat: int, id: String, label := "") -> bool:
 			core.cage.tighten(seat, "caught")
 		for o in core.living():
 			core.brains[o].saw_cheat(seat, true)
+		core.p(seat).stat("cheats_caught")
 		return false
 	core.suspicion.add(seat, int(d.get("ok", 6)), id)
 	core.emit({"e": "cheat", "seat": seat, "cheat": id})
+	core.p(seat).stat("cheats_ok")
 	core.toast("You %s. He didn't see." % what.to_lower(), seat)
 	return true

@@ -7,14 +7,14 @@ extends RefCounted
 ## human's input arrives through, reading the same view_for() a human's screen gets.
 ##
 ## Life cycle: setup() (on creation) -> start() (after the instructions card) ->
-## tick(dt) until done -> rats and summary() are read by MatchCore.
+## tick(dt) until done -> teeth and summary() are read by MatchCore.
 
 var core: MatchCore
 var seats: Array[int] = []
 var level := 0
 var t := 0.0
 var done := false
-var rats: Dictionary = {}       # seat -> rats won (or lost) in this game
+var teeth: Dictionary = {}       # seat -> teeth won (or lost) in this game
 var rng := RandomNumberGenerator.new()
 var notes: Array[String] = []      # what happened, for the results screen
 ## v0.2: the format, the teams in it, and how it came out. A free-for-all that ends in a
@@ -31,7 +31,7 @@ func init(c: MatchCore, participants: Array[int], lvl: int) -> void:
 	level = lvl
 	rng.seed = c.rng.randi()
 	for s in seats:
-		rats[s] = 0
+		teeth[s] = 0
 	setup()
 
 
@@ -104,29 +104,107 @@ func apply_cheat(_seat: int, _id: String) -> void:
 	pass
 
 
-## Ghosts may interfere, a little: every game gets at least a whisper (tell someone one
-## thing) and, in arena games, a cold spot. Subclasses add their own.
+## Ghosts may interfere, a little. Arena games add a cold spot; others their own. (No
+## talking: there's no chat in LAST CALL 3, living or dead.)
+## Every game: a ghost can CHILL someone (a cold breath down their neck: the game reads
+## `chilled` and makes them clumsy for a few seconds, its own way).
+var chilled: Dictionary = {}     # seat -> seconds left
+
+
 func ghost_action(seat: int, a: Dictionary) -> void:
-	if str(a.get("do", "")) == "whisper":
+	if str(a.get("do", "")) == "chill":
 		var to := int(a.get("target", -1))
-		if seats.has(to) and alive(to):
-			var info := ghost_secret(to)
-			core.toast("A cold voice in your ear: %s" % (info if info != "" else "\"they're lying.\""), to)
-			core.emit({"e": "ghost_whisper", "seat": seat, "to": to})
+		if seats.has(to) and alive(to) and float(chilled.get(to, 0.0)) <= 0.0:
+			chilled[to] = 3.0
+			core.emit({"e": "mg", "k": "chill", "seat": seat, "target": to})
 
 
-func ghost_secret(_to: int) -> String:
-	return ""
+func tick_chill(dt: float) -> void:
+	for k in chilled.keys():
+		chilled[k] = float(chilled[k]) - dt
+		if chilled[k] <= 0.0:
+			chilled.erase(k)
 
 
-func ghost_ai(seat: int, brain: AiBrain, _view: Dictionary, _dt: float) -> void:
-	brain.wait += _dt
-	if brain.wait < 6.0:
+func is_chilled(s: int) -> bool:
+	return float(chilled.get(s, 0.0)) > 0.0
+
+
+func ghost_ai(seat: int, brain: AiBrain, _view: Dictionary, dt: float) -> void:
+	brain.wait += dt
+	if brain.wait < 7.0:
 		return
 	brain.wait = 0.0
 	var l := living()
 	if not l.is_empty():
-		ghost_action(seat, {"do": "whisper", "target": l[brain.rng.randi_range(0, l.size() - 1)]})
+		ghost_action(seat, {"do": "chill", "target": l[brain.rng.randi_range(0, l.size() - 1)]})
+
+
+## Placings, best first, ties grouped: [[seats], [seats]...]. Games that rank people
+## (FFA, survival) set `ranking`; otherwise winners first, then the living, then the dead.
+var ranking: Array = []
+
+
+func placings() -> Array:
+	if not ranking.is_empty():
+		return ranking.duplicate(true)
+	var out := []
+	if draw:
+		return [seats.duplicate()]
+	var w := winners.duplicate()
+	if not w.is_empty():
+		out.append(w)
+	var alive_rest := []
+	var dead := []
+	for s in seats:
+		if w.has(s):
+			continue
+		if core.p(s).alive:
+			alive_rest.append(s)
+		else:
+			dead.append(s)
+	if not alive_rest.is_empty():
+		out.append(alive_rest)
+	if not dead.is_empty():
+		out.append(dead)
+	return out
+
+
+## Rank by a score (higher is better), ties grouped; the dead at the bottom.
+func rank_by(score: Dictionary) -> void:
+	var lst := seats.duplicate()
+	lst.sort_custom(func(a, b):
+		var da := 0 if core.p(a).alive else 1
+		var db := 0 if core.p(b).alive else 1
+		if da != db:
+			return da < db
+		return float(score.get(a, 0)) > float(score.get(b, 0)))
+	ranking.clear()
+	for s in lst:
+		var key := [core.p(s).alive, float(score.get(s, 0))]
+		if not ranking.is_empty():
+			var prev: int = ranking[ranking.size() - 1][0]
+			if [core.p(prev).alive, float(score.get(prev, 0))] == key:
+				ranking[ranking.size() - 1].append(s)
+				continue
+		ranking.append([s])
+
+
+## Someone sabotaged this seat's equipment (Sabotage Kit, the boiler room). Games read it.
+var handicapped: Dictionary = {}
+
+
+func handicap(seat: int) -> void:
+	handicapped[seat] = true
+	notes.append("%s's equipment had been tampered with." % core.p(seat).name)
+
+
+## The control scheme the HUD builds for this game (each game's own): a list of widgets.
+## kinds: "stick" (move), "tap" (a button: {do}), "hold" (press and hold: sends {do, on}),
+## "swipe" (a pad: sends {do, dir}), "timing" (a ring: tap when it lines up: {do}),
+## "pick" (buttons for each of `options`: {do, pick}).
+func controls(_seat: int) -> Array:
+	return [{"kind": "stick"}]
 
 
 func tampered(seat: int) -> bool:
@@ -180,8 +258,8 @@ func body(seat: int) -> Dictionary:
 
 func base_view() -> Dictionary:
 	return {"id": id(), "title": title(), "instructions": instructions(), "level": level, "t": t,
-		"seats": seats, "done": done, "rats": rats.duplicate(), "format": format, "teams": teams.duplicate(true),
-		"winners": winners.duplicate(), "draw": draw}
+		"seats": seats, "done": done, "teeth": teeth.duplicate(), "format": format, "teams": teams.duplicate(true),
+		"winners": winners.duplicate(), "draw": draw, "handicapped": handicapped.keys(), "chilled": chilled.keys()}
 
 
 ## base_view plus what the viewer can do (the HUD reads "actions" and "cheats").
@@ -191,4 +269,5 @@ func view_with_actions(v: Dictionary, viewers: Array) -> Dictionary:
 		if seats.has(s) and alive(s):
 			v["actions"] = actions_for(s)
 			v["cheats"] = cheat_options(s)
+			v["controls"] = controls(s)
 	return v

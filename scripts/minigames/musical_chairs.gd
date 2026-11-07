@@ -194,13 +194,13 @@ func _reveal() -> void:
 			core.say("mc_standing", {"name": core.p(s).name})
 			var part: String = ["leg_l", "leg_r", "arm_l", "arm_r"][rng.randi_range(0, 3)]
 			core.injure(s, part, "bruised" if sev < 2 else "burned", "standing")
-			rats[s] -= 1
+			teeth[s] -= 1
 			notes.append("%s stood." % core.p(s).name)
 			continue
 		var ci: int = seated[s]
 		var hz: String = chairs[ci].hazard
 		if hz == "":
-			rats[s] += 2
+			teeth[s] += 2
 			continue
 		any_bad = true
 		revealed.append([ci, hz, s])

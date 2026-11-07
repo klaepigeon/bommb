@@ -82,3 +82,11 @@ func roll(seat: int, sides: int) -> int:
 	if tip(seat, "dice"):
 		r = mini(r, core.rng.randi_range(1, sides))
 	return r
+
+
+func to_save() -> Dictionary:
+	return {}
+
+
+func load_save(_d: Dictionary) -> void:
+	pass

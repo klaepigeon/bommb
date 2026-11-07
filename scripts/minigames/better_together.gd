@@ -99,7 +99,7 @@ func tick(dt: float) -> void:
 					all_across = false
 		if any_alive and all_across:
 			for s in teams[i]:
-				rats[s] += 3
+				teeth[s] += 3
 			finish(teams[i].filter(func(s): return alive(s)), false)
 			return
 	if t >= DURATION or living().is_empty():

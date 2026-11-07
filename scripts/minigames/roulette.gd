@@ -5,7 +5,7 @@ extends Minigame
 ## shot is death (you'll be a ghost). It ends when someone's shot, or it's been round.
 ##
 ## It's social: SAY what you think is in the next chamber (true or not); OFFER someone Dead
-## Rats to take your turn (they can say no); give a ghost's whisper something to work with.
+## Teeth to take your turn (they can say no).
 ## And it's crooked: PEEK at the cylinder, SPIN it when nobody's looking, POCKET the round,
 ## or load a SPARE ROUND you found. He sees what he sees (CheatingManager), and the Cage
 ## leans on the cylinder for the ones he doesn't like.
@@ -35,7 +35,7 @@ var sub := "turn"          # turn | resolve | over
 var sub_t := 0.0
 var last := {}
 var voided := false
-var offer := {}              # {from, to, rats}
+var offer := {}              # {from, to, teeth}
 var claims: Dictionary = {}  # seat -> "EMPTY" | "LOADED"
 
 
@@ -118,7 +118,7 @@ func tick(dt: float) -> void:
 						notes.append("It went round the table and nobody was shot.")
 					sub = "over"
 					for s in living():
-						rats[s] += 3
+						teeth[s] += 3
 					finish(living(), false)
 				else:
 					_next()
@@ -129,9 +129,9 @@ func action(seat: int, a: Dictionary) -> void:
 	# answering an offer, and talking, happen out of turn
 	if what in ["accept", "decline"] and not offer.is_empty() and offer.to == seat and sub == "turn":
 		if what == "accept":
-			var paid := core.economy.take(offer.from, int(offer.rats), "paid for a turn")
-			core.p(seat).rats += paid
-			core.toast("%s takes %s's turn, for %d Dead Rats." % [core.p(seat).name, core.p(offer.from).name, paid])
+			var paid := core.economy.take(offer.from, int(offer.teeth), "paid for a turn")
+			core.p(seat).teeth += paid
+			core.toast("%s takes %s's turn, for %d Teeth." % [core.p(seat).name, core.p(offer.from).name, paid])
 			mirror[offer.from] = -100 - seat    # marker: the trigger is pulled by `seat`, at `seat`
 			offer = {}
 			_pull(current())
@@ -150,11 +150,11 @@ func action(seat: int, a: Dictionary) -> void:
 	match what:
 		"offer":
 			var to := int(a.get("target", -1))
-			var n := clampi(int(a.get("rats", 3)), 1, pl.rats)
-			if to != seat and living().has(to) and pl.rats > 0:
-				offer = {"from": seat, "to": to, "rats": n}
-				core.toast("%s offers %s %d Dead Rats to take the next pull." % [pl.name, core.p(to).name, n])
-				core.emit({"e": "mg", "k": "offer", "from": seat, "to": to, "rats": n})
+			var n := clampi(int(a.get("teeth", 3)), 1, pl.teeth)
+			if to != seat and living().has(to) and pl.teeth > 0:
+				offer = {"from": seat, "to": to, "teeth": n}
+				core.toast("%s offers %s %d Teeth to take the next pull." % [pl.name, core.p(to).name, n])
+				core.emit({"e": "mg", "k": "offer", "from": seat, "to": to, "teeth": n})
 			return
 		"cheat":
 			var cid := str(a.get("id", ""))
@@ -196,7 +196,7 @@ func action(seat: int, a: Dictionary) -> void:
 				_resolve({"seat": seat, "lowered": true})
 		"item":
 			var item := str(a.get("id", ""))
-			if not pl.items.has(item) or Items.CATALOGUE.get(item, {}).get("use", "") != "roulette":
+			if not pl.items.has(item) or Items.def(item).get("use", "") != "roulette":
 				return
 			pl.items.erase(item)
 			core.emit({"e": "use", "seat": seat, "item": item})
@@ -228,8 +228,8 @@ func action(seat: int, a: Dictionary) -> void:
 					if not opts.has(to):
 						to = opts[0] if not opts.is_empty() else -1
 					if to >= 0:
-						offer = {"from": seat, "to": to, "rats": 5}
-						core.p(seat).rats += 5   # the envelope is the money
+						offer = {"from": seat, "to": to, "teeth": 5}
+						core.p(seat).teeth += 5   # the envelope is the money
 						core.toast("%s slides an envelope to %s: take my turn." % [pl.name, core.p(to).name])
 				"mirror":
 					var target := int(a.get("target", -1))
@@ -280,7 +280,7 @@ func _pull(seat: int) -> void:
 				loaded = 1
 				_spin()
 	else:
-		rats[seat] += 1
+		teeth[seat] += 1
 		core.say("pr_click")
 	core.emit({"e": "mg", "k": "pull", "seat": seat, "target": target, "bang": bang})
 	_resolve(r)
@@ -318,7 +318,7 @@ func view_for(viewers: Array) -> Dictionary:
 func actions_for(seat: int) -> Array:
 	var out := []
 	if not offer.is_empty() and offer.to == seat:
-		out.append({"do": "accept", "name": "TAKE THE TURN FOR %d RATS" % int(offer.rats)})
+		out.append({"do": "accept", "name": "TAKE THE TURN FOR %d TEETH" % int(offer.teeth)})
 		out.append({"do": "decline", "name": "SAY NO"})
 	out.append({"do": "claim", "say": "EMPTY", "name": "SAY: IT'S EMPTY", "small": true})
 	out.append({"do": "claim", "say": "LOADED", "name": "SAY: IT'S LOADED", "small": true})
@@ -326,11 +326,11 @@ func actions_for(seat: int) -> Array:
 		return out
 	var pl := core.p(seat)
 	for it in pl.items:
-		if Items.CATALOGUE.get(it, {}).get("use", "") == "roulette":
+		if Items.def(it).get("use", "") == "roulette":
 			out.append({"do": "item", "id": it, "name": Items.name_of(it)})
 	for o in living():
-		if o != seat and pl.rats > 0 and offer.is_empty():
-			out.append({"do": "offer", "target": o, "rats": mini(3, pl.rats), "name": "PAY %s TO PULL (%d)" % [core.p(o).name, mini(3, pl.rats)], "small": true})
+		if o != seat and pl.teeth > 0 and offer.is_empty():
+			out.append({"do": "offer", "target": o, "teeth": mini(3, pl.teeth), "name": "PAY %s TO PULL (%d)" % [core.p(o).name, mini(3, pl.teeth)], "small": true})
 	out.append({"do": "lower", "name": "put it down", "small": true})
 	out.append({"do": "pull", "name": "PULL THE TRIGGER", "primary": true})
 	return out
@@ -359,7 +359,7 @@ func ai(seat: int, brain: AiBrain, view: Dictionary, _dt: float) -> void:
 			brain.wait = 0.0
 			var left := float(CHAMBERS - clicks)
 			var risk := float(loaded) / maxf(left, 1.0)
-			var yes := brain.greed > 0.55 and risk < 0.3 + brain.nerve * 0.2 and int(offer.rats) >= 3
+			var yes := brain.greed > 0.55 and risk < 0.3 + brain.nerve * 0.2 and int(offer.teeth) >= 3
 			action(seat, {"t": "mg", "do": "accept" if yes else "decline"})
 		return
 	if view.sub != "turn" or view.turn != seat:
@@ -392,10 +392,10 @@ func ai(seat: int, brain: AiBrain, view: Dictionary, _dt: float) -> void:
 		action(seat, {"t": "mg", "do": "lower"})
 		return
 	if risk >= 0.5:
-		if pl.rats >= 3 and offer.is_empty() and brain.rng.randf() < 0.5:
+		if pl.teeth >= 3 and offer.is_empty() and brain.rng.randf() < 0.5:
 			var others := living().filter(func(o): return o != seat)
 			if not others.is_empty():
-				action(seat, {"t": "mg", "do": "offer", "target": others[brain.rng.randi_range(0, others.size() - 1)], "rats": 3})
+				action(seat, {"t": "mg", "do": "offer", "target": others[brain.rng.randi_range(0, others.size() - 1)], "teeth": 3})
 				return
 		if pl.items.has("mirror") and brain.coop < 0.5:
 			action(seat, {"t": "mg", "do": "item", "id": "mirror", "target": brain.rival(core, seat)})

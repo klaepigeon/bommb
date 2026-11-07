@@ -1,0 +1,22 @@
+{
+ "_comment": "THE CALLER'S GAME (VictoryManager): in that mode, halfway through, he reveals 'reveal' hidden victory conditions drawn from these. At the end, whoever best meets each one gets 'rats' Dead Rats (ties all get them). Most Dead Rats still wins: these are how he moves the goalposts. 'low' = fewest. 'ghosts': whether a ghost qualifies. 'forfeit' stats count deliberate absences, not losses.",
+ "reveal": 2,
+ "rats": 3,
+ "objectives": {
+  "professional_loser": {"name": "PROFESSIONAL LOSER", "desc": "Most last-place finishes.", "stat": "last_places"},
+  "financial_ruin": {"name": "FINANCIAL RUIN", "desc": "Fewest Teeth at the end.", "stat": "teeth_now", "low": true},
+  "unkillable": {"name": "UNKILLABLE", "desc": "Most deaths survived.", "stat": "near_deaths"},
+  "most_rats": {"name": "THE RAT KING", "desc": "Most Dead Rats (again).", "stat": "rats_now"},
+  "fewest_rats": {"name": "THE PAUPER", "desc": "Fewest Dead Rats.", "stat": "rats_now", "low": true},
+  "most_teeth": {"name": "THE HOARDER", "desc": "Most Teeth at the end.", "stat": "teeth_now"},
+  "fewest_deaths": {"name": "CAREFUL", "desc": "Fewest deaths.", "stat": "deaths", "low": true, "ghosts": false},
+  "most_deaths": {"name": "FREQUENT DIER", "desc": "Most deaths.", "stat": "deaths"},
+  "most_injuries": {"name": "SPARE PARTS", "desc": "Most injuries.", "stat": "injuries"},
+  "fewest_wins": {"name": "TRY HARDER", "desc": "Fewest minigame wins.", "stat": "minigame_wins", "low": true},
+  "most_cheats": {"name": "CROOK", "desc": "Most successful cheating.", "stat": "cheats_ok"},
+  "most_found": {"name": "SNOOP", "desc": "Most things found away from the table.", "stat": "room_found"},
+  "most_forfeits": {"name": "NO-SHOW", "desc": "Most minigames missed on purpose.", "stat": "forfeits"},
+  "most_gifts": {"name": "TEACHER'S PET", "desc": "Most gifts received.", "stat": "gifts_received"},
+  "most_punished": {"name": "MASOCHIST", "desc": "Most punishments received.", "stat": "punishments"}
+ }
+}

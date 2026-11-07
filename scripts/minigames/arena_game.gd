@@ -36,6 +36,10 @@ func speed_of(s: int) -> float:
 			sp *= 0.35
 	if tampered(s):
 		sp *= 1.15
+	if handicapped.has(s):
+		sp *= 0.75
+	if is_chilled(s):
+		sp *= 0.5
 	return sp
 
 
@@ -91,6 +95,7 @@ func clamp_in(p: Vector2) -> Vector2:
 ## Move everyone this frame (call from tick). Things that hold people still (seated, in
 ## a chain) can override can_move().
 func walk_all(dt: float) -> void:
+	tick_chill(dt)
 	for s in seats:
 		if not alive(s):
 			continue
@@ -134,6 +139,13 @@ func ghost_action(seat: int, a: Dictionary) -> void:
 		core.emit({"e": "mg", "k": "cold", "seat": seat})
 		return
 	super.ghost_action(seat, a)
+
+
+func controls(_seat: int) -> Array:
+	var out: Array = [{"kind": "stick"}]
+	for a in actions_for(_seat):
+		out.append({"kind": "tap", "do": a.do, "label": a.name})
+	return out
 
 
 func ghost_ai(seat: int, brain: AiBrain, _view: Dictionary, dt: float) -> void:

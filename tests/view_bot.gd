@@ -17,7 +17,7 @@ func step(view: Dictionary, dt: float) -> void:
 	if not me.alive:
 		if me.get("ghost", false) and str(view.phase) == "turn" and int(view.turn.seat) == seat and view.turn.sub == "ghost":
 			_t = 0.0
-			Net.send_action(seat, {"t": "ghost", "do": "rise" if int(me.rats) >= int(view.get("resurrect_cost", 10)) else "scavenge"})
+			Net.send_action(seat, {"t": "ghost", "do": "rise" if int(me.teeth) >= int(view.get("resurrect_cost", 10)) else "scavenge"})
 		return
 	match str(view.phase):
 		"intro", "mg_intro", "mg_results":

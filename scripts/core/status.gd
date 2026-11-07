@@ -71,13 +71,19 @@ func tick_turn(seat: int) -> void:
 	if p.statuses.is_empty():
 		return
 	if has(seat, "rat_fever"):
-		var lose := 1 + (2 if has(seat, "hunger") else 0)
-		p.rats = maxi(0, p.rats - lose)
-		core.toast("%s sweats out %d Dead Rat%s (rat fever)." % [p.name, lose, "" if lose == 1 else "s"])
+		var t0 := 0
+		for st in p.statuses:
+			if st.id == "rat_fever":
+				t0 = int(st.t)
+		var lose := (1 if t0 % 2 == 0 else 0) + (1 if has(seat, "hunger") else 0)
+		if lose > 0 and p.rats > 0:
+			lose = mini(lose, p.rats)
+			core.change_rats(seat, -lose, "rat fever")
+			core.toast("%s sweats out %d Dead Rat%s (rat fever)." % [p.name, lose, "" if lose == 1 else "s"])
 	if has(seat, "hunger"):
-		if p.rats > 0:
-			p.rats -= 1
-			core.toast("%s eats a Dead Rat (hunger)." % p.name)
+		if p.teeth >= 2:
+			core.economy.take(seat, 2, "hunger")
+			core.toast("%s eats two Teeth (hunger)." % p.name)
 		else:
 			var part := Body.random_severable(p.body, core.rng)
 			if part != "":

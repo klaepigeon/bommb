@@ -1,6 +1,6 @@
 class_name Hud
 extends CanvasLayer
-## Everything on the glass during a match: the contestants' cards (rats, injuries,
+## Everything on the glass during a match: the contestants' cards (teeth, injuries,
 ## items, the key), the Caller's dialogue box, toasts, the context buttons for whoever
 ## on this device has something to do, prompts, the minigame card, results, and the
 ## ending. It only shows the view and sends actions (via `act`); no rules live here.
@@ -197,12 +197,12 @@ func _fill_card(c: Dictionary, p: Dictionary, v: Dictionary) -> void:
 	c.name.text = ("> " if turn else "") + str(p.name) + ("  (YOU)" if local.has(int(p.seat)) and local.size() == 1 else "")
 	c.name.add_theme_color_override("font_color", UiKit.HOT if p.alive else UiKit.DIM)
 	if not p.alive:
-		c.line.text = "GHOST  %d rats  (back for %d)" % [int(p.rats), int(v.get("resurrect_cost", 10))] if p.get("ghost", false) else "OUT (%s)" % str(p.death).to_upper()
+		c.line.text = "GHOST  %d teeth  (back for %d)" % [int(p.teeth), int(v.get("resurrect_cost", 10))] if p.get("ghost", false) else "OUT (%s)" % str(p.death).to_upper()
 		c.hurt.text = "died: %s" % str(p.death)
 		(c.root as Control).modulate = Color(0.6, 0.7, 0.9) if p.get("ghost", false) else Color(0.6, 0.6, 0.6)
 		return
 	(c.root as Control).modulate = Color.WHITE
-	var bits := ["%d rats" % int(p.rats), "%d items" % int(p.item_count)]
+	var bits := ["%d teeth" % int(p.teeth), "%d items" % int(p.item_count)]
 	if p.has_key:
 		bits.append("KEY")
 	if p.helmet:
@@ -341,7 +341,7 @@ func _action_signature(v: Dictionary) -> String:
 	return "%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s" % [v.phase, v.turn.get("seat", -1), v.turn.get("sub", ""), menu_mode,
 		mg.get("turn", ""), mg.get("sub", ""), mg.get("holder", ""), str(mg.get("flight", {}).is_empty()), mg.get("step", ""),
 		str(mg.get("busy", {}).is_empty()), str(v.door_push.size()) + str(v.players.map(func(p): return p.items.size())) + str(mg.get("peeks", {}))
-		+ str(v.turn.get("prompt", {}).get("kind", "")) + str(v.players.map(func(p): return [p.location, p.room_actions, p.rats, p.alive])) + str(mg.get("actions", []).size())
+		+ str(v.turn.get("prompt", {}).get("kind", "")) + str(v.players.map(func(p): return [p.location, p.room_actions, p.teeth, p.alive])) + str(mg.get("actions", []).size())
 		+ str(mg.get("chosen", [])) + str(mg.get("offer", {})) + str(mg.get("round", "")) + str(mg.get("cheats", []).size()) + str(v.get("ghosts", []))]
 
 
@@ -417,22 +417,22 @@ func _prompt(s: int, pr: Dictionary, v: Dictionary) -> void:
 		h.add_child(UiKit.button("KEEP WALKING", func(): act.emit(s, {"t": "answer", "yes": false})))
 	elif pr.kind == "shop":
 		var prices: Dictionary = v.shop.get(str(pr.shop), {})
-		modal_box.add_child(UiKit.label("%s  (you have %d Dead Rats)" % ["THE BLACK MARKET" if pr.shop == "black_market" else "THE MEDIC", int(v.players[s].rats)], 16))
+		modal_box.add_child(UiKit.label("%s  (you have %d Teeth)" % ["THE BLACK MARKET" if pr.shop == "black_market" else "THE MEDIC", int(v.players[s].teeth)], 16))
 		var grid := GridContainer.new()
 		grid.columns = 2
 		modal_box.add_child(grid)
 		for it in prices.keys():
 			var b := UiKit.button("%s  %d" % [Items.name_of(it), int(prices[it])], func(): act.emit(s, {"t": "answer", "buy": it}), 30, 150)
-			b.disabled = int(v.players[s].rats) < int(prices[it])
-			b.tooltip_text = str(Items.CATALOGUE.get(it, {}).get("desc", ""))
+			b.disabled = int(v.players[s].teeth) < int(prices[it])
+			b.tooltip_text = str(Items.def(it).get("desc", ""))
 			grid.add_child(b)
 		modal_box.add_child(UiKit.button("DONE", func(): act.emit(s, {"t": "answer", "done": true})))
 	elif pr.kind == "gamble":
-		modal_box.add_child(UiKit.label("Double or nothing. How many Dead Rats?", 16))
+		modal_box.add_child(UiKit.label("Double or nothing. How many Teeth?", 16))
 		var h2 := UiKit.hbox(6)
 		modal_box.add_child(h2)
 		for w in [1, 3, 5]:
-			if int(v.players[s].rats) >= w:
+			if int(v.players[s].teeth) >= w:
 				h2.add_child(UiKit.button(str(w), func(): act.emit(s, {"t": "answer", "wager": w}), 36, 60))
 		h2.add_child(UiKit.button("WALK AWAY", func(): act.emit(s, {"t": "answer", "wager": 0})))
 	elif pr.kind == "hidden":
@@ -445,7 +445,7 @@ func _prompt(s: int, pr: Dictionary, v: Dictionary) -> void:
 		modal_box.add_child(UiKit.label("STICKY FINGERS. Take something from:", 16))
 		for o in pr.options:
 			var p: Dictionary = v.players[int(o)]
-			modal_box.add_child(UiKit.button("%s (%d items, %d rats)" % [p.name, p.items.size(), int(p.rats)], func(): act.emit(s, {"t": "answer", "target": int(o)})))
+			modal_box.add_child(UiKit.button("%s (%d items, %d teeth)" % [p.name, p.items.size(), int(p.teeth)], func(): act.emit(s, {"t": "answer", "target": int(o)})))
 
 
 ## Away from the table: where to go, what to do there, and sitting back down.
@@ -485,7 +485,7 @@ func _ghost_actions(s: int, me: Dictionary, v: Dictionary) -> void:
 		actions.add_child(UiKit.button("BACK", func(): menu_mode = ""))
 		return
 	var cost := int(v.get("resurrect_cost", 10))
-	if int(me.rats) >= cost:
+	if int(me.teeth) >= cost:
 		actions.add_child(UiKit.primary("COME BACK (%d RATS)" % cost, func(): act.emit(s, {"t": "ghost", "do": "rise"})))
 	actions.add_child(UiKit.button("SCAVENGE FOR RATS", func(): act.emit(s, {"t": "ghost", "do": "scavenge"})))
 	actions.add_child(UiKit.button("HAUNT SOMEONE", func(): menu_mode = "haunt"))
@@ -540,7 +540,7 @@ func _roulette_actions(s: int, v: Dictionary) -> void:
 		actions.add_child(UiKit.button("BACK", func(): menu_mode = ""))
 		return
 	for it in me.items:
-		if Items.CATALOGUE.get(it, {}).get("use", "") == "roulette":
+		if Items.def(it).get("use", "") == "roulette":
 			if it == "mirror":
 				actions.add_child(UiKit.button(Items.name_of(it), func(): menu_mode = "mirror"))
 			else:
@@ -587,8 +587,8 @@ func _cards(v: Dictionary) -> void:
 			card.visible = true
 			card_box.add_child(UiKit.label("RESULTS", 24, UiKit.HOT, true))
 			for p in v.players:
-				var won := int(v.mg.get("rats", {}).get(int(p.seat), 0))
-				card_box.add_child(UiKit.label("%s   %s   rats %d (%+d)" % [p.name, "ALIVE" if p.alive else "OUT", int(p.rats), won], 14,
+				var won := int(v.mg.get("teeth", {}).get(int(p.seat), 0))
+				card_box.add_child(UiKit.label("%s   %s   teeth %d (%+d)" % [p.name, "ALIVE" if p.alive else "OUT", int(p.teeth), won], 14,
 					UiKit.INK if p.alive else UiKit.DIM))
 		"ceremony":
 			pass
@@ -600,7 +600,7 @@ func _cards(v: Dictionary) -> void:
 			card_box.add_child(UiKit.label("YOU GOT OUT" if esc else "TOTAL ELIMINATION", 28, UiKit.TEAL if esc else UiKit.HOT, true))
 			card_box.add_child(UiKit.label("The door was never painted on." if esc else "Nobody went home. Nobody ever does.", 15))
 			for st in v.ending_info.get("standings", []):
-				card_box.add_child(UiKit.label("%s  -  %s  -  %d rats" % [st.name, "out the door" if st.alive else str(st.death), int(st.rats)], 13))
+				card_box.add_child(UiKit.label("%s  -  %s  -  %d teeth" % [st.name, "out the door" if st.alive else str(st.death), int(st.teeth)], 13))
 			var h := UiKit.hbox(8)
 			card_box.add_child(h)
 			if Net.is_authority():

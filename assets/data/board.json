@@ -1,224 +1,169 @@
 {
- "_comment": "LAST CALL 3 board: a loop of spaces, walked in order (positions are drawn by TableBoard). Types: start rats item hazard note clue caller steal medic door roulette resurrect black_market poison gamble punish hidden. Three 'clue' spaces (clue 0,1,2) and one 'door' are needed for the escape.",
+ "_comment": "LAST CALL 3 board graph. 'main' is the loop (walked in order, start at 0). 'branches' leave the loop at 'from' and rejoin at 'to', through their own spaces; a junction asks which way. 'toll' Teeth (or a Shortcut Key) to take it. 'rat_spots': main-loop indices the Dead Rat can sit on (buy it for 'rat_price' Teeth when you pass or land). Space types: start normal bad event item shop black_market medical minigame duel battle roulette resurrect poison gamble caller trap hidden rulebook veto clue door note.",
  "name": "THE FUNCTION ROOM",
- "spaces": [
+ "rat_price": 20,
+ "main": [
   {
-   "type": "start",
-   "pos": [
-    0,
-    0
-   ]
+   "type": "start"
   },
   {
-   "type": "rats",
-   "pos": [
-    0,
-    0
-   ]
+   "type": "normal"
   },
   {
-   "type": "item",
-   "pos": [
-    0,
-    0
-   ]
+   "type": "item"
   },
   {
-   "type": "hazard",
-   "pos": [
-    0,
-    0
-   ]
+   "type": "normal"
   },
   {
-   "type": "note",
-   "pos": [
-    0,
-    0
-   ],
-   "text": "A name tag on the floor: HELLO MY NAME IS ___. Someone has written underneath: 'he can't count us if we hold hands'."
+   "type": "bad"
   },
   {
-   "type": "black_market",
-   "pos": [
-    0,
-    0
-   ]
+   "type": "shop"
   },
   {
    "type": "clue",
-   "pos": [
-    0,
-    0
-   ],
    "clue": 0,
    "text": "The wallpaper here is peeling. Underneath, in crayon: a number, and an arrow toward the door. 'IT ISN'T PAINTED ON.'"
   },
   {
-   "type": "caller",
-   "pos": [
-    0,
-    0
-   ]
+   "type": "event"
   },
   {
-   "type": "roulette",
-   "pos": [
-    0,
-    0
-   ]
+   "type": "normal"
   },
   {
-   "type": "gamble",
-   "pos": [
-    0,
-    0
-   ]
+   "type": "normal"
   },
   {
-   "type": "steal",
-   "pos": [
-    0,
-    0
-   ]
+   "type": "caller"
   },
   {
-   "type": "medic",
-   "pos": [
-    0,
-    0
-   ]
+   "type": "duel"
   },
   {
-   "type": "poison",
-   "pos": [
-    0,
-    0
-   ]
+   "type": "normal"
   },
   {
-   "type": "rats",
-   "pos": [
-    0,
-    0
-   ]
+   "type": "rulebook"
   },
   {
-   "type": "hidden",
-   "pos": [
-    0,
-    0
-   ]
+   "type": "door"
   },
   {
-   "type": "door",
-   "pos": [
-    0,
-    0
-   ]
+   "type": "normal"
   },
   {
-   "type": "rats",
-   "pos": [
-    0,
-    0
-   ]
-  },
-  {
-   "type": "punish",
-   "pos": [
-    0,
-    0
-   ]
+   "type": "battle"
   },
   {
    "type": "clue",
-   "pos": [
-    0,
-    0
-   ],
    "clue": 1,
    "text": "Inside a crushed party hat: a number inked on the band. 'THE BOMB HAS A KEY. IT WON'T LET ONE PERSON WIND IT.'"
   },
   {
-   "type": "resurrect",
-   "pos": [
-    0,
-    0
-   ]
+   "type": "medical"
   },
   {
-   "type": "item",
-   "pos": [
-    0,
-    0
-   ]
+   "type": "normal"
   },
   {
-   "type": "roulette",
-   "pos": [
-    0,
-    0
-   ]
+   "type": "bad"
   },
   {
-   "type": "note",
-   "pos": [
-    0,
-    0
-   ],
-   "text": "Scratched into the skirting board: 'THE POPPER DOESN'T GO OFF IF NOBODY PICKS IT UP. WE TRIED. ALL OF US.'"
+   "type": "hidden"
   },
   {
-   "type": "hazard",
-   "pos": [
-    0,
-    0
-   ]
+   "type": "roulette"
   },
   {
-   "type": "black_market",
-   "pos": [
-    0,
-    0
-   ]
+   "type": "minigame"
+  },
+  {
+   "type": "normal"
   },
   {
    "type": "clue",
-   "pos": [
-    0,
-    0
-   ],
    "clue": 2,
    "text": "A photo pinned under a chair: last year's contestants at the door, all pushing at once. A number on the back."
   },
   {
-   "type": "rats",
-   "pos": [
-    0,
-    0
-   ]
+   "type": "poison"
   },
   {
-   "type": "gamble",
-   "pos": [
-    0,
-    0
-   ]
-  },
-  {
-   "type": "medic",
-   "pos": [
-    0,
-    0
-   ]
-  },
-  {
-   "type": "hidden",
-   "pos": [
-    0,
-    0
-   ]
+   "type": "normal"
   }
+ ],
+ "branches": [
+  {
+   "name": "THE ABATTOIR",
+   "from": 8,
+   "to": 12,
+   "side": "in",
+   "spaces": [
+    {
+     "type": "trap"
+    },
+    {
+     "type": "gamble"
+    },
+    {
+     "type": "black_market"
+    },
+    {
+     "type": "trap"
+    }
+   ],
+   "desc": "Short. Nasty. The black market's down here."
+  },
+  {
+   "name": "THE CHAPEL",
+   "from": 15,
+   "to": 19,
+   "side": "out",
+   "spaces": [
+    {
+     "type": "resurrect"
+    },
+    {
+     "type": "normal"
+    },
+    {
+     "type": "medical"
+    },
+    {
+     "type": "veto"
+    },
+    {
+     "type": "normal"
+    }
+   ],
+   "desc": "The long way round. Quieter. Someone prays here."
+  },
+  {
+   "name": "THE MEAT LOCKER",
+   "from": 20,
+   "to": 26,
+   "side": "in",
+   "toll": 6,
+   "spaces": [
+    {
+     "type": "hidden"
+    }
+   ],
+   "desc": "A shortcut through the cold. Six Teeth to the man at the door, or a key."
+  }
+ ],
+ "rat_spots": [
+  3,
+  9,
+  12,
+  19,
+  24,
+  27
+ ],
+ "notes": [
+  "A name tag on the floor: HELLO MY NAME IS ___. Someone has written underneath: 'he can't count us if we hold hands'.",
+  "Scratched into the skirting board: 'THE POPPER DOESN'T GO OFF IF NOBODY PICKS IT UP. WE TRIED. ALL OF US.'"
  ]
 }

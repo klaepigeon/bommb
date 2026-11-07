@@ -1,7 +1,7 @@
 extends ArenaGame
-## MEAT GRINDER (FFA). A conveyor belt runs toward the grinder; walk against it. Dead Rats
+## MEAT GRINDER (FFA). A conveyor belt runs toward the grinder; walk against it. Teeth
 ## ride the belt: grab them. Presses come down across parts of the belt: be somewhere else.
-## PUSH people back toward the end. Jam a press if he isn't looking. Most rats when the
+## PUSH people back toward the end. Jam a press if he isn't looking. Most teeth when the
 ## belt stops wins; the grinder takes whatever reaches it.
 
 const BELT := 1.25
@@ -10,6 +10,7 @@ var presses: Array = []       # [{x, z0, z1, period, phase, jam}]
 var pickups: Array = []       # [Vector2]
 var score: Dictionary = {}
 var _spawn := 0.0
+var _rush := false
 
 
 func id() -> String:
@@ -21,8 +22,8 @@ func title() -> String:
 
 
 func instructions() -> Array:
-	return ["The belt carries you to the grinder. Walk against it.", "Grab the Dead Rats riding the belt.",
-		"Don't be under a press when it comes down.", "PUSH people. Most rats when it stops wins."]
+	return ["The belt carries you to the grinder. Walk against it.", "Grab the Teeth riding the belt.",
+		"Don't be under a press when it comes down.", "PUSH people. Most teeth when it stops wins."]
 
 
 func setup() -> void:
@@ -39,8 +40,13 @@ func setup() -> void:
 		score[s] = 0
 
 
+## The environment changes: halfway through the line speeds up and the presses quicken.
+func belt() -> float:
+	return BELT + level * 0.12 + (0.5 if t > DURATION * 0.5 else 0.0)
+
+
 func drift(_s: int) -> Vector2:
-	return Vector2(-BELT - level * 0.12, 0)
+	return Vector2(-belt(), 0)
 
 
 func closed(pr: Dictionary) -> bool:
@@ -57,10 +63,16 @@ func tick(dt: float) -> void:
 		_spawn = 0.9
 		pickups.append(Vector2(6.0, rng.randf_range(-2.0, 2.0)))
 	for i in pickups.size():
-		pickups[i] += Vector2(-BELT, 0) * dt
+		pickups[i] += Vector2(-belt(), 0) * dt
 	pickups = pickups.filter(func(p): return p.x > -6.0)
 	for pr in presses:
 		pr.jam = maxf(0.0, pr.jam - dt)
+	if t > DURATION * 0.5 and not _rush:
+		_rush = true
+		for pr in presses:
+			pr.period *= 0.75
+		core.emit({"e": "mg", "k": "rush"})
+		core.say("grinder_rush")
 	for s in living():
 		var p: Vector2 = pos[s]
 		for i in range(pickups.size() - 1, -1, -1):
@@ -88,6 +100,7 @@ func tick(dt: float) -> void:
 
 
 func _end() -> void:
+	rank_by(score)
 	var best := -1
 	var top: Array = []
 	for s in living():
@@ -97,7 +110,7 @@ func _end() -> void:
 		elif score[s] == best:
 			top.append(s)
 	for s in living():
-		rats[s] += score[s]
+		teeth[s] += score[s]
 	finish(top if top.size() == 1 else [], top.size() != 1)
 
 

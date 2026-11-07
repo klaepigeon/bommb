@@ -2,7 +2,7 @@ extends ArenaGame
 ## RUN FOR YOUR LIFE (FFA). A corridor. Something comes down it behind you (the hooks),
 ## faster all the time. Blades sweep across it; a door can be slammed in the face of
 ## whoever's behind you; a vent is a shortcut if you'll crawl; a lever at the start sends
-## the blades mad for everyone ahead of you. Dead Rats on the floor. First to the end
+## the blades mad for everyone ahead of you. Teeth on the floor. First to the end
 ## wins. Finishing isn't guaranteed.
 
 const DURATION := 40.0
@@ -86,7 +86,7 @@ func tick(dt: float) -> void:
 		for i in range(pickups.size() - 1, -1, -1):
 			if p.distance_to(pickups[i]) < 0.5:
 				pickups.remove_at(i)
-				rats[s] += 1
+				teeth[s] += 1
 		if p.x >= bounds.end.x - 0.3:
 			finished.append(s)
 			core.emit({"e": "mg", "k": "finish", "seat": s, "place": finished.size()})
@@ -104,7 +104,7 @@ func tick(dt: float) -> void:
 		if finished.is_empty():
 			finish([], true)
 		else:
-			rats[finished[0]] += 3
+			teeth[finished[0]] += 3
 			finish([finished[0]], false)
 
 

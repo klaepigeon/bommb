@@ -5,7 +5,7 @@ extends RefCounted
 ##     back, and every living player gives up one body part, chosen at random. A draw
 ##     you set up on purpose counts.
 ##   The resurrection square: land on it and one ghost (chosen at random) comes back.
-##   Dead Rats: a ghost who has saved up enough buys their own way back.
+##   Dead Rats: a ghost spends one of their Dead Rats (it comes off their score).
 ## (And a living player can give a ghost a Lazarus Rat.)
 
 var core: MatchCore
@@ -50,7 +50,7 @@ func collective() -> void:
 	for s in core.living():
 		var part := Body.random_severable(core.p(s).body, core.rng)
 		if part != "":
-			core.injure(s, part, "lost", "the sacrifice")
+			core.injure(s, part, "lost", "the sacrifice", false)
 	for s in gs:
 		revive(s, "sacrifice")
 
@@ -58,18 +58,27 @@ func collective() -> void:
 func square(lander: int) -> void:
 	var gs := ghosts()
 	if gs.is_empty():
-		core.toast("The resurrection square. Nobody's waiting. %s gets a Dead Rat for trying." % core.p(lander).name)
+		core.toast("The resurrection square. Nobody's waiting. %s gets a Tooth for trying." % core.p(lander).name)
 		core.economy.award(lander, 1, "resurrection square")
 		return
 	var s: int = gs[core.rng.randi_range(0, gs.size() - 1)]
+	for g in gs:
+		if core.p(g).items.has("grave_ticket"):
+			core.p(g).items.erase("grave_ticket")
+			s = g
+			break
+	core.p(lander).stat("revived_others")
 	revive(s, "square")
 
 
 func buy(seat: int) -> bool:
 	if not core.p(seat).ghost:
 		return false
-	if not core.economy.charge(seat, core.economy.resurrect_cost(), "resurrection"):
-		core.toast("Not enough Dead Rats (%d)." % core.economy.resurrect_cost(), seat)
+	var p := core.p(seat)
+	if p.rats < core.economy.resurrect_cost():
+		core.toast("A ghost needs a Dead Rat to come back. You have none.", seat)
 		return false
+	core.change_rats(seat, -core.economy.resurrect_cost(), "resurrection")
+	p.stat("rats_spent")
 	revive(seat, "rats")
 	return true

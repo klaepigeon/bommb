@@ -1,6 +1,6 @@
 extends ChoiceGame
 ## CONFESSION (FFA). He asks about each other. First everyone answers, privately (a name).
-## Then everyone predicts which name came up most. Right: Dead Rats. Wrong: a pin. Say what
+## Then everyone predicts which name came up most. Right: Teeth. Wrong: a pin. Say what
 ## you picked (or don't; or lie about it). Most right predictions wins.
 
 const QUESTIONS := ["Who here would sell you out first?", "Who deserves the next pin?", "Who's lying to you right now?",
@@ -21,7 +21,7 @@ func title() -> String:
 
 func instructions() -> Array:
 	return ["He asks a question about the people at this table. Answer with a name.", "Then guess which name came up most.",
-		"Right: Dead Rats. Wrong: a pin.", "Say what you picked. Or lie."]
+		"Right: Teeth. Wrong: a pin.", "Say what you picked. Or lie."]
 
 
 func setup() -> void:
@@ -57,7 +57,7 @@ func resolve(revealed: Dictionary) -> bool:
 			continue
 		if revealed[s] == top:
 			correct[s] += 1
-			rats[s] += 2
+			teeth[s] += 2
 		else:
 			var part := Body.random_severable(body(s), rng)
 			if part != "":

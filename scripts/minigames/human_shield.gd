@@ -76,7 +76,7 @@ func tick(dt: float) -> void:
 		h = parcel[i].holder
 		if h >= 0 and (pos[h] as Vector2).x >= bounds.end.x - 0.4:
 			for s in teams[i]:
-				rats[s] += 3
+				teeth[s] += 3
 			finish(teams[i].filter(func(s): return alive(s)), false)
 			return
 	if t >= DURATION or living().is_empty():

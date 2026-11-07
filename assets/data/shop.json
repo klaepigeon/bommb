@@ -1,8 +1,13 @@
 {
- "_comment": "Prices in Dead Rats. The black market sells everything; medical sells the medicine cheaper. Resurrection: what a ghost pays to come back.",
- "black_market": {"first_aid": 3, "painkillers": 2, "antidote": 4, "surgery": 6, "prosthetic": 6, "helmet": 5, "alibi": 6,
-  "lucky_foot": 7, "loaded_die": 4, "hairpin": 2, "spinner": 3, "peeker": 3, "bribe": 3, "lazarus_rat": 12},
- "medical": {"first_aid": 2, "antidote": 3, "surgery": 5, "prosthetic": 5},
- "resurrect_cost": 10,
- "gamble_odds": 0.5
+ "_comment": "Shops (ShopManager). Each round every shop re-stocks: 'slots' items drawn from its pool (weighted by rarity), each with 'qty' in stock. Price = item price x shop 'mult' x (1 + cage_tax x your Cage level) x any amendment, rounded; one item a round is on special (half price). The black market sells contraband; a coupon opens the stock under the counter. The ghost shop is for ghosts.",
+ "rarity_weight": {"common": 6, "uncommon": 3, "rare": 1, "contraband": 2},
+ "cage_tax": 0.12,
+ "shops": {
+  "general": {"name": "THE TUCK SHOP", "mult": 1.0, "slots": 4, "qty": 2, "pool": ["loaded_dice", "high_roller", "double_roll", "warp_tooth", "shortcut_key", "greased_shoes", "reverse_gear", "pickpocket", "rat_trap", "tooth_tax", "lucky_tooth", "safety_pin", "body_armour", "insurance", "gift_basket", "debt_note", "bandage", "rubber_stamp", "loophole", "debt_collector", "last_will"]},
+  "black_market": {"name": "THE BLACK MARKET", "mult": 1.2, "slots": 4, "qty": 1, "under_counter": ["helmet", "lazarus_rat", "gavel", "executive_privilege", "bullet"], "pool": ["loaded_die", "counterfeit_teeth", "poisoned_gift", "sabotage_kit", "loaded_double", "warp_tooth", "alibi", "lucky_foot", "mirror", "skip", "spinner", "peeker", "bribe", "hairpin", "emergency_legislation", "bribe_token", "black_market_coupon"]},
+  "medical": {"name": "THE INFIRMARY", "mult": 0.9, "slots": 4, "qty": 3, "pool": ["first_aid", "bandage", "antidote", "painkillers", "prosthetic", "surgery", "safety_pin", "body_armour"]},
+  "ghost": {"name": "THE GHOST SHOP", "mult": 1.0, "slots": 3, "qty": 2, "pool": ["cold_hand", "phantom_coin", "possession_ticket", "grave_ticket"]}
+ },
+ "gamble_odds": 0.5,
+ "resurrect_rats": 1
 }

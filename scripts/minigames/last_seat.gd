@@ -133,7 +133,7 @@ func _result() -> void:
 		core.kill(s, "trapdoor", [["leg_l", "lost"]])
 		notes.append("%s was left standing." % core.p(s).name)
 	for s in sitting:
-		rats[s] += 2
+		teeth[s] += 2
 	winners.clear()
 	for s in sitting:
 		winners.append(s)

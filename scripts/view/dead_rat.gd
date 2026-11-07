@@ -1,6 +1,6 @@
 class_name DeadRat
 extends RefCounted
-## The Dead Rat: the collectible. Grey-brown, stiff, legs in the air, a long bald tail,
+## The Tooth: the collectible. Grey-brown, stiff, legs in the air, a long bald tail,
 ## X for eyes. Disgusting and, somehow, worth having.
 
 static var _mesh: ArrayMesh

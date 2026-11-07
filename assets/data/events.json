@@ -1,0 +1,50 @@
+{
+ "_comment": "Random events (EventManager), on an outcome spectrum. An event square (and a few other things) rolls a tier from 'weights', shifted by who you are: the Cage and suspicion push it down, being last (in Dead Rats) pushes it up, leading pushes it down a little, late in the match it swings harder. A Lucky Tooth turns any bad, awful or catastrophic result into neutral. Then one event from that tier. 'do' is the effect; 'n' its size.",
+ "tiers": ["miracle", "excellent", "good", "neutral", "bad", "awful", "catastrophe"],
+ "weights": [3, 8, 20, 18, 20, 10, 4],
+ "events": {
+  "miracle": [
+   {"id": "rat_rain", "name": "IT'S RAINING RATS", "do": "rats", "n": 1, "text": "A Dead Rat drops out of the ceiling vent, into %s's lap."},
+   {"id": "full_recovery", "name": "A MIRACLE CURE", "do": "heal_all", "text": "%s's wounds close up. Even the ones that shouldn't."},
+   {"id": "mass_resurrection", "name": "THE DEAD SIT UP", "do": "resurrect", "text": "The lights fail. When they come back, there's a ghost back in a chair."}
+  ],
+  "excellent": [
+   {"id": "jackpot", "name": "JACKPOT", "do": "teeth", "n": 15, "text": "The fruit machine in the corner pays out. Into %s's pocket."},
+   {"id": "rat_delivered", "name": "SPECIAL DELIVERY", "do": "rat_near", "text": "The Dead Rat is carried to the square just in front of %s."},
+   {"id": "free_rare", "name": "AN UNUSUAL REWARD", "do": "item", "pool": "rare", "text": "There's a parcel with %s's name on it."}
+  ],
+  "good": [
+   {"id": "windfall", "name": "TEETH WINDFALL", "do": "teeth", "n": 7, "text": "%s finds Teeth in the upholstery."},
+   {"id": "free_item", "name": "FREE SAMPLE", "do": "item", "pool": "any", "text": "A tray goes by. %s takes something off it."},
+   {"id": "protection", "name": "A GUARDIAN ANGEL", "do": "protect", "text": "%s feels watched over. Something will take the next blow."},
+   {"id": "everyone_wins", "name": "UNEXPECTED COOPERATION", "do": "teeth_all", "n": 3, "text": "Everyone pitches in. Everyone gets something."},
+   {"id": "advance", "name": "A FOLLOWING WIND", "do": "move", "n": 3, "text": "The floor tilts. %s slides three squares on."}
+  ],
+  "neutral": [
+   {"id": "swap", "name": "MUSICAL CHAIRS", "do": "swap", "text": "The table turns. %s is somewhere else, and so is someone else."},
+   {"id": "trade", "name": "FORCED TRADE", "do": "trade", "text": "%s has to swap something with someone. No refunds."},
+   {"id": "gamble_offer", "name": "A GAMBLING OPPORTUNITY", "do": "gamble", "text": "A man with no face offers %s a bet."},
+   {"id": "caller_steps_in", "name": "CALLER INTERVENTION", "do": "caller", "text": "He takes a personal interest in %s."},
+   {"id": "special_game", "name": "SPECIAL ATTRACTION", "do": "bonus_game", "text": "A bonus game is wheeled out for after the main event."},
+   {"id": "rat_moves", "name": "THE RAT MOVES", "do": "rat_move", "text": "The Dead Rat has been moved. Nobody saw who by."},
+   {"id": "board_change", "name": "RENOVATIONS", "do": "alter", "text": "A square near %s has been repainted."}
+  ],
+  "bad": [
+   {"id": "confiscation", "name": "CONFISCATION", "do": "teeth", "n": -6, "text": "Security empties %s's pockets."},
+   {"id": "item_theft", "name": "LIGHT FINGERS", "do": "lose_item", "text": "Someone's been in %s's pockets."},
+   {"id": "setback", "name": "A SETBACK", "do": "move", "n": -3, "text": "The floor tilts the other way. %s slides back three."},
+   {"id": "bruising", "name": "A FALL", "do": "injury", "status": "bruised", "text": "%s trips over nothing."}
+  ],
+  "awful": [
+   {"id": "poisoned", "name": "SOMETHING IN THE DRINK", "do": "poison", "text": "%s's drink tastes of pennies."},
+   {"id": "rat_loss", "name": "THE RAT GETS UP", "do": "rats", "n": -1, "text": "One of %s's Dead Rats wasn't dead. It leaves."},
+   {"id": "broken", "name": "MACHINERY", "do": "injury", "status": "broken", "text": "A belt catches %s's sleeve."},
+   {"id": "punished", "name": "PUNISHMENT", "do": "punish", "text": "He's decided %s needs a lesson."}
+  ],
+  "catastrophe": [
+   {"id": "amputation", "name": "THE BUTCHER'S HOUR", "do": "lose_part", "text": "The butcher comes out of the kitchen for %s."},
+   {"id": "bankrupt", "name": "BANKRUPTCY", "do": "teeth_half", "text": "%s's Teeth are seized. Half of them."},
+   {"id": "two_rats", "name": "VERMIN CONTROL", "do": "rats", "n": -2, "text": "The exterminator takes two of %s's Dead Rats."}
+  ]
+ }
+}

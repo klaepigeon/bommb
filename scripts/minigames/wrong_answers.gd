@@ -31,7 +31,7 @@ func setup() -> void:
 	rounds = 3
 	var best := -1
 	for s in seats:
-		if best < 0 or core.p(s).rats > core.p(best).rats:
+		if best < 0 or core.p(s).teeth > core.p(best).teeth:
 			best = s
 	controller = best
 	teams = [[controller], seats.filter(func(s): return s != controller)]
@@ -73,7 +73,7 @@ func resolve(revealed: Dictionary) -> bool:
 		else:
 			team_wrong += 1
 			core.injure(s, ["hand_l", "hand_r"][rng.randi_range(0, 1)], "burned" if level == 0 else "broken", "the wrong wire")
-			rats[controller] += 1
+			teeth[controller] += 1
 	core.toast("The safe wire was %s.%s" % [safe, " The control room said %s." % instruction if instruction != "" else ""])
 	return false
 
@@ -82,7 +82,7 @@ func conclude() -> void:
 	var team: Array = teams[1].filter(func(s): return alive(s))
 	if team_right >= team_wrong:
 		for s in team:
-			rats[s] += 2
+			teeth[s] += 2
 		finish(team, false)
 	else:
 		finish([controller] if alive(controller) else [], false)

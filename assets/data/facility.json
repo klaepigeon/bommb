@@ -1,0 +1,73 @@
+{
+ "_comment": "THE FACILITY (FacilityManager): the slaughterhouse-turned-studio around the table, walked in real time (the LCC building: data/hall/*.json). Getting up costs suspicion; the board doesn't wait; the return timer runs; when it runs out the Caller decides what to do about you (CallerResponseManager). Each interactable: where (hall metres x,z), its area, reach r, its actions. Action: ok/caught = suspicion if fine / if seen; effect; once (per match) | per_round | cost (Teeth) | needs (an item) | needs_flag (facility state) | hidden_until (a flag). Areas out of the hall are out of his sight: he only catches you there on a 'camera' roll. 'locks': doors that need a facility flag before they open (everything else opens).",
+ "leave_suspicion": 4,
+ "return_time": 45,
+ "camera_chance": 0.25,
+ "walk_speed": 3.2,
+ "table_radius": 2.7,
+ "areas": {"hall": "THE MAIN SHOWROOM", "kitchen": "THE BUTCHER'S KITCHEN", "freezer": "THE MEAT LOCKER", "cloakroom": "THE CLOAKROOM", "office": "ADMINISTRATION", "toilets": "THE TOILETS", "booth": "HIS BOOTH", "corridor": "THE BACK CORRIDOR", "staffroom": "THE EMPLOYEE BREAK ROOM", "boiler": "MAINTENANCE", "stairs": "THE STAIRS DOWN", "cellar": "THE SUBLEVEL", "bar": "THE LOUNGE BAR", "carpark": "THE LOADING BAY", "cageroom": "THE CAGE ROOM", "bar_stairs": "THE BEER CELLAR STAIRS", "barcellar": "THE BEER CELLAR", "flat_stairs": "THE PRIVATE STAIR", "flat": "THE MANAGER'S FLAT"},
+ "locks": {"door:stairs": "cellar", "door:boiler": "boiler", "door:carpark": "yard", "door:fire": "never", "door:flat_stairs": "never", "door:carpark_gate": "never", "door:cageroom": "never"},
+ "things": {
+  "vending": {"name": "THE VENDING MACHINE", "pos": [-6.8, 5.2], "r": 1.4, "actions": [
+   {"id": "vend", "name": "Put 2 Teeth in", "ok": 1, "caught": 4, "effect": "vend", "cost": 2},
+   {"id": "kick_vending", "name": "Kick it", "ok": 5, "caught": 10, "effect": "kick_vending", "needs_flag": "vending_jammed"}]},
+  "phone": {"name": "THE PAY PHONE", "pos": [6.9, 5.4], "r": 1.4, "actions": [
+   {"id": "answer_phone", "name": "Answer it", "ok": 2, "caught": 6, "effect": "phone"}]},
+  "arcade": {"name": "A BROKEN ARCADE CABINET", "pos": [6.8, -1.4], "r": 1.4, "actions": [
+   {"id": "arcade_play", "name": "Play (1 Tooth)", "ok": 1, "caught": 3, "effect": "arcade_play", "cost": 1},
+   {"id": "arcade_hit", "name": "HIT THE BUTTON", "ok": 0, "caught": 0, "effect": "arcade_hit", "needs_flag": "arcade_lit"}]},
+  "panel": {"name": "A WALL PANEL", "pos": [-7.0, -8.4], "r": 1.4, "actions": [
+   {"id": "knock_wall", "name": "Knock on the wall", "ok": 2, "caught": 6, "effect": "knock", "hidden_until_not": "panel_found"},
+   {"id": "open_panel", "name": "Open the panel", "ok": 4, "caught": 12, "effect": "open_panel", "needs_flag": "panel_found", "once": true}]},
+  "drain": {"name": "THE FLOOR DRAIN", "pos": [2.2, 3.6], "r": 1.2, "actions": [
+   {"id": "reach_drain", "name": "Reach into the drain", "ok": 2, "caught": 6, "effect": "drain"}]},
+  "props": {"name": "THE PROPS CUPBOARD", "pos": [5.6, 2.6], "r": 1.4, "actions": [
+   {"id": "tamper", "name": "Rig the next game's equipment", "ok": 9, "caught": 24, "effect": "tamper"},
+   {"id": "look_ahead", "name": "Look at what's set out for later", "ok": 3, "caught": 10, "effect": "look_ahead"}]},
+  "fusebox": {"name": "THE FUSE BOX", "pos": [-2.2, -9.4], "r": 1.4, "actions": [
+   {"id": "flick_lights", "name": "Flick the lights", "ok": 3, "caught": 10, "effect": "distract"}]},
+  "pinata": {"name": "THE PIÑATA", "pos": [2.6, -4.4], "r": 1.6, "actions": [
+   {"id": "hit_pinata", "name": "Hit the piñata", "ok": 2, "caught": 8, "effect": "pinata", "per_round": true}]},
+  "stairs_door": {"name": "THE CELLAR DOOR", "pos": [-5.2, -9.4], "r": 1.4, "actions": [
+   {"id": "pick_stairs", "name": "Pick the lock (hairpin)", "ok": 6, "caught": 18, "effect": "unlock", "flag": "cellar", "needs": "hairpin", "hidden_if": "cellar"}]},
+  "kitchen": {"name": "THE BUTCHER'S BLOCK", "area": "kitchen", "pos": [-10.5, -6.0], "r": 2.2, "actions": [
+   {"id": "raid_kitchen", "name": "Raid the fridge", "ok": 3, "caught": 10, "effect": "find", "pool": "kitchen", "per_round": true},
+   {"id": "take_cleaver", "name": "Take a cleaver", "ok": 6, "caught": 16, "effect": "give", "item": "sabotage_kit", "once": true},
+   {"id": "spike_punch", "name": "Spike the punch", "ok": 10, "caught": 25, "effect": "spike", "once": true}]},
+  "freezer": {"name": "A FREEZER FULL OF SHOES", "area": "freezer", "pos": [-11.0, -11.5], "r": 2.2, "actions": [
+   {"id": "search_shoes", "name": "Search the shoes", "ok": 1, "caught": 4, "effect": "shoes"}]},
+  "coats": {"name": "THE COAT RACK", "area": "cloakroom", "pos": [-10.0, 1.5], "r": 2.2, "actions": [
+   {"id": "search_coats", "name": "Go through the pockets", "ok": 3, "caught": 12, "effect": "find", "pool": "coats", "per_round": true},
+   {"id": "rob_coat", "name": "Rob someone's coat", "ok": 7, "caught": 18, "effect": "rob", "target": true, "per_round": true}]},
+  "office": {"name": "THE MANAGER'S DESK", "area": "office", "pos": [10.0, -4.5], "r": 2.2, "actions": [
+   {"id": "read_minutes", "name": "Read the minutes", "ok": 5, "caught": 14, "effect": "minutes"},
+   {"id": "file_amendment", "name": "File an amendment (6 Teeth)", "ok": 6, "caught": 16, "effect": "amendment", "cost": 6, "per_round": true}]},
+  "cistern": {"name": "THE CISTERN", "area": "toilets", "pos": [10.0, 2.0], "r": 2.2, "actions": [
+   {"id": "cistern", "name": "Feel behind the cistern", "ok": 3, "caught": 8, "effect": "find", "pool": "cistern", "per_round": true}]},
+  "booth": {"name": "HIS FILES", "area": "booth", "pos": [0.0, 9.0], "r": 2.2, "actions": [
+   {"id": "read_file", "name": "Read the files", "ok": 8, "caught": 22, "effect": "read_file"},
+   {"id": "doctor_file", "name": "Rub out your own file", "ok": 12, "caught": 30, "effect": "doctor_file"},
+   {"id": "loosen_cage", "name": "Loosen your Cage", "ok": 14, "caught": 35, "effect": "loosen_cage"}]},
+  "lockers": {"name": "THE STAFF LOCKERS", "area": "staffroom", "pos": [4.5, -14.5], "r": 2.2, "actions": [
+   {"id": "open_locker", "name": "Open the locker with the name on", "ok": 4, "caught": 12, "effect": "locker", "per_round": true}]},
+  "boiler_door": {"name": "MAINTENANCE", "area": "corridor", "pos": [7.0, -11.1], "r": 1.4, "actions": [
+   {"id": "pick_boiler", "name": "Pick the lock (hairpin)", "ok": 6, "caught": 18, "effect": "unlock", "flag": "boiler", "needs": "hairpin", "hidden_if": "boiler"}]},
+  "boiler": {"name": "THE MACHINERY", "area": "boiler", "pos": [10.0, -10.3], "r": 2.2, "actions": [
+   {"id": "sabotage_machine", "name": "Sabotage someone's next game", "ok": 8, "caught": 22, "effect": "sabotage", "target": true, "per_round": true}]},
+  "nest": {"name": "THE RATS' NEST", "area": "cellar", "pos": [-5.2, -17.0], "r": 2.4, "actions": [
+   {"id": "cellar_nest", "name": "Reach into the rats' nest", "ok": 4, "caught": 12, "effect": "nest", "per_round": true},
+   {"id": "contraband", "name": "Search the crates", "ok": 6, "caught": 16, "effect": "find", "pool": "cellar", "per_round": true}]},
+  "till": {"name": "THE TILL", "area": "bar", "pos": [-6.25, 9.5], "r": 2.2, "actions": [
+   {"id": "rob_till", "name": "Open the till", "ok": 6, "caught": 16, "effect": "till", "per_round": true},
+   {"id": "drink", "name": "Pour yourself a drink", "ok": 2, "caught": 4, "effect": "drink"}]},
+  "van": {"name": "THE VAN", "area": "carpark", "pos": [-6.0, 15.0], "r": 2.6, "actions": [
+   {"id": "search_van", "name": "Search the back of the van", "ok": 5, "caught": 14, "effect": "find", "pool": "van", "per_round": true}]}
+ },
+ "pools": {
+  "coats": [["teeth", 3], ["hairpin", 3], ["alibi", 1], ["painkillers", 2], ["debt_note", 1], ["nothing", 2]],
+  "kitchen": [["antidote", 3], ["first_aid", 2], ["teeth", 1], ["poison", 2], ["nothing", 1]],
+  "cellar": [["loaded_die", 3], ["bullet", 1], ["lucky_foot", 2], ["teeth_big", 2], ["bite", 2]],
+  "cistern": [["counterfeit_teeth", 2], ["alibi", 1], ["loaded_die", 2], ["hairpin", 2], ["nothing", 2]],
+  "van": [["black_market_coupon", 2], ["counterfeit_teeth", 2], ["body_armour", 1], ["warp_tooth", 1], ["teeth_big", 2]]
+ }
+}

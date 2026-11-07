@@ -2,7 +2,7 @@ extends MgView
 ## Every arena game, drawn from its view (ArenaGame.arena_view): a metal plate on the table
 ## for the floor, and each object by kind: chairs, the belt and the grinder and its presses,
 ## pressure plates and crates, the corridor with its blades, doors, vent and the hooks,
-## holes and saws and chains, dart lanes and barriers, Dead Rats to pick up, ghosts' cold
+## holes and saws and chains, dart lanes and barriers, Teeth to pick up, ghosts' cold
 ## spots. The puppets walk where the view says.
 
 var nodes: Dictionary = {}      # key -> Node3D

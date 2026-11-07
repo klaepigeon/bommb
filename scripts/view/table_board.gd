@@ -12,10 +12,10 @@ const SIZE := Vector2(21.0, 14.4)
 const DOOR := Vector3(0, 0, -6.4)
 
 const INK_RED := Color("8a1a12")
-const RING := {"start": Color("2a6a3a"), "rats": Color("b08a2a"), "item": Color("2a4a8a"), "hazard": Color("8a1a12"),
+const RING := {"start": Color("2a6a3a"), "teeth": Color("b08a2a"), "item": Color("2a4a8a"), "hazard": Color("8a1a12"),
 	"note": Color("6a5a4a"), "clue": Color("6a5a4a"), "caller": Color("5a2a6a"), "steal": Color("a05a1a"),
 	"medic": Color("8a1a12"), "door": Color("3a2416")}
-const GLYPH := {"start": "GO", "rats": "$", "item": "?", "hazard": "!", "caller": "C", "steal": "&", "medic": "+",
+const GLYPH := {"start": "GO", "teeth": "$", "item": "?", "hazard": "!", "caller": "C", "steal": "&", "medic": "+",
 	"roulette": "BANG", "resurrect": "RISE", "black_market": "£", "poison": "XXX", "gamble": "2x", "punish": "!!"}
 
 var board: Array = []
@@ -135,7 +135,7 @@ func _sheet() -> void:
 	sub.font = load("res://assets/fonts/fell_italic.ttf")
 
 
-const SQUARE := {"start": Color("2a8a4a"), "rats": Color("e0a820"), "item": Color("3a6ac8"), "hazard": Color("c82a2a"),
+const SQUARE := {"start": Color("2a8a4a"), "teeth": Color("e0a820"), "item": Color("3a6ac8"), "hazard": Color("c82a2a"),
 	"note": Color("a07a5a"), "clue": Color("8a6ac0"), "caller": Color("7a2a8a"), "steal": Color("e07020"),
 	"medic": Color("e8e0d8"), "door": Color("5a3a24"), "roulette": Color("1a1a1a"), "resurrect": Color("d8d8f0"),
 	"black_market": Color("2a2a3a"), "poison": Color("6a9a2a"), "gamble": Color("c86aa8"), "punish": Color("6a0a0a"),

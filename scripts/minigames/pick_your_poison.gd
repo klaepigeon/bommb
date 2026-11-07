@@ -74,7 +74,7 @@ func resolve(revealed: Dictionary) -> bool:
 		notes.append("%s drank %s." % [core.p(s).name, core.status.name_of(what)])
 		if not harm:
 			fine.append(s)
-			rats[s] += 3
+			teeth[s] += 3
 	finish(fine, fine.is_empty() or fine.size() == revealed.size())
 	return true
 
