@@ -28,6 +28,7 @@ Audio="*res://scripts/autoload/audio.gd"
 Seats="*res://scripts/autoload/seats.gd"
 Net="*res://scripts/net/net.gd"
 Lighting="*res://scripts/visual/lamp_field.gd"
+Saves="*res://scripts/autoload/saves.gd"
 
 [display]
 

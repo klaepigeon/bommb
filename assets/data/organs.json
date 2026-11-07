@@ -1,0 +1,31 @@
+{
+ "_comment": "ORGAN TRAIL organs (OrganTrail reads these; add one here and it's in the game). stages: the order of the operation. decoys: what it can be mistaken for (locate). path: the incision (field coords 0..1, the patient's open torso seen from above), tolerance: how far off the line you can be. protected: circles you mustn't cut (x, y, r). connections: how many to separate; nerves: how many of those are protected (only the patient can feel which). vessels: [sizes] to clamp; pulse: seconds per heartbeat (the clamp window follows it). order: how many connections to cut in order (the chart only the patient can see). band: the extraction force window [lo, hi] (0..100); pull: how much has to come out (seconds in the band); breath: extraction only works on the out-breath (lungs). lobes: extracted in parts. consequence: what it costs the patient afterwards.",
+ "organs": {
+  "heart": {"name": "THE HEART", "look": "fist-sized, dark red, it's still going", "side": "CENTRE", "stages": ["locate", "incise", "separate", "clamp", "disconnect", "extract", "present"],
+   "decoys": [["a lung", "spongy, pink", "LEFT"], ["the liver", "big, brown, smooth", "RIGHT"]], "path": [[0.42, 0.25], [0.5, 0.45], [0.58, 0.25]], "tolerance": 0.06, "protected": [[0.5, 0.33, 0.04]],
+   "connections": 4, "nerves": 1, "vessels": ["LARGE", "LARGE", "SMALL", "LARGE"], "pulse": 0.8, "order": 4, "band": [40, 70], "pull": 4.0, "consequence": "kill_unless_won"},
+  "brain": {"name": "THE BRAIN", "look": "grey, folded, warm", "side": "TOP", "stages": ["locate", "incise", "separate", "disconnect", "extract", "present"],
+   "decoys": [["a sponge", "grey, folded, cold", "TOP"]], "path": [[0.3, 0.12], [0.4, 0.06], [0.6, 0.06], [0.7, 0.12]], "tolerance": 0.04, "protected": [[0.5, 0.08, 0.03]],
+   "connections": 5, "nerves": 2, "vessels": [], "pulse": 1.0, "order": 3, "band": [25, 40], "pull": 6.0, "consequence": "kill_unless_won"},
+  "kidney": {"name": "THE LEFT KIDNEY", "look": "bean-shaped, the size of a fist", "side": "LEFT", "stages": ["locate", "incise", "separate", "clamp", "extract", "present"],
+   "decoys": [["the right kidney", "bean-shaped, the size of a fist", "RIGHT"], ["the spleen", "bean-ish, purple", "LEFT"]], "path": [[0.25, 0.5], [0.3, 0.65]], "tolerance": 0.07, "protected": [[0.28, 0.58, 0.035]],
+   "connections": 3, "nerves": 1, "vessels": ["LARGE", "SMALL"], "pulse": 0.9, "order": 0, "band": [35, 75], "pull": 3.0, "consequence": "torso"},
+  "liver": {"name": "THE LIVER", "look": "big, brown, smooth, heavy", "side": "RIGHT", "stages": ["locate", "incise", "separate", "clamp", "extract", "extract", "extract", "present"],
+   "decoys": [["the stomach", "a bag, pinkish", "LEFT"]], "path": [[0.55, 0.42], [0.7, 0.45], [0.8, 0.55]], "tolerance": 0.08, "protected": [],
+   "connections": 4, "nerves": 1, "vessels": ["LARGE", "LARGE", "SMALL"], "pulse": 0.9, "order": 0, "band": [45, 85], "pull": 2.5, "lobes": 3, "consequence": "poison:necrosis"},
+  "lung": {"name": "THE LEFT LUNG", "look": "pink, spongy, going in and out", "side": "LEFT", "stages": ["locate", "incise", "separate", "clamp", "extract", "present"],
+   "decoys": [["the right lung", "pink, spongy, going in and out", "RIGHT"]], "path": [[0.3, 0.22], [0.25, 0.4], [0.3, 0.55]], "tolerance": 0.07, "protected": [[0.27, 0.32, 0.03]],
+   "connections": 3, "nerves": 1, "vessels": ["SMALL", "SMALL", "LARGE"], "pulse": 0.75, "order": 0, "band": [30, 65], "pull": 3.5, "breath": true, "consequence": "torso"},
+  "stomach": {"name": "THE STOMACH", "look": "a bag, pinkish, it gurgles", "side": "LEFT", "stages": ["locate", "incise", "separate", "extract", "present"],
+   "decoys": [["the liver", "big, brown, smooth", "RIGHT"]], "path": [[0.35, 0.5], [0.45, 0.62], [0.55, 0.6]], "tolerance": 0.09, "protected": [],
+   "connections": 4, "nerves": 0, "vessels": [], "pulse": 1.0, "order": 0, "band": [30, 80], "pull": 3.0, "messy": true, "consequence": "poison:hunger"},
+  "eye": {"name": "THE LEFT EYE", "look": "white, wet, looking at you", "side": "LEFT", "stages": ["locate", "separate", "disconnect", "extract", "present"],
+   "decoys": [["the right eye", "white, wet, looking at you", "RIGHT"]], "path": [], "tolerance": 0.03, "protected": [],
+   "connections": 3, "nerves": 1, "vessels": [], "pulse": 1.0, "order": 3, "band": [15, 28], "pull": 2.5, "consequence": "lose_eye"}
+ },
+ "instruments": {"locate": "HANDS", "incise": "SCALPEL", "separate": "RETRACTOR", "clamp": "CLAMP", "disconnect": "SCISSORS", "extract": "FORCEPS", "present": "TRAY"},
+ "tray": ["SCALPEL", "RETRACTOR", "CLAMP", "SCISSORS", "FORCEPS", "SYRINGE", "CAUTERY", "TRAY", "HANDS"],
+ "callouts": {"hold_still": "HOLD STILL!", "fading": "I'M LOSING CONSCIOUSNESS!", "hurts": "THAT HURTS!", "wrong_tool": "WRONG INSTRUMENT!", "keep_going": "KEEP GOING!", "stop": "STOP!", "wrong": "SOMETHING'S WRONG!", "fine": "I'M FINE!", "numb": "I CAN'T FEEL ANYTHING!", "doing_it_wrong": "YOU'RE DOING IT WRONG!", "next_1": "NEXT: 1", "next_2": "NEXT: 2", "next_3": "NEXT: 3", "next_4": "NEXT: 4", "next_5": "NEXT: 5"},
+ "sabotage": {"steal": {"name": "STEAL AN INSTRUMENT", "cost": 5, "cd": 15}, "distract": {"name": "THROW A SPARE INSTRUMENT", "cost": 2, "cd": 10}, "swap_jars": {"name": "SWAP THEIR JARS", "cost": 4, "once": true}, "malfunction": {"name": "JAM THEIR TOOL", "cost": 6, "cd": 20}},
+ "modifiers": {"swap_roles": "Halfway through, surgeon and patient swap.", "hard_anaesthesia": "One patient's anaesthetic is wearing off fast.", "inferior_tools": "One team's instruments are blunt.", "shared_complication": "Complications hit both tables at once.", "time_limit": "Ninety seconds. Then the lights go off.", "secret_patient": "One patient has been promised something if their surgeon fails.", "reward_survival": "A bonus if your patient lives.", "reward_clean": "A bonus for a clean job.", "change_organ": "Halfway through, he'll ask for something else."}
+}

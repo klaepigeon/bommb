@@ -81,12 +81,16 @@ func safe_moment(core: MatchCore) -> bool:
 
 
 func to_save() -> Dictionary:
-	return {"greed": greed, "coop": coop, "nerve": nerve, "perception": perception, "explore": explore, "crook": crook, "skill": skill}
+	return {"greed": greed, "coop": coop, "nerve": nerve, "perception": perception, "explore": explore, "crook": crook, "skill": skill,
+		"rng": str(rng.state)}
 
 
 func load_save(d: Dictionary) -> void:
 	for k in d.keys():
-		set(k, float(d[k]))
+		if k == "rng":
+			rng.state = int(str(d[k]))
+		else:
+			set(k, float(d[k]))
 
 
 ## Whoever's winning (Dead Rats, then Teeth), among the living others.
@@ -170,7 +174,8 @@ func board(core: MatchCore, dt: float) -> void:
 		return
 	var me: Dictionary = v.players[seat]
 	if turn.sub == "prompt":
-		_answer(core, v, me, turn.prompt)
+		if not (turn.prompt as Dictionary).is_empty():
+			_answer(core, v, me, turn.prompt)
 		return
 	if turn.sub != "pre":
 		return
@@ -375,6 +380,16 @@ func _answer(core: MatchCore, v: Dictionary, me: Dictionary, pr: Dictionary) -> 
 			if pick == "" and not (pr.options as Array).is_empty():
 				pick = str(pr.options[0])
 			core.action(seat, {"t": "answer", "rule": pick})
+		"lever":
+			# change something: open the way I'm going (or, if I'm the type, shut someone else's)
+			var opts: Array = (pr.options as Array).filter(func(o): return not o.now)
+			if opts.is_empty():
+				opts = pr.options
+			var pick: Dictionary = opts[rng.randi_range(0, opts.size() - 1)]
+			for o in opts:
+				if str(o.value) in ["open", "high"] and coop >= 0.3:
+					pick = o
+			core.action(seat, {"t": "answer", "gate": pick.gate, "value": pick.value})
 		_:
 			var r := rival(core, seat)
 			core.action(seat, {"t": "answer", "target": r if pr.options.has(r) else pr.options[0]})
@@ -544,6 +559,9 @@ func _pick_goal(core: MatchCore, not_this := "") -> void:
 		pref.append_array(["drain", "vending", "till", "nest", "van", "coats"])
 	if explore > 0.5:
 		pref.append_array(["freezer", "panel", "phone", "arcade", "office", "stairs_door", "kitchen", "pinata"])
+	if explore > 0.6 or coop > 0.6:
+		pref.append_array(["esc_cake", "esc_balloons", "esc_photos", "esc_keypad_a", "esc_conveyor", "esc_switches", "esc_packages",
+			"esc_office", "esc_exit_pad", "esc_lever_l", "esc_lever_r"])
 	if pref.is_empty():
 		pref = fac.things.keys()
 	var from := me.pos if me.away() else fac.seat_pos(seat) * 1.25

@@ -28,6 +28,7 @@ var _drain_t := 0.0
 var locker_name := -1               # whose name is on the locker this round
 var arcade: Dictionary = {}         # seat -> {lit_at, t}
 var walk_speed := 3.2
+var escape: EscapeRoom
 
 
 func _init(c: MatchCore) -> void:
@@ -39,6 +40,7 @@ func _init(c: MatchCore) -> void:
 	building = Building.new(Content.db)
 	_open_doors()
 	responses = CallerResponseManager.new(c)
+	escape = EscapeRoom.new(c, self)
 	_next_ring = core.rng.randf_range(20.0, 45.0)
 
 
@@ -149,7 +151,7 @@ func walk(seat: int, a: Dictionary) -> void:
 
 func sit(seat: int, forced: bool, why: String) -> void:
 	var p := core.p(seat)
-	if not p.away():
+	if not p.away() or p.location == "escaped":
 		return
 	p.location = "table"
 	p.away_t = 0.0
@@ -164,7 +166,7 @@ func sit(seat: int, forced: bool, why: String) -> void:
 
 func tick(dt: float) -> void:
 	for p in core.players:
-		if not p.away():
+		if not p.away() or p.location == "escaped":
 			continue
 		p.away_t += dt
 		if p.away_t >= p.away_limit and not p.away_late:
@@ -189,6 +191,7 @@ func tick(dt: float) -> void:
 	if _drain_t >= 15.0:
 		_drain_t = 0.0
 		drain_teeth = mini(8, drain_teeth + 1)
+	escape.tick(dt)
 	for s in arcade.keys():
 		arcade[s].t += dt
 		if arcade[s].t > float(arcade[s].lit_at) + 1.2:
@@ -290,6 +293,9 @@ func _found(seat: int) -> void:
 
 func _effect(seat: int, id: String, a: Dictionary, target: int) -> void:
 	var p := core.p(seat)
+	if str(a.effect).begins_with("esc_"):
+		escape.effect(seat, a)
+		return
 	match str(a.effect):
 		"find":
 			_find(seat, str(a.pool))
@@ -592,7 +598,7 @@ func view_for(seat: int) -> Dictionary:
 
 func to_save() -> Dictionary:
 	return {"state": state.duplicate(true), "once": used_once.duplicate(), "drain": drain_teeth, "locker": locker_name,
-		"spiked": spiked, "spiker": spiker, "late": responses.late_count}
+		"spiked": spiked, "spiker": spiker, "late": responses.late_count, "escape": escape.to_save()}
 
 
 func load_save(d: Dictionary) -> void:
@@ -606,4 +612,5 @@ func load_save(d: Dictionary) -> void:
 	spiked = bool(d.get("spiked", false))
 	spiker = int(d.get("spiker", -1))
 	responses.late_count = int(d.get("late", 0))
+	escape.load_save(d.get("escape", {}))
 	_open_doors()

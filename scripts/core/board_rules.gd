@@ -112,6 +112,10 @@ func tick(dt: float) -> void:
 				sub_t = 0.0
 				_step()
 		"prompt":
+			if prompt.is_empty():
+				push_warning("empty prompt: " + str(walked) + " " + str(core.log_lines.slice(-4)))
+				_after()
+				return
 			if not core.is_ai(s) and sub_t > core._wait(PROMPT_LIMIT):
 				action(s, default_answer())
 		"missed":
@@ -129,7 +133,7 @@ func default_answer() -> Dictionary:
 			return {"t": "answer", "yes": false}
 		"path":
 			return {"t": "answer", "to": int(prompt.options[0].to)}
-		"shop", "gamble", "gavel", "veto":
+		"shop", "gamble", "gavel", "veto", "lever":
 			return {"t": "answer", "done": true}
 		"duel":
 			return {"t": "answer", "target": prompt.options[0], "wager": 0}
@@ -245,6 +249,7 @@ func _ask(kind: String, options: Array, extra := {}, resume := "after") -> void:
 func _resume() -> void:
 	var r := str(prompt.get("resume", "after"))
 	prompt = {}
+	sub = "resolving"
 	match r:
 		"move":
 			if steps > 0:
@@ -383,6 +388,12 @@ func _land() -> void:
 		core.say("cage_board", {"name": name})
 		kind = "punish"
 	var mult := 3 if core.final_round() else 1
+	if kind in ["signpost", "floodgate", "switch", "rotator", "control", "conveyor", "wheel", "death", "bonus"]:
+		core.say("space_" + kind, {"name": name})
+		core.machines.land(s, kind)
+		if sub != "prompt":
+			_after()
+		return
 	match kind:
 		"start":
 			core.economy.award(s, 3 * mult, "start")
@@ -467,6 +478,9 @@ func _land() -> void:
 		"hidden":
 			_ask("hidden", [true, false])
 			return
+		"surgery":
+			core.say("space_surgery", {"name": name})
+			core.call_special("organ_trail", s)
 		"rulebook":
 			core.say("space_rulebook", {"name": name})
 			core.rulebook.add_random(s)
@@ -527,6 +541,21 @@ func open_rule_prompt(s: int, kind: String, resume := "") -> void:
 	for id in opts:
 		named.append({"id": id, "name": core.rulebook.catalogue[id].name, "desc": core.rulebook.catalogue[id].desc})
 	_ask(kind, opts, {"rules": named}, resume)
+
+
+## Pull a lever on the Control System (or a signpost, a floodgate): which way.
+func ask_lever(s: int, gate: String) -> void:
+	var gs: Array = [gate] if gate != "" else core.graph.gates.keys().filter(func(x): return x != "rotator")
+	var opts := []
+	for gname in gs:
+		if not core.graph.gates.has(gname):
+			continue
+		for v in core.graph.gate_values(gname):
+			opts.append({"gate": gname, "value": str(v), "name": str(core.graph.gate_defs[gname].get("name", gname)), "now": str(core.graph.gates[gname]) == str(v),
+				"desc": core.machines._describe(gname, str(v))})
+	if opts.is_empty():
+		return
+	_ask("lever", opts)
 
 
 func offer_gamble(s: int) -> void:
@@ -639,6 +668,16 @@ func _answer(seat: int, a: Dictionary) -> void:
 				core.rulebook.repeal(id, "vetoed by " + pl.name)
 			elif not a.get("done", false) and not (prompt.options as Array).is_empty():
 				core.rulebook.repeal(str(prompt.options[0]), "vetoed by " + pl.name)
+			_resume()
+		"lever":
+			var gname := str(a.get("gate", ""))
+			var v := str(a.get("value", ""))
+			var ok := false
+			for o in prompt.options:
+				if o.gate == gname and o.value == v:
+					ok = true
+			if ok:
+				core.machines.set_gate(gname, v, seat, "a lever")
 			_resume()
 		"caller":
 			_resume()
@@ -787,6 +826,8 @@ func caller_choice(s: int) -> void:
 	core.say("space_caller", {"name": pl.name})
 	core.emit({"e": "caller_table", "seat": s})
 	var r := core.rng.randi_range(0, 4)
+	if core.rng.randf() < 0.12 and core.living().size() >= 4:
+		r = 5
 	if core.items.consume_passive(s, "bribe_token", "his mood"):
 		r = [0, 3, 4][core.rng.randi_range(0, 2)]
 	match r:
@@ -807,6 +848,9 @@ func caller_choice(s: int) -> void:
 		4:
 			core.toast("He leans over the table and looks at %s for a long time. Then: 'An amendment.'" % pl.name)
 			core.rulebook.add_random(-1)
+		5:
+			core.toast("He looks at %s, and then at the operating theatre." % pl.name)
+			core.call_special("organ_trail", -1)
 
 
 func _steal(s: int, o: int) -> void:

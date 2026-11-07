@@ -25,6 +25,7 @@
    {"id": "trade", "name": "FORCED TRADE", "do": "trade", "text": "%s has to swap something with someone. No refunds."},
    {"id": "gamble_offer", "name": "A GAMBLING OPPORTUNITY", "do": "gamble", "text": "A man with no face offers %s a bet."},
    {"id": "caller_steps_in", "name": "CALLER INTERVENTION", "do": "caller", "text": "He takes a personal interest in %s."},
+   {"id": "emergency_surgery", "name": "AN EMERGENCY SURGICAL COMPETITION", "do": "surgery", "text": "A siren. Two operating tables are wheeled out. %s gets to watch, for now."},
    {"id": "special_game", "name": "SPECIAL ATTRACTION", "do": "bonus_game", "text": "A bonus game is wheeled out for after the main event."},
    {"id": "rat_moves", "name": "THE RAT MOVES", "do": "rat_move", "text": "The Dead Rat has been moved. Nobody saw who by."},
    {"id": "board_change", "name": "RENOVATIONS", "do": "alter", "text": "A square near %s has been repainted."}

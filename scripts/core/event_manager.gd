@@ -152,6 +152,8 @@ func _apply(seat: int, ev: Dictionary) -> void:
 			core.rules.caller_choice(seat)
 		"bonus_game":
 			core.queue_minigame("bonus", core.living())
+		"surgery":
+			core.call_special("organ_trail", -1)
 		"alter":
 			core.alter_space(seat)
 		"injury":

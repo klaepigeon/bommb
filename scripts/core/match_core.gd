@@ -84,6 +84,7 @@ var fate: EventManager
 var awards: AwardManager
 var victory: VictoryManager
 var cutscenes: CutsceneManager
+var machines: BoardMachines
 var pending_encounter := ""          # "roulette" | "battle": a square has called it for this round
 var _next_mg := ""
 var _last_mg := ""
@@ -99,7 +100,7 @@ func setup(seat_list: Array, match_seed: int = 0, opts := {}) -> void:
 	max_rounds = int(LENGTHS.get(turns, turns)) if turns is String else int(turns)
 	max_rounds = clampi(max_rounds, 1, 60)
 	mode = str(opts.get("mode", "classic"))
-	graph = BoardGraph.load_board(str(opts.get("board", "res://assets/data/board.json")))
+	graph = BoardGraph.load_board(str(opts.get("board", "res://assets/data/murderland.json")))
 	board = graph.nodes
 	board_name = graph.name
 	for s in seat_list:
@@ -125,6 +126,7 @@ func setup(seat_list: Array, match_seed: int = 0, opts := {}) -> void:
 	awards = AwardManager.new(self)
 	victory = VictoryManager.new(self)
 	cutscenes = CutsceneManager.new(self)
+	machines = BoardMachines.new(self)
 	rules = BoardRules.new(self)
 	victory.setup(mode)
 	rat_space = graph.rat_spots[rng.randi_range(0, graph.rat_spots.size() - 1)] if not graph.rat_spots.is_empty() else -1
@@ -498,6 +500,7 @@ func _start_round() -> void:
 	shops.restock()
 	items.round_tick()
 	facility.new_round()
+	machines.round_start()
 	if facility.spiked:
 		facility.spiked = false
 		say("punch")
@@ -566,6 +569,17 @@ func queue_minigame(kind: String, seats: Array, id := "", wager := 0, by := -1) 
 	emit({"e": "queued", "kind": kind, "seats": seats})
 
 
+## A special event (ORGAN TRAIL) is called for, after this round's turns.
+func call_special(id: String, by := -1) -> void:
+	for e in mg_queue:
+		if str(e.id) == id:
+			return
+	queue_minigame("special", [], id, 0, by)
+	emit({"e": "special", "id": id, "by": by})
+	say("special_" + id)
+	toast("THE CALLER: \"A SPECIAL EVENT! After the turns: %s.\"" % MinigameRegistry.title_of(id))
+
+
 func board_round_done() -> void:
 	if living().is_empty():
 		_end("dead")
@@ -611,6 +625,10 @@ func _start_entry(e: Dictionary) -> bool:
 				return false
 			if id == "":
 				id = _pick_minigame(2, "duel")
+		"special":
+			if not MinigameRegistry.fits(id, seats.size()):
+				toast("%s needs %d of you at the table. Not tonight." % [MinigameRegistry.title_of(id), int(MinigameRegistry.GAMES.get(id, {}).get("min", 4))])
+				return false
 	if id == "" or seats.size() < int(MinigameRegistry.GAMES.get(id, {}).get("min", 2)):
 		return false
 	mg_entry = e.duplicate(true)
@@ -634,7 +652,7 @@ func _start_entry(e: Dictionary) -> bool:
 	mg_count += 1
 	mg = MinigameRegistry.create(id, self, seats, level)
 	_set_phase("mg_intro")
-	emit({"e": "minigame", "id": mg_id, "title": mg.title(), "level": level, "kind": kind, "pool": mg_entry.pool,
+	emit({"e": "minigame", "id": mg_id, "title": mg.title(), "level": level, "kind": kind, "pool": mg_entry.pool, "presentation": MinigameRegistry.presentation(id),
 		"wager_rule": mg_entry.get("wager_rule", ""), "seats": seats})
 	say("minigame_" + kind if kind != "main" else "minigame", {"game": mg.title(), "n": mg_entry.pool})
 	return true
@@ -877,12 +895,14 @@ func _end(kind: String) -> void:
 	ending = kind
 	var st := victory.standings()
 	var winner := -1
+	var winners: Array = st.filter(func(x): return int(x.place) == 1).map(func(x): return int(x.seat))
 	if kind == "escape":
-		winner = -2
+		winners = facility.escape.escaped.keys() if not facility.escape.escaped.is_empty() else living()
+		winner = int(winners[0]) if not winners.is_empty() else -1
 	elif not st.is_empty():
 		winner = int(st[0].seat)
 	ending_info = {"kind": kind, "round": round_n, "max_rounds": max_rounds, "standings": st, "winner": winner,
-		"winners": st.filter(func(x): return int(x.place) == 1).map(func(x): return int(x.seat)),
+		"winners": winners, "escaped": facility.escape.escaped.keys(),
 		"awards": awards.given.duplicate(true), "objectives": victory.results.duplicate(true),
 		"subversions": subversions.duplicate(), "economy": economy.flow.duplicate(), "draws": draws}
 	match kind:
@@ -914,7 +934,7 @@ func view_for(seats: Array) -> Dictionary:
 		"phase": phase, "phase_t": phase_t, "round": round_n, "max_rounds": max_rounds, "final": final_round(), "mode": mode,
 		"players": pv, "board_name": board_name, "shared_code": shared_code.duplicate(), "key_space": key_space,
 		"unrest": unrest, "ending": ending, "ending_info": ending_info, "ceremony": ceremony,
-		"turn": rules.view() if rules else {}, "mg_id": mg_id, "mg_entry": mg_entry.duplicate(true),
+		"turn": rules.view() if rules else {}, "mg_id": mg_id, "mg_entry": mg_entry.duplicate(true), "presentation": MinigameRegistry.presentation(mg_id) if mg_id != "" else "MEAT_PUPPET",
 		"mg": mg.view_for(seats) if mg else {}, "door_push": door_push.keys(),
 		"ready": ready_seats.keys(), "you": seats,
 		"attention": suspicion.view(), "ghosts": ghosts(), "resurrect_cost": economy.resurrect_cost(),
@@ -926,7 +946,7 @@ func view_for(seats: Array) -> Dictionary:
 		"cheats": cheats.available(me, "board") if me >= 0 else [],
 		"flags": status.view_flags(me) if me >= 0 else {},
 		"next_game": next_minigame() if me >= 0 and str(players[me].known.get("next_game", "")) != "" and not status.has(me, "memory") else "",
-		"cutscene": cutscenes.view(),
+		"cutscene": cutscenes.view(), "machines": machines.view(),
 		"finale": {"awards": awards.given.duplicate(true), "objectives": victory.results.duplicate(true), "standings": victory.standings()} if phase in ["finale", "ending"] else {},
 	}
 
@@ -955,7 +975,7 @@ func snapshot() -> Dictionary:
 		"key_space": key_space, "key_exists": key_exists, "unrest": unrest, "subversions": Array(subversions), "mg_count": mg_count,
 		"mg_history": mg_history.duplicate(), "last_mg": _last_mg, "next_mg": _next_mg, "draws": draws, "leader": leader_seat,
 		"rulebook": rulebook.to_save(), "shops": shops.to_save(), "victory": victory.to_save(), "fate": fate.to_save(),
-		"facility": facility.to_save(), "cage": cage.to_save(), "cheats_once": cheats.used_once.duplicate(),
+		"facility": facility.to_save(), "machines": machines.to_save(), "cage": cage.to_save(), "cheats_once": cheats.used_once.duplicate(),
 		"economy": {"house": economy.house_pile, "flow": economy.flow.duplicate()}, "log": log_lines.slice(maxi(0, log_lines.size() - 60)),
 	}
 
@@ -1003,6 +1023,7 @@ static func from_snapshot(seat_list: Array, d: Dictionary) -> MatchCore:
 	c.victory.load_save(d.get("victory", {}))
 	c.fate.load_save(d.get("fate", []))
 	c.facility.load_save(d.get("facility", {}))
+	c.machines.load_save(d.get("machines", {}))
 	c.cage.load_save(d.get("cage", {}))
 	c.cheats.used_once = d.get("cheats_once", {}).duplicate()
 	c.economy.house_pile = int(d.get("economy", {}).get("house", 30))

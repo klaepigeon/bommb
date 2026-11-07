@@ -9,6 +9,7 @@ extends RefCounted
 ##   core: one of the ten LAST CALL 3 v0.2.5 games (picked more often); the rest are the
 ##     extra catalogue from v0.2, still in the rotation.
 ##   encounter: only a board square calls it (Russian Roulette). retired: loads by id only.
+##   presentation: MEAT_PUPPET (the default: every ordinary game) | FULL_CHARACTER | CINEMATIC | CUSTOM.
 
 const GAMES := {
 	# --- the ten -----------------------------------------------------------------------
@@ -31,6 +32,8 @@ const GAMES := {
 	"confession": {"script": "res://scripts/minigames/confession.gd", "view": "res://scripts/view/mg_choice_view.gd", "format": "ffa", "min": 3, "title": "CONFESSION"},
 	"consensus": {"script": "res://scripts/minigames/consensus.gd", "view": "res://scripts/view/mg_choice_view.gd", "format": "ffa", "min": 2, "title": "THE CONSENSUS"},
 	"hot_potato": {"script": "res://scripts/minigames/hot_potato.gd", "view": "res://scripts/view/mg_potato_view.gd", "format": "coop", "min": 2, "title": "HOT POTATO"},
+	# --- special events (never in the rotation; a square, an event or the Caller calls them) ---
+	"organ_trail": {"script": "res://scripts/minigames/organ_trail.gd", "view": "res://scripts/view/mg_organ_view.gd", "format": "2v2", "min": 4, "max": 4, "title": "ORGAN TRAIL", "encounter": true, "special": true, "presentation": "FULL_CHARACTER"},
 	# --- encounters, retired ----------------------------------------------------------------
 	"roulette": {"script": "res://scripts/minigames/roulette.gd", "view": "res://scripts/view/mg_roulette_view.gd", "format": "special", "min": 2, "title": "RUSSIAN ROULETTE", "encounter": true},
 	"musical_chairs": {"script": "res://scripts/minigames/musical_chairs.gd", "view": "res://scripts/view/mg_chairs_view.gd", "format": "ffa", "min": 2, "title": "MUSICAL CHAIRS", "retired": true},
@@ -60,6 +63,12 @@ static func eligible(n: int, fmt := "") -> Array:
 			return GAMES[k].format == "ffa"
 		# the round's main game is never a duel unless there are only two of you
 		return GAMES[k].format != "duel" or n == 2)
+
+
+## How a game is shown: every ordinary minigame is played by the meat puppets; special
+## events say otherwise (declared here, never guessed from the category).
+static func presentation(game_id: String) -> String:
+	return str(GAMES.get(game_id, {}).get("presentation", "MEAT_PUPPET"))
 
 
 static func title_of(game_id: String) -> String:
