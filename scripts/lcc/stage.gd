@@ -301,10 +301,10 @@ func set_fog(col: Color, density: float) -> void:
 ## The look of the whole game: a filthy bathroom under one buzzing tube. Drained colour,
 ## bile-green mids, crushed blacks; blood keeps its red.
 func saw_look() -> void:
-	post.set_shader_parameter("saw", 0.85)
-	post.set_shader_parameter("saturation", 0.55)
+	post.set_shader_parameter("saw", 0.4)
+	post.set_shader_parameter("saturation", 0.95)
 	post.set_shader_parameter("brightness", 1.02)
-	post.set_shader_parameter("contrast", 1.22)
+	post.set_shader_parameter("contrast", 1.15)
 	post.set_shader_parameter("vignette", 0.55)
 	post.set_shader_parameter("hatch", 0.25)
 	post.set_shader_parameter("ink_lines", 0.7)
@@ -315,7 +315,7 @@ func party_look() -> void:
 	var e := env.environment
 	e.background_color = Color("0b0d09")
 	e.ambient_light_color = Color("a8b090")
-	e.ambient_light_energy = 0.8
+	e.ambient_light_energy = 1.0
 	e.fog_light_color = Color("1e2418")
 	e.fog_density = 0.014
 	saw_look()

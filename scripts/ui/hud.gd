@@ -24,6 +24,8 @@ var toast_box: VBoxContainer
 var actions: VBoxContainer
 var modal: PanelContainer
 var modal_box: VBoxContainer
+var modal_scroll: ScrollContainer
+var modal_footer: HBoxContainer
 var card: PanelContainer
 var card_box: VBoxContainer
 var controls_box: HBoxContainer
@@ -124,14 +126,22 @@ func _ready() -> void:
 	modal = PartyUi.panel(PartyUi.CREAM, PartyUi.INK, 28)
 	modal.visible = false
 	root.add_child(modal)
-	var ms := ScrollContainer.new()
-	ms.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	ms.custom_minimum_size = Vector2(700, 300)
-	modal.add_child(ms)
+	var mcol := PartyUi.vbox(8)
+	modal.add_child(mcol)
+	modal_scroll = ScrollContainer.new()
+	modal_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	modal_scroll.custom_minimum_size = Vector2(700, 120)
+	mcol.add_child(modal_scroll)
 	modal_box = PartyUi.vbox(10)
 	modal_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	modal_box.mouse_filter = Control.MOUSE_FILTER_PASS
-	ms.add_child(modal_box)
+	modal_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	modal_scroll.add_child(modal_box)
+	# always on screen, never scrolled away: DONE / BACK live here
+	modal_footer = PartyUi.hbox(10)
+	modal_footer.alignment = BoxContainer.ALIGNMENT_CENTER
+	mcol.add_child(modal_footer)
+	modal_box.resized.connect(_fit_modal)
+	modal.visibility_changed.connect(_fit_modal)
 	card = PartyUi.panel(PartyUi.CREAM, PartyUi.INK, 30)
 	card.visible = false
 	root.add_child(card)
@@ -152,6 +162,7 @@ func _ready() -> void:
 	root.add_child(cutscene_lbl)
 	look_btn = PartyUi.button("LOOK UP", func(): look_toggled.emit(), PartyUi.TURQ, 150.0, 20)
 	root.add_child(look_btn)
+	root.move_child(top, -1)   # the menu button stays tappable over any panel
 	Ui.changed.connect(_layout)
 	_layout()
 
@@ -204,7 +215,7 @@ func _layout() -> void:
 	facility_panel.custom_minimum_size = Vector2(400, 0) * PartyUi.k()
 	organ_panel.position = Vector2(vp.x * 0.5 - 330 * PartyUi.k(), m.position.y + 70)
 	organ_panel.custom_minimum_size = Vector2(660, 0) * PartyUi.k()
-	modal.position = vp * 0.5 - Vector2(380, 230) * PartyUi.k()
+	_fit_modal.call_deferred()
 	card.set_anchors_preset(Control.PRESET_CENTER)
 	card.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	card.grow_vertical = Control.GROW_DIRECTION_BOTH
@@ -217,6 +228,24 @@ func _layout() -> void:
 	look_btn.position = Vector2(m.position.x, vp.y - m.size.y - 70 * PartyUi.bk()) if right else Vector2(vp.x - m.size.x - 160, vp.y - m.size.y - 70 * PartyUi.bk())
 
 
+## The action column sits above the minigame controls when there are any, never over them.
+func _stack_actions() -> void:
+	var vp := root.get_viewport_rect().size
+	var m: Rect2 = Ui.margins
+	var need := actions.get_combined_minimum_size()
+	var h := maxf(need.y, 10.0)
+	var bottom := vp.y - m.size.y
+	var ctl_h := 0.0
+	for c in controls_box.get_children():
+		if c is Control and (c as Control).visible:
+			ctl_h = maxf(ctl_h, (c as Control).get_combined_minimum_size().y)
+	if ctl_h > 0.0:
+		bottom = vp.y - m.size.y - ctl_h - 12.0
+	actions.size = Vector2(maxf(need.x, 360.0 * PartyUi.bk()), h)
+	var right := not Ui.left_handed
+	actions.position = Vector2(vp.x - m.size.x - actions.size.x if right else m.position.x, bottom - h)
+
+
 func _corner(c: Control, right: bool, sz: Vector2, m: Rect2) -> void:
 	var vp := root.get_viewport_rect().size if root.is_inside_tree() else Vector2(1280, 720)
 	c.size = sz
@@ -224,7 +253,7 @@ func _corner(c: Control, right: bool, sz: Vector2, m: Rect2) -> void:
 
 
 func _card_ui(i: int) -> Dictionary:
-	var p := PartyUi.panel(PartyUi.CREAM, PartyUi.INK, 16)
+	var p := PartyUi.panel(PartyUi.CREAM.lerp(PartyUi.seat_colour(i), 0.3), PartyUi.INK, 16)
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var h := PartyUi.hbox(8)
 	p.add_child(h)
@@ -240,8 +269,8 @@ func _card_ui(i: int) -> Dictionary:
 	nm.autowrap_mode = TextServer.AUTOWRAP_OFF
 	nm.clip_text = true
 	var money := PartyUi.hbox(6)
-	var teeth := PartyUi.chip("0 TEETH", PartyUi.CREAM.darkened(0.05), 15)
-	var rats := PartyUi.chip("0 DEAD RATS", PartyUi.YELLOW, 15)
+	var teeth := PartyUi.chip("0 TEETH", PartyUi.CREAM, 16)
+	var rats := PartyUi.chip("0 DEAD RATS", PartyUi.YELLOW, 16)
 	money.add_child(teeth)
 	money.add_child(rats)
 	var chips := PartyUi.flow(4)
@@ -258,13 +287,14 @@ func _card_ui(i: int) -> Dictionary:
 func update(v: Dictionary, local_seats: Array, delta: float) -> void:
 	view = v
 	local = local_seats
+	_stack_actions.call_deferred()
 	if v.is_empty():
 		return
 	for i in 4:
 		(cards[i].root as Control).visible = i < v.players.size()
 		if i < v.players.size():
 			_fill_card(cards[i], v.players[i], v)
-	_typed += delta * 45.0
+	_typed += delta * 110.0
 	dialog_text.text = _typing.substr(0, int(_typed))
 	_top(v)
 	_status(v)
@@ -427,6 +457,18 @@ func _action_signature(v: Dictionary) -> String:
 		str(v.get("ready", []).has(me)) + str(v.get("ghosts", [])) + str(v.get("cheats", []).size())]
 
 
+## The modal fits its content up to most of the screen, centred; past that it scrolls.
+func _fit_modal() -> void:
+	if not modal or not modal.visible or not root.is_inside_tree():
+		return
+	var vp := root.get_viewport_rect().size
+	var want := modal_box.get_combined_minimum_size()
+	var footer_h := modal_footer.get_combined_minimum_size().y if modal_footer.get_child_count() > 0 else 0.0
+	modal_scroll.custom_minimum_size = Vector2(minf(maxf(want.x, 700.0), vp.x - 120.0), minf(want.y, vp.y * 0.78 - footer_h - 60.0))
+	modal.reset_size()
+	modal.position = ((vp - modal.size) * 0.5).floor()
+
+
 func _clear(box: Node) -> void:
 	for c in box.get_children():
 		box.remove_child(c)
@@ -581,7 +623,7 @@ func _board_actions(s: int, me: Dictionary, v: Dictionary) -> void:
 	actions.add_child(row)
 	var dmax := Body.dice_max(me.body, int(me.painkillers) > 0)
 	var nr := str(me.get("next_roll", ""))
-	var lbl := {"low": "ROLL (1-3)", "high": "ROLL (4-6)", "d10": "ROLL THE D10", "double": "ROLL TWICE", "loaded_double": "ROLL TWO DICE", "six": "ROLL (it's loaded)"}.get(nr, "ROLL (1-%d)" % dmax)
+	var lbl := {"low": "ROLL (1-4)", "high": "ROLL (6-9)", "d10": "ROLL THE D10", "double": "ROLL TWICE", "loaded_double": "ROLL TWO DICE", "six": "ROLL (it's loaded)"}.get(nr, "ROLL (1-%d)" % dmax)
 	actions.add_child(PartyUi.primary(lbl, func(): act.emit(s, {"t": "roll"}), 300.0))
 
 
@@ -594,6 +636,7 @@ func _modal_title(text: String, sub := "") -> void:
 func _prompt(s: int, pr: Dictionary, v: Dictionary) -> void:
 	modal.visible = true
 	_clear(modal_box)
+	_clear(modal_footer)
 	var me: Dictionary = v.players[s]
 	var ans := func(a: Dictionary): act.emit(s, a.merged({"t": "answer"}))
 	match str(pr.kind):
@@ -621,7 +664,7 @@ func _prompt(s: int, pr: Dictionary, v: Dictionary) -> void:
 		"shop":
 			_modal_title(str(pr.get("name", "THE SHOP")), "You have %d Teeth and %d of %d pockets." % [int(me.teeth), me.items.size(), Items.MAX_HELD])
 			var grid := GridContainer.new()
-			grid.columns = 2
+			grid.columns = 3 if root.get_viewport_rect().size.x > 1500 else 2
 			grid.add_theme_constant_override("h_separation", 10)
 			grid.add_theme_constant_override("v_separation", 10)
 			for e in pr.get("shelf", []):
@@ -642,7 +685,7 @@ func _prompt(s: int, pr: Dictionary, v: Dictionary) -> void:
 				p.add_child(bx)
 				grid.add_child(p)
 			modal_box.add_child(grid)
-			modal_box.add_child(PartyUi.primary("DONE", func(): ans.call({"done": true})))
+			modal_footer.add_child(PartyUi.primary("DONE", func(): ans.call({"done": true})))
 		"gamble":
 			_modal_title("A BET?", "Double or nothing. You have %d Teeth." % int(me.teeth))
 			var h := PartyUi.hbox(8)
@@ -1218,6 +1261,7 @@ func _toggle_menu() -> void:
 		return
 	modal.visible = true
 	_clear(modal_box)
+	_clear(modal_footer)
 	_modal_title("MENU")
 	var toggles := [["REDUCED EFFECTS", "reduced_fx"], ["REDUCED GORE", "reduced_gore"], ["LEFT-HANDED", "left_handed"], ["SCREEN SHAKE", "screen_shake"]]
 	for tg in toggles:
@@ -1261,3 +1305,43 @@ func toast(text: String, private := false) -> void:
 	tw.tween_interval(6.0 if private else 4.0)
 	tw.tween_property(p, "modulate:a", 0.0, 0.5)
 	tw.tween_callback(p.queue_free)
+
+
+## A big inked banner slammed across the middle: whose turn it is, the round, a death.
+## Queued, so two at once play one after the other (and a long queue is cut short).
+var _banners: Array = []
+var _banner_running := false
+func banner(text: String, col := PartyUi.YELLOW, hold := 1.1) -> void:
+	_banners.append([text, col, hold])
+	if _banners.size() > 3:
+		_banners.pop_front()
+	if _banner_running:
+		return
+	_banner_running = true
+	while not _banners.is_empty():
+		var b: Array = _banners.pop_front()
+		await _show_banner(b[0], b[1], b[2] * (0.6 if not _banners.is_empty() else 1.0))
+	_banner_running = false
+
+
+func _show_banner(text: String, col: Color, hold: float) -> void:
+	var p := PartyUi.panel(col.lerp(PartyUi.CREAM, 0.15), PartyUi.INK, 18)
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var l := PartyUi.label(text, 54, PartyUi.INK if col.get_luminance() > 0.4 else PartyUi.CREAM, true)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.autowrap_mode = TextServer.AUTOWRAP_OFF
+	p.add_child(l)
+	root.add_child(p)
+	await get_tree().process_frame
+	if not is_instance_valid(p):
+		return
+	var vp := root.get_viewport_rect().size
+	p.position = Vector2(-p.size.x, vp.y * 0.38)
+	p.rotation = -0.04
+	var mid := Vector2((vp.x - p.size.x) * 0.5, vp.y * 0.38)
+	var tw := p.create_tween()
+	tw.tween_property(p, "position", mid, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_interval(hold)
+	tw.tween_property(p, "position", Vector2(vp.x + 40, mid.y), 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_callback(p.queue_free)
+	await tw.finished

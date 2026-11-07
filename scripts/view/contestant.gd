@@ -274,6 +274,24 @@ func walk_to(p: Vector3) -> void:
 	target = p
 
 
+## A board step, Mario Party style: a quick hop to the next square that lands in `dur`.
+var _hop: Tween
+func hop_to(p: Vector3, dur := 0.2) -> void:
+	if _hop and _hop.is_valid():
+		_hop.kill()
+		position = target
+	var from := position
+	target = p
+	var d := p - from
+	if Vector2(d.x, d.z).length() > 0.05:
+		face_dir = atan2(d.x, d.z)
+	_hop = create_tween()
+	_hop.tween_method(func(t: float):
+		var q := from.lerp(p, t)
+		q.y += sin(t * PI) * 0.9
+		position = q, 0.0, 1.0, dur).set_trans(Tween.TRANS_SINE)
+
+
 func look_toward(p: Vector3) -> void:
 	var d := p - global_position
 	if Vector2(d.x, d.z).length() > 0.05:
@@ -288,8 +306,11 @@ func _process(delta: float) -> void:
 	d.y = 0.0
 	if is_ghost:
 		target.y = position.y
-	var moving := d.length() > 0.04 and not seated
-	if moving:
+	var moving := d.length() > 0.04 and not seated and not (_hop and _hop.is_running())
+	if _hop and _hop.is_running():
+		_phase += delta * 14.0
+		human.walk(_phase, 1.0)
+	elif moving:
 		var step := minf(d.length(), WALK_SPEED * _speed_mul * delta)
 		position += d.normalized() * step
 		face_dir = lerp_angle(face_dir, atan2(d.x, d.z), minf(1.0, delta * 10.0))

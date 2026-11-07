@@ -101,9 +101,9 @@ func _until(core: MatchCore, cond: Callable, secs := 30.0) -> bool:
 
 func test_body() -> void:
 	var b := Body.fresh()
-	check(Body.dice_max(b) == 6, "fresh body rolls 6")
+	check(Body.dice_max(b) == 9, "fresh body rolls 1-9")
 	Body.injure(b, "leg_l", "lost")
-	check(Body.dice_max(b) == 4, "lost leg -2")
+	check(Body.dice_max(b) == 6, "lost leg -3")
 	check(Body.speed(b) < 1.0 and Body.speed(b) > 0.3, "lost leg slows")
 	Body.injure(b, "leg_l", "bruised")
 	check(b.leg_l.s == "lost", "can't bruise a lost leg")

@@ -39,7 +39,7 @@ var arena_root: Node3D
 var arena: ArenaWorld
 var director := CameraDirector.new()
 var view: Dictionary = {}
-var dice: LcDice3D
+var dice: DiceBlock
 var _phase := ""
 var _move_sent: Dictionary = {}
 var _move_t := 0.0
@@ -84,8 +84,8 @@ func _ready() -> void:
 	robot.build([Vector3(-4.0, 0, 0), Vector3(4.0, 0, 0)])
 	caller = CallerActor.wrap(hall.caller)
 	hall.add_child(caller)
-	dice = LcDice3D.new()
-	dice.setup(6, Color("fff4dc"), Color("ff3b3b"), 0.3)
+	dice = DiceBlock.new()
+	dice.setup(9, Color("e6d9b5"), Color("b3201a"), 0.6)
 	dice.visible = false
 	table.add_child(dice)
 	arena_root = Node3D.new()
@@ -343,22 +343,25 @@ func _event(e: Dictionary) -> void:
 			if contestants.has(s):
 				director.request("intro", {"at": _puppet_at(s)}, 15, 1.6)
 				_anim(s, "look_around")
+				var nm := str(view.players[s].name) if view.has("players") and s < view.players.size() else "?"
+				hud.banner(("YOUR TURN!" if Net.my_seats.has(s) else "%s'S TURN" % nm.to_upper()), PartyUi.seat_colour(s))
 		"roll":
 			var c: Contestant = contestants[s]
 			_anim(s, "dice_throw")
 			dice.visible = true
 			var to := c.position + Vector3(0.8, 0.3, 0.8)
-			dice.roll_to(int(e.n), c.position + Vector3(0, 2.5, 0), to, 0.9)
+			dice.roll_to(int(e.n), c.position + Vector3(0, 3.2, 0), c.position + Vector3(0, 2.2, 0), 0.45)
 			Sfx.play("dice_rattle", -2.0)
 			stage.hall.flashboard.light(int(e.n))
 			director.request("dice", {"at": _puppet_at(s)}, 18, 1.4)
-			get_tree().create_timer(2.4).timeout.connect(func(): dice.visible = false)
+			get_tree().create_timer(1.6).timeout.connect(func(): dice.visible = false)
 		"move":
 			var c2: Contestant = contestants[s]
 			if e.get("slide", false):
 				c2.walk_to(venue.stand_pos(int(e.space), s))
 			else:
-				c2.walk_to(venue.stand_pos(int(e.space), s))
+				c2.hop_to(venue.stand_pos(int(e.space), s), BoardRules.STEP_TIME * 0.85)
+				_counter(s, int(e.get("left", -1)))
 				Audio.sfx("step", 0.15, -10.0)
 			var at := on_table(venue.space_pos(int(e.space)))
 			var nxt: Array = graph.next_of(int(e.space))
@@ -382,11 +385,15 @@ func _event(e: Dictionary) -> void:
 				contestants[q].walk_to(venue.stand_pos(int(view.players[q].space), q))
 			robot.play("grab", contestants[int(e.a)].position)
 		"teeth":
+			if int(e.delta) != 0:
+				_popup(s, "%+d TEETH" % int(e.delta), PartyUi.MINT if int(e.delta) > 0 else PartyUi.RED)
 			if int(e.delta) >= 5:
 				_anim(s, "good", false)
 			elif int(e.delta) <= -5:
 				_anim(s, "bad", false)
 		"rats":
+			if int(e.delta) != 0:
+				_popup(s, "%+d DEAD RAT%s" % [int(e.delta), "" if absi(int(e.delta)) == 1 else "S"], PartyUi.YELLOW if int(e.delta) > 0 else PartyUi.RED, 1.4)
 			if int(e.delta) > 0:
 				_anim(s, "celebrate")
 				director.request("award", {"at": _puppet_at(s)}, 20, 1.8)
@@ -421,6 +428,7 @@ func _event(e: Dictionary) -> void:
 			_anim(s, react, false)
 			director.request("poison", {"at": _puppet_at(s)}, 18, 1.8)
 		"revive":
+			hud.banner("%s IS BACK!" % str(view.players[s].name).to_upper() if view.has("players") and s >= 0 and s < view.players.size() else "SOMEONE", PartyUi.MINT)
 			_rebuild(s, false)
 			_anim(s, "rise")
 			Sfx.play("relic_found", -2.0)
@@ -432,6 +440,7 @@ func _event(e: Dictionary) -> void:
 			_glitch(0.8)
 			robot.play("seizure")
 		"caught":
+			hud.banner("CAUGHT CHEATING: %s" % str(view.players[s].name).to_upper() if view.has("players") and s >= 0 and s < view.players.size() else "SOMEONE", PartyUi.RED, 1.3)
 			Audio.sfx("slam", 0.05, 0.0)
 			stage.flash(0.25)
 			shake(0.4)
@@ -456,6 +465,7 @@ func _event(e: Dictionary) -> void:
 			else:
 				caller.look("you")
 		"death":
+			hud.banner("%s IS DEAD" % str(view.players[s].name).to_upper() if view.has("players") and s >= 0 and s < view.players.size() else "SOMEONE", PartyUi.BLOOD, 1.4)
 			_ghost_t[s] = 3.2
 			_deaths_shown[s] = true
 			contestants[s].die(str(e.anim), on_table(Vector3(0, 3, 0)))
@@ -495,7 +505,15 @@ func _event(e: Dictionary) -> void:
 		"award":
 			for q in e.seats:
 				_anim(int(q), "victory")
+		"round":
+			if not e.get("final", false):
+				hud.banner("ROUND %d" % int(e.n), PartyUi.CREAM, 0.8)
+		"machine_warn":
+			hud.banner("NEXT ROUND: %s" % str(e.get("name", "THE MACHINES")).to_upper(), PartyUi.ORANGE, 1.0)
+		"final_round":
+			hud.banner("LAST ROUND!", PartyUi.RED, 1.6)
 		"lead_change":
+			hud.banner("%s TAKES THE LEAD" % str(view.players[s].name).to_upper() if view.has("players") and s >= 0 and s < view.players.size() else "SOMEONE", PartyUi.YELLOW, 0.9)
 			_anim(s, "celebrate")
 		"door_open":
 			pass
@@ -507,6 +525,55 @@ func _event(e: Dictionary) -> void:
 				guest_anims[s].play("relief")
 	if mgv:
 		mgv.on_event(e)
+
+
+## A number or a "+3 TEETH" floating up off a puppet: screen-sized, always on top, inked.
+func _popup(s: int, text: String, col: Color, size := 1.0, rise := true) -> Label3D:
+	if not contestants.has(s):
+		return null
+	var l := Label3D.new()
+	l.text = text
+	l.font = load("res://assets/fonts/fell_sc.ttf")
+	l.font_size = int(64 * size)
+	l.outline_size = int(18 * size)
+	l.outline_modulate = PartyUi.INK
+	l.modulate = col
+	l.fixed_size = true
+	l.pixel_size = 0.0012
+	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	l.no_depth_test = true
+	l.render_priority = 10
+	l.outline_render_priority = 9
+	add_child(l)
+	var at: Vector3 = (contestants[s] as Node3D).global_position
+	var up: float = 2.6 * (contestants[s] as Node3D).global_transform.basis.get_scale().y
+	l.global_position = at + Vector3(0, up, 0)
+	if rise:
+		l.scale = Vector3.ONE * 0.4
+		var tw := l.create_tween()
+		tw.tween_property(l, "scale", Vector3.ONE, 0.15).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.parallel().tween_property(l, "global_position", l.global_position + Vector3(0, up * 0.8, 0), 1.3)
+		tw.tween_property(l, "modulate:a", 0.0, 0.3)
+		tw.parallel().tween_property(l, "outline_modulate:a", 0.0, 0.3)
+		tw.tween_callback(l.queue_free)
+	return l
+
+
+var _step_lbl: Label3D
+## The steps left, over the mover's head, like a party game's countdown.
+func _counter(s: int, left: int) -> void:
+	if _step_lbl and is_instance_valid(_step_lbl):
+		_step_lbl.queue_free()
+	if left <= 0:
+		return
+	_step_lbl = _popup(s, str(left), PartyUi.CREAM, 1.6, false)
+	if _step_lbl:
+		_step_lbl.global_position += Vector3(0, 0.3, 0)
+		var tw := _step_lbl.create_tween()
+		_step_lbl.scale = Vector3.ONE * 1.4
+		tw.tween_property(_step_lbl, "scale", Vector3.ONE, 0.12)
+		var me := _step_lbl
+		get_tree().create_timer(BoardRules.STEP_TIME * 1.6).timeout.connect(func(): if is_instance_valid(me) and me == _step_lbl: me.queue_free())
 
 
 func _puppet_at(s: int) -> Vector3:

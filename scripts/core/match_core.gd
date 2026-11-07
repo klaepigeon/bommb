@@ -22,9 +22,9 @@ extends RefCounted
 
 const DEFAULT_ROUNDS := 15
 const LENGTHS := {"quick": 10, "standard": 15, "extended": 20, "marathon": 30}
-const INTRO_TIME := 9.0
-const MG_INTRO_TIME := 9.0
-const MG_RESULTS_TIME := 5.5
+const INTRO_TIME := 6.0
+const MG_INTRO_TIME := 6.0
+const MG_RESULTS_TIME := 4.0
 const FINALE_TIME := 14.0
 const HUMAN_TURN_LIMIT := 30.0
 const DOOR_PUSH_TIME := 12.0

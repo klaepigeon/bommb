@@ -168,16 +168,16 @@ static func hearing(body: Dictionary) -> float:
 
 ## The highest the board die can roll for you.
 static func dice_max(body: Dictionary, pk := false) -> int:
-	var m := 6
+	var m := 9
 	for p in ["leg_l", "leg_r"]:
 		match body[p].s:
 			"broken":
-				m -= 0 if pk else 1
+				m -= 0 if pk else 2
 			"prosthetic":
 				m -= 1
 			"lost":
-				m -= 2
-	return maxi(m, 2)
+				m -= 3
+	return maxi(m, 3)
 
 
 ## Something a first aid tin can do something about.

@@ -1,24 +1,29 @@
 class_name PartyUi
 extends RefCounted
-## MURDERLAND's house style for everything on the glass: the robot's idea of a children's
-## party. Fat rounded panels with a black outline and a drop shadow, bubblegum pink,
-## yellow, turquoise, mint, purple, orange, cream; Titan One for anything shouted, Baloo 2
-## for everything read. Big touch targets (UiManager.button). Readable over any background:
-## every panel is opaque, every loose label is outlined.
+## MEAT PARTY's look on the glass: LAST CALL's hand-inked card stock, dyed. Every panel and
+## button is a sheet of his paper (freehand ink border, coffee rings, specks) tinted from
+## one palette; IM Fell English SC for anything he prints, Special Elite for anything
+## typed. Readable over any background: panels are opaque, loose labels are inked round.
+##
+## The palette, by colour theory: a dark neutral (dried blood) and a light one (bone) carry
+## everything; one dominant accent (blood red) for danger and the big action; its split
+## complements (bile green, verdigris) for "good"/"go"; a warm highlight (nicotine yellow)
+## for what's selected or yours. Saturation is kept a notch below clean, so it reads gross,
+## not candy. The four seats are spaced round the wheel at matched value.
 
-const PINK := Color("a8231a")
-const RED := Color("b0261c")
-const YELLOW := Color("bfae62")
-const TURQ := Color("62786a")
-const ORANGE := Color("8f5428")
-const PURPLE := Color("5a4c58")
-const MINT := Color("a3b38a")
-const CREAM := Color("cfc8b2")
-const SILVER := Color("8e948c")
-const BLOOD := Color("8a0f1a")
-const INK := Color("0e0d0b")
-const DIM := Color("6a6a60")
-const SEAT := [Color("b0261c"), Color("5e8c7c"), Color("c2a84e"), Color("8a7aa0")]
+const PINK := Color("c2263a")      # wound pink-red: headings, the title
+const RED := Color("b3201a")       # blood: danger, the main action
+const YELLOW := Color("e0b43c")    # nicotine: highlight, selected, primary buttons
+const TURQ := Color("3f9488")      # verdigris: go, safe, info
+const ORANGE := Color("cc6a24")    # rust: shops, money
+const PURPLE := Color("7e4f96")    # bruise: items, the uncanny
+const MINT := Color("9bbd3c")      # bile: good news
+const CREAM := Color("e6d9b5")     # bone: the paper itself
+const SILVER := Color("9aa39c")
+const BLOOD := Color("7a0d14")
+const INK := Color("1e120e")       # dried-blood ink
+const DIM := Color("6e6152")
+const SEAT := [Color("c8322a"), Color("2f9a8e"), Color("d9a92e"), Color("8a5aa8")]
 const SPACE := {
 	"start": Color("ffffff"), "normal": Color("2e8bff"), "bonus": Color("ffd23f"), "bad": Color("ff3b3b"), "event": Color("6fe3a5"),
 	"item": Color("8e5cf0"), "shop": Color("ff8c2e"), "black_market": Color("2a1a2e"), "medical": Color("f8f8ff"), "minigame": Color("ff5fa2"),
@@ -39,7 +44,7 @@ static var _theme: Theme
 
 static func title_font() -> Font:
 	if _title == null:
-		_title = load("res://assets/fonts/special_elite.ttf")
+		_title = load("res://assets/fonts/fell_sc.ttf")
 	return _title
 
 
@@ -59,21 +64,34 @@ static func bk() -> float:
 	return float(ui.button) / 64.0 if ui else 1.0
 
 
-static func box(bg: Color, border := INK, radius := 18, bw := 4, shadow := 6) -> StyleBoxFlat:
-	radius = mini(radius, 3)
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = bg
-	sb.border_color = border
-	sb.set_border_width_all(bw)
-	sb.set_corner_radius_all(radius)
-	sb.shadow_color = Color(0, 0, 0, 0.45)
-	sb.shadow_size = shadow
-	sb.shadow_offset = Vector2(0, shadow * 0.6)
+## A sheet of his card stock dyed `bg`: light colours on the white stock (the ink border stays
+## dark), dark colours on the dark stock (the border comes out pale). `radius` picks the cut:
+## small = a button strip, large = a sheet. `border`/`bw`/`shadow` are kept for callers but the
+## ink border is drawn into the paper.
+static func box(bg: Color, border := INK, radius := 18, bw := 4, shadow := 6) -> StyleBox:
+	var dark := bg.get_luminance() < 0.22
+	var path := "res://assets/ink/party/dark.png" if dark else ("res://assets/ink/party/button.png" if radius < 20 else "res://assets/ink/party/card.png")
+	var sb := StyleBoxTexture.new()
+	sb.texture = load(path)
+	var base := 0.25 if dark else 0.94
+	sb.modulate_color = Color(bg.r / base, bg.g / base, bg.b / base, bg.a)
+	var m := 10.0 if radius < 20 else 22.0
+	for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
+		sb.set_texture_margin(side, m)
 	sb.content_margin_left = 14
 	sb.content_margin_right = 14
 	sb.content_margin_top = 8
 	sb.content_margin_bottom = 8
-	sb.anti_aliasing = true
+	return sb
+
+
+## A plain flat fill (meters, thin bars: too small for paper).
+static func flat_box(bg: Color, border := INK, bw := 2) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = bg
+	sb.border_color = border
+	sb.set_border_width_all(bw)
+	sb.anti_aliasing = false
 	return sb
 
 
@@ -87,7 +105,7 @@ static func theme() -> Theme:
 	t.set_stylebox("hover", "Button", box(YELLOW))
 	t.set_stylebox("pressed", "Button", box(ORANGE, INK, 18, 4, 2))
 	t.set_stylebox("disabled", "Button", box(Color("d8cfc0"), DIM))
-	t.set_stylebox("focus", "Button", box(Color(0, 0, 0, 0), PINK, 18, 4, 0))
+	t.set_stylebox("focus", "Button", StyleBoxEmpty.new())
 	t.set_color("font_color", "Button", INK)
 	t.set_color("font_hover_color", "Button", INK)
 	t.set_color("font_pressed_color", "Button", INK)
@@ -144,6 +162,21 @@ static func button(text: String, cb: Callable, colour := CREAM, min_w := 180.0, 
 	b.focus_mode = Control.FOCUS_NONE
 	if cb.is_valid():
 		b.pressed.connect(cb)
+	# respond on touch-down, unless it's in a list you might be scrolling
+	b.tree_entered.connect(func():
+		var n: Node = b.get_parent()
+		var in_scroll := false
+		while n:
+			if n is ScrollContainer:
+				in_scroll = true
+				break
+			n = n.get_parent()
+		b.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE if in_scroll else BaseButton.ACTION_MODE_BUTTON_PRESS)
+	b.button_down.connect(func():
+		Sfx.play("blip", -10.0, 0.08)
+		b.pivot_offset = b.size * 0.5
+		b.scale = Vector2(0.94, 0.94)
+		b.create_tween().tween_property(b, "scale", Vector2.ONE, 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT))
 	return b
 
 
@@ -176,14 +209,14 @@ static func flow(sep := 8) -> HFlowContainer:
 ## A little coloured badge (a stat, a status).
 static func chip(text: String, bg: Color, size := 16) -> PanelContainer:
 	var p := PanelContainer.new()
-	var sb := box(bg, INK, 12, 3, 0)
+	var sb := flat_box(bg, INK, 2)
 	sb.content_margin_left = 8
 	sb.content_margin_right = 8
 	sb.content_margin_top = 1
 	sb.content_margin_bottom = 1
 	p.add_theme_stylebox_override("panel", sb)
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var l := label(text, size, INK if bg.get_luminance() > 0.45 else CREAM, true)
+	var l := label(text, size, INK if bg.get_luminance() > 0.45 else CREAM, false)
 	l.autowrap_mode = TextServer.AUTOWRAP_OFF
 	p.add_child(l)
 	return p
@@ -195,12 +228,12 @@ static func meter(frac: float, col: Color, w := 160.0, h := 16.0, label_text := 
 	c.custom_minimum_size = Vector2(w, h) * k()
 	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var bg := Panel.new()
-	bg.add_theme_stylebox_override("panel", box(Color("2a1a26"), INK, int(h * 0.5), 3, 0))
+	bg.add_theme_stylebox_override("panel", flat_box(Color("2a1a14"), INK, 2))
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	c.add_child(bg)
 	var fg := Panel.new()
-	fg.add_theme_stylebox_override("panel", box(col, Color(0, 0, 0, 0), int(h * 0.5), 0, 0))
+	fg.add_theme_stylebox_override("panel", flat_box(col, Color(0, 0, 0, 0), 0))
 	fg.anchor_right = clampf(frac, 0.0, 1.0)
 	fg.anchor_bottom = 1.0
 	fg.offset_left = 3

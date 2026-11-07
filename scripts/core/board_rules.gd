@@ -6,10 +6,10 @@ extends RefCounted
 ## then the ghosts take theirs. What each square type does is _land(). Anyone who's away
 ## from the table when their turn comes misses it: the board doesn't wait.
 
-const STEP_TIME := 0.32
-const AFTER_TIME := 1.8
+const STEP_TIME := 0.24
+const AFTER_TIME := 0.9
 const PROMPT_LIMIT := 20.0
-const MISSED_TIME := 1.4
+const MISSED_TIME := 0.9
 const LIMBS := ["hand_l", "hand_r", "arm_l", "arm_r", "leg_l", "leg_r"]
 const NORMAL_PAY := 3
 const BAD_TAKE := 3
@@ -181,13 +181,13 @@ func _roll(seat: int) -> void:
 	var pl := core.p(seat)
 	var dmax := Body.dice_max(pl.body, pl.pk())
 	var mod := core.status.dice_mod(seat)
-	dmax = clampi(dmax + int(mod[0]), 1, 9)
+	dmax = clampi(dmax + int(mod[0]), 1, 12)
 	dice = []
 	match pl.next_roll:
 		"low":
-			dice = [core.rng.randi_range(1, 3)]
+			dice = [core.rng.randi_range(1, 4)]
 		"high":
-			dice = [core.rng.randi_range(4, 6)]
+			dice = [core.rng.randi_range(6, 9)]
 		"d10":
 			dice = [core.cage.roll(seat, 10)]
 		"double":
@@ -196,7 +196,7 @@ func _roll(seat: int) -> void:
 			dice = [a, b]
 			roll = maxi(a, b)
 		"loaded_double":
-			dice = [core.rng.randi_range(3, 6), core.rng.randi_range(3, 6)]
+			dice = [core.rng.randi_range(5, 9), core.rng.randi_range(5, 9)]
 		"six":
 			dice = [dmax]
 		_:
@@ -227,7 +227,7 @@ func _roll(seat: int) -> void:
 		_after()
 		return
 	sub = "moving"
-	sub_t = -0.8   # let the dice land
+	sub_t = -0.45   # let the block land
 
 
 func _after() -> void:
@@ -290,7 +290,7 @@ func _arrive(to: int) -> void:
 	steps -= 1
 	walked.append(to)
 	pl.stat("spaces_moved")
-	core.emit({"e": "move", "seat": s, "space": pl.space})
+	core.emit({"e": "move", "seat": s, "space": pl.space, "left": steps})
 	var sp: Dictionary = core.graph.node(pl.space)
 	if core.key_space == pl.space:
 		core.key_space = -1
