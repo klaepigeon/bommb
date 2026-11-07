@@ -204,7 +204,12 @@ func handicap(seat: int) -> void:
 ## "swipe" (a pad: sends {do, dir}), "timing" (a ring: tap when it lines up: {do}),
 ## "pick" (buttons for each of `options`: {do, pick}).
 func controls(_seat: int) -> Array:
-	return [{"kind": "stick"}]
+	return [] if buttons_only() else [{"kind": "stick"}]
+
+
+## Played entirely with the choice buttons the game puts up (no stick, no pads).
+func buttons_only() -> bool:
+	return false
 
 
 func tampered(seat: int) -> bool:

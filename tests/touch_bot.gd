@@ -40,6 +40,8 @@ func _ready() -> void:
 		all = _inputs()
 		var pick = _choose(all.filter(func(x): return is_instance_valid(x)))
 		if pick and is_instance_valid(pick):
+			if taps < 12:
+				print("TAP ", _label(pick))
 			await _use(pick)
 		await _wait(6)
 		if Net.core and Net.core.ending != "":
@@ -50,7 +52,7 @@ func _ready() -> void:
 		print("  UNREACHABLE: ", k, " -> covered by ", unreachable[k])
 	for k in dead:
 		print("  DEAD TAP: ", k)
-	var ok := unreachable.is_empty() and dead.is_empty() and fired > 0
+	var ok := unreachable.is_empty() and dead.is_empty() and fired > 0 and phases.has("turn") and phases.has("mg_play")
 	print("TOUCH BOT: ", "PASS" if ok else "FAIL")
 	get_tree().quit(0 if ok else 1)
 
@@ -72,6 +74,12 @@ func _label(c) -> String:
 func _is_input(c: Node) -> bool:
 	if not (c is Control) or not c.is_visible_in_tree():
 		return false
+	# the controls screen's diagrams are pictures of controls, deliberately inert
+	var a: Node = c
+	while a:
+		if a.has_meta("diagram"):
+			return false
+		a = a.get_parent()
 	if c is BaseButton:
 		return not (c as BaseButton).disabled
 	return c.mouse_filter == Control.MOUSE_FILTER_STOP and c.get_script() != null and not (c is PanelContainer) and not (c is ColorRect)
@@ -114,6 +122,15 @@ func _audit(c) -> void:
 	if not is_instance_valid(c) or not c.is_visible_in_tree():
 		return
 	var top := get_viewport().gui_get_hovered_control()
+	# nothing under it at all: the list was being rebuilt; look again over a few frames
+	var tries := 0
+	while top == null and tries < 4 and is_instance_valid(c) and c.is_visible_in_tree():
+		tries += 1
+		Input.parse_input_event(mm)
+		await get_tree().process_frame
+		top = get_viewport().gui_get_hovered_control()
+	if not is_instance_valid(c) or not c.is_visible_in_tree():
+		return
 	if top != c and not (top and c.is_ancestor_of(top)):
 		var key := _label(c)
 		if not unreachable.has(key):
@@ -142,12 +159,12 @@ func _choose(all: Array) -> Control:
 				_practice_taps = 0
 				return c
 	if Net.core and Net.core.phase == "mg_intro" and _practice_taps < 3:
-		var pc: Array = cands.filter(func(c): return not (c is Button and ((c as Button).text.begins_with("READY") or (c as Button).text == "STOP PRACTISING")))
+		var pc: Array = cands.filter(func(c): return not (c is Button and ((c as Button).text.begins_with("READY") or (c as Button).text == "STOP PRACTISING" or (c as Button).text == "NEXT")))
 		if not pc.is_empty():
 			_practice_taps += 1
 			kinds["practice"] = true
 			return pc[randi() % pc.size()]
-	for pref in ["PLAY", "SIT DOWN", "ROLL", "READY"]:
+	for pref in ["PLAY", "SIT DOWN", "ROLL", "NEXT", "READY"]:
 		for c in cands:
 			if c is Button and (c as Button).text.begins_with(pref):
 				return c

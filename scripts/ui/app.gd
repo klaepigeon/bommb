@@ -232,6 +232,7 @@ func _fill_lobby() -> void:
 	if _lobby_box == null:
 		return
 	for c in _lobby_box.get_children():
+		_lobby_box.remove_child(c)
 		c.queue_free()
 	var authority := Net.is_authority()
 	if Net.online() and Net.code != "":
@@ -282,6 +283,7 @@ func _fill_lobby() -> void:
 				if seat == 0:
 					Settings.set_v("face", Seats.seats[seat].face)
 				_fill_lobby(), 34, 70))
+	var seats_end := _lobby_box.get_child_count()
 	if authority:
 		var opt := PartyUi.hbox(8)
 		_lobby_box.add_child(opt)
@@ -300,8 +302,20 @@ func _fill_lobby() -> void:
 			modes.add_child(PartyUi.button(M[1], func():
 				Settings.set_v("match_mode", m)
 				_fill_lobby(), PartyUi.TURQ if sel2 else PartyUi.CREAM, 270.0, 15))
+	if authority:
+		var pace := PartyUi.hbox(8)
+		_lobby_box.add_child(pace)
+		pace.add_child(_lbl("PACE:", 14, PartyUi.INK, true))
+		for P in [["standard", "STANDARD"], ["relaxed", "RELAXED"], ["fast", "FAST"]]:
+			var pk: String = P[0]
+			var sel3 := str(Settings.get_v("pacing", "standard")) == pk
+			pace.add_child(PartyUi.button(P[1], func():
+				Settings.set_v("pacing", pk)
+				_fill_lobby(), PartyUi.YELLOW if sel3 else PartyUi.CREAM, 150.0, 15))
 	var row := PartyUi.hbox(8)
 	_lobby_box.add_child(row)
+	# SIT DOWN / LEAVE right under the seats, where they're always on screen
+	_lobby_box.move_child(row, seats_end)
 	if authority:
 		var go := _pbtn("SIT DOWN", func(): Net.launch(), 50, 200)
 		go.disabled = not Net.all_ready() or (Net.online() and Net.code in ["", "....."])

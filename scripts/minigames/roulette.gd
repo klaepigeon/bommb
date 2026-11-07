@@ -410,3 +410,7 @@ func ai(seat: int, brain: AiBrain, view: Dictionary, _dt: float) -> void:
 		action(seat, {"t": "mg", "do": "item", "id": "spinner"})
 		return
 	action(seat, {"t": "mg", "do": "pull"})
+
+
+func buttons_only() -> bool:
+	return true

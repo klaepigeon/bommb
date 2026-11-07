@@ -166,6 +166,28 @@ func _ready() -> void:
 	cutscene_lbl = PartyUi.shout("", 34, PartyUi.PINK)
 	cutscene_lbl.visible = false
 	root.add_child(cutscene_lbl)
+	# the presentation's own captions (the arena's name...) and the 3-2-1-GO
+	stage_lbl = PartyUi.shout("", 44, PartyUi.YELLOW)
+	stage_lbl.visible = false
+	root.add_child(stage_lbl)
+	# the turn's panel (whose turn: their Teeth, Dead Rats, pockets) and the landing's (what that square is)
+	info_panel = PartyUi.panel(PartyUi.CREAM, PartyUi.INK, 16)
+	info_panel.visible = false
+	info_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(info_panel)
+	info_box = PartyUi.vbox(4)
+	info_panel.add_child(info_box)
+	# the flow debug overlay (--flow-debug / --flow-step)
+	debug_lbl = PartyUi.label("", 14, PartyUi.MINT, false, true)
+	debug_lbl.visible = OS.get_cmdline_user_args().has("--flow-debug") or OS.get_cmdline_user_args().has("--flow-step")
+	root.add_child(debug_lbl)
+	step_btn = PartyUi.button("NEXT STAGE ▶", func(): act.emit(_me(), {"t": "flow_next"}), PartyUi.MINT, 200.0, 16)
+	step_btn.visible = false
+	root.add_child(step_btn)
+	countdown_lbl = PartyUi.shout("", 200, PartyUi.YELLOW)
+	countdown_lbl.visible = false
+	countdown_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(countdown_lbl)
 	look_btn = PartyUi.button("LOOK UP", func(): look_toggled.emit(), PartyUi.TURQ, 150.0, 20)
 	root.add_child(look_btn)
 	root.move_child(top, -1)   # the menu button stays tappable over any panel
@@ -231,6 +253,15 @@ func _layout() -> void:
 	(letterbox[1] as ColorRect).size = Vector2(vp.x, vp.y * 0.12)
 	cutscene_lbl.position = Vector2(0, vp.y * 0.89)
 	cutscene_lbl.size = Vector2(vp.x, vp.y * 0.1)
+	info_panel.position = Vector2(vp.x * 0.5 - 260 * PartyUi.k(), vp.y * 0.62)
+	info_panel.custom_minimum_size = Vector2(520, 0) * PartyUi.k()
+	debug_lbl.position = Vector2(vp.x * 0.3, m.position.y + 4)
+	step_btn.position = Vector2(vp.x * 0.5 - 100, m.position.y + 40)
+	stage_lbl.position = Vector2(0, vp.y * 0.78)
+	stage_lbl.size = Vector2(vp.x, vp.y * 0.14)
+	countdown_lbl.position = Vector2(0, vp.y * 0.25)
+	countdown_lbl.size = Vector2(vp.x, vp.y * 0.5)
+	countdown_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	look_btn.position = Vector2(m.position.x, vp.y - m.size.y - 70 * PartyUi.bk()) if right else Vector2(vp.x - m.size.x - 160, vp.y - m.size.y - 70 * PartyUi.bk())
 
 
@@ -294,6 +325,7 @@ func update(v: Dictionary, local_seats: Array, delta: float) -> void:
 	view = v
 	local = local_seats
 	_stack_actions.call_deferred()
+	_stage_overlay(v)
 	if v.is_empty():
 		return
 	for i in 4:
@@ -889,17 +921,15 @@ func _controls(v: Dictionary) -> void:
 	var me := _me()
 	if me < 0 or not v.mg.get("seats", []).has(me):
 		return
-	var hints := {"tap": " [SPACE]", "hold": " [SHIFT]", "timing": " [SPACE]"}
-	var n_tap := 0
+	var counts := {}
 	for c in v.mg.get("controls", []):
 		if str(c.kind) == "stick":
 			continue
-		var hint := ""
-		if str(c.kind) == "tap" and n_tap == 0:
-			hint = hints.tap
-			n_tap += 1
-		elif str(c.kind) in ["hold", "timing"]:
-			hint = hints[str(c.kind)] if (str(c.kind) == "hold" and _holds.is_empty()) or (str(c.kind) == "timing" and _rings.is_empty()) else ""
+		var kd := str(c.kind)
+		var n := int(counts.get(kd, 0))
+		counts[kd] = n + 1
+		# the key/button it answers to, on a keyboard or pad (touch: the button itself)
+		var hint := "" if Ui.device == "touch" or not kd in ["tap", "hold", "timing"] else " [%s]" % Ui.control_binding(kd, n).replace("hold ", "")
 		var w := PartyControls.make(c, func(a: Dictionary): act.emit(me, a.merged({"t": "mg"})), hint)
 		w.size_flags_vertical = Control.SIZE_SHRINK_END
 		controls_box.add_child(w)
@@ -916,26 +946,31 @@ func _controls(v: Dictionary) -> void:
 				_taps.append(w)
 
 
-## Keyboard and pad for the minigame controls (GameView forwards input here).
+## Keyboard and controller for the minigame controls (GameView forwards input here). It
+## answers to the input actions (UiManager.ACTIONS), the same ones the instruction screens
+## show, so what's on the screen is what works.
 func key_input(ev: InputEvent) -> bool:
-	if not (ev is InputEventKey) or ev.echo:
+	if not (ev is InputEventKey or ev is InputEventJoypadButton) or (ev is InputEventKey and ev.echo):
 		return false
-	var k: int = ev.physical_keycode
-	if k == KEY_SPACE and ev.pressed:
-		if not _rings.is_empty() and is_instance_valid(_rings[0]):
-			_rings[0].tap()
-			return true
-		if not _taps.is_empty() and is_instance_valid(_taps[0]):
-			(_taps[0] as Button).pressed.emit()
-			return true
-	if k == KEY_SHIFT and not _holds.is_empty() and is_instance_valid(_holds[0]):
-		_holds[0].set_held(ev.pressed)
+	# the timing ring comes first on the main button
+	if ev.is_action_pressed("mg_timing") and not _rings.is_empty() and is_instance_valid(_rings[0]):
+		_rings[0].tap()
 		return true
-	if ev.pressed and not _swipes.is_empty() and is_instance_valid(_swipes[0]):
-		var d := {KEY_LEFT: Vector2.LEFT, KEY_RIGHT: Vector2.RIGHT, KEY_UP: Vector2.UP, KEY_DOWN: Vector2.DOWN, KEY_A: Vector2.LEFT, KEY_D: Vector2.RIGHT, KEY_W: Vector2.UP, KEY_S: Vector2.DOWN}
-		if d.has(k):
-			_swipes[0].fire(d[k])
+	var taps := ["mg_tap", "mg_tap2", "mg_tap3"]
+	for i in taps.size():
+		if ev.is_action_pressed(taps[i]) and i < _taps.size() and is_instance_valid(_taps[i]):
+			(_taps[i] as Button).pressed.emit()
 			return true
+	var holds := ["mg_hold", "mg_hold2"]
+	for i in holds.size():
+		if (ev.is_action_pressed(holds[i]) or ev.is_action_released(holds[i])) and i < _holds.size() and is_instance_valid(_holds[i]):
+			_holds[i].set_held(ev.is_pressed())
+			return true
+	if not _swipes.is_empty() and is_instance_valid(_swipes[0]):
+		for d in [["mg_swipe_left", Vector2.LEFT], ["mg_swipe_right", Vector2.RIGHT], ["mg_swipe_up", Vector2.UP], ["mg_swipe_down", Vector2.DOWN]]:
+			if ev.is_action_pressed(d[0]):
+				_swipes[0].fire(d[1])
+				return true
 	return false
 
 
@@ -1100,9 +1135,13 @@ func _card_signature(v: Dictionary) -> String:
 	var phase := str(v.phase)
 	match phase:
 		"mg_intro":
-			return "intro" + str(v.mg_id) + str(v.get("ready", [])) + str(_away()) + str(_practice)
+			var pz: Dictionary = v.get("presenter", {})
+			return "intro" + str(v.mg_id) + str(pz.get("stage", "")) + str(pz.get("confirmed", [])) + str(_away()) + str(_practice) + str(Ui.device) + (str(int(float(pz.get("t", 0)) * 4)) if str(pz.get("stage", "")) == "countdown" else "")
 		"mg_results":
-			return "res" + str(v.mg_id) + str(int(float(v.phase_t) * 2.0))
+			var pr: Dictionary = v.get("presenter", {})
+			return "res" + str(v.mg_id) + str(pr.get("stage", "")) + str(int(float(pr.get("t", 0)) * 2.0))
+		"mg_return":
+			return "ret"
 		"finale":
 			return "fin" + str(int(float(v.phase_t)))
 		"ending":
@@ -1129,35 +1168,13 @@ func _cards(v: Dictionary) -> void:
 			if v.mode == "callers_game":
 				card_box.add_child(PartyUi.label("THE CALLER'S GAME: he has his own idea of who wins. He'll tell you halfway.", 18, PartyUi.PURPLE, true))
 		"mg_intro":
-			card.visible = true
-			var mg: Dictionary = v.mg
-			var e: Dictionary = v.get("mg_entry", {})
-			var kind := str(e.get("kind", "main"))
-			var head := {"battle": "BATTLE!", "duel": "DUEL!", "bonus": "BONUS GAME!", "special": "SPECIAL EVENT!", "roulette": "ENCOUNTER!"}.get(kind, "MINIGAME!")
-			card_box.add_child(PartyUi.shout(head, 30, PartyUi.PINK))
-			card_box.add_child(PartyUi.shout(str(mg.title), 46, PartyUi.YELLOW))
-			var fmt := str(mg.get("format", "ffa"))
-			card_box.add_child(PartyUi.label({"ffa": "EVERYONE FOR THEMSELVES", "2v2": "TWO AGAINST TWO", "1v3": "ONE AGAINST THE REST", "duel": "ONE ON ONE", "coop": "ALL OF YOU, TOGETHER", "special": "AN ENCOUNTER"}.get(fmt, fmt), 20, PartyUi.INK, true))
-			if not (mg.get("teams", []) as Array).is_empty():
-				var tl := []
-				for tm in mg.teams:
-					tl.append(" + ".join((tm as Array).map(func(s): return str(v.players[int(s)].name))))
-				card_box.add_child(PartyUi.label("  VS  ".join(tl), 18, PartyUi.BLOOD, true))
-			if int(e.get("pool", 0)) > 0:
-				card_box.add_child(PartyUi.label("THE POT: %d TEETH (%s). Winner takes it." % [int(e.pool), {"fixed": "5 each", "percent": "a fifth of everyone's Teeth", "double": "half of everything you've got"}.get(str(e.get("wager_rule", "")), "the stakes")], 18, PartyUi.BLOOD, true))
-			if e.get("rat_prize", false):
-				card_box.add_child(PartyUi.label("AND A DEAD RAT FOR THE WINNER.", 18, PartyUi.BLOOD, true))
-			if v.get("presentation", "MEAT_PUPPET") == "FULL_CHARACTER":
-				card_box.add_child(PartyUi.label("YOU'LL BE DOING THIS ONE YOURSELVES. IN PERSON.", 16, PartyUi.PURPLE, true))
-			if v.mg_id == "organ_trail" and not (mg.get("modifier_text", []) as Array).is_empty():
-				for m in mg.modifier_text:
-					card_box.add_child(PartyUi.label("THE CALLER'S RULE: " + str(m), 16, PartyUi.PURPLE, true))
-			_how_to_play(v, mg)
-			if _away():
-				card_box.add_child(PartyUi.label("YOU'RE NOT AT THE TABLE. GET BACK NOW OR MISS IT.", 18, PartyUi.RED, true))
+			_present(v)
 		"mg_results":
 			card.visible = true
 			_results(v)
+		"mg_return":
+			card.visible = true
+			card_box.add_child(PartyUi.shout("BACK TO THE BOARD...", 40, PartyUi.CREAM))
 		"finale":
 			card.visible = true
 			_finale(v)
@@ -1169,7 +1186,9 @@ func _cards(v: Dictionary) -> void:
 ## Mario-style: FINISH! (freeze) -> who won (reveal) -> Teeth counting up (rewards) -> back to the board.
 func _results(v: Dictionary) -> void:
 	var r: Dictionary = v.get("last_results", {})
-	var t := float(v.phase_t)
+	var pst: Dictionary = v.get("presenter", {})
+	# play_freeze: FINISH!  results: who won, the placings.  rewards: the Teeth count up.
+	var t := {"play_freeze": 0.5, "results": 2.0}.get(str(pst.get("stage", "")), 2.4 + float(pst.get("t", 0.0)))
 	card_box.add_child(PartyUi.shout("FINISH!" if t < 1.2 else str(view.mg.get("title", "")), 44, PartyUi.YELLOW))
 	if t < 1.2:
 		return
@@ -1378,64 +1397,190 @@ func _show_banner(text: String, col: Color, hold: float) -> void:
 
 
 
-# --- HOW TO PLAY: the minigame instructions, a practice go, READY --------------------------
+# --- THE MINIGAME PRESENTATION: one screen per stage (MinigamePresenter) ----------------------
 
 var _practice := false
 var _practice_log: Label
 var _practice_dot: Control
 var _practice_stick: TouchStick
+var countdown_lbl: Label
+var stage_lbl: Label
+var info_panel: PanelContainer
+var info_box: VBoxContainer
+var _info_sig := ""
+var debug_lbl: Label
+var step_btn: Button
+var _last_count := ""
 
 const CONTROL_HELP := {
-	"stick": "MOVE: drag the stick (or WASD / arrow keys)",
-	"tap": "TAP the button",
-	"hold": "HOLD the button down, let go to stop",
-	"swipe": "SWIPE across the pad in the direction shown",
-	"timing": "TAP when the ring lines up with the mark",
-	"trace": "TRACE the shape with your finger",
-	"pick": "PICK one of the options",
+	"stick": "MOVE", "tap": "PRESS", "hold": "HOLD", "swipe": "SWIPE", "timing": "ON THE BEAT",
+	"trace": "TRACE", "pick": "PICK", "buttons": "CHOOSE",
 }
+const CATEGORY_COLOUR := {"FREE-FOR-ALL": PartyUi.YELLOW, "2 VS 2": PartyUi.TURQ, "1 VS 3": PartyUi.ORANGE, "DUEL": PartyUi.RED,
+	"CO-OP": PartyUi.MINT, "SPECIAL EVENT": PartyUi.PURPLE, "ENCOUNTER": PartyUi.BLOOD}
 
 
-func _how_to_play(v: Dictionary, mg: Dictionary) -> void:
+func _present(v: Dictionary) -> void:
+	var pz: Dictionary = v.get("presenter", {})
+	var stage := str(pz.get("stage", ""))
+	var rg: Dictionary = v.get("registration", {})
+	var mg: Dictionary = v.mg
+	var e: Dictionary = v.get("mg_entry", {})
+	var cat := str(rg.get("category", "MINIGAME"))
+	var cc: Color = CATEGORY_COLOUR.get(cat, PartyUi.YELLOW)
+	match stage:
+		"board_freeze":
+			pass    # the board stops; the camera leaves it
+		"selection":
+			card.visible = true
+			var kind := str(e.get("kind", "main"))
+			card_box.add_child(PartyUi.shout({"battle": "BATTLE MINIGAME!", "duel": "DUEL!", "bonus": "BONUS GAME!", "special": "SPECIAL EVENT!", "roulette": "AN ENCOUNTER!"}.get(kind, "MINIGAME TIME!"), 52, PartyUi.PINK))
+			var chip := PartyUi.chip(cat, cc, 34)
+			chip.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			card_box.add_child(chip)
+		"title":
+			card.visible = true
+			var chip2 := PartyUi.chip(cat, cc, 20)
+			chip2.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			card_box.add_child(chip2)
+			card_box.add_child(PartyUi.shout(str(rg.get("name", mg.get("title", ""))), 58, PartyUi.YELLOW))
+			var d := PartyUi.label(str(rg.get("description", "")), 24, PartyUi.INK, true)
+			d.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			card_box.add_child(d)
+		"arena_preview", "arena_intro":
+			card.visible = false
+		"teams":
+			card.visible = true
+			card_box.add_child(PartyUi.shout("WHO'S PLAYING", 40, PartyUi.PINK))
+			var teams: Array = mg.get("teams", [])
+			var seats: Array = mg.get("seats", [])
+			var row := PartyUi.hbox(18)
+			row.alignment = BoxContainer.ALIGNMENT_CENTER
+			if teams.is_empty():
+				for s2 in seats:
+					row.add_child(_player_card(int(s2), v))
+			else:
+				for ti in teams.size():
+					var col := PartyUi.vbox(6)
+					col.add_child(PartyUi.label(["TEAM 1", "TEAM 2", "TEAM 3"][mini(ti, 2)] if (teams[ti] as Array).size() > 1 or cat != "1 VS 3" else "ON THEIR OWN", 22, PartyUi.BLOOD, true))
+					for s3 in teams[ti]:
+						col.add_child(_player_card(int(s3), v))
+					row.add_child(col)
+					if ti < teams.size() - 1:
+						row.add_child(PartyUi.shout("VS", 40, PartyUi.RED))
+			card_box.add_child(row)
+			if int(e.get("pool", 0)) > 0:
+				card_box.add_child(PartyUi.label("THE POT: %d TEETH. Winner takes it." % int(e.pool), 20, PartyUi.BLOOD, true))
+			if e.get("rat_prize", false):
+				card_box.add_child(PartyUi.label("AND A DEAD RAT FOR THE WINNER.", 20, PartyUi.BLOOD, true))
+			if v.get("presentation", "MEAT_PUPPET") == "FULL_CHARACTER":
+				card_box.add_child(PartyUi.label("YOU'LL BE DOING THIS ONE YOURSELVES. IN PERSON.", 18, PartyUi.PURPLE, true))
+		"instructions":
+			card.visible = true
+			card_box.add_child(PartyUi.label(str(rg.get("name", "")), 22, PartyUi.DIM, true))
+			card_box.add_child(PartyUi.shout("HOW TO PLAY", 46, PartyUi.RED))
+			for line in rg.get("instructions", mg.get("instructions", [])):
+				card_box.add_child(PartyUi.label("• " + str(line), 22))
+			if v.mg_id == "organ_trail":
+				for m in mg.get("modifier_text", []):
+					card_box.add_child(PartyUi.label("THE CALLER'S RULE: " + str(m), 18, PartyUi.PURPLE, true))
+			_confirm_row(v, pz, "NEXT", "mg_next")
+		"controls":
+			card.visible = true
+			card_box.add_child(PartyUi.label(str(rg.get("name", "")), 22, PartyUi.DIM, true))
+			card_box.add_child(PartyUi.shout("CONTROLS", 46, PartyUi.RED))
+			card_box.add_child(PartyUi.label({"touch": "ON THE TOUCH SCREEN", "keyboard": "ON THE KEYBOARD", "pad": "ON THE CONTROLLER"}.get(Ui.device, ""), 16, PartyUi.DIM, true))
+			_control_diagram(rg)
+			if _practice:
+				_practice_area(mg)
+			_confirm_row(v, pz, "READY!", "ready", true)
+		"positioning", "countdown":
+			card.visible = false
+	if _away():
+		card_box.add_child(PartyUi.label("YOU'RE NOT AT THE TABLE. GET BACK NOW OR MISS IT.", 18, PartyUi.RED, true))
+
+
+func _player_card(s: int, v: Dictionary) -> Control:
+	var p: Dictionary = v.players[s]
+	var pc := PartyUi.panel(PartyUi.CREAM.lerp(PartyUi.seat_colour(s), 0.45), PartyUi.INK, 16)
+	pc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var l := PartyUi.label(str(p.name) + (" (YOU)" if local.has(s) else ""), 24, PartyUi.INK, true)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.autowrap_mode = TextServer.AUTOWRAP_OFF
+	pc.add_child(l)
+	return pc
+
+
+## One row per control: what it does, and how it's worked on your device (read from the
+## real bindings). On a touch screen, the actual on-screen control is drawn next to it.
+func _control_diagram(rg: Dictionary) -> void:
+	var counts := {}
+	var touch: Array = rg.get("touch", [])
+	if touch.is_empty():
+		touch = [{"kind": "buttons", "do": "", "label": "the choices that come up"}]
+	for c in touch:
+		var kd := str(c.kind)
+		var n := int(counts.get(kd, 0))
+		counts[kd] = n + 1
+		var row := PartyUi.hbox(14)
+		var what := str(c.get("label", "")).replace("_", " ").to_upper()
+		if what == "":
+			what = {"stick": "WALK AROUND"}.get(kd, str(c.get("do", "")).to_upper())
+		var key := PartyUi.chip(Ui.control_binding(kd, n).to_upper(), PartyUi.INK, 20)
+		key.custom_minimum_size = Vector2(230, 0) * PartyUi.k()
+		key.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(key)
+		var lab := PartyUi.label("%s: %s" % [CONTROL_HELP.get(kd, kd), what], 22, PartyUi.INK, true)
+		lab.custom_minimum_size = Vector2(320, 0) * PartyUi.k()
+		lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lab.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(lab)
+		if Ui.device == "touch" and kd != "buttons":
+			# the real control, small and inert: this is what it looks like on your screen
+			var w: Control = TouchStick.new() if kd == "stick" else PartyControls.make(c, func(_a): pass, "")
+			w.custom_minimum_size = Vector2(110, 110) if kd == "stick" else w.custom_minimum_size * 0.6
+			w.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			for ch in w.find_children("*", "Control", true, false):
+				(ch as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+			w.modulate.a = 0.85
+			w.set_meta("diagram", true)    # a picture of the control, not the control
+			row.add_child(w)
+		card_box.add_child(row)
+
+
+## Who's confirmed, and this screen's button (NEXT / READY), plus PRACTICE on the controls.
+func _confirm_row(v: Dictionary, pz: Dictionary, label: String, what: String, practice := false) -> void:
 	var me := _me()
-	card_box.add_child(PartyUi.label("HOW TO PLAY", 24, PartyUi.RED, true))
-	for line in mg.get("instructions", []):
-		card_box.add_child(PartyUi.label("• " + str(line), 18))
-	var ctl: Array = mg.get("controls", [])
-	var acts: Array = mg.get("actions", [])
-	if not ctl.is_empty() or not acts.is_empty():
-		card_box.add_child(PartyUi.label("CONTROLS", 22, PartyUi.RED, true))
-		for c in ctl:
-			var nm := str(c.get("label", c.get("do", ""))).replace("_", " ").to_upper()
-			card_box.add_child(PartyUi.label("• %s%s" % [CONTROL_HELP.get(str(c.kind), str(c.kind)), (" (" + nm + ")") if nm != "" else ""], 17))
-		if ctl.is_empty():
-			card_box.add_child(PartyUi.label("• Choose with the buttons that come up.", 17))
-	if _practice:
-		_practice_area(mg)
-	# who's ready
-	var ready: Array = v.get("ready", [])
+	var done: Array = pz.get("confirmed", [])
+	var waiting: Array = pz.get("waiting", [])
 	var row := PartyUi.hbox(8)
-	for p in v.players:
-		if not (p.alive or p.get("ghost", false)):
-			continue
-		var is_ai := str(p.get("kind", "")) == "ai"
-		var ok := is_ai or ready.has(int(p.seat))
-		row.add_child(PartyUi.chip("%s %s" % [p.name, "READY" if ok else "..."], PartyUi.MINT if ok else PartyUi.CREAM, 15))
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	for s in v.mg.get("seats", []):
+		var p: Dictionary = v.players[int(s)]
+		var ok := str(p.get("kind", "")) == "ai" or done.has(int(s)) or not waiting.has(int(s))
+		row.add_child(PartyUi.chip("%s %s" % [p.name, "✓" if ok else "..."], PartyUi.MINT if ok else PartyUi.CREAM, 17))
 	card_box.add_child(row)
 	var btns := PartyUi.hbox(12)
 	btns.alignment = BoxContainer.ALIGNMENT_CENTER
-	if not ctl.is_empty() or not acts.is_empty():
+	if practice:
 		btns.add_child(PartyUi.button("STOP PRACTISING" if _practice else "PRACTICE", func():
 			_practice = not _practice
 			_sig.erase("card"), PartyUi.TURQ, 240.0, 22))
-	var im_ready := me >= 0 and ready.has(me)
-	var rb := PartyUi.primary("READY!" if not im_ready else "WAITING FOR THE OTHERS", func():
-		_practice = false
-		for s in local:
-			act.emit(s, {"t": "ready"}), 300.0)
-	rb.disabled = im_ready
-	btns.add_child(rb)
+	var mine: bool = me >= 0 and (v.mg.get("seats", []) as Array).has(me)
+	var already: bool = done.has(me)
+	if mine:
+		var b := PartyUi.primary(label if not already else "WAITING FOR THE OTHERS", func():
+			_practice = false
+			for s in local:
+				act.emit(s, {"t": what}), 300.0)
+		b.disabled = already
+		btns.add_child(b)
+	else:
+		btns.add_child(PartyUi.label("You're watching this one.", 18, PartyUi.DIM, true))
 	card_box.add_child(btns)
+	var left := maxf(0.0, float(pz.get("length", 0.0)) - float(pz.get("t", 0.0)))
+	if left > 0.5:
+		card_box.add_child(PartyUi.label("(take your time: at least %ds to read)" % int(ceil(left)), 15, PartyUi.DIM))
 
 
 ## Practice: the game's real controls, wired to a little feedback line instead of the match.
@@ -1536,3 +1681,90 @@ func _search_card(v: Dictionary) -> void:
 					card_box.add_child(PartyUi.label("Not every scrap was found. Whatever it said, nobody will know.", 18))
 				else:
 					card_box.add_child(PartyUi.label("%d of %d pieces on the table. Somebody kept theirs." % [int(r.laid), int(r.total)], 18))
+
+
+
+## Captions and the countdown, every frame, from the presenter's stage and clock.
+func _stage_overlay(v: Dictionary) -> void:
+	_info(v)
+	var fl: Dictionary = v.get("flow", {})
+	if debug_lbl.visible:
+		debug_lbl.text = "FLOW %s  %.1fs  | %s | stage %s | invalid %d" % [str(fl.get("state", "")), float(fl.get("t", 0)), str(fl.get("waiting_on", "")),
+			str(v.get("presenter", {}).get("stage", "-")), int(fl.get("invalid", 0))]
+	step_btn.visible = str(fl.get("waiting_on", "")).begins_with("DEBUG STEP")
+	var pz: Dictionary = v.get("presenter", {})
+	var stage := str(pz.get("stage", ""))
+	var rg: Dictionary = v.get("registration", {})
+	var cap := ""
+	match stage:
+		"arena_preview":
+			cap = str(rg.get("arena_title", ""))
+		"arena_intro":
+			cap = "%s: THE ARENA" % str(rg.get("name", ""))
+		"positioning":
+			cap = "TAKE YOUR PLACES"
+		"play_freeze":
+			cap = ""
+	stage_lbl.visible = cap != ""
+	stage_lbl.text = cap
+	# 3, 2, 1, GO! over the countdown's length (GO! lingers into the first moment of play)
+	var txt := ""
+	if stage == "countdown":
+		var length := maxf(0.1, float(pz.get("length", 4.0)))
+		var k := int(float(pz.get("t", 0.0)) / (length / 4.0))
+		txt = ["3", "2", "1", "GO!"][clampi(k, 0, 3)]
+	elif stage == "play" and float(pz.get("t", 9.0)) < 0.7:
+		txt = "GO!"
+	countdown_lbl.visible = txt != ""
+	if txt != _last_count:
+		_last_count = txt
+		countdown_lbl.text = txt
+		if txt != "":
+			countdown_lbl.add_theme_color_override("font_color", PartyUi.MINT if txt == "GO!" else PartyUi.YELLOW)
+			countdown_lbl.pivot_offset = countdown_lbl.size * 0.5
+			countdown_lbl.scale = Vector2(1.6, 1.6)
+			countdown_lbl.create_tween().tween_property(countdown_lbl, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			Sfx.play("bell" if txt == "GO!" else "blip", -2.0, 0.0, 1.4 if txt == "GO!" else 1.0)
+
+
+
+## WHO is playing (the turn announcement) and WHAT happened (the landing): one panel, one job.
+func _info(v: Dictionary) -> void:
+	var fl := str(v.get("flow", {}).get("state", ""))
+	var sig := ""
+	var s := int(v.get("turn", {}).get("seat", -1)) if str(v.phase) == "turn" else -1
+	if s >= 0 and fl == "TURN_ANNOUNCEMENT":
+		sig = "turn%d" % s
+	elif s >= 0 and fl == "LANDING_EVENT":
+		sig = "land%d:%d" % [s, int(v.players[s].space)]
+	if sig == _info_sig:
+		return
+	_info_sig = sig
+	_clear(info_box)
+	info_panel.visible = sig != ""
+	if sig == "":
+		return
+	var p: Dictionary = v.players[s]
+	if fl == "TURN_ANNOUNCEMENT":
+		info_panel.add_theme_stylebox_override("panel", PartyUi.box(PartyUi.CREAM.lerp(PartyUi.seat_colour(s), 0.4), PartyUi.INK, 16))
+		info_box.add_child(PartyUi.shout("%s'S TURN" % str(p.name).to_upper() if not local.has(s) else "YOUR TURN!", 40, PartyUi.seat_colour(s).lightened(0.2)))
+		var row := PartyUi.hbox(8)
+		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		row.add_child(PartyUi.chip("%d TEETH" % int(p.teeth), PartyUi.CREAM, 20))
+		row.add_child(PartyUi.chip("%d DEAD RATS" % int(p.rats), PartyUi.YELLOW, 20))
+		info_box.add_child(row)
+		var items: Array = p.get("items", [])
+		if not items.is_empty():
+			info_box.add_child(PartyUi.label("POCKETS: " + ", ".join(items.map(func(it): return Items.name_of(it))), 18, PartyUi.INK, true))
+		var sts: Array = p.get("statuses", [])
+		if not sts.is_empty():
+			info_box.add_child(PartyUi.label("AFFLICTED: " + ", ".join(sts.map(func(st): return str(st.get("id", "")).replace("_", " ").to_upper())), 17, PartyUi.BLOOD, true))
+		if p.get("ghost", false):
+			info_box.add_child(PartyUi.label("A GHOST. Haunt someone, scavenge, or buy your way back.", 17, PartyUi.PURPLE, true))
+	else:
+		var sp := int(p.space)
+		var t := str(v.get("board_types", {}).get(str(sp), v.get("space_type", "")))
+		var info: Array = PartyUi.SPACE_INFO.get(t, [t.to_upper(), ""])
+		info_panel.add_theme_stylebox_override("panel", PartyUi.box(PartyUi.space_colour(t).lerp(PartyUi.CREAM, 0.45), PartyUi.INK, 16))
+		info_box.add_child(PartyUi.shout(str(info[0]), 40, PartyUi.space_colour(t).lightened(0.25)))
+		info_box.add_child(PartyUi.label(str(info[1]), 22, PartyUi.INK, true))

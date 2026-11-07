@@ -42,17 +42,30 @@ func _ready() -> void:
 			Net.core.brains[s].coop = 0.95
 
 
+var _last_key := ""
+var _seen := {}
+
+
 func _process(delta: float) -> void:
 	if Net.core == null:
 		return
 	_t += delta
 	var v: Dictionary = Net.last_view
-	# let the instructions card be seen before the bot presses READY
-	if v.is_empty() or str(v.get("phase", "")) != "mg_intro" or float(v.get("phase_t", 0.0)) > 2.5:
-		bot.step(Net.last_view, delta)
+	bot.step(Net.last_view, delta)
 	if v.is_empty():
 		return
 	var ph := str(v.phase)
+	# every presentation stage, and the turn's announcement and landing, once each
+	var st := str(v.get("presenter", {}).get("stage", ""))
+	var fl := str(v.get("flow", {}).get("state", ""))
+	var key := st if st != "" else (fl if fl in ["TURN_ANNOUNCEMENT", "LANDING_EVENT", "ROUND_END"] else "")
+	if key != "" and key != _last_key:
+		_last_key = key
+		if not _seen.has(key):
+			_seen[key] = true
+			get_tree().create_timer(0.9).timeout.connect(func(): _shot("flow_" + key.to_lower()))
+	elif key == "":
+		_last_key = ""
 	if ph != _last_phase:
 		_last_phase = ph
 		var tag := ph + ("_" + str(v.mg_id) if ph.begins_with("mg") else "")

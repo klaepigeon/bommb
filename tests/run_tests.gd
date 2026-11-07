@@ -22,7 +22,7 @@ func _ready() -> void:
 		"full_matches", "lengths_and_counts", "awards", "callers_game", "rules", "events", "facility", "facility_misses",
 		"cutscenes", "save_reload", "hot_potato_defuse", "roulette_void", "chairs_hazards", "disconnect", "views_hide_secrets",
 		"cheating", "suspicion_death", "cage_dice", "cage_roulette", "ghosts_and_draws", "resurrection_square", "ghost_buys_life",
-		"roulette_social", "poison", "treatment", "all_minigames", "core_ten", "caller_reacts", "no_chat", "organ_trail", "escape_room", "search"]
+		"roulette_social", "poison", "treatment", "all_minigames", "core_ten", "caller_reacts", "no_chat", "organ_trail", "escape_room", "search", "presentation", "turn_flow", "input_bindings"]
 	for t in tests:
 		if args.has("only") and args.only != t:
 			continue
@@ -54,6 +54,7 @@ func _core(kinds := ["local", "local", "local", "local"], seed_v := 99, opts := 
 	var core := MatchCore.new()
 	core.fast = true
 	core.setup(seats(kinds.size(), kinds), seed_v, opts)
+	core.flow.report = false   # tests poke the rules directly (skipping turns); acceptance tests don't
 	return core
 
 
@@ -1745,3 +1746,197 @@ func test_search() -> void:
 			check(c2.players[1].teeth > int(before[1][1]), "the keeper gets Teeth for the scraps")
 		_until(c2, func(): return c2.phase == "turn", 30.0)
 		check(c2.phase == "turn", "back to the board after the reveal")
+
+
+
+# --- v0.2.6: THE PRESENTATION FRAMEWORK AND THE TURN LOOP ---------------------------------
+
+## Different minigames, one presentation controller: every stage, in order, the board frozen,
+## their own title/description/instructions/controls/arena, a countdown, results and rewards
+## through the shared system, back to the board. FFA, 2v2, 1v3, a duel, co-op, a special event
+## and an encounter; AI only and with a person at the table.
+func test_presentation() -> void:
+	var cases := [["meat_grinder", 4, "FREE-FOR-ALL"], ["tug_of_war", 4, "2 VS 2"], ["the_controller", 4, "1 VS 3"],
+		["last_man_breathing", 2, "DUEL"], ["dont_press_it", 4, "CO-OP"], ["organ_trail", 4, "SPECIAL EVENT"], ["roulette", 4, "ENCOUNTER"]]
+	for c in cases:
+		for kinds in [[], ["local", "ai", "ai", "ai"]]:
+			var r := MinigameValidation.run_through(c[0], c[1], kinds)
+			var who := "%s (%s)" % [c[0], "with a person" if not kinds.is_empty() else "AI"]
+			check((r.problems as Array).is_empty(), "%s: through the whole presentation %s" % [who, str(r.problems)])
+			check(r.stages == MinigamePresenter.STAGES, "%s: all 15 stages, in order" % who)
+			check(str(r.shown.get("title", {}).get("category", "")) == c[2], "%s: shown as %s" % [who, c[2]])
+			check(str(r.shown.get("title", {}).get("name", "")) == MinigameRegistry.title_of(c[0]), "%s: its own title" % who)
+			var fl: Array = r.flows
+			var want := ["MINIGAME_SELECTION", "MINIGAME_INTRO", "MINIGAME_INSTRUCTIONS", "MINIGAME_ARENA_INTRO", "MINIGAME_COUNTDOWN", "MINIGAME_ACTIVE", "MINIGAME_RESULTS", "MINIGAME_RETURN"]
+			var i := fl.find("MINIGAME_SELECTION")
+			check(i >= 0 and fl.slice(i, i + want.size()) == want, "%s: the flow states in order (%s)" % [who, str(fl)])
+	# the instructions can't be skipped: a person who hasn't pressed NEXT holds it there
+	var core := MinigameValidation._core(4, ["local", "ai", "ai", "ai"])
+	core.flow.report = false
+	core._start_round()
+	_until(core, func(): return core.phase == "turn", 30.0)
+	core.flow.goto("TURN_END")
+	core.rules.sub = "idle"
+	core.board_round_done()
+	core.mg_queue.clear()
+	core._start_entry({"kind": "battle", "seats": [], "id": "meat_grinder", "wager": 0, "by": -1})
+	_until(core, func(): return core.presenter.stage == "instructions", 60.0)
+	# well past the reading time, short of the (long) safety limit
+	while core.presenter.t < core.pace("mg_instructions_max") * 0.8:
+		core.tick(0.05)
+	check(core.presenter.t > core.pace("mg_instructions") * 3.0, "(waited well past the reading time)")
+	check(core.presenter.stage == "instructions", "instructions wait for the person who hasn't pressed NEXT")
+	check(str(core.flow.waiting_on).contains("NEXT"), "and the flow says what it's waiting for: " + str(core.flow.waiting_on))
+	check(core.mg.t == 0.0, "the game hasn't started underneath")
+	core.action(0, {"t": "mg_next"})
+	core.tick(0.05)
+	check(core.presenter.stage == "controls", "NEXT: on to the controls")
+	core.action(0, {"t": "ready"})
+	_until(core, func(): return core.presenter.stage == "arena_intro", 30.0)
+	check(core.presenter.stage == "arena_intro", "READY (after the reading time): into the arena")
+	# reading time is honoured even when everyone is AI
+	var ai := MinigameValidation.run_through("spin_cycle", 4)
+	check((ai.problems as Array).is_empty(), "spin cycle, AI only")
+	# pacing presets: complete, and FAST keeps every stage
+	for pr in Pacing.PRESETS.keys():
+		var pc := Pacing.new(pr)
+		for key in Pacing.PRESETS.standard.keys():
+			check(Pacing.PRESETS[pr].has(key), "%s has %s" % [pr, key])
+		check(pc.get_t("mg_instructions") >= 3.0, "%s gives at least 3s to read the instructions" % pr)
+		check(pc.get_t("mg_countdown") >= 3.0, "%s keeps the 3-2-1-GO" % pr)
+	check(Pacing.new("relaxed").get_t("step") > Pacing.new("fast").get_t("step"), "relaxed moves slower than fast")
+	# every registered game is complete
+	for id in MinigameRegistry.GAMES.keys():
+		if MinigameRegistry.GAMES[id].get("retired", false):
+			continue
+		var v := MinigameValidation.check(id)
+		check((v.problems as Array).is_empty(), "%s: registration complete %s" % [id, str(v.problems)])
+	# and an incomplete one is caught
+	var bare := Minigame.new()
+	bare.init(core, [0, 1] as Array[int], 0)
+	var bad := MinigameRegistry.validate("meat_grinder", bare)
+	check(bad.has("no instructions"), "a game with no instructions is flagged incomplete")
+	MinigameRegistry._checked.erase("meat_grinder")
+	# debug stepping: nothing moves on until "flow_next"
+	var dc := MinigameValidation._core(4)
+	dc.flow.report = false
+	dc.presenter.debug_step = true
+	dc._start_round()
+	_until(dc, func(): return dc.phase == "turn", 30.0)
+	dc.flow.goto("TURN_END")
+	dc.rules.sub = "idle"
+	dc.board_round_done()
+	dc.mg_queue.clear()
+	dc._start_entry({"kind": "battle", "seats": [], "id": "meat_grinder", "wager": 0, "by": -1})
+	for k in 200:
+		dc.tick(0.05)
+	check(dc.presenter.stage == "board_freeze" and str(dc.flow.waiting_on).begins_with("DEBUG STEP"), "debug step: held at the first stage")
+	dc.action(0, {"t": "flow_next"})
+	dc.tick(0.05)
+	check(dc.presenter.stage == "selection", "flow_next: one stage on")
+
+
+## A whole four-player match, one person and three AI, at real (scaled) pacing: every turn
+## announced, moved, landed, resolved and ended; the round ends; the game is presented; the
+## board waits; results, then rewards; back to the board; the next round. No invalid change.
+func test_turn_flow() -> void:
+	for seed_v in [61, 62, 63]:
+		var core := MatchCore.new()
+		core.fast = true
+		core.slow_flow = true
+		core.setup(seats(4, ["local", "ai", "ai", "ai"]), seed_v, {"turns": 3})
+		var moves_while_frozen := 0
+		var rewards_before_results := 0
+		var results_seen := false
+		var t := 0.0
+		while core.ending == "" and t < 4000.0:
+			# the person at seat 0 does what the screens ask
+			match core.phase:
+				"intro", "mg_results", "finale":
+					core.action(0, {"t": "ready"})
+				"turn":
+					if core.rules.current() == 0:
+						match core.rules.sub:
+							"pre":
+								core.action(0, {"t": "roll"})
+							"prompt":
+								core.action(0, core.rules.default_answer())
+							"ghost":
+								core.action(0, {"t": "ghost", "do": "scavenge"})
+				"search":
+					core.action(0, {"t": "search_choice", "keep": false})
+			if core.presenter.active:
+				core.action(0, {"t": "mg_next" if core.presenter.stage == "instructions" else "ready"})
+			core.tick(0.05)
+			t += 0.05
+			for e in core.take_events():
+				match str(e.e):
+					"move":
+						if core.presenter.active:
+							moves_while_frozen += 1
+					"results":
+						results_seen = true
+					"rewards":
+						if not results_seen:
+							rewards_before_results += 1
+						results_seen = false
+		var h: Array = core.flow.history
+		check(core.ending != "", "seed %d: the match finished (%s)" % [seed_v, core.ending])
+		check(core.flow.invalid.is_empty(), "seed %d: no invalid flow change %s" % [seed_v, str(core.flow.invalid)])
+		check(moves_while_frozen == 0, "seed %d: nobody moves on the board during a minigame" % seed_v)
+		check(rewards_before_results == 0, "seed %d: results are shown before rewards are paid" % seed_v)
+		# round 1, as it should go
+		var i0 := h.find("ROUND_START")
+		var ann := 0
+		var ends := 0
+		var j := i0 + 1
+		while j < h.size() and h[j] != "ROUND_END":
+			if h[j] == "TURN_ANNOUNCEMENT":
+				ann += 1
+			if h[j] == "TURN_END":
+				ends += 1
+			j += 1
+		check(ann == 4 and ends == 4, "seed %d: four turns announced and ended in round 1 (%d, %d)" % [seed_v, ann, ends])
+		var first_turn := h.slice(h.find("TURN_ANNOUNCEMENT"), h.find("TURN_END") + 1)
+		check(first_turn.has("PLAYER_MOVEMENT") and first_turn.has("EVENT_RESOLUTION") and first_turn.back() == "TURN_END", "seed %d: a turn: announce, move, (land), resolve, end %s" % [seed_v, str(first_turn)])
+		var after := h.slice(j, j + 10)
+		check(after.slice(0, 9) == ["ROUND_END", "MINIGAME_SELECTION", "MINIGAME_INTRO", "MINIGAME_INSTRUCTIONS", "MINIGAME_ARENA_INTRO", "MINIGAME_COUNTDOWN", "MINIGAME_ACTIVE", "MINIGAME_RESULTS", "MINIGAME_RETURN"],
+			"seed %d: the round ends into the minigame presentation %s" % [seed_v, str(after)])
+		var k2 := h.find("ROUND_CONTINUE", j)
+		check(k2 > j and h.find("ROUND_START", k2) == k2 + 1, "seed %d: then the next round begins" % seed_v)
+		check(core.round_n >= 2, "seed %d: more than one round played" % seed_v)
+
+
+## The controls shown are the controls bound: keyboard and controller bindings read back from
+## the InputMap, and a controller button actually works a minigame button.
+func test_input_bindings() -> void:
+	var ui = get_node_or_null("/root/Ui")
+	check(ui != null, "the UI manager is there")
+	if ui == null:
+		return
+	ui.ensure_actions()
+	check(ui.binding("mg_tap", "keyboard") == "SPACE", "keyboard: tap is SPACE (%s)" % ui.binding("mg_tap", "keyboard"))
+	check(ui.binding("mg_tap", "pad") == "A", "controller: tap is A")
+	check(ui.binding("mg_hold", "pad") == "RB", "controller: hold is RB")
+	check(ui.control_binding("stick", 0, "pad") == "LEFT STICK", "controller: move is the left stick")
+	check(ui.control_binding("tap", 1, "keyboard") == "E", "keyboard: the second tap is E")
+	check(ui.control_binding("hold", 0, "touch").contains("hold"), "touch: hold the button")
+	# a real HUD, a minigame button, the controller's A
+	var hud := Hud.new()
+	add_child(hud)
+	var hit := [0]
+	var b := Button.new()
+	b.pressed.connect(func(): hit[0] += 1)
+	hud.add_child(b)
+	hud._taps.append(b)
+	var pad := InputEventJoypadButton.new()
+	pad.button_index = JOY_BUTTON_A
+	pad.pressed = true
+	check(hud.key_input(pad), "the HUD takes the controller's A")
+	check(hit[0] == 1, "and it presses the minigame's button")
+	var key := InputEventKey.new()
+	key.physical_keycode = KEY_SPACE
+	key.pressed = true
+	hud.key_input(key)
+	check(hit[0] == 2, "SPACE does too")
+	hud.queue_free()

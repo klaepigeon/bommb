@@ -225,3 +225,7 @@ func ai(seat: int, brain: AiBrain, view: Dictionary, dt: float) -> void:
 	brain.wait = 0.0
 	brain.hold_time = brain.rng.randf_range(0.7, 2.6) * (1.3 - brain.nerve * 0.6)
 	action(seat, {"t": "mg", "do": "pass", "target": brain.rival(core, seat) if brain.coop < 0.5 else _random_other(seat)})
+
+
+func buttons_only() -> bool:
+	return true

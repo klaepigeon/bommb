@@ -189,3 +189,7 @@ func ai(seat: int, brain: AiBrain, view: Dictionary, dt: float) -> void:
 func ai_choice(seat: int, brain: AiBrain):
 	var ok := options.filter(func(o): return can_choose(seat, o))
 	return ok[brain.rng.randi_range(0, ok.size() - 1)] if not ok.is_empty() else options[0]
+
+
+func buttons_only() -> bool:
+	return true

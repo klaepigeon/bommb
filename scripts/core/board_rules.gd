@@ -17,7 +17,8 @@ const BAD_TAKE := 3
 var core: MatchCore
 var order: Array[int] = []
 var idx := 0
-var sub := "idle"      # pre | moving | prompt | after | ghost | missed | idle
+var sub := "idle"      # announce | pre | moving | landing | prompt | resolving | after | ghost | missed | search | idle
+var _then := "pre"      # what the announcement leads into
 var sub_t := 0.0
 var roll := 0
 var dice: Array = []    # what the dice showed (for the view)
@@ -62,16 +63,26 @@ func _start_turn() -> void:
 	walked = []
 	var s := order[idx]
 	var pl := core.p(s)
+	# TURN ANNOUNCEMENT: whose turn it is, before anything happens
+	core.flow.goto("TURN_ANNOUNCEMENT")
+	sub = "announce"
 	if pl.ghost:
-		sub = "ghost"
+		_then = "ghost"
 		core.emit({"e": "turn", "seat": s, "ghost": true})
 		core.say("ghost_turn", {"name": pl.name})
+		if core.fast and not core.slow_flow:
+			_end_announce()
 		return
 	if pl.away():
-		_missed(s)
+		_then = "missed"
+		core.emit({"e": "turn", "seat": s, "away": true})
+		if core.fast and not core.slow_flow:
+			_end_announce()
 		return
-	sub = "pre"
+	_then = "pre"
 	core.emit({"e": "turn", "seat": s})
+	if core.fast and not core.slow_flow:
+		_end_announce()
 	core.say("turn", {"name": pl.name})
 	core.status.tick_turn(s)
 	if pl.loophole > 0:
@@ -81,6 +92,7 @@ func _start_turn() -> void:
 ## They're not at the table. The board goes on without them.
 func _missed(s: int) -> void:
 	var pl := core.p(s)
+	core.flow.goto("TURN_END")
 	sub = "missed"
 	sub_t = 0.0
 	pl.stat("missed_turns")
@@ -98,6 +110,17 @@ func tick(dt: float) -> void:
 	sub_t += dt
 	var s := current()
 	match sub:
+		"announce":
+			core.flow.waiting_on = "the turn announcement"
+			if sub_t >= core.pace("turn_announce"):
+				_end_announce()
+		"landing":
+			core.flow.waiting_on = "the landing"
+			if sub_t >= core.pace("landing"):
+				core.flow.goto("EVENT_RESOLUTION")
+				sub = "resolving"
+				sub_t = 0.0
+				_land()
 		"pre":
 			if core.p(s).away():
 				_missed(s)
@@ -108,7 +131,7 @@ func tick(dt: float) -> void:
 			if not core.is_ai(s) and sub_t > core._wait(MatchCore.HUMAN_TURN_LIMIT):
 				action(s, {"t": "ghost", "do": "scavenge"})
 		"moving":
-			if sub_t >= core._wait(STEP_TIME):
+			if sub_t >= core.pace("step"):
 				sub_t = 0.0
 				_step()
 		"prompt":
@@ -119,10 +142,10 @@ func tick(dt: float) -> void:
 			if not core.is_ai(s) and sub_t > core._wait(PROMPT_LIMIT):
 				action(s, default_answer())
 		"missed":
-			if sub_t >= core._wait(MISSED_TIME):
+			if sub_t >= core.pace("turn_end"):
 				next_turn()
 		"after":
-			if sub_t >= core._wait(AFTER_TIME):
+			if sub_t >= core.pace("turn_end"):
 				next_turn()
 
 
@@ -140,9 +163,27 @@ func default_answer() -> Dictionary:
 	return {"t": "answer", "target": prompt.get("options", [-1])[0]}
 
 
+## The announcement's over: the player's move (or the ghost's, or a missed turn).
+func _end_announce() -> void:
+	var s := current()
+	sub_t = 0.0
+	match _then:
+		"ghost":
+			core.flow.goto("PLAYER_MOVEMENT")
+			sub = "ghost"
+		"missed":
+			_missed(s)
+		_:
+			core.flow.goto("PLAYER_MOVEMENT")
+			sub = "pre"
+
+
 func action(seat: int, a: Dictionary) -> void:
 	if seat != current():
 		return
+	# acting during your own announcement (a test, a fast thumb): the announcement ends first
+	if sub == "announce" and _then != "missed":
+		_end_announce()
 	var pl := core.p(seat)
 	var t := str(a.get("t", ""))
 	match sub:
@@ -231,6 +272,7 @@ func _roll(seat: int) -> void:
 
 
 func _after() -> void:
+	core.flow.goto("TURN_END")
 	sub = "after"
 	sub_t = 0.0
 	prompt = {}
@@ -314,7 +356,16 @@ func _arrive(to: int) -> void:
 			return
 		core.toast("The Dead Rat. %d Teeth. %s has %d." % [price, pl.name, pl.teeth], s)
 	if steps <= 0:
-		_land()
+		# LANDING: stop, show where they are; the square resolves after a beat
+		core.flow.goto("LANDING_EVENT")
+		sub = "landing"
+		sub_t = 0.0
+		var spn: Dictionary = core.graph.node(pl.space)
+		core.emit({"e": "stopped", "seat": s, "space": pl.space, "type": str(spn.type)})
+		if core.fast and not core.slow_flow:
+			core.flow.goto("EVENT_RESOLUTION")
+			sub = "resolving"
+			_land()
 	elif sp.type == "door":
 		_ask("door_stop", [true, false], {}, "move")
 

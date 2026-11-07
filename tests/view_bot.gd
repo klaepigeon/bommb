@@ -20,7 +20,15 @@ func step(view: Dictionary, dt: float) -> void:
 			Net.send_action(seat, {"t": "ghost", "do": "rise" if int(me.rats) >= int(view.get("resurrect_cost", 1)) else "scavenge"})
 		return
 	match str(view.phase):
-		"intro", "mg_intro", "mg_results", "finale":
+		"mg_intro":
+			# the presentation asks people for NEXT (instructions) and READY (controls)
+			var st := str(view.get("presenter", {}).get("stage", ""))
+			if st == "instructions":
+				Net.send_action(seat, {"t": "mg_next"})
+			elif st == "controls":
+				Net.send_action(seat, {"t": "ready"})
+			_t = 0.0
+		"intro", "mg_results", "finale":
 			Net.send_action(seat, {"t": "ready"})
 			_t = 0.0
 		"turn":

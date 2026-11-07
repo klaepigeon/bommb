@@ -37,6 +37,22 @@ const GLYPH := {"start": "GO", "normal": "+3", "bonus": "★", "bad": "−3", "e
 	"caller": "C", "trap": "▲", "hidden": "…", "rulebook": "§", "veto": "✕", "death": "✝", "surgery": "✚", "signpost": "⇆",
 	"rotator": "↻", "floodgate": "≈", "switch": "⇄", "conveyor": "»", "wheel": "✺", "control": "◎", "clue": "#", "door": "▯", "note": "~", "search": "?!"}
 
+## What every square is, for the landing panel: its name, and what it does to you.
+const SPACE_INFO := {
+	"start": ["THE START", "Pass it: +3 Teeth."], "normal": ["A TEETH SQUARE", "+3 Teeth."], "bad": ["A BAD SQUARE", "-3 Teeth."],
+	"bonus": ["A BONUS SQUARE", "Something good from the machines."], "event": ["AN EVENT", "Something happens. To someone."],
+	"item": ["AN ITEM SQUARE", "Something for your pockets."], "shop": ["THE SHOP", "Spend your Teeth."], "black_market": ["THE BLACK MARKET", "Spend them on worse things."],
+	"medical": ["THE MEDIC", "Treatment, for a price."], "minigame": ["A MINIGAME SQUARE", "A game, right now."], "duel": ["A DUEL", "Pick someone. Wager. Play."],
+	"battle": ["A BATTLE", "Everyone puts Teeth in a pot. One game."], "roulette": ["THE REVOLVER", "Russian Roulette at the round's end."],
+	"resurrect": ["THE RESURRECTION SQUARE", "Someone dead comes back."], "poison": ["A POISON SQUARE", "Drink it?"], "gamble": ["A GAMBLE", "Double or nothing."],
+	"caller": ["HIS SQUARE", "The Caller decides."], "trap": ["A TRAP", "It goes off."], "hidden": ["A HIDDEN SQUARE", "Something's under it."],
+	"rulebook": ["THE RULEBOOK", "A new rule for everyone."], "veto": ["THE VETO", "Strike a rule out."], "death": ["THE DEATH MACHINE", "It might kill you."],
+	"surgery": ["THE OPERATING THEATRE", "ORGAN TRAIL, after the turns."], "signpost": ["A SIGNPOST", "Point the road the other way."],
+	"rotator": ["THE ROTATING PLATFORM", "Turn it."], "floodgate": ["THE FLOODGATES", "Open or shut."], "switch": ["A SWITCH", "Flip a path."],
+	"conveyor": ["A CONVEYOR", "It carries you."], "wheel": ["THE WHEEL", "Spin it."], "control": ["THE CONTROL DESK", "Pull a lever."],
+	"search": ["SEARCH THE ROOM", "Everyone gets up and searches."],
+}
+
 static var _title: Font
 static var _body: Font
 static var _theme: Theme

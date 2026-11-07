@@ -88,5 +88,5 @@ How a match flows, how to add a minigame, and what's done: [docs/CHECKLIST.md](d
 v0.2 (ghosts, Dead Rats, suspicion and the Cage, cheating, leaving the table, poisons, ten
 new games, the Russian Roulette encounter): [docs/V02.md](docs/V02.md).
 v0.2.5 and MURDERLAND (the party board, Control System, arenas, ORGAN TRAIL, escape room,
-saves, match length and mode): [docs/V025.md](docs/V025.md).
+saves, match length and mode): [docs/V025.md](docs/V025.md). Game flow, the minigame presentation framework, pacing and adding minigames: [docs/FLOW.md](docs/FLOW.md).
 Networking, the relay, and what still needs real devices: [docs/NETWORKING.md](docs/NETWORKING.md).

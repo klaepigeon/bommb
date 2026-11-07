@@ -360,7 +360,8 @@ func resume_offline(d: Dictionary) -> void:
 func _begin(arr: Array, seed_v: int) -> void:
 	in_match = true
 	core = MatchCore.new()
-	core.setup(arr, seed_v, {"turns": int(Settings.get_v("match_turns", 15)), "mode": str(Settings.get_v("match_mode", "classic"))})
+	core.setup(arr, seed_v, {"turns": int(Settings.get_v("match_turns", 15)), "mode": str(Settings.get_v("match_mode", "classic")),
+		"pacing": str(Settings.get_v("pacing", "standard")), "flow_step": OS.get_cmdline_user_args().has("--flow-step")})
 	match_started.emit()
 
 

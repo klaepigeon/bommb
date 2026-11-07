@@ -25,6 +25,7 @@ var values := {
 	"left_handed": false,      # swap the stick and the buttons
 	"match_turns": 15,
 	"match_mode": "classic",
+	"pacing": "standard",
 }
 
 

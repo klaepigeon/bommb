@@ -86,6 +86,12 @@ var victory: VictoryManager
 var cutscenes: CutsceneManager
 var machines: BoardMachines
 var search: SearchEvent
+var flow := GameFlow.new()          # the explicit game-flow state (GameFlow)
+var pacing := Pacing.new()          # every presentation timing (Pacing)
+var presenter: MinigamePresenter    # every minigame's presentation sequence
+var incomplete: Dictionary = {}     # minigame id -> what its registration is missing
+var _pending_results: Dictionary = {}
+var slow_flow := false              # tests: run the full presentation even when fast
 var pending_encounter := ""          # "roulette" | "battle": a square has called it for this round
 var _next_mg := ""
 var _last_mg := ""
@@ -101,6 +107,9 @@ func setup(seat_list: Array, match_seed: int = 0, opts := {}) -> void:
 	max_rounds = int(LENGTHS.get(turns, turns)) if turns is String else int(turns)
 	max_rounds = clampi(max_rounds, 1, 60)
 	mode = str(opts.get("mode", "classic"))
+	pacing = Pacing.new(str(opts.get("pacing", "standard")))
+	presenter = MinigamePresenter.new(self)
+	presenter.debug_step = bool(opts.get("flow_step", false))
 	graph = BoardGraph.load_board(str(opts.get("board", "res://assets/data/murderland.json")))
 	board = graph.nodes
 	board_name = graph.name
@@ -136,6 +145,7 @@ func setup(seat_list: Array, match_seed: int = 0, opts := {}) -> void:
 		p.teeth = int(opts.get("start_teeth", 10))
 	say("intro")
 	_set_phase("intro")
+	flow.goto("MATCH_INTRO")
 
 
 # --- events -------------------------------------------------------------------------
@@ -382,17 +392,26 @@ func tick(dt: float) -> void:
 	if cutscenes.blocking():
 		phase_t -= dt
 		return
+	flow.tick(dt)
 	match phase:
 		"intro":
-			if phase_t > _wait(INTRO_TIME) or _all_ready():
+			if phase_t > pace("intro") or _all_ready():
 				_start_round()
+		"round_start":
+			flow.waiting_on = "the round announcement"
+			if phase_t >= pace("round_start"):
+				_set_phase("turn")
+				rules.begin_round()
+		"round_end":
+			flow.waiting_on = "the end-of-round announcement"
+			if phase_t >= pace("round_end"):
+				_round_end_done()
 		"turn":
 			rules.tick(dt)
 		"search":
 			search.tick(dt)
-		"mg_intro":
-			if phase_t > _wait(MG_INTRO_TIME) or _all_ready():
-				_register_and_play()
+		"mg_intro", "mg_results", "mg_return":
+			presenter.tick(dt)
 		"mg_play":
 			mg.tick(dt)
 			for s in mg.seats:
@@ -401,15 +420,11 @@ func tick(dt: float) -> void:
 			for s in ghosts():
 				if is_ai(s):
 					brains[s].ghost_minigame(self, mg, dt)
-			if mg.done:
-				_finish_minigame()
-		"mg_results":
-			if phase_t > _wait(MG_RESULTS_TIME) or _all_ready():
-				_after_minigame()
+			presenter.tick(dt)
 		"door":
 			_tick_door()
 		"finale":
-			if phase_t > _wait(FINALE_TIME) or (_all_ready() and phase_t > _wait(4.0)):
+			if phase_t > pace("finale") or (_all_ready() and phase_t > _wait(4.0)):
 				_end("winner")
 	if phase == "turn":
 		var cur := rules.current()
@@ -427,6 +442,23 @@ func tick(dt: float) -> void:
 
 func _wait(t: float) -> float:
 	return t * (0.05 if fast else 1.0)
+
+
+func _reg_view() -> Dictionary:
+	if mg_id == "" or mg == null:
+		return {}
+	var r := MinigameRegistry.registration(mg_id, mg)
+	return {"name": r.name, "category": r.category, "description": r.description, "arena": r.arena,
+		"arena_title": str(ArenaWorld.TITLES.get(r.arena, "THE TABLE")), "instructions": r.instructions, "touch": r.touch}
+
+
+## A presentation timing (Pacing), scaled for headless runs.
+func pace(key: String) -> float:
+	return _wait(pacing.get_t(key))
+
+
+func phase_to(p: String) -> void:
+	_set_phase(p)
 
 
 func _all_ready() -> bool:
@@ -451,6 +483,15 @@ func action(seat: int, a: Dictionary) -> void:
 		return
 	if t == "ready":
 		ready_seats[seat] = true
+		if presenter.active:
+			presenter.confirm(seat, "ready")
+		return
+	if t == "mg_next":
+		if presenter.active:
+			presenter.confirm(seat, "next")
+		return
+	if t == "flow_next":
+		presenter.step()
 		return
 	if not players[seat].alive and not players[seat].ghost:
 		return
@@ -496,7 +537,8 @@ func final_round() -> bool:
 
 
 func _start_round() -> void:
-	_set_phase("turn")
+	_set_phase("round_start")
+	flow.goto("ROUND_START")
 	if final_round():
 		say("final_round")
 		emit({"e": "final_round"})
@@ -531,7 +573,10 @@ func _start_round() -> void:
 	emit({"e": "round", "n": round_n, "final": final_round()})
 	if _saves_ok():
 		Engine.get_main_loop().root.get_node("/root/Saves").checkpoint(self)
-	rules.begin_round()
+	# headless fast runs (most tests) don't sit through the announcement
+	if fast and not slow_flow:
+		_set_phase("turn")
+		rules.begin_round()
 
 
 func _saves_ok() -> bool:
@@ -593,6 +638,13 @@ func board_round_done() -> void:
 	if living().is_empty():
 		_end("dead")
 		return
+	# everyone's had a turn: the round's end is announced, then the games
+	flow.goto("ROUND_END")
+	_set_phase("round_end")
+	emit({"e": "round_end", "n": round_n})
+
+
+func _round_end_done() -> void:
 	# the round's own game goes last
 	var main_kind := "main"
 	if pending_encounter == "roulette":
@@ -609,6 +661,7 @@ func _next_queued() -> void:
 		var e: Dictionary = mg_queue.pop_front()
 		if _start_entry(e):
 			return
+	flow.goto("ROUND_CONTINUE")
 	_round_over()
 
 
@@ -660,16 +713,26 @@ func _start_entry(e: Dictionary) -> bool:
 	var level := mini(mg_count / 4, 3)
 	mg_count += 1
 	mg = MinigameRegistry.create(id, self, seats, level)
-	_set_phase("mg_intro")
+	# an incomplete registration is never put in front of people: flag it, skip it
+	var bad := MinigameRegistry.validate(id, mg)
+	if not bad.is_empty():
+		incomplete[id] = bad
+		push_error("MINIGAME INCOMPLETE: %s: %s" % [id, "; ".join(bad)])
+		toast("(%s isn't finished: %s)" % [MinigameRegistry.title_of(id), bad[0]])
+		_refund_pool(seats)
+		mg = null
+		return false
+	pacing.overrides = MinigameRegistry.registration(id).pacing
+	presenter.begin()
 	emit({"e": "minigame", "id": mg_id, "title": mg.title(), "level": level, "kind": kind, "pool": mg_entry.pool, "presentation": MinigameRegistry.presentation(id),
 		"wager_rule": mg_entry.get("wager_rule", ""), "seats": seats})
 	say("minigame_" + kind if kind != "main" else "minigame", {"game": mg.title(), "n": mg_entry.pool})
 	return true
 
 
-## The countdown's over: whoever's at the table plays. Anyone still out in the facility
-## misses it (a forfeit). If that leaves too few, the game doesn't happen.
-func _register_and_play() -> void:
+## Into the arena: whoever's at the table plays. Anyone still out in the facility misses it
+## (a forfeit). If that leaves too few, the game doesn't happen (false: we've moved on).
+func mg_register() -> bool:
 	var present: Array[int] = []
 	for s in mg.seats:
 		if players[s].alive and not players[s].away():
@@ -685,16 +748,24 @@ func _register_and_play() -> void:
 			# a wager goes back
 			_refund_pool(mg.seats)
 			mg = null
+			presenter.cancel()
+			pacing.overrides = {}
 			_next_queued()
-			return
+			return false
 		mg = MinigameRegistry.create(mg_id, self, present, mini((mg_count - 1) / 4, 3))
 		mg_entry.seats = present
 	for s in mg.seats:
 		if players[s].handicap:
 			players[s].handicap = false
 			mg.handicap(s)
-	_set_phase("mg_play")
-	mg.start()
+	return true
+
+
+## Back compatibility (tests, tools): register and start straight away.
+func _register_and_play() -> void:
+	if mg_register():
+		_set_phase("mg_play")
+		mg.start()
 
 
 func _refund_pool(seats: Array) -> void:
@@ -706,9 +777,32 @@ func _refund_pool(seats: Array) -> void:
 	mg_entry.pool = 0
 
 
-## Results: placings, payouts, the pool, stats, and the one rule every free-for-all shares:
-## a draw brings the dead back, and every living player pays for it with a part of themselves.
+## RESULTS (the presenter's results stage): who placed where and what everyone's owed, shown
+## first; REWARDS (its rewards stage) pays it out. A draw in a free-for-all brings the dead
+## back, and every living player pays for it with a part of themselves.
+func mg_results() -> void:
+	_pending_results = _compute_results()
+
+
+func mg_rewards() -> void:
+	if not _pending_results.is_empty():
+		_apply_rewards(_pending_results)
+	_pending_results = {}
+
+
+## The presenter's done (it's back at the board): the next game, or the round goes on.
+func mg_finished() -> void:
+	pacing.overrides = {}
+	_after_minigame()
+
+
+## Both at once (tests and tools that don't run the presenter).
 func _finish_minigame() -> void:
+	_set_phase("mg_results")
+	_apply_rewards(_compute_results())
+
+
+func _compute_results() -> Dictionary:
 	var kind := str(mg_entry.get("kind", "main"))
 	var fmt := mg.format
 	var groups := mg.placings()
@@ -744,6 +838,19 @@ func _finish_minigame() -> void:
 	# what they picked up in the game itself
 	for s in mg.teeth.keys():
 		pay[s] = int(pay.get(s, 0)) + int(mg.teeth[s])
+	var pool := int(mg_entry.get("pool", 0))
+	last_results = {"id": mg_id, "kind": kind, "pay": pay.duplicate(), "summary": mg.summary(), "winners": mg.winners.duplicate(),
+		"draw": drew, "placings": groups.duplicate(true), "pool": pool, "pool_to": mg.winners.duplicate() if pool > 0 and not drew else []}
+	emit({"e": "results", "id": mg_id, "kind": kind, "teeth": pay.duplicate(), "summary": mg.summary(), "winners": mg.winners.duplicate(),
+		"draw": drew, "placings": groups.duplicate(true), "pool": pool})
+	return {"kind": kind, "pay": pay, "groups": groups, "drew": drew}
+
+
+func _apply_rewards(r: Dictionary) -> void:
+	var kind: String = r.kind
+	var pay: Dictionary = r.pay
+	var groups: Array = r.groups
+	var drew: bool = r.drew
 	for s in pay.keys():
 		var n := int(pay[s])
 		if n > 0 and players[s].alive:
@@ -782,12 +889,9 @@ func _finish_minigame() -> void:
 		for s in mg.seats:
 			if dt > 0 and players[s].alive:
 				economy.award(s, dt, "participation")
-	_set_phase("mg_results")
 	say("results_draw" if draw_resurrects else "results")
-	last_results = {"id": mg_id, "kind": kind, "pay": pay.duplicate(), "summary": mg.summary(), "winners": mg.winners.duplicate(),
-		"draw": drew, "placings": groups.duplicate(true), "pool": pool, "pool_to": pool_to}
-	emit({"e": "results", "id": mg_id, "kind": kind, "teeth": pay.duplicate(), "summary": mg.summary(), "winners": mg.winners.duplicate(),
-		"draw": drew, "placings": groups.duplicate(true), "pool": pool})
+	last_results.pool_to = pool_to
+	emit({"e": "rewards", "id": mg_id, "teeth": pay.duplicate(), "pool_to": pool_to})
 	if draw_resurrects and not living().is_empty():
 		draws += 1
 		resurrection.collective()
@@ -803,6 +907,8 @@ func _after_minigame() -> void:
 
 func _round_over() -> void:
 	mg = null
+	if flow.state != "ROUND_CONTINUE":
+		flow.goto("ROUND_CONTINUE")
 	if living().is_empty():
 		_end("dead")
 		return
@@ -822,6 +928,7 @@ func _round_over() -> void:
 ## The end of the match: the Caller's Awards, the Caller's Game, standings, a winner.
 func _finale() -> void:
 	ceremony = "awards"
+	flow.goto("FINALE")
 	_set_phase("finale")
 	say("finale")
 	var given := awards.present(3)
@@ -860,6 +967,7 @@ func try_door(seat: int) -> void:
 	add_unrest("door", 1.0)
 	door_push.clear()
 	door_push[seat] = true
+	flow.goto("DOOR")
 	_set_phase("door")
 	say("door_open")
 	emit({"e": "door", "opener": seat})
@@ -921,6 +1029,7 @@ func _end(kind: String) -> void:
 			say("ending_dead")
 		_:
 			say("ending_winner", {"name": players[winner].name if winner >= 0 else "nobody"})
+	flow.goto("GAME_END")
 	_set_phase("ending")
 	emit({"e": "ending", "kind": kind, "winner": winner})
 	log_lines.append("ENDING: " + kind)
@@ -956,6 +1065,9 @@ func view_for(seats: Array) -> Dictionary:
 		"flags": status.view_flags(me) if me >= 0 else {},
 		"next_game": next_minigame() if me >= 0 and str(players[me].known.get("next_game", "")) != "" and not status.has(me, "memory") else "",
 		"cutscene": cutscenes.view(), "machines": machines.view(), "search": search.view_for(me),
+		"flow": flow.view(), "presenter": presenter.view(), "pacing": pacing.view(),
+		"space_type": str(graph.node(players[rules.current()].space).type) if phase == "turn" and rules.current() >= 0 else "",
+		"registration": _reg_view(),
 		"finale": {"awards": awards.given.duplicate(true), "objectives": victory.results.duplicate(true), "standings": victory.standings()} if phase in ["finale", "ending"] else {},
 	}
 
@@ -1046,6 +1158,7 @@ static func from_snapshot(seat_list: Array, d: Dictionary) -> MatchCore:
 
 
 func _resume_round() -> void:
+	flow.goto("ROUND_START")
 	_set_phase("turn")
 	_next_mg = _pick_minigame(living().size())
 	emit({"e": "round", "n": round_n, "final": final_round(), "resumed": true})

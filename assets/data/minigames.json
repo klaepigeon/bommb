@@ -1,0 +1,151 @@
+{
+ "_doc": "Minigame presentation metadata (MinigameRegistry.registration reads this together with GAMES and the game's own class). description: one line for the title card. anims: special animations its view plays. pacing: timings it overrides (Pacing keys), never stages.",
+ "games": {
+  "meat_grinder": {
+   "description": "A conveyor belt into a grinder. Walk against it, grab Teeth, dodge the presses.",
+   "anims": [
+    "press_slam",
+    "grind"
+   ]
+  },
+  "floor_is_meat": {
+   "description": "Hop plate to plate over a pit of meat before the plates drop.",
+   "anims": [
+    "plate_drop",
+    "sink"
+   ]
+  },
+  "last_seat": {
+   "description": "Musical chairs with one chair too few. Sit when the alarm goes.",
+   "anims": [
+    "sit",
+    "knocked_out"
+   ]
+  },
+  "hook_line_sinker": {
+   "description": "Fish Teeth out of a vat. Mind the jaws, and the current.",
+   "anims": [
+    "reel",
+    "zap"
+   ]
+  },
+  "spin_cycle": {
+   "description": "Keep your feet in a giant spinning drum.",
+   "anims": [
+    "tumble",
+    "reverse"
+   ]
+  },
+  "better_together": {
+   "description": "Chained to your partner, cross the saws and the holes first.",
+   "anims": [
+    "yank",
+    "saw"
+   ]
+  },
+  "tug_of_war": {
+   "description": "Pull on the beat. Drag the other pair into the pit.",
+   "anims": [
+    "heave",
+    "fall_in"
+   ]
+  },
+  "the_controller": {
+   "description": "One of you runs the machines. The rest of you run for the exit.",
+   "anims": [
+    "saw",
+    "press",
+    "flood"
+   ]
+  },
+  "last_man_breathing": {
+   "description": "Hold your breath when the air turns foul. Last one breathing wins.",
+   "anims": [
+    "gasp",
+    "choke"
+   ]
+  },
+  "dont_press_it": {
+   "description": "A bomb, a panel, and four people who have to defuse it together.",
+   "anims": [
+    "strike",
+    "boom"
+   ]
+  },
+  "dead_weight": {
+   "description": "Load each plate with exactly the right number of crates.",
+   "anims": [
+    "spring"
+   ]
+  },
+  "pick_your_poison": {
+   "description": "Everyone picks a bottle. Everyone drinks.",
+   "anims": [
+    "drink",
+    "retch"
+   ]
+  },
+  "run_for_your_life": {
+   "description": "Something's chasing you round the arena. Don't be last.",
+   "anims": [
+    "caught"
+   ]
+  },
+  "wrong_answers": {
+   "description": "One of you knows the answer. The others have to guess who's lying.",
+   "anims": [
+    "buzzer"
+   ]
+  },
+  "human_shield": {
+   "description": "Carry the parcel through the darts. Your partner takes the hits.",
+   "anims": [
+    "dart_hit",
+    "barrier"
+   ]
+  },
+  "confession": {
+   "description": "Somebody did something. Confess, accuse, or keep quiet.",
+   "anims": [
+    "accuse"
+   ]
+  },
+  "consensus": {
+   "description": "Pick a door. If you all agree, nobody gets hurt.",
+   "anims": [
+    "door_open"
+   ]
+  },
+  "hot_potato": {
+   "description": "Pass the ticking thing around. Don't be holding it.",
+   "anims": [
+    "boom"
+   ]
+  },
+  "organ_trail": {
+   "description": "SPECIAL EVENT: surgery in pairs. One operates, one is operated on.",
+   "anims": [
+    "incise",
+    "extract",
+    "flatline"
+   ],
+   "pacing": {
+    "mg_instructions": 9.0
+   }
+  },
+  "roulette": {
+   "description": "ENCOUNTER: a revolver, a cylinder, and a table of friends.",
+   "anims": [
+    "spin",
+    "click",
+    "bang"
+   ]
+  },
+  "musical_chairs": {
+   "description": "The old musical chairs (retired).",
+   "anims": [
+    "sit"
+   ]
+  }
+ }
+}

@@ -248,9 +248,12 @@ func _on_state(v: Dictionary, events: Array) -> void:
 func _phase_changed(p: String) -> void:
 	var was := _phase
 	_phase = p
-	if p == "mg_intro" and mgv == null:
+	# the arena is entered by the presenter's ARENA PREVIEW (see "mg_stage"); a screen that
+	# joins mid-game (or resumes) catches up here
+	if p == "mg_play" and mgv == null:
 		_enter_arena()
-	if p in ["turn", "ceremony", "ending", "door", "finale"] and mgv != null:
+		_show_puppets(true)
+	if p in ["turn", "round_start", "ceremony", "ending", "door", "finale"] and mgv != null:
 		_leave_arena()
 	if p == "finale":
 		robot.play("trophy")
@@ -262,6 +265,72 @@ func _phase_changed(p: String) -> void:
 				anims[s].play("victory" if w.has(s) else "defeat")
 			if guest_anims.has(s):
 				guest_anims[s].play("victory" if w.has(s) else "defeat")
+
+
+## The minigame presentation, as the 3D world sees it (MinigamePresenter's stages).
+func _mg_stage(st: String) -> void:
+	match st:
+		"board_freeze":
+			# the party pauses: the board is held in a wide shot while the game is announced
+			director.request("board_wide", {"at": on_table(Vector3.ZERO)}, 28, 6.0)
+			Audio.sfx("bell", 0.0, -6.0, 0.9)
+		"arena_preview":
+			if mgv == null:
+				_enter_arena()
+			_show_puppets(false)
+			director.request("arena", {"pos": on_arena(Vector3(14, 9, 16)), "look": on_arena(Vector3(0, 0.5, 0)), "fov": 56.0}, 30, 60.0)
+		"arena_intro":
+			director.request("arena", {"pos": on_arena(Vector3(-9, 5, 11)), "look": on_arena(Vector3(0, 0.8, 0)), "fov": 54.0}, 31, 60.0)
+		"positioning":
+			_show_puppets(true)
+			director.request("arena", {"pos": on_arena(Vector3(0, 6, 12)), "look": on_arena(Vector3(0, 0.8, 2)), "fov": 52.0}, 31, 60.0)
+		"countdown":
+			director.request("arena", {"pos": on_arena(Vector3(0, 8, 13)), "look": on_arena(Vector3(0, 0.5, 0)), "fov": 54.0}, 31, 5.0)
+		"play":
+			director.clear("arena")
+		"return":
+			_fade_to_board()
+
+
+## The puppets appear in the arena one after another, each with a hop and its name.
+func _show_puppets(on: bool) -> void:
+	var i := 0
+	for s in contestants:
+		var c: Contestant = contestants[s]
+		if c.get_parent() != arena_root:
+			continue
+		if not on:
+			c.visible = false
+			continue
+		var cc := c
+		var si: int = s
+		get_tree().create_timer(0.25 * i).timeout.connect(func():
+			if not is_instance_valid(cc):
+				return
+			cc.visible = true
+			var to := cc.position
+			cc.position = to + Vector3(0, 1.5, 0)
+			cc.create_tween().tween_property(cc, "position", to, 0.3).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+			Sfx.play("blip", -6.0, 0.05, 0.8 + 0.1 * si))
+		i += 1
+
+
+## Back to the board: a fade through the dark, never a cut in the middle of things.
+func _fade_to_board() -> void:
+	var fade := ColorRect.new()
+	fade.color = Color(0, 0, 0, 0)
+	fade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud.add_child(fade)
+	var d := float(view.get("pacing", {}).get("mg_return", 2.4))
+	var tw := fade.create_tween()
+	tw.tween_property(fade, "color:a", 1.0, d * 0.4)
+	tw.tween_callback(func():
+		if mgv != null:
+			_leave_arena())
+	tw.tween_interval(d * 0.2)
+	tw.tween_property(fade, "color:a", 0.0, d * 0.4)
+	tw.tween_callback(fade.queue_free)
 
 
 ## Into the minigame's attraction: its arena is built, the puppets are carried there.
@@ -334,16 +403,21 @@ func _event(e: Dictionary) -> void:
 				_robot_idle = 4.0
 			if str(e.get("mood", "")) == "glitch":
 				_glitch(0.6)
-			caller.speak(clampf(str(e.text).length() * 0.05, 0.8, 4.0))
-			Audio.voice(str(e.get("id", "")), str(e.text))
 		"toast":
 			hud.toast(str(e.text), int(e.get("to", -1)) >= 0)
+		"mg_stage":
+			_mg_stage(str(e.stage))
+		"stopped":
+			# LANDING: everything stops; the camera comes to the square
+			director.request("landing", {"at": _puppet_at(s)}, 19, float(view.get("pacing", {}).get("landing", 1.6)) + 1.0)
+		"round_end":
+			hud.banner("END OF ROUND %d" % int(e.n), PartyUi.CREAM, 1.6)
+			director.request("board_wide", {"at": on_table(Vector3.ZERO)}, 18, 3.0)
 		"turn":
 			if contestants.has(s):
 				director.request("intro", {"at": _puppet_at(s)}, 15, 1.6)
 				_anim(s, "look_around")
-				var nm := str(view.players[s].name) if view.has("players") and s < view.players.size() else "?"
-				hud.banner(("YOUR TURN!" if Net.my_seats.has(s) else "%s'S TURN" % nm.to_upper()), PartyUi.seat_colour(s))
+				pass   # the HUD's turn panel announces it (one message, one place)
 		"roll":
 			var c: Contestant = contestants[s]
 			_anim(s, "dice_throw")
@@ -359,7 +433,7 @@ func _event(e: Dictionary) -> void:
 				c2.walk_to(venue.stand_pos(int(e.space), s))
 			else:
 				# on the move you go over the middle of every square; you step aside when you stop
-				c2.hop_to(venue.space_pos(int(e.space)) + Vector3(0, 0.02, 0), BoardRules.STEP_TIME * 0.7)
+				c2.hop_to(venue.space_pos(int(e.space)) + Vector3(0, 0.02, 0), float(view.get("pacing", {}).get("step", 0.42)) * 0.7)
 				_counter(s, int(e.get("left", -1)))
 				Audio.sfx("step", 0.15, -10.0)
 			var at := on_table(venue.space_pos(int(e.space)))
@@ -904,7 +978,7 @@ func _camera(delta: float) -> void:
 			director.set_base("overview", {})
 		else:
 			director.set_base("stage", {"pos": Vector3(0, 1.45, 1.9), "look": Vector3(0, 2.0, -5.6), "fov": 52.0})
-	elif mgv and ph in ["mg_intro", "mg_play", "mg_results"]:
+	elif mgv and ph in ["mg_intro", "mg_play", "mg_results", "mg_return"]:
 		var c := mgv.camera()
 		var root: Node3D = mgv.get_parent() as Node3D
 		var look := root.to_global(c[1])

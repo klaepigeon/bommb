@@ -62,6 +62,7 @@ func start(seat: int) -> void:
 		core.emit({"e": "leave", "seat": s, "pos": [p.pos.x, p.pos.y]})
 		_pause[s] = core.rng.randf_range(2.5, 5.0)
 	core._set_phase("search")
+	core.flow.goto("SEARCH")
 	core.emit({"e": "search", "stage": "search", "by": seat})
 	core.toast("SEARCH THE ROOM! Whoever finds the most scraps wins %d Teeth." % RACE_PRIZE)
 

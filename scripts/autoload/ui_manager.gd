@@ -22,6 +22,7 @@ var _last_size := Vector2.ZERO
 
 
 func _ready() -> void:
+	ensure_actions()
 	Settings.changed.connect(refresh)
 	get_viewport().size_changed.connect(refresh)
 	refresh()
@@ -77,3 +78,102 @@ func px(n: float) -> int:
 
 func is_phone() -> bool:
 	return profile.begins_with("phone")
+
+
+
+# --- INPUT BINDINGS --------------------------------------------------------------------------
+## The game's real input actions (keyboard and controller), defined once, here. The minigame
+## HUD answers to these actions, and the instruction screens read them back to show what to
+## press, so what's shown is always what's bound. Touch is the on-screen controls themselves.
+##   mg_move     WASD / arrows / left stick          (a game with a stick)
+##   mg_tap      Space / pad A        mg_tap2  E / pad X        mg_tap3  R / pad Y
+##   mg_hold     Shift / pad RB       mg_hold2 Q / pad LB
+##   mg_swipe_*  arrows / d-pad       (a swipe pad)
+##   mg_timing   Space / pad A        (a timing ring: the same as mg_tap)
+##   board_roll  Space / pad A        board_ok  Enter / pad A
+
+signal device_changed(device: String)
+
+const ACTIONS := {
+	"mg_tap": [KEY_SPACE, JOY_BUTTON_A], "mg_tap2": [KEY_E, JOY_BUTTON_X], "mg_tap3": [KEY_R, JOY_BUTTON_Y],
+	"mg_hold": [KEY_SHIFT, JOY_BUTTON_RIGHT_SHOULDER], "mg_hold2": [KEY_Q, JOY_BUTTON_LEFT_SHOULDER],
+	"mg_swipe_left": [KEY_LEFT, JOY_BUTTON_DPAD_LEFT], "mg_swipe_right": [KEY_RIGHT, JOY_BUTTON_DPAD_RIGHT],
+	"mg_swipe_up": [KEY_UP, JOY_BUTTON_DPAD_UP], "mg_swipe_down": [KEY_DOWN, JOY_BUTTON_DPAD_DOWN],
+	"mg_timing": [KEY_SPACE, JOY_BUTTON_A], "board_roll": [KEY_SPACE, JOY_BUTTON_A], "board_ok": [KEY_ENTER, JOY_BUTTON_A],
+}
+const PAD_NAMES := {JOY_BUTTON_A: "A", JOY_BUTTON_B: "B", JOY_BUTTON_X: "X", JOY_BUTTON_Y: "Y", JOY_BUTTON_LEFT_SHOULDER: "LB",
+	JOY_BUTTON_RIGHT_SHOULDER: "RB", JOY_BUTTON_DPAD_LEFT: "D-PAD ◀", JOY_BUTTON_DPAD_RIGHT: "D-PAD ▶", JOY_BUTTON_DPAD_UP: "D-PAD ▲",
+	JOY_BUTTON_DPAD_DOWN: "D-PAD ▼", JOY_BUTTON_START: "START"}
+
+var device := "touch" if (OS.has_feature("mobile") or OS.get_name() in ["Android", "iOS"]) else "keyboard"
+
+
+func ensure_actions() -> void:
+	for a in ACTIONS.keys():
+		if InputMap.has_action(a):
+			continue
+		InputMap.add_action(a, 0.4)
+		var k := InputEventKey.new()
+		k.physical_keycode = ACTIONS[a][0]
+		InputMap.action_add_event(a, k)
+		var j := InputEventJoypadButton.new()
+		j.button_index = ACTIONS[a][1]
+		InputMap.action_add_event(a, j)
+	# WASD as well as the arrows, for the swipes and moving
+	for pair in [["mg_swipe_left", KEY_A], ["mg_swipe_right", KEY_D], ["mg_swipe_up", KEY_W], ["mg_swipe_down", KEY_S]]:
+		var k2 := InputEventKey.new()
+		k2.physical_keycode = pair[1]
+		if not InputMap.action_has_event(pair[0], k2):
+			InputMap.action_add_event(pair[0], k2)
+
+
+## The last thing the player touched decides how controls are shown.
+func _input(ev: InputEvent) -> void:
+	var d := device
+	if ev is InputEventScreenTouch or ev is InputEventScreenDrag:
+		d = "touch"
+	elif ev is InputEventKey or ev is InputEventMouseButton:
+		d = "keyboard"
+	elif ev is InputEventJoypadButton or (ev is InputEventJoypadMotion and absf(ev.axis_value) > 0.5):
+		d = "pad"
+	if d != device:
+		device = d
+		device_changed.emit(d)
+
+
+## What to press for an action on a device, read back from the InputMap.
+func binding(action: String, dev := "") -> String:
+	dev = device if dev == "" else dev
+	if not InputMap.has_action(action):
+		return "?"
+	var keys: Array = []
+	for ev in InputMap.action_get_events(action):
+		if dev == "pad" and ev is InputEventJoypadButton:
+			keys.append(PAD_NAMES.get(ev.button_index, "BUTTON %d" % ev.button_index))
+		elif dev == "keyboard" and ev is InputEventKey:
+			keys.append(OS.get_keycode_string(ev.physical_keycode).to_upper())
+	return " / ".join(keys) if not keys.is_empty() else "?"
+
+
+## How one minigame control is worked on a device: the n-th of its kind (0, 1, 2).
+func control_binding(kind: String, n := 0, dev := "") -> String:
+	dev = device if dev == "" else dev
+	if dev == "touch":
+		return {"stick": "the stick (bottom left)", "tap": "its button", "hold": "press and hold its button", "swipe": "swipe across the pad",
+			"timing": "tap the ring", "trace": "trace on the pad", "pick": "tap an option", "buttons": "tap a choice"}.get(kind, kind)
+	match kind:
+		"stick":
+			return "WASD / ARROWS" if dev == "keyboard" else "LEFT STICK"
+		"tap":
+			return binding(["mg_tap", "mg_tap2", "mg_tap3"][mini(n, 2)], dev)
+		"hold":
+			return "hold " + binding(["mg_hold", "mg_hold2"][mini(n, 1)], dev)
+		"swipe":
+			return "%s %s %s %s" % [binding("mg_swipe_up", dev), binding("mg_swipe_left", dev), binding("mg_swipe_down", dev), binding("mg_swipe_right", dev)] if dev == "keyboard" else "D-PAD"
+		"timing":
+			return binding("mg_timing", dev)
+		"trace":
+			return "the mouse (drag)" if dev == "keyboard" else "the touch screen"
+		"pick", "buttons":
+			return "click a choice" if dev == "keyboard" else "D-PAD + A"
+	return kind
