@@ -15,6 +15,9 @@ func step(view: Dictionary, dt: float) -> void:
 		return
 	var me: Dictionary = view.players[seat]
 	if not me.alive:
+		if me.get("ghost", false) and str(view.phase) == "turn" and int(view.turn.seat) == seat and view.turn.sub == "ghost":
+			_t = 0.0
+			Net.send_action(seat, {"t": "ghost", "do": "rise" if int(me.rats) >= int(view.get("resurrect_cost", 10)) else "scavenge"})
 		return
 	match str(view.phase):
 		"intro", "mg_intro", "mg_results":
@@ -27,16 +30,31 @@ func step(view: Dictionary, dt: float) -> void:
 			_t = 0.0
 			if turn.sub == "pre":
 				Net.send_action(seat, {"t": "roll"})
+			elif turn.sub == "room":
+				Net.send_action(seat, {"t": "sit"})
 			elif turn.sub == "prompt":
 				var pr: Dictionary = turn.prompt
 				if pr.kind == "door_stop":
 					Net.send_action(seat, {"t": "answer", "yes": false})
+				elif pr.kind in ["shop", "gamble", "hidden"]:
+					Net.send_action(seat, {"t": "answer", "done": true, "wager": 0, "yes": false})
 				else:
 					Net.send_action(seat, {"t": "answer", "target": pr.options[0]})
 		"door":
 			Net.send_action(seat, {"t": "push"})
 		"mg_play":
 			var mg: Dictionary = view.mg
+			if mg.get("arena", false):
+				var a := Time.get_ticks_msec() / 900.0 + seat
+				Net.send_move(seat, Vector2(cos(a), sin(a) * 0.3 + 0.5).limit_length(1.0))
+				return
+			if mg.get("choice", false):
+				var acts: Array = mg.get("actions", []).filter(func(x): return x.do == "choose")
+				if not acts.is_empty() and _t > 1.5 and not mg.get("mine", {}).has(seat):
+					_t = 0.0
+					var pick: Dictionary = acts[rng.randi_range(0, acts.size() - 1)]
+					Net.send_action(seat, {"t": "mg", "do": "choose", "choice": pick.choice})
+				return
 			match str(mg.get("id", "")):
 				"roulette":
 					if mg.sub == "turn" and int(mg.turn) == seat:

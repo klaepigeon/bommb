@@ -30,6 +30,12 @@ var _shake := 0.0
 var _move_sent: Dictionary = {}
 var _move_t := 0.0
 var _deaths_shown: Dictionary = {}
+## The view: "board" (straight down at the board: the default) or "room" (sat up, looking
+## at him and the others). Swipe down for the room, up for the board; Tab; the HUD button.
+var look_mode := "board"
+var _drag := Vector2.ZERO
+var _dragging := false
+var _ghost_t: Dictionary = {}       # seat -> seconds until their puppet turns into a ghost
 
 
 func _ready() -> void:
@@ -60,6 +66,7 @@ func _ready() -> void:
 	hud = Hud.new()
 	add_child(hud)
 	hud.act.connect(func(seat, a): Net.send_action(seat, a))
+	hud.look_toggled.connect(func(): set_look("room" if look_mode == "board" else "board"))
 	hud.leave_pressed.connect(func(): leave_requested.emit())
 	hud.lobby_pressed.connect(func(): lobby_requested.emit())
 	Net.state.connect(_on_state)
@@ -135,6 +142,9 @@ func _on_state(v: Dictionary, events: Array) -> void:
 			# joined late or missed it: show them gone
 			_deaths_shown[int(p.seat)] = true
 			c.die(str(p.death), caller.fig.global_position)
+			_ghost_t[int(p.seat)] = 0.1
+		if p.ghost and c.is_ghost:
+			c.walk_to(venue.stand_pos(int(p.space), int(p.seat)) + Vector3(0, 0.6, 0))
 	caller.set_unrest(float(v.unrest))
 	if v.key_space != null:
 		venue.show_key(int(v.key_space))
@@ -212,8 +222,38 @@ func _event(e: Dictionary) -> void:
 			Sfx.play("dice_rattle", -2.0)
 			stage.hall.flashboard.light(int(e.n))
 			get_tree().create_timer(3.0).timeout.connect(func(): dice.visible = false)
+		"revive":
+			_rebuild(int(e.seat), false)
+			Sfx.play("relic_found", -2.0)
+			stage.flash(0.15)
+		"sacrifice":
+			Audio.sfx("slam", 0.0, 2.0, 0.6)
+			shake(0.6)
+			_glitch(0.8)
+		"caught":
+			Audio.sfx("slam", 0.05, 0.0)
+			stage.flash(0.25)
+			shake(0.4)
+			caller.look(guests[int(e.seat)].global_position + Vector3(0, 1.2, 0) if guests.has(int(e.seat)) else "you")
+		"leave", "go":
+			var g: TableGuest = guests.get(int(e.seat))
+			if g and e.has("pos"):
+				g.walk_to(Vector3(e.pos[0], 0, e.pos[2]))
+			elif g:
+				g.get_up()
+		"sit":
+			var g2: TableGuest = guests.get(int(e.seat))
+			if g2:
+				g2.sit_back()
+		"attention":
+			stage.post.set_shader_parameter("gaze", 0.35 if e.watching and Net.my_seats.has(int(e.target)) else 0.0)
+			if not e.watching:
+				caller.look(str(e.at) if str(e.at) in ["clock", "tv", "exit", "ceiling", "floor", "drink"] else "exit")
+			else:
+				caller.look("you")
 		"death":
 			var s := int(e.seat)
+			_ghost_t[s] = 3.2
 			_deaths_shown[s] = true
 			contestants[s].die(str(e.anim), caller.fig.global_position)
 			shake(0.5)
@@ -249,6 +289,12 @@ func _event(e: Dictionary) -> void:
 
 
 func _process(delta: float) -> void:
+	for sk in _ghost_t.keys():
+		_ghost_t[sk] -= delta
+		if _ghost_t[sk] <= 0.0:
+			_ghost_t.erase(sk)
+			if view.is_empty() or view.players[sk].ghost:
+				_rebuild(sk, true)
 	if view.is_empty():
 		return
 	hud.update(view, Net.my_seats, delta)
@@ -267,6 +313,61 @@ func _process(delta: float) -> void:
 		caller.look("exit")
 
 
+## A dead contestant's puppet, or a revived one: replace it (fresh build, then the view
+## puts their injuries back on).
+func _rebuild(seat: int, ghost: bool) -> void:
+	var old: Contestant = contestants.get(seat)
+	var at := old.position if old else venue.stand_pos(0, seat)
+	if old:
+		old.queue_free()
+	var s: Dictionary = Seats.seats[seat]
+	var c := Contestant.new()
+	table.add_child(c)
+	c.setup(seat, int(s.face), s.color, str(s.name))
+	c.place(Vector3(at.x, 0.05, at.z))
+	if ghost:
+		c.make_ghost()
+	else:
+		_deaths_shown.erase(seat)
+	contestants[seat] = c
+	if not ghost and guests.has(seat):
+		var g: TableGuest = guests[seat]
+		var slot := g.slot
+		g.queue_free()
+		var ng := TableGuest.new()
+		stage.hall.add_child(ng)
+		ng.setup(seat, slot, int(s.face), s.color)
+		guests[seat] = ng
+
+
+func set_look(mode: String) -> void:
+	look_mode = mode
+	if mode == "board":
+		stage.set_glance(Vector2.ZERO)
+
+
+func _unhandled_input(ev: InputEvent) -> void:
+	if ev is InputEventKey and ev.pressed and ev.keycode == KEY_TAB:
+		set_look("room" if look_mode == "board" else "board")
+		return
+	if ev is InputEventScreenTouch or (ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT):
+		_dragging = ev.pressed
+		_drag = Vector2.ZERO
+		if not ev.pressed:
+			stage.set_glance(Vector2.ZERO)
+	elif (ev is InputEventScreenDrag or (ev is InputEventMouseMotion and _dragging)) and _dragging:
+		_drag += ev.relative
+		var h := get_viewport().get_visible_rect().size.y
+		if _drag.y > h * 0.12 and look_mode == "board":
+			set_look("room")
+			_drag = Vector2.ZERO
+		elif _drag.y < -h * 0.12 and look_mode == "room":
+			set_look("board")
+			_drag = Vector2.ZERO
+		elif look_mode == "room":
+			stage.set_glance(Vector2(_drag.x / h * 2.0, -_drag.y / h * 1.5))
+
+
 func _glitch(amount: float) -> void:
 	var tw := create_tween()
 	tw.tween_method(func(v): stage.post.set_shader_parameter("glitch", v), amount, 0.0, 0.7)
@@ -274,33 +375,46 @@ func _glitch(amount: float) -> void:
 
 ## Seated at the table. Leans in over the board for a turn or a game; looks up at him for
 ## the ceremonies and the door.
+## Two ways to look. BOARD (the default): straight down over the board (or the game on
+## it), from your side, so you can read it. ROOM: sat up in your chair (his stage, the
+## others round the table; drag to look round). His big moments, and you getting up from
+## the table, take you to the room whatever you'd picked.
 func _camera(delta: float) -> void:
-	var want_pos := Vector3(0, 1.62, 1.72)
-	var want_look := Vector3(0, 0.74, -0.12)
-	var fov := 52.0
-	if mgv:
-		var c := mgv.camera()
-		want_look = on_table(c[1])
-		# the board views were made from far above: same angle, from your chair
-		var dir: Vector3 = (on_table(c[0]) - want_look).normalized()
-		want_pos = want_look + dir * (float(c[2]) if c.size() > 2 else 1.05)
-		fov = 50.0
-	elif view.phase == "turn":
-		var s := int(view.turn.get("seat", -1))
-		if contestants.has(s):
-			# from your chair, leaning a little toward whose turn it is (the others in view)
-			var p := on_table(contestants[s].position)
-			want_look = Vector3(0, 0.74, -0.25).lerp(p, 0.35)
-			want_pos = Vector3(want_look.x * 0.4, 1.58, 1.62)
-			fov = 60.0
-	elif view.phase in ["ceremony", "door", "intro"]:
+	var want_pos := Vector3(0, 2.28, 0.42)
+	var want_look := Vector3(0, 0.78, -0.03)
+	var fov := 50.0
+	var me: int = int(Net.my_seats[0]) if not Net.my_seats.is_empty() else -1
+	var me_v: Dictionary = view.players[me] if me >= 0 and me < view.players.size() else {}
+	var forced := ""
+	if view.phase in ["ceremony", "door", "intro"]:
+		forced = "stage"
+	elif view.phase == "ending" and view.ending == "escape":
+		forced = "door"
+	elif not me_v.is_empty() and str(me_v.get("location", "table")) not in ["table"] and view.phase == "turn":
+		forced = "walk"
+	if forced == "stage":
 		want_pos = Vector3(0, 1.45, 1.72)
 		want_look = Vector3(0, 2.0, -5.6)
-		fov = 50.0
-	elif view.phase == "ending" and view.ending == "escape":
+	elif forced == "door":
 		want_look = on_table(venue.door_node.position + Vector3(0.6, 1.0, 0))
 		want_pos = want_look + Vector3(0, 0.25, 0.7)
-	var k := minf(1.0, delta * 2.2)
+	elif forced == "walk":
+		var g: TableGuest = guests.get(me)
+		var at := g.global_position if g else Vector3.ZERO
+		want_look = at + Vector3(0, 1.0, 0) + (at - Vector3(0, 0, 0)).normalized() * 0.8
+		want_pos = at + Vector3(0, 1.65, 0) - (at - Vector3(0, 0, 0)).normalized() * 0.6
+		fov = 62.0
+	elif look_mode == "room":
+		want_pos = Vector3(0, 1.58, 1.62)
+		want_look = Vector3(0, 0.95, -1.5)
+		fov = 60.0
+	elif mgv:
+		var c := mgv.camera()
+		want_look = on_table(c[1])
+		var dist: float = float(c[2]) if c.size() > 2 else 1.05
+		want_pos = want_look + Vector3(0, dist * 1.05, dist * 0.32)
+		fov = 52.0
+	var k := minf(1.0, delta * 2.4)
 	_cam_pos = _cam_pos.lerp(want_pos, k)
 	_cam_look = _cam_look.lerp(want_look, k)
 	_fov = lerpf(_fov, fov, k)
@@ -313,7 +427,7 @@ func _camera(delta: float) -> void:
 ## Movement for local seats in real-time games: each seat's device (touch stick, a
 ## keyboard block, a pad), sent ~20 times a second when it changes.
 func _local_input(delta: float) -> void:
-	if not (view.phase == "mg_play" and view.mg_id == "musical_chairs"):
+	if not (view.phase == "mg_play" and (view.mg_id == "musical_chairs" or view.mg.get("arena", false))):
 		return
 	_move_t += delta
 	if _move_t < 0.05:

@@ -8,6 +8,7 @@ extends CanvasLayer
 signal act(seat: int, a: Dictionary)
 signal leave_pressed
 signal lobby_pressed
+signal look_toggled
 
 var root: Control
 var cards: Array = []
@@ -29,7 +30,10 @@ var _typed := 0.0
 var _act_sig := ""
 var _modal_sig := ""
 var _card_sig := ""
-var menu_mode := ""             # "" | items | give_item | give_to:<id> | mirror
+var menu_mode := ""             # "" | items | give_item | give_to:<id> | mirror | cheat | cheat_to:<id> | haunt | bless | whisper
+var attention: Label
+var game_prompt: Label
+var look_btn: Button
 
 
 func _ready() -> void:
@@ -118,6 +122,29 @@ func _ready() -> void:
 	root.add_child(card)
 	card_box = UiKit.vbox(6)
 	card.add_child(card_box)
+	# his attention: the thing every cheat is timed against
+	attention = UiKit.voice("", 24)
+	attention.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	attention.offset_left = -420
+	attention.offset_right = -16
+	attention.offset_top = 70
+	attention.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	root.add_child(attention)
+	# what a game is asking
+	game_prompt = UiKit.voice("", 26)
+	game_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	game_prompt.offset_left = -420
+	game_prompt.offset_right = 420
+	game_prompt.offset_top = 96
+	root.add_child(game_prompt)
+	# board / room
+	look_btn = UiKit.button("LOOK UP", func(): look_toggled.emit(), 30, 90)
+	look_btn.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+	look_btn.offset_left = 12
+	look_btn.offset_bottom = -12
+	look_btn.offset_top = -60
+	look_btn.offset_right = 160
+	root.add_child(look_btn)
 
 
 func _card_ui() -> Dictionary:
@@ -170,9 +197,9 @@ func _fill_card(c: Dictionary, p: Dictionary, v: Dictionary) -> void:
 	c.name.text = ("> " if turn else "") + str(p.name) + ("  (YOU)" if local.has(int(p.seat)) and local.size() == 1 else "")
 	c.name.add_theme_color_override("font_color", UiKit.HOT if p.alive else UiKit.DIM)
 	if not p.alive:
-		c.line.text = "OUT (%s)" % str(p.death).to_upper()
-		c.hurt.text = ""
-		(c.root as Control).modulate = Color(0.6, 0.6, 0.6)
+		c.line.text = "GHOST  %d rats  (back for %d)" % [int(p.rats), int(v.get("resurrect_cost", 10))] if p.get("ghost", false) else "OUT (%s)" % str(p.death).to_upper()
+		c.hurt.text = "died: %s" % str(p.death)
+		(c.root as Control).modulate = Color(0.6, 0.7, 0.9) if p.get("ghost", false) else Color(0.6, 0.6, 0.6)
 		return
 	(c.root as Control).modulate = Color.WHITE
 	var bits := ["%d rats" % int(p.rats), "%d items" % int(p.item_count)]
@@ -184,7 +211,16 @@ func _fill_card(c: Dictionary, p: Dictionary, v: Dictionary) -> void:
 		bits.append("@DOOR")
 	if int(p.clue_count) > 0:
 		bits.append("?%d" % int(p.clue_count))
+	var levels: Array = v.get("cage_levels", [])
+	bits.append("SUS %d" % int(p.get("suspicion", 0)))
+	bits.append("CAGE: %s" % (str(levels[int(p.get("cage", 0))]) if int(p.get("cage", 0)) < levels.size() else str(p.get("cage", 0))))
+	for st in p.get("statuses", []):
+		bits.append(str(st.id).to_upper().replace("_", " "))
+	if str(p.get("location", "table")) != "table":
+		bits.append("AWAY FROM THE TABLE")
 	c.line.text = "  ".join(bits)
+	c.line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	c.line.custom_minimum_size = Vector2(210, 0)
 	var hurts := []
 	for part in Body.PARTS:
 		var s: String = p.body[part].s
@@ -194,7 +230,7 @@ func _fill_card(c: Dictionary, p: Dictionary, v: Dictionary) -> void:
 
 
 func _short(part: String) -> String:
-	return {"hand_l": "LH", "hand_r": "RH", "arm_l": "LA", "arm_r": "RA", "leg_l": "LL", "leg_r": "RL", "eye_l": "LE", "eye_r": "RE", "ears": "EAR"}[part]
+	return {"head": "HEAD", "torso": "BODY", "hand_l": "LH", "hand_r": "RH", "arm_l": "LA", "arm_r": "RA", "leg_l": "LL", "leg_r": "RL", "eye_l": "LE", "eye_r": "RE", "ears": "EAR", "tail": "TAIL"}.get(part, part)
 
 
 func _status(v: Dictionary) -> void:
@@ -218,6 +254,23 @@ func _status(v: Dictionary) -> void:
 		"door":
 			s = "THE DOOR: everyone has to push"
 	status_line.text = s
+	var att: Dictionary = v.get("attention", {})
+	if att.is_empty() or v.phase in ["ending"]:
+		attention.text = ""
+	elif att.get("watching", false):
+		var tgt := int(att.get("target", -1))
+		attention.text = "HE'S WATCHING " + ("YOU" if local.has(tgt) else (str(v.players[tgt].name) if tgt >= 0 else "EVERYONE"))
+		attention.add_theme_color_override("font_color", Color("ff5a4a"))
+	elif att.get("turning", false):
+		attention.text = "HE'S TURNING ROUND..."
+		attention.add_theme_color_override("font_color", Color("f0c060"))
+	else:
+		attention.text = "HE'S LOOKING AWAY"
+		attention.add_theme_color_override("font_color", Color("8ae08a"))
+	game_prompt.text = str(v.mg.get("prompt", "")) if v.phase == "mg_play" else ""
+	if v.phase == "mg_play" and v.mg.has("time_left"):
+		status_line.text += "   %d s" % int(v.mg.time_left)
+	look_btn.text = "THE BOARD" if get_parent() and get_parent().get("look_mode") == "room" else "LOOK UP"
 	chambers.text = ""
 	if v.phase == "mg_play" and v.mg_id == "roulette":
 		var mg: Dictionary = v.mg
@@ -256,9 +309,22 @@ func _actions(v: Dictionary) -> void:
 			_board_actions(s, me, v)
 		elif v.turn.sub == "prompt":
 			_prompt(s, v.turn.prompt, v)
+		elif v.turn.sub == "room":
+			_room_actions(s, me, v)
+		elif v.turn.sub == "ghost":
+			_ghost_actions(s, me, v)
 		return
 	if phase == "mg_play":
 		var mg: Dictionary = v.mg
+		for s in local:
+			if v.players[s].get("ghost", false):
+				_ghost_mg_actions(s, v)
+				return
+		if mg.has("actions") or mg.has("cheats"):
+			for s in local:
+				if v.players[s].alive:
+					_generic_mg_actions(s, mg)
+					return
 		match str(v.mg_id):
 			"roulette":
 				var s := int(mg.turn)
@@ -274,7 +340,9 @@ func _action_signature(v: Dictionary) -> String:
 	var mg: Dictionary = v.get("mg", {})
 	return "%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s" % [v.phase, v.turn.get("seat", -1), v.turn.get("sub", ""), menu_mode,
 		mg.get("turn", ""), mg.get("sub", ""), mg.get("holder", ""), str(mg.get("flight", {}).is_empty()), mg.get("step", ""),
-		str(mg.get("busy", {}).is_empty()), str(v.door_push.size()) + str(v.players.map(func(p): return p.items.size())) + str(mg.get("peeks", {}))]
+		str(mg.get("busy", {}).is_empty()), str(v.door_push.size()) + str(v.players.map(func(p): return p.items.size())) + str(mg.get("peeks", {}))
+		+ str(v.turn.get("prompt", {}).get("kind", "")) + str(v.players.map(func(p): return [p.location, p.room_actions, p.rats, p.alive])) + str(mg.get("actions", []).size())
+		+ str(mg.get("chosen", [])) + str(mg.get("offer", {})) + str(mg.get("round", "")) + str(mg.get("cheats", []).size()) + str(v.get("ghosts", []))]
 
 
 func _board_actions(s: int, me: Dictionary, v: Dictionary) -> void:
@@ -309,6 +377,29 @@ func _board_actions(s: int, me: Dictionary, v: Dictionary) -> void:
 		actions.add_child(UiKit.button("GIVE ITEM", func(): menu_mode = "give_item"))
 	if int(me.clue_count) > 0:
 		actions.add_child(UiKit.button("TELL EVERYONE", func(): act.emit(s, {"t": "share"})))
+	if menu_mode == "cheat":
+		for cid in v.get("cheats", []):
+			var d: Dictionary = Assets.load_json("res://assets/data/cheats.json").cheats.get(cid, {})
+			if d.get("target", false):
+				actions.add_child(UiKit.button(str(d.name), func(): menu_mode = "cheat_to:" + cid))
+			else:
+				actions.add_child(UiKit.button(str(d.name), func():
+					menu_mode = ""
+					act.emit(s, {"t": "cheat", "id": cid})))
+		actions.add_child(UiKit.button("BACK", func(): menu_mode = ""))
+		return
+	if menu_mode.begins_with("cheat_to:"):
+		var cid := menu_mode.substr(9)
+		for p in v.players:
+			if p.alive and int(p.seat) != s:
+				actions.add_child(UiKit.button("ON " + str(p.name), func():
+					menu_mode = ""
+					act.emit(s, {"t": "cheat", "id": cid, "target": int(p.seat)})))
+		actions.add_child(UiKit.button("BACK", func(): menu_mode = ""))
+		return
+	if not v.get("cheats", []).is_empty():
+		actions.add_child(UiKit.button("CHEAT...", func(): menu_mode = "cheat", 34))
+	actions.add_child(UiKit.button("LEAVE THE TABLE", func(): act.emit(s, {"t": "leave"}), 34))
 	var b := UiKit.primary("ROLL  (1-%d)" % Body.dice_max(me.body, int(me.painkillers) > 0), func(): act.emit(s, {"t": "roll"}), 52)
 	actions.add_child(b)
 	b.grab_focus.call_deferred()
@@ -324,11 +415,115 @@ func _prompt(s: int, pr: Dictionary, v: Dictionary) -> void:
 		modal_box.add_child(h)
 		h.add_child(UiKit.button("STOP AT THE DOOR", func(): act.emit(s, {"t": "answer", "yes": true})))
 		h.add_child(UiKit.button("KEEP WALKING", func(): act.emit(s, {"t": "answer", "yes": false})))
+	elif pr.kind == "shop":
+		var prices: Dictionary = v.shop.get(str(pr.shop), {})
+		modal_box.add_child(UiKit.label("%s  (you have %d Dead Rats)" % ["THE BLACK MARKET" if pr.shop == "black_market" else "THE MEDIC", int(v.players[s].rats)], 16))
+		var grid := GridContainer.new()
+		grid.columns = 2
+		modal_box.add_child(grid)
+		for it in prices.keys():
+			var b := UiKit.button("%s  %d" % [Items.name_of(it), int(prices[it])], func(): act.emit(s, {"t": "answer", "buy": it}), 30, 150)
+			b.disabled = int(v.players[s].rats) < int(prices[it])
+			b.tooltip_text = str(Items.CATALOGUE.get(it, {}).get("desc", ""))
+			grid.add_child(b)
+		modal_box.add_child(UiKit.button("DONE", func(): act.emit(s, {"t": "answer", "done": true})))
+	elif pr.kind == "gamble":
+		modal_box.add_child(UiKit.label("Double or nothing. How many Dead Rats?", 16))
+		var h2 := UiKit.hbox(6)
+		modal_box.add_child(h2)
+		for w in [1, 3, 5]:
+			if int(v.players[s].rats) >= w:
+				h2.add_child(UiKit.button(str(w), func(): act.emit(s, {"t": "answer", "wager": w}), 36, 60))
+		h2.add_child(UiKit.button("WALK AWAY", func(): act.emit(s, {"t": "answer", "wager": 0})))
+	elif pr.kind == "hidden":
+		modal_box.add_child(UiKit.label("This square is loose. There's something under it.", 16))
+		var h3 := UiKit.hbox(8)
+		modal_box.add_child(h3)
+		h3.add_child(UiKit.button("LIFT IT", func(): act.emit(s, {"t": "answer", "yes": true})))
+		h3.add_child(UiKit.button("LEAVE IT", func(): act.emit(s, {"t": "answer", "yes": false})))
 	elif pr.kind == "steal":
 		modal_box.add_child(UiKit.label("STICKY FINGERS. Take something from:", 16))
 		for o in pr.options:
 			var p: Dictionary = v.players[int(o)]
 			modal_box.add_child(UiKit.button("%s (%d items, %d rats)" % [p.name, p.items.size(), int(p.rats)], func(): act.emit(s, {"t": "answer", "target": int(o)})))
+
+
+## Away from the table: where to go, what to do there, and sitting back down.
+func _room_actions(s: int, me: Dictionary, v: Dictionary) -> void:
+	var room: Dictionary = v.get("room", {})
+	actions.add_child(UiKit.label("%d thing%s left before you're missed" % [int(me.room_actions), "" if int(me.room_actions) == 1 else "s"], 12, UiKit.CREAM))
+	if menu_mode.begins_with("room_to:"):
+		var aid := menu_mode.substr(8)
+		for p in v.players:
+			if p.alive and int(p.seat) != s:
+				actions.add_child(UiKit.button(str(p.name), func():
+					menu_mode = ""
+					act.emit(s, {"t": "room_act", "id": aid, "target": int(p.seat)})))
+		actions.add_child(UiKit.button("BACK", func(): menu_mode = ""))
+		return
+	for a in room.get("actions", []):
+		var aid: String = a.id
+		if a.get("target", false):
+			actions.add_child(UiKit.button(str(a.name), func(): menu_mode = "room_to:" + aid, 34))
+		else:
+			actions.add_child(UiKit.button(str(a.name), func(): act.emit(s, {"t": "room_act", "id": aid}), 34))
+	for hid in room.get("hotspots", {}).keys():
+		if hid != str(me.location):
+			actions.add_child(UiKit.button("GO TO " + str(room.hotspots[hid].name), func(): act.emit(s, {"t": "go", "where": hid}), 30))
+	actions.add_child(UiKit.primary("SIT BACK DOWN", func(): act.emit(s, {"t": "sit"}), 40))
+
+
+## A ghost's turn.
+func _ghost_actions(s: int, me: Dictionary, v: Dictionary) -> void:
+	if menu_mode in ["haunt", "bless", "whisper"]:
+		for p in v.players:
+			if p.alive:
+				var mode := menu_mode
+				actions.add_child(UiKit.button(str(p.name), func():
+					menu_mode = ""
+					act.emit(s, {"t": "ghost", "do": mode, "target": int(p.seat)})))
+		actions.add_child(UiKit.button("BACK", func(): menu_mode = ""))
+		return
+	var cost := int(v.get("resurrect_cost", 10))
+	if int(me.rats) >= cost:
+		actions.add_child(UiKit.primary("COME BACK (%d RATS)" % cost, func(): act.emit(s, {"t": "ghost", "do": "rise"})))
+	actions.add_child(UiKit.button("SCAVENGE FOR RATS", func(): act.emit(s, {"t": "ghost", "do": "scavenge"})))
+	actions.add_child(UiKit.button("HAUNT SOMEONE", func(): menu_mode = "haunt"))
+	actions.add_child(UiKit.button("PUSH SOMEONE ON", func(): menu_mode = "bless"))
+	actions.add_child(UiKit.button("FLICK THE LIGHTS", func(): act.emit(s, {"t": "ghost", "do": "distract"})))
+	actions.add_child(UiKit.button("whisper to the other ghosts", func(): act.emit(s, {"t": "ghost", "do": "whisper", "text": "Get me back."}), 30))
+
+
+## A ghost during a game: a whisper, and (in the arena games) a cold spot.
+func _ghost_mg_actions(s: int, v: Dictionary) -> void:
+	var mg: Dictionary = v.mg
+	for p in v.players:
+		if p.alive and mg.get("seats", []).has(int(p.seat)):
+			if mg.get("arena", false):
+				var at: Vector2 = mg.pos.get(int(p.seat), Vector2.ZERO)
+				actions.add_child(UiKit.button("COLD SPOT ON " + str(p.name), func(): act.emit(s, {"t": "ghost", "do": "cold", "at": at}), 30))
+			actions.add_child(UiKit.button("WHISPER TO " + str(p.name), func(): act.emit(s, {"t": "ghost", "do": "whisper", "target": int(p.seat)}), 30))
+
+
+## Every v0.2 game lists its own buttons (Minigame.actions_for) and cheats.
+func _generic_mg_actions(s: int, mg: Dictionary) -> void:
+	if str(mg.get("id", "")) == "roulette" and mg.sub != "turn":
+		return
+	for c in mg.get("cheats", []):
+		var cid: String = c.id
+		var direct: bool = c.get("direct", false)
+		actions.add_child(UiKit.button("(cheat) " + str(c.name), func():
+			if direct:
+				act.emit(s, {"t": "mg", "do": "cheat", "id": cid})
+			else:
+				act.emit(s, {"t": "mg_cheat", "id": cid}), 28))
+	for a in mg.get("actions", []):
+		var payload := {"t": "mg"}
+		payload.merge(a)
+		payload.erase("name")
+		var label := str(a.name) + ("  <" if a.get("picked", false) else "")
+		var b: Button = UiKit.primary(label, func(): act.emit(s, payload), 44) if a.get("primary", false) else UiKit.button(label, func(): act.emit(s, payload), 28 if a.get("small", false) else 38)
+		actions.add_child(b)
 
 
 func _roulette_actions(s: int, v: Dictionary) -> void:
@@ -418,6 +613,9 @@ func _stick(v: Dictionary) -> void:
 	if v.phase == "mg_play" and v.mg_id == "musical_chairs" and local.size() >= 1:
 		var s: int = local[0]
 		show = v.players[s].alive and not v.mg.seated.has(s) and DisplayServer.is_touchscreen_available()
+	var arena: bool = v.phase == "mg_play" and v.mg.get("arena", false)
+	if arena and local.size() >= 1:
+		show = v.players[local[0]].alive and (DisplayServer.is_touchscreen_available() or OS.has_feature("mobile"))
 	stick.visible = show or (v.phase == "mg_play" and v.mg_id == "musical_chairs" and OS.has_feature("mobile"))
 
 

@@ -35,6 +35,7 @@ var _name_tag: Label3D
 const IRIS := [Color("4a6a9a"), Color("5a3a1e"), Color("4a7a3a"), Color("7a6030")]
 
 var eyes: Array[Node3D] = []      # [left, right]
+var is_ghost := false
 var _eye_rest: Array[Vector3] = []
 var _strings: MeshInstance3D
 var _string_mesh: ImmediateMesh
@@ -107,6 +108,29 @@ func _mouth() -> void:
 	var mi := MeshInstance3D.new()
 	mi.mesh = mb.build()
 	human.head.add_child(mi)
+
+
+## Dead: a pale, see-through copy of the puppet, hovering over its square. (The eyes keep
+## following you.)
+func make_ghost() -> void:
+	is_ghost = true
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.albedo_color = Color(0.75, 0.85, 1.0, 0.32)
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	for n in find_children("*", "MeshInstance3D", true, false):
+		(n as MeshInstance3D).material_override = m
+	if _strings:
+		_strings.visible = false
+	for c in get_children():
+		if c is CPUParticles3D:
+			c.queue_free()
+	position.y = 0.6
+	target.y = 0.6
+	if _name_tag:
+		_name_tag.text = "%s (GHOST)" % _name_tag.text
+		_name_tag.modulate = Color(0.7, 0.8, 1.0, 0.8)
 
 
 ## Two real eyes, pushed into the meat where a face would be.
@@ -262,6 +286,8 @@ func _process(delta: float) -> void:
 		return
 	var d := target - position
 	d.y = 0.0
+	if is_ghost:
+		target.y = position.y
 	var moving := d.length() > 0.04 and not seated
 	if moving:
 		var step := minf(d.length(), WALK_SPEED * _speed_mul * delta)
@@ -273,6 +299,8 @@ func _process(delta: float) -> void:
 		human.walk(_phase, 0.0)
 		human.idle(_t + seat)
 	rotation.y = lerp_angle(rotation.y, face_dir, minf(1.0, delta * 8.0))
+	if is_ghost:
+		position.y = 0.6 + sin(_t * 1.7 + seat) * 0.15
 	_look_eyes()
 	_draw_strings()
 	# a limp: one leg short

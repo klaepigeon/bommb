@@ -44,7 +44,15 @@ func setup(s: int, slot_i: int, face: int, c: Color) -> void:
 	_rest_arms()
 
 
+var chair: Node3D
+
+
 func _chair() -> void:
+	# the chair stays where it is when they get up (it's the room's, not theirs)
+	chair = Node3D.new()
+	chair.position = position
+	chair.rotation = rotation
+	get_parent().add_child(chair)
 	var mb := LcMB.new()
 	var seat_m := LcMB.mat(LcTex.wood(Color("7a4a2a"), 7, 32, 2))
 	var leg_m := LcMB.mat(LcTex.grime(Color("4a4a48"), Color("6a6a66"), 16, 8, 0.4))
@@ -54,13 +62,13 @@ func _chair() -> void:
 		mb.box("l", leg_m, Vector3(0.03, 0.45, 0.03), LcMB.T(p), Color(1, 1, 1))
 	var mi := MeshInstance3D.new()
 	mi.mesh = mb.build()
-	add_child(mi)
+	chair.add_child(mi)
 	# a party hat, on the seat back
 	var hat := LcMB.new()
 	hat.cyl("h", LcMB.mat(LcTex.grime(Color("c83a6a"), Color("f06a9a"), 16, 7 + seat, 0.4)), 0.07, 0.0, 0.18, 6, LcMB.T(Vector3(0.16, 0.95, -0.18), Vector3(0, 0, 0.4)), Color(1, 1, 1))
 	var hm := MeshInstance3D.new()
 	hm.mesh = hat.build()
-	add_child(hm)
+	chair.add_child(hm)
 
 
 ## Forearms on the table, as if waiting. (Arms reach forward: -x rotation.)
@@ -100,6 +108,8 @@ func lean_in(on: bool) -> void:
 func _process(delta: float) -> void:
 	_t += delta
 	if human == null or dead:
+		return
+	if _walk(delta):
 		return
 	_lean = lerpf(_lean, _want_lean, minf(1.0, delta * 3.0))
 	human.upper.rotation.x = _lean + sin(_t * 1.3 + seat) * 0.02
@@ -224,6 +234,62 @@ func die() -> void:
 		pool.create_tween().tween_property(pool, "scale", Vector3.ONE, 3.0))
 
 
+var _home := Vector3.ZERO
+var _home_rot := 0.0
+var _walk_to := Vector3.INF
+var _walk_phase := 0.0
+
+
+## Up from the chair (leaving the table).
+func get_up() -> void:
+	if human == null or dead:
+		return
+	_home = position
+	_home_rot = rotation.y
+	human.hips.position.y = 0.92
+	for l in [human.leg_l, human.leg_r, human.shin_l, human.shin_r]:
+		(l as Node3D).rotation.x = 0.0
+	for a in [human.arm_l, human.arm_r, human.fore_l, human.fore_r]:
+		(a as Node3D).rotation = Vector3.ZERO
+
+
+func walk_to(p: Vector3) -> void:
+	if human == null or dead:
+		return
+	if _walk_to == Vector3.INF and _home == Vector3.ZERO:
+		get_up()
+	_walk_to = p
+
+
+func sit_back() -> void:
+	if human == null or dead or _home == Vector3.ZERO:
+		return
+	_walk_to = _home
+
+
+func _walk(delta: float) -> bool:
+	if _walk_to == Vector3.INF:
+		return false
+	var d := _walk_to - position
+	d.y = 0.0
+	if d.length() < 0.05:
+		position = Vector3(_walk_to.x, 0, _walk_to.z)
+		if _walk_to == _home:
+			rotation.y = _home_rot
+			_home = Vector3.ZERO
+			_walk_to = Vector3.INF
+			human.sit()
+			human.hips.position.y = 0.5
+			_rest_arms()
+		human.walk(_walk_phase, 0.0)
+		return true
+	position += d.normalized() * minf(d.length(), 1.6 * Body.speed(Body.fresh()) * delta)
+	rotation.y = lerp_angle(rotation.y, atan2(d.x, d.z), minf(1.0, delta * 8.0))
+	_walk_phase += delta * 9.0
+	human.walk(_walk_phase, 1.0)
+	return true
+
+
 ## They got out: up from the chair.
 func stand() -> void:
 	if human == null or dead:
@@ -233,3 +299,8 @@ func stand() -> void:
 	for l in [human.leg_l, human.leg_r, human.shin_l, human.shin_r]:
 		tw.parallel().tween_property(l, "rotation:x", 0.0, 0.6)
 	tw.parallel().tween_property(self, "position:z", position.z + (0.5 if slot == 2 else 0.0), 0.6)
+
+
+func _exit_tree() -> void:
+	if chair and is_instance_valid(chair) and not chair.is_queued_for_deletion():
+		chair.queue_free()

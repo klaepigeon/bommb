@@ -1,7 +1,7 @@
 extends MgView
-## POPPER ROULETTE, drawn: a round card table, everyone seated, and the Lucky Popper (a
-## brass drum of six chambers with a pull-string and a frill of paper) passed to whoever's
-## turn it is. A pull: the string goes, the drum turns, click... or the Big Pop.
+## RUSSIAN ROULETTE, drawn: a separate round card table, everyone seated, and the gun (a
+## long-barrelled brass revolver, six chambers) passed to whoever's turn it is. A pull: the
+## hammer falls, the cylinder turns, click... or the shot.
 
 const R := 1.35
 var table: Node3D
@@ -28,22 +28,26 @@ func setup(g: GameView, view: Dictionary) -> void:
 	popper = Node3D.new()
 	drum = Node3D.new()
 	popper.add_child(drum)
-	var pb := LcMB.new()
 	var brass := LcMB.mat(LcTex.brass())
-	pb.cyl("b", brass, 0.13, 0.13, 0.22, 6, LcMB.T(Vector3(0, 0, -0.11), Vector3(PI / 2, 0, 0)), Color(1, 1, 1))
+	var steel := LcMB.mat(LcTex.grime(Color("3a3a40"), Color("6a6a72"), 16, 3, 0.3))
+	var wood2 := LcMB.mat(LcTex.wood(Color("5a2a14"), 6, 16, 1))
+	var db := LcMB.new()
+	db.cyl("c", steel, 0.1, 0.1, 0.16, 6, LcMB.T(Vector3(0, 0, -0.08), Vector3(PI / 2, 0, 0)), Color(1, 1, 1))
 	for k in 6:
 		var a := TAU * k / 6
-		pb.cyl("h", LcMB.mat(LcTex.solid(Color("201810"))), 0.03, 0.03, 0.01, 6, LcMB.T(Vector3(cos(a) * 0.08, sin(a) * 0.08, 0.115), Vector3(PI / 2, 0, 0)), Color(1, 1, 1))
+		db.cyl("h", LcMB.mat(LcTex.solid(Color("101010"))), 0.025, 0.025, 0.01, 6, LcMB.T(Vector3(cos(a) * 0.06, sin(a) * 0.06, 0.085), Vector3(PI / 2, 0, 0)), Color(1, 1, 1))
 	var dmi := MeshInstance3D.new()
-	dmi.mesh = pb.build()
+	dmi.mesh = db.build()
 	drum.add_child(dmi)
-	var fb := LcMB.new()
-	var paper := LcMB.mat(LcTex.checker(Color("f0c020"), Color("e8402a"), 16, 4, 3, 0.1))
-	fb.cyl("p", paper, 0.14, 0.24, 0.16, 8, LcMB.T(Vector3(0, 0, 0.11), Vector3(PI / 2, 0, 0)), Color(1, 1, 1))
-	fb.box("s", LcMB.mat(LcTex.solid(Color("f0f0f0"))), Vector3(0.01, 0.01, 0.4), LcMB.T(Vector3(0, -0.05, -0.32)), Color(1, 1, 1))
-	fb.sphere("s", LcMB.mat(LcTex.solid(Color("e8402a"))), 0.03, 2, 4, LcMB.T(Vector3(0, -0.05, -0.52)), Color(1, 1, 1))
+	var gb := LcMB.new()
+	# barrel forward (+z: the muzzle), frame, grip, trigger guard
+	gb.cyl("b", steel, 0.035, 0.035, 0.5, 6, LcMB.T(Vector3(0, 0.03, 0.08), Vector3(PI / 2, 0, 0)), Color(1, 1, 1))
+	gb.box("f", brass, Vector3(0.06, 0.12, 0.26), LcMB.T(Vector3(0, 0.0, -0.02)), Color(1, 1, 1))
+	gb.box("g", wood2, Vector3(0.06, 0.26, 0.1), LcMB.T(Vector3(0, -0.15, -0.16), Vector3(-0.35, 0, 0)), Color(1, 1, 1))
+	gb.ring("t", brass, 0.05, 0.012, 8, LcMB.T(Vector3(0, -0.08, -0.04), Vector3(0, 0, PI / 2)), Color(1, 1, 1))
+	gb.box("h", steel, Vector3(0.03, 0.06, 0.04), LcMB.T(Vector3(0, 0.08, -0.14)), Color(1, 1, 1))
 	var fmi := MeshInstance3D.new()
-	fmi.mesh = fb.build()
+	fmi.mesh = gb.build()
 	popper.add_child(fmi)
 	popper.position = center + Vector3(0, 0.95, 0)
 	add_child(popper)
