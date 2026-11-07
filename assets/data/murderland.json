@@ -110,8 +110,8 @@
    "type": "start",
    "district": "welcome",
    "pos": [
-    0.5,
-    0.9
+    0.7039,
+    0.9054
    ],
    "next": [
     {
@@ -124,8 +124,8 @@
    "type": "normal",
    "district": "welcome",
    "pos": [
-    0.6228,
-    0.8993
+    0.733,
+    0.8682
    ],
    "next": [
     {
@@ -138,8 +138,8 @@
    "type": "bonus",
    "district": "welcome",
    "pos": [
-    0.6733,
-    0.8973
+    0.7381,
+    0.8141
    ],
    "next": [
     {
@@ -152,8 +152,8 @@
    "type": "normal",
    "district": "welcome",
    "pos": [
-    0.7117,
-    0.894
+    0.7305,
+    0.7602
    ],
    "next": [
     {
@@ -166,8 +166,8 @@
    "type": "shop",
    "district": "welcome",
    "pos": [
-    0.7435,
-    0.8893
+    0.7184,
+    0.7073
    ],
    "next": [
     {
@@ -183,8 +183,8 @@
    "type": "normal",
    "district": "welcome",
    "pos": [
-    0.7709,
-    0.8832
+    0.7292,
+    0.6623
    ],
    "next": [
     {
@@ -197,8 +197,8 @@
    "type": "event",
    "district": "welcome",
    "pos": [
-    0.7949,
-    0.8758
+    0.7701,
+    0.6575
    ],
    "next": [
     {
@@ -211,8 +211,8 @@
    "type": "normal",
    "district": "welcome",
    "pos": [
-    0.8162,
-    0.8669
+    0.8123,
+    0.6573
    ],
    "next": [
     {
@@ -225,8 +225,8 @@
    "type": "item",
    "district": "welcome",
    "pos": [
-    0.8351,
-    0.8565
+    0.8535,
+    0.6549
    ],
    "next": [
     {
@@ -239,8 +239,8 @@
    "type": "normal",
    "district": "welcome",
    "pos": [
-    0.852,
-    0.8446
+    0.8936,
+    0.648
    ],
    "next": [
     {
@@ -253,8 +253,8 @@
    "type": "bad",
    "district": "welcome",
    "pos": [
-    0.867,
-    0.8311
+    0.9328,
+    0.632
    ],
    "next": [
     {
@@ -267,12 +267,15 @@
    "type": "normal",
    "district": "woods",
    "pos": [
-    0.8802,
-    0.8158
+    0.9593,
+    0.5927
    ],
    "next": [
     {
      "to": 12
+    },
+    {
+     "to": 113
     }
    ]
   },
@@ -281,8 +284,8 @@
    "type": "signpost",
    "district": "woods",
    "pos": [
-    0.8918,
-    0.7987
+    0.9389,
+    0.5466
    ],
    "next": [
     {
@@ -302,8 +305,8 @@
    "type": "normal",
    "district": "woods",
    "pos": [
-    0.9017,
-    0.7795
+    0.9044,
+    0.5172
    ],
    "next": [
     {
@@ -316,8 +319,8 @@
    "type": "hidden",
    "district": "woods",
    "pos": [
-    0.9101,
-    0.7578
+    0.867,
+    0.4952
    ],
    "next": [
     {
@@ -330,8 +333,8 @@
    "type": "normal",
    "district": "woods",
    "pos": [
-    0.917,
-    0.7332
+    0.828,
+    0.4764
    ],
    "next": [
     {
@@ -344,8 +347,8 @@
    "type": "item",
    "district": "woods",
    "pos": [
-    0.9224,
-    0.7048
+    0.7893,
+    0.4567
    ],
    "next": [
     {
@@ -358,8 +361,8 @@
    "type": "bad",
    "district": "woods",
    "pos": [
-    0.9264,
-    0.6709
+    0.7831,
+    0.4144
    ],
    "next": [
     {
@@ -372,8 +375,8 @@
    "type": "normal",
    "district": "woods",
    "pos": [
-    0.9289,
-    0.6276
+    0.8133,
+    0.3765
    ],
    "next": [
     {
@@ -386,8 +389,8 @@
    "type": "event",
    "district": "woods",
    "pos": [
-    0.93,
-    0.5571
+    0.8428,
+    0.3381
    ],
    "next": [
     {
@@ -403,8 +406,8 @@
    "type": "normal",
    "district": "woods",
    "pos": [
-    0.9296,
-    0.4011
+    0.8674,
+    0.2952
    ],
    "next": [
     {
@@ -417,8 +420,8 @@
    "type": "minigame",
    "district": "woods",
    "pos": [
-    0.9278,
-    0.3491
+    0.8774,
+    0.2429
    ],
    "next": [
     {
@@ -431,8 +434,8 @@
    "type": "normal",
    "district": "funhouse",
    "pos": [
-    0.9246,
-    0.3113
+    0.8493,
+    0.2063
    ],
    "next": [
     {
@@ -445,8 +448,8 @@
    "type": "bonus",
    "district": "funhouse",
    "pos": [
-    0.9199,
-    0.2805
+    0.8081,
+    0.2006
    ],
    "next": [
     {
@@ -459,8 +462,8 @@
    "type": "rotator",
    "district": "funhouse",
    "pos": [
-    0.9137,
-    0.2541
+    0.7678,
+    0.2076
    ],
    "next": [
     {
@@ -483,8 +486,8 @@
    "type": "normal",
    "district": "funhouse",
    "pos": [
-    0.9061,
-    0.231
+    0.7275,
+    0.2212
    ],
    "next": [
     {
@@ -497,8 +500,8 @@
    "type": "bad",
    "district": "funhouse",
    "pos": [
-    0.8969,
-    0.2106
+    0.6885,
+    0.2383
    ],
    "next": [
     {
@@ -511,8 +514,8 @@
    "type": "duel",
    "district": "funhouse",
    "pos": [
-    0.8862,
-    0.1925
+    0.6493,
+    0.2551
    ],
    "next": [
     {
@@ -525,8 +528,8 @@
    "type": "normal",
    "district": "funhouse",
    "pos": [
-    0.8738,
-    0.1763
+    0.6113,
+    0.2454
    ],
    "next": [
     {
@@ -539,8 +542,8 @@
    "type": "event",
    "district": "funhouse",
    "pos": [
-    0.8597,
-    0.1619
+    0.596,
+    0.1949
    ],
    "next": [
     {
@@ -553,8 +556,8 @@
    "type": "gamble",
    "district": "funhouse",
    "pos": [
-    0.8438,
-    0.1492
+    0.5817,
+    0.143
    ],
    "next": [
     {
@@ -567,8 +570,8 @@
    "type": "normal",
    "district": "funhouse",
    "pos": [
-    0.8259,
-    0.1381
+    0.5609,
+    0.0958
    ],
    "next": [
     {
@@ -581,8 +584,8 @@
    "type": "trap",
    "district": "funhouse",
    "pos": [
-    0.8058,
-    0.1285
+    0.5298,
+    0.06
    ],
    "next": [
     {
@@ -595,8 +598,8 @@
    "type": "normal",
    "district": "sunken",
    "pos": [
-    0.7832,
-    0.1203
+    0.4899,
+    0.0511
    ],
    "next": [
     {
@@ -609,8 +612,8 @@
    "type": "floodgate",
    "district": "sunken",
    "pos": [
-    0.7576,
-    0.1136
+    0.4534,
+    0.0755
    ],
    "next": [
     {
@@ -633,8 +636,8 @@
    "type": "normal",
    "district": "sunken",
    "pos": [
-    0.7282,
-    0.1082
+    0.4279,
+    0.1178
    ],
    "next": [
     {
@@ -647,8 +650,8 @@
    "type": "medical",
    "district": "sunken",
    "pos": [
-    0.6935,
-    0.1042
+    0.4107,
+    0.1684
    ],
    "next": [
     {
@@ -661,8 +664,8 @@
    "type": "normal",
    "district": "sunken",
    "pos": [
-    0.6503,
-    0.1015
+    0.3979,
+    0.2198
    ],
    "next": [
     {
@@ -675,8 +678,8 @@
    "type": "bad",
    "district": "sunken",
    "pos": [
-    0.5868,
-    0.1002
+    0.372,
+    0.2584
    ],
    "next": [
     {
@@ -689,8 +692,8 @@
    "type": "resurrect",
    "district": "sunken",
    "pos": [
-    0.4132,
-    0.1002
+    0.3316,
+    0.2474
    ],
    "next": [
     {
@@ -703,8 +706,8 @@
    "type": "normal",
    "district": "sunken",
    "pos": [
-    0.3497,
-    0.1015
+    0.2923,
+    0.2296
    ],
    "next": [
     {
@@ -717,8 +720,8 @@
    "type": "poison",
    "district": "sunken",
    "pos": [
-    0.3065,
-    0.1042
+    0.2531,
+    0.214
    ],
    "next": [
     {
@@ -731,8 +734,8 @@
    "type": "normal",
    "district": "sunken",
    "pos": [
-    0.2718,
-    0.1082
+    0.2128,
+    0.2032
    ],
    "next": [
     {
@@ -745,8 +748,8 @@
    "type": "event",
    "district": "sunken",
    "pos": [
-    0.2424,
-    0.1136
+    0.171,
+    0.2011
    ],
    "next": [
     {
@@ -759,8 +762,8 @@
    "type": "normal",
    "district": "giggleworks",
    "pos": [
-    0.2168,
-    0.1203
+    0.1333,
+    0.2185
    ],
    "next": [
     {
@@ -773,8 +776,8 @@
    "type": "switch",
    "district": "giggleworks",
    "pos": [
-    0.1942,
-    0.1285
+    0.124,
+    0.2689
    ],
    "next": [
     {
@@ -787,8 +790,8 @@
    "type": "conveyor",
    "district": "giggleworks",
    "pos": [
-    0.1741,
-    0.1381
+    0.1439,
+    0.3172
    ],
    "next": [
     {
@@ -801,8 +804,8 @@
    "type": "conveyor",
    "district": "giggleworks",
    "pos": [
-    0.1562,
-    0.1492
+    0.1718,
+    0.358
    ],
    "next": [
     {
@@ -815,8 +818,8 @@
    "type": "normal",
    "district": "giggleworks",
    "pos": [
-    0.1403,
-    0.1619
+    0.2023,
+    0.3952
    ],
    "next": [
     {
@@ -832,8 +835,8 @@
    "type": "trap",
    "district": "giggleworks",
    "pos": [
-    0.1262,
-    0.1763
+    0.2254,
+    0.4381
    ],
    "next": [
     {
@@ -846,8 +849,8 @@
    "type": "shop",
    "district": "giggleworks",
    "pos": [
-    0.1138,
-    0.1925
+    0.1915,
+    0.4673
    ],
    "next": [
     {
@@ -860,8 +863,8 @@
    "type": "normal",
    "district": "giggleworks",
    "pos": [
-    0.1031,
-    0.2106
+    0.1531,
+    0.4852
    ],
    "next": [
     {
@@ -874,8 +877,8 @@
    "type": "bad",
    "district": "giggleworks",
    "pos": [
-    0.0939,
-    0.231
+    0.114,
+    0.5056
    ],
    "next": [
     {
@@ -888,8 +891,8 @@
    "type": "battle",
    "district": "giggleworks",
    "pos": [
-    0.0863,
-    0.2541
+    0.0781,
+    0.5303
    ],
    "next": [
     {
@@ -902,8 +905,8 @@
    "type": "normal",
    "district": "giggleworks",
    "pos": [
-    0.0801,
-    0.2805
+    0.0471,
+    0.5664
    ],
    "next": [
     {
@@ -916,8 +919,8 @@
    "type": "normal",
    "district": "carnival",
    "pos": [
-    0.0754,
-    0.3113
+    0.0496,
+    0.6163
    ],
    "next": [
     {
@@ -930,8 +933,8 @@
    "type": "wheel",
    "district": "carnival",
    "pos": [
-    0.0722,
-    0.3491
+    0.0856,
+    0.6413
    ],
    "next": [
     {
@@ -949,8 +952,8 @@
    "type": "normal",
    "district": "carnival",
    "pos": [
-    0.0704,
-    0.4011
+    0.1259,
+    0.6521
    ],
    "next": [
     {
@@ -963,8 +966,8 @@
    "type": "roulette",
    "district": "carnival",
    "pos": [
-    0.07,
-    0.5571
+    0.1672,
+    0.6566
    ],
    "next": [
     {
@@ -977,8 +980,8 @@
    "type": "bonus",
    "district": "carnival",
    "pos": [
-    0.0711,
-    0.6276
+    0.2081,
+    0.6575
    ],
    "next": [
     {
@@ -991,8 +994,8 @@
    "type": "normal",
    "district": "carnival",
    "pos": [
-    0.0736,
-    0.6709
+    0.2499,
+    0.6582
    ],
    "next": [
     {
@@ -1008,8 +1011,8 @@
    "type": "death",
    "district": "carnival",
    "pos": [
-    0.0776,
-    0.7048
+    0.2841,
+    0.6798
    ],
    "next": [
     {
@@ -1022,8 +1025,8 @@
    "type": "event",
    "district": "carnival",
    "pos": [
-    0.083,
-    0.7332
+    0.2756,
+    0.7337
    ],
    "next": [
     {
@@ -1036,8 +1039,8 @@
    "type": "gamble",
    "district": "carnival",
    "pos": [
-    0.0899,
-    0.7578
+    0.2648,
+    0.7863
    ],
    "next": [
     {
@@ -1050,8 +1053,8 @@
    "type": "normal",
    "district": "carnival",
    "pos": [
-    0.0983,
-    0.7795
+    0.2621,
+    0.8406
    ],
    "next": [
     {
@@ -1064,8 +1067,8 @@
    "type": "caller",
    "district": "carnival",
    "pos": [
-    0.1082,
-    0.7987
+    0.278,
+    0.8905
    ],
    "next": [
     {
@@ -1078,8 +1081,8 @@
    "type": "normal",
    "district": "royal",
    "pos": [
-    0.1198,
-    0.8158
+    0.3154,
+    0.9097
    ],
    "next": [
     {
@@ -1092,8 +1095,8 @@
    "type": "rulebook",
    "district": "royal",
    "pos": [
-    0.133,
-    0.8311
+    0.3557,
+    0.899
    ],
    "next": [
     {
@@ -1106,8 +1109,8 @@
    "type": "normal",
    "district": "royal",
    "pos": [
-    0.148,
-    0.8446
+    0.3924,
+    0.8737
    ],
    "next": [
     {
@@ -1125,8 +1128,8 @@
    "type": "item",
    "district": "royal",
    "pos": [
-    0.1649,
-    0.8565
+    0.4255,
+    0.8412
    ],
    "next": [
     {
@@ -1139,8 +1142,8 @@
    "type": "normal",
    "district": "royal",
    "pos": [
-    0.1838,
-    0.8669
+    0.4566,
+    0.8047
    ],
    "next": [
     {
@@ -1153,8 +1156,8 @@
    "type": "control",
    "district": "royal",
    "pos": [
-    0.2051,
-    0.8758
+    0.4896,
+    0.7728
    ],
    "next": [
     {
@@ -1167,8 +1170,8 @@
    "type": "bonus",
    "district": "royal",
    "pos": [
-    0.2291,
-    0.8832
+    0.5272,
+    0.7863
    ],
    "next": [
     {
@@ -1181,8 +1184,8 @@
    "type": "veto",
    "district": "royal",
    "pos": [
-    0.2565,
-    0.8893
+    0.5587,
+    0.8231
    ],
    "next": [
     {
@@ -1195,8 +1198,8 @@
    "type": "normal",
    "district": "royal",
    "pos": [
-    0.2883,
-    0.894
+    0.5901,
+    0.8575
    ],
    "next": [
     {
@@ -1209,8 +1212,8 @@
    "type": "black_market",
    "district": "royal",
    "pos": [
-    0.3267,
-    0.8973
+    0.6249,
+    0.8872
    ],
    "next": [
     {
@@ -1226,8 +1229,8 @@
    "type": "normal",
    "district": "royal",
    "pos": [
-    0.3772,
-    0.8993
+    0.6633,
+    0.9067
    ],
    "next": [
     {
@@ -1240,8 +1243,8 @@
    "type": "item",
    "district": "welcome",
    "pos": [
-    0.7172,
-    0.8122
+    0.6849,
+    0.6478
    ],
    "next": [
     {
@@ -1255,8 +1258,8 @@
    "type": "gamble",
    "district": "welcome",
    "pos": [
-    0.7221,
-    0.7738
+    0.7442,
+    0.5991
    ],
    "next": [
     {
@@ -1270,8 +1273,8 @@
    "type": "normal",
    "district": "welcome",
    "pos": [
-    0.7714,
-    0.7899
+    0.8238,
+    0.5965
    ],
    "next": [
     {
@@ -1285,8 +1288,8 @@
    "type": "normal",
    "district": "woods",
    "pos": [
-    0.9344,
-    0.7936
+    0.96,
+    0.483
    ],
    "next": [
     {
@@ -1300,8 +1303,8 @@
    "type": "bonus",
    "district": "woods",
    "pos": [
-    0.9634,
-    0.7807
+    0.9492,
+    0.415
    ],
    "next": [
     {
@@ -1315,8 +1318,8 @@
    "type": "normal",
    "district": "woods",
    "pos": [
-    0.97,
-    0.7552
+    0.9,
+    0.4379
    ],
    "next": [
     {
@@ -1330,8 +1333,8 @@
    "type": "hidden",
    "district": "woods",
    "pos": [
-    0.9552,
-    0.7169
+    0.8503,
+    0.4169
    ],
    "next": [
     {
@@ -1345,8 +1348,8 @@
    "type": "trap",
    "district": "woods",
    "pos": [
-    0.826,
-    0.4991
+    0.7899,
+    0.3159
    ],
    "next": [
     {
@@ -1360,8 +1363,8 @@
    "type": "item",
    "district": "woods",
    "pos": [
-    0.8252,
-    0.4297
+    0.8234,
+    0.2658
    ],
    "next": [
     {
@@ -1375,8 +1378,8 @@
    "type": "event",
    "district": "funhouse",
    "pos": [
-    0.8325,
-    0.2822
+    0.7362,
+    0.2862
    ],
    "next": [
     {
@@ -1390,8 +1393,8 @@
    "type": "normal",
    "district": "funhouse",
    "pos": [
-    0.7909,
-    0.2803
+    0.6802,
+    0.311
    ],
    "next": [
     {
@@ -1405,8 +1408,8 @@
    "type": "hidden",
    "district": "funhouse",
    "pos": [
-    0.8055,
-    0.2361
+    0.6181,
+    0.3058
    ],
    "next": [
     {
@@ -1420,8 +1423,8 @@
    "type": "normal",
    "district": "funhouse",
    "pos": [
-    0.9246,
-    0.1824
+    0.7,
+    0.1613
    ],
    "next": [
     {
@@ -1435,8 +1438,8 @@
    "type": "bonus",
    "district": "funhouse",
    "pos": [
-    0.8953,
-    0.1438
+    0.633,
+    0.1257
    ],
    "next": [
     {
@@ -1450,8 +1453,8 @@
    "type": "normal",
    "district": "sunken",
    "pos": [
-    0.6809,
-    0.188
+    0.4748,
+    0.1464
    ],
    "next": [
     {
@@ -1465,8 +1468,8 @@
    "type": "item",
    "district": "sunken",
    "pos": [
-    0.6241,
-    0.2168
+    0.4533,
+    0.2125
    ],
    "next": [
     {
@@ -1480,8 +1483,8 @@
    "type": "normal",
    "district": "sunken",
    "pos": [
-    0.5955,
-    0.1813
+    0.4267,
+    0.2753
    ],
    "next": [
     {
@@ -1495,8 +1498,8 @@
    "type": "bonus",
    "district": "sunken",
    "pos": [
-    0.6115,
-    0.0587
+    0.377,
+    0.1127
    ],
    "next": [
     {
@@ -1510,8 +1513,8 @@
    "type": "normal",
    "district": "sunken",
    "pos": [
-    0.4611,
-    0.0555
+    0.315,
+    0.1633
    ],
    "next": [
     {
@@ -1525,8 +1528,8 @@
    "type": "trap",
    "district": "giggleworks",
    "pos": [
-    0.1952,
-    0.2319
+    0.2689,
+    0.4371
    ],
    "next": [
     {
@@ -1541,8 +1544,8 @@
    "type": "black_market",
    "district": "giggleworks",
    "pos": [
-    0.2111,
-    0.271
+    0.2361,
+    0.5051
    ],
    "next": [
     {
@@ -1556,8 +1559,8 @@
    "type": "normal",
    "district": "giggleworks",
    "pos": [
-    0.172,
-    0.2664
+    0.1789,
+    0.5342
    ],
    "next": [
     {
@@ -1571,8 +1574,8 @@
    "type": "bonus",
    "district": "carnival",
    "pos": [
-    0.1446,
-    0.4191
+    0.1758,
+    0.6009
    ],
    "next": [
     {
@@ -1586,8 +1589,8 @@
    "type": "event",
    "district": "carnival",
    "pos": [
-    0.1901,
-    0.4917
+    0.2636,
+    0.5986
    ],
    "next": [
     {
@@ -1601,8 +1604,8 @@
    "type": "item",
    "district": "carnival",
    "pos": [
-    0.1923,
-    0.5685
+    0.323,
+    0.6425
    ],
    "next": [
     {
@@ -1616,8 +1619,8 @@
    "type": "bonus",
    "district": "carnival",
    "pos": [
-    0.151,
-    0.6495
+    0.328,
+    0.7141
    ],
    "next": [
     {
@@ -1631,8 +1634,8 @@
    "type": "resurrect",
    "district": "carnival",
    "pos": [
-    0.0425,
-    0.7183
+    0.2244,
+    0.7222
    ],
    "next": [
     {
@@ -1646,8 +1649,8 @@
    "type": "surgery",
    "district": "carnival",
    "pos": [
-    0.0332,
-    0.7539
+    0.1962,
+    0.7807
    ],
    "next": [
     {
@@ -1661,8 +1664,8 @@
    "type": "normal",
    "district": "carnival",
    "pos": [
-    0.0549,
-    0.7726
+    0.2102,
+    0.8477
    ],
    "next": [
     {
@@ -1676,8 +1679,8 @@
    "type": "bonus",
    "district": "royal",
    "pos": [
-    0.2189,
-    0.7984
+    0.4068,
+    0.7799
    ],
    "next": [
     {
@@ -1691,8 +1694,8 @@
    "type": "bonus",
    "district": "royal",
    "pos": [
-    0.2734,
-    0.7736
+    0.455,
+    0.7252
    ],
    "next": [
     {
@@ -1706,8 +1709,8 @@
    "type": "item",
    "district": "royal",
    "pos": [
-    0.3014,
-    0.7835
+    0.5238,
+    0.72
    ],
    "next": [
     {
@@ -1721,8 +1724,8 @@
    "type": "normal",
    "district": "royal",
    "pos": [
-    0.303,
-    0.828
+    0.5774,
+    0.7632
    ],
    "next": [
     {
@@ -1736,8 +1739,8 @@
    "type": "normal",
    "district": "royal",
    "pos": [
-    0.3985,
-    0.9331
+    0.6286,
+    0.95
    ],
    "next": [
     {
@@ -1751,8 +1754,8 @@
    "type": "medical",
    "district": "royal",
    "pos": [
-    0.4716,
-    0.9482
+    0.688,
+    0.95
    ],
    "next": [
     {
@@ -1766,8 +1769,8 @@
    "type": "normal",
    "district": "royal",
    "pos": [
-    0.5465,
-    0.9341
+    0.7448,
+    0.9415
    ],
    "next": [
     {
@@ -1775,6 +1778,141 @@
     }
    ],
    "branch": "THE PALACE GARDENS"
+  },
+  {
+   "id": 113,
+   "type": "normal",
+   "district": "woods",
+   "pos": [
+    0.8731,
+    0.5746
+   ],
+   "next": [
+    {
+     "to": 114
+    }
+   ],
+   "branch": "THE CONTROL ROOM"
+  },
+  {
+   "id": 114,
+   "type": "event",
+   "district": "woods",
+   "pos": [
+    0.7819,
+    0.5573
+   ],
+   "next": [
+    {
+     "to": 115
+    }
+   ],
+   "branch": "THE CONTROL ROOM"
+  },
+  {
+   "id": 115,
+   "type": "control",
+   "district": "woods",
+   "pos": [
+    0.6859,
+    0.5802
+   ],
+   "next": [
+    {
+     "to": 116
+    }
+   ],
+   "branch": "THE CONTROL ROOM"
+  },
+  {
+   "id": 116,
+   "type": "normal",
+   "district": "woods",
+   "pos": [
+    0.5922,
+    0.6292
+   ],
+   "next": [
+    {
+     "to": 117
+    }
+   ],
+   "branch": "THE CONTROL ROOM"
+  },
+  {
+   "id": 117,
+   "type": "bonus",
+   "district": "woods",
+   "pos": [
+    0.4926,
+    0.6661
+   ],
+   "next": [
+    {
+     "to": 118
+    }
+   ],
+   "branch": "THE CONTROL ROOM"
+  },
+  {
+   "id": 118,
+   "type": "normal",
+   "district": "woods",
+   "pos": [
+    0.4022,
+    0.6239
+   ],
+   "next": [
+    {
+     "to": 119
+    }
+   ],
+   "branch": "THE CONTROL ROOM"
+  },
+  {
+   "id": 119,
+   "type": "control",
+   "district": "woods",
+   "pos": [
+    0.3139,
+    0.5777
+   ],
+   "next": [
+    {
+     "to": 120
+    }
+   ],
+   "branch": "THE CONTROL ROOM"
+  },
+  {
+   "id": 120,
+   "type": "event",
+   "district": "woods",
+   "pos": [
+    0.2208,
+    0.5726
+   ],
+   "next": [
+    {
+     "to": 121
+    }
+   ],
+   "branch": "THE CONTROL ROOM"
+  },
+  {
+   "id": 121,
+   "type": "normal",
+   "district": "woods",
+   "pos": [
+    0.1279,
+    0.5818
+   ],
+   "next": [
+    {
+     "to": 55
+    }
+   ],
+   "branch": "THE CONTROL ROOM"
   }
  ],
  "branches": [
@@ -1955,6 +2093,27 @@
    ],
    "toll": 0,
    "desc": "Round the hedges and out by the front gate. Quiet. Too quiet.",
+   "gate": "",
+   "when": ""
+  },
+  {
+   "name": "THE CONTROL ROOM",
+   "district": "woods",
+   "from": 11,
+   "to": 55,
+   "ids": [
+    113,
+    114,
+    115,
+    116,
+    117,
+    118,
+    119,
+    120,
+    121
+   ],
+   "toll": 0,
+   "desc": "Straight through the middle, past his console. He likes to watch you go by.",
    "gate": "",
    "when": ""
   }

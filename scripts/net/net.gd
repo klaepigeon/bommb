@@ -345,7 +345,7 @@ func launch(seed_v: int = 0) -> void:
 func _begin(arr: Array, seed_v: int) -> void:
 	in_match = true
 	core = MatchCore.new()
-	core.setup(arr, seed_v)
+	core.setup(arr, seed_v, {"turns": int(Settings.get_v("match_turns", 15)), "mode": str(Settings.get_v("match_mode", "classic"))})
 	match_started.emit()
 
 

@@ -17,10 +17,10 @@ func step(view: Dictionary, dt: float) -> void:
 	if not me.alive:
 		if me.get("ghost", false) and str(view.phase) == "turn" and int(view.turn.seat) == seat and view.turn.sub == "ghost":
 			_t = 0.0
-			Net.send_action(seat, {"t": "ghost", "do": "rise" if int(me.teeth) >= int(view.get("resurrect_cost", 10)) else "scavenge"})
+			Net.send_action(seat, {"t": "ghost", "do": "rise" if int(me.rats) >= int(view.get("resurrect_cost", 1)) else "scavenge"})
 		return
 	match str(view.phase):
-		"intro", "mg_intro", "mg_results":
+		"intro", "mg_intro", "mg_results", "finale":
 			Net.send_action(seat, {"t": "ready"})
 			_t = 0.0
 		"turn":
@@ -34,16 +34,52 @@ func step(view: Dictionary, dt: float) -> void:
 				Net.send_action(seat, {"t": "sit"})
 			elif turn.sub == "prompt":
 				var pr: Dictionary = turn.prompt
-				if pr.kind == "door_stop":
-					Net.send_action(seat, {"t": "answer", "yes": false})
-				elif pr.kind in ["shop", "gamble", "hidden"]:
-					Net.send_action(seat, {"t": "answer", "done": true, "wager": 0, "yes": false})
-				else:
-					Net.send_action(seat, {"t": "answer", "target": pr.options[0]})
+				if pr.is_empty():
+					return
+				match str(pr.kind):
+					"door_stop", "hidden", "poison":
+						Net.send_action(seat, {"t": "answer", "yes": false})
+					"rat":
+						Net.send_action(seat, {"t": "answer", "yes": true})
+					"path":
+						var opts: Array = pr.options.filter(func(o): return o.can)
+						Net.send_action(seat, {"t": "answer", "to": int(opts[rng.randi_range(0, opts.size() - 1)].to)})
+					"shop", "gamble", "gavel", "veto", "lever":
+						Net.send_action(seat, {"t": "answer", "done": true, "wager": 0})
+					"duel":
+						Net.send_action(seat, {"t": "answer", "target": pr.options[0], "wager": 0})
+					_:
+						Net.send_action(seat, {"t": "answer", "target": pr.options[0]})
 		"door":
 			Net.send_action(seat, {"t": "push"})
 		"mg_play":
 			var mg: Dictionary = view.mg
+			if not mg.get("seats", []).has(seat):
+				return
+			# the game's own controls: press what it offers, now and then
+			var ctl: Array = mg.get("controls", [])
+			if not ctl.is_empty() and str(ctl[0].kind) != "stick" and not mg.get("choice", false) and str(mg.get("id", "")) not in ["roulette", "hot_potato", "musical_chairs"]:
+				if _t > 0.35:
+					_t = 0.0
+					var c: Dictionary = ctl[rng.randi_range(0, ctl.size() - 1)]
+					match str(c.kind):
+						"hold":
+							Net.send_action(seat, {"t": "mg", "do": c.do, "on": rng.randf() < 0.6})
+						"swipe":
+							var d: Array = [[1, 0], [-1, 0], [0, 1], [0, -1]][rng.randi_range(0, 3)]
+							Net.send_action(seat, {"t": "mg", "do": c.do, "dir": d})
+						"pick":
+							var o: Array = c.get("options", [])
+							if not o.is_empty():
+								Net.send_action(seat, {"t": "mg", "do": c.do, "pick": str(o[rng.randi_range(0, o.size() - 1)])})
+						"trace":
+							var pts := []
+							for k in 12:
+								pts.append([0.3 + k * 0.03, 0.4 + rng.randf() * 0.05])
+							Net.send_action(seat, {"t": "mg", "do": c.do, "pts": pts})
+						_:
+							Net.send_action(seat, {"t": "mg", "do": c.do})
+				return
 			if mg.get("arena", false):
 				var a := Time.get_ticks_msec() / 900.0 + seat
 				Net.send_move(seat, Vector2(cos(a), sin(a) * 0.3 + 0.5).limit_length(1.0))

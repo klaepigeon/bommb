@@ -271,7 +271,7 @@ func view_for(viewers: Array) -> Dictionary:
 	for r in ROWS:
 		for c in COLS:
 			var tl: Dictionary = tiles[r][c]
-			objects.append({"kind": "plate", "pos": centre(Vector2i(c, r)), "size": [TILE * 0.94, TILE * 0.94], "state": tl.s, "t": tl.t})
+			objects.append({"kind": "floortile", "pos": centre(Vector2i(c, r)), "size": [TILE * 0.94, TILE * 0.94], "state": tl.s, "t": tl.t})
 	for pk in planks:
 		objects.append({"kind": "plank", "pos": centre(pk)})
 	v.merge(arena_view())

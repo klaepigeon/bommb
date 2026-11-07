@@ -17,6 +17,14 @@ var values := {
 	"screen_shake": true,
 	"text_size": 1.0,
 	"reduced_motion": false,
+	# v0.2.5 accessibility / layout (UiManager reads these)
+	"ui_scale": 1.0,           # everything on the glass
+	"button_size": 1.0,        # touch targets
+	"reduced_fx": false,       # fewer particles, flashes, glitches
+	"reduced_gore": false,     # less to look at; the consequences still happen
+	"left_handed": false,      # swap the stick and the buttons
+	"match_turns": 15,
+	"match_mode": "classic",
 }
 
 

@@ -29,6 +29,7 @@ Seats="*res://scripts/autoload/seats.gd"
 Net="*res://scripts/net/net.gd"
 Lighting="*res://scripts/visual/lamp_field.gd"
 Saves="*res://scripts/autoload/saves.gd"
+Ui="*res://scripts/autoload/ui_manager.gd"
 
 [display]
 

@@ -5,8 +5,10 @@ extends Node3D
 ## with its candles, book, chips, deck box, dice tray and the PASS box.
 
 const TABLE_Y := 0.78
-const TABLE_W := 2.9
-const TABLE_D := 2.3
+## LAST CALL 3 / MURDERLAND: the game table is an operating table, big enough for the park
+const PARTY := true
+const TABLE_W := 3.6 if PARTY else 2.9
+const TABLE_D := 2.8 if PARTY else 2.3
 const ROOM_W := 15.0
 const ROOM_FRONT := 7.0
 const ROOM_BACK := -10.0
@@ -37,6 +39,11 @@ func build() -> void:
 	_scoreboard()
 	_lights()
 	_party()
+	if PARTY:
+		var venue := PartyVenue.new()
+		venue.name = "PartyVenue"
+		add_child(venue)
+		venue.build(self)
 	HallStations.build(self)
 	ShellBuilder.split_big(self, 3.0)
 	world = WorldView.new()
@@ -60,7 +67,7 @@ func _mi(m: Mesh, parent: Node3D = self) -> MeshInstance3D:
 
 func _room() -> void:
 	var mb := MB.new()
-	var floor_m := MB.mat(Tex.checker(Color("1e1a18"), Color("4a3a30"), 64, 4, 2, 0.35), Color.WHITE, Vector2.ONE)
+	var floor_m := MB.mat(Tex.checker(Color("d8d2c8"), Color("e8a8b8"), 64, 4, 2, 0.3) if PARTY else Tex.checker(Color("1e1a18"), Color("4a3a30"), 64, 4, 2, 0.35), Color.WHITE, Vector2.ONE)
 	var w := ROOM_W
 	var d := ROOM_FRONT - ROOM_BACK
 	var wall_m := MB.mat(Tex.wall_panel(), Color.WHITE)
@@ -196,6 +203,9 @@ func _multi(mesh: Mesh, xforms: Array) -> void:
 	add_child(mmi)
 
 func _table() -> void:
+	if PARTY:
+		_operating_table()
+		return
 	var mb := MB.new()
 	var top := MB.mat(Tex.wood(Color("6a4a2e"), 3, 64, 4), Color.WHITE)
 	var ty := TABLE_Y
@@ -217,6 +227,28 @@ func _table() -> void:
 	_dice_tray(Vector3(1.0, ty, 0.78))
 	_rule_rack(Vector3(0.0, ty, -0.92))
 	_bell(Vector3(1.02, ty, -0.42))
+
+## MURDERLAND's table: a big stainless operating table on a hydraulic column, with gutters
+## round the edge (the board sits in it), a tray for the dice and a bowl of Teeth.
+func _operating_table() -> void:
+	var mb := MB.new()
+	var steel := MB.mat(Tex.grime(Color("aab4bf"), Color("cfd6dd"), 16, 44, 0.2))
+	var dark := MB.mat(Tex.grime(Color("4a5058"), Color("6a7480"), 16, 45, 0.3))
+	var ty := TABLE_Y
+	mb.box("t", steel, Vector3(TABLE_W, 0.07, TABLE_D), MB.T(Vector3(0, ty - 0.035, 0)), Color(1, 1, 1))
+	mb.box("t", steel, Vector3(TABLE_W + 0.08, 0.05, 0.06), MB.T(Vector3(0, ty + 0.0, TABLE_D / 2 + 0.01)), Color(0.9, 0.9, 0.95))
+	mb.box("t", steel, Vector3(TABLE_W + 0.08, 0.05, 0.06), MB.T(Vector3(0, ty + 0.0, -TABLE_D / 2 - 0.01)), Color(0.9, 0.9, 0.95))
+	mb.box("t", steel, Vector3(0.06, 0.05, TABLE_D), MB.T(Vector3(TABLE_W / 2 + 0.01, ty, 0)), Color(0.9, 0.9, 0.95))
+	mb.box("t", steel, Vector3(0.06, 0.05, TABLE_D), MB.T(Vector3(-TABLE_W / 2 - 0.01, ty, 0)), Color(0.9, 0.9, 0.95))
+	mb.box("d", dark, Vector3(TABLE_W - 0.4, 0.14, TABLE_D - 0.4), MB.T(Vector3(0, ty - 0.14, 0)), Color(1, 1, 1))
+	mb.cyl("d", dark, 0.28, 0.32, ty - 0.2, 10, MB.T(Vector3(0, (ty - 0.2) / 2, 0)), Color(1, 1, 1))
+	mb.cyl("d", dark, 0.75, 0.85, 0.08, 12, MB.T(Vector3(0, 0.04, 0)), Color(1, 1, 1))
+	for s in [-1.0, 1.0]:
+		mb.cyl("d", dark, 0.05, 0.05, 0.8, 6, MB.T(Vector3(s * 0.45, 0.42, 0.3), Vector3(0.3, 0, 0)), Color(0.8, 0.8, 0.8))
+	_mi(mb.build())
+	_dice_tray(Vector3(TABLE_W / 2 - 0.25, ty, TABLE_D / 2 - 0.2))
+	_bell(Vector3(-TABLE_W / 2 + 0.2, ty, TABLE_D / 2 - 0.2))
+
 
 func _candles(at: Vector3) -> void:
 	var wax := MB.mat(Tex.grime(Color("c8b898"), Color("e8dcc0"), 16, 21, 0.3), Color(1, 0.92, 0.8), Vector2.ONE, true)

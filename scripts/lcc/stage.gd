@@ -294,3 +294,24 @@ func is_behind(p: Vector3) -> bool:
 func set_fog(col: Color, density: float) -> void:
 	env.environment.fog_light_color = col
 	env.environment.fog_density = density
+
+## LAST CALL 3 / MURDERLAND: the robot's party is bright. Lift the room out of the dark:
+## warm pink ambient, a thin haze instead of fog, colour back in the picture, the pen
+## hatching only in the deep shadows. (dread still creeps in with his unrest.)
+func party_look() -> void:
+	var e := env.environment
+	e.background_color = Color("1a0f1e")
+	e.ambient_light_color = Color("b898a8")
+	e.ambient_light_energy = 0.85
+	e.fog_light_color = Color("3a2238")
+	e.fog_density = 0.012
+	post.set_shader_parameter("saturation", 1.28)
+	post.set_shader_parameter("brightness", 0.98)
+	post.set_shader_parameter("contrast", 1.08)
+	post.set_shader_parameter("vignette", 0.22)
+	post.set_shader_parameter("hatch", 0.3)
+	post.set_shader_parameter("ink_lines", 0.65)
+	post.set_shader_parameter("grain", 0.5)
+	camera.far = 60.0
+	if hall.lamp_light:
+		hall.lamp_light.light_energy = 0.9

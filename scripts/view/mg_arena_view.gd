@@ -17,6 +17,9 @@ func setup(g: GameView, view: Dictionary) -> void:
 	var b: Array = view.mg.get("bounds", [-6, -4.5, 12, 9])
 	var mb := LcMB.new()
 	var plate := LcMB.mat(LcTex.grime(Color("3a3a40"), Color("5a5a62"), 32, 91, 0.4))
+	if str(view.mg.get("floor", "")) == "meat":
+		# a pit of meat under the plates
+		plate = LcMB.mat(LcTex.grime(Color("6a0a14"), Color("b02a3a"), 32, 92, 0.7))
 	mb.box("f", plate, Vector3(float(b[2]) + 0.6, 0.12, float(b[3]) + 0.6), LcMB.T(Vector3(float(b[0]) + float(b[2]) / 2.0, 0.0, float(b[1]) + float(b[3]) / 2.0)), Color(1, 1, 1))
 	floor_node = MeshInstance3D.new()
 	floor_node.mesh = mb.build()
@@ -137,6 +140,72 @@ func update_view(view: Dictionary, _dt: float) -> void:
 				n.position = _at(p, 0.0)
 				(n.get_node("L") as Label3D).text = "%d / %d" % [int(o.count), int(o.target)]
 				(n.get_node("L") as Label3D).modulate = Color("8ae08a") if int(o.count) == int(o.target) else Color("ff8a6a")
+			"floortile":
+				var n := _node(key, func():
+					var t := _box(Vector3(float(size[0]), 0.35, float(size[1])), Color("c9d1d9"))
+					return t)
+				var st := str(o.state)
+				var tile_y := 0.0
+				var col := Color(1, 1, 1)
+				match st:
+					"warn":
+						# the telegraph: it flashes red and shakes before it drops
+						var flash := int(Time.get_ticks_msec() / 120) % 2 == 0
+						col = Color(1.6, 0.35, 0.35) if flash else Color(1.2, 0.8, 0.8)
+						tile_y = sin(Time.get_ticks_msec() * 0.06) * 0.04
+					"gone":
+						tile_y = -3.0
+					"bridge":
+						col = Color(1.2, 0.9, 0.5)
+				n.position = _at(p, tile_y)
+				n.visible = st != "gone"
+				_tint(n, col)
+			"plank":
+				var n := _node(key, func(): return _box(Vector3(1.0, 0.12, 0.3), Color("8a5a3a")))
+				n.position = _at(p, 0.42)
+				n.rotation.y = 0.4
+			"zone":
+				var n := _node(key, func():
+					var z := _box(Vector3(float(size[0]), 0.03, float(size[1])), Color("2a2a30"))
+					var l := _label(str(o.label), Color("ffd23f"))
+					l.name = "L"
+					l.position = Vector3(0, 0.2, float(size[1]) * 0.5 - 0.4)
+					l.font_size = 90
+					z.add_child(l)
+					return z)
+				n.position = _at(p, 0.0)
+				_tint(n, Color(0.6, 1.0, 1.8) if o.get("flood", false) else Color(1, 1, 1))
+			"valve":
+				var n := _node(key, func():
+					var mi := MeshInstance3D.new()
+					var mb := LcMB.new()
+					mb.ring("v", LcMB.mat(LcTex.solid(Color("ff3b3b"))), 0.45, 0.09, 10, LcMB.T(Vector3(0, 0.9, 0), Vector3(PI / 2, 0, 0)), Color(1, 1, 1))
+					mb.box("v", LcMB.mat(LcTex.solid(Color("c9d1d9"))), Vector3(0.12, 0.9, 0.12), LcMB.T(Vector3(0, 0.45, 0)), Color(1, 1, 1))
+					mi.mesh = mb.build()
+					var l := _label("")
+					l.name = "L"
+					l.position = Vector3(0, 1.8, 0)
+					mi.add_child(l)
+					return mi)
+				n.position = _at(p, 0.0)
+				n.rotation.y = float(o.prog) * TAU * 2.0
+				(n.get_node("L") as Label3D).text = "LOCKED" if o.get("locked", false) else ("OPEN" if float(o.prog) >= 1.0 else "%d%%" % int(float(o.prog) * 100))
+			"saw_tell", "press_tell":
+				var n := _node(key, func(): return _box(Vector3(float(size[0]), 0.04, float(size[1])), Color("ff2020"), true))
+				n.position = _at(p, 0.1)
+				n.visible = int(Time.get_ticks_msec() / 100) % 2 == 0
+			"exit":
+				var n := _node(key, func(): return _box(Vector3(float(size[0]), 2.2, float(size[1])), Color("2ec4c6")))
+				n.position = _at(p, 0.0)
+				n.scale.y = 0.06 if o.get("open", false) else 1.0
+			"booth":
+				var n := _node(key, func():
+					var bx := _box(Vector3(float(size[0]), 1.8, float(size[1])), Color("8e5cf0"))
+					var l := _label("CONTROL", Color("ffd23f"))
+					l.position = Vector3(0, 2.4, 0)
+					bx.add_child(l)
+					return bx)
+				n.position = _at(p, 0.0)
 			"crate":
 				var n := _node(key, func(): return _box(Vector3(0.45, 0.45, 0.45), Color("8a6a40")))
 				n.position = _at(p, 0.06 + (1.0 if int(o.get("held", -1)) >= 0 else 0.0))
@@ -208,6 +277,19 @@ func update_view(view: Dictionary, _dt: float) -> void:
 			c.walk_to(_at(p, 0.05))
 
 
+func _tint(n: Node3D, col: Color) -> void:
+	if n is MeshInstance3D:
+		var mi := n as MeshInstance3D
+		if mi.get_meta("tint", Color(1, 1, 1)) != col:
+			mi.set_meta("tint", col)
+			for i in mi.get_surface_override_material_count():
+				var m: Material = mi.mesh.surface_get_material(i)
+				if m is ShaderMaterial:
+					var mm := (m as ShaderMaterial).duplicate() as ShaderMaterial
+					mm.set_shader_parameter("albedo", col)
+					mi.set_surface_override_material(i, mm)
+
+
 func on_event(e: Dictionary) -> void:
 	if e.e != "mg":
 		return
@@ -228,10 +310,20 @@ func on_event(e: Dictionary) -> void:
 			Audio.sfx("door", 0.05, 0.0)
 		"finish":
 			Audio.sfx("bell", 0.0, -2.0)
+		"drop", "fall":
+			Audio.sfx("break", 0.05, -4.0, 0.7)
+		"hop":
+			Audio.sfx("step", 0.15, -8.0, 1.4)
+		"tell":
+			Audio.sfx("alarm", 0.0, -10.0, 1.6)
+		"saw", "press":
+			gv.shake(0.4)
+		"valve", "exit_open", "escaped":
+			Audio.sfx("bell", 0.0, -4.0)
 
 
 func camera() -> Array:
-	return [center + Vector3(0, 9.5, 8.5), center, 1.15]
+	return [center + Vector3(0, 9.5, 8.5), center, 0.95]
 
 
 func _exit_tree() -> void:

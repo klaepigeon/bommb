@@ -9,8 +9,8 @@ extends Node3D
 ##
 ## Your own seat is the camera: for you, only your forearms and hands on the table edge.
 
-const SLOTS := [  # in hall coordinates, around the table; slot 0 is yours
-	[Vector3(0, 0, 1.42), PI], [Vector3(-1.62, 0, -0.3), PI / 2], [Vector3(0, 0, -1.48), 0.0], [Vector3(1.62, 0, -0.3), -PI / 2]]
+const SLOTS := [  # in hall coordinates, around the (operating) table; slot 0 is yours
+	[Vector3(0, 0, 1.72), PI], [Vector3(-2.02, 0, -0.1), PI / 2], [Vector3(0, 0, -1.78), 0.0], [Vector3(2.02, 0, -0.1), -PI / 2]]
 
 var seat := 0
 var slot := 0

@@ -16,14 +16,30 @@ def node(t, district, pos, **kw):
     nodes.append(n)
     return n["id"]
 
-# the loop: a rounded rectangle (superellipse) round the middle of the table
+# the loop: seven lobes, one per district, the road winding out into each and back toward
+# the middle between them (so the whole board is used, not just its rim); evenly spaced by
+# arc length so every step is the same distance.
+LOBES = 7
+def _petal(u):
+    a = 2 * math.pi * u - math.pi / 2 + math.pi / LOBES
+    r = 0.8 + 0.2 * math.cos(LOBES * (a + math.pi / 2 - math.pi / LOBES))
+    return (0.5 + 0.47 * r * math.cos(a), 0.5 - 0.45 * r * math.sin(a))
+_fine = [_petal(k / 4000.0) for k in range(4001)]
+_acc = [0.0]
+for k in range(1, len(_fine)):
+    dx = (_fine[k][0] - _fine[k - 1][0]) * 96
+    dy = (_fine[k][1] - _fine[k - 1][1]) * 72
+    _acc.append(_acc[-1] + math.hypot(dx, dy))
 def loop_pos(u):
-    a = 2 * math.pi * u - math.pi / 2  # u=0 at the front middle (nearest the players)
-    c, s = math.cos(a), math.sin(a)
-    p = 4.0
-    x = math.copysign(abs(c) ** (2 / p), c)
-    y = math.copysign(abs(s) ** (2 / p), s)
-    return (0.5 + 0.43 * x, 0.5 - 0.40 * y)
+    target = u * _acc[-1]
+    lo, hi = 0, len(_acc) - 1
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if _acc[mid] < target:
+            lo = mid + 1
+        else:
+            hi = mid
+    return _fine[lo]
 
 DISTRICTS = [
     ("welcome", "THE WELCOME DISTRICT", ["start", "normal", "bonus", "normal", "shop", "normal", "event", "normal", "item", "normal", "bad"]),
@@ -113,6 +129,55 @@ branch("THE ROYAL ROAD", "royal", D["royal"] + 2, D["royal"] + 8, ["bonus", "bon
 branch("THE PALACE GARDENS", "royal", D["royal"] + 9, (D["welcome"] + 1) % M, ["normal", "medical", "normal"], -1,
        "Round the hedges and out by the front gate. Quiet. Too quiet.", bulge=0.05)
 
+# THE CONTROL ROOM: a road across the middle of the park, past the Control System, from the
+# valley between the Woods and the Funhouse to the one between the Giggleworks and the Carnival
+# the valleys between lobes are the district boundaries: the Woods' gate and the Carnival's
+_ci, _cj = D["woods"], D["carnival"]
+branch("THE CONTROL ROOM", nodes[main[_ci]]["district"], _ci, _cj, ["normal", "event", "control", "normal", "bonus", "normal", "control", "event", "normal"], 1,
+       "Straight through the middle, past his console. He likes to watch you go by.", bulge=0.02)
+
+# relax the detours: push their squares off everything else, keep them evenly strung along
+# their route, keep them on the board (the main loop stays where it is)
+W, Hh = 96.0, 72.0
+main_set = set(main)
+branch_ids = [i for b in branches for i in b["ids"]]
+def P(i):
+    return [nodes[i]["pos"][0] * W, nodes[i]["pos"][1] * Hh]
+pts = {i: P(i) for i in range(len(nodes))}
+for it in range(600):
+    for b in branches:
+        chain = [b["from"]] + b["ids"] + [b["to"]]
+        for k in range(1, len(chain) - 1):
+            i = chain[k]
+            x, y = pts[i]
+            fx = fy = 0.0
+            # springs to the neighbours in the chain
+            for j in (chain[k - 1], chain[k + 1]):
+                dx = pts[j][0] - x; dy = pts[j][1] - y
+                d = math.hypot(dx, dy) or 1e-6
+                f = (d - 4.4) * 0.08
+                fx += dx / d * f; fy += dy / d * f
+            # kept off the Control System in the middle
+            dx = x - W * 0.5; dy = y - Hh * 0.5
+            d = math.hypot(dx, dy) or 1e-6
+            if d < 13.0:
+                f = (13.0 - d) * 0.3
+                fx += dx / d * f; fy += dy / d * f
+            # pushed off every other square
+            for j in range(len(nodes)):
+                if j == i:
+                    continue
+                dx = x - pts[j][0]; dy = y - pts[j][1]
+                d = math.hypot(dx, dy) or 1e-6
+                if d < 5.2:
+                    f = (5.2 - d) * 0.25
+                    fx += dx / d * f; fy += dy / d * f
+            x = min(W * 0.96, max(W * 0.04, x + fx))
+            y = min(Hh * 0.95, max(Hh * 0.05, y + fy))
+            pts[i] = [x, y]
+for i in branch_ids:
+    nodes[i]["pos"] = [round(pts[i][0] / W, 4), round(pts[i][1] / Hh, 4)]
+
 # the signposts close one way or the other: left sends you under the mushrooms, right keeps the road
 nodes[main[D["woods"] + 1]]["next"][0].update({"gate": "woods_sign", "when": "right"})
 
@@ -146,4 +211,20 @@ board = {
 out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "assets", "data", "murderland.json")
 with open(out, "w") as f:
     json.dump(board, f, indent=1)
-print("MURDERLAND:", len(nodes), "spaces,", M, "on the loop,", len(branches), "detours,", len(board["rat_spots"]), "rat spots")
+gaps = []
+for n in nodes:
+    for e in n["next"]:
+        a = n["pos"]; b = nodes[e["to"]]["pos"]
+        gaps.append(math.hypot((a[0] - b[0]) * 96, (a[1] - b[1]) * 72))
+close = 99
+for i in range(len(nodes)):
+    for j in range(i + 1, len(nodes)):
+        a = nodes[i]["pos"]; b = nodes[j]["pos"]
+        close = min(close, math.hypot((a[0] - b[0]) * 96, (a[1] - b[1]) * 72))
+mg = []
+for i in range(M):
+    a = nodes[main[i]]["pos"]; b = nodes[main[(i + 1) % M]]["pos"]
+    mg.append(math.hypot((a[0] - b[0]) * 96, (a[1] - b[1]) * 72))
+print("main step %.2f-%.2f" % (min(mg), max(mg)))
+print("MURDERLAND:", len(nodes), "spaces,", M, "on the loop,", len(branches), "detours,", len(board["rat_spots"]), "rat spots;",
+      "step %.2f-%.2f (avg %.2f), closest pair %.2f" % (min(gaps), max(gaps), sum(gaps) / len(gaps), close))
