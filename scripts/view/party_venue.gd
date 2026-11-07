@@ -125,7 +125,6 @@ func _rails() -> void:
 			var sag := sin(fmod(x2 + 7.0, 1.2) / 1.2 * PI) * 0.18
 			mb.tri("w", white, Vector3(x2 - 0.18, H - 0.42 - sag, z), Vector3(x2 + 0.18, H - 0.42 - sag, z), Vector3(x2, H - 0.75 - sag, z), cols[k % cols.size()])
 	_mi(mb)
-	_sign("HAPPY BIRTHDAY!", Vector3(0, H - 0.95, -3.5), 0.0, 72, Color("ff5fa2"))
 	_sign("WELCOME, GUESTS!", Vector3(0, H - 0.95, 4.5), PI, 64, Color("2ec4c6"))
 
 

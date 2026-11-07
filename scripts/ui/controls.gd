@@ -19,10 +19,10 @@ static func make(spec: Dictionary, send: Callable, key_hint := "") -> Control:
 			return TracePad.new().setup(spec, send)
 		"pick":
 			var box: VBoxContainer = PartyUi.vbox(4)
-			box.mouse_filter = Control.MOUSE_FILTER_PASS
+			box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			box.add_child(PartyUi.label(str(spec.get("label", "")), 16, PartyUi.CREAM, true, true))
 			var fl := PartyUi.flow(6)
-			fl.mouse_filter = Control.MOUSE_FILTER_PASS
+			fl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			for o in spec.get("options", []):
 				var opt := str(o)
 				var sel := str(spec.get("selected", "")) == opt
@@ -162,7 +162,7 @@ class TimingRing:
 			h.offset_left = -110
 			h.offset_right = 110
 			h.offset_bottom = 70
-			h.mouse_filter = Control.MOUSE_FILTER_PASS
+			h.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			for o in options:
 				var opt := str(o)
 				h.add_child(PartyUi.button(opt, func(): choice = opt, PartyUi.CREAM, 90.0, 16))

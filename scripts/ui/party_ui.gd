@@ -6,19 +6,19 @@ extends RefCounted
 ## for everything read. Big touch targets (UiManager.button). Readable over any background:
 ## every panel is opaque, every loose label is outlined.
 
-const PINK := Color("ff5fa2")
-const RED := Color("ff3b3b")
-const YELLOW := Color("ffd23f")
-const TURQ := Color("2ec4c6")
-const ORANGE := Color("ff8c2e")
-const PURPLE := Color("8e5cf0")
-const MINT := Color("6fe3a5")
-const CREAM := Color("fff4dc")
-const SILVER := Color("c9d1d9")
+const PINK := Color("a8231a")
+const RED := Color("b0261c")
+const YELLOW := Color("bfae62")
+const TURQ := Color("62786a")
+const ORANGE := Color("8f5428")
+const PURPLE := Color("5a4c58")
+const MINT := Color("a3b38a")
+const CREAM := Color("cfc8b2")
+const SILVER := Color("8e948c")
 const BLOOD := Color("8a0f1a")
-const INK := Color("1a0b14")
-const DIM := Color("8a7a88")
-const SEAT := [Color("ff5fa2"), Color("2ec4c6"), Color("ffd23f"), Color("8e5cf0")]
+const INK := Color("0e0d0b")
+const DIM := Color("6a6a60")
+const SEAT := [Color("b0261c"), Color("5e8c7c"), Color("c2a84e"), Color("8a7aa0")]
 const SPACE := {
 	"start": Color("ffffff"), "normal": Color("2e8bff"), "bonus": Color("ffd23f"), "bad": Color("ff3b3b"), "event": Color("6fe3a5"),
 	"item": Color("8e5cf0"), "shop": Color("ff8c2e"), "black_market": Color("2a1a2e"), "medical": Color("f8f8ff"), "minigame": Color("ff5fa2"),
@@ -39,16 +39,13 @@ static var _theme: Theme
 
 static func title_font() -> Font:
 	if _title == null:
-		_title = load("res://assets/fonts/titan_one.ttf")
+		_title = load("res://assets/fonts/special_elite.ttf")
 	return _title
 
 
 static func body_font() -> Font:
 	if _body == null:
-		var f: FontVariation = FontVariation.new()
-		f.base_font = load("res://assets/fonts/baloo2.ttf")
-		f.variation_opentype = {"wght": 700}
-		_body = f
+		_body = load("res://assets/fonts/special_elite.ttf")
 	return _body
 
 
@@ -63,6 +60,7 @@ static func bk() -> float:
 
 
 static func box(bg: Color, border := INK, radius := 18, bw := 4, shadow := 6) -> StyleBoxFlat:
+	radius = mini(radius, 3)
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = bg
 	sb.border_color = border

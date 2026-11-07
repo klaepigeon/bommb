@@ -51,8 +51,9 @@ func _ensure_stage(pose := "title") -> void:
 		bg_stage.set_internal_height(Settings.screen_lines() if Settings.screen_lines() > 0 else 540)
 		bg_caller = CallerActor.wrap(bg_stage.hall.caller)
 		bg_stage.hall.add_child(bg_caller)
-		bg_stage.hall.flashboard.set_left("LAST", "CALL")
-		bg_stage.hall.flashboard.set_right("PART", "03")
+		bg_stage.hall.flashboard.set_left("MEAT", "")
+		bg_stage.hall.flashboard.set_right("PARTY", "")
+		bg_stage.saw_look()
 		_idle = Timer.new()
 		_idle.wait_time = 3.2
 		_idle.autostart = true
@@ -110,14 +111,15 @@ func menu() -> void:
 	c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_swap(c)
 	bg_stage.set_pose("title", 1.2)
-	var title := PartyUi.shout("LAST CALL 3", 96, PartyUi.PINK)
+	var title := PartyUi.shout("MEAT PARTY", 110, PartyUi.PINK)
 	title.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 	title.offset_left = -720
 	title.offset_right = -40
 	title.offset_top = 24
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	c.add_child(title)
-	var sub := PartyUi.shout("MEAT PARTY: WELCOME TO MURDERLAND", 34, PartyUi.YELLOW)
+	var sub := PartyUi.shout("", 34, PartyUi.YELLOW)
+	sub.visible = false
 	sub.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 	sub.offset_left = -720
 	sub.offset_right = -46

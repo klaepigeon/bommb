@@ -616,7 +616,7 @@ var pinata: Node3D
 
 
 func _party() -> void:
-	_neon("LAST CALL", Vector3(-0.5, 2.05, ROOM_BACK + 0.08), 0.0, Color("ff2a6a"), 110, "steady")
+	_neon("MEAT PARTY", Vector3(-0.5, 2.05, ROOM_BACK + 0.08), 0.0, Color("ff2a6a"), 110, "steady")
 	_neon("3", Vector3(2.6, 2.05, ROOM_BACK + 0.08), 0.0, Color("30e0ff"), 140, "stutter")
 	# a spot on him, from the front of the stage
 	var spot := SpotLight3D.new()
@@ -627,7 +627,7 @@ func _party() -> void:
 	spot.position = CALLER_SPOT + Vector3(0, 3.0, 2.6)
 	add_child(spot)
 	spot.look_at_from_position(spot.position, CALLER_SPOT + Vector3(0, 1.4, 0), Vector3.UP)
-	_neon("MEAT PARTY", Vector3(-ROOM_W / 2 + 0.06, 2.6, -2.5), PI / 2, Color("ff60e0"), 72, "flicker")
+	_neon("GAME ON", Vector3(-ROOM_W / 2 + 0.06, 2.6, -2.5), PI / 2, Color("ff60e0"), 72, "flicker")
 	_neon("BINGO", Vector3(ROOM_W / 2 - 0.06, 2.6, -3.0), -PI / 2, Color("ffd030"), 72, "steady")
 	_neon("OPEN", Vector3(ROOM_W / 2 - 0.06, 2.4, 2.0), -PI / 2, Color("40ff70"), 56, "dying")
 	_neon("NO ONE LEAVES", Vector3(-ROOM_W / 2 + 0.06, 2.3, 3.0), PI / 2, Color("ff3020"), 40, "stutter")

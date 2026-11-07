@@ -21,6 +21,7 @@ uniform float glitch = 0.0;         // 0..1: the picture tears (scares, his faul
 uniform float ink_lines = 1.0;      // outline strength
 uniform float hatch = 1.0;          // pen hatching in the shadows
 uniform float grain = 1.0;
+uniform float saw = 0.0;            // 0..1: the bathroom grade: bile-green, crushed blacks, dirty highlights
 uniform vec2 src_size = vec2(640.0, 360.0);
 
 const float bayer[16] = float[16](0.0, 8.0, 2.0, 10.0, 12.0, 4.0, 14.0, 6.0, 3.0, 11.0, 1.0, 9.0, 15.0, 7.0, 13.0, 5.0);
@@ -64,6 +65,15 @@ void fragment() {
 	vec3 shadow_tint = vec3(0.86, 1.0, 0.9);
 	vec3 light_tint = vec3(1.06, 0.98, 0.84);
 	c *= mix(shadow_tint, light_tint, smoothstep(0.15, 0.7, l));
+	if (saw > 0.0) {
+		float sl = luma(c);
+		vec3 bile = vec3(sl) * vec3(0.84, 1.0, 0.62) + vec3(0.0, 0.015, 0.0);
+		// keep a little of the real colour (blood stays red)
+		float red = clamp((c.r - max(c.g, c.b)) * 2.5, 0.0, 1.0);
+		vec3 g = mix(bile, c * vec3(1.0, 0.9, 0.8), red * 0.7);
+		g = smoothstep(vec3(0.04), vec3(0.96), g);
+		c = mix(c, g, saw);
+	}
 
 	// ink: a Sobel on brightness, traced where the picture changes hard
 	float tl = luma(tex(TEXTURE, uv + px1 * vec2(-1.0, -1.0)));

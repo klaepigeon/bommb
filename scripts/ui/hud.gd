@@ -97,11 +97,11 @@ func _ready() -> void:
 	root.add_child(info)
 	actions = PartyUi.vbox(8)
 	actions.alignment = BoxContainer.ALIGNMENT_END
-	actions.mouse_filter = Control.MOUSE_FILTER_PASS
+	actions.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(actions)
 	controls_box = PartyUi.hbox(12)
 	controls_box.alignment = BoxContainer.ALIGNMENT_END
-	controls_box.mouse_filter = Control.MOUSE_FILTER_PASS
+	controls_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(controls_box)
 	stick = TouchStick.new()
 	stick.custom_minimum_size = Vector2(240, 240)

@@ -298,20 +298,27 @@ func set_fog(col: Color, density: float) -> void:
 ## LAST CALL 3 / MURDERLAND: the robot's party is bright. Lift the room out of the dark:
 ## warm pink ambient, a thin haze instead of fog, colour back in the picture, the pen
 ## hatching only in the deep shadows. (dread still creeps in with his unrest.)
+## The look of the whole game: a filthy bathroom under one buzzing tube. Drained colour,
+## bile-green mids, crushed blacks; blood keeps its red.
+func saw_look() -> void:
+	post.set_shader_parameter("saw", 0.85)
+	post.set_shader_parameter("saturation", 0.55)
+	post.set_shader_parameter("brightness", 1.02)
+	post.set_shader_parameter("contrast", 1.22)
+	post.set_shader_parameter("vignette", 0.55)
+	post.set_shader_parameter("hatch", 0.25)
+	post.set_shader_parameter("ink_lines", 0.7)
+	post.set_shader_parameter("grain", 0.9)
+
+
 func party_look() -> void:
 	var e := env.environment
-	e.background_color = Color("1a0f1e")
-	e.ambient_light_color = Color("b898a8")
-	e.ambient_light_energy = 0.85
-	e.fog_light_color = Color("3a2238")
-	e.fog_density = 0.012
-	post.set_shader_parameter("saturation", 1.28)
-	post.set_shader_parameter("brightness", 0.98)
-	post.set_shader_parameter("contrast", 1.08)
-	post.set_shader_parameter("vignette", 0.22)
-	post.set_shader_parameter("hatch", 0.3)
-	post.set_shader_parameter("ink_lines", 0.65)
-	post.set_shader_parameter("grain", 0.5)
+	e.background_color = Color("0b0d09")
+	e.ambient_light_color = Color("a8b090")
+	e.ambient_light_energy = 0.8
+	e.fog_light_color = Color("1e2418")
+	e.fog_density = 0.014
+	saw_look()
 	camera.far = 60.0
 	if hall.lamp_light:
 		hall.lamp_light.light_energy = 0.9

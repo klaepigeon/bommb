@@ -4,7 +4,7 @@ extends Node3D
 ## entertainment complex, away from the cluttered board (and the meat puppets go there to
 ## play it). Ten arenas, each its own geometry, palette, lighting and moving gimmick, built
 ## round the play area the game's view lays down in the middle (about 16 x 12 puppet units).
-##   kitchen    THE BIRTHDAY KITCHEN: giant countertops, ovens, mixing bowls, hanging utensils
+##   kitchen    THE MEAT KITCHEN: giant countertops, ovens, mixing bowls, hanging utensils
 ##   speedway   THE SLAUGHTERHOUSE SPEEDWAY: conveyor roads, meat rails, gates, warning signs
 ##   factory    THE TOY FACTORY: assembly lines, robot arms, boxes, catwalks, gears
 ##   clown      THE CLOWN HOUSE: mirrors, a turning room, inflatables, striped tilted walls
@@ -21,7 +21,7 @@ const THEMES := {
 	"dead_weight": "factory", "run_for_your_life": "speedway", "human_shield": "carnival", "pick_your_poison": "kitchen", "confession": "stage",
 	"consensus": "stage", "wrong_answers": "clown", "hot_potato": "impossible", "musical_chairs": "stage", "organ_trail": "hospital",
 }
-const TITLES := {"kitchen": "THE BIRTHDAY KITCHEN", "speedway": "THE SLAUGHTERHOUSE SPEEDWAY", "factory": "THE TOY FACTORY", "clown": "THE CLOWN HOUSE",
+const TITLES := {"kitchen": "THE MEAT KITCHEN", "speedway": "THE SLAUGHTERHOUSE SPEEDWAY", "factory": "THE TOY FACTORY", "clown": "THE CLOWN HOUSE",
 	"aquarium": "THE AQUARIUM", "locker": "THE MEAT LOCKER", "carnival": "THE CARNIVAL", "hospital": "THE HOSPITAL", "stage": "THE PARTY STAGE",
 	"impossible": "THE IMPOSSIBLE ROOM"}
 

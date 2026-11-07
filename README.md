@@ -1,4 +1,4 @@
-# LAST CALL 3: MEAT PARTY
+# MEAT PARTY
 
 A four-player survival party game in Godot 4.7, hosted by **THE CALLER**: a plaid-suited
 robot with a brass bingo cage full of dice for a head, ported from *LAST CALL: The
