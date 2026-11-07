@@ -14,6 +14,13 @@ multiplayer (RPCs on the `Net` autoload) runs over a swappable `MultiplayerPeer`
 `Net.join_code` tries the LAN first (2.5 s), then the relay. Ports and the default relay
 URL are in `project.godot` (`meat_party/net/*`); players can set a relay in Settings.
 
+## The live relay
+
+`wss://lc3onlinebeta.onrender.com` (Render, free tier; the game's default). Tested from
+here with real game processes over the internet: `RELAY_URL=wss://lc3onlinebeta.onrender.com
+tools/net_test.sh remote 3` (3 humans + 1 AI, full match, everyone saw the same ending).
+Free tier: it sleeps after 15 idle minutes; the first host after that waits 30-60 s.
+
 ## Deploying the relay (for internet play)
 
 The relay is `server/relay/relay.js`: one small Node.js file (the same protocol as the
@@ -80,7 +87,7 @@ gets their seat back. Host leaving ends the match for everyone (the host *is* th
 
 1. 3 and 4 humans on separate Android devices; 3 PC players; mixed Android + PC;
    Android host with PC clients and the reverse.
-2. Players on different internet connections: **needs the relay deployed somewhere
-   public** (no relay is running anywhere yet; the default URL is localhost).
+2. Players on genuinely different home/mobile connections (the relay is deployed and
+   tested over the internet from one machine; not yet from separate homes/phones).
 3. LAN discovery on Android: the export asks for CHANGE_WIFI_MULTICAST_STATE, but some
    phones filter UDP broadcast; join by address works regardless.

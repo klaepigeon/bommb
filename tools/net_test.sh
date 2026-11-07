@@ -5,6 +5,7 @@
 #   tools/net_test.sh ip 3         # 3 humans, joined by address
 #   tools/net_test.sh rejoin 3     # a client drops mid-match and comes back
 #   tools/net_test.sh noderelay 4  # 4 humans through the Node relay (server/relay)
+#   RELAY_URL=wss://host tools/net_test.sh remote 3   # through a deployed relay
 # This proves the protocol and the match flow; it is NOT the real-device / real-internet
 # test (docs/NETWORKING.md).
 cd "$(dirname "$0")/.." || exit 1
@@ -12,7 +13,13 @@ VIA=${1:-relay}; N=${2:-3}; FAST=${FAST:---fast}
 W=$(mktemp -d); PORT=$((19000 + RANDOM % 1000))
 trap 'kill $(jobs -p) 2>/dev/null' EXIT
 G="godot --headless"
-if [ "$VIA" = noderelay ]; then
+RELAY="ws://127.0.0.1:$PORT"
+if [ "$VIA" = remote ]; then
+  # a deployed relay: RELAY_URL=wss://... tools/net_test.sh remote 3
+  RELAY="$RELAY_URL"
+  HVIA=relay
+  VIA=relay
+elif [ "$VIA" = noderelay ]; then
   # the Node relay (server/relay), as deployed
   PORT=$PORT node server/relay/relay.js > $W/relay.log 2>&1 &
   sleep 1.0
@@ -25,14 +32,14 @@ elif [ "$VIA" = relay ] || [ "$VIA" = rejoin ]; then
 else
   HVIA=lan
 fi
-$G res://tests/net_test.tscn -- --role=host --via=$HVIA --humans=$N --relay=ws://127.0.0.1:$PORT --codefile=$W/code --out=$W/host.txt --name=HOST $FAST > $W/host.log 2>&1 &
+$G res://tests/net_test.tscn -- --role=host --via=$HVIA --humans=$N --relay=$RELAY --codefile=$W/code --out=$W/host.txt --name=HOST $FAST > $W/host.log 2>&1 &
 for i in $(seq 1 40); do [ -s $W/code ] && break; sleep 0.25; done
 CODE=$(cat $W/code); echo "room code: $CODE"
 for i in $(seq 2 $N); do
   EXTRA=""
   [ "$VIA" = ip ] && EXTRA="--ip=127.0.0.1"
   [ "$VIA" = rejoin ] && [ $i = 2 ] && EXTRA="--drop_at=25"
-  $G res://tests/net_test.tscn -- --role=client --code=$CODE --relay=ws://127.0.0.1:$PORT --out=$W/c$i.txt --name=CLIENT$i $EXTRA > $W/c$i.log 2>&1 &
+  $G res://tests/net_test.tscn -- --role=client --code=$CODE --relay=$RELAY --out=$W/c$i.txt --name=CLIENT$i $EXTRA > $W/c$i.log 2>&1 &
   sleep 0.5
 done
 for i in $(seq 1 1200); do

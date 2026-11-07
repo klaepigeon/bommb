@@ -47,7 +47,7 @@ pointing/emulate_mouse_from_touch=true
 
 [meat_party]
 
-net/relay_url="ws://127.0.0.1:9080"
+net/relay_url="wss://lc3onlinebeta.onrender.com"
 net/enet_port=24510
 net/lan_discovery_port=24511
 
