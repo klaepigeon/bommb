@@ -1,6 +1,6 @@
 class_name Hud
 extends CanvasLayer
-## Everything on the glass during a match: the contestants' cards (tickets, injuries,
+## Everything on the glass during a match: the contestants' cards (rats, injuries,
 ## items, the key), the Caller's dialogue box, toasts, the context buttons for whoever
 ## on this device has something to do, prompts, the minigame card, results, and the
 ## ending. It only shows the view and sends actions (via `act`); no rules live here.
@@ -175,7 +175,7 @@ func _fill_card(c: Dictionary, p: Dictionary, v: Dictionary) -> void:
 		(c.root as Control).modulate = Color(0.6, 0.6, 0.6)
 		return
 	(c.root as Control).modulate = Color.WHITE
-	var bits := ["%d tickets" % int(p.tickets), "%d items" % int(p.item_count)]
+	var bits := ["%d rats" % int(p.rats), "%d items" % int(p.item_count)]
 	if p.has_key:
 		bits.append("KEY")
 	if p.helmet:
@@ -328,7 +328,7 @@ func _prompt(s: int, pr: Dictionary, v: Dictionary) -> void:
 		modal_box.add_child(UiKit.label("STICKY FINGERS. Take something from:", 16))
 		for o in pr.options:
 			var p: Dictionary = v.players[int(o)]
-			modal_box.add_child(UiKit.button("%s (%d items, %d tickets)" % [p.name, p.items.size(), int(p.tickets)], func(): act.emit(s, {"t": "answer", "target": int(o)})))
+			modal_box.add_child(UiKit.button("%s (%d items, %d rats)" % [p.name, p.items.size(), int(p.rats)], func(): act.emit(s, {"t": "answer", "target": int(o)})))
 
 
 func _roulette_actions(s: int, v: Dictionary) -> void:
@@ -392,8 +392,8 @@ func _cards(v: Dictionary) -> void:
 			card.visible = true
 			card_box.add_child(UiKit.label("RESULTS", 24, UiKit.HOT, true))
 			for p in v.players:
-				var won := int(v.mg.get("tickets", {}).get(int(p.seat), 0))
-				card_box.add_child(UiKit.label("%s   %s   tickets %d (%+d)" % [p.name, "ALIVE" if p.alive else "OUT", int(p.tickets), won], 14,
+				var won := int(v.mg.get("rats", {}).get(int(p.seat), 0))
+				card_box.add_child(UiKit.label("%s   %s   rats %d (%+d)" % [p.name, "ALIVE" if p.alive else "OUT", int(p.rats), won], 14,
 					UiKit.INK if p.alive else UiKit.DIM))
 		"ceremony":
 			pass
@@ -405,7 +405,7 @@ func _cards(v: Dictionary) -> void:
 			card_box.add_child(UiKit.label("YOU GOT OUT" if esc else "TOTAL ELIMINATION", 28, UiKit.TEAL if esc else UiKit.HOT, true))
 			card_box.add_child(UiKit.label("The door was never painted on." if esc else "Nobody went home. Nobody ever does.", 15))
 			for st in v.ending_info.get("standings", []):
-				card_box.add_child(UiKit.label("%s  -  %s  -  %d tickets" % [st.name, "out the door" if st.alive else str(st.death), int(st.tickets)], 13))
+				card_box.add_child(UiKit.label("%s  -  %s  -  %d rats" % [st.name, "out the door" if st.alive else str(st.death), int(st.rats)], 13))
 			var h := UiKit.hbox(8)
 			card_box.add_child(h)
 			if Net.is_authority():

@@ -159,7 +159,7 @@ func _defused(seat: int) -> void:
 		notes.append("%s kept the key." % core.p(seat).name)
 	else:
 		for s in defused_by:
-			tickets[s] += 3
+			rats[s] += 3
 	core.add_unrest("defused", 1.0)
 
 
@@ -179,7 +179,7 @@ func _boom() -> void:
 			notes.append("%s's helmet saved most of them." % nm)
 	for s in living():
 		if s != victim:
-			tickets[s] += 2
+			rats[s] += 2
 
 
 func view_for(_viewers: Array) -> Dictionary:

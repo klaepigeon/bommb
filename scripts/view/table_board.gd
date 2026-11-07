@@ -12,10 +12,11 @@ const SIZE := Vector2(21.0, 14.4)
 const DOOR := Vector3(0, 0, -6.4)
 
 const INK_RED := Color("8a1a12")
-const RING := {"start": Color("2a6a3a"), "tickets": Color("b08a2a"), "item": Color("2a4a8a"), "hazard": Color("8a1a12"),
+const RING := {"start": Color("2a6a3a"), "rats": Color("b08a2a"), "item": Color("2a4a8a"), "hazard": Color("8a1a12"),
 	"note": Color("6a5a4a"), "clue": Color("6a5a4a"), "caller": Color("5a2a6a"), "steal": Color("a05a1a"),
 	"medic": Color("8a1a12"), "door": Color("3a2416")}
-const GLYPH := {"start": "GO", "tickets": "$", "item": "?", "hazard": "!", "caller": "C", "steal": "&", "medic": "+"}
+const GLYPH := {"start": "GO", "rats": "$", "item": "?", "hazard": "!", "caller": "C", "steal": "&", "medic": "+",
+	"roulette": "BANG", "resurrect": "RISE", "black_market": "£", "poison": "XXX", "gamble": "2x", "punish": "!!"}
 
 var board: Array = []
 var path: Array[Vector2] = []    # each space's (x, z) on the sheet
@@ -134,9 +135,35 @@ func _sheet() -> void:
 	sub.font = load("res://assets/fonts/fell_italic.ttf")
 
 
-const SQUARE := {"start": Color("2a8a4a"), "tickets": Color("e0a820"), "item": Color("3a6ac8"), "hazard": Color("c82a2a"),
+const SQUARE := {"start": Color("2a8a4a"), "rats": Color("e0a820"), "item": Color("3a6ac8"), "hazard": Color("c82a2a"),
 	"note": Color("a07a5a"), "clue": Color("8a6ac0"), "caller": Color("7a2a8a"), "steal": Color("e07020"),
-	"medic": Color("e8e0d8"), "door": Color("5a3a24")}
+	"medic": Color("e8e0d8"), "door": Color("5a3a24"), "roulette": Color("1a1a1a"), "resurrect": Color("d8d8f0"),
+	"black_market": Color("2a2a3a"), "poison": Color("6a9a2a"), "gamble": Color("c86aa8"), "punish": Color("6a0a0a"),
+	"hidden": Color("8a7a6a")}
+
+var _glyphs: Array = []      # [Label3D, true text] per space with a glyph
+var _vision := ""
+
+
+## What this screen's player can make out: blind (nothing on the squares), hallucinating
+## (some squares say the wrong thing), unreliable (none of them can be trusted).
+func set_vision(flags: Dictionary) -> void:
+	var key := "%s%s%s" % [flags.get("blind", false), flags.get("hallucinating", false), flags.get("unreliable", false)]
+	if key == _vision:
+		return
+	_vision = key
+	var texts := GLYPH.values()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = art_seed
+	for g in _glyphs:
+		var l: Label3D = g[0]
+		var t: String = g[1]
+		if flags.get("blind", false):
+			l.text = ""
+		elif flags.get("unreliable", false) or (flags.get("hallucinating", false) and rng.randf() < 0.4):
+			l.text = str(texts[rng.randi_range(0, texts.size() - 1)])
+		else:
+			l.text = t
 
 
 func _tiles() -> void:
@@ -154,9 +181,11 @@ func _tiles() -> void:
 		mb.box("t", LcMB.mat(LcTex.grime(col.darkened(0.12), col.lightened(0.08), 16, 40 + i, 0.4)), Vector3(0.9, 0.06, 0.76), LcMB.T(Vector3(0, -0.02, 0)), Color(1, 1, 1))
 		_mesh(mb, t)
 		if GLYPH.has(sp.type):
-			var g := _label(GLYPH[sp.type], Vector3(0, 0.02, 0.0), 80, Color("f8f0e0") if sp.type != "medic" else INK_RED, true, t)
+			var txt: String = GLYPH[sp.type]
+			var g := _label(txt, Vector3(0, 0.02, 0.0), 80 if txt.length() <= 2 else 46, Color("f8f0e0") if sp.type not in ["medic", "resurrect"] else INK_RED, true, t)
 			g.outline_size = 10
 			g.outline_modulate = Color("2a0e0a")
+			_glyphs.append([g, txt])
 		if sp.type in ["clue", "note"]:
 			# a scrap of wallpaper on the square, something written on it
 			var s2 := LcMB.new()

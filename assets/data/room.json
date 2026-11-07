@@ -1,0 +1,37 @@
+{
+ "_comment": "The hall around the table (RoomInteractionManager). Leaving the table is your turn: you get two actions out there, then sit back down (or get sat down). pos is where your person walks to (hall metres). Each action: suspicion if it goes fine / if he sees it, what it does, whether it can only be done once (per match), what it needs.",
+ "leave_suspicion": 4,
+ "actions_per_visit": 2,
+ "hotspots": {
+  "coats": {"name": "THE COAT RACK", "pos": [-6.6, 0, 1.6], "actions": [
+   {"id": "search_coats", "name": "Go through the pockets", "ok": 3, "caught": 12, "effect": "find", "pool": "coats"},
+   {"id": "rob_coat", "name": "Rob someone's coat", "ok": 7, "caught": 18, "effect": "rob", "target": true}]},
+  "kitchen": {"name": "THE KITCHEN", "pos": [-6.6, 0, -3.2], "actions": [
+   {"id": "raid_kitchen", "name": "Raid the fridge", "ok": 3, "caught": 10, "effect": "find", "pool": "kitchen"},
+   {"id": "spike_punch", "name": "Spike the punch", "ok": 10, "caught": 25, "effect": "spike", "once": true}]},
+  "cellar": {"name": "THE CELLAR DOOR", "pos": [6.4, 0, -6.6], "actions": [
+   {"id": "pick_lock", "name": "Pick the lock (needs a hairpin)", "ok": 6, "caught": 18, "effect": "unlock", "needs": "hairpin", "once": true},
+   {"id": "cellar_nest", "name": "Reach into the rats' nest", "ok": 4, "caught": 12, "effect": "nest", "needs_unlocked": "cellar"},
+   {"id": "contraband", "name": "Search the crates", "ok": 6, "caught": 16, "effect": "find", "pool": "cellar", "needs_unlocked": "cellar"}]},
+  "booth": {"name": "HIS BOOTH", "pos": [3.4, 0, -7.6], "actions": [
+   {"id": "read_file", "name": "Read the files", "ok": 8, "caught": 22, "effect": "read_file"},
+   {"id": "doctor_file", "name": "Rub out your own file", "ok": 12, "caught": 30, "effect": "doctor_file"},
+   {"id": "loosen_cage", "name": "Loosen your Cage", "ok": 14, "caught": 35, "effect": "loosen_cage"}]},
+  "pinata": {"name": "THE PIÑATA", "pos": [2.6, 0, -4.4], "actions": [
+   {"id": "hit_pinata", "name": "Hit the piñata", "ok": 2, "caught": 8, "effect": "pinata"}]},
+  "props": {"name": "THE PROPS CUPBOARD", "pos": [5.6, 0, 2.6], "actions": [
+   {"id": "tamper", "name": "Rig the next game's equipment", "ok": 9, "caught": 24, "effect": "tamper"},
+   {"id": "look_ahead", "name": "Look at what's set out for later", "ok": 3, "caught": 10, "effect": "look_ahead"}]},
+  "fusebox": {"name": "THE FUSE BOX", "pos": [-2.2, 0, -9.4], "actions": [
+   {"id": "flick_lights", "name": "Flick the lights", "ok": 3, "caught": 10, "effect": "distract"}]},
+  "under_stage": {"name": "UNDER THE STAGE", "pos": [-2.6, 0, -4.6], "hidden": true, "actions": [
+   {"id": "find_hatch", "name": "Feel along the stage for a catch", "ok": 4, "caught": 12, "effect": "reveal_hatch", "once": true},
+   {"id": "spare_parts", "name": "Take something from the spare parts", "ok": 6, "caught": 16, "effect": "find", "pool": "spares", "needs_unlocked": "hatch"}]}
+ },
+ "pools": {
+  "coats": [["rats", 2], ["hairpin", 3], ["alibi", 1], ["painkillers", 2], ["nothing", 2]],
+  "kitchen": [["antidote", 3], ["first_aid", 2], ["rats", 1], ["poison", 2], ["nothing", 1]],
+  "cellar": [["loaded_die", 3], ["bullet", 1], ["lucky_foot", 2], ["rats_big", 2], ["bite", 2]],
+  "spares": [["prosthetic", 4], ["lazarus_rat", 1], ["surgery", 2]]
+ }
+}

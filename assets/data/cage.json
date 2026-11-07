@@ -1,0 +1,17 @@
+{
+ "_comment": "THE CAGE: how far the Caller has stacked the odds against one player. Each system rolls 'does he tip this one?' with the chance for that player's Cage level (0..5). Tune freely; every number here is used by the real event code (CageManager.tip).",
+ "levels": ["OPEN", "LATCHED", "LOCKED", "CHAINED", "WELDED", "BURIED"],
+ "systems": {
+  "dice":        [0.0, 0.15, 0.3, 0.45, 0.6, 0.75],
+  "board_event": [0.0, 0.1, 0.2, 0.35, 0.5, 0.65],
+  "items":       [0.0, 0.15, 0.3, 0.45, 0.6, 0.7],
+  "rewards":     [0.0, 0.15, 0.25, 0.4, 0.55, 0.7],
+  "hazard":      [0.0, 0.1, 0.2, 0.3, 0.45, 0.6],
+  "poison":      [0.0, 0.2, 0.35, 0.5, 0.65, 0.8],
+  "roulette":    [0.0, 0.08, 0.16, 0.25, 0.35, 0.45],
+  "environment": [0.0, 0.1, 0.2, 0.3, 0.45, 0.6],
+  "encounter":   [0.0, 0.15, 0.3, 0.45, 0.6, 0.75]
+ },
+ "tighten_at": [25, 50, 75],
+ "tighten_chance": 0.6
+}

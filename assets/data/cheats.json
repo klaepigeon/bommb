@@ -1,0 +1,14 @@
+{
+ "_comment": "Cheats (CheatingManager). context: where it's offered. ok/caught: suspicion if it works / if he sees. 'caught' also confiscates and costs your turn where that makes sense. Doing one while he's watching gets you caught; while he's looking away it works; in the moment he's turning back (his cage shudders) it's a coin toss.",
+ "cheats": {
+  "load_dice":   {"name": "LOAD THE DIE", "desc": "Your roll comes up high.", "context": "board", "ok": 6, "caught": 18},
+  "palm_rats":   {"name": "PALM SOME RATS", "desc": "Two Dead Rats off the house pile.", "context": "board", "ok": 5, "caught": 16},
+  "pick_pocket": {"name": "PICK A POCKET", "desc": "Take an item or three Dead Rats from someone.", "context": "board", "ok": 8, "caught": 20, "target": true},
+  "nudge":       {"name": "NUDGE YOUR PUPPET", "desc": "Your puppet moves on a square while nobody's looking.", "context": "board", "ok": 5, "caught": 14},
+  "shove":       {"name": "SHOVE THEIR PUPPET", "desc": "Someone else's puppet goes back two squares.", "context": "board", "ok": 7, "caught": 18, "target": true},
+  "peek_gun":    {"name": "PEEK AT THE CYLINDER", "desc": "See whether the next chamber is loaded.", "context": "roulette", "ok": 5, "caught": 18},
+  "spin_gun":    {"name": "SPIN IT SECRETLY", "desc": "Re-spin the cylinder, without anyone seeing.", "context": "roulette", "ok": 8, "caught": 20},
+  "pocket_round": {"name": "POCKET THE ROUND", "desc": "Take the bullet out. Once.", "context": "roulette", "ok": 15, "caught": 35, "once": true},
+  "game_cheat":  {"name": "CHEAT", "desc": "Whatever this game lets you get away with.", "context": "minigame", "ok": 6, "caught": 18}
+ }
+}

@@ -188,7 +188,7 @@ func _pull(seat: int) -> void:
 				loaded = 1
 				_spin()
 	else:
-		tickets[seat] += 1
+		rats[seat] += 1
 		core.say("pr_click")
 	core.emit({"e": "mg", "k": "pull", "seat": seat, "target": target, "bang": bang})
 	_resolve(r)

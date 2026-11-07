@@ -9,12 +9,14 @@ extends RefCounted
 ##   persistent broken (until treated)
 ##   permanent  lost (a prosthetic brings back some use)
 
-const PARTS := ["hand_l", "hand_r", "arm_l", "arm_r", "leg_l", "leg_r", "eye_l", "eye_r", "ears"]
+const PARTS := ["head", "torso", "hand_l", "hand_r", "arm_l", "arm_r", "leg_l", "leg_r", "eye_l", "eye_r", "ears", "tail"]
+## Parts that can be taken off (a sacrifice, a machine): never the head or torso.
+const SEVERABLE := ["hand_l", "hand_r", "arm_l", "arm_r", "leg_l", "leg_r", "eye_l", "eye_r", "ears", "tail"]
 const RANK := {"ok": 0, "bruised": 1, "burned": 2, "broken": 3, "prosthetic": 4, "lost": 5}
 const FACTOR := {"ok": 1.0, "bruised": 0.8, "burned": 0.6, "broken": 0.35, "prosthetic": 0.7, "lost": 0.0}
 const TEMP_ROUNDS := 2
-const LABEL := {"hand_l": "LEFT HAND", "hand_r": "RIGHT HAND", "arm_l": "LEFT ARM", "arm_r": "RIGHT ARM",
-	"leg_l": "LEFT LEG", "leg_r": "RIGHT LEG", "eye_l": "LEFT EYE", "eye_r": "RIGHT EYE", "ears": "EARS"}
+const LABEL := {"head": "HEAD", "torso": "TORSO", "hand_l": "LEFT HAND", "hand_r": "RIGHT HAND", "arm_l": "LEFT ARM", "arm_r": "RIGHT ARM",
+	"leg_l": "LEFT LEG", "leg_r": "RIGHT LEG", "eye_l": "LEFT EYE", "eye_r": "RIGHT EYE", "ears": "EARS", "tail": "TAIL"}
 
 
 static func fresh() -> Dictionary:
@@ -24,12 +26,34 @@ static func fresh() -> Dictionary:
 	return b
 
 
+## Older saves / views without the new parts: fill them in.
+static func ensure(b: Dictionary) -> Dictionary:
+	for p in PARTS:
+		if not b.has(p):
+			b[p] = {"s": "ok", "t": 0}
+	return b
+
+
+## Pick a part to take: one that's still there.
+static func random_severable(body: Dictionary, rng: RandomNumberGenerator) -> String:
+	var opts := []
+	for p in SEVERABLE:
+		if body[p].s != "lost":
+			opts.append(p)
+	if opts.is_empty():
+		return ""
+	return opts[rng.randi_range(0, opts.size() - 1)]
+
+
 ## Apply an injury. Returns the status the part ends up with. A worse injury replaces a
 ## lesser one; a temporary injury on a part that is already worse does nothing; anything
 ## broken or lost on a prosthetic wrecks it (lost again).
 static func injure(body: Dictionary, part: String, status: String) -> String:
 	if not body.has(part):
 		return ""
+	# a head or a torso can be hurt, never taken off: that's what death is for
+	if part in ["head", "torso"] and status in ["lost", "prosthetic"]:
+		status = "broken"
 	var cur: Dictionary = body[part]
 	var s: String = cur.s
 	if s == "lost":
@@ -69,7 +93,7 @@ static func set_bone(body: Dictionary) -> String:
 
 ## Fit a prosthetic to the most useful lost part (legs first). Returns the part, or "".
 static func fit_prosthetic(body: Dictionary) -> String:
-	for p in ["leg_l", "leg_r", "arm_r", "arm_l", "hand_r", "hand_l"]:
+	for p in ["leg_l", "leg_r", "arm_r", "arm_l", "hand_r", "hand_l", "tail"]:
 		if body[p].s == "lost":
 			if p.begins_with("arm"):
 				body[p].s = "prosthetic"
@@ -116,15 +140,26 @@ static func legs(body: Dictionary, pk := false) -> float:
 	return (f(body, "leg_l", pk) + f(body, "leg_r", pk)) * 0.5
 
 
-## Movement speed multiplier. Never zero: with no legs you drag yourself.
+## Movement speed multiplier. Never zero: with no legs you drag yourself. A lost tail
+## costs balance, a broken torso costs wind.
 static func speed(body: Dictionary, pk := false) -> float:
-	return 0.3 + 0.7 * legs(body, pk)
+	return (0.3 + 0.7 * legs(body, pk)) * (0.85 + 0.15 * f(body, "tail", pk)) * (0.8 + 0.2 * f(body, "torso", pk))
+
+
+## Balance: legs and tail. (Narrow ledges, chains, conveyors.)
+static func balance(body: Dictionary) -> float:
+	return clampf(legs(body) * 0.7 + f(body, "tail") * 0.3, 0.0, 1.0)
+
+
+## Coordination and perception, from the head.
+static func head(body: Dictionary) -> float:
+	return f(body, "head")
 
 
 static func sight(body: Dictionary) -> float:
 	var a := f(body, "eye_l")
 	var b := f(body, "eye_r")
-	return maxf(a, b) * 0.75 + minf(a, b) * 0.25
+	return (maxf(a, b) * 0.75 + minf(a, b) * 0.25) * (0.7 + 0.3 * f(body, "head"))
 
 
 static func hearing(body: Dictionary) -> float:

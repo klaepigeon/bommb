@@ -1,0 +1,20 @@
+{
+ "_comment": "Lasting effects (StatusEffectManager). 'turns' counts board turns. Effects are read by the board, minigames and views. 'combos' fire when two are active together.",
+ "poisons": {
+  "rat_fever":   {"name": "RAT FEVER", "desc": "Lose a Dead Rat at the start of each turn.", "turns": 4, "harm": true},
+  "paralytic":   {"name": "PARALYTIC", "desc": "Sometimes you can't move at all.", "turns": 3, "harm": true},
+  "blindness":   {"name": "BLINDNESS", "desc": "You can't read the board.", "turns": 3, "harm": true},
+  "thinner":     {"name": "BLOOD THINNER", "desc": "Every injury goes one worse.", "turns": 4, "harm": true},
+  "hallucinogen": {"name": "HALLUCINOGEN", "desc": "Some squares aren't what they look like.", "turns": 3, "harm": true},
+  "stimulant":   {"name": "STIMULANT", "desc": "Three extra steps, then a turn you can barely move.", "turns": 2, "harm": false},
+  "necrosis":    {"name": "NECROSIS", "desc": "Something on you is going off. It gets worse.", "turns": 5, "harm": true},
+  "memory":      {"name": "MEMORY LOSS", "desc": "You won't know what game is next.", "turns": 3, "harm": true},
+  "hunger":      {"name": "HUNGER", "desc": "Pay a Dead Rat each turn, or bite something you need.", "turns": 4, "harm": true},
+  "cure":        {"name": "THE CURE", "desc": "Nothing. It tasted of strawberries.", "turns": 0, "harm": false}
+ },
+ "combos": {
+  "rat_fever+hunger": "Accelerated rat loss: two more each turn.",
+  "paralytic+necrosis": "Your legs are going: two less on every roll.",
+  "hallucinogen+memory": "Nothing on the board can be trusted."
+ }
+}

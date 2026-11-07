@@ -3,7 +3,7 @@ extends RefCounted
 ## An AI contestant. It plays through MatchCore.action() like anyone else and decides
 ## from MatchCore.view_for([its seat]): what a human in that seat would see, no more.
 ##
-## Personality: greed (tickets over safety), coop (willingness to help the others; it
+## Personality: greed (rats over safety), coop (willingness to help the others; it
 ## moves: kindness seen raises it, being wronged lowers it), nerve (holds on longer, takes
 ## risks), perception (how likely it is to notice a tell).
 
@@ -42,13 +42,13 @@ func wronged_by(_from: int, amount: float) -> void:
 	coop = maxf(0.0, coop - amount)
 
 
-## Whoever's winning (most tickets), among the living others.
+## Whoever's winning (most rats), among the living others.
 func rival(core: MatchCore, me: int) -> int:
 	var best := -1
 	var bt := -1
 	for s in core.living():
-		if s != me and core.p(s).tickets > bt:
-			bt = core.p(s).tickets
+		if s != me and core.p(s).rats > bt:
+			bt = core.p(s).rats
 			best = s
 	return best
 

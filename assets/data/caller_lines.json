@@ -18,9 +18,9 @@
   {"text": "A {n}. I'd have rolled better. I always roll better.", "gesture": "shrug", "mood": "calm"},
   {"text": "{n} steps. Mind the floor. The floor minds you.", "gesture": "point", "mood": "calm"}
  ],
- "space_tickets": [
-  {"text": "TICKETS for {name}! Tickets are how we know who we love.", "gesture": "clap", "mood": "pleased"},
-  {"text": "{name} gets {n} tickets. Hold on to those. Tight. With your hands. While you have them.", "gesture": "thumbs_up", "mood": "pleased"}
+ "space_Dead Rats": [
+  {"text": "DEAD RATS for {name}! Dead Rats are how we know who we love.", "gesture": "clap", "mood": "pleased"},
+  {"text": "{name} gets {n} Dead Rats. Hold on to those. Tight. With your hands. While you have them.", "gesture": "thumbs_up", "mood": "pleased"}
  ],
  "space_item": [
   {"text": "A present for {name}! A {item}! Don't say I never gave you anything.", "gesture": "present_right", "mood": "pleased"},
@@ -52,8 +52,8 @@
  ],
  "caller_gift": [{"text": "A {item}, {name}. A gift. From me. Remember who gives you things.", "gesture": "present_right", "mood": "pleased"}],
  "caller_swap": [{"text": "{name} and {target}, swap places! Ha! Hahaha. Life is like that.", "gesture": "dance", "mood": "pleased"}],
- "caller_tax": [{"text": "TAX! {name} gives {n} tickets to the house. The house is me.", "gesture": "reach", "mood": "calm"}],
- "caller_bonus": [{"text": "{name}, have {n} tickets. I like your face. I might keep it.", "gesture": "thumbs_up", "mood": "pleased"}],
+ "caller_tax": [{"text": "TAX! {name} gives {n} Dead Rats to the house. The house is me.", "gesture": "reach", "mood": "calm"}],
+ "caller_bonus": [{"text": "{name}, have {n} Dead Rats. I like your face. I might keep it.", "gesture": "thumbs_up", "mood": "pleased"}],
  "pass_start": [{"text": "PAYDAY, {name}! Round the room again.", "gesture": "clap", "mood": "pleased"}],
  "door_pass": [
   {"text": "That's a wall, {name}. With a picture of a door on it. Keep walking.", "gesture": "wag", "mood": "displeased"}
@@ -129,7 +129,7 @@
   {"text": "Oh. Oh no. Oh well.", "gesture": "shrug", "mood": "calm"}
  ],
  "results": [
-  {"text": "What a game. What a GAME. Tickets for the living!", "gesture": "spread", "mood": "pleased"},
+  {"text": "What a game. What a GAME. Dead Rats for the living!", "gesture": "spread", "mood": "pleased"},
   {"text": "Results! The scoreboard never lies. I do. It doesn't.", "gesture": "present_left", "mood": "calm"}
  ],
  "round": [

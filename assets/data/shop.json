@@ -1,0 +1,8 @@
+{
+ "_comment": "Prices in Dead Rats. The black market sells everything; medical sells the medicine cheaper. Resurrection: what a ghost pays to come back.",
+ "black_market": {"first_aid": 3, "painkillers": 2, "antidote": 4, "surgery": 6, "prosthetic": 6, "helmet": 5, "alibi": 6,
+  "lucky_foot": 7, "loaded_die": 4, "hairpin": 2, "spinner": 3, "peeker": 3, "bribe": 3, "lazarus_rat": 12},
+ "medical": {"first_aid": 2, "antidote": 3, "surgery": 5, "prosthetic": 5},
+ "resurrect_cost": 10,
+ "gamble_odds": 0.5
+}

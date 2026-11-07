@@ -1,55 +1,55 @@
 {
- "_comment": "MEAT PARTY board: a loop of spaces, walked in order. Types: start tickets item hazard note clue caller steal medic door. 'pos' is metres on the hall floor (x, z). Add or reorder spaces freely; three 'clue' spaces (clue 0,1,2) and one 'door' are needed for the escape.",
+ "_comment": "LAST CALL 3 board: a loop of spaces, walked in order (positions are drawn by TableBoard). Types: start rats item hazard note clue caller steal medic door roulette resurrect black_market poison gamble punish hidden. Three 'clue' spaces (clue 0,1,2) and one 'door' are needed for the escape.",
  "name": "THE FUNCTION ROOM",
  "spaces": [
   {
    "type": "start",
    "pos": [
-    0.0,
-    5.6
+    0,
+    0
    ]
   },
   {
-   "type": "tickets",
+   "type": "rats",
    "pos": [
-    3.82,
-    5.48
+    0,
+    0
    ]
   },
   {
    "type": "item",
    "pos": [
-    5.67,
-    5.14
+    0,
+    0
    ]
   },
   {
    "type": "hazard",
    "pos": [
-    6.99,
-    4.55
+    0,
+    0
    ]
   },
   {
    "type": "note",
    "pos": [
-    7.89,
-    3.69
+    0,
+    0
    ],
    "text": "A name tag on the floor: HELLO MY NAME IS ___. Someone has written underneath: 'he can't count us if we hold hands'."
   },
   {
-   "type": "tickets",
+   "type": "black_market",
    "pos": [
-    8.42,
-    2.49
+    0,
+    0
    ]
   },
   {
    "type": "clue",
    "pos": [
-    8.6,
-    0.0
+    0,
+    0
    ],
    "clue": 0,
    "text": "The wallpaper here is peeling. Underneath, in crayon: a number, and an arrow toward the door. 'IT ISN'T PAINTED ON.'"
@@ -57,125 +57,167 @@
   {
    "type": "caller",
    "pos": [
-    8.42,
-    -2.49
+    0,
+    0
    ]
   },
   {
-   "type": "item",
+   "type": "roulette",
    "pos": [
-    7.89,
-    -3.69
+    0,
+    0
+   ]
+  },
+  {
+   "type": "gamble",
+   "pos": [
+    0,
+    0
    ]
   },
   {
    "type": "steal",
    "pos": [
-    6.99,
-    -4.55
-   ]
-  },
-  {
-   "type": "hazard",
-   "pos": [
-    5.67,
-    -5.14
+    0,
+    0
    ]
   },
   {
    "type": "medic",
    "pos": [
-    3.82,
-    -5.48
+    0,
+    0
+   ]
+  },
+  {
+   "type": "poison",
+   "pos": [
+    0,
+    0
+   ]
+  },
+  {
+   "type": "rats",
+   "pos": [
+    0,
+    0
+   ]
+  },
+  {
+   "type": "hidden",
+   "pos": [
+    0,
+    0
    ]
   },
   {
    "type": "door",
    "pos": [
-    0.0,
-    -5.6
+    0,
+    0
    ]
   },
   {
-   "type": "tickets",
+   "type": "rats",
    "pos": [
-    -3.82,
-    -5.48
+    0,
+    0
    ]
   },
   {
-   "type": "item",
+   "type": "punish",
    "pos": [
-    -5.67,
-    -5.14
+    0,
+    0
    ]
   },
   {
    "type": "clue",
    "pos": [
-    -6.99,
-    -4.55
+    0,
+    0
    ],
    "clue": 1,
    "text": "Inside a crushed party hat: a number inked on the band. 'THE BOMB HAS A KEY. IT WON'T LET ONE PERSON WIND IT.'"
   },
   {
-   "type": "hazard",
+   "type": "resurrect",
    "pos": [
-    -7.89,
-    -3.69
+    0,
+    0
    ]
   },
   {
-   "type": "caller",
+   "type": "item",
    "pos": [
-    -8.42,
-    -2.49
+    0,
+    0
    ]
   },
   {
-   "type": "tickets",
+   "type": "roulette",
    "pos": [
-    -8.6,
-    -0.0
+    0,
+    0
    ]
   },
   {
    "type": "note",
    "pos": [
-    -8.42,
-    2.49
+    0,
+    0
    ],
    "text": "Scratched into the skirting board: 'THE POPPER DOESN'T GO OFF IF NOBODY PICKS IT UP. WE TRIED. ALL OF US.'"
   },
   {
-   "type": "item",
+   "type": "hazard",
    "pos": [
-    -7.89,
-    3.69
+    0,
+    0
    ]
   },
   {
-   "type": "steal",
+   "type": "black_market",
    "pos": [
-    -6.99,
-    4.55
+    0,
+    0
    ]
   },
   {
    "type": "clue",
    "pos": [
-    -5.67,
-    5.14
+    0,
+    0
    ],
    "clue": 2,
    "text": "A photo pinned under a chair: last year's contestants at the door, all pushing at once. A number on the back."
   },
   {
+   "type": "rats",
+   "pos": [
+    0,
+    0
+   ]
+  },
+  {
+   "type": "gamble",
+   "pos": [
+    0,
+    0
+   ]
+  },
+  {
    "type": "medic",
    "pos": [
-    -3.82,
-    5.48
+    0,
+    0
+   ]
+  },
+  {
+   "type": "hidden",
+   "pos": [
+    0,
+    0
    ]
   }
  ]

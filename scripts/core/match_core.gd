@@ -7,8 +7,14 @@ extends RefCounted
 ##
 ## Phases: intro -> turn (board, BoardRules) -> mg_intro -> mg_play -> mg_results ->
 ## (next round) turn ... -> door (the collective push) / ceremony -> ending.
+##
+## v0.2: the systems hang off this as managers, each its own file, each talking to the
+## others only through MatchCore: suspicion (and his attention), the Cage, cheating, the
+## room, resurrection (ghosts), status effects (poisons) and the economy (Dead Rats). The
+## minigame manager is here: picking the next game, rewards, and draws (Collective
+## Sacrifice).
 
-const MAX_ROUNDS := 10
+const MAX_ROUNDS := 12
 const INTRO_TIME := 9.0
 const MG_INTRO_TIME := 8.0
 const MG_RESULTS_TIME := 5.0
@@ -45,6 +51,17 @@ var brains: Dictionary = {}          # seat -> AiBrain (for AI seats and timed-o
 var rules: BoardRules
 var log_lines: Array[String] = []
 var fast := false                    # tests: shorten the waits
+var suspicion: SuspicionManager
+var cage: CageManager
+var cheats: CheatingManager
+var room: RoomInteractionManager
+var resurrection: ResurrectionManager
+var status: StatusEffectManager
+var economy: EconomyManager
+var pending_encounter := ""          # "roulette": a board square has called it for this round
+var _next_mg := ""
+var _last_mg := ""
+var draws := 0
 
 
 func setup(seat_list: Array, match_seed: int = 0, board_path := "res://assets/data/board.json") -> void:
@@ -62,6 +79,13 @@ func setup(seat_list: Array, match_seed: int = 0, board_path := "res://assets/da
 	for i in 3:
 		code.append(rng.randi_range(1, 9))
 	schedule = MinigameRegistry.schedule()
+	suspicion = SuspicionManager.new(self)
+	cage = CageManager.new(self)
+	cheats = CheatingManager.new(self)
+	room = RoomInteractionManager.new(self)
+	resurrection = ResurrectionManager.new(self)
+	status = StatusEffectManager.new(self)
+	economy = EconomyManager.new(self)
 	rules = BoardRules.new(self)
 	say("intro")
 	_set_phase("intro")
@@ -126,12 +150,12 @@ func is_ai(seat: int) -> bool:
 	return players[seat].kind == "ai"
 
 
-func injure(seat: int, part: String, status: String, cause := "") -> void:
+func injure(seat: int, part: String, status: String, cause := "") -> void:  # status: the injury
 	var pl := players[seat]
 	if not pl.alive:
 		return
 	var before: String = pl.body[part].s
-	var now := Body.injure(pl.body, part, status)
+	var now := Body.injure(pl.body, part, self.status.worsen(seat, status) if self.status else status)
 	if now != before:
 		emit({"e": "injure", "seat": seat, "part": part, "status": now, "cause": cause})
 		log_lines.append("%s: %s %s (%s)" % [pl.name, part, now, cause])
@@ -150,9 +174,13 @@ func kill(seat: int, anim: String, fallback := [], forced := false) -> bool:
 			injure(seat, f[0], f[1], "helmet")
 		return false
 	pl.alive = false
+	pl.ghost = true
 	pl.death = anim
 	pl.died_round = round_n
+	pl.deaths += 1
 	pl.at_door = false
+	pl.location = "table"
+	pl.statuses.clear()
 	if pl.has_key:
 		pl.has_key = false
 		key_space = pl.space
@@ -160,7 +188,13 @@ func kill(seat: int, anim: String, fallback := [], forced := false) -> bool:
 	emit({"e": "death", "seat": seat, "anim": anim})
 	log_lines.append("DEATH: %s (%s)" % [pl.name, anim])
 	say("death", {"name": pl.name})
+	if living().is_empty() and phase != "ending":
+		_end("dead")
 	return true
+
+
+func ghosts() -> Array[int]:
+	return resurrection.ghosts()
 
 
 func give_item(seat: int, id: String, how := "found") -> bool:
@@ -194,6 +228,7 @@ func tick(dt: float) -> void:
 	if ending != "":
 		return
 	phase_t += dt
+	suspicion.tick(dt)
 	match phase:
 		"intro":
 			if phase_t > _wait(INTRO_TIME) or _all_ready():
@@ -209,6 +244,9 @@ func tick(dt: float) -> void:
 			for s in mg.seats:
 				if players[s].alive and is_ai(s):
 					brains[s].minigame(self, mg, dt)
+			for s in ghosts():
+				if is_ai(s):
+					brains[s].ghost_minigame(self, mg, dt)
 			if mg.done:
 				_finish_minigame()
 		"mg_results":
@@ -223,8 +261,11 @@ func tick(dt: float) -> void:
 				_end("dead")
 	if phase == "turn":
 		var cur := rules.current()
-		if cur >= 0 and players[cur].alive and is_ai(cur):
-			brains[cur].board(self, dt)
+		if cur >= 0 and is_ai(cur):
+			if players[cur].alive:
+				brains[cur].board(self, dt)
+			elif players[cur].ghost:
+				brains[cur].ghost_turn(self, dt)
 
 
 func _wait(t: float) -> float:
@@ -251,16 +292,32 @@ func action(seat: int, a: Dictionary) -> void:
 	if t == "ready":
 		ready_seats[seat] = true
 		return
-	if not players[seat].alive:
+	if not players[seat].alive and not players[seat].ghost:
 		return
 	match phase:
 		"turn":
 			rules.action(seat, a)
 		"mg_play":
-			if t == "mg" and mg:
+			if mg == null:
+				return
+			if players[seat].ghost:
+				if t == "ghost":
+					mg.ghost_action(seat, a)
+				return
+			if t == "mg":
 				mg.action(seat, a)
+			elif t == "mg_cheat":
+				var id := str(a.get("id", ""))
+				var label := ""
+				for o in mg.cheat_options(seat):
+					if o.id == id:
+						label = str(o.name)
+				if label != "" and cheats.attempt(seat, "game_cheat", label):
+					mg.apply_cheat(seat, id)
+		"mg_results", "mg_intro", "intro":
+			pass
 		"door":
-			if t == "push":
+			if t == "push" and players[seat].alive:
 				door_push[seat] = true
 				emit({"e": "push", "seat": seat})
 
@@ -270,13 +327,47 @@ func action(seat: int, a: Dictionary) -> void:
 func _start_round() -> void:
 	_set_phase("turn")
 	say("round", {"n": round_n})
+	# somebody spiked the punch: everyone else has had a glass
+	if room.spiked:
+		room.spiked = false
+		say("punch")
+		for s in living():
+			if s != room.spiker:
+				status.apply(s, status.random_poison(s), "the punch")
+	_next_mg = _pick_minigame()
 	rules.begin_round()
+
+
+## The minigame manager: what's next (decided at the start of the round, so the props
+## cupboard can show it and rig it). A roulette square overrides it.
+func next_minigame() -> String:
+	if pending_encounter != "":
+		return pending_encounter
+	if _next_mg == "":
+		_next_mg = _pick_minigame()
+	return _next_mg
+
+
+func _pick_minigame() -> String:
+	var n := living().size()
+	var pool := MinigameRegistry.eligible(n).filter(func(k): return k != _last_mg)
+	if pool.is_empty():
+		pool = MinigameRegistry.eligible(n)
+	if pool.is_empty():
+		return "last_seat"
+	return pool[rng.randi_range(0, pool.size() - 1)]
 
 
 ## Called by BoardRules when everyone has had a turn.
 func board_round_done() -> void:
-	mg_id = str(schedule[mg_count % schedule.size()])
-	var level := mg_count / schedule.size()
+	if living().is_empty():
+		_end("dead")
+		return
+	mg_id = next_minigame()
+	pending_encounter = ""
+	_next_mg = ""
+	_last_mg = mg_id
+	var level := mini(mg_count / 4, 3)
 	mg_count += 1
 	mg = MinigameRegistry.create(mg_id, self, living(), level)
 	_set_phase("mg_intro")
@@ -284,12 +375,25 @@ func board_round_done() -> void:
 	say("minigame", {"game": mg.title()})
 
 
+## Rewards, and the one rule every free-for-all shares: a draw brings the dead back, and
+## every living player pays for it with a part of themselves.
 func _finish_minigame() -> void:
-	for s in mg.tickets.keys():
-		players[s].tickets = maxi(0, players[s].tickets + int(mg.tickets[s]))
+	for s in mg.rats.keys():
+		var n := int(mg.rats[s])
+		if n > 0 and players[s].alive:
+			economy.award(s, n, mg_id)
+		elif n < 0:
+			economy.take(s, -n, mg_id)
+	for s in mg.winners:
+		if players[s].alive:
+			economy.award(s, MinigameRegistry.WIN_RATS, mg_id + " win")
+	var drew: bool = mg.draw and mg.format == "ffa"
 	_set_phase("mg_results")
-	say("results")
-	emit({"e": "results", "id": mg_id, "tickets": mg.tickets.duplicate(), "summary": mg.summary()})
+	say("results_draw" if drew else "results")
+	emit({"e": "results", "id": mg_id, "rats": mg.rats.duplicate(), "summary": mg.summary(), "winners": mg.winners.duplicate(), "draw": drew})
+	if drew and not living().is_empty():
+		draws += 1
+		resurrection.collective()
 
 
 func _after_minigame() -> void:
@@ -297,13 +401,8 @@ func _after_minigame() -> void:
 	if alive.is_empty():
 		_end("dead")
 		return
-	if alive.size() == 1:
-		ceremony = "winner"
-		say("winner", {"name": players[alive[0]].name})
-		_set_phase("ceremony")
-		emit({"e": "ceremony", "kind": "winner", "seat": alive[0]})
-		return
 	round_n += 1
+	cage.review()
 	for pl in players:
 		if pl.alive:
 			Body.tick_round(pl.body)
@@ -389,7 +488,7 @@ func _end(kind: String) -> void:
 	ending = kind
 	var standings := []
 	for pl in players:
-		standings.append({"seat": pl.seat, "name": pl.name, "tickets": pl.tickets, "alive": pl.alive, "death": pl.death})
+		standings.append({"seat": pl.seat, "name": pl.name, "rats": pl.rats, "alive": pl.alive, "death": pl.death})
 	ending_info = {"kind": kind, "round": round_n, "standings": standings, "subversions": subversions.duplicate()}
 	say("ending_escape" if kind == "escape" else "ending_dead")
 	_set_phase("ending")
