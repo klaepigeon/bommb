@@ -14,7 +14,7 @@ extends RefCounted
 ## minigame manager is here: picking the next game, rewards, and draws (Collective
 ## Sacrifice).
 
-const MAX_ROUNDS := 12
+const MAX_ROUNDS := 15
 const INTRO_TIME := 9.0
 const MG_INTRO_TIME := 8.0
 const MG_RESULTS_TIME := 5.0
@@ -510,4 +510,10 @@ func view_for(seats: Array) -> Dictionary:
 		"turn": rules.view() if rules else {}, "mg_id": mg_id,
 		"mg": mg.view_for(seats) if mg else {}, "door_push": door_push.keys(),
 		"ready": ready_seats.keys(), "you": seats,
+		"attention": suspicion.view(), "ghosts": ghosts(), "resurrect_cost": economy.resurrect_cost(),
+		"cage_levels": cage.levels, "shop": economy.shop, "draws": draws, "encounter": pending_encounter,
+		"room": room.view_for(int(seats[0])) if not seats.is_empty() else {},
+		"cheats": cheats.available(int(seats[0]), "board") if not seats.is_empty() else [],
+		"flags": status.view_flags(int(seats[0])) if not seats.is_empty() else {},
+		"next_game": next_minigame() if not seats.is_empty() and str(players[int(seats[0])].known.get("next_game", "")) != "" and not status.has(int(seats[0]), "memory") else "",
 	}

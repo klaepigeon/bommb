@@ -119,3 +119,9 @@ texture={
 "compress/mode": 0,
 "mipmaps/generate": false
 }
+
+[debug]
+
+gdscript/warnings/inference_on_variant=0
+gdscript/warnings/integer_division=0
+gdscript/warnings/narrowing_conversion=0

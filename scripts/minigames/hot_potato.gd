@@ -79,7 +79,7 @@ func tick(dt: float) -> void:
 		"boom", "defused":
 			if sub_t > 3.0:
 				sub = "over"
-				done = true
+				finish(living(), false)
 
 
 func _random_other(s: int) -> int:

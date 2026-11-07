@@ -1,149 +1,855 @@
 {
  "_comment": "The Caller's lines, by event. Each line: text, gesture (CallerActor animation), mood (calm|pleased|displeased|intense|glitch), and optional unrest band [min, max] (0 = composed, 3 = coming apart). {name} {item} {n} {game} {target} are filled in. Add lines freely; the host picks one and every screen shows the same.",
  "intro": [
-  {"text": "GOOD EVENING, CONTESTANTS! Welcome to MEAT PARTY. I am THE CALLER. I call. You answer.", "gesture": "spread", "mood": "pleased"},
-  {"text": "Four lovely people. Four lovely chairs. Well. Some of the chairs are lovely.", "gesture": "present_left", "mood": "pleased"},
-  {"text": "Roll the dice, walk the board, play the games. The winner goes home!", "gesture": "point", "mood": "pleased"},
-  {"text": "There is no door. Ignore the door. It is painted on. I painted it.", "gesture": "wag", "mood": "calm"}
+  {
+   "text": "GOOD EVENING, CONTESTANTS! Welcome to MEAT PARTY. I am THE CALLER. I call. You answer.",
+   "gesture": "spread",
+   "mood": "pleased"
+  },
+  {
+   "text": "Four lovely people. Four lovely chairs. Well. Some of the chairs are lovely.",
+   "gesture": "present_left",
+   "mood": "pleased"
+  },
+  {
+   "text": "Roll the dice, walk the board, play the games. The winner goes home!",
+   "gesture": "point",
+   "mood": "pleased"
+  },
+  {
+   "text": "There is no door. Ignore the door. It is painted on. I painted it.",
+   "gesture": "wag",
+   "mood": "calm"
+  }
  ],
  "turn": [
-  {"text": "{name}! Your turn, sweetheart.", "gesture": "point", "mood": "pleased"},
-  {"text": "Roll for me, {name}. Roll like you mean it.", "gesture": "beckon", "mood": "pleased"},
-  {"text": "{name}, the dice are warm. I warmed them.", "gesture": "tap", "mood": "calm"},
-  {"text": "{name}. Go on. Everyone's watching. I'm watching. I'm always watching.", "gesture": "lean", "mood": "intense", "unrest": [1, 3]},
-  {"text": "{name}'s turn. Or is it. Yes. It is.", "gesture": "glitch", "mood": "glitch", "unrest": [2, 3]}
+  {
+   "text": "{name}! Your turn, sweetheart.",
+   "gesture": "point",
+   "mood": "pleased"
+  },
+  {
+   "text": "Roll for me, {name}. Roll like you mean it.",
+   "gesture": "beckon",
+   "mood": "pleased"
+  },
+  {
+   "text": "{name}, the dice are warm. I warmed them.",
+   "gesture": "tap",
+   "mood": "calm"
+  },
+  {
+   "text": "{name}. Go on. Everyone's watching. I'm watching. I'm always watching.",
+   "gesture": "lean",
+   "mood": "intense",
+   "unrest": [
+    1,
+    3
+   ]
+  },
+  {
+   "text": "{name}'s turn. Or is it. Yes. It is.",
+   "gesture": "glitch",
+   "mood": "glitch",
+   "unrest": [
+    2,
+    3
+   ]
+  }
  ],
  "roll": [
-  {"text": "{n}! Off you pop.", "gesture": "clap", "mood": "pleased"},
-  {"text": "A {n}. I'd have rolled better. I always roll better.", "gesture": "shrug", "mood": "calm"},
-  {"text": "{n} steps. Mind the floor. The floor minds you.", "gesture": "point", "mood": "calm"}
+  {
+   "text": "{n}! Off you pop.",
+   "gesture": "clap",
+   "mood": "pleased"
+  },
+  {
+   "text": "A {n}. I'd have rolled better. I always roll better.",
+   "gesture": "shrug",
+   "mood": "calm"
+  },
+  {
+   "text": "{n} steps. Mind the floor. The floor minds you.",
+   "gesture": "point",
+   "mood": "calm"
+  }
  ],
  "space_Dead Rats": [
-  {"text": "DEAD RATS for {name}! Dead Rats are how we know who we love.", "gesture": "clap", "mood": "pleased"},
-  {"text": "{name} gets {n} Dead Rats. Hold on to those. Tight. With your hands. While you have them.", "gesture": "thumbs_up", "mood": "pleased"}
+  {
+   "text": "DEAD RATS for {name}! Dead Rats are how we know who we love.",
+   "gesture": "clap",
+   "mood": "pleased"
+  },
+  {
+   "text": "{name} gets {n} Dead Rats. Hold on to those. Tight. With your hands. While you have them.",
+   "gesture": "thumbs_up",
+   "mood": "pleased"
+  }
  ],
  "space_item": [
-  {"text": "A present for {name}! A {item}! Don't say I never gave you anything.", "gesture": "present_right", "mood": "pleased"},
-  {"text": "{name} finds a {item}. I left it there. Or someone did. Last year.", "gesture": "shrug", "mood": "calm"}
+  {
+   "text": "A present for {name}! A {item}! Don't say I never gave you anything.",
+   "gesture": "present_right",
+   "mood": "pleased"
+  },
+  {
+   "text": "{name} finds a {item}. I left it there. Or someone did. Last year.",
+   "gesture": "shrug",
+   "mood": "calm"
+  }
  ],
  "space_hazard": [
-  {"text": "PARTY FAVOUR! {name} gets a little something. {target}.", "gesture": "slam", "mood": "pleased"},
-  {"text": "Oops-a-daisy, {name}. That'll be the {target}.", "gesture": "cover_eyes", "mood": "calm"}
+  {
+   "text": "PARTY FAVOUR! {name} gets a little something. {target}.",
+   "gesture": "slam",
+   "mood": "pleased"
+  },
+  {
+   "text": "Oops-a-daisy, {name}. That'll be the {target}.",
+   "gesture": "cover_eyes",
+   "mood": "calm"
+  }
  ],
  "space_medic": [
-  {"text": "The first aid corner. Take a plaster, {name}. Take two. We're not monsters.", "gesture": "bow", "mood": "calm"}
+  {
+   "text": "The first aid corner. Take a plaster, {name}. Take two. We're not monsters.",
+   "gesture": "bow",
+   "mood": "calm"
+  }
  ],
  "space_note": [
-  {"text": "Don't read that, {name}. That's old. That's from before.", "gesture": "wag", "mood": "displeased"},
-  {"text": "{name} is reading the walls. The walls are for looking AT.", "gesture": "point", "mood": "displeased"}
+  {
+   "text": "Don't read that, {name}. That's old. That's from before.",
+   "gesture": "wag",
+   "mood": "displeased"
+  },
+  {
+   "text": "{name} is reading the walls. The walls are for looking AT.",
+   "gesture": "point",
+   "mood": "displeased"
+  }
  ],
  "space_clue": [
-  {"text": "{name}, what have you got there? Nothing? Good. Lovely.", "gesture": "lean", "mood": "intense"},
-  {"text": "Leave the wallpaper alone, {name}. It's load-bearing.", "gesture": "wag", "mood": "displeased"}
+  {
+   "text": "{name}, what have you got there? Nothing? Good. Lovely.",
+   "gesture": "lean",
+   "mood": "intense"
+  },
+  {
+   "text": "Leave the wallpaper alone, {name}. It's load-bearing.",
+   "gesture": "wag",
+   "mood": "displeased"
+  }
  ],
  "space_steal": [
-  {"text": "STICKY FINGERS! {name}, help yourself to somebody. I mean, to something of somebody's.", "gesture": "spread", "mood": "pleased"}
+  {
+   "text": "STICKY FINGERS! {name}, help yourself to somebody. I mean, to something of somebody's.",
+   "gesture": "spread",
+   "mood": "pleased"
+  }
  ],
  "steal": [
-  {"text": "{name} takes from {target}! That's the spirit. That's the only spirit.", "gesture": "clap", "mood": "pleased"}
+  {
+   "text": "{name} takes from {target}! That's the spirit. That's the only spirit.",
+   "gesture": "clap",
+   "mood": "pleased"
+  }
  ],
  "space_caller": [
-  {"text": "CALLER'S CHOICE! I choose... {name}.", "gesture": "spin", "mood": "intense"}
+  {
+   "text": "CALLER'S CHOICE! I choose... {name}.",
+   "gesture": "spin",
+   "mood": "intense"
+  }
  ],
- "caller_gift": [{"text": "A {item}, {name}. A gift. From me. Remember who gives you things.", "gesture": "present_right", "mood": "pleased"}],
- "caller_swap": [{"text": "{name} and {target}, swap places! Ha! Hahaha. Life is like that.", "gesture": "dance", "mood": "pleased"}],
- "caller_tax": [{"text": "TAX! {name} gives {n} Dead Rats to the house. The house is me.", "gesture": "reach", "mood": "calm"}],
- "caller_bonus": [{"text": "{name}, have {n} Dead Rats. I like your face. I might keep it.", "gesture": "thumbs_up", "mood": "pleased"}],
- "pass_start": [{"text": "PAYDAY, {name}! Round the room again.", "gesture": "clap", "mood": "pleased"}],
+ "caller_gift": [
+  {
+   "text": "A {item}, {name}. A gift. From me. Remember who gives you things.",
+   "gesture": "present_right",
+   "mood": "pleased"
+  }
+ ],
+ "caller_swap": [
+  {
+   "text": "{name} and {target}, swap places! Ha! Hahaha. Life is like that.",
+   "gesture": "dance",
+   "mood": "pleased"
+  }
+ ],
+ "caller_tax": [
+  {
+   "text": "TAX! {name} gives {n} Dead Rats to the house. The house is me.",
+   "gesture": "reach",
+   "mood": "calm"
+  }
+ ],
+ "caller_bonus": [
+  {
+   "text": "{name}, have {n} Dead Rats. I like your face. I might keep it.",
+   "gesture": "thumbs_up",
+   "mood": "pleased"
+  }
+ ],
+ "pass_start": [
+  {
+   "text": "PAYDAY, {name}! Round the room again.",
+   "gesture": "clap",
+   "mood": "pleased"
+  }
+ ],
  "door_pass": [
-  {"text": "That's a wall, {name}. With a picture of a door on it. Keep walking.", "gesture": "wag", "mood": "displeased"}
+  {
+   "text": "That's a wall, {name}. With a picture of a door on it. Keep walking.",
+   "gesture": "wag",
+   "mood": "displeased"
+  }
  ],
  "door_stop": [
-  {"text": "{name} is standing by the door. Why. Why would you do that.", "gesture": "freeze", "mood": "intense"},
-  {"text": "Lovely door, isn't it, {name}. Painted. Definitely painted.", "gesture": "nervous", "mood": "displeased", "unrest": [1, 3]}
+  {
+   "text": "{name} is standing by the door. Why. Why would you do that.",
+   "gesture": "freeze",
+   "mood": "intense"
+  },
+  {
+   "text": "Lovely door, isn't it, {name}. Painted. Definitely painted.",
+   "gesture": "nervous",
+   "mood": "displeased",
+   "unrest": [
+    1,
+    3
+   ]
+  }
  ],
  "door_gather": [
-  {"text": "Why are you ALL by the door. Come back to the board. The board is where the fun is.", "gesture": "beckon", "mood": "intense"},
-  {"text": "Stop that. Stop standing together. It looks like a plan.", "gesture": "nervous", "mood": "glitch"}
+  {
+   "text": "Why are you ALL by the door. Come back to the board. The board is where the fun is.",
+   "gesture": "beckon",
+   "mood": "intense"
+  },
+  {
+   "text": "Stop that. Stop standing together. It looks like a plan.",
+   "gesture": "nervous",
+   "mood": "glitch"
+  }
  ],
  "door_open": [
-  {"text": "Where did you get a key. Where did you get a KEY. That's MY key. That's the BOMB'S key.", "gesture": "panic", "mood": "glitch"}
+  {
+   "text": "Where did you get a key. Where did you get a KEY. That's MY key. That's the BOMB'S key.",
+   "gesture": "panic",
+   "mood": "glitch"
+  }
  ],
  "door_push": [
-  {"text": "Don't push. Don't push it. If you push it it opens. Nobody wants that.", "gesture": "nervous", "mood": "glitch"},
-  {"text": "One of you won't push. One of you never pushes. I've seen it every year.", "gesture": "lean", "mood": "intense"}
+  {
+   "text": "Don't push. Don't push it. If you push it it opens. Nobody wants that.",
+   "gesture": "nervous",
+   "mood": "glitch"
+  },
+  {
+   "text": "One of you won't push. One of you never pushes. I've seen it every year.",
+   "gesture": "lean",
+   "mood": "intense"
+  }
  ],
  "door_fail": [
-  {"text": "There. You see? You don't trust each other. Nobody ever does. Back to your spaces!", "gesture": "laugh", "mood": "pleased"}
+  {
+   "text": "There. You see? You don't trust each other. Nobody ever does. Back to your spaces!",
+   "gesture": "laugh",
+   "mood": "pleased"
+  }
  ],
  "share": [
-  {"text": "{name} is whispering. No whispering at MEAT PARTY.", "gesture": "shush", "mood": "displeased"},
-  {"text": "Sharing? We don't share. We play.", "gesture": "wag", "mood": "displeased"}
+  {
+   "text": "{name} is whispering. No whispering at MEAT PARTY.",
+   "gesture": "shush",
+   "mood": "displeased"
+  },
+  {
+   "text": "Sharing? We don't share. We play.",
+   "gesture": "wag",
+   "mood": "displeased"
+  }
  ],
  "give": [
-  {"text": "{name} gives a {item} to {target}. Why. What do you get. What do you GET.", "gesture": "shrug", "mood": "displeased"}
+  {
+   "text": "{name} gives a {item} to {target}. Why. What do you get. What do you GET.",
+   "gesture": "shrug",
+   "mood": "displeased"
+  }
  ],
  "use_item": [
-  {"text": "{name} uses the {item}. Good. Use things. Use people. It's all the same.", "gesture": "thumbs_up", "mood": "calm"}
+  {
+   "text": "{name} uses the {item}. Good. Use things. Use people. It's all the same.",
+   "gesture": "thumbs_up",
+   "mood": "calm"
+  }
  ],
  "minigame": [
-  {"text": "IT'S GAME TIME! Tonight's game: {game}!", "gesture": "conduct", "mood": "pleased"},
-  {"text": "Everybody up! It's {game}! My favourite. They're all my favourite.", "gesture": "dance", "mood": "pleased"},
-  {"text": "{game}. You know this one. Everyone knows this one. Some of you won't, after.", "gesture": "present_left", "mood": "intense", "unrest": [1, 3]}
+  {
+   "text": "IT'S GAME TIME! Tonight's game: {game}!",
+   "gesture": "conduct",
+   "mood": "pleased"
+  },
+  {
+   "text": "Everybody up! It's {game}! My favourite. They're all my favourite.",
+   "gesture": "dance",
+   "mood": "pleased"
+  },
+  {
+   "text": "{game}. You know this one. Everyone knows this one. Some of you won't, after.",
+   "gesture": "present_left",
+   "mood": "intense",
+   "unrest": [
+    1,
+    3
+   ]
+  }
  ],
- "mc_music": [{"text": "MUSIC! Walk, walk, walk. Round and round.", "gesture": "conduct", "mood": "pleased"}],
- "mc_stop": [{"text": "SIT!", "gesture": "slam", "mood": "intense"}],
- "mc_hazard_live_wire": [{"text": "Oh, that one was live. Sorry. Not sorry. I can't feel sorry, I'm brass.", "gesture": "shrug", "mood": "pleased"}],
- "mc_hazard_spring": [{"text": "UP he goes! Mind the ceiling. The ceiling doesn't mind you.", "gesture": "point_up", "mood": "pleased"}],
- "mc_hazard_trapdoor": [{"text": "And down. Bye bye. Write if you find work.", "gesture": "wave", "mood": "pleased"}],
- "mc_hazard_jaws": [{"text": "The toothy cushion! Everybody's favourite. Except the person on it.", "gesture": "clap", "mood": "pleased"}],
- "mc_hazard_clapper": [{"text": "CLAP CLAP. That's the armrests. They clap for you.", "gesture": "clap", "mood": "pleased"}],
- "mc_standing": [{"text": "{name} didn't sit. Standing is RUDE.", "gesture": "wag", "mood": "displeased"}],
- "mc_safe": [{"text": "Everyone sat nicely. How boring. Again!", "gesture": "shrug", "mood": "displeased"}],
+ "mc_music": [
+  {
+   "text": "MUSIC! Walk, walk, walk. Round and round.",
+   "gesture": "conduct",
+   "mood": "pleased"
+  }
+ ],
+ "mc_stop": [
+  {
+   "text": "SIT!",
+   "gesture": "slam",
+   "mood": "intense"
+  }
+ ],
+ "mc_hazard_live_wire": [
+  {
+   "text": "Oh, that one was live. Sorry. Not sorry. I can't feel sorry, I'm brass.",
+   "gesture": "shrug",
+   "mood": "pleased"
+  }
+ ],
+ "mc_hazard_spring": [
+  {
+   "text": "UP he goes! Mind the ceiling. The ceiling doesn't mind you.",
+   "gesture": "point_up",
+   "mood": "pleased"
+  }
+ ],
+ "mc_hazard_trapdoor": [
+  {
+   "text": "And down. Bye bye. Write if you find work.",
+   "gesture": "wave",
+   "mood": "pleased"
+  }
+ ],
+ "mc_hazard_jaws": [
+  {
+   "text": "The toothy cushion! Everybody's favourite. Except the person on it.",
+   "gesture": "clap",
+   "mood": "pleased"
+  }
+ ],
+ "mc_hazard_clapper": [
+  {
+   "text": "CLAP CLAP. That's the armrests. They clap for you.",
+   "gesture": "clap",
+   "mood": "pleased"
+  }
+ ],
+ "mc_standing": [
+  {
+   "text": "{name} didn't sit. Standing is RUDE.",
+   "gesture": "wag",
+   "mood": "displeased"
+  }
+ ],
+ "mc_safe": [
+  {
+   "text": "Everyone sat nicely. How boring. Again!",
+   "gesture": "shrug",
+   "mood": "displeased"
+  }
+ ],
  "pr_turn": [
-  {"text": "{name}. Pick it up. Pull the string. It's a party popper. Mostly.", "gesture": "point", "mood": "intense"},
-  {"text": "Your go, {name}. Five chances in six. Or four. Or three. I lose count on purpose.", "gesture": "tap", "mood": "calm"}
+  {
+   "text": "{name}. Pick it up. Pull the string. It's a party popper. Mostly.",
+   "gesture": "point",
+   "mood": "intense"
+  },
+  {
+   "text": "Your go, {name}. Five chances in six. Or four. Or three. I lose count on purpose.",
+   "gesture": "tap",
+   "mood": "calm"
+  }
  ],
- "pr_click": [{"text": "Click! Lucky lucky lucky. Pass it on.", "gesture": "clap", "mood": "pleased"}, {"text": "Nothing! Aww.", "gesture": "shrug", "mood": "displeased"}],
- "pr_bang": [{"text": "POP! Congratulations, {name}! The confetti is the best part.", "gesture": "spread", "mood": "pleased"}],
- "pr_helmet": [{"text": "The helmet took most of it, {name}. Most.", "gesture": "shrug", "mood": "calm"}],
- "pr_spin": [{"text": "Spin it, spin it! Nobody knows where it is now. Not even me. Well. Me.", "gesture": "spin", "mood": "pleased"}],
- "pr_peek": [{"text": "{name} is peeking. Peeking is cheating. Cheating is allowed.", "gesture": "cover_eyes", "mood": "calm"}],
- "pr_skip": [{"text": "{name} skips! Coward. Lovely coward.", "gesture": "wag", "mood": "displeased"}],
- "pr_mirror": [{"text": "{name} points it at {target}! THAT's the game! THAT's the game!", "gesture": "dance", "mood": "pleased"}],
+ "pr_click": [
+  {
+   "text": "Click! Lucky lucky lucky. Pass it on.",
+   "gesture": "clap",
+   "mood": "pleased"
+  },
+  {
+   "text": "Nothing! Aww.",
+   "gesture": "shrug",
+   "mood": "displeased"
+  }
+ ],
+ "pr_bang": [
+  {
+   "text": "POP! Congratulations, {name}! The confetti is the best part.",
+   "gesture": "spread",
+   "mood": "pleased"
+  }
+ ],
+ "pr_helmet": [
+  {
+   "text": "The helmet took most of it, {name}. Most.",
+   "gesture": "shrug",
+   "mood": "calm"
+  }
+ ],
+ "pr_spin": [
+  {
+   "text": "Spin it, spin it! Nobody knows where it is now. Not even me. Well. Me.",
+   "gesture": "spin",
+   "mood": "pleased"
+  }
+ ],
+ "pr_peek": [
+  {
+   "text": "{name} is peeking. Peeking is cheating. Cheating is allowed.",
+   "gesture": "cover_eyes",
+   "mood": "calm"
+  }
+ ],
+ "pr_skip": [
+  {
+   "text": "{name} skips! Coward. Lovely coward.",
+   "gesture": "wag",
+   "mood": "displeased"
+  }
+ ],
+ "pr_mirror": [
+  {
+   "text": "{name} points it at {target}! THAT's the game! THAT's the game!",
+   "gesture": "dance",
+   "mood": "pleased"
+  }
+ ],
  "pr_lower": [
-  {"text": "{name} puts it down. Pick it up. Pick it up, {name}.", "gesture": "point", "mood": "displeased"},
-  {"text": "Why is it on the table. It goes in your HAND.", "gesture": "slam", "mood": "intense", "unrest": [1, 3]}
+  {
+   "text": "{name} puts it down. Pick it up. Pick it up, {name}.",
+   "gesture": "point",
+   "mood": "displeased"
+  },
+  {
+   "text": "Why is it on the table. It goes in your HAND.",
+   "gesture": "slam",
+   "mood": "intense",
+   "unrest": [
+    1,
+    3
+   ]
+  }
  ],
- "pr_void": [{"text": "Nobody picked it up. Nobody. That's not... that's not how... YOU PICK IT UP.", "gesture": "glitch", "mood": "glitch"}],
- "hp_start": [{"text": "HOT POTATO! It's not a potato. Pass it! Pass it! Don't hold it!", "gesture": "conduct", "mood": "pleased"}],
- "hp_pass": [{"text": "Wheee!", "gesture": "point", "mood": "pleased"}],
- "hp_step1": [{"text": "What are you doing to it. Don't play with it. Play the GAME.", "gesture": "lean", "mood": "intense"}],
- "hp_step2": [{"text": "That's not passing. That's... that's the opposite of passing.", "gesture": "nervous", "mood": "displeased"}],
- "hp_step3": [{"text": "Put it down put it down put it down it's MINE it's my", "gesture": "panic", "mood": "glitch"}],
- "hp_defused": [{"text": "...", "gesture": "freeze", "mood": "glitch"}, {"text": "It stopped. Why did it stop. Who taught you that.", "gesture": "head_spin", "mood": "glitch"}],
- "hp_boom": [{"text": "BOOM! {name} was holding it! Rules are rules!", "gesture": "laugh", "mood": "pleased"}],
+ "pr_void": [
+  {
+   "text": "Nobody picked it up. Nobody. That's not... that's not how... YOU PICK IT UP.",
+   "gesture": "glitch",
+   "mood": "glitch"
+  }
+ ],
+ "hp_start": [
+  {
+   "text": "HOT POTATO! It's not a potato. Pass it! Pass it! Don't hold it!",
+   "gesture": "conduct",
+   "mood": "pleased"
+  }
+ ],
+ "hp_pass": [
+  {
+   "text": "Wheee!",
+   "gesture": "point",
+   "mood": "pleased"
+  }
+ ],
+ "hp_step1": [
+  {
+   "text": "What are you doing to it. Don't play with it. Play the GAME.",
+   "gesture": "lean",
+   "mood": "intense"
+  }
+ ],
+ "hp_step2": [
+  {
+   "text": "That's not passing. That's... that's the opposite of passing.",
+   "gesture": "nervous",
+   "mood": "displeased"
+  }
+ ],
+ "hp_step3": [
+  {
+   "text": "Put it down put it down put it down it's MINE it's my",
+   "gesture": "panic",
+   "mood": "glitch"
+  }
+ ],
+ "hp_defused": [
+  {
+   "text": "...",
+   "gesture": "freeze",
+   "mood": "glitch"
+  },
+  {
+   "text": "It stopped. Why did it stop. Who taught you that.",
+   "gesture": "head_spin",
+   "mood": "glitch"
+  }
+ ],
+ "hp_boom": [
+  {
+   "text": "BOOM! {name} was holding it! Rules are rules!",
+   "gesture": "laugh",
+   "mood": "pleased"
+  }
+ ],
  "death": [
-  {"text": "Goodbye, {name}! Give them a hand, everybody. Not {name}'s. {name} hasn't got one.", "gesture": "applaud", "mood": "pleased"},
-  {"text": "{name} is out! What a performance. Truly. A one-time show.", "gesture": "bow", "mood": "pleased"},
-  {"text": "Oh. Oh no. Oh well.", "gesture": "shrug", "mood": "calm"}
+  {
+   "text": "Goodbye, {name}! Give them a hand, everybody. Not {name}'s. {name} hasn't got one.",
+   "gesture": "applaud",
+   "mood": "pleased"
+  },
+  {
+   "text": "{name} is out! What a performance. Truly. A one-time show.",
+   "gesture": "bow",
+   "mood": "pleased"
+  },
+  {
+   "text": "Oh. Oh no. Oh well.",
+   "gesture": "shrug",
+   "mood": "calm"
+  }
  ],
  "results": [
-  {"text": "What a game. What a GAME. Dead Rats for the living!", "gesture": "spread", "mood": "pleased"},
-  {"text": "Results! The scoreboard never lies. I do. It doesn't.", "gesture": "present_left", "mood": "calm"}
+  {
+   "text": "What a game. What a GAME. Dead Rats for the living!",
+   "gesture": "spread",
+   "mood": "pleased"
+  },
+  {
+   "text": "Results! The scoreboard never lies. I do. It doesn't.",
+   "gesture": "present_left",
+   "mood": "calm"
+  }
  ],
  "round": [
-  {"text": "Round {n}! Still here? Still here. Lovely.", "gesture": "clap", "mood": "pleased"},
-  {"text": "Round {n}. The chairs are getting hungrier. I mean happier.", "gesture": "salute", "mood": "calm"},
-  {"text": "Round {n}. Round... what round is it. It's always this round.", "gesture": "glitch", "mood": "glitch", "unrest": [2, 3]}
+  {
+   "text": "Round {n}! Still here? Still here. Lovely.",
+   "gesture": "clap",
+   "mood": "pleased"
+  },
+  {
+   "text": "Round {n}. The chairs are getting hungrier. I mean happier.",
+   "gesture": "salute",
+   "mood": "calm"
+  },
+  {
+   "text": "Round {n}. Round... what round is it. It's always this round.",
+   "gesture": "glitch",
+   "mood": "glitch",
+   "unrest": [
+    2,
+    3
+   ]
+  }
  ],
- "winner": [{"text": "WE HAVE A WINNER! {name}! Come and collect your prize. Come closer. Closer.", "gesture": "beckon", "mood": "pleased"}],
- "last_call": [{"text": "LAST CALL! Last call, everybody. Prizes for everyone! Come here! All of you!", "gesture": "spread", "mood": "intense"}],
- "ending_dead": [{"text": "And that's MEAT PARTY! Same time next year. Bring friends. Bring more friends.", "gesture": "bow", "mood": "pleased"}],
- "ending_escape": [{"text": "Wait. Wait. Come back. Who's going to play. WHO'S GOING TO PLAY.", "gesture": "panic", "mood": "glitch"}],
- "disconnect": [{"text": "{name} has stepped out. Don't worry. I'll play for them. I always wanted a body.", "gesture": "spread", "mood": "intense"}],
+ "winner": [
+  {
+   "text": "WE HAVE A WINNER! {name}! Come and collect your prize. Come closer. Closer.",
+   "gesture": "beckon",
+   "mood": "pleased"
+  }
+ ],
+ "last_call": [
+  {
+   "text": "LAST CALL! Last call, everybody. Prizes for everyone! Come here! All of you!",
+   "gesture": "spread",
+   "mood": "intense"
+  }
+ ],
+ "ending_dead": [
+  {
+   "text": "And that's MEAT PARTY! Same time next year. Bring friends. Bring more friends.",
+   "gesture": "bow",
+   "mood": "pleased"
+  }
+ ],
+ "ending_escape": [
+  {
+   "text": "Wait. Wait. Come back. Who's going to play. WHO'S GOING TO PLAY.",
+   "gesture": "panic",
+   "mood": "glitch"
+  }
+ ],
+ "disconnect": [
+  {
+   "text": "{name} has stepped out. Don't worry. I'll play for them. I always wanted a body.",
+   "gesture": "spread",
+   "mood": "intense"
+  }
+ ],
  "unrest": [
-  {"text": "Everything's fine. Everything is fine. Everything is party.", "gesture": "nervous", "mood": "glitch"},
-  {"text": "I've been doing this a long time. A long time. Nobody's ever... no.", "gesture": "freeze", "mood": "glitch"}
+  {
+   "text": "Everything's fine. Everything is fine. Everything is party.",
+   "gesture": "nervous",
+   "mood": "glitch"
+  },
+  {
+   "text": "I've been doing this a long time. A long time. Nobody's ever... no.",
+   "gesture": "freeze",
+   "mood": "glitch"
+  }
+ ],
+ "suspicion_25": [
+  {
+   "text": "{name}. I've started a file on you. It's only a little file.",
+   "gesture": "tap",
+   "mood": "intense"
+  }
+ ],
+ "suspicion_50": [
+  {
+   "text": "{name}'s file needs a second folder. I love a second folder.",
+   "gesture": "lean",
+   "mood": "intense"
+  },
+  {
+   "text": "I see you, {name}. I always saw you. Now I'm writing it down.",
+   "gesture": "stare",
+   "mood": "intense"
+  }
+ ],
+ "suspicion_75": [
+  {
+   "text": "{name}. Three-quarters of the way to a conversation we won't both enjoy.",
+   "gesture": "slam",
+   "mood": "displeased"
+  }
+ ],
+ "suspicion_100": [
+  {
+   "text": "{name}. Your file is full. Come here. Come HERE.",
+   "gesture": "hatch",
+   "mood": "intense"
+  }
+ ],
+ "cage_tighten": [
+  {
+   "text": "{name}'s cage: {level}. Nothing personal. It's all personal.",
+   "gesture": "spin",
+   "mood": "pleased"
+  },
+  {
+   "text": "A little tighter for {name}. Can you feel it? You will.",
+   "gesture": "reach",
+   "mood": "intense"
+  }
+ ],
+ "cage_board": [
+  {
+   "text": "Oh dear, {name}. That square was nicer a second ago.",
+   "gesture": "shrug",
+   "mood": "pleased"
+  }
+ ],
+ "caught": [
+  {
+   "text": "CAUGHT! {name} tried to {what}. In MY hall.",
+   "gesture": "slam",
+   "mood": "intense"
+  },
+  {
+   "text": "{name}. I saw that. I see everything. That's what the dice are for.",
+   "gesture": "wag",
+   "mood": "displeased"
+  }
+ ],
+ "caught_room": [
+  {
+   "text": "{name}! What are you doing over there? SIT DOWN.",
+   "gesture": "point",
+   "mood": "intense"
+  }
+ ],
+ "forced_sit": [
+  {
+   "text": "Back in your seat, {name}. Good. Stay.",
+   "gesture": "beckon",
+   "mood": "displeased"
+  }
+ ],
+ "leave_table": [
+  {
+   "text": "{name} is stretching their legs. Stretch them. I'll wait. I always wait.",
+   "gesture": "shrug",
+   "mood": "calm"
+  },
+  {
+   "text": "Where are you going, {name}? Nowhere. There's nowhere.",
+   "gesture": "look_door",
+   "mood": "intense"
+  }
+ ],
+ "ghost_turn": [
+  {
+   "text": "{name}, you're dead. You still get a go. I'm generous.",
+   "gesture": "wave",
+   "mood": "pleased"
+  }
+ ],
+ "revive_sacrifice": [
+  {
+   "text": "{name} is BACK. Everyone chipped in. Literally.",
+   "gesture": "applaud",
+   "mood": "pleased"
+  }
+ ],
+ "revive_square": [
+  {
+   "text": "Up you get, {name}! Death is just a square on a board.",
+   "gesture": "spread",
+   "mood": "pleased"
+  }
+ ],
+ "revive_rats": [
+  {
+   "text": "{name} bought their way back. Everything's for sale. Even you.",
+   "gesture": "bow",
+   "mood": "pleased"
+  }
+ ],
+ "revive_lazarus": [
+  {
+   "text": "{name} is back. Somebody fed them a rat. Disgusting. Lovely.",
+   "gesture": "clap",
+   "mood": "pleased"
+  }
+ ],
+ "lazarus": [
+  {
+   "text": "{name} gives {target} a Lazarus Rat. Friendship. Ugh.",
+   "gesture": "facepalm",
+   "mood": "displeased"
+  }
+ ],
+ "sacrifice": [
+  {
+   "text": "A DRAW! You know the rule. The dead come back... and everyone pays. A piece each!",
+   "gesture": "conduct",
+   "mood": "intense"
+  }
+ ],
+ "results_draw": [
+  {
+   "text": "A draw. A DRAW. Oh, you've done it now.",
+   "gesture": "panic",
+   "mood": "glitch"
+  }
+ ],
+ "space_roulette": [
+  {
+   "text": "{name} has called the GUN! Everybody to the other table!",
+   "gesture": "present_right",
+   "mood": "intense"
+  }
+ ],
+ "space_resurrect": [
+  {
+   "text": "The resurrection square! Somebody's coming back. I don't get to pick. I HATE that.",
+   "gesture": "spread",
+   "mood": "displeased"
+  }
+ ],
+ "space_black_market": [
+  {
+   "text": "{name} has found the black market. I didn't see that. I see everything. I didn't see that.",
+   "gesture": "cover_eyes",
+   "mood": "calm"
+  }
+ ],
+ "space_poison": [
+  {
+   "text": "Drink up, {name}! It's on the house.",
+   "gesture": "present_left",
+   "mood": "pleased"
+  }
+ ],
+ "space_gamble": [
+  {
+   "text": "Feeling lucky, {name}? Don't. But do.",
+   "gesture": "spin",
+   "mood": "pleased"
+  }
+ ],
+ "space_punish": [
+  {
+   "text": "Punishment, {name}! I've been looking forward to this all night.",
+   "gesture": "slam",
+   "mood": "pleased"
+  }
+ ],
+ "gamble_win": [
+  {
+   "text": "{name} wins {n}! I let you. Remember that.",
+   "gesture": "shrug",
+   "mood": "displeased"
+  }
+ ],
+ "gamble_lose": [
+  {
+   "text": "{name} loses {n}. The house always wins. I am the house.",
+   "gesture": "laugh",
+   "mood": "pleased"
+  }
+ ],
+ "punch": [
+  {
+   "text": "Somebody's been at the punch. Everybody's had a glass. Bottoms up.",
+   "gesture": "drum",
+   "mood": "intense"
+  }
+ ],
+ "grinder": [
+  {
+   "text": "{name} reached the end of the belt! The END end.",
+   "gesture": "wave",
+   "mood": "pleased"
+  }
+ ],
+ "run_first": [
+  {
+   "text": "{name} made it! First! What a runner. Run run run.",
+   "gesture": "applaud",
+   "mood": "pleased"
+  }
+ ],
+ "run_caught": [
+  {
+   "text": "The hooks have {name}. Should have run faster. Should have run ever.",
+   "gesture": "laugh",
+   "mood": "pleased"
+  }
+ ],
+ "consensus_yes": [
+  {
+   "text": "Unanimous. How touching. How very touching. Do you know what a draw does?",
+   "gesture": "nervous",
+   "mood": "glitch"
+  }
+ ],
+ "consensus_no": [
+  {
+   "text": "No agreement. Everybody pays.",
+   "gesture": "slam",
+   "mood": "pleased"
+  }
  ]
 }
