@@ -87,4 +87,6 @@ tests/              run_tests (rules), net_test + view_bot (network), shots (scr
 How a match flows, how to add a minigame, and what's done: [docs/CHECKLIST.md](docs/CHECKLIST.md).
 v0.2 (ghosts, Dead Rats, suspicion and the Cage, cheating, leaving the table, poisons, ten
 new games, the Russian Roulette encounter): [docs/V02.md](docs/V02.md).
+v0.2.5 and MURDERLAND (the party board, Control System, arenas, ORGAN TRAIL, escape room,
+saves, match length and mode): [docs/V025.md](docs/V025.md).
 Networking, the relay, and what still needs real devices: [docs/NETWORKING.md](docs/NETWORKING.md).

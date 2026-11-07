@@ -342,6 +342,21 @@ func launch(seed_v: int = 0) -> void:
 	_begin(Seats.to_array(), match_seed)
 
 
+## An offline match from the save file (SaveManager): same seats, same round, same dice.
+func resume_offline(d: Dictionary) -> void:
+	start_offline()
+	var arr: Array = Saves.seats_of(d)
+	Seats.from_array(arr)
+	my_seats = []
+	for s in Seats.seats:
+		if s.kind == "local":
+			my_seats.append(int(s.seat))
+	in_match = true
+	core = MatchCore.from_snapshot(Seats.to_array(), d.get("match", {}))
+	match_seed = core.seed_value
+	match_started.emit()
+
+
 func _begin(arr: Array, seed_v: int) -> void:
 	in_match = true
 	core = MatchCore.new()

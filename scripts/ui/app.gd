@@ -12,7 +12,7 @@ var _lobby_box: VBoxContainer
 
 
 func _ready() -> void:
-	get_tree().root.theme = UiKit.theme()
+	get_tree().root.theme = PartyUi.theme()
 	Net.status.connect(func(s): if _status: _status.text = s)
 	Net.lobby_changed.connect(func(): if _lobby_box: _fill_lobby())
 	Net.match_started.connect(_start_match)
@@ -74,11 +74,11 @@ func _drop_stage() -> void:
 ## A sheet of his card stock laid on the table, with a heading in red ink.
 func _page(title: String) -> VBoxContainer:
 	var c := Control.new()
-	c.theme = UiKit.theme()
+	c.theme = PartyUi.theme()
 	c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_swap(c)
 	bg_stage.set_pose("deal", 0.9)
-	var sheet := UiKit.panel()
+	var sheet := PartyUi.panel()
 	sheet.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	sheet.offset_left = -470
 	sheet.offset_right = 470
@@ -88,10 +88,10 @@ func _page(title: String) -> VBoxContainer:
 	var sc := ScrollContainer.new()
 	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	sheet.add_child(sc)
-	var v := UiKit.vbox(10)
+	var v := PartyUi.vbox(10)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sc.add_child(v)
-	v.add_child(UiKit.label(title, 26, UiKit.HOT, true))
+	v.add_child(_lbl(title, 26, PartyUi.PINK, true))
 	_ui = c
 	return v
 
@@ -106,44 +106,51 @@ func _toast(t: String) -> void:
 func menu() -> void:
 	Audio.music("title")
 	var c := Control.new()
-	c.theme = UiKit.theme()
+	c.theme = PartyUi.theme()
 	c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_swap(c)
 	bg_stage.set_pose("title", 1.2)
-	var title := UIKit.label("LAST CALL 3", 96, Color("a01a12"), true)
-	title.add_theme_font_override("font", UIKit.voice_font)
-	title.add_theme_color_override("font_outline_color", Color(0.03, 0.01, 0.01))
-	title.add_theme_constant_override("outline_size", 10)
+	var title := PartyUi.shout("LAST CALL 3", 96, PartyUi.PINK)
 	title.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 	title.offset_left = -720
 	title.offset_right = -40
 	title.offset_top = 24
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	c.add_child(title)
-	var sub := UiKit.voice("MEAT PARTY", 40)
+	var sub := PartyUi.shout("MEAT PARTY: WELCOME TO MURDERLAND", 34, PartyUi.YELLOW)
 	sub.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 	sub.offset_left = -720
 	sub.offset_right = -46
 	sub.offset_top = 140
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	c.add_child(sub)
-	var v := UiKit.vbox(10)
+	var v := PartyUi.vbox(10)
 	v.set_anchors_and_offsets_preset(Control.PRESET_CENTER_LEFT)
 	v.offset_left = 60
 	v.offset_right = 420
 	v.offset_top = -170
 	v.offset_bottom = 300
 	c.add_child(v)
-	var b := UiKit.primary("PLAY (vs. AI)", single, 44)
+	if Saves.has_save():
+		v.add_child(_pbtn("CONTINUE (%s)" % Saves.summary(), resume, 44))
+	var b := _pbtn("PLAY (vs. AI)", single, 44)
 	v.add_child(b)
-	b.grab_focus.call_deferred()
-	v.add_child(UiKit.button("LOCAL PARTY (2-4)", local_setup, 44))
-	v.add_child(UiKit.button("ONLINE", online, 44))
-	v.add_child(UiKit.button("SETTINGS", settings, 40))
+	v.add_child(_btn("LOCAL PARTY (2-4)", local_setup, 44))
+	v.add_child(_btn("ONLINE", online, 44))
+	v.add_child(_btn("SETTINGS", settings, 40))
 	if not OS.has_feature("mobile"):
-		v.add_child(UiKit.button("LEAVE", func(): get_tree().quit(), 36))
-	_status = UiKit.label("", 12, UiKit.CREAM)
+		v.add_child(_btn("LEAVE", func(): get_tree().quit(), 36))
+	_status = _lbl("", 12, PartyUi.CREAM)
 	v.add_child(_status)
+
+
+## Pick up a saved match where it was (the start of its round, the same dice).
+func resume() -> void:
+	var d := Saves.read()
+	if d.is_empty():
+		menu()
+		return
+	Net.resume_offline(d)
 
 
 func single() -> void:
@@ -170,13 +177,13 @@ func local_setup() -> void:
 
 func online() -> void:
 	var v := _page("ONLINE")
-	v.add_child(UiKit.label("Phones and PCs can share a room. On the same Wi-Fi, a room is found by its code. Over the internet, rooms go through the relay (%s)." % Settings.relay_url(), 12, UiKit.INK))
-	var h := UiKit.hbox(8)
+	v.add_child(_lbl("Phones and PCs can share a room. On the same Wi-Fi, a room is found by its code. Over the internet, rooms go through the relay (%s)." % Settings.relay_url(), 12, PartyUi.INK))
+	var h := PartyUi.hbox(8)
 	v.add_child(h)
-	h.add_child(UiKit.button("HOST ON THIS NETWORK", func():
+	h.add_child(_btn("HOST ON THIS NETWORK", func():
 		if Net.host_lan() == OK:
 			lobby(), 46, 200))
-	h.add_child(UiKit.button("HOST OVER THE INTERNET", func():
+	h.add_child(_btn("HOST OVER THE INTERNET", func():
 		if Net.host_relay() == OK:
 			lobby(), 46, 200))
 	var code := LineEdit.new()
@@ -186,35 +193,35 @@ func online() -> void:
 	var ip := LineEdit.new()
 	ip.placeholder_text = "or an address (192.168.1.20)"
 	ip.custom_minimum_size = Vector2(240, 44)
-	var h2 := UiKit.hbox(8)
+	var h2 := PartyUi.hbox(8)
 	v.add_child(h2)
 	h2.add_child(code)
-	h2.add_child(UiKit.button("JOIN", func():
+	h2.add_child(_btn("JOIN", func():
 		if code.text.strip_edges() != "":
 			Net.join_code(code.text)
 			lobby(), 44))
-	var h3 := UiKit.hbox(8)
+	var h3 := PartyUi.hbox(8)
 	v.add_child(h3)
 	h3.add_child(ip)
-	h3.add_child(UiKit.button("JOIN ADDRESS", func():
+	h3.add_child(_btn("JOIN ADDRESS", func():
 		if ip.text.strip_edges() != "":
 			var parts := ip.text.strip_edges().split(":")
 			Net.join_ip(parts[0], int(parts[1]) if parts.size() > 1 else 0)
 			lobby(), 44, 140))
-	_status = UiKit.label("", 13, UiKit.HOT)
+	_status = _lbl("", 13, PartyUi.PINK)
 	v.add_child(_status)
-	v.add_child(UiKit.button("BACK", menu, 40))
+	v.add_child(_btn("BACK", menu, 40))
 
 
 # --- the lobby (every mode) --------------------------------------------------------------
 
 func lobby() -> void:
 	var v := _page("THE SEATING PLAN")
-	_status = UiKit.label("", 13, UiKit.HOT)
+	_status = _lbl("", 13, PartyUi.PINK)
 	v.add_child(_status)
 	if Net.online():
 		_status.text = "Room code: %s" % Net.code if Net.code != "" else "Connecting..."
-	_lobby_box = UiKit.vbox(6)
+	_lobby_box = PartyUi.vbox(6)
 	v.add_child(_lobby_box)
 	_fill_lobby()
 
@@ -226,9 +233,9 @@ func _fill_lobby() -> void:
 		c.queue_free()
 	var authority := Net.is_authority()
 	if Net.online() and Net.code != "":
-		_lobby_box.add_child(UiKit.label("ROOM  %s" % Net.code, 28, UiKit.HOT, true))
+		_lobby_box.add_child(_lbl("ROOM  %s" % Net.code, 28, PartyUi.PINK, true))
 	for s in Seats.seats:
-		var h := UiKit.hbox(8)
+		var h := PartyUi.hbox(8)
 		_lobby_box.add_child(h)
 		var face := TextureRect.new()
 		face.texture = Assets.face_texture(int(s.face))
@@ -245,46 +252,64 @@ func _fill_lobby() -> void:
 				desc = "%s  %s" % [s.name, "READY" if s.ready else "not ready"]
 			"ai":
 				desc = "%s  (AI)" % s.name
-		var l := UiKit.label("%d. %s" % [int(s.seat) + 1, desc], 15, (s.color as Color).darkened(0.45) if s.kind != "empty" else UiKit.DIM)
+		var l := _lbl("%d. %s" % [int(s.seat) + 1, desc], 15, (s.color as Color).darkened(0.45) if s.kind != "empty" else PartyUi.DIM)
 		l.custom_minimum_size = Vector2(380, 0)
 		l.autowrap_mode = TextServer.AUTOWRAP_OFF
 		h.add_child(l)
 		var seat := int(s.seat)
 		if authority and s.kind in ["empty", "ai"]:
-			h.add_child(UiKit.button("REMOVE AI" if s.kind == "ai" else "ADD AI", func():
+			h.add_child(_btn("REMOVE AI" if s.kind == "ai" else "ADD AI", func():
 				Net.toggle_ai(seat)
 				_fill_lobby(), 34, 110))
 		if Seats.mode == "local" and s.kind == "empty":
-			h.add_child(UiKit.button("ADD PLAYER", func():
+			h.add_child(_btn("ADD PLAYER", func():
 				Seats.set_seat(seat, {"kind": "local", "name": "PLAYER %d" % (seat + 1), "device": DEVICES[mini(seat + 1, DEVICES.size() - 1)], "face": seat, "ready": true})
 				_fill_lobby(), 34, 120))
 		if Seats.mode == "local" and s.kind == "local":
-			h.add_child(UiKit.button("CONTROLS", func():
+			h.add_child(_btn("CONTROLS", func():
 				var d := DEVICES.find(str(s.get("device", "primary")))
 				Seats.seats[seat].device = DEVICES[(d + 1) % DEVICES.size()]
 				_fill_lobby(), 34, 100))
 			if seat > 0:
-				h.add_child(UiKit.button("X", func():
+				h.add_child(_btn("X", func():
 					Seats.clear_seat(seat)
 					_fill_lobby(), 34, 40))
 		if s.kind == "local" or (s.kind == "remote" and Net.my_seats.has(seat)):
-			h.add_child(UiKit.button("FACE", func():
+			h.add_child(_btn("FACE", func():
 				Seats.seats[seat].face = (int(Seats.seats[seat].face) + 1) % Assets.face_count()
 				if seat == 0:
 					Settings.set_v("face", Seats.seats[seat].face)
 				_fill_lobby(), 34, 70))
-	var row := UiKit.hbox(8)
+	if authority:
+		var opt := PartyUi.hbox(8)
+		_lobby_box.add_child(opt)
+		var lengths := [[10, "QUICK"], [15, "STANDARD"], [20, "EXTENDED"], [30, "MARATHON"]]
+		for L in lengths:
+			var n: int = L[0]
+			var sel := int(Settings.get_v("match_turns", 15)) == n
+			opt.add_child(PartyUi.button("%s\n%d ROUNDS" % [L[1], n], func():
+				Settings.set_v("match_turns", n)
+				_fill_lobby(), PartyUi.YELLOW if sel else PartyUi.CREAM, 130.0, 16))
+		var modes := PartyUi.hbox(8)
+		_lobby_box.add_child(modes)
+		for M in [["classic", "CLASSIC: MOST DEAD RATS WINS"], ["callers_game", "THE CALLER'S GAME: HIDDEN RULES"]]:
+			var m: String = M[0]
+			var sel2 := str(Settings.get_v("match_mode", "classic")) == m
+			modes.add_child(PartyUi.button(M[1], func():
+				Settings.set_v("match_mode", m)
+				_fill_lobby(), PartyUi.TURQ if sel2 else PartyUi.CREAM, 270.0, 15))
+	var row := PartyUi.hbox(8)
 	_lobby_box.add_child(row)
 	if authority:
-		var go := UiKit.primary("SIT DOWN", func(): Net.launch(), 50, 200)
+		var go := _pbtn("SIT DOWN", func(): Net.launch(), 50, 200)
 		go.disabled = not Net.all_ready() or (Net.online() and Net.code in ["", "....."])
 		row.add_child(go)
 		go.grab_focus.call_deferred()
 	elif Net.role == "client" and not Net.my_seats.is_empty():
 		var mine: Dictionary = Seats.seats[int(Net.my_seats[0])]
-		row.add_child(UiKit.button("NOT READY" if mine.ready else "READY", func():
+		row.add_child(_btn("NOT READY" if mine.ready else "READY", func():
 			Net.set_ready(not mine.ready), 50, 160))
-	row.add_child(UiKit.button("LEAVE", func():
+	row.add_child(_btn("LEAVE", func():
 		Net.leave_quiet()
 		menu(), 50, 100))
 
@@ -307,13 +332,13 @@ func settings() -> void:
 	name.max_length = 12
 	name.custom_minimum_size = Vector2(200, 40)
 	name.text_changed.connect(func(t): Settings.set_v("name", t.to_upper()))
-	var hn := UiKit.hbox(8)
-	hn.add_child(UiKit.label("NAME", 15))
+	var hn := PartyUi.hbox(8)
+	hn.add_child(_lbl("NAME", 15))
 	hn.add_child(name)
 	v.add_child(hn)
 	for k in ["master", "music", "sfx", "voice", "ambience"]:
-		var h := UiKit.hbox(8)
-		var l := UiKit.label(k.to_upper(), 14)
+		var h := PartyUi.hbox(8)
+		var l := _lbl(k.to_upper(), 14)
 		l.custom_minimum_size = Vector2(110, 0)
 		h.add_child(l)
 		var sl := HSlider.new()
@@ -325,14 +350,14 @@ func settings() -> void:
 		sl.value_changed.connect(func(x): Settings.set_v(k, x))
 		h.add_child(sl)
 		v.add_child(h)
-	var hq := UiKit.hbox(8)
+	var hq := PartyUi.hbox(8)
 	v.add_child(hq)
-	var q := UiKit.button("GRAPHICS: " + Settings.QUALITY[int(Settings.get_v("quality"))], func(): pass, 40, 220)
+	var q := _btn("GRAPHICS: " + Settings.QUALITY[int(Settings.get_v("quality"))], func(): pass, 40, 220)
 	q.pressed.connect(func():
 		Settings.set_v("quality", (int(Settings.get_v("quality")) + 1) % 3)
 		q.text = "GRAPHICS: " + Settings.QUALITY[int(Settings.get_v("quality"))])
 	hq.add_child(q)
-	var f := UiKit.button("FRAME RATE: %d" % int(Settings.get_v("fps")), func(): pass, 40, 180)
+	var f := _btn("FRAME RATE: %d" % int(Settings.get_v("fps")), func(): pass, 40, 180)
 	f.pressed.connect(func():
 		Settings.set_v("fps", 30 if int(Settings.get_v("fps")) == 60 else 60)
 		f.text = "FRAME RATE: %d" % int(Settings.get_v("fps")))
@@ -342,8 +367,21 @@ func settings() -> void:
 	relay.placeholder_text = Settings.relay_url()
 	relay.custom_minimum_size = Vector2(320, 40)
 	relay.text_changed.connect(func(t): Settings.set_v("relay_url", t.strip_edges()))
-	var hr := UiKit.hbox(8)
-	hr.add_child(UiKit.label("RELAY", 14))
+	var hr := PartyUi.hbox(8)
+	hr.add_child(_lbl("RELAY", 14))
 	hr.add_child(relay)
 	v.add_child(hr)
-	v.add_child(UiKit.button("BACK", menu, 40))
+	v.add_child(_btn("BACK", menu, 40))
+
+
+
+func _btn(text: String, cb: Callable, min_h := 40, min_w := 120) -> Button:
+	return PartyUi.button(text, cb, PartyUi.CREAM, float(min_w) * 1.3, 18)
+
+
+func _pbtn(text: String, cb: Callable, min_h := 48, min_w := 200) -> Button:
+	return PartyUi.button(text, cb, PartyUi.YELLOW, float(min_w) * 1.3, 22)
+
+
+func _lbl(text: String, size := 14, color := PartyUi.INK, title := false) -> Label:
+	return PartyUi.label(text, int(size * 1.3), color, title)
