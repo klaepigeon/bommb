@@ -22,27 +22,30 @@ extends RefCounted
 ## Safety: the camera never goes below the table top or out through the walls, and a
 ## request with bad data is ignored rather than followed.
 
+## Board shots share ONE angle and one field of view (a steady high three-quarter view, the
+## way a party board game is watched); they differ only a little in distance, and the camera
+## glides between them slowly. Nothing on the board swings, spins or punches in.
 const PRESETS := {
-	"overview": {"height": 6.2, "back": 3.0, "fov": 56.0, "speed": 1.6},
-	"intro": {"height": 1.25, "back": 1.15, "fov": 48.0, "speed": 2.2},
-	"dice": {"height": 0.55, "back": 0.6, "fov": 44.0, "speed": 2.6},
-	"follow": {"height": 1.05, "back": 0.95, "fov": 50.0, "speed": 2.4, "ahead": 0.35},
-	"junction": {"height": 1.15, "back": 0.85, "fov": 54.0, "speed": 2.0},
-	"landing": {"height": 0.55, "back": 0.6, "fov": 42.0, "speed": 2.6},
-	"event": {"height": 0.7, "back": 0.75, "fov": 44.0, "speed": 2.2},
-	"roulette": {"height": 0.5, "back": 0.55, "fov": 40.0, "speed": 3.0},
-	"death": {"height": 0.35, "back": 0.5, "fov": 38.0, "speed": 3.0},
-	"resurrection": {"height": 0.6, "back": 0.6, "fov": 42.0, "speed": 2.4},
-	"poison": {"height": 0.4, "back": 0.5, "fov": 40.0, "speed": 2.6},
-	"shop": {"height": 0.5, "back": 0.6, "fov": 44.0, "speed": 2.4},
-	"award": {"height": 0.5, "back": 0.65, "fov": 42.0, "speed": 2.0},
-	"machine": {"height": 1.0, "back": 1.0, "fov": 48.0, "speed": 1.8},
-	"board_wide": {"height": 4.0, "back": 3.2, "fov": 60.0, "speed": 1.6},
-	"cutscene": {"height": 0.55, "back": 0.65, "fov": 40.0, "speed": 3.0},
-	"arena": {"speed": 3.5},
-	"room": {"speed": 2.0},
+	"overview": {"height": 6.2, "back": 3.0, "fov": 50.0, "speed": 0.9},
+	"intro": {"height": 1.9, "back": 1.6, "fov": 50.0, "speed": 1.0},
+	"dice": {"height": 1.9, "back": 1.6, "fov": 50.0, "speed": 1.0},
+	"follow": {"height": 1.9, "back": 1.6, "fov": 50.0, "speed": 1.1},
+	"junction": {"height": 2.2, "back": 1.8, "fov": 50.0, "speed": 0.9},
+	"landing": {"height": 1.7, "back": 1.45, "fov": 50.0, "speed": 0.9},
+	"event": {"height": 1.6, "back": 1.4, "fov": 50.0, "speed": 0.9},
+	"roulette": {"height": 1.4, "back": 1.25, "fov": 50.0, "speed": 0.9},
+	"death": {"height": 1.4, "back": 1.25, "fov": 50.0, "speed": 0.8},
+	"resurrection": {"height": 1.5, "back": 1.3, "fov": 50.0, "speed": 0.8},
+	"poison": {"height": 1.5, "back": 1.3, "fov": 50.0, "speed": 0.9},
+	"shop": {"height": 1.5, "back": 1.3, "fov": 50.0, "speed": 0.9},
+	"award": {"height": 1.5, "back": 1.3, "fov": 50.0, "speed": 0.8},
+	"machine": {"height": 1.4, "back": 1.3, "fov": 50.0, "speed": 0.8},
+	"board_wide": {"height": 4.0, "back": 3.2, "fov": 50.0, "speed": 0.8},
+	"cutscene": {"height": 1.0, "back": 1.0, "fov": 46.0, "speed": 1.2},
+	"arena": {"speed": 1.6},
+	"room": {"speed": 1.2},
 	"fp": {"speed": 12.0},
-	"stage": {"speed": 1.6},
+	"stage": {"speed": 0.9},
 }
 const FLOOR_Y := 0.85
 const CEILING := 3.6
@@ -109,9 +112,8 @@ func _target(shot: Dictionary) -> Array:
 			var back := float(d.get("back", pr.back)) * k
 			var height := float(d.get("height", pr.height)) * k
 			# come in from the player's side of the table, a little off-axis
-			var from := table_forward.rotated(Vector3.UP, float(d.get("yaw", 0.0)))
-			if dir != Vector3.ZERO:
-				from = (table_forward * 0.6 - dir * 0.4).normalized()
+			# always the same angle: never turn with the path
+			var from := table_forward
 			return [focus + from * back + Vector3(0, height, 0), focus, float(d.get("fov", pr.fov))]
 
 
@@ -145,7 +147,7 @@ func update(delta: float) -> Dictionary:
 	else:
 		pos = _spring(pos, want_p, "_vel_p", speed, delta)
 		look = _spring(look, want_l, "_vel_l", speed * 1.3, delta)
-	fov = lerpf(fov, want_f, minf(1.0, delta * speed))
+	fov = lerpf(fov, want_f, minf(1.0, delta * speed * 0.6))
 	debug_text = "%s  p%s  l%s  fov %.0f" % [current, str(pos.snapped(Vector3.ONE * 0.01)), str(look.snapped(Vector3.ONE * 0.01)), fov]
 	return {"pos": pos, "look": look, "fov": fov, "shot": current}
 

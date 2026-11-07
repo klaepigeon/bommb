@@ -22,9 +22,9 @@ extends RefCounted
 
 const DEFAULT_ROUNDS := 15
 const LENGTHS := {"quick": 10, "standard": 15, "extended": 20, "marathon": 30}
-const INTRO_TIME := 6.0
-const MG_INTRO_TIME := 6.0
-const MG_RESULTS_TIME := 4.0
+const INTRO_TIME := 8.0
+const MG_INTRO_TIME := 120.0   # the instructions wait for READY; this is only a safety net
+const MG_RESULTS_TIME := 6.0
 const FINALE_TIME := 14.0
 const HUMAN_TURN_LIMIT := 30.0
 const DOOR_PUSH_TIME := 12.0
@@ -85,6 +85,7 @@ var awards: AwardManager
 var victory: VictoryManager
 var cutscenes: CutsceneManager
 var machines: BoardMachines
+var search: SearchEvent
 var pending_encounter := ""          # "roulette" | "battle": a square has called it for this round
 var _next_mg := ""
 var _last_mg := ""
@@ -127,6 +128,7 @@ func setup(seat_list: Array, match_seed: int = 0, opts := {}) -> void:
 	victory = VictoryManager.new(self)
 	cutscenes = CutsceneManager.new(self)
 	machines = BoardMachines.new(self)
+	search = SearchEvent.new(self)
 	rules = BoardRules.new(self)
 	victory.setup(mode)
 	rat_space = graph.rat_spots[rng.randi_range(0, graph.rat_spots.size() - 1)] if not graph.rat_spots.is_empty() else -1
@@ -386,6 +388,8 @@ func tick(dt: float) -> void:
 				_start_round()
 		"turn":
 			rules.tick(dt)
+		"search":
+			search.tick(dt)
 		"mg_intro":
 			if phase_t > _wait(MG_INTRO_TIME) or _all_ready():
 				_register_and_play()
@@ -415,9 +419,10 @@ func tick(dt: float) -> void:
 			elif players[cur].ghost:
 				brains[cur].ghost_turn(self, dt)
 	# the AI wanders off (or comes back) on its own clock, whoever's turn it is
-	for pl in players:
-		if pl.alive and is_ai(pl.seat):
-			brains[pl.seat].facility(self, dt)
+	if phase != "search":
+		for pl in players:
+			if pl.alive and is_ai(pl.seat):
+				brains[pl.seat].facility(self, dt)
 
 
 func _wait(t: float) -> float:
@@ -431,7 +436,8 @@ func _all_ready() -> bool:
 			need += 1
 			if not ready_seats.has(pl.seat):
 				return false
-	return need > 0
+	# nobody human here (all AI, or spectating): carry on after a short look
+	return need > 0 or phase_t > _wait(6.0)
 
 
 # --- actions --------------------------------------------------------------------------
@@ -440,6 +446,9 @@ func action(seat: int, a: Dictionary) -> void:
 	if ending != "" or seat < 0 or seat >= players.size():
 		return
 	var t := str(a.get("t", ""))
+	if t == "search_choice":
+		search.choose(seat, bool(a.get("keep", true)))
+		return
 	if t == "ready":
 		ready_seats[seat] = true
 		return
@@ -946,7 +955,7 @@ func view_for(seats: Array) -> Dictionary:
 		"cheats": cheats.available(me, "board") if me >= 0 else [],
 		"flags": status.view_flags(me) if me >= 0 else {},
 		"next_game": next_minigame() if me >= 0 and str(players[me].known.get("next_game", "")) != "" and not status.has(me, "memory") else "",
-		"cutscene": cutscenes.view(), "machines": machines.view(),
+		"cutscene": cutscenes.view(), "machines": machines.view(), "search": search.view_for(me),
 		"finale": {"awards": awards.given.duplicate(true), "objectives": victory.results.duplicate(true), "standings": victory.standings()} if phase in ["finale", "ending"] else {},
 	}
 

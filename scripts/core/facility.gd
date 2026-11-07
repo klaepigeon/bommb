@@ -83,7 +83,11 @@ func at_table(p: Vector2) -> bool:
 
 # --- the off-table controller -------------------------------------------------------------
 
+## Nobody gets up whenever they like any more: the room is searched together, from a SEARCH
+## square (SearchEvent puts everyone out there itself).
 func can_leave(seat: int) -> bool:
+	if not data.get("free_leave", false):
+		return false
 	var p := core.p(seat)
 	if not p.alive or p.away():
 		return false

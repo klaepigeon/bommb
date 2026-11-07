@@ -25,6 +25,7 @@ var actions: VBoxContainer
 var modal: PanelContainer
 var modal_box: VBoxContainer
 var modal_scroll: ScrollContainer
+var card_scroll: ScrollContainer
 var modal_footer: HBoxContainer
 var card: PanelContainer
 var card_box: VBoxContainer
@@ -145,11 +146,16 @@ func _ready() -> void:
 	card = PartyUi.panel(PartyUi.CREAM, PartyUi.INK, 30)
 	card.visible = false
 	root.add_child(card)
+	card_scroll = ScrollContainer.new()
+	card_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	card.add_child(card_scroll)
 	card_box = PartyUi.vbox(8)
 	card_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card_box.mouse_filter = Control.MOUSE_FILTER_PASS
+	card_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card_box.custom_minimum_size = Vector2(760, 0)
-	card.add_child(card_box)
+	card_scroll.add_child(card_box)
+	card_box.resized.connect(_fit_card)
+	card.visibility_changed.connect(_fit_card)
 	for i in 2:
 		var bar := ColorRect.new()
 		bar.color = Color(0, 0, 0, 0.92)
@@ -294,7 +300,7 @@ func update(v: Dictionary, local_seats: Array, delta: float) -> void:
 		(cards[i].root as Control).visible = i < v.players.size()
 		if i < v.players.size():
 			_fill_card(cards[i], v.players[i], v)
-	_typed += delta * 110.0
+	_typed += delta * 45.0
 	dialog_text.text = _typing.substr(0, int(_typed))
 	_top(v)
 	_status(v)
@@ -457,6 +463,17 @@ func _action_signature(v: Dictionary) -> String:
 		str(v.get("ready", []).has(me)) + str(v.get("ghosts", [])) + str(v.get("cheats", []).size())]
 
 
+## The card (instructions, results...) fits its content up to most of the screen, centred.
+func _fit_card() -> void:
+	if not card or not card.visible or not root.is_inside_tree():
+		return
+	var vp := root.get_viewport_rect().size
+	var want := card_box.get_combined_minimum_size()
+	card_scroll.custom_minimum_size = Vector2(minf(want.x, vp.x - 100.0), minf(want.y, vp.y * 0.86 - 70.0))
+	card.reset_size()
+	card.position = ((vp - card.size) * 0.5).floor()
+
+
 ## The modal fits its content up to most of the screen, centred; past that it scrolls.
 func _fit_modal() -> void:
 	if not modal or not modal.visible or not root.is_inside_tree():
@@ -480,7 +497,9 @@ func _actions(v: Dictionary) -> void:
 	modal.visible = false
 	var phase := str(v.phase)
 	var me := _me()
-	if phase in ["intro", "mg_intro", "mg_results", "finale"]:
+	if phase == "mg_intro":
+		return   # READY lives on the HOW TO PLAY card
+	if phase in ["intro", "mg_results", "finale"]:
 		if not v.get("ready", []).has(me):
 			actions.add_child(PartyUi.primary("READY!", func():
 				for s in local:
@@ -501,12 +520,6 @@ func _actions(v: Dictionary) -> void:
 				_prompt(s, v.turn.prompt, v)
 			elif v.turn.sub == "ghost":
 				_ghost_actions(s, mp, v)
-		# anyone at the table can get up, any time it isn't their own move
-		for q in local:
-			var p: Dictionary = v.players[q]
-			if p.alive and str(p.location) == "table" and not (q == s and v.turn.sub in ["moving", "prompt"]):
-				actions.add_child(PartyUi.button("GET UP FROM THE TABLE", func(): act.emit(q, {"t": "leave", "pos": _seat_pos(q)}), PartyUi.ORANGE, 260.0, 18))
-				break
 		return
 	if phase == "mg_play":
 		var mg: Dictionary = v.mg
@@ -949,7 +962,8 @@ func _facility_signature(v: Dictionary) -> String:
 	var near: String = get_parent().near_thing() if get_parent() and get_parent().has_method("near_thing") else ""
 	var fac: Dictionary = v.get("facility", {})
 	var p: Dictionary = v.players[me]
-	return "%s|%s|%s|%s|%d|%s" % [near, str(fac.get("things", {}).get(near, {}).get("actions", [])), p.location, str(fac.get("ringing", false)),
+	var se: Dictionary = v.get("search", {})
+	return "%s|%d|%s|%s|%s|%s|%s|%s|%d|%s" % [str(se.get("stage", "")), int(float(se.get("t", 0.0))), str(se.get("left", "")), str(se.get("mine", [])), near, str(fac.get("things", {}).get(near, {}).get("actions", [])), p.location, str(fac.get("ringing", false)),
 		int(float(p.away_limit) - float(p.away_t)), str(get_parent().at_table() if get_parent() and get_parent().has_method("at_table") else false)]
 
 
@@ -964,6 +978,17 @@ func _facility(v: Dictionary) -> void:
 	var gv = get_parent()
 	if str(p.location) == "escaped":
 		facility_box.add_child(PartyUi.label("YOU GOT OUT OF THE PARTY.", 24, PartyUi.MINT, true))
+		return
+	var se: Dictionary = v.get("search", {})
+	if se.get("active", false) and str(se.stage) == "search":
+		facility_box.add_child(PartyUi.label("SEARCH THE ROOM!", 26, PartyUi.YELLOW, true))
+		var tl := maxi(0, int(float(se.limit) - float(se.t)))
+		facility_box.add_child(PartyUi.meter(clampf(float(se.t) / float(se.limit), 0.0, 1.0), PartyUi.RED if tl < 10 else PartyUi.ORANGE, 360.0, 22.0, "%ds LEFT" % tl))
+		facility_box.add_child(PartyUi.label("Scraps of paper, somewhere in here. Walk over one to pick it up. Most found wins %d Teeth." % SearchEvent.RACE_PRIZE, 16, PartyUi.CREAM))
+		facility_box.add_child(PartyUi.label("STILL OUT THERE: %d of %d" % [int(se.left), int(se.total)], 18, PartyUi.CREAM, true))
+		var mine: Array = se.get("mine", [])
+		if not mine.is_empty():
+			facility_box.add_child(PartyUi.label("YOURS: " + "  /  ".join(mine.map(func(w): return "\"%s\"" % w)), 18, PartyUi.MINT, true))
 		return
 	var left := int(float(p.away_limit) - float(p.away_t))
 	var area := str(gv.area_name()) if gv and gv.has_method("area_name") else ""
@@ -1075,7 +1100,7 @@ func _card_signature(v: Dictionary) -> String:
 	var phase := str(v.phase)
 	match phase:
 		"mg_intro":
-			return "intro" + str(v.mg_id) + str(int(v.phase_t)) + str(_away())
+			return "intro" + str(v.mg_id) + str(v.get("ready", [])) + str(_away()) + str(_practice)
 		"mg_results":
 			return "res" + str(v.mg_id) + str(int(float(v.phase_t) * 2.0))
 		"finale":
@@ -1084,6 +1109,9 @@ func _card_signature(v: Dictionary) -> String:
 			return "end" + str(v.ending)
 		"intro":
 			return "hello"
+		"search":
+			var se: Dictionary = v.get("search", {})
+			return "search" + str(se.get("stage", "")) + str(se.get("chose", false)) + str(se.get("chosen", [])) + str(se.get("result", {}).size())
 	return phase
 
 
@@ -1092,6 +1120,8 @@ func _cards(v: Dictionary) -> void:
 	card.visible = false
 	card.reset_size()
 	match str(v.phase):
+		"search":
+			_search_card(v)
 		"intro":
 			card.visible = true
 			card_box.add_child(PartyUi.shout("WELCOME TO MURDERLAND!", 44, PartyUi.PINK))
@@ -1119,13 +1149,10 @@ func _cards(v: Dictionary) -> void:
 				card_box.add_child(PartyUi.label("AND A DEAD RAT FOR THE WINNER.", 18, PartyUi.BLOOD, true))
 			if v.get("presentation", "MEAT_PUPPET") == "FULL_CHARACTER":
 				card_box.add_child(PartyUi.label("YOU'LL BE DOING THIS ONE YOURSELVES. IN PERSON.", 16, PartyUi.PURPLE, true))
-			for line in mg.instructions:
-				card_box.add_child(PartyUi.label("• " + str(line), 18))
 			if v.mg_id == "organ_trail" and not (mg.get("modifier_text", []) as Array).is_empty():
 				for m in mg.modifier_text:
 					card_box.add_child(PartyUi.label("THE CALLER'S RULE: " + str(m), 16, PartyUi.PURPLE, true))
-			var left := maxi(0, int(MatchCore.MG_INTRO_TIME - float(v.phase_t)))
-			card_box.add_child(PartyUi.shout("STARTS IN %d" % left, 30, PartyUi.TURQ))
+			_how_to_play(v, mg)
 			if _away():
 				card_box.add_child(PartyUi.label("YOU'RE NOT AT THE TABLE. GET BACK NOW OR MISS IT.", 18, PartyUi.RED, true))
 		"mg_results":
@@ -1311,7 +1338,7 @@ func toast(text: String, private := false) -> void:
 ## Queued, so two at once play one after the other (and a long queue is cut short).
 var _banners: Array = []
 var _banner_running := false
-func banner(text: String, col := PartyUi.YELLOW, hold := 1.1) -> void:
+func banner(text: String, col := PartyUi.YELLOW, hold := 1.5) -> void:
 	_banners.append([text, col, hold])
 	if _banners.size() > 3:
 		_banners.pop_front()
@@ -1336,12 +1363,176 @@ func _show_banner(text: String, col: Color, hold: float) -> void:
 	if not is_instance_valid(p):
 		return
 	var vp := root.get_viewport_rect().size
-	p.position = Vector2(-p.size.x, vp.y * 0.38)
-	p.rotation = -0.04
-	var mid := Vector2((vp.x - p.size.x) * 0.5, vp.y * 0.38)
-	var tw := p.create_tween()
-	tw.tween_property(p, "position", mid, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.tween_interval(hold)
-	tw.tween_property(p, "position", Vector2(vp.x + 40, mid.y), 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	tw.tween_callback(p.queue_free)
+	p.position = Vector2((vp.x - p.size.x) * 0.5, vp.y * 0.36)
+	p.pivot_offset = p.size * 0.5
+	p.rotation = -0.03
+	p.scale = Vector2(0.9, 0.9)
+	p.modulate.a = 0.0
+	var tw := p.create_tween().set_parallel(true)
+	tw.tween_property(p, "modulate:a", 1.0, 0.3)
+	tw.tween_property(p, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.chain().tween_interval(hold)
+	tw.chain().tween_property(p, "modulate:a", 0.0, 0.35)
+	tw.chain().tween_callback(p.queue_free)
 	await tw.finished
+
+
+
+# --- HOW TO PLAY: the minigame instructions, a practice go, READY --------------------------
+
+var _practice := false
+var _practice_log: Label
+var _practice_dot: Control
+var _practice_stick: TouchStick
+
+const CONTROL_HELP := {
+	"stick": "MOVE: drag the stick (or WASD / arrow keys)",
+	"tap": "TAP the button",
+	"hold": "HOLD the button down, let go to stop",
+	"swipe": "SWIPE across the pad in the direction shown",
+	"timing": "TAP when the ring lines up with the mark",
+	"trace": "TRACE the shape with your finger",
+	"pick": "PICK one of the options",
+}
+
+
+func _how_to_play(v: Dictionary, mg: Dictionary) -> void:
+	var me := _me()
+	card_box.add_child(PartyUi.label("HOW TO PLAY", 24, PartyUi.RED, true))
+	for line in mg.get("instructions", []):
+		card_box.add_child(PartyUi.label("• " + str(line), 18))
+	var ctl: Array = mg.get("controls", [])
+	var acts: Array = mg.get("actions", [])
+	if not ctl.is_empty() or not acts.is_empty():
+		card_box.add_child(PartyUi.label("CONTROLS", 22, PartyUi.RED, true))
+		for c in ctl:
+			var nm := str(c.get("label", c.get("do", ""))).replace("_", " ").to_upper()
+			card_box.add_child(PartyUi.label("• %s%s" % [CONTROL_HELP.get(str(c.kind), str(c.kind)), (" (" + nm + ")") if nm != "" else ""], 17))
+		if ctl.is_empty():
+			card_box.add_child(PartyUi.label("• Choose with the buttons that come up.", 17))
+	if _practice:
+		_practice_area(mg)
+	# who's ready
+	var ready: Array = v.get("ready", [])
+	var row := PartyUi.hbox(8)
+	for p in v.players:
+		if not (p.alive or p.get("ghost", false)):
+			continue
+		var is_ai := str(p.get("kind", "")) == "ai"
+		var ok := is_ai or ready.has(int(p.seat))
+		row.add_child(PartyUi.chip("%s %s" % [p.name, "READY" if ok else "..."], PartyUi.MINT if ok else PartyUi.CREAM, 15))
+	card_box.add_child(row)
+	var btns := PartyUi.hbox(12)
+	btns.alignment = BoxContainer.ALIGNMENT_CENTER
+	if not ctl.is_empty() or not acts.is_empty():
+		btns.add_child(PartyUi.button("STOP PRACTISING" if _practice else "PRACTICE", func():
+			_practice = not _practice
+			_sig.erase("card"), PartyUi.TURQ, 240.0, 22))
+	var im_ready := me >= 0 and ready.has(me)
+	var rb := PartyUi.primary("READY!" if not im_ready else "WAITING FOR THE OTHERS", func():
+		_practice = false
+		for s in local:
+			act.emit(s, {"t": "ready"}), 300.0)
+	rb.disabled = im_ready
+	btns.add_child(rb)
+	card_box.add_child(btns)
+
+
+## Practice: the game's real controls, wired to a little feedback line instead of the match.
+func _practice_area(mg: Dictionary) -> void:
+	var box := PartyUi.panel(PartyUi.TURQ.lerp(PartyUi.CREAM, 0.6), PartyUi.INK, 16)
+	var v2 := PartyUi.vbox(8)
+	box.add_child(v2)
+	v2.add_child(PartyUi.label("PRACTICE: nothing counts. Try it.", 18, PartyUi.INK, true))
+	_practice_log = PartyUi.label("", 18, PartyUi.BLOOD, true)
+	var row := PartyUi.hbox(14)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	var ctl: Array = mg.get("controls", [])
+	for c in ctl:
+		if str(c.kind) == "stick":
+			_practice_stick = TouchStick.new()
+			_practice_stick.custom_minimum_size = Vector2(170, 170) * PartyUi.bk()
+			row.add_child(_practice_stick)
+			var pen := Panel.new()
+			pen.add_theme_stylebox_override("panel", PartyUi.flat_box(PartyUi.INK.lerp(PartyUi.CREAM, 0.15), PartyUi.INK, 2))
+			pen.custom_minimum_size = Vector2(170, 170) * PartyUi.bk()
+			pen.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			_practice_dot = ColorRect.new()
+			_practice_dot.color = PartyUi.seat_colour(maxi(0, _me()))
+			_practice_dot.size = Vector2(18, 18)
+			_practice_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			pen.add_child(_practice_dot)
+			row.add_child(pen)
+			continue
+		var cc: Dictionary = c
+		var w := PartyControls.make(cc, func(a: Dictionary):
+			if is_instance_valid(_practice_log):
+				_practice_log.text = "✓ %s" % str(a.get("do", a.get("pick", "that"))).replace("_", " ").to_upper(), "")
+		row.add_child(w)
+	if ctl.is_empty():
+		for a in mg.get("actions", []):
+			var lab := str(a.get("label", a.get("name", "?")))
+			row.add_child(PartyUi.button(lab, func():
+				if is_instance_valid(_practice_log):
+					_practice_log.text = "✓ That's how you pick: %s" % lab, PartyUi.CREAM, 160.0, 16))
+	v2.add_child(row)
+	v2.add_child(_practice_log)
+	card_box.add_child(box)
+
+
+func _process(delta: float) -> void:
+	if _practice and is_instance_valid(_practice_stick) and is_instance_valid(_practice_dot):
+		var pen := _practice_dot.get_parent() as Control
+		var p := _practice_dot.position + _practice_stick.value * 220.0 * delta
+		_practice_dot.position = p.clamp(Vector2.ZERO, pen.size - _practice_dot.size)
+
+
+
+# --- THE SEARCH: the secret choice, and the reveal -------------------------------------------
+
+func _search_card(v: Dictionary) -> void:
+	var se: Dictionary = v.get("search", {})
+	var me := _me()
+	match str(se.get("stage", "")):
+		"choice":
+			card.visible = true
+			card_box.add_child(PartyUi.shout("TIME'S UP!", 40, PartyUi.RED))
+			var mine: Array = se.get("mine", [])
+			if se.get("holder", false):
+				card_box.add_child(PartyUi.label("You found %d scrap%s:" % [mine.size(), "" if mine.size() == 1 else "s"], 20, PartyUi.INK, true))
+				card_box.add_child(PartyUi.label("  ".join(mine.map(func(w): return "\"%s\"" % w)), 26, PartyUi.BLOOD, true))
+				card_box.add_child(PartyUi.label("Nobody will see what you choose until everyone has.", 16, PartyUi.DIM))
+				if se.get("chose", false):
+					card_box.add_child(PartyUi.label("DONE. WAITING FOR THE OTHERS...", 20, PartyUi.INK, true))
+				else:
+					var row := PartyUi.hbox(12)
+					row.alignment = BoxContainer.ALIGNMENT_CENTER
+					row.add_child(PartyUi.button("KEEP THEM\n(%d Teeth each)" % SearchEvent.KEEP_EACH, func(): act.emit(me, {"t": "search_choice", "keep": true}), PartyUi.ORANGE, 260.0, 20))
+					row.add_child(PartyUi.button("LAY THEM\nON THE TABLE", func(): act.emit(me, {"t": "search_choice", "keep": false}), PartyUi.TURQ, 260.0, 20))
+					card_box.add_child(row)
+			else:
+				card_box.add_child(PartyUi.label("You didn't find a thing. The others are deciding what to do with theirs.", 20, PartyUi.INK, true))
+		"reveal":
+			card.visible = true
+			var r: Dictionary = se.get("result", {})
+			var wn: Array = r.get("winners", [])
+			card_box.add_child(PartyUi.label("MOST SCRAPS FOUND", 20, PartyUi.DIM, true))
+			card_box.add_child(PartyUi.shout(" & ".join(wn.map(func(s): return str(v.players[int(s)].name))) + "  +%d TEETH" % SearchEvent.RACE_PRIZE if not wn.is_empty() else "NOBODY", 32, PartyUi.YELLOW))
+			var counts: Dictionary = r.get("counts", {})
+			var ch: Dictionary = r.get("choices", {})
+			var row2 := PartyUi.hbox(8)
+			for s in counts.keys():
+				var n := int(counts[s])
+				var what := "found nothing" if n == 0 else ("LAID %d" % n if str(ch.get(s, ch.get(str(s), "keep"))) == "lay" else "KEPT %d" % n)
+				row2.add_child(PartyUi.chip("%s: %s" % [v.players[int(s)].name, what], PartyUi.TURQ.lerp(PartyUi.CREAM, 0.5) if what.begins_with("LAID") else PartyUi.CREAM, 15))
+			card_box.add_child(row2)
+			if r.get("whole", false):
+				card_box.add_child(PartyUi.shout("THE NOTE, WHOLE:", 30, PartyUi.MINT))
+				card_box.add_child(PartyUi.label("\"NOBODY WINS ALONE. PUT US BACK TOGETHER.\"", 26, PartyUi.BLOOD, true))
+				card_box.add_child(PartyUi.shout("EVERYONE GETS A DEAD RAT", 34, PartyUi.YELLOW))
+			else:
+				card_box.add_child(PartyUi.shout("THE NOTE STAYS TORN", 30, PartyUi.RED))
+				if not r.get("all_found", false):
+					card_box.add_child(PartyUi.label("Not every scrap was found. Whatever it said, nobody will know.", 18))
+				else:
+					card_box.add_child(PartyUi.label("%d of %d pieces on the table. Somebody kept theirs." % [int(r.laid), int(r.total)], 18))

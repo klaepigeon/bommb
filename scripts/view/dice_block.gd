@@ -59,9 +59,40 @@ func _show(n: int) -> void:
 func _process(dt: float) -> void:
 	if _cycling:
 		_t += dt
-		if _t > 0.06:
+		position.y = _hover_at.y + sin(Time.get_ticks_msec() * 0.004) * 0.06
+		rotation.y += dt * 0.8
+		if _t > 0.07:
 			_t = 0.0
 			_show(randi_range(1, max_n))
+
+
+## Hang over someone's head, flicking through the numbers, waiting to be hit.
+func hover(at: Vector3) -> void:
+	if not visible or not _cycling or _hit:
+		position = at
+		scale = Vector3.ONE
+		rotation = Vector3.ZERO
+	visible = true
+	_cycling = true
+	_hit = false
+	_hover_at = at
+
+
+## Hit from below: it jolts up, stops on the number, and hangs there a moment.
+func hit(value: int) -> void:
+	_cycling = false
+	_hit = true
+	_show(value)
+	var tw := create_tween()
+	tw.tween_property(self, "position", _hover_at + Vector3(0, 0.25, 0), 0.08).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(self, "position", _hover_at, 0.25).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	tw.tween_interval(1.0)
+	tw.tween_property(self, "scale", Vector3.ONE * 0.01, 0.25)
+	tw.tween_callback(func(): visible = false; _hit = false)
+
+
+var _hit := false
+var _hover_at := Vector3.ZERO
 
 
 func roll_to(value: int, from: Vector3, to: Vector3, duration: float = 0.9) -> Tween:

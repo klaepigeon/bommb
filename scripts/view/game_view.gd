@@ -324,10 +324,9 @@ func _event(e: Dictionary) -> void:
 	var s := int(e.get("seat", -1))
 	match kind:
 		"say":
-			hud.say(str(e.text))
+			# the Caller doesn't talk: he gestures, and the minigame instructions do the explaining
 			caller.play(str(e.get("gesture", "")))
 			caller.set_mood(str(e.get("mood", "")))
-			robot.speak(clampf(str(e.text).length() * 0.05, 0.8, 4.0))
 			robot.mood(str(e.get("mood", "")))
 			var key := str(e.get("key", ""))
 			if key.begins_with("space_caller") or key.begins_with("event_") or key.begins_with("rule") or key.begins_with("special") or key in ["final_round", "finale", "award", "machine_warn", "missed_turn", "punch", "death"]:
@@ -348,25 +347,25 @@ func _event(e: Dictionary) -> void:
 		"roll":
 			var c: Contestant = contestants[s]
 			_anim(s, "dice_throw")
-			dice.visible = true
-			var to := c.position + Vector3(0.8, 0.3, 0.8)
-			dice.roll_to(int(e.n), c.position + Vector3(0, 3.2, 0), c.position + Vector3(0, 2.2, 0), 0.45)
+			if not dice.visible:
+				dice.hover(c.position + Vector3(0, 2.4, 0))
+			dice.hit(int(e.n))
 			Sfx.play("dice_rattle", -2.0)
 			stage.hall.flashboard.light(int(e.n))
 			director.request("dice", {"at": _puppet_at(s)}, 18, 1.4)
-			get_tree().create_timer(1.6).timeout.connect(func(): dice.visible = false)
 		"move":
 			var c2: Contestant = contestants[s]
 			if e.get("slide", false):
 				c2.walk_to(venue.stand_pos(int(e.space), s))
 			else:
-				c2.hop_to(venue.stand_pos(int(e.space), s), BoardRules.STEP_TIME * 0.85)
+				# on the move you go over the middle of every square; you step aside when you stop
+				c2.hop_to(venue.space_pos(int(e.space)) + Vector3(0, 0.02, 0), BoardRules.STEP_TIME * 0.7)
 				_counter(s, int(e.get("left", -1)))
 				Audio.sfx("step", 0.15, -10.0)
 			var at := on_table(venue.space_pos(int(e.space)))
 			var nxt: Array = graph.next_of(int(e.space))
 			var dir := (on_table(venue.space_pos(int(nxt[0]))) - at).normalized() if not nxt.is_empty() else Vector3.ZERO
-			director.request("follow", {"at": at, "dir": dir}, 12, 0.9)
+			director.request("follow", {"at": at}, 12, 1.2)
 		"prompt":
 			if str(e.kind) == "path" and contestants.has(s):
 				director.request("junction", {"at": _puppet_at(s)}, 16, 20.0)
@@ -374,6 +373,9 @@ func _event(e: Dictionary) -> void:
 			director.clear("junction")
 		"land":
 			_anim(s, "land")
+			if contestants.has(s):
+				var cl: Contestant = contestants[s]
+				get_tree().create_timer(0.5).timeout.connect(func(): if is_instance_valid(cl): cl.walk_to(venue.stand_pos(int(e.space), s)))
 			director.request("landing", {"at": _puppet_at(s)}, 14, 1.4)
 			var t := str(e.type)
 			if t in ["normal", "bonus", "start", "item", "hidden"]:
@@ -513,7 +515,6 @@ func _event(e: Dictionary) -> void:
 		"final_round":
 			hud.banner("LAST ROUND!", PartyUi.RED, 1.6)
 		"lead_change":
-			hud.banner("%s TAKES THE LEAD" % str(view.players[s].name).to_upper() if view.has("players") and s >= 0 and s < view.players.size() else "SOMEONE", PartyUi.YELLOW, 0.9)
 			_anim(s, "celebrate")
 		"door_open":
 			pass
@@ -627,6 +628,11 @@ func _results(e: Dictionary) -> void:
 
 
 func _process(delta: float) -> void:
+	# the dice block waits over the head of whoever's about to roll
+	if not view.is_empty() and str(view.phase) == "turn" and str(view.turn.get("sub", "")) == "pre":
+		var cs := int(view.turn.seat)
+		if contestants.has(cs) and not dice._hit:
+			dice.hover((contestants[cs] as Node3D).position + Vector3(0, 2.4, 0))
 	for sk in _ghost_t.keys():
 		_ghost_t[sk] -= delta
 		if _ghost_t[sk] <= 0.0:
@@ -721,6 +727,7 @@ func _facility(delta: float) -> void:
 				b.open_portals[id] = true
 			else:
 				b.open_portals.erase(id)
+	_update_scraps(b)
 	var away := _away()
 	if away and not _fp_active:
 		_fp_active = true
@@ -772,6 +779,46 @@ func _facility(delta: float) -> void:
 	stage._base_pos = Vector3(fp_pos.x, fy + EYE * (0.6 if Body.legs(viewer_body()) < 0.3 else 1.0), fp_pos.y)
 	stage.walk_yaw = fp_yaw
 	stage.walk_pitch = fp_pitch
+
+
+var _scrap_nodes: Array = []
+## THE SEARCH's scraps of paper: floating, slowly turning, faintly lit so you can find them.
+func _update_scraps(b: Building) -> void:
+	var se: Dictionary = view.get("search", {})
+	var sc: Array = se.get("scraps", []) if se.get("active", false) and str(se.get("stage", "")) == "search" else []
+	while _scrap_nodes.size() < sc.size():
+		var n := Node3D.new()
+		var paper := MeshInstance3D.new()
+		var qm := QuadMesh.new()
+		qm.size = Vector2(0.32, 0.24)
+		paper.mesh = qm
+		var m := StandardMaterial3D.new()
+		m.albedo_color = Color("efe4c4")
+		m.emission_enabled = true
+		m.emission = Color("ffe9a8")
+		m.emission_energy_multiplier = 0.6
+		m.cull_mode = BaseMaterial3D.CULL_DISABLED
+		paper.material_override = m
+		paper.rotation = Vector3(-0.5, 0, 0.2)
+		n.add_child(paper)
+		var glow := OmniLight3D.new()
+		glow.light_color = Color("ffd98a")
+		glow.light_energy = 0.7
+		glow.omni_range = 1.4
+		n.add_child(glow)
+		stage.hall.add_child(n)
+		_scrap_nodes.append(n)
+	for i in _scrap_nodes.size():
+		var n: Node3D = _scrap_nodes[i]
+		if i >= sc.size() or sc[i].taken:
+			n.visible = false
+			continue
+		n.visible = true
+		var q := Vector2(float(sc[i].pos[0]), float(sc[i].pos[1]))
+		var fy := b.floor_at(q, b.area_at(q))
+		var tt := Time.get_ticks_msec() * 0.001 + i
+		n.position = Vector3(q.x, fy + 0.85 + sin(tt * 2.0) * 0.06, q.y)
+		n.rotation.y = tt * 1.2
 
 
 ## The facility thing in reach (for the HUD's buttons).

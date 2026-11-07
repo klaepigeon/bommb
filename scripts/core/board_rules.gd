@@ -6,10 +6,10 @@ extends RefCounted
 ## then the ghosts take theirs. What each square type does is _land(). Anyone who's away
 ## from the table when their turn comes misses it: the board doesn't wait.
 
-const STEP_TIME := 0.24
-const AFTER_TIME := 0.9
+const STEP_TIME := 0.42
+const AFTER_TIME := 1.8
 const PROMPT_LIMIT := 20.0
-const MISSED_TIME := 0.9
+const MISSED_TIME := 1.6
 const LIMBS := ["hand_l", "hand_r", "arm_l", "arm_r", "leg_l", "leg_r"]
 const NORMAL_PAY := 3
 const BAD_TAKE := 3
@@ -227,7 +227,7 @@ func _roll(seat: int) -> void:
 		_after()
 		return
 	sub = "moving"
-	sub_t = -0.45   # let the block land
+	sub_t = -1.0   # let the block land and the number sink in
 
 
 func _after() -> void:
@@ -395,6 +395,10 @@ func _land() -> void:
 			_after()
 		return
 	match kind:
+		"search":
+			sub = "search"
+			core.search.start(s)
+			return
 		"start":
 			core.economy.award(s, 3 * mult, "start")
 			core.say("pass_start", {"name": name})

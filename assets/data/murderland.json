@@ -180,7 +180,7 @@
   },
   {
    "id": 5,
-   "type": "normal",
+   "type": "search",
    "district": "welcome",
    "pos": [
     0.7292,
@@ -330,7 +330,7 @@
   },
   {
    "id": 15,
-   "type": "normal",
+   "type": "search",
    "district": "woods",
    "pos": [
     0.828,
@@ -525,7 +525,7 @@
   },
   {
    "id": 28,
-   "type": "normal",
+   "type": "search",
    "district": "funhouse",
    "pos": [
     0.6113,
@@ -661,7 +661,7 @@
   },
   {
    "id": 37,
-   "type": "normal",
+   "type": "search",
    "district": "sunken",
    "pos": [
     0.3979,
@@ -815,7 +815,7 @@
   },
   {
    "id": 48,
-   "type": "normal",
+   "type": "search",
    "district": "giggleworks",
    "pos": [
     0.2023,
@@ -991,7 +991,7 @@
   },
   {
    "id": 60,
-   "type": "normal",
+   "type": "search",
    "district": "carnival",
    "pos": [
     0.2499,
@@ -1139,7 +1139,7 @@
   },
   {
    "id": 70,
-   "type": "normal",
+   "type": "search",
    "district": "royal",
    "pos": [
     0.4566,

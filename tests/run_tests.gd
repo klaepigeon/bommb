@@ -22,7 +22,7 @@ func _ready() -> void:
 		"full_matches", "lengths_and_counts", "awards", "callers_game", "rules", "events", "facility", "facility_misses",
 		"cutscenes", "save_reload", "hot_potato_defuse", "roulette_void", "chairs_hazards", "disconnect", "views_hide_secrets",
 		"cheating", "suspicion_death", "cage_dice", "cage_roulette", "ghosts_and_draws", "resurrection_square", "ghost_buys_life",
-		"roulette_social", "poison", "treatment", "all_minigames", "core_ten", "caller_reacts", "no_chat", "organ_trail", "escape_room"]
+		"roulette_social", "poison", "treatment", "all_minigames", "core_ten", "caller_reacts", "no_chat", "organ_trail", "escape_room", "search"]
 	for t in tests:
 		if args.has("only") and args.only != t:
 			continue
@@ -839,6 +839,8 @@ func _walk_to(core: MatchCore, seat: int, to: Vector2) -> void:
 
 func test_facility() -> void:
 	var core := _core()
+	check(not core.facility.can_leave(1), "nobody gets up whenever they like (the room's for SEARCH squares)")
+	core.facility.data.free_leave = true   # the room's own rules, tested with free leaving on
 	core._start_round()
 	check(core.facility.building.areas.size() > 3, "the facility is a real building")
 	_look_away(core)
@@ -905,6 +907,7 @@ func test_facility() -> void:
 	check(not core.p(me).away(), "walk back to your chair and sit")
 	# caught in the hall
 	var c2 := _core()
+	c2.facility.data.free_leave = true
 	c2._start_round()
 	var who := (c2.rules.current() + 2) % 4
 	_look_away(c2)
@@ -925,6 +928,7 @@ func test_facility_misses() -> void:
 	var responses := {}
 	for i in 60:
 		var core := _core(["local", "local", "local", "local"], 2200 + i)
+		core.facility.data.free_leave = true
 		core._start_round()
 		var me := (core.rules.current() + 3) % 4
 		_look_away(core)
@@ -938,6 +942,7 @@ func test_facility_misses() -> void:
 	check(responses.size() >= 5, "he doesn't always do the same thing (%d kinds)" % responses.size())
 	# a missed turn
 	var core := _core()
+	core.facility.data.free_leave = true
 	core._start_round()
 	var nxt := core.rules.order[(core.rules.idx + 1) % 4]
 	_look_away(core)
@@ -1625,6 +1630,7 @@ func test_organ_trail() -> void:
 
 func test_escape_room() -> void:
 	var core := _core()
+	core.facility.data.free_leave = true
 	core._start_round()
 	var fac := core.facility
 	var b := fac.building
@@ -1682,3 +1688,60 @@ func test_escape_room() -> void:
 	check(core.p(a).location == "escaped", "they walk out")
 	_until(core, func(): return core.ending != "", 40.0)
 	check(core.ending == "escape" and (core.ending_info.winners as Array).has(a) and (core.ending_info.winners as Array).has(c), "the match ends: they escaped the party")
+
+
+
+# --- THE SEARCH ----------------------------------------------------------------------------
+
+## A SEARCH square: everyone up, scraps found, the secret choice, the reveal, back to the turn.
+func test_search() -> void:
+	# all AI: they walk to the scraps themselves
+	var core := _core(["ai", "ai", "ai", "ai"], 41)
+	_to_turn(core, 0)
+	core.rules.sub = "search"
+	core.search.start(0)
+	check(core.phase == "search", "a search square starts THE SEARCH")
+	check(core.players.all(func(p): return p.away()), "everyone gets up to search")
+	check(not core.facility.can_leave(1), "nobody can get up on their own any more")
+	var rats_before: Array = core.players.map(func(p): return p.rats)
+	var saw_choice := [false]
+	var ok := _until(core, func():
+		if core.search.stage == "choice":
+			saw_choice[0] = true
+		return core.phase == "turn", 120.0)
+	check(ok, "the search ends and the turn carries on")
+	check(saw_choice[0], "there's a choice stage")
+	check(core.players.all(func(p): return not p.away()), "everyone's back at the table")
+	var r: Dictionary = core.search.result
+	check(not r.is_empty() and int(r.total) == 6, "six scraps, a result")
+	check(int(r.best) > 0, "the AI finds scraps (best %d)" % int(r.best))
+	if r.whole:
+		check(core.players.all(func(p): return p.rats == rats_before[p.seat] + 1), "the whole note: a Dead Rat each")
+	# people: everyone lays (a whole note), then one betrays
+	for betray in [false, true]:
+		var c2 := _core(["local", "local", "local", "local"], 43)
+		_to_turn(c2, 0)
+		c2.rules.sub = "search"
+		c2.search.start(0)
+		# walk everyone onto the scraps (the host takes positions at walking pace: step there)
+		for i in c2.search.scraps.size():
+			var sc: Dictionary = c2.search.scraps[i]
+			var s := i % 4
+			c2.players[s].pos = sc.pos
+			c2.tick(0.05)
+		check(c2.search.stage == "choice", "every scrap found: straight to the choice")
+		var before: Array = c2.players.map(func(p): return [p.rats, p.teeth])
+		for s in 4:
+			c2.action(s, {"t": "search_choice", "keep": betray and s == 1})
+		c2.tick(0.05)
+		check(c2.search.stage == "reveal", "all chosen: the reveal")
+		var r2: Dictionary = c2.search.result
+		if not betray:
+			check(r2.whole, "everyone laid theirs: the note is whole")
+			check(c2.players.all(func(p): return p.rats == int(before[p.seat][0]) + 1), "a Dead Rat each")
+		else:
+			check(not r2.whole, "one keeper: the note stays torn")
+			check(c2.players.all(func(p): return p.rats == int(before[p.seat][0])), "no Dead Rats")
+			check(c2.players[1].teeth > int(before[1][1]), "the keeper gets Teeth for the scraps")
+		_until(c2, func(): return c2.phase == "turn", 30.0)
+		check(c2.phase == "turn", "back to the board after the reveal")

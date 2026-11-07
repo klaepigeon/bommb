@@ -46,8 +46,10 @@ func _process(delta: float) -> void:
 	if Net.core == null:
 		return
 	_t += delta
-	bot.step(Net.last_view, delta)
 	var v: Dictionary = Net.last_view
+	# let the instructions card be seen before the bot presses READY
+	if v.is_empty() or str(v.get("phase", "")) != "mg_intro" or float(v.get("phase_t", 0.0)) > 2.5:
+		bot.step(Net.last_view, delta)
 	if v.is_empty():
 		return
 	var ph := str(v.phase)

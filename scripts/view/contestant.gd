@@ -288,7 +288,7 @@ func hop_to(p: Vector3, dur := 0.2) -> void:
 	_hop = create_tween()
 	_hop.tween_method(func(t: float):
 		var q := from.lerp(p, t)
-		q.y += sin(t * PI) * 0.9
+		q.y += sin(t * PI) * 0.5
 		position = q, 0.0, 1.0, dur).set_trans(Tween.TRANS_SINE)
 
 

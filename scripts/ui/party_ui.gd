@@ -31,11 +31,11 @@ const SPACE := {
 	"gamble": Color("f1c40f"), "caller": Color("b03a8a"), "trap": Color("6b4a2a"), "hidden": Color("4a4a5a"), "rulebook": Color("e8dcc0"),
 	"veto": Color("c8b080"), "death": Color("2b0008"), "surgery": Color("e8fff4"), "signpost": Color("3ac060"), "rotator": Color("ff6ad5"),
 	"floodgate": Color("2a7ab0"), "switch": Color("a0a0b0"), "conveyor": Color("707080"), "wheel": Color("ff9f1c"), "control": Color("ff2e63"),
-	"clue": Color("d8c8a0"), "door": Color("6a4a2e"), "note": Color("d8c8a0")}
+	"clue": Color("d8c8a0"), "door": Color("6a4a2e"), "note": Color("d8c8a0"), "search": Color("e8d27a")}
 const GLYPH := {"start": "GO", "normal": "+3", "bonus": "★", "bad": "−3", "event": "!", "item": "?", "shop": "$", "black_market": "££",
 	"medical": "+", "minigame": "▶", "duel": "VS", "battle": "⚔", "roulette": "●", "resurrect": "↑", "poison": "☠", "gamble": "×2",
 	"caller": "C", "trap": "▲", "hidden": "…", "rulebook": "§", "veto": "✕", "death": "✝", "surgery": "✚", "signpost": "⇆",
-	"rotator": "↻", "floodgate": "≈", "switch": "⇄", "conveyor": "»", "wheel": "✺", "control": "◎", "clue": "#", "door": "▯", "note": "~"}
+	"rotator": "↻", "floodgate": "≈", "switch": "⇄", "conveyor": "»", "wheel": "✺", "control": "◎", "clue": "#", "door": "▯", "note": "~", "search": "?!"}
 
 static var _title: Font
 static var _body: Font
@@ -78,10 +78,11 @@ static func box(bg: Color, border := INK, radius := 18, bw := 4, shadow := 6) ->
 	var m := 10.0 if radius < 20 else 22.0
 	for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
 		sb.set_texture_margin(side, m)
-	sb.content_margin_left = 14
-	sb.content_margin_right = 14
-	sb.content_margin_top = 8
-	sb.content_margin_bottom = 8
+	var cm := 14.0 if radius < 20 else 30.0
+	sb.content_margin_left = cm
+	sb.content_margin_right = cm
+	sb.content_margin_top = 8.0 if radius < 20 else 24.0
+	sb.content_margin_bottom = 8.0 if radius < 20 else 24.0
 	return sb
 
 

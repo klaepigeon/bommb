@@ -13,6 +13,8 @@ var fired := 0
 var kinds := {}
 var phases := {}
 var _audit_i := 0
+var _practised := {}
+var _practice_taps := 0
 
 
 func _ready() -> void:
@@ -131,6 +133,20 @@ func _choose(all: Array) -> Control:
 		cands.append(c)
 	if cands.is_empty():
 		return null
+	# each minigame: practise first (a few goes on the practice controls), then READY
+	var mgid := str(Net.core.mg_id) if Net.core else ""
+	if Net.core and Net.core.phase == "mg_intro" and not _practised.has(mgid):
+		for c in cands:
+			if c is Button and (c as Button).text == "PRACTICE":
+				_practised[mgid] = true
+				_practice_taps = 0
+				return c
+	if Net.core and Net.core.phase == "mg_intro" and _practice_taps < 3:
+		var pc: Array = cands.filter(func(c): return not (c is Button and ((c as Button).text.begins_with("READY") or (c as Button).text == "STOP PRACTISING")))
+		if not pc.is_empty():
+			_practice_taps += 1
+			kinds["practice"] = true
+			return pc[randi() % pc.size()]
 	for pref in ["PLAY", "SIT DOWN", "ROLL", "READY"]:
 		for c in cands:
 			if c is Button and (c as Button).text.begins_with(pref):

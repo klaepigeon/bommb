@@ -42,7 +42,7 @@ func setup(s: int, seed_v: int, over := {}) -> void:
 	perception = rng.randf_range(0.35, 0.85)
 	explore = rng.randf_range(0.1, 0.8)
 	crook = rng.randf_range(0.05, 0.7)
-	think_time = rng.randf_range(0.35, 0.8)
+	think_time = rng.randf_range(1.0, 1.7)
 	_leave_cd = rng.randf_range(15.0, 40.0)
 	for k in over.keys():
 		set(k, over[k])
