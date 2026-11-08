@@ -20,6 +20,7 @@ uniform bool use_emission_tex = false;
 uniform vec2 snap_res = vec2(320.0, 240.0);
 uniform bool use_vertex_color = false;
 uniform vec2 uv_scale = vec2(1.0);
+uniform bool use_alpha_cut = false;     // pierced carving: holes where the texture's alpha is 0
 // a hole knocked in a wall (the gap behind the bedroom wardrobe): fragments inside the box are
 // cut away, with a ragged edge. w = 1 when it's open.
 global uniform vec4 hole_min;
@@ -46,6 +47,7 @@ void fragment() {
 		}
 	}
 	vec4 c = texture(albedo_tex, UV * uv_scale) * albedo_color;
+	if (use_alpha_cut && c.a < 0.5) discard;
 	if (use_vertex_color) { c.rgb *= COLOR.rgb; }
 	ALBEDO = c.rgb;
 	ROUGHNESS = roughness * (use_roughness_tex ? texture(roughness_tex, UV * uv_scale).g : 1.0);

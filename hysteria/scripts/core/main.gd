@@ -16,6 +16,9 @@ var socko: Socko
 var socko_intro: SockoIntro
 var socko_hud: SockoHud
 var pause_menu: PauseMenu
+var labyrinth: Labyrinth
+var in_labyrinth := false
+const LAB_AT := Vector3(400, 0, 0)      # far from the flat; each is hidden while you're in the other
 var socko_tutorial: SockoTutorial
 
 func _ready() -> void:
@@ -65,6 +68,8 @@ func _ready() -> void:
 	socko_intro = SockoIntro.new(); socko_intro.name = "SockoIntro"
 	add_child(socko_intro)
 	socko_intro.setup(socko, player, encounter)
+	labyrinth = Labyrinth.new(); labyrinth.name = "Labyrinth"; labyrinth.position = LAB_AT
+	viewport.add_child(labyrinth); labyrinth.visible = false; labyrinth.process_mode = Node.PROCESS_MODE_DISABLED
 	pause_menu = PauseMenu.new(); pause_menu.name = "PauseMenu"; pause_menu.setup(player); add_child(pause_menu)
 	socko_hud = SockoHud.new(); socko_hud.name = "SockoHud"; add_child(socko_hud)
 	socko_tutorial = SockoTutorial.new(); socko_tutorial.name = "SockoTutorial"; add_child(socko_tutorial)
@@ -81,6 +86,8 @@ func _ready() -> void:
 		dread.level = float(args.dread)
 	if args.has("touch"):
 		touch.visible = true; player.touch_ui = true; pause_menu.pause_btn.visible = true
+	if args.has("lab"):
+		enter_labyrinth()
 	if args.has("shots"):
 		_shots(args.shots)
 	else:
@@ -89,6 +96,30 @@ func _ready() -> void:
 		else:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 			Game.say("Flat 47. [WASD] move  [Shift] run  [C] crouch  [E] use  [F] torch", 6.0)
+
+## Through the gap behind the wardrobe and back. Only one of the two places exists at a time.
+func enter_labyrinth() -> void:
+	in_labyrinth = true
+	labyrinth.visible = true; labyrinth.process_mode = Node.PROCESS_MODE_INHERIT
+	world.get_node("Apartment").visible = false
+	(world.get_node("Environment") as WorldEnvironment).environment = labyrinth.env
+	player.global_transform = labyrinth.global_transform * labyrinth.arrive
+	player.yaw = player.global_transform.basis.get_euler().y; player.pitch = 0.0
+	player.velocity = Vector3.ZERO
+
+func leave_labyrinth(to: Transform3D) -> void:
+	in_labyrinth = false
+	labyrinth.visible = false; labyrinth.process_mode = Node.PROCESS_MODE_DISABLED
+	world.get_node("Apartment").visible = true
+	(world.get_node("Environment") as WorldEnvironment).environment = world.environment
+	player.global_position = to.origin; player.yaw = to.basis.get_euler().y; player.velocity = Vector3.ZERO
+
+func _physics_process(_d: float) -> void:
+	if in_labyrinth:
+		var local := labyrinth.to_local(player.global_position)
+		var w := labyrinth.wrap(local)
+		if w != local:
+			player.global_position = labyrinth.to_global(w)
 
 ## The screen pass works in physical pixels; the low-res grid is SHRINK canvas pixels, which the
 ## stretch mode scales up on high-density screens.
