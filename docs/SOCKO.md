@@ -109,7 +109,7 @@ nods), **manipulator** (still, held smile, sympathetic talking, divided attentio
 idles, forced smile; now and then he goes dead still, then straight back to cheerful). Defiance
 2 → frustrated, 4.5 → angry; it decays, and doing what he wants brings him back. Wired: the
 intro (presenter), walking off (companion), the labyrinth (manipulator), looking at clues and
-buying memory skills (defied), the revolver, Headshot, Marta dead (obeyed), the key and the bath
+buying memory skills (defied), calming Marta with Sonya's shoes (heavily defied), the revolver, Headshot, Marta dead (obeyed), the key and the bath
 (defied), the axe or gun on the chain (obeyed).
 
 **Dialogue:** `say(text, emotion, volume, style, cues)`. Inline cues in `{}` fire on the next word

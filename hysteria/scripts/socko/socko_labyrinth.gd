@@ -30,6 +30,7 @@ func setup(p_socko: Socko, p_player: Node, p_main: Node, p_hud: SockoHud, p_hunt
 		_say("dead2", "What? It's a… word. Come on.", "lying", 0.9, 1.2))
 	# he gave her the shoe. Socko hates this.
 	_hunter.calmed.connect(func(for_good: bool):
+		socko.director.defied(3.0 if for_good else 1.5)   # the shoes: the worst thing you could do to him
 		if for_good:
 			_say("peace", "…", "uncanny", 0.5, 0.5, false, true)
 			_say("peace2", "She's still in there, you know. In case you were wondering. Gun works fine on sad people.", "angry", 0.9, 4.0)

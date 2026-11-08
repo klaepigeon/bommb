@@ -140,10 +140,10 @@ func apply_pose() -> void:
 	# fingers lift from the knuckles and bend at the middle joint; the thumb drops from the web.
 	# The fingers do more of the work (a puppeteer's thumb mostly holds still). Twist wrings the
 	# two jaws against each other, a little.
-	skel.set_bone_pose_rotation(B.FINGERS, Quaternion(Basis.from_euler(Vector3(j * 0.56 - c * 0.22, tw * 0.1, skew * 0.3 * j - tw * 0.22))))
-	skel.set_bone_pose_rotation(B.FINGERTIPS, Quaternion(Basis.from_euler(Vector3(j * 0.2 - c * (0.3 if c > 0.0 else 0.42), 0, 0))))
-	skel.set_bone_pose_rotation(B.THUMB, Quaternion(Basis.from_euler(Vector3(-j * 0.4 + c * 0.1, -tw * 0.08, -skew * 0.2 * j + tw * 0.2))))
-	skel.set_bone_pose_rotation(B.THUMBTIP, Quaternion(Basis.from_euler(Vector3(-j * 0.18 + c * 0.2, 0, 0))))
+	skel.set_bone_pose_rotation(B.FINGERS, Quaternion(Basis.from_euler(Vector3(j * 0.36 - c * 0.22, tw * 0.1, skew * 0.3 * j - tw * 0.22))))
+	skel.set_bone_pose_rotation(B.FINGERTIPS, Quaternion(Basis.from_euler(Vector3(j * 0.1 - c * (0.3 if c > 0.0 else 0.42), 0, 0))))
+	skel.set_bone_pose_rotation(B.THUMB, Quaternion(Basis.from_euler(Vector3(-j * 0.27 + c * 0.1, -tw * 0.08, -skew * 0.2 * j + tw * 0.2))))
+	skel.set_bone_pose_rotation(B.THUMBTIP, Quaternion(Basis.from_euler(Vector3(-j * 0.08 + c * 0.2, 0, 0))))
 	# the corners of the mouth: up (smile), down (frown), back (wide), in (pursed). Each side on
 	# its own, so a smile can be lopsided.
 	for side in [-1, 1]:
@@ -370,7 +370,7 @@ func _build_sock() -> ArrayMesh:
 	for r in R:
 		for ia in NA:
 			pk.quad(pg[r][ia], pg[r][ia + 1], pg[r + 1][ia + 1], pg[r + 1][ia])
-	mouth_mat = _felt_mat(Color("3d0d10"), 0.1)   # dark inside: a cavity, not a red lamp
+	mouth_mat = _mouth_mat()
 	pk.commit(mesh, mouth_mat)
 	# ---- the red felt tongue, stitched to the lower jaw
 	var tg := ClothSkin.new()
@@ -431,6 +431,21 @@ func _cloth_mat() -> ShaderMaterial:
 	var m := ShaderMaterial.new(); m.shader = CLOTH
 	m.set_shader_parameter("albedo_tex", _sock_tex())
 	m.set_shader_parameter("fuzz", 0.16)
+	return m
+
+## The mouth's lining: muted red felt at the lips, darkening into the throat (v: upper lip 0 →
+## deepest 0.5 → lower lip 1), so an open mouth reads as a felt mouth, not a hole or a lamp.
+func _mouth_mat() -> ShaderMaterial:
+	var m := ShaderMaterial.new(); m.shader = CLOTH
+	var img := Image.create(8, 16, false, Image.FORMAT_RGB8)
+	var rng := RandomNumberGenerator.new(); rng.seed = 77
+	for y in 16:
+		var k := absf((y + 0.5) / 16.0 - 0.5) * 2.0          # 1 at the lips, 0 in the throat
+		var c := Color("2a080a").lerp(Color("8e2a26"), smoothstep(0.15, 0.95, k))
+		for x in 8:
+			img.set_pixel(x, y, c * (0.9 + rng.randf() * 0.2))
+	m.set_shader_parameter("albedo_tex", ImageTexture.create_from_image(img))
+	m.set_shader_parameter("fuzz", 0.12)
 	return m
 
 func _felt_mat(c: Color, fuzz: float) -> ShaderMaterial:

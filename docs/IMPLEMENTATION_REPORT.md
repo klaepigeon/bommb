@@ -34,7 +34,7 @@ the later direction is in the game, and the conflict is listed here rather than 
 | Flat 47 | working: rooms, doors, drawers, ~130 physics props, documents, "outside" white void and sticky notes, modelled skirting/coving/roses | `flat47.gd`, `flat_detail.gd` |
 | Kurt's right arm and hand | working: anatomical two-bone IK, articulated fingers, grips, reach | `kurt_arm.gd`, `player.gd` |
 | Socko | working: skinned sock on the hand, mouth formed by fingers and thumb, googly-eye physics, layered animation (hand, puppet, springs, intention), gestures, gaze, torch from his mouth | `scripts/socko/` |
-| Socko's agenda | partial: tutorial lines, labyrinth agenda (rush, kill Marta, headshot), reactions to clues, shoes, killing, the escape; no emotional progression model yet | `socko_tutorial.gd`, `socko_labyrinth.gd` |
+| Socko's agenda | partial: tutorial lines, labyrinth agenda (rush, kill Marta, headshot), reactions to clues, shoes, killing, the escape; emotional progression (presenter → companion → manipulator, frustrated / angry from defiance) in `SockoDirector` (see SOCKO.md) | `socko_tutorial.gd`, `socko_labyrinth.gd` |
 | The opening | working: Marta at the table, look/touch/grab, "Have you seen the boxes?", blackout, Socko's introduction | `marta_encounter.gd`, `socko_intro.gd` |
 | The labyrinth | working: the impossible town under the Romanovs, wrapping main street, modelled facades, interiors, the frozen fight, environmental story (Rasputin, Trickshot, Sonya) | `scripts/labyrinth/` |
 | Marta the hunter | working: hunts by sound and sight, holds Kurt, can be shot dead, or calmed with Sonya's shoes (one for a while, the pair for good) | `marta_hunter.gd` |
