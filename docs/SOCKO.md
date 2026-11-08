@@ -9,7 +9,6 @@ tongue on the protagonist's **left** hand, there **only** after he wakes.
 | File | What it is |
 |---|---|
 | `scripts/socko/sock_rig.gd` (`SockRig`) | The forearm, hand and sock as **one skinned mesh on one skeleton**: forearm → hand → fingers → fingertips (upper jaw) / thumb → thumbtip (lower jaw). The coat sleeve, the googly eyes (on a `BoneAttachment3D` on the finger bone, with physically simulated pupils). |
-| `scripts/player/right_hand.gd` (`RightHand`) | Kurt's right arm and hand, the one that does everything: reaches for what he uses, grips what he carries, flicks to throw, holds weapons (`hold_weapon`). Jointed PS1-style like Marta. |
 | `scripts/socko/socko.gd` (`Socko`) | The performance controller: the bible's four layers (§3), emotions (§5), gestures (§6), gaze priority (§7.2), speech (§7.5), independent intention (§9). |
 | `scripts/socko/socko_intro.gd` (`SockoIntro`) | Story bible beats 9–10: the hand rising, then the six introduction lines, waiting on the player. |
 | `scripts/socko/socko_tutorial.gd` (`SockoTutorial`) | The bible's tutorial lines, each once, when relevant: walking, crouching (prompted, then "you've done this before"), the first pickup, turning something over too long, the first loud drop or throw. Each comes with a short control hint (keyboard, pad or touch wording). |
@@ -35,8 +34,8 @@ tongue on the protagonist's **left** hand, there **only** after he wakes.
   body toward the right, and the wrist turned in so the face comes round to him at about three
   quarters. Only the swing from the elbow lags behind a turn. A ray pulls the hand in against
   walls and doors.
-- **Kurt's hands:** the right does everything (interacting, carrying, throwing, weapons). The left
-  is Socko's and is never busy.
+- **Kurt's hands:** the right (`KurtArm`, see docs/KURT.md) does everything: interacting,
+  carrying, throwing, weapons. The left is Socko's and is never busy.
 - **The torch is in his mouth.** From the moment Socko appears, Kurt's torch light comes out from
   between his jaws, and nobody explains it. [F] / the TORCH button switches it. He holds his mouth
   open for it and aims it where Kurt is looking (what's under the crosshair). It's as bright as
@@ -84,6 +83,5 @@ angry and furious lines open wider and lopsided.
 - **Fabric wrinkles** are static folds plus skinning. There are no dynamic wrinkle maps.
 - **Tutorial lines not yet wired:** the pistol, reloading, the bath, the bolt, and sparing or
   killing her. They need systems that don't exist in Godot yet.
-- **Weapons:** none exist in Godot yet. `RightHand.hold_weapon()` is where one goes.
-- **Right hand grip** is generic: one grip pose sized to the object, no per-object hand poses.
+- **Weapons:** none exist in Godot yet; they go in Kurt's right hand (`KurtArm`, docs/KURT.md).
 - Tested on desktop under software rendering only, not on an Android device yet.

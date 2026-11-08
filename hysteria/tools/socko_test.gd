@@ -43,6 +43,7 @@ func _initialize() -> void:
 	await _shot("1_rising", 1.5)
 	await _wait(2.9)
 	await _shot("2_hi", 0.4)
+	await _until(func(): return intro.state >= intro.S.HI, 4.0)
 	ok = _check(intro.state >= intro.S.HI, "\"…Hi.\"") and ok
 	# mouth moves with speech, shuts after
 	var max_jaw := 0.0
@@ -130,7 +131,6 @@ func _initialize() -> void:
 	ok = _check((rig.eyes[0].p as Vector2).distance_to(before) > 0.002, "…and a jerk of the hand rattles them") and ok
 
 	# ---- the right hand does the doing
-	var rh = p.right_hand
 	p.global_position = Vector3(5.2, 0, 4.5); p.yaw = PI / 2; p.pitch = -0.15   # facing Sonya's room door?
 	var best: RigidBody3D
 	for n in main.world.find_children("*", "RigidBody3D", true, false):
@@ -138,9 +138,10 @@ func _initialize() -> void:
 	best.global_position = p.hold.global_position
 	p.grab(best)
 	await _wait(0.6)
-	var grip: float = rh.wrist.global_position.distance_to(best.global_position)
-	var side: float = (p.cam.global_transform.affine_inverse() * rh.wrist.global_position).x
-	ok = _check(grip < 0.2 and side > 0.0, "carrying: the right hand holds it (%.2f m off, on the right)" % grip) and ok
+	var palm: Vector3 = p.global_transform * p.arm.palm_point()
+	var grip: float = palm.distance_to(best.global_position)
+	var side: float = (p.cam.global_transform.affine_inverse() * palm).x
+	ok = _check(grip < 0.2 and side > 0.0, "carrying: Kurt's right hand holds it (%.2f m off, on the right)" % grip) and ok
 	await _shot("9_right_hand_carry", 0.2)
 	p.throw()
 	await _wait(0.15)
