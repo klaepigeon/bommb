@@ -24,6 +24,7 @@ var skill_menu: SkillMenu
 var socko_lab: SockoLabyrinth
 var escape: FlatEscape
 var save_game: SaveGame
+var memory: MemoryEffects
 ## gutterspace nuggets: where they hang (the flat, then the labyrinth in its own space)
 const NUGGETS_FLAT := [Vector3(3.4, 1.1, 4.2), Vector3(1.2, 0.9, 1.0), Vector3(8.2, 1.3, 2.6), Vector3(9.3, 0.8, 6.9),
 	Vector3(6.1, 1.0, 0.7), Vector3(5.2, 1.2, 6.6), Vector3(1.6, 1.4, 6.8), Vector3(7.6, 1.5, 4.6)]
@@ -106,8 +107,10 @@ func _ready() -> void:
 	pause_menu.skill_menu = skill_menu
 	socko_lab = SockoLabyrinth.new(); socko_lab.name = "SockoLabyrinth"; add_child(socko_lab)
 	socko_lab.setup(socko, player, self, socko_hud, hunter, skill_menu)
+	_flat_detail()
 	escape = FlatEscape.new(); escape.name = "FlatEscape"; add_child(escape)
 	escape.setup(world, player, self)
+	memory = MemoryEffects.new(); memory.name = "MemoryEffects"; add_child(memory); memory.setup(self)
 	save_game = SaveGame.new(); save_game.name = "SaveGame"; save_game.setup(self); add_child(save_game)
 	pause_menu.save_game = save_game
 
@@ -137,11 +140,23 @@ func _ready() -> void:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 			Game.say("Flat 47. [WASD] move  [Shift] run  [C] crouch  [E] use  [F] torch", 6.0)
 
+## Skirting, coving and ceiling roses in Flat 47 (FlatDetail finds the walls with rays, so it
+## waits a physics frame for the walls to be in the physics world)
+func _flat_detail() -> void:
+	await get_tree().physics_frame
+	var lv: Dictionary = world.get("level")
+	var n := FlatDetail.build(world, lv.get("rooms", {}), lv.get("lights", []))
+	print("flat detail: %d runs" % n)
+
 ## Launching the game continues the saved one (only as the real main scene: not under the tests,
 ## which make their own).
 func _continue() -> void:
-	if get_tree().current_scene == self:
-		save_game.load_game()
+	if get_tree().current_scene != self or not SaveGame.exists(): return
+	var card: CanvasLayer = load("res://scripts/ui/title_card.gd").new()
+	card.chosen.connect(func(cont: bool):
+		if cont: save_game.load_game()
+		else: SaveGame.wipe())
+	add_child(card)
 
 ## Through the gap behind the wardrobe and back. Only one of the two places exists at a time.
 func enter_labyrinth() -> void:
@@ -159,6 +174,13 @@ func leave_labyrinth(to: Transform3D) -> void:
 	world.get_node("Apartment").visible = true
 	(world.get_node("Environment") as WorldEnvironment).environment = world.environment
 	player.global_position = to.origin; player.yaw = to.basis.get_euler().y; player.velocity = Vector3.ZERO
+
+## the screen grain's frame: 12 a second, like film (the shader's comment says why)
+var _grain_t := 0.0
+func _process(delta: float) -> void:
+	_grain_t += delta
+	if container and container.material:
+		(container.material as ShaderMaterial).set_shader_parameter("grain_seed", float(int(_grain_t * 12.0) % 64))
 
 func _physics_process(_d: float) -> void:
 	if Skills.owned("second_wind") and not Input.is_action_pressed("sprint"):

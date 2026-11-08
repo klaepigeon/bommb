@@ -1,5 +1,8 @@
 # HYSTERIA — Project and Asset Audit
 
+> **Superseded** for the Godot project by `docs/IMPLEMENTATION_REPORT.md`. This audit describes
+> the earlier Three.js build.
+
 Deliverable 2. What exists in `klaepigeon/bommb` as of commit `5276b90`, measured against the
 master development prompt. No assets or systems are listed here that are not in the repository.
 

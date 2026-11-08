@@ -117,11 +117,21 @@ func go_through(inward: bool) -> void:
 	player.set("locked", true)
 	Game.fade.emit(1.0, 0.45)
 	await get_tree().create_timer(0.55).timeout
+	# what he's carrying comes through with him: kept where it is relative to his hand
+	var held: RigidBody3D = player.get("held")
+	var rel := Transform3D()
+	if held: rel = (player.get("hold") as Node3D).global_transform.affine_inverse() * held.global_transform
 	if inward:
 		main.call("enter_labyrinth")
 	else:
 		main.call("leave_labyrinth", Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(7.05, 0, 1.25)))
 	player.set("crouched", false)
+	if held and is_instance_valid(held):
+		held.global_transform = (player.get("hold") as Node3D).global_transform * rel
+		held.linear_velocity = Vector3.ZERO
+		# the prop now belongs to the place he's in, so it hides and shows with it
+		var home: Node = main.labyrinth if inward else world
+		if held.get_parent() != home: held.reparent(home)
 	await get_tree().create_timer(0.15).timeout
 	player.set("locked", false)
 	Game.fade.emit(0.0, 0.7)

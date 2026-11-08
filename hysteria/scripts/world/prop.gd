@@ -55,6 +55,10 @@ func _on_hit(_other: Node) -> void:
 	var loud := clampf(v * pow(mass, 0.35) / 7.0, 0.1, 1.0)
 	Sfx.play(get_parent(), "thud", global_position, linear_to_db(loud) + 2.0)
 	Noises.make(get_tree(), global_position, loud, "impact", thrown_by if thrown_by else self)
+	# a hard enough hit does damage to what can take it (a padlock): momentum, roughly
+	var n: Node = _other
+	while n and not n.has_method("struck"): n = n.get_parent()
+	if n: n.call("struck", v * mass, self)
 
 func prompt() -> String:
 	return ("Pick up " + title.to_lower()) if liftable else ""

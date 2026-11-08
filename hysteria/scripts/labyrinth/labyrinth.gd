@@ -188,7 +188,10 @@ func _bay(c: int, r: int, d: String, f: Facades.Frame) -> void:
 		var floors := 3 if (r >= 8 and r <= 11) else (3 if house.randf() < 0.3 else 2)
 		var s := {"rng": rng, "wall": p[0], "ground": p[1] if house.randf() < 0.7 else p[0],
 			"hood": ["flat", "pediment", "arch"][house.randi() % 3], "floors": floors,
-			"lit_up": 0.18, "drainpipe": rng.randf() < 0.25, "kind": "window" if rng.randf() < 0.75 else "blank"}
+			"lit_up": 0.18, "drainpipe": (kc % 2 == 1 and house.randf() < 0.65) or rng.randf() < 0.1, "kind": "window" if rng.randf() < 0.75 else "blank",
+			# houses are two bays wide: quoins and a party wall at each end, a pilaster between
+			"house_left": kc % 2 == 0, "house_right": kc % 2 == 1, "balcony": rng.randf() < 0.3,
+			"chimney": house.randf() < 0.6 and kc % 2 == 0, "canopy": rng.randf() < 0.5}
 		s.merge(front, true)
 		if s.kind == "hole":
 			_hole_bay(f)
@@ -292,6 +295,14 @@ func _environment() -> void:
 	env.fog_enabled = true; env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
 	env.fog_light_color = Color(0.05, 0.058, 0.075); env.fog_density = 0.075; env.fog_sky_affect = 0.0
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES; env.tonemap_exposure = 1.25
+	# a thin, cold moon, high and across the main street: no shadows (a directional light without
+	# them costs nothing extra and never flickers), just enough to model the cornices, the courses
+	# of the rustication, the logs, against the night. It goes with the town (hidden with it).
+	var moon := DirectionalLight3D.new(); moon.name = "Moon"
+	moon.light_color = Color(0.55, 0.63, 0.88); moon.light_energy = 0.32; moon.light_specular = 0.15
+	moon.shadow_enabled = false
+	moon.rotation = Vector3(deg_to_rad(-38.0), deg_to_rad(28.0), 0.0)
+	add_child(moon)
 
 ## The cathedral: an onion dome on a drum, gilded, with a cross; always 70 m off to the south
 ## and 30 up, wherever you go. Unfogged, so it hangs in the black like a thing you could reach.

@@ -163,9 +163,24 @@ Memory skills calm her and reveal more of the story.
   girl's voice counting in Russian, hide-and-seek: *«…семь, восемь, девять, десять. Я иду
   искать.»* It stops when you listen for it. Socko goes dead still.
 
+**Marta and Sonya's shoes (built; PROPOSED, owner to approve):** she keeps asking for them
+("Sonya, shoes.", "Have you seen them?"). The pair are in Flat 47: the left in the hall, the
+right at the bottom of the black bath. Anything carried goes through the wardrobe gap with Kurt.
+Hold a red shoe out to her, or have one in hand when she reaches him, and she takes it instead
+of him: one shoe calms her for two minutes (deaf, drifting, head down to it, a warmer light,
+*"…Sonya's."*, then *"…the other one."*); the pair, and she goes to the nursery and sits by the
+door with them in her lap, for good. Socko: *"No. No no no. What are you doing? She was RIGHT
+THERE. Shoot her!"* … *"…Fine. Your way. Your slow, slow way."*; the pair: silence, then *"She's
+still in there, you know. In case you were wondering. Gun works fine on sad people."* At the
+chapter's end: *"Shoes. You gave her shoes. Next time, we do it my way."* She can still be shot
+while calm; that's the player's to choose.
+
+**More ways through the chain (built):** heavy things thrown at the padlock add up until its
+hasp gives (the axe twice; lighter things more often; a bottle's too light).
+
 **Saving (built):** one quiet slot. It saves every 30 s once Socko is on the hand, on pause, and
 when the app is put away; launching continues. "Restart chapter", `-- fresh`, and
-finishing the chapter wipe it.
+finishing the chapter wipe it. Save game in the pause menu saves now (or says why not); launching with a save asks Continue / New game. Moved objects stay where he left them, in either place.
 
 ## 3. The boxes (the question is load-bearing)
 

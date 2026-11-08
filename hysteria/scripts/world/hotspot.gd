@@ -6,6 +6,7 @@ extends StaticBody3D
 var prompt_text := ""
 var on_use := Callable()
 var on_shot := Callable()     # (point) -> bool
+var on_struck := Callable()   # (momentum, prop): something thrown or swung into it
 
 static func make(parent: Node, at: Vector3, size: Vector3, text: String, use := Callable(), shot_cb := Callable()) -> Hotspot:
 	var h := Hotspot.new(); h.prompt_text = text; h.on_use = use; h.on_shot = shot_cb
@@ -18,6 +19,9 @@ func prompt() -> String:
 
 func interact(_player: Node) -> void:
 	if on_use.is_valid(): on_use.call()
+
+func struck(momentum: float, by: Node) -> void:
+	if on_struck.is_valid(): on_struck.call(momentum, by)
 
 func shot(point: Vector3, _normal: Vector3, _headshot_kills: bool, _shape: int) -> bool:
 	return on_shot.call(point) if on_shot.is_valid() else false

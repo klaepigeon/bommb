@@ -28,6 +28,14 @@ func setup(p_socko: Socko, p_player: Node, p_main: Node, p_hud: SockoHud, p_hunt
 		socko.director.obeyed(2.0)
 		_say("dead", "Trickshot's still got it!", "happy", 1.2, 0.0, false, true)
 		_say("dead2", "What? It's a… word. Come on.", "lying", 0.9, 1.2))
+	# he gave her the shoe. Socko hates this.
+	_hunter.calmed.connect(func(for_good: bool):
+		if for_good:
+			_say("peace", "…", "uncanny", 0.5, 0.5, false, true)
+			_say("peace2", "She's still in there, you know. In case you were wondering. Gun works fine on sad people.", "angry", 0.9, 4.0)
+		else:
+			_say("calm1", "No. No no no. What are you doing? She was RIGHT THERE. Shoot her!", "furious", 1.2, 0.2, false, true)
+			_say("calm2", "…Fine. Your way. Your slow, slow way.", "disappointed", 0.8, 2.0))
 	_hunter.held_kurt.connect(func(): _say("held%d" % Time.get_ticks_msec(), "Up. Up. She's had her go. Now we have ours.", "angry", 1.0, 4.5, true))
 	_skills.bought.connect(func(id: String):
 		if id == "headshot": socko.director.obeyed(1.5)

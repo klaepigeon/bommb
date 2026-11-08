@@ -167,6 +167,7 @@ func look_at_kurt(seconds := 3.0) -> void:
 func take_torch(lamp: SpotLight3D) -> void:
 	torch = lamp.duplicate() as SpotLight3D
 	torch.name = "MouthLight"
+	torch.shadow_normal_bias = 1.6       # no acne shimmer on the walls it lights, on a phone's shadow precision
 	torch.top_level = true
 	add_child(torch)
 	torch_on = lamp.visible
@@ -473,15 +474,32 @@ func _process(delta: float) -> void:
 var _face_s := 0.0
 var _hide := 0.0
 
+var _torch_dir := Vector3.ZERO
+var _torch_pos := Vector3.ZERO
+var _glow_k := 0.6
+var _t_torch := 0.0
+
 func _update_torch() -> void:
 	if not torch:
 		return
 	torch.visible = torch_on
-	var k := 0.15 + 0.85 * smoothstep(0.04, 0.3, rig.jaw)    # shut mouth, little light; talking, it pulses
+	# The light comes out of his mouth, but it's a steady lamp: it doesn't pulse with his jaw (the
+	# whole lit room pulsing with every syllable read as flicker) and it doesn't ride every spring
+	# in the hand. The source sits at the mouth, a little behind; the beam goes mostly where Kurt
+	# looks with a touch of where the mouth points, and both are smoothed like a lamp held steady.
+	var dt := get_process_delta_time()
+	var m := rig.mouth_global()
+	var look := -cam.global_transform.basis.z
+	var want_dir := (look * 0.85 + (-m.basis.z) * 0.15).normalized()
+	_torch_dir = want_dir if _torch_dir == Vector3.ZERO else _torch_dir.slerp(want_dir, 1.0 - exp(-dt / 0.12)).normalized()
+	_torch_pos = m.origin if _torch_pos == Vector3.ZERO else _torch_pos.lerp(m.origin, 1.0 - exp(-dt / 0.06))
+	_glow_k = lerpf(_glow_k, 0.6 + 0.4 * smoothstep(0.04, 0.3, rig.jaw), 1.0 - exp(-dt / 0.25))
 	if torch_on:
-		torch.global_transform = rig.mouth_global()
-		torch.light_energy = 2.4 * k
-	rig.mouth_mat.set_shader_parameter("glow", Vector3(1.0, 0.85, 0.65) * (1.6 * k if torch_on else 0.0))
+		var up := cam.global_transform.basis.y
+		torch.global_transform = Transform3D(Basis.looking_at(_torch_dir, up), _torch_pos)
+		torch.light_energy = 2.4 * (0.98 + 0.02 * sin(_t_torch * 1.9))
+		_t_torch += dt
+	rig.mouth_mat.set_shader_parameter("glow", Vector3(1.0, 0.85, 0.65) * (1.6 * _glow_k if torch_on else 0.0))
 var _pull := 0.0
 
 ## Where the elbow-forearm goes, in the camera's frame: blended between held ahead (show), low
