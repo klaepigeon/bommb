@@ -244,14 +244,14 @@ export function buildOpenings() {
   makeDoor({ id: 'dChild', hinge: 'a0', swing: 1, open: 0, max: 1.5, color: '#c7c8bd', seed: 5, scratches: false, text: null });
   makeDoor({ id: 'dBath', hinge: 'a1', swing: 1, open: 0, max: 1.45, color: '#d6d2c2', seed: 6, stiff: true, stuckOnce: 'Swollen with damp. It gives a little.', creak: 'doorScrape' });
   // the box-room door: bolted on the living-room side
-  const store = makeDoor({ id: 'dStore', hinge: 'a1', swing: 1, open: 0, max: 1.45, color: '#b9ad94', seed: 7 });
+  const store = makeDoor({ id: 'dStore', hinge: 'a0', swing: 1, open: 0, max: 2.5, color: '#b9ad94', seed: 7 });
   {
     const o = openById.dStore, l = lineById[o.line], zf = l.p0 - 0.012;
     const iron = mat('iron', { map: metalTex('#4a4440', 0.8, 51).map, roughness: 0.7, metalness: 0.6 });
-    box(0.03, 0.09, 0.012, iron, { x: o.a0 + 0.07, y: 1.38, z: zf, static: false }); // keeper on the frame
+    box(0.03, 0.09, 0.012, iron, { x: o.a1 - 0.07, y: 1.38, z: zf, static: false }); // keeper on the frame
     const boltGrp = new THREE.Group(); G.scene.add(boltGrp);
-    const plate = box(0.16, 0.05, 0.01, iron, { x: o.a0 + 0.2, y: 1.38, z: zf, parent: boltGrp, static: false });
-    const rod = cyl(0.008, 0.008, 0.16, 6, iron, { x: o.a0 + 0.13, y: 1.38, z: zf - 0.012, rz: Math.PI / 2, parent: boltGrp, static: false });
+    const plate = box(0.16, 0.05, 0.01, iron, { x: o.a1 - 0.2, y: 1.38, z: zf, parent: boltGrp, static: false });
+    const rod = cyl(0.008, 0.008, 0.16, 6, iron, { x: o.a1 - 0.13, y: 1.38, z: zf - 0.012, rz: Math.PI / 2, parent: boltGrp, static: false });
     // bolt moves with the door leaf (it's on the door, the keeper is on the frame)
     store.pivot.attach(boltGrp);
     store.locked = {
@@ -322,9 +322,14 @@ function buildEntry() {
   const ph = cyl(0.012, 0.012, 0.02, 10, brass, { x: 0, y: 1.58, z: 0.04, rx: Math.PI / 2, parent: door.pivot, static: false });
   ph.position.x = (o.a1 - o.a0) / 2;
   interactive(ph, { prompt: () => 'Look through the peephole', use: () => G.peephole?.(), range: 1.4 });
+  // the cutscene needs the door open and unchained, then slammed and chained again
+  G.entry = {
+    door,
+    setChain(on) { links.forEach((x) => { x.visible = on; }); padlock.visible = on; door.max = on ? 0.11 : 1.3; },
+  };
   const free = (how) => {
     links.forEach((l) => { l.visible = false; }); padlock.visible = false;
-    door.max = 1.45; door.speed = 2.2; door.locked = null; door.target = 1.45; G.flags.outside = true;
+    door.max = 1.45; door.speed = 2.2; door.locked = null; door.target = 1.45; G.flags.outside = true; setTimeout(() => G.tip?.('out'), 4000);
     sfx(how === 'axe' ? 'metal' : 'click', door.world, { vol: 1, rate: how === 'axe' ? 0.8 : 0.6 }); sfx('chainRattle', door.world, { rate: 0.8 });
     G.ui.toast(how === 'axe' ? 'Three blows. The chain gives on the third and falls in a heap. The door swings out onto the landing on its own weight.' : 'The little key turns. The padlock drops into your hand, cold. The chain slides off.');
   };
@@ -336,6 +341,7 @@ function buildEntry() {
       if (door.target > 0.05) { door.target = 0; sfx('doorHeavy', door.world, { vol: 0.5 }); return true; }
       door.target = door.max; sfx('chainRattle', door.world);
       if (!G.flags.chainSeen) { G.flags.chainSeen = true; setTimeout(() => G.ui.toast('The chain is padlocked on this side. No key on the ring by the door.'), 600); }
+      G.tip?.('chain');
       return true;
     },
   };

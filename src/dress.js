@@ -55,7 +55,8 @@ function torch() {
   G.toggleTorch = () => { T.on = !T.on; sfx('click', null, { vol: 0.6 }); if (!G.flags.torchHint) G.flags.torchHint = true; };
   onUpdate((dt, t) => {
     // a cheap torch: it browns out and you have to give it a knock
-    const w = T.on ? (0.92 + Math.sin(t * 13) * 0.015 + (Math.random() < dt * 0.15 ? -0.5 : 0)) : 0;
+    if (G.torchKill > 0) G.torchKill -= dt;
+    const w = T.on && !(G.torchKill > 0 && Math.random() < 0.85) ? (0.92 + Math.sin(t * 13) * 0.015 + (Math.random() < dt * 0.15 ? -0.5 : 0)) : 0;
     T.k += (w - T.k) * Math.min(1, dt * 20);
     s.intensity = T.base * Math.max(0, T.k);
     s.shadow.autoUpdate = T.k > 0.01; // no shadow pass while it's off

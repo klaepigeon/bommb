@@ -119,6 +119,13 @@ export function updatePlayer(dt, camera) {
   P.room = zn ? zn.key : (Math.abs(P.floorY) < 1.5 && roomAt(P.pos.x, P.pos.z)) || (onBal ? 'balcony' : P.room);
   G.playerZone = P.room;
 
+  // something pulls your eyes to it
+  if (G.forceLook) {
+    const f = G.forceLook, dx = f.target.x - P.pos.x, dz = f.target.z - P.pos.z, dy = f.target.y - (P.floorY + P.eye);
+    const wy = Math.atan2(-dx, -dz), wp = Math.atan2(dy, Math.hypot(dx, dz)), k = Math.min(1, dt * 7);
+    P.yaw += Math.atan2(Math.sin(wy - P.yaw), Math.cos(wy - P.yaw)) * k; P.pitch += (wp - P.pitch) * k;
+    f.t -= dt; if (f.t <= 0) G.forceLook = null;
+  }
   // crouch (and can't stand up under something low)
   const target = P.crouch ? 1.05 : 1.62;
   P.height += (target - P.height) * Math.min(1, dt * 8);
@@ -141,8 +148,9 @@ export function updatePlayer(dt, camera) {
   P.bob += dt * (moving ? P.speed * 5.8 : 1.2);
   const bobAmt = moving ? Math.min(1, P.speed / 2) * (P.crouch ? 0.012 : 0.028) : 0.003;
   const breathe = Math.sin(G.time * 1.3) * 0.004;
-  P.eye = P.height - 0.08 + Math.sin(P.bob * 2) * bobAmt + breathe;
+  P.eye = G.eyeOverride ?? (P.height - 0.08 + Math.sin(P.bob * 2) * bobAmt + breathe);
 
   camera.position.set(P.pos.x + Math.cos(P.bob) * bobAmt * 0.4 * right.x, P.floorY + P.eye, P.pos.z + Math.cos(P.bob) * bobAmt * 0.4 * right.z);
-  camera.rotation.set(P.pitch, P.yaw, Math.cos(P.bob) * bobAmt * 0.25);
+  camera.rotation.set(P.pitch, P.yaw, (G.rollOverride ?? 0) + Math.cos(P.bob) * bobAmt * 0.25);
+  if (G.pullTo) camera.position.lerp(G.pullTo.target, G.pullTo.k);
 }

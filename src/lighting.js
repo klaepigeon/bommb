@@ -84,8 +84,9 @@ export function updateLights(dt) {
   // the building's supply sags now and then: every mains light dims together
   brownT -= dt;
   if (brownT <= 0) { brownT = 35 + Math.random() * 60; brown = 0.25 + Math.random() * 0.3; setTimeout(() => { brown = 0.6; }, 300 + Math.random() * 900); setTimeout(() => { brown = 1; }, 1500 + Math.random() * 1500); }
+  if (G.lightsKill > 0) G.lightsKill -= dt;
   for (const L of LIGHTS) {
-    const on = powered(L);
+    const on = powered(L) && !(G.lightsKill > 0 && L.name !== 'sky');
     let k = on ? flick(L, dt) : 0;
     if (on && L.mains) k *= brown;
     L.k = k;

@@ -62,7 +62,7 @@ function flat48() {
     const m = box(w, h, d, plain, { x: X(x), y: 0, base: true, z, parent: grp, static: false });
     collider({ x: X(x), z, hx: w / 2, hz: d / 2, y0: 0, y1: h }); staticBox(X(x), h / 2, z, w, h, d);
     const t = tag(label); t.position.set(X(x), h + 0.002, z); t.rotation.set(-Math.PI / 2, 0, (Math.random() - 0.5) * 0.6); grp.add(t);
-    examine([m, t], label, desc || `A shape the size of a ${label.toLowerCase()}. A paper tag on it in pencil: "${label}".`);
+    examine([m, t], label, desc || `A shape the size of a ${label.toLowerCase()}. A paper tag on it in pencil: "${label}".`, { onUse: () => { G.boxesSeen = (G.boxesSeen || 0) + 1; if (G.boxesSeen === 3) setTimeout(() => G.tip?.('boxes'), 1500); } });
     return m;
   };
   block(0.45, 2.4, 0.85, 2.0, 0.6, 'SOFA', 'The size of their sofa, exactly. On the tag, in a different pencil: "the green one with the burn".');
@@ -272,6 +272,7 @@ function flat44() {
       G.addDecay?.(0.05);
       // with each pass the chairs turn a little more toward the doors
       chairs.forEach((c, i) => { c.rotation.y = Math.PI - Math.min(Math.PI, loops * 0.5 + i * 0.05); });
+      if (loops === 2) G.tip?.('f44');
       if (loops === 1) setTimeout(() => G.ui.toast('Cell after cell. The same chair. You have been counting: this is the eleventh. There were ten.'), 300);
       if (loops === 3) { knockSeq(V(p.x - 12, oy + 1.2, 1.4), [3, 3], 0.7, 1); }
       if (loops === 5) setTimeout(() => G.ui.toast('The chairs are facing the doors now.'), 300);
@@ -290,6 +291,7 @@ function zoneHum(pos, key) {
 
 // when the building gives you back to 47, some things in 47 have moved
 G.onReturn = () => {
+  setTimeout(() => G.tip?.('back'), 3000);
   const bear = G.props.find((p) => p.name === 'Teddy bear');
   if (bear && !bear.held) { bear.body.position.set(8.2, 0.15, 4.5); bear.body.quaternion.setFromEuler(0, Math.PI / 2, 0); bear.body.velocity.set(0, 0, 0); bear.body.wakeUp(); bear.desc = 'Sonya’s bear. It was tucked into her bed. Now it’s sitting in the hall, facing the front door, as if waiting for someone to come in.'; }
   const tv = G.lights.tv; if (tv && !tv.switched) tv.switched = true;

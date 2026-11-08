@@ -8,7 +8,7 @@ const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] });
 const p = await b.newPage({ viewport: { width: 960, height: 540 } });
 const errors = []; p.on('pageerror', (e) => errors.push(e.stack));
-await p.goto(pathToFileURL(join(root, 'dist/index.html')).href + '?q=low');
+await p.goto(pathToFileURL(join(root, 'dist/index.html')).href + '?q=low&skip');
 await p.waitForFunction(() => window.__ready, null, { timeout: 200000 });
 const pad = (o = {}, ms = 1500) => p.evaluate(([o]) => window.__nativePad(o.lx || 0, o.ly || 0, o.rx || 0, o.ry || 0, 0, 0, o.mask || 0), [o]).then(() => p.waitForTimeout(ms));
 const B = { A: 1, B: 2, X: 4, Y: 8, START: 512, DOWN: 1 << 13 };

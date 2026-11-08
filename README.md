@@ -5,9 +5,21 @@ a 1950s brick block on Ulitsa Gagarina in Kerzhansk, a city that was told to lea
 Phase 1 is the flat itself: seven rooms and a balcony to explore, with the courtyard
 and the city beyond the windows. It runs in a browser and builds to one HTML file.
 
-There is no monster and no objective yet. There is the flat, what the Sokolov family
-left in it, the evidence that somebody came back afterwards, and the building, which
-is never quite quiet — and, once you find a way out of the flat, is not quite real.
+You are Lebedev, a private investigator. Marta Sokolova's sister in Kursk hasn't heard
+from her in eight days and has paid you to knock on a door. The opening cutscene takes
+you across the courtyard, through the lobby and up the stairs to 47, where the door is
+standing open. You go in, and it shuts behind you: the chain is on, from the inside.
+
+You find Marta in the box room. She is alive. Coral has grown up out of her, through her
+skin and her clothes and on into the wall and the floor, so that she is rooted where she
+sits, breathing. Touch her face and she wakes, takes hold of you, and asks if you've seen
+the boxes. Then dark; then the box room floor, and Socko on your left hand, and she
+isn't there any more.
+
+Socko is a dirty sock with big googly eyes and the only thing in the game that looks like
+it came from somewhere else. From then on he gives you your objectives (top left) and
+tells you how things work the first time you need to know, out loud, in a cheap
+text-to-speech voice, flapping his mouth.
 
 ## Play
 
@@ -58,7 +70,7 @@ Build it with `android/build.sh` (Android SDK with build-tools 35 and platform 3
 17+; no Gradle). It's signed with the project's own debug key in `android/`, so each
 build installs over the last.
 
-URL options: `?q=high|medium|low` sets quality (shadow detail, render scale; point-light
+URL options: `?skip` skips the opening cutscene (in game: E, Space or A skips it); `?q=high|medium|low` sets quality (shadow detail, render scale; point-light
 shadows only on high). Touch screens get a stick and buttons and start on low.
 
 ## The flat
@@ -107,7 +119,7 @@ take things down off shelves, knock on the pipes.
 
 ## The building (and reality, dying)
 
-The front door is chained and padlocked from the inside. The key is somewhere in the
+After you wake, the front door is still chained and padlocked from the inside. The key is somewhere in the
 flat (where somebody hid it, under something you'd rather not put your arm into); or
 there's an axe in the box room.
 
@@ -180,6 +192,10 @@ src/
   building.js    the stairwell, landings and their doors, lobby, street, basement, the stair loop, pooled lights
   flats.js       48 (the draft), 51 (the echo, and the void past it), 44 (the corridor)
   decay.js       reality dying: the surface shader patch, decay volumes, fog/sky/post/audio, progression
+  cutscene.js    the opening: shots along camera paths, subtitles, events, skip
+  marta.js       Marta: PS1-style (vertex-snapped, flat-shaded, pixel textures), coral, breathing, the grab, waking
+  hands.js       first-person hands (drawn over the world), torch hand, reaching, holding; Socko on the left
+  voice.js       text-to-speech (Android TTS / browser speech / square-wave babble), Socko's lines, objectives, tips
 android/         the Android app: manifest, MainActivity (WebView + controller bridge), build.sh
 ```
 
@@ -204,6 +220,7 @@ node tools/smoke.mjs      # boot headless, save screenshots of ~20 viewpoints to
 node tools/play.mjs       # scripted playthrough: walks the flat (A*), uses ~30 things, fails on any error
 node tools/pad.mjs        # drives the game with a fake controller through the Android bridge
 node tools/building.mjs   # key, front door, 48, up to 51 and out into the void, down to 44's corridor, the street
+node tools/cine.mjs       # plays the opening cutscene, then finds Marta, touches her face, wakes with Socko
 android/build.sh          # → dist/Flat47.apk
 ```
 

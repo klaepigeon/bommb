@@ -18,6 +18,8 @@ import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.speech.tts.TextToSpeech;
+import java.util.Locale;
 
 /**
  * Flat 47 on Android: the web build in a full-screen WebView, plus a bridge that reads
@@ -31,6 +33,8 @@ public class MainActivity extends Activity {
     private int mask = 0, hatMask = 0;
     private boolean padSeen = false, sendQueued = false;
     private int lastPadId = -1;
+    private TextToSpeech tts;
+    private boolean ttsReady = false;
 
     @Override
     protected void onCreate(Bundle b) {
@@ -51,7 +55,14 @@ public class MainActivity extends Activity {
         web.loadUrl("file:///android_asset/index.html");
         immersive();
         heartbeat();
+        // the game's voices (Socko, and her) come from the phone's own speech engine
+        tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            public void onInit(int status) { if (status == TextToSpeech.SUCCESS) { tts.setLanguage(Locale.UK); ttsReady = true; } }
+        });
     }
+
+    @Override
+    protected void onDestroy() { if (tts != null) tts.shutdown(); super.onDestroy(); }
 
     private void immersive() {
         web.setSystemUiVisibility(View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_FULLSCREEN
@@ -178,6 +189,14 @@ public class MainActivity extends Activity {
 
     // ---------------------------------------------------------------- page -> app
     private class Bridge {
+        @JavascriptInterface
+        public boolean speak(String text, float pitch, float rate) {
+            if (!ttsReady) return false;
+            tts.setPitch(Math.max(0.1f, pitch)); tts.setSpeechRate(Math.max(0.3f, rate));
+            tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "line");
+            return true;
+        }
+
         @JavascriptInterface
         public void rumble(int ms, int amplitude) {
             try {

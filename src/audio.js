@@ -81,6 +81,10 @@ function makeBuffers() {
   B.scratch = buf(1.8, (d, sr) => { for (let i = 0; i < d.length; i++) { const t = i / sr; const burst = Math.max(0, Math.sin(t * 6.283 * 3.3)) ** 4; d[i] = noise() * burst * env(t, 0.1, 1.2); } bp(d, sr, 2200, 1.2); norm(d, 0.5); });
   B.tvOn = buf(0.5, (d, sr) => { for (let i = 0; i < d.length; i++) { const t = i / sr; d[i] = noise() * Math.exp(-t / 0.02) + Math.sin(6.283 * 15600 * t) * 0.2 * Math.exp(-t / 0.3) + Math.sin(6.283 * 60 * t) * Math.exp(-t / 0.08); } norm(d, 0.5); });
   B.plug = buf(2.5, (d, sr) => { for (let i = 0; i < d.length; i++) { const t = i / sr; d[i] = noise() * (0.5 + 0.5 * Math.sin(t * 6.283 * 3.7)) * env(t, 0.1, 1.5); } lp(d, 0.06); bp(d, sr, 250, 1.5); norm(d, 0.6); });
+  // the sting: a low cluster swelling, a metal shriek over it, cut off
+  B.sting = buf(3.2, (d, sr) => { let a = 0, b2 = 0, c = 0; for (let i = 0; i < d.length; i++) { const t = i / sr; a += 55 / sr; b2 += 58.3 / sr; c += (1900 + Math.sin(t * 13) * 300 + t * 400) / sr; const sw = Math.min(1, t / 0.15) * (t < 2.6 ? 1 : Math.max(0, 1 - (t - 2.6) / 0.6)); d[i] = sw * ((Math.sin(a * 6.283) + Math.sin(b2 * 6.283)) * 0.5 + Math.sin(c * 6.283) * 0.18 * Math.min(1, t / 0.6) + noise() * 0.08); } norm(d, 0.95); });
+  B.heart = buf(0.9, (d, sr) => { for (let i = 0; i < d.length; i++) { const t = i / sr; const th = (t0) => (t > t0 ? Math.sin(6.283 * 48 * (t - t0)) * Math.exp(-(t - t0) / 0.06) : 0); d[i] = th(0) + th(0.22) * 0.7; } lp(d, 0.2); norm(d, 0.9); });
+  B.breath = buf(1.6, (d, sr) => { for (let i = 0; i < d.length; i++) { const t = i / sr; d[i] = noise() * Math.sin(Math.min(1, t / 1.6) * Math.PI) ** 2; } bp(d, sr, 900, 0.8); norm(d, 0.35); });
   // footsteps per surface
   const step = (lo, click, crunch, amp) => (d, sr) => { for (let i = 0; i < d.length; i++) { const t = i / sr; d[i] = Math.sin(6.283 * lo * t) * Math.exp(-t / 0.035) * 0.8 + noise() * Math.exp(-t / click) * 0.6 + (crunch ? noise() * (Math.random() < 0.06 ? 1 : 0) * Math.exp(-t / 0.08) * crunch : 0); } norm(d, amp); };
   B.step_wood = [0, 1, 2].map(() => buf(0.22, step(95, 0.01, 0, 0.5)));
@@ -113,6 +117,8 @@ export function initAudio() {
   startAmbience();
 }
 export function setMasterVolume(v) { if (master) master.gain.value = v; }
+// a dead silence for a few seconds (blackouts), then the building comes back
+G.audioDuck = (sec) => { if (!master) return; const t = ctx.currentTime, v = master.gain.value; master.gain.cancelScheduledValues(t); master.gain.setTargetAtTime(0.02, t, 0.15); master.gain.setTargetAtTime(v, t + sec, 0.8); };
 
 // per-source chain: [gain] -> [occlusion lowpass] -> [panner] -> dry + wet
 function chain(pos, o = {}) {

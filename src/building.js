@@ -375,6 +375,7 @@ function stairLoop() {
       SIGNS[T].userData.redraw(T + loops); SIGNS[T + 1].userData.redraw(T + 1 + loops);
       for (const k of ['W', 'E1', 'E2', 'S']) { const d1 = LDOORS[`${T}:${k}`]; if (d1) d1.plate.userData.redraw(String(flatNo(T + loops, { W: 0, E1: 1, E2: 2, S: 3 }[k]))); const d2 = LDOORS[`${T + 1}:${k}`]; if (d2) d2.plate.userData.redraw(String(flatNo(T + 1 + loops, { W: 0, E1: 1, E2: 2, S: 3 }[k]))); }
       G.addDecay?.(0.06);
+      if (loops === 2) G.tip?.('loop');
       if (loops === 1) setTimeout(() => G.ui.toast(`The building has nine floors. The wall says ${T + 1}.`), 400);
       if (loops === 4) setTimeout(() => G.ui.toast('Somewhere below, on a landing you passed, a door opens.'), 800);
       if (loops === 7) setTimeout(() => G.ui.toast('Your legs are tired. The numbers keep going.'), 600);

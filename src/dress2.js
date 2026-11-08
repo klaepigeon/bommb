@@ -450,7 +450,7 @@ function bath() {
         water.visible = false; keys.visible = true;
         G.ui.toast('At the bottom, in the silt: the other red shoe. Right foot. And a ring of keys.');
         pickable(shoe, { name: "Child's shoe", desc: 'A girl’s red buckle shoe, right foot. The pair to the one in the hall.', mass: 0.2, sound: 'soft' });
-        pickable(keys, { name: 'Keys', desc: 'His keys, on a plastic fob from the plant. Flat key, letterbox key, and a little brass one for a padlock. Somebody dropped them in the bath, or hid them there.', mass: 0.05, sound: 'can', onTake: () => { G.flags.key = true; } });
+        pickable(keys, { name: 'Keys', desc: 'His keys, on a plastic fob from the plant. Flat key, letterbox key, and a little brass one for a padlock. Somebody dropped them in the bath, or hid them there.', mass: 0.05, sound: 'can', onTake: () => { G.flags.key = true; G.tip?.('key'); } });
       }
     });
     // the overflow plate the chain hangs from: easier to find with a cold hand than the chain
@@ -560,16 +560,16 @@ function storage() {
   }
   // the den: a sleeping bag, a crate for a table, candles, the stove, the cans
   {
-    const bag = drape(0.75, 1.9, [{ x0: -0.3, x1: 0.3, z0: -0.9, z1: 0.9, top: 0.09 }], mat('sleepingBag', { map: fabricTex('#3a4a32', 221, 2).map, roughness: 0.9 }), { x: 1.5, z: 7.55, y: 0, ry: Math.PI / 2, seed: 15, wrinkle: 0.07, fall: 1.5 });
+    const bag = drape(0.75, 1.9, [{ x0: -0.3, x1: 0.3, z0: -0.9, z1: 0.9, top: 0.09 }], mat('sleepingBag', { map: fabricTex('#3a4a32', 221, 2).map, roughness: 0.9 }), { x: 1.3, z: 7.55, y: 0, ry: Math.PI / 2, seed: 15, wrinkle: 0.07, fall: 1.5 });
     void bag;
     rbox(0.42, 0.1, 0.28, 0.04, M.cloth[3], { x: 0.75, y: 0.0, base: true, z: 7.6, ry: 0.1 }); // a rolled jumper for a pillow
-    const crate = carcass(0.5, 0.36, 0.38, M.pine, { x: 2.35, z: 6.6, ry: -Math.PI / 2 });
+    const crate = carcass(0.5, 0.36, 0.38, M.pine, { x: 2.35, z: 6.95, ry: -Math.PI / 2 });
     box(0.5, 0.02, 0.38, M.pine, { y: 0.37, parent: crate });
     // candle: if you've found matches, light it
-    const cnd = candle(2.35, 0.38, 6.55, 0.06);
+    const cnd = candle(2.35, 0.38, 6.9, 0.06);
     const flameM = mat('flame', { color: 0xffc060, emissive: 0xffa030, emissiveIntensity: 0, transparent: true, opacity: 0.9 });
     const flame = new THREE.Mesh(new THREE.SphereGeometry(0.008, 8, 6), flameM); flame.scale.set(1, 2.2, 1); flame.position.y = cnd.userData.top + 0.006; flame.visible = false; cnd.add(flame);
-    const l = new THREE.PointLight(0xff9a40, 2.2, 5, 2); l.position.set(2.35, 0.55, 6.55); l.userData.shadowTier = 'high';
+    const l = new THREE.PointLight(0xff9a40, 2.2, 5, 2); l.position.set(2.35, 0.55, 6.9); l.userData.shadowTier = 'high';
     const L = addLight('candle', l, { on: false, flicker: 'candle', fixtures: [flame], emissive: 3 });
     let fire = null;
     interactive(cnd.children, {
@@ -581,15 +581,15 @@ function storage() {
         if (!G.flags.lit) { G.flags.lit = true; G.ui.toast('The match flares and the room comes up out of the dark around you.'); }
       },
     });
-    const stove = group({ x: 2.25, y: 0.38, z: 6.8 });
+    const stove = group({ x: 2.25, y: 0.38, z: 7.12 });
     cyl(0.06, 0.07, 0.08, 12, mat('campStove', { color: 0x4a6a3a, roughness: 0.6, metalness: 0.4 }), { y: 0.04, parent: stove, static: false });
     for (let i = 0; i < 3; i++) box(0.12, 0.008, 0.008, M.iron, { y: 0.085, ry: i * 1.05, parent: stove, static: false });
     makeProp(stove, { mass: 0.6, name: 'Camping stove', desc: 'The gas cartridge is light — nearly used up. These were sold at the army surplus shop by the station.', sound: 'metal' });
     for (let i = 0; i < 9; i++) { const t = can(1.9 + (r() - 0.5) * 0.7, 0, 6.2 + r() * 0.8, labelMat('stew2', '#5a6a3a', '#e8e0c8', 'ТУШЁНКА', 'army'), { open: true, rz: r() < 0.5 ? Math.PI / 2 : 0, ry: r() * 6 }); if (t.rotation.z) t.position.y = 0.037; makeProp(t, { mass: 0.15, name: 'Empty tin', desc: 'Army tushonka, the newer label. Scraped clean with a spoon.', sound: 'can' }); }
-    sheet(D.denNote, 0.18, 0.23, { x: 2.42, y: 0.385, z: 6.72, rx: -Math.PI / 2, rz: 0.4, name: 'Note in pencil' });
+    sheet(D.denNote, 0.18, 0.23, { x: 2.42, y: 0.385, z: 7.05, rx: -Math.PI / 2, rz: 0.4, name: 'Note in pencil' });
     // Sonya's drawing for her dad, pinned to the wall above the bag where he could see it lying down
     sheet(D.drawing, 0.4, 0.29, { x: 2.725, y: 0.9, z: 7.5, ry: -Math.PI / 2, name: 'Drawing' });
-    const torchB = cyl(0.015, 0.015, 0.05, 8, M.chrome, { x: 2.5, y: 0.385, z: 6.45, rz: Math.PI / 2, static: false });
+    const torchB = cyl(0.015, 0.015, 0.05, 8, M.chrome, { x: 2.5, y: 0.385, z: 6.78, rz: Math.PI / 2, static: false });
     makeProp(torchB, { mass: 0.05, name: 'Battery', desc: 'Flat. Licked, the old way, to test it: nothing.', sound: 'can' });
     const blanketGone = null; void blanketGone;
   }
@@ -597,3 +597,4 @@ function storage() {
   { const ax = group({ x: 2.55, y: 0.0, z: 5.45 }); box(0.04, 0.7, 0.03, M.pine, { y: 0.35, parent: ax, static: false }); box(0.15, 0.1, 0.02, M.iron, { y: 0.68, x: 0.05, parent: ax, static: false }); ax.rotation.z = 0.25; ax.position.x = 2.6; makeProp(ax, { mass: 1.5, name: 'Axe', desc: 'A hatchet from the dacha. Pale splinters of new pine stuck in the blade, the same wood as the boards over Sonya’s window.', sound: 'metal' }); }
 }
 function pickL(r, a) { return a[(r() * a.length) | 0]; }
+

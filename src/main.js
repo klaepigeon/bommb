@@ -24,6 +24,10 @@ import { buildStairwell, FLOORS } from './building.js';
 import { buildFlats } from './flats.js';
 import { initDecay, patchAll } from './decay.js';
 import { DOORS } from './openings.js';
+import { playIntro } from './cutscene.js';
+import { buildHands } from './hands.js';
+import { buildMarta } from './marta.js';
+import { objective } from './voice.js';
 
 const params = new URLSearchParams(location.search);
 const $ = (id) => document.getElementById(id);
@@ -57,6 +61,7 @@ async function boot() {
   buildDaylight();
   msg('Putting their things back where they left them…'); await frame();
   dressFlat();
+  buildMarta();
   msg('Opening up the rest of the building…'); await frame();
   buildStairwell();
   buildFlats();
@@ -76,6 +81,7 @@ async function boot() {
   scene.traverse((o) => { if (o.isMesh && o.castShadow) { if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); const sc = o.getWorldScale(new THREE.Vector3()); if (o.geometry.boundingSphere.radius * Math.max(sc.x, sc.y, sc.z) < 0.06) o.castShadow = false; } });
   for (const s of scene.children) if (s.isMesh && /-(n|s|e|w|ceiling)$/.test(s.name)) { s.castShadow = true; s.userData.blocker = true; I.blockers.push(s); }
   for (const s of G.zoneSkins || []) I.blockers.push(s);
+  buildHands(camera);
   initDecay();
   patchAll(scene);
 
@@ -195,15 +201,16 @@ function loop(now) {
   clock.update(now); const dt = Math.min(0.05, clock.getDelta());
   if (!G.running && !params.has('shots')) { updatePad(dt, padH); composer.render(); return; }
   G.time += dt;
-  P.frozen = I.inspecting || !!G.peeping;
+  P.frozen = I.inspecting || !!G.peeping || !!G.lockPlayer;
   updatePad(dt, padH);
-  updatePlayer(dt, camera);
+  if (G.cutscene) G.cutscene.update(dt); else updatePlayer(dt, camera);
+  shake(dt);
   G.playerPos = (G.playerPos || new THREE.Vector3()).set(P.pos.x, P.floorY, P.pos.z);
   G.playerZone = P.room;
   G.phys.step(1 / 60, dt, 3);
   for (const f of G.updates) f(dt, G.time);
   updateLights(dt);
-  updateInteract(dt, camera);
+  if (!G.cutscene) updateInteract(dt, camera); else UI.prompt('');
   updateAudio(camera, dt, P.room);
   UI.tick(dt);
   updateWorld(dt);
@@ -220,6 +227,12 @@ function loop(now) {
 
 // ---------------------------------------------------------------- input / menus
 function lock() { renderer.domElement.requestPointerLock?.(); }
+// a jolt to the camera, dying away
+function shake(dt) {
+  if (!G.shake) return;
+  const k = G.shake; G.shake = Math.max(0, k - dt * 0.9);
+  camera.rotation.x += (Math.random() - 0.5) * k * 0.05; camera.rotation.y += (Math.random() - 0.5) * k * 0.05; camera.position.y += (Math.random() - 0.5) * k * 0.02;
+}
 // white or black fades for the places that give you back
 let fadeK = 0, fadeCol = '#fff';
 function fade(dt) {
@@ -235,7 +248,13 @@ G.teleport = (x, z, y, yaw = null, keep = false) => {
   if (I.held) { const b = I.held.body; b.position.set(x, y + 1.3, z); }
   updatePlayer(0, camera);
 };
-$('enter').onclick = () => { initAudio(); G.running = true; $('start').classList.add('hidden'); if (!G.flags.started) { G.flags.started = true; setTimeout(() => UI.toast('The hall bulb is dying. F for the torch.', 5), 2500); } if (PAD.using) P.locked = true; else if (matchMedia('(pointer: coarse)').matches) { $('touch').classList.remove('hidden'); P.locked = true; } else lock(); };
+$('enter').onclick = () => {
+  initAudio(); G.running = true; $('start').classList.add('hidden');
+  if (!G.flags.started) {
+    G.flags.started = true;
+    const after = () => { setTimeout(() => UI.toast('The chain won’t come off. There’s a padlock through it. The hall bulb is dying — F for the torch.', 6), 900); setTimeout(() => objective('Find Marta Sokolova.'), 3000); };
+    if (params.has('skip')) after(); else playIntro(after);
+  } if (PAD.using) P.locked = true; else if (matchMedia('(pointer: coarse)').matches) { $('touch').classList.remove('hidden'); P.locked = true; } else lock(); };
 $('resume').onclick = () => resumeGame();
 document.addEventListener('pointerlockchange', () => {
   P.locked = document.pointerLockElement === renderer.domElement;
@@ -249,6 +268,7 @@ $('quality').onchange = (e) => { Q = e.target.value; applyQuality(); };
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); composer?.setSize(innerWidth, innerHeight); });
 addEventListener('keydown', (e) => {
   if (!G.running) return;
+  if (G.cutscene) { if (['Escape', 'Space', 'KeyE', 'Enter'].includes(e.code)) G.cutscene.skip(); return; }
   if (e.code === 'KeyE') { if (I.inspecting && I.held?.doc && !I.reading) inspectRead(); else use(); }
   if (e.code === 'KeyF') G.toggleTorch?.();
   if (e.code === 'Escape' && I.reading) UI.closeRead();
@@ -256,7 +276,7 @@ addEventListener('keydown', (e) => {
 });
 renderer && 0;
 addEventListener('mousedown', (e) => {
-  if (!G.running) return;
+  if (!G.running || G.cutscene) return;
   if (I.reading) { UI.closeRead(); return; }
   if (e.button === 0) { if (I.inspecting) endInspect(); else if (I.held) throwHeld(); else use(); }
   if (e.button === 2) { if (I.inspecting) endInspect(); else if (I.held) beginInspect(); }
@@ -286,13 +306,13 @@ const padH = {
   menuBack: () => { if (!$('pause').classList.contains('hidden')) resumeGame(); },
   move: (x, y, run) => { P.padMove.x = x; P.padMove.y = y; P.padRun = run; },
   look: (dx, dy) => { if (I.inspecting) inspectLook(dx, dy); else if (!G.peeping) look(dx, dy); },
-  use: () => { if (G.peeping) { dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE' })); return; } if (I.inspecting && I.held?.doc && !I.reading) inspectRead(); else use(); },
+  use: () => { if (G.cutscene) { G.cutscene.skip(); return; } if (G.peeping) { dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE' })); return; } if (I.inspecting && I.held?.doc && !I.reading) inspectRead(); else use(); },
   back: () => { if (G.peeping) dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape' })); else if (I.reading) UI.closeRead(); else if (I.inspecting) endInspect(); else if (I.held) drop(0); },
   torch: () => G.toggleTorch?.(),
   crouch: () => { P.crouch = !P.crouch; },
   throw: () => { if (I.inspecting) endInspect(); else if (I.held) throwHeld(); },
   inspect: () => { if (I.inspecting) endInspect(); else if (I.held) beginInspect(); },
-  pause: pauseGame,
+  pause: () => { if (G.cutscene) G.cutscene.skip(); else pauseGame(); },
   onMode: () => { G.glyph = 'A'; $('touch').classList.add('hidden'); document.body.classList.add('pad'); },
 };
 addEventListener('gamepadconnected', () => { if (!$('start').classList.contains('hidden') && !$('enter').disabled) setFocus(0); });
@@ -333,6 +353,8 @@ window.__G = G; window.__P = P; window.__I = I; G.doorsById = DOORS; G.I = I;
 window.__view = (x, z, yaw, pitch = 0, crouch = false, y = 0) => { P.pos.set(x, 0, z); P.floorY = y; P.yaw = yaw; P.pitch = pitch; P.crouch = crouch; P.height = crouch ? 1.05 : 1.62; for (let i = 0; i < 3; i++) { updatePlayer(0.016, camera); } };
 window.__step = (n = 30) => { renderer.info.autoReset = false; for (let i = 0; i < n; i++) { G.playerPos = (G.playerPos || new THREE.Vector3()).set(P.pos.x, P.floorY, P.pos.z); G.playerZone = P.room; updateWorld(1 / 60, true); G.time += 1 / 60; updatePlayer(1 / 60, camera); G.phys.step(1 / 60); for (const f of G.updates) f(1 / 60, G.time); updateLights(1 / 60); updateInteract(1 / 60, camera); } renderer.info.reset(); composer.render(); };
 window.__roomAt = roomAt;
+// test helper: advance whatever is running (cutscene included) by sec seconds, then draw
+window.__advance = (sec) => { const n = Math.round(sec * 30); for (let i = 0; i < n; i++) { G.time += 1 / 30; if (G.cutscene) G.cutscene.update(1 / 30); else updatePlayer(1 / 30, camera); shake(1 / 30); G.phys.step(1 / 30); for (const f of G.updates) f(1 / 30, G.time); updateLights(1 / 30); updateWorld(1 / 30, true); } if (!G.cutscene) updateInteract(1 / 30, camera); composer.render(); };
 window.__use = use; window.__throw = throwHeld; window.__inspect = beginInspect; window.__endInspect = endInspect;
 window.__aim = (x, y, z) => { const dx = x - camera.position.x, dy = y - camera.position.y, dz = z - camera.position.z; P.yaw = Math.atan2(-dx, -dz); P.pitch = Math.atan2(dy, Math.hypot(dx, dz)); updatePlayer(0.016, camera); updateInteract(0.016, camera); const t = I.target; return t ? (t.kind === 'use' ? (typeof t.it.prompt === 'function' ? t.it.prompt() : t.it.prompt) : t.kind + ':' + (t.spec?.name || t.prop?.name)) : null; };
 // test helper: A* over a 10 cm grid of the walkable floor, then walk the path

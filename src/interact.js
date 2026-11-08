@@ -25,7 +25,7 @@ export const UI = {
     if (doc.canvas) { cv.style.display = ''; cv.width = doc.canvas.width; cv.height = doc.canvas.height; cv.getContext('2d').drawImage(doc.canvas, 0, 0); } else cv.style.display = 'none';
     tx.textContent = doc.text || ''; tx.style.display = doc.text ? '' : 'none';
     el.classList.remove('hidden');
-    sfx('paper', null, { vol: 0.6 });
+    sfx('paper', null, { vol: 0.6 }); G.tip?.('read');
   },
   closeRead() { I.reading = false; $('doc').classList.add('hidden'); sfx('paper', null, { vol: 0.4 }); },
   tick(dt) { if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('toast').classList.remove('on'); } },
@@ -80,6 +80,7 @@ export function use() {
   if (I.inspecting) { endInspect(); return; }
   if (I.held) { drop(0.6); return; }
   const t = I.target; if (!t) return;
+  G.handReach = 0.35;
   if (t.kind === 'use') { t.it.use(); return; }
   if (t.kind === 'pick') {
     const { root, spec } = t;
@@ -99,7 +100,7 @@ function grab(prop) {
   prop.yaw0 = P.yaw;
   prop.body.angularDamping = 0.9;
   prop.body.collisionFilterMask = 1; // still hits the world
-  sfx('pickup', prop.mesh.position, { vol: 0.6 });
+  sfx('pickup', prop.mesh.position, { vol: 0.6 }); G.tip?.('held');
   if (!prop.seen && prop.desc) { prop.seen = true; UI.toast(prop.desc, 6); }
   prop.onPick?.(prop);
 }

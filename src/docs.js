@@ -71,6 +71,9 @@ export const denNote = once('den', () => {
     '',
     "I'll wait for them here. This was",
     'the only room with a bolt.',
+    '',
+    'Somebody has bolted it.',
+    'From the other side.',
   ];
   handLines(g, lines, 30, 36, 22, 'rgba(50,48,46,0.78)', 1.5, r);
   // pencil smudges, a crossed-out line
