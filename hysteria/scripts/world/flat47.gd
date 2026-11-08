@@ -391,9 +391,10 @@ var environment: Environment
 
 # ---------------------------------------------------------------- outside
 ## The model came with the JS build's courtyard and city (trees, cars, lamp posts, wires, other
-## blocks). None of it exists any more: anything whose middle is beyond the building's walls and
-## balcony, or above or below this storey, is removed.
-const BUILDING := AABB(Vector3(-0.6, -0.8, -1.95), Vector3(25.7, 4.3, 10.7))
+## blocks), and the building around the flat (the stairwell, the landing, Flat 48 next door).
+## None of it exists here: anything whose middle is beyond Flat 47's own walls and balcony, or
+## above or below this storey, is removed. (Less to draw, fewer surfaces for lights to reach.)
+const BUILDING := AABB(Vector3(-0.6, -0.8, -1.95), Vector3(11.05, 4.3, 10.4))
 func _strip_outside(root: Node) -> void:
 	var gone := 0
 	for mi in root.find_children("*", "MeshInstance3D", true, false):
