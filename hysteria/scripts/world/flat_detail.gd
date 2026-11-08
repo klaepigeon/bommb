@@ -134,9 +134,10 @@ static func _rail(kit: TownKit, a: Vector3, b: Vector3, inward: Vector3, y: floa
 static func _rose(kit: TownKit, at: Vector3) -> void:
 	kit.cyl("coving", at - Vector3(0, 0.02, 0), 0.24, 0.02, 14)
 	kit.cyl("coving", at - Vector3(0, 0.045, 0), 0.17, 0.025, 12)
+	# a ring of leaves in the plaster: a raised torus, as the moulds made them
 	kit.fine = true
-	for i in 12:
-		var a := TAU * i / 12.0
-		kit.box("coving", at + Vector3(cos(a) * 0.205, -0.03, sin(a) * 0.205), Vector3(0.025, 0.01, 0.025), Basis(Vector3.UP, -a))
+	for i in 16:
+		var a0 := TAU * i / 16.0; var a1 := TAU * (i + 1) / 16.0
+		kit.cyl_axis("coving", at + Vector3(cos(a0) * 0.2, -0.032, sin(a0) * 0.2), at + Vector3(cos(a1) * 0.2, -0.032, sin(a1) * 0.2), 0.014, 4)
 	kit.fine = false
 	kit.cyl("coving", at - Vector3(0, 0.08, 0), 0.06, 0.035, 8, 0.04)

@@ -107,6 +107,7 @@ func _ready() -> void:
 	pause_menu.skill_menu = skill_menu
 	socko_lab = SockoLabyrinth.new(); socko_lab.name = "SockoLabyrinth"; add_child(socko_lab)
 	socko_lab.setup(socko, player, self, socko_hud, hunter, skill_menu)
+	_flat_detail()
 	escape = FlatEscape.new(); escape.name = "FlatEscape"; add_child(escape)
 	escape.setup(world, player, self)
 	memory = MemoryEffects.new(); memory.name = "MemoryEffects"; add_child(memory); memory.setup(self)
@@ -138,6 +139,14 @@ func _ready() -> void:
 		else:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 			Game.say("Flat 47. [WASD] move  [Shift] run  [C] crouch  [E] use  [F] torch", 6.0)
+
+## Skirting, coving and ceiling roses in Flat 47 (FlatDetail finds the walls with rays, so it
+## waits a physics frame for the walls to be in the physics world)
+func _flat_detail() -> void:
+	await get_tree().physics_frame
+	var lv: Dictionary = world.get("level")
+	var n := FlatDetail.build(world, lv.get("rooms", {}), lv.get("lights", []))
+	print("flat detail: %d runs" % n)
 
 ## Launching the game continues the saved one (only as the real main scene: not under the tests,
 ## which make their own).

@@ -68,6 +68,9 @@ const MATS := {
 	"paper": ["paper", 0.84, 1.0, 0.1, {}],
 	"paper_old": ["paper_old", 0.84, 1.0, 0.1, {"alpha": true}],
 	"leaves": ["leaves", 0.6, 1.0, 0.1, {"alpha": true}],
+	# Flat 47's joinery and plaster
+	"skirting": ["wood", 1.0, 0.55, 0.35, {"color": Color(0.42, 0.26, 0.17)}],
+	"coving": ["", 1.0, 0.95, 0.12, {"color": Color(0.6, 0.58, 0.53)}],
 }
 
 var parent: Node3D
