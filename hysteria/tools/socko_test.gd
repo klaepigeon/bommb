@@ -121,7 +121,7 @@ func _initialize() -> void:
 		var gt: Transform3D = (e.disc as Node3D).global_transform
 		var down := Vector2(Vector3.DOWN.dot(gt.basis.x.normalized()), Vector3.DOWN.dot(gt.basis.z.normalized()))
 		var press := absf(Vector3.DOWN.dot(gt.basis.y.normalized()))
-		if down.length() > 0.4 * press + 0.05:     # steep enough that it can't stick
+		if down.length() > 0.6 * press + 0.1:      # clearly steep (near the sticking slope a real googly eye can hang)
 			eyes_ok = eyes_ok and (e.p as Vector2).normalized().dot(down.normalized()) > 0.9 and (e.p as Vector2).length() > (e.r as float) * 0.9
 	ok = _check(eyes_ok, "googly pupils fall to the bottom of the eye when he's still") and ok
 	# a jerk of the arm sends them flying
