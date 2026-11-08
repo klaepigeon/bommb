@@ -63,5 +63,22 @@ func _initialize() -> void:
 	var gone: float = mat.get_shader_parameter("bw")
 	print("dread: 80 s with her ", snappedf(grey, 0.01), ", 10 s out ", snappedf(back, 0.01), ", 40 s more ", snappedf(gone, 0.01))
 	ok = ok and grey > 0.99 and back < grey and back > 0.2 and gone < 0.01
+	# lights: no mesh may be reached by more omni or spot lights than the Compatibility renderer
+	# (Android) shades per object, or it drops some, differently as the camera moves (flicker)
+	var cap := int(ProjectSettings.get_setting("rendering/limits/opengl/max_lights_per_object", 8))
+	var worst := 0; var worst_omni := 0; var worst_spot := 0
+	var lights := world.find_children("*", "Light3D", true, false).filter(func(l): return l.visible and not (l is DirectionalLight3D))
+	for m in world.find_children("*", "MeshInstance3D", true, false):
+		var bb: AABB = m.global_transform * m.get_aabb()
+		var co := 0; var cs := 0
+		for l in lights:
+			var r: float = l.omni_range if l is OmniLight3D else l.spot_range
+			if l.global_position.clamp(bb.position, bb.end).distance_to(l.global_position) < r:
+				if l is OmniLight3D: co += 1
+				else: cs += 1
+		worst = maxi(worst, co + cs); worst_omni = maxi(worst_omni, co); worst_spot = maxi(worst_spot, cs)
+	print("lights: worst mesh reached by %d omni, %d spot, %d together (cap %d)" % [worst_omni, worst_spot, worst, cap])
+	# 8 of each is Godot's default; the project raises the cap so even both together fit
+	ok = ok and worst <= cap and worst_omni <= 8 and worst_spot <= 8
 	print("SMOKE ", "PASS" if ok else "FAIL")
 	quit(0 if ok else 1)

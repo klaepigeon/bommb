@@ -31,7 +31,17 @@ pointing/emulate_mouse_from_touch=false
 
 [rendering]
 
+; headroom over the flat's worst mesh (6 omni + 5 spot): Compatibility silently drops the rest
 limits/opengl/max_lights_per_object=16
+
+; Android: the mobile defaults are 16-bit, half-size, unfiltered shadow maps, which on Adreno and
+; Mali shimmer and acne as the camera (and the PS1 vertex snapping) moves. Same shadows as desktop.
+lights_and_shadows/directional_shadow/size.mobile=4096
+lights_and_shadows/directional_shadow/16_bits=false
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality.mobile=2
+lights_and_shadows/positional_shadow/atlas_size.mobile=4096
+lights_and_shadows/positional_shadow/atlas_16_bits=false
+lights_and_shadows/positional_shadow/soft_shadow_filter_quality.mobile=2
 
 textures/vram_compression/import_etc2_astc=true
 
