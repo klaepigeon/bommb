@@ -14,6 +14,7 @@ var sens: HSlider
 var vol: HSlider
 var invert: CheckButton
 var resume_btn: Button
+var skill_menu: Node
 var open := false
 var _was_captured := false
 
@@ -94,6 +95,10 @@ func _build() -> void:
 	invert.scale = Vector2(2.0, 2.0); invert.pivot_offset = Vector2(0, 28)   # thumb-sized
 	invert.toggled.connect(func(_v): _apply(); _save())
 	box.add_child(_row("Invert look", invert))
+	var skills := _button("Skills"); skills.pressed.connect(func():
+		toggle()
+		if skill_menu: skill_menu.call("toggle"))
+	box.add_child(skills)
 	var restart := _button("Restart chapter"); restart.pressed.connect(_restart); box.add_child(restart)
 	var quit := _button("Quit"); quit.pressed.connect(func(): get_tree().quit()); box.add_child(quit)
 	add_child(panel)

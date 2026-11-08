@@ -8,6 +8,7 @@ extends CanvasLayer
 var header: Label
 var text: Label
 var hint: Label
+var nug: Label
 var _hint_t := 0.0
 var socko := false
 
@@ -18,6 +19,7 @@ func _ready() -> void:
 	header = _label(11, Color(0.72, 0.6, 0.38)); box.add_child(header)
 	text = _label(15, Color(0.88, 0.86, 0.8)); box.add_child(text)
 	hint = _label(13, Color(0.7, 0.7, 0.66)); box.add_child(hint)
+	nug = _label(14, Color(1.0, 0.45, 1.0)); box.add_child(nug)
 	set_objective("Find Marta Sokolova.")
 
 func _label(sz: int, c: Color) -> Label:
@@ -38,6 +40,8 @@ func show_hint(t: String, seconds := 6.0) -> void:
 	hint.text = t; _hint_t = seconds; hint.modulate.a = 1.0
 
 func _process(delta: float) -> void:
+	var n := Skills.nuggets()
+	nug.text = "◆ %d" % n if n > 0 else ""
 	if _hint_t > 0.0:
 		_hint_t -= delta
 		hint.modulate.a = clampf(_hint_t, 0.0, 1.0)

@@ -44,8 +44,9 @@ var _hand_world := Transform3D.IDENTITY
 var _reach_t := -1.0                      # time into a reach for the thing being used, or -1
 var _reach_at := Vector3.ZERO             # world point being reached for
 var _reach_pose := "grip"
-var torch_holder: Node = null
-var gun: Node3D = null               # the revolver, once he has it (Revolver)       # once Socko has it, the light's his (toggle_torch goes to him)
+var torch_holder: Node = null        # once Socko has it, the light's his (toggle_torch goes to him)
+var gun: Node3D = null               # the revolver, once he has it (Revolver)
+var throw_power := 1.0               # The Bow (memory) makes throws flatter and harder
 
 func _ready() -> void:
 	torch.light_projector = Penumbra.make(0.65)   # three: the torch's penumbra
@@ -347,4 +348,4 @@ func throw() -> void:
 		return
 	var b := held
 	drop()
-	b.linear_velocity = -cam.global_transform.basis.z * clampf(9.0 / sqrt(b.mass), 2.0, 9.0)
+	b.linear_velocity = -cam.global_transform.basis.z * clampf(9.0 / sqrt(b.mass), 2.0, 9.0) * throw_power

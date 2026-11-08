@@ -27,6 +27,8 @@ var player: Node
 var cam: Camera3D
 var reloading := false
 var headshot_kills := false         # the skill tree's Headshot
+var reload_each := RELOAD_EACH      # Quick Reload makes it quicker
+var kick_scale := 1.0               # Steady Hand makes it smaller
 
 var _kick := 0.0
 var _flash: OmniLight3D
@@ -64,6 +66,7 @@ func equip(p_player: Node) -> void:
 	top_level = true
 	drawn = true
 	player.set("gun", self)
+	SkillEffects.apply_to_gun(self)
 
 # ---------------------------------------------------------------- the model
 func _model() -> void:
@@ -148,9 +151,9 @@ func fire() -> void:
 	if loaded <= 0:
 		_sfx(_click(1.0)); emptied.emit(); return
 	loaded -= 1
-	_kick = 1.0; _flash_t = 0.06
-	player.set("shake", 0.6)
-	player.set("pitch", float(player.get("pitch")) + 0.025)
+	_kick = kick_scale; _flash_t = 0.06
+	player.set("shake", 0.6 * kick_scale)
+	player.set("pitch", float(player.get("pitch")) + 0.025 * kick_scale)
 	_sfx(_bang())
 	Noises.make(get_tree(), global_position, 1.0, "gunshot", player)
 	var from := cam.global_position; var to := from - cam.global_transform.basis.z * RANGE
@@ -177,7 +180,7 @@ func reload() -> void:
 	_sfx(_click(0.7))
 	await get_tree().create_timer(0.25).timeout
 	while loaded < CAPACITY and spare > 0 and reloading:
-		await get_tree().create_timer(RELOAD_EACH).timeout
+		await get_tree().create_timer(reload_each).timeout
 		loaded += 1; spare -= 1
 		_sfx(_click(1.3))
 	await get_tree().create_timer(0.2).timeout

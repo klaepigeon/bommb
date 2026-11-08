@@ -10,6 +10,7 @@ const SETS := {
 	"rooms": [["r_salon_door", 4.5, 4.9, PI, 0.0, false], ["r_salon_in", 4.5, 6.35, PI, -0.08, false], ["r_salon_corner", 3.8, 7.4, -0.95, -0.15, false],
 		["r_hotel_in", 13.25, 9.5, -PI * 0.5, -0.12, false], ["r_hotel_corner", 14.45, 9.95, 1.08, -0.1, false],
 		["r_nursery_in", 2.85, 15.5, PI * 0.5, -0.1, false], ["r_nursery_corner", 1.9, 15.35, -2.39, -0.05, false]],
+	"marta": [["m_lane", 6.5, 2.7, PI, 0.12, false], ["m_close", 6.4, 3.55, PI, 0.18, true], ["m_side", 7.6, 4.3, PI * 0.5 + 0.6, 0.12, false]],
 	"hole": [["hole_lab", 6.5, 1.75, 0.0, -0.12, true], ["hole_lab_dark", 6.4, 1.9, 0.15, -0.05, false]],
 	"shops": [["s_pharmacy", 2.5, 5.0, 0.0, 0.12, false], ["s_bakery", 8.5, 5.0, 0.0, 0.12, false], ["s_tavern", 11.5, 5.0, 0.0, 0.12, false],
 		["s_photo", 3.5, 4.0, PI, 0.12, false], ["s_clock", 7.5, 4.0, PI, 0.12, false], ["s_hotel", 11.0, 8.5, -PI / 2, 0.1, false]],
@@ -33,8 +34,15 @@ func _initialize() -> void:
 	root.add_child(main)
 	await process_frame; await process_frame
 	var p = main.player
-	var lab: bool = which in ["lab", "shops", "hole", "fight", "fightclose", "rooms"]
+	var lab: bool = which in ["lab", "shops", "hole", "fight", "fightclose", "rooms", "marta"]
 	if lab: main.enter_labyrinth()
+	if which == "marta":
+		main.hunter.wake(Vector2i(6, 4))
+		main.hunter.position = main.labyrinth.center(6, 4) + Vector3(0, 0, 1.0)
+		main.hunter._yaw = 0.0
+		await process_frame
+		main.hunter.set_process(false)
+		main.hunter.marta.face(main.player.cam.global_position)
 	for v in SETS[which]:
 		var at := Vector3(v[1], 0, v[2])
 		if lab: at = main.labyrinth.to_global(at * 4.0)

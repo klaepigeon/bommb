@@ -19,6 +19,18 @@ var pause_menu: PauseMenu
 var labyrinth: Labyrinth
 var in_labyrinth := false
 var wardrobe: WardrobeGap
+var hunter: MartaHunter
+var skill_menu: SkillMenu
+var socko_lab: SockoLabyrinth
+## gutterspace nuggets: where they hang (the flat, then the labyrinth in its own space)
+const NUGGETS_FLAT := [Vector3(3.4, 1.1, 4.2), Vector3(1.2, 0.9, 1.0), Vector3(8.2, 1.3, 2.6), Vector3(9.3, 0.8, 6.9),
+	Vector3(6.1, 1.0, 0.7), Vector3(5.2, 1.2, 6.6), Vector3(1.6, 1.4, 6.8), Vector3(7.6, 1.5, 4.6)]
+const NUGGETS_LAB := [Vector3(26.0, 1.3, 7.0), Vector3(26.0, 1.0, 13.5), Vector3(14.0, 1.2, 17.2), Vector3(35.0, 1.6, 22.8),
+	Vector3(46.5, 1.1, 22.6), Vector3(9.0, 1.0, 20.0), Vector3(42.0, 1.2, 27.0), Vector3(42.0, 1.4, 30.5),
+	Vector3(34.0, 1.0, 46.5), Vector3(50.5, 2.2, 33.5), Vector3(37.0, 3.1, 44.0), Vector3(42.0, 1.1, 50.5),
+	Vector3(31.0, 1.2, 57.5), Vector3(52.0, 1.0, 63.5), Vector3(42.0, 1.6, 65.0), Vector3(22.0, 1.0, 62.0),
+	Vector3(15.5, 0.9, 61.0), Vector3(16.0, 1.1, 27.0), Vector3(20.8, 1.5, 29.0), Vector3(54.0, 1.1, 40.6),
+	Vector3(57.8, 1.2, 35.4), Vector3(8.5, 0.9, 63.6), Vector3(10.8, 1.0, 59.9), Vector3(28.0, 1.2, 21.0)]
 const LAB_AT := Vector3(400, 0, 0)      # far from the flat; each is hidden while you're in the other
 var socko_tutorial: SockoTutorial
 
@@ -78,11 +90,20 @@ func _ready() -> void:
 	back.set("gap", wardrobe); back.set("inward", false)
 	var bcs := CollisionShape3D.new(); var bbox := BoxShape3D.new(); bbox.size = Vector3(1.0, 1.6, 0.2); bcs.shape = bbox; back.add_child(bcs)
 	labyrinth.add_child(back); back.position = labyrinth.hole_at + Vector3(0, 0, 0.2)
+	hunter = MartaHunter.new(); hunter.name = "MartaHunter"; hunter.setup(labyrinth, player); labyrinth.add_child(hunter)
+	for p in NUGGETS_FLAT:
+		var n := Nugget.new(); n.position = p; world.add_child(n)        # placed before it's added: it keeps its place
+	for p in NUGGETS_LAB:
+		var n := Nugget.new(); n.position = p; labyrinth.add_child(n)
 	var whud := WeaponHud.new(); whud.name = "WeaponHud"; whud.setup(player); add_child(whud)
 	pause_menu = PauseMenu.new(); pause_menu.name = "PauseMenu"; pause_menu.setup(player); add_child(pause_menu)
 	socko_hud = SockoHud.new(); socko_hud.name = "SockoHud"; add_child(socko_hud)
 	socko_tutorial = SockoTutorial.new(); socko_tutorial.name = "SockoTutorial"; add_child(socko_tutorial)
 	socko_tutorial.setup(socko, player, socko_hud)
+	skill_menu = SkillMenu.new(); skill_menu.name = "SkillMenu"; skill_menu.setup(player, socko); add_child(skill_menu)
+	pause_menu.skill_menu = skill_menu
+	socko_lab = SockoLabyrinth.new(); socko_lab.name = "SockoLabyrinth"; add_child(socko_lab)
+	socko_lab.setup(socko, player, self, socko_hud, hunter, skill_menu)
 
 	var args := _args()
 	if args.has("torch_exp"):
@@ -124,6 +145,8 @@ func leave_labyrinth(to: Transform3D) -> void:
 	player.global_position = to.origin; player.yaw = to.basis.get_euler().y; player.velocity = Vector3.ZERO
 
 func _physics_process(_d: float) -> void:
+	if Skills.owned("second_wind") and not Input.is_action_pressed("sprint"):
+		player.stamina = minf(1.0, player.stamina + _d * 0.06)
 	if in_labyrinth:
 		var local := labyrinth.to_local(player.global_position)
 		var w := labyrinth.wrap(local)

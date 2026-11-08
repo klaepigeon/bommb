@@ -112,6 +112,34 @@ Socko wants Marta dead and the tutorial rushed: no reading, no looking, take the
 nuggets, buy the headshot. He guides Kurt straight to the revolver and pushes the skill tree's
 **Headshot** (instant kill). He's dismissive of every clue and goes quiet in the nursery.
 
+**Socko's labyrinth lines (built; new, PROPOSED wording, owner to approve):**
+- The gap: *"Huh. Would you look at that. A shortcut."* · Arriving: *"Don't stop. Don't look.
+  Something of yours is down here. This way."* · Steering (repeats, with a point down the way):
+  *"This way, bud."* / *"Keep going. Don't read the signs."* / *"You don't need to see that. Gun
+  first."* / *"Left, right, whatever. Come on."*
+- Clues, waved away: photograph *"Old photo. Dead people. Come on."* · note *"Don't read other
+  people's mail, bud."* · newspaper *"Old news. Literally."* · poster *"Huh. Some fella. Gun's that
+  way."* · mask *"Nope. Not your colour. Put it down."* · quiver *"Arrows? We're past arrows. We've
+  got a gun."* · photo strip *"…Anyway."* · glasses *"Somebody had a nice night. Come on."* ·
+  register *"Paperwork. Boring."* · letters *"Nobody's reading those, bud."* · Sonya's door
+  *"Leave it."* · the nursery: dead still and silent, then *"Nothing in here. Let's go."* (a lie).
+- The revolver: the bible's *"Ooh. Now we're talking. You know what that's for."* and, reloading,
+  *"Look at you go. Did you see your hands? I didn't teach you that."*
+- Marta: *"There she is. Don't think. Aim for the head."* · hits *"Again! Again!"* / *"Oh, that's
+  it. That's it!"* · after she takes hold of him *"Up. Up. She's had her go. Now we have ours."* ·
+  her death *"Trickshot's still got it!"* … *"What? It's a… word. Come on."*
+- Nuggets and the tree: *"Ooh, shiny. Grab those. Grab all of those."* · *"You've got enough.
+  Headshot. Trust me."* · bought Headshot *"There we go. Now we're friends."* · bought a Memory
+  skill *"…Really? That? Okay. Your nuggets."*
+
+Marta in the labyrinth (built): she comes into the town a few seconds after the revolver is
+taken, floating, seated in nothing, with a cold light about her; she hunts by sound (footsteps by
+how he moves, impacts, the scrape of the wardrobe, gunshots across the whole town) and by sight
+(further with his torch on, less when he's crouched); if she reaches him she takes hold of him
+("Have you seen them?") and he comes to by the hole; shot, she staggers (body 1, head 3 of 8);
+with Headshot a head shot kills her, and that's permanent. Close by she murmurs: *"…the
+boxes…"*, *"Have you seen…"*, *"Sonya, shoes."* (the bible's fragments).
+
 **Gutterspace nuggets:** floating pink-and-black shards that look like missing textures,
 scattered through the flat and the labyrinth. They're spent in the skill tree, where **anything
 can be bought in any order** (Memory or Survival). Survival skills make Marta more aggressive;
