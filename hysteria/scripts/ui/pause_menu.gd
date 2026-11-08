@@ -16,6 +16,7 @@ var invert: CheckButton
 var resume_btn: Button
 var skill_menu: Node
 var save_game: Node
+var save_note: Label
 var open := false
 var _was_captured := false
 
@@ -89,6 +90,10 @@ func _build() -> void:
 	title.add_theme_font_size_override("font_size", 22); title.add_theme_color_override("font_color", Color(0.72, 0.6, 0.38))
 	box.add_child(title)
 	resume_btn = _button("Resume"); resume_btn.pressed.connect(toggle); box.add_child(resume_btn)
+	var save_btn := _button("Save game"); save_btn.pressed.connect(_save_game); box.add_child(save_btn)
+	save_note = Label.new(); save_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	save_note.add_theme_font_size_override("font_size", 18); save_note.add_theme_color_override("font_color", Color(0.72, 0.6, 0.38))
+	box.add_child(save_note)
 	sens = _slider(0.3, 3.0, 0.05); box.add_child(_row("Look speed", sens))
 	vol = _slider(0.0, 1.0, 0.05); box.add_child(_row("Volume", vol))
 	invert = CheckButton.new(); invert.add_theme_font_size_override("font_size", 20)
@@ -112,6 +117,7 @@ func toggle() -> void:
 		_was_captured = Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		if save_game: save_game.call("save")
+		save_note.text = ""
 		if Game._voice() != "": DisplayServer.tts_pause()
 		resume_btn.grab_focus()
 	else:
@@ -128,6 +134,13 @@ func _notification(what: int) -> void:
 		toggle()
 	elif what == NOTIFICATION_APPLICATION_PAUSED and not open:
 		toggle()    # switched away from the app: come back paused
+
+func _save_game() -> void:
+	if not save_game: return
+	if save_game.call("save"):
+		save_note.text = "Saved."
+	else:
+		save_note.text = save_game.call("why_not")
 
 func _restart() -> void:
 	get_tree().paused = false

@@ -62,8 +62,9 @@ func _chain() -> void:
 	_plate = (door as Node3D).global_transform * Vector3(leaf_w + 0.05, 1.55, 0.06)
 	var plate := MeshInstance3D.new(); var pb := BoxMesh.new(); pb.size = Vector3(0.1, 0.06, 0.02); plate.mesh = pb; plate.material_override = steel
 	world.add_child(plate); plate.global_transform = Transform3D((door as Node3D).global_transform.basis, _plate)
-	padlock = Hotspot.make(world, _plate + Vector3(0, -0.05, 0), Vector3(0.08, 0.08, 0.06), "", Callable(), func(_p): return padlock_shot())
+	padlock = Hotspot.make(world, _plate + Vector3(0, -0.05, 0), Vector3(0.12, 0.12, 0.08), "", Callable(), func(_p): return padlock_shot())
 	padlock.name = "Padlock"
+	padlock.on_struck = padlock_struck
 	padlock_mesh = MeshInstance3D.new(); var lm := BoxMesh.new(); lm.size = Vector3(0.032, 0.036, 0.013); padlock_mesh.mesh = lm
 	var brass := StandardMaterial3D.new(); brass.albedo_color = Color(0.55, 0.45, 0.26); brass.metallic = 0.8; brass.roughness = 0.4
 	padlock_mesh.material_override = brass; padlock.add_child(padlock_mesh)
@@ -152,6 +153,20 @@ func padlock_shot() -> bool:
 	padlock_mesh.rotation.z += 0.4
 	if _padlock_hits >= 2: _free("gun")
 	return true
+
+## Something heavy thrown into the padlock: the axe, the iron, a bottle won't do it. Hard hits add
+## up; a cheap padlock gives after enough of them.
+var _strike := 0.0
+func padlock_struck(momentum: float, by: Node) -> void:
+	if free or momentum < 5.0: return
+	_strike += momentum
+	_sfx(_clang(1.3), padlock.global_position, -1.0)
+	padlock_mesh.rotation.z += 0.25
+	if _strike >= 12.0:
+		Game.say("The padlock's hasp bends on the %s and gives. The chain drops." % String(by.get("title")).to_lower(), 4.5)
+		_free("thrown", true)
+		_sfx(_rattle(), _plate, 0.0)
+		_socko("freed", "Huh. Okay. Not how I'd have done it.", "curious", 1.0)
 
 func _free(how: String, quiet := false) -> void:
 	if free: return
@@ -264,6 +279,7 @@ func _end() -> void:
 	SaveGame.wipe()            # the chapter's done: next time starts at the beginning
 	chapter_end.emit()
 	if Game.flags.get("marta_dead", false): _socko("end", "Look at us. Look at us go. Didn't even need the tutorial.", "happy")
+	elif Game.flags.get("marta_at_peace", false): _socko("end", "Shoes. You gave her shoes. Next time, we do it my way.", "disappointed")
 	else: _socko("end", "See? Easy. Next time we just do it my way.", "happy")
 	await get_tree().create_timer(3.5).timeout
 	Game.fade.emit(1.0, 2.5)

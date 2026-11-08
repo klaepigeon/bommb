@@ -63,7 +63,7 @@ func _initialize() -> void:
 	await create_timer(0.3).timeout
 	check(heard.has("axe"), "the blows are loud (heard as 'axe')")
 	await create_timer(2.2).timeout
-	check(e.free and d.locked == "" and not e.links[0].visible, "three blows: the chain is gone")
+	check(e.free and d.locked == "" and e.links[0].global_position.y < 0.1, "three blows: the chain falls in a heap")
 	check(root.get_node("Game").flags.get("escaped_by", "") == "axe", "escaped by the axe")
 	check(not p.locked, "Kurt has his hands back")
 	for i in 120: await physics_frame

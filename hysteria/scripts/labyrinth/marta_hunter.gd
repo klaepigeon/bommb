@@ -11,6 +11,11 @@ extends Node3D
 ##   HOLD    within reach: she takes hold of him, close to her face ("Have you seen them?"), and
 ##           it goes black; he comes to by the hole in the lane, and she's gone off somewhere
 ##   DEAD    shot down: she falls out of the air and stays down (for good)
+##   CALM    he gave her one of Sonya's red shoes (held out to her, or in his hand when she
+##           reaches him): she holds it and drifts, deaf to him, for a while; given the pair, she
+##           goes to the nursery and sits by the door with them in her lap, and that's for good
+##           (owner's canon: she's looking for Sonya; the bible's "Sonya, shoes." The shoe
+##           solution itself is PROPOSED)
 ##
 ## Hearing and sight scale with Skills.aggression(): Survival makes her keener, Memory softer.
 ## Footsteps carry by how he moves (running far, crouching hardly at all; Quiet Feet less);
@@ -20,8 +25,14 @@ signal seen_kurt
 signal held_kurt
 signal died
 signal hurt(head: bool)
+signal calmed(for_good: bool)
 
-enum S { DRIFT, LISTEN, SEARCH, CHASE, HOLD, DEAD }
+enum S { DRIFT, LISTEN, SEARCH, CHASE, HOLD, DEAD, CALM }
+
+const CALM_FOR := 120.0
+var shoes: Array[Node3D] = []      # Sonya's shoes, in her hands
+var at_peace := false
+var _calm_until := 0.0
 
 const HOVER := 0.42                 # her seat's this far above where a chair's would be
 const DRIFT_SPEED := 0.85
@@ -89,7 +100,7 @@ func _enter(s: S) -> void:
 # ---------------------------------------------------------------- senses
 ## Noises.make: everything heard in the town
 func hear(pos: Vector3, loud: float, what: String, source: Node) -> void:
-	if not awake or state in [S.DEAD, S.HOLD, S.CHASE]: return
+	if not awake or state in [S.DEAD, S.HOLD, S.CHASE, S.CALM]: return
 	var here := lab.to_local(pos)
 	var radius := loud * 40.0 * Skills.aggression()
 	if what == "gunshot": radius = 60.0
@@ -198,7 +209,18 @@ func _process(delta: float) -> void:
 				# lost sight: go to where he was last
 				if _path.is_empty() or _state_t > 1.0: _route_to(_heard_at); _state_t = 0.0
 				if _move(CHASE_SPEED * agg * 0.9, delta): _enter(S.SEARCH)
-			if near < REACH and not player.get("locked"): _hold()
+			if near < REACH and not player.get("locked"):
+				# a red shoe in his hand: she takes that instead of him
+				if _is_shoe(player.get("held")): take_shoe(player.get("held"))
+				else: _hold()
+		S.CALM:
+			if at_peace:
+				_move(DRIFT_SPEED * 0.6, delta)
+			else:
+				if _move(DRIFT_SPEED * 0.7, delta) or _path.is_empty(): _wander()
+				if _t > _calm_until:
+					_enter(S.DRIFT); _aura(false)
+					Game.say("“…the other one.”", 3.0)
 		S.HOLD:
 			pass
 		S.DEAD:
@@ -211,7 +233,10 @@ func _process(delta: float) -> void:
 	# floating: a slow bob; leaning a little into her movement; her head on him once she knows
 	marta.position.y = HOVER + sin(_t * 1.1) * 0.05
 	rotation.y = _yaw
-	if state in [S.CHASE, S.HOLD] or (state == S.LISTEN and near < 10.0):
+	if state == S.CALM:
+		# head down, to what's in her hands
+		marta.joints.head.rotation = marta.joints.head.rotation.lerp(Vector3(-0.75, 0.0, 0.05), 1.0 - exp(-delta * 2.0))
+	elif state in [S.CHASE, S.HOLD] or (state == S.LISTEN and near < 10.0):
 		marta.face(player.cam.global_position, Marta.JAW_OPEN if state == S.CHASE else 0.2)
 	else:
 		marta.joints.head.rotation = marta.joints.head.rotation.lerp(Vector3(-0.35, sin(_t * 0.3) * 0.6, 0.1), 1.0 - exp(-delta * 2.0))
@@ -220,7 +245,62 @@ func _process(delta: float) -> void:
 	_whisper_t -= delta
 	if _whisper_t <= 0.0 and near < 9.0 and state != S.DEAD:
 		_whisper_t = randf_range(9.0, 16.0)
-		Game.say(["“…the boxes…”", "“Have you seen…”", "“Sonya, shoes.”"][randi() % 3], 2.5)
+		var lines := ["“…the boxes…”", "“Have you seen…”", "“Sonya, shoes.”"]
+		if state == S.CALM:
+			lines = ["“…Sonya's.”", "“She was always losing them.”", "“Buckle. Buckle.”"] if at_peace else ["“…Sonya's.”", "“…and the other one?”"]
+		Game.say(lines[randi() % lines.size()], 2.5)
+
+# ---------------------------------------------------------------- Sonya's shoes
+func _is_shoe(item) -> bool:
+	return item != null and is_instance_valid(item) and String(item.get("title")).to_lower().begins_with("child's shoe")
+
+func use_with_prompt(item: Node) -> String:
+	if state == S.DEAD or not _is_shoe(item): return ""
+	var near := lab.to_local(player.global_position).distance_to(position)
+	return "Hold out the shoe" if near < 3.0 else ""
+
+func use_with(_p: Node, item: Node) -> bool:
+	if use_with_prompt(item) == "": return false
+	take_shoe(item); return true
+
+## She takes the shoe out of his hand, and holds it.
+func take_shoe(item: RigidBody3D) -> void:
+	if player.get("held") == item:
+		player.set("held", null); player.set("inspecting", false)
+		item.remove_collision_exception_with(player)
+	item.freeze = true; item.collision_layer = 0; item.collision_mask = 0
+	item.reparent(marta.joints.wrR if shoes.is_empty() else marta.joints.wrL)
+	item.position = Vector3(0.0, -0.03, -0.06 - shoes.size() * 0.02); item.rotation = Vector3(0.3, 0.0, 0.0)
+	shoes.append(item)
+	_aura(true)
+	Game.flags["marta_shoes"] = shoes.size()
+	if shoes.size() >= 2:
+		at_peace = true
+		Game.flags["marta_at_peace"] = true
+		Game.speak("…Sonya's.", 3.0, 0.75, 0.7)
+		Game.say("She holds them in her lap, the pair, and turns them so the buckles match.", 5.0)
+		_enter(S.CALM); _to_nursery()
+		calmed.emit(true)
+	else:
+		Game.speak("…Sonya's.", 3.0, 0.75, 0.7)
+		_calm_until = _t + CALM_FOR
+		_enter(S.CALM); _wander()
+		calmed.emit(false)
+
+## warmer and dimmer while she's calm
+func _aura(calm: bool) -> void:
+	var a := get_node_or_null("Aura") as OmniLight3D
+	if not a: return
+	a.light_color = Color(0.95, 0.8, 0.62) if calm else Color(0.62, 0.85, 0.75)
+	a.light_energy = 0.7 if calm else 1.1
+
+## to the nursery's door and in: she sits by Sonya's door
+func _to_nursery() -> void:
+	var r: Dictionary = Interiors.NURSERY
+	var z: float = r.door[1]
+	_route_to(Vector3(r.x1 + 2.0, 0, z))
+	_path.append(Vector3(r.x1 - 0.8, 0, z))
+	_path.append(Vector3(r.x0 + 1.4, 0, z + 0.4))
 
 func _hold() -> void:
 	_enter(S.HOLD)

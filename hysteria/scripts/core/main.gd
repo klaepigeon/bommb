@@ -24,6 +24,7 @@ var skill_menu: SkillMenu
 var socko_lab: SockoLabyrinth
 var escape: FlatEscape
 var save_game: SaveGame
+var memory: MemoryEffects
 ## gutterspace nuggets: where they hang (the flat, then the labyrinth in its own space)
 const NUGGETS_FLAT := [Vector3(3.4, 1.1, 4.2), Vector3(1.2, 0.9, 1.0), Vector3(8.2, 1.3, 2.6), Vector3(9.3, 0.8, 6.9),
 	Vector3(6.1, 1.0, 0.7), Vector3(5.2, 1.2, 6.6), Vector3(1.6, 1.4, 6.8), Vector3(7.6, 1.5, 4.6)]
@@ -108,6 +109,7 @@ func _ready() -> void:
 	socko_lab.setup(socko, player, self, socko_hud, hunter, skill_menu)
 	escape = FlatEscape.new(); escape.name = "FlatEscape"; add_child(escape)
 	escape.setup(world, player, self)
+	memory = MemoryEffects.new(); memory.name = "MemoryEffects"; add_child(memory); memory.setup(self)
 	save_game = SaveGame.new(); save_game.name = "SaveGame"; save_game.setup(self); add_child(save_game)
 	pause_menu.save_game = save_game
 
@@ -140,8 +142,12 @@ func _ready() -> void:
 ## Launching the game continues the saved one (only as the real main scene: not under the tests,
 ## which make their own).
 func _continue() -> void:
-	if get_tree().current_scene == self:
-		save_game.load_game()
+	if get_tree().current_scene != self or not SaveGame.exists(): return
+	var card: CanvasLayer = load("res://scripts/ui/title_card.gd").new()
+	card.chosen.connect(func(cont: bool):
+		if cont: save_game.load_game()
+		else: SaveGame.wipe())
+	add_child(card)
 
 ## Through the gap behind the wardrobe and back. Only one of the two places exists at a time.
 func enter_labyrinth() -> void:
