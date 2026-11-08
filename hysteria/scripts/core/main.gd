@@ -12,6 +12,8 @@ var viewport: SubViewport
 var dread: Dread
 var marta: Marta
 var encounter: MartaEncounter
+var socko: Socko
+var socko_intro: SockoIntro
 
 func _ready() -> void:
 	container = SubViewportContainer.new()
@@ -53,6 +55,13 @@ func _ready() -> void:
 	encounter = MartaEncounter.new(); encounter.name = "MartaEncounter"
 	add_child(encounter)
 	encounter.setup(marta, player, presence, dread)
+	# Socko: on his left hand, from the moment he comes to (story bible beats 9-10), not before
+	socko = Socko.new(); socko.name = "Socko"
+	socko.setup(player.cam, player)
+	viewport.add_child(socko)
+	socko_intro = SockoIntro.new(); socko_intro.name = "SockoIntro"
+	add_child(socko_intro)
+	socko_intro.setup(socko, player, encounter)
 
 	var args := _args()
 	if args.has("torch_exp"):
