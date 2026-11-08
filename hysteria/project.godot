@@ -13,16 +13,25 @@ Game="*res://scripts/core/game.gd"
 
 [display]
 
+window/handheld/orientation=4
+
 window/size/viewport_width=1280
 window/size/viewport_height=720
-window/stretch/mode="disabled"
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
 
 [physics]
 
 common/physics_ticks_per_second=60
 3d/default_gravity=9.81
 
+[input_devices]
+
+pointing/emulate_mouse_from_touch=false
+
 [rendering]
+
+textures/vram_compression/import_etc2_astc=true
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"

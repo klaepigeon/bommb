@@ -49,5 +49,19 @@ func _initialize() -> void:
 	for i in 20: await physics_frame
 	print("thrown ", snappedf(best.global_position.distance_to(start), 0.01), " m")
 	ok = ok and best.global_position.distance_to(start) > 0.3
+	# dread: time with the body drains the colour; leaving lets it back
+	var dread: Node = main.dread
+	var mat: ShaderMaterial = main.container.material
+	p.global_position = Vector3(3.2, 0, 3.5)   # living room, with the body at the table
+	for i in 80: dread._process(1.0)
+	var grey: float = mat.get_shader_parameter("bw")
+	p.global_position = Vector3(7.0, 0, 4.5)   # out in the hall
+	for i in 10: dread._process(1.0)
+	var back: float = mat.get_shader_parameter("bw")
+	p.global_position = Vector3(5.0, 0, 6.5)   # Sonya's room: nothing here yet
+	for i in 40: dread._process(1.0)
+	var gone: float = mat.get_shader_parameter("bw")
+	print("dread: 80 s with her ", snappedf(grey, 0.01), ", 10 s out ", snappedf(back, 0.01), ", 40 s more ", snappedf(gone, 0.01))
+	ok = ok and grey > 0.99 and back < grey and back > 0.2 and gone < 0.01
 	print("SMOKE ", "PASS" if ok else "FAIL")
 	quit(0 if ok else 1)

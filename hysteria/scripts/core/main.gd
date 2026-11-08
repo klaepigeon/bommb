@@ -9,6 +9,7 @@ var world: Node3D
 var player: CharacterBody3D
 var container: SubViewportContainer
 var viewport: SubViewport
+var dread: Dread
 
 func _ready() -> void:
 	container = SubViewportContainer.new()
@@ -19,6 +20,7 @@ func _ready() -> void:
 	var mat := ShaderMaterial.new(); mat.shader = preload("res://shaders/ps1_screen.gdshader")
 	container.material = mat
 	add_child(container)
+	get_window().size_changed.connect(_rescale); _rescale.call_deferred()
 	viewport = SubViewport.new()
 	viewport.msaa_3d = Viewport.MSAA_DISABLED
 	viewport.canvas_item_default_texture_filter = Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST
@@ -33,6 +35,16 @@ func _ready() -> void:
 	player.place(world.spawn)
 
 	add_child(preload("res://scripts/ui/hud.gd").new())
+	var touch: CanvasLayer = preload("res://scripts/ui/touch.gd").new()
+	touch.player = player
+	add_child(touch)
+
+	# the body at the dinner table (a marker until she's ported): stay in her room and the colour goes
+	var body := Presence.new(); body.name = "TheBody"
+	world.add_child(body); body.position = Vector3(2.4, 0.9, 1.9)
+	dread = Dread.new(); dread.name = "Dread"
+	add_child(dread)
+	dread.setup(player, world.level.rooms, container.material)
 
 	var args := _args()
 	if args.has("torch_exp"):
@@ -41,11 +53,24 @@ func _ready() -> void:
 		player.torch.light_energy = float(args.torch_k)
 	if args.has("torch_shadow"):
 		player.torch.shadow_enabled = args.torch_shadow == "1"
+	if args.has("dread"):
+		dread.level = float(args.dread)
+	if args.has("touch"):
+		touch.visible = true; player.touch_ui = true
 	if args.has("shots"):
 		_shots(args.shots)
 	else:
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-		Game.say("Flat 47. [WASD] move  [Shift] run  [C] crouch  [E] use  [F] torch", 6.0)
+		if DisplayServer.is_touchscreen_available():
+			Game.say("Left thumb: walk (push to the rim to run). Right thumb: look.", 6.0)
+		else:
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+			Game.say("Flat 47. [WASD] move  [Shift] run  [C] crouch  [E] use  [F] torch", 6.0)
+
+## The screen pass works in physical pixels; the low-res grid is SHRINK canvas pixels, which the
+## stretch mode scales up on high-density screens.
+func _rescale() -> void:
+	var k := float(get_window().size.y) / float(get_viewport().get_visible_rect().size.y)
+	(container.material as ShaderMaterial).set_shader_parameter("shrink", SHRINK * k)
 
 func _args() -> Dictionary:
 	var d := {}

@@ -32,7 +32,11 @@ func _bind_inputs() -> void:
 		var mb := InputEventMouseButton.new()
 		mb.button_index = mouse[action]
 		InputMap.action_add_event(action, mb)
-	var pad := {"interact": JOY_BUTTON_A, "torch": JOY_BUTTON_X, "crouch": JOY_BUTTON_Y, "sprint": JOY_BUTTON_LEFT_STICK, "pause": JOY_BUTTON_START}
+	# triggers: right throws, left turns the held thing over
+	for pair in [["throw", JOY_AXIS_TRIGGER_RIGHT], ["inspect", JOY_AXIS_TRIGGER_LEFT]]:
+		var jm := InputEventJoypadMotion.new(); jm.axis = pair[1]; jm.axis_value = 1.0
+		InputMap.action_add_event(pair[0], jm)
+	var pad := {"interact": JOY_BUTTON_A, "torch": JOY_BUTTON_X, "crouch": JOY_BUTTON_Y, "sprint": JOY_BUTTON_LEFT_STICK, "pause": JOY_BUTTON_START, "throw": JOY_BUTTON_RIGHT_SHOULDER}
 	for action in pad:
 		var jb := InputEventJoypadButton.new()
 		jb.button_index = pad[action]

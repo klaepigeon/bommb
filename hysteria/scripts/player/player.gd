@@ -20,6 +20,7 @@ var bob := 0.0
 var held: RigidBody3D
 var inspecting := false
 var target: Node
+var touch_ui := false   # prompts without key names when playing by touch
 var noise := 0.0    # how loud he is this frame, 0..1 (footsteps, impacts); for the AI later
 
 @onready var head: Node3D = $Head
@@ -59,7 +60,7 @@ func _physics_process(delta: float) -> void:
 	if pad.length() > 0.2:
 		inp = pad.limit_length(1.0)
 	if Input.is_action_just_pressed("crouch"):
-		crouched = not crouched
+		toggle_crouch()
 	var running := Input.is_action_pressed("sprint") and not crouched and inp.y < -0.3 and stamina > 0.05
 	var speed := CROUCH if crouched else (RUN if running else WALK)
 	stamina = clampf(stamina + (-0.22 if running else 0.12) * delta, 0.0, 1.0)
@@ -88,7 +89,7 @@ func _aim() -> void:
 	target = null
 	var txt := ""
 	if held:
-		txt = "[LMB] throw   [E] drop   [RMB] turn over"
+		txt = "Throw  ·  Drop  ·  Turn over" if touch_ui else "[LMB/RT] throw   [E/A] drop   [RMB/LT] turn over"
 	elif ray.is_colliding():
 		var n: Node = ray.get_collider()
 		while n and not n.has_method("interact"):
@@ -96,23 +97,33 @@ func _aim() -> void:
 		if n:
 			var p: String = n.call("prompt")
 			if p != "":
-				target = n; txt = "[E] " + p
+				target = n; txt = p if touch_ui else "[E] " + p
 	Game.prompt.emit(txt)
 
 func _unhandled_input(e: InputEvent) -> void:
 	if e.is_action_pressed("interact"):
-		if held:
-			drop()
-		elif target:
-			target.call("interact", self)
+		use()
 	elif e.is_action_pressed("torch"):
-		torch.visible = not torch.visible
-	elif e.is_action_pressed("throw") and held:
+		toggle_torch()
+	elif e.is_action_pressed("throw"):
 		throw()
-	elif e.is_action_pressed("inspect") and held:
-		inspecting = true
+	elif e.is_action_pressed("inspect"):
+		inspecting = held != null
 	elif e.is_action_released("inspect"):
 		inspecting = false
+
+# ---------------------------------------------------------------- actions (keys, pad and touch)
+func use() -> void:
+	if held:
+		drop()
+	elif target:
+		target.call("interact", self)
+
+func toggle_torch() -> void:
+	torch.visible = not torch.visible
+
+func toggle_crouch() -> void:
+	crouched = not crouched
 
 # ---------------------------------------------------------------- carrying
 func grab(b: RigidBody3D) -> void:
@@ -144,6 +155,8 @@ func drop() -> void:
 		b.remove_collision_exception_with(self)
 
 func throw() -> void:
+	if not held:
+		return
 	var b := held
 	drop()
 	b.linear_velocity = -cam.global_transform.basis.z * clampf(9.0 / sqrt(b.mass), 2.0, 9.0)

@@ -2,6 +2,7 @@
 // turns the built Flat 47 into a .glb (geometry + baked textures) and a level JSON
 // (collision, floors, lights, doors, props) for the Godot project to import.
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
+import { ROOMS } from '../../src/plan.js';
 import { Group, Mesh, Matrix4, Color, CanvasTexture, Vector2, Vector3, Quaternion } from 'three';
 
 window.__exportFlat47 = async (maxTex) => {
@@ -113,6 +114,7 @@ window.__exportFlat47 = async (maxTex) => {
         .forEach((f, i) => out.push({ name: 'stair' + i, type: 'PointLight', pos: f.pos.toArray(), color: '#' + new Color(f.color).getHexString(), intensity: f.k, range: f.range, decay: 2, circuit: null, on: true, flicker: f.flicker, broken: false, shadow: false }));
       return out;
     })(),
+    rooms: ROOMS,
     circuits: Object.fromEntries(Object.entries(G.circuits || {}).map(([k, c]) => [k, !!c.on])),
     spawn: { x: 9.35, y: 0, z: 4.55, yaw: Math.PI / 2 },
   };
