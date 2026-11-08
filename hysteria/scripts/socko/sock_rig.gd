@@ -35,6 +35,7 @@ const MOUTH_DEPTH := 0.62    # how far the pocket folds in toward the throat
 var skel: Skeleton3D
 var sock: MeshInstance3D
 var sleeve: MeshInstance3D
+var mouth_mat: ShaderMaterial   # the inside of the mouth (it glows when the torch is in there)
 var eyes: Array = []         # {disc, pupil, p: Vector2, v: Vector2, last: Vector3, lastv: Vector3}
 
 var wrist := Vector3.ZERO
@@ -42,8 +43,8 @@ var jaw := 0.0
 var skew := 0.0
 var curl := 0.0
 var squash := 0.0
-var gaze_world = null        # Vector3 the googly pupils drift toward (they're loose: it's a bias)
-var gaze_pull := 0.0
+var gaze_world = null        # only used when defy_gravity > 0
+var defy_gravity := 0.0      # layer D: pupils hold on gaze_world against gravity (wrong)
 
 const CLOTH := preload("res://shaders/ps1_cloth.gdshader")
 
@@ -84,6 +85,13 @@ func _skinned(n: String) -> MeshInstance3D:
 
 func bone_global(b: int) -> Transform3D:
 	return skel.global_transform * skel.get_bone_global_pose(b)
+
+## Between the jaws, just inside the lips, facing out of the mouth: where light comes from.
+func mouth_global() -> Transform3D:
+	var f := bone_global(B.FINGERS); var t := bone_global(B.THUMB)
+	var o := f.origin.lerp(t.origin, 0.5)
+	var b := Basis(f.basis.get_rotation_quaternion().slerp(t.basis.get_rotation_quaternion(), 0.5))
+	return Transform3D(b, o + b * Vector3(0, 0, -0.03))
 
 ## Where the head is (between the jaws, a little behind the nose), and which way the mouth faces.
 func head_global() -> Transform3D:
@@ -281,7 +289,8 @@ func _build_sock() -> ArrayMesh:
 	for r in R:
 		for ia in NA:
 			pk.quad(pg[r][ia], pg[r][ia + 1], pg[r + 1][ia + 1], pg[r + 1][ia])
-	pk.commit(mesh, _felt_mat(Color("7a1c1c"), 0.15))
+	mouth_mat = _felt_mat(Color("7a1c1c"), 0.15)
+	pk.commit(mesh, mouth_mat)
 	# ---- the red felt tongue, stitched to the lower jaw
 	var tg := ClothSkin.new()
 	var tc := Vector3(0, -0.0035, ZC - 0.036); var tr := Vector3(0.02, 0.0045, 0.03)
@@ -415,36 +424,59 @@ func _eyes() -> void:
 		disc.add_child(pupil)
 		for mi in [face, dome, pupil]:
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		eyes.append({"disc": disc, "pupil": pupil, "r": r * 0.46, "p": Vector2(0, r * 0.3), "v": Vector2.ZERO, "last": Vector3.ZERO, "lastv": Vector3.ZERO, "init": false})
+		eyes.append({"disc": disc, "pupil": pupil, "r": r * 0.46, "p": Vector2(0, r * 0.3), "v": Vector2.ZERO, "last": Vector3.ZERO, "lastv": Vector3.ZERO, "acc": Vector3.ZERO, "init": false})
 
-## Loose pupils: gravity and the hand's acceleration push them round inside the rim; they rattle
-## against it and settle. `gaze_world` adds a pull, so his eyes seem to land on what he's after.
+## Real googly eyes: a loose black disc between a card and a clear dome. It has no idea where
+## he's looking. Gravity (and the hand's own acceleration, felt as a push the other way) slides it
+## across the card; it catches on the card and stays put when the slope is gentle, rattles off the
+## rim when the hand jerks, and runs round the rim to the lowest point. Real units (metres,
+## 9.8 m/s²), substepped so it's the same at 20 fps as at 120.
+## `defy_gravity` (layer D, off unless Socko is being uncanny) lets the pupils hold on a point
+## against all of that, which no googly eye can do.
+const PUPIL_MU_K := 0.22     # sliding friction, plastic on card
+const PUPIL_MU_S := 0.32     # sticks below this slope
+const PUPIL_BOUNCE := 0.35   # off the rim
 func update_eyes(delta: float) -> void:
 	if delta <= 0.0:
 		return
+	var n := int(ceil(delta / (1.0 / 240.0))); var h := delta / n
 	for e in eyes:
 		var disc: Node3D = e.disc
 		var gt := disc.global_transform
 		var pos := gt.origin
 		if not e.init:
-			e.last = pos; e.lastv = Vector3.ZERO; e.init = true
+			e.last = pos; e.lastv = Vector3.ZERO; e.acc = Vector3.ZERO; e.init = true
 		var vel: Vector3 = (pos - e.last) / delta
-		var acc: Vector3 = (vel - e.lastv) / delta
+		var acc: Vector3 = ((vel - e.lastv) / delta).limit_length(90.0)
+		e.acc = (e.acc as Vector3).lerp(acc, 0.6)      # finite differences are noisy frame to frame
 		e.last = pos; e.lastv = vel
-		var force := Vector3(0, -9.8, 0) - acc.limit_length(60.0)
-		var ax := gt.basis.x.normalized(); var az := gt.basis.z.normalized()
-		var f2 := Vector2(force.dot(ax), force.dot(az)) * 0.03
-		if gaze_world != null and gaze_pull > 0.0:
+		var ax := gt.basis.x.normalized(); var az := gt.basis.z.normalized(); var ny := gt.basis.y.normalized()
+		var geff: Vector3 = Vector3(0, -9.8, 0) - (e.acc as Vector3)
+		var f := Vector2(geff.dot(ax), geff.dot(az))
+		var press := absf(geff.dot(ny))                  # against the card, or up into the dome
+		if defy_gravity > 0.0 and gaze_world != null:
 			var to: Vector3 = ((gaze_world as Vector3) - pos).normalized()
-			f2 += Vector2(to.dot(ax), to.dot(az)) * gaze_pull * 0.5
-		var v: Vector2 = e.v + f2 * delta
-		v *= pow(0.02, delta)               # friction against the backing card
-		var p: Vector2 = e.p + v * delta
-		var r: float = e.r
-		if p.length() > r:
-			var nrm := p.normalized()
-			p = nrm * r
-			var vn := v.dot(nrm)
-			if vn > 0.0: v -= nrm * vn * 1.45   # a little bounce off the rim
-		e.p = p; e.v = v
+			var want := Vector2(to.dot(ax), to.dot(az)).limit_length(1.0) * (e.r as float)
+			e.p = (e.p as Vector2).lerp(want, 1.0 - pow(0.001, delta * defy_gravity))
+			e.v = Vector2.ZERO
+			(e.pupil as Node3D).position = Vector3(e.p.x, 0.0025, e.p.y)
+			continue
+		var v: Vector2 = e.v; var p: Vector2 = e.p; var r: float = e.r
+		for i in n:
+			var sp := v.length()
+			if sp < 0.002 and f.length() <= PUPIL_MU_S * press:
+				v = Vector2.ZERO                         # stuck on the card
+			else:
+				v += f * h
+				var drop := PUPIL_MU_K * press * h
+				var sp2 := v.length()
+				v = v - v / sp2 * minf(drop, sp2) if sp2 > 0.0 else v
+			p += v * h
+			if p.length() > r:
+				var nrm := p.normalized()
+				p = nrm * r
+				var vn := v.dot(nrm)
+				if vn > 0.0:
+					v -= nrm * vn * (1.0 + PUPIL_BOUNCE)
+		e.v = v; e.p = p
 		(e.pupil as Node3D).position = Vector3(p.x, 0.0025, p.y)

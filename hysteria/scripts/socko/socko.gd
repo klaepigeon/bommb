@@ -74,6 +74,10 @@ var _t := 0.0
 var _rng := RandomNumberGenerator.new()
 var _snap_t := 0.0; var _snap := Vector3.ZERO
 var _spill: OmniLight3D
+# the torch: once Socko's there, Kurt's light comes out of his mouth. Nobody explains it.
+var torch: SpotLight3D
+var torch_on := false
+var _torch_aim := Vector3.ZERO
 
 # ---------------------------------------------------------------- emotions (bible §4–5)
 # lift/lean move the hand (m); pitch/roll tilt the head (rad); jaw at rest; bounce: speech
@@ -140,6 +144,19 @@ func attend(p: Vector3, seconds := 4.0) -> void:
 
 func look_at_kurt(seconds := 3.0) -> void:
 	_kurt_t = seconds
+
+## Take over Kurt's torch: from now on the light comes out of Socko's mouth (same lamp, same
+## beam), aimed where Kurt is looking, as bright as his mouth is open.
+func take_torch(lamp: SpotLight3D) -> void:
+	torch = lamp.duplicate() as SpotLight3D
+	torch.name = "MouthLight"
+	torch.top_level = true
+	add_child(torch)
+	torch_on = lamp.visible
+	lamp.visible = false
+
+func toggle_torch() -> void:
+	torch_on = not torch_on
 
 func busy() -> bool:
 	return talking or _gesture != ""
@@ -255,9 +272,9 @@ func _process(delta: float) -> void:
 	var g := _gesture_offsets(delta)
 
 	# ---------------- A: where the hand is
-	var busy_hand: bool = player != null and player.get("held") != null and player.get("inspecting")
+	# his hand is never busy (Kurt does everything with the right); it drops only when he runs
 	var running: bool = player != null and Vector2(player.velocity.x, player.velocity.z).length() > 2.0
-	pose_low = move_toward(pose_low, 1.0 if (busy_hand or running) else 0.0, delta * 2.5)
+	pose_low = move_toward(pose_low, 1.0 if running else 0.0, delta * 2.5)
 	var face_w := clampf(pose_face + (1.0 if _kurt_t > 0.0 else 0.0) * 0.85 + g.face, 0.0, 1.0)
 	_face_s = lerpf(_face_s, face_w, 1.0 - pow(0.02, delta))
 	# the elbow is part of the body: it goes where the body goes. Only the swing of the forearm from
@@ -328,6 +345,8 @@ func _process(delta: float) -> void:
 		ghost_mouth = maxf(0.0, ghost_mouth - delta)
 		spoken = (0.35 + 0.25 * sin(_t * 23.0)) * clampf(ghost_mouth, 0.0, 1.0) * absf(sin(_t * 9.0))
 	var jaw_want := maxf(_p.jaw + g.jaw, spoken * 0.62 * clampf(loud, 0.3, 1.6))
+	if torch_on and not talking:
+		jaw_want = maxf(jaw_want, 0.34)      # holds his mouth open for the light
 	if emotion in ["angry", "furious"] and talking: jaw_want *= 1.25
 	for i in n:
 		_jaw_v += ((jaw_want - _jaw) * 380.0 - _jaw_v * 2.0 * 0.6 * 19.5) * h
@@ -347,11 +366,22 @@ func _process(delta: float) -> void:
 	rig.squash = _sq
 	rig.apply_pose()
 	rig.gaze_world = _eyes_on
-	rig.gaze_pull = lerpf(1.0, 3.0, still)
+	rig.defy_gravity = clampf((stillness - 0.5) * 2.0, 0.0, 1.0) + beyond   # only when he's being wrong
 	rig.update_eyes(delta)
+	_update_torch()
 	_spill.global_position = rig.head_global().origin + cam.global_transform.basis.z * 0.25 + Vector3(0, 0.1, 0)
 
 var _face_s := 0.0
+
+func _update_torch() -> void:
+	if not torch:
+		return
+	torch.visible = torch_on
+	var k := 0.15 + 0.85 * smoothstep(0.04, 0.3, rig.jaw)    # shut mouth, little light; talking, it pulses
+	if torch_on:
+		torch.global_transform = rig.mouth_global()
+		torch.light_energy = 2.4 * k
+	rig.mouth_mat.set_shader_parameter("glow", Vector3(1.0, 0.85, 0.65) * (1.6 * k if torch_on else 0.0))
 var _pull := 0.0
 
 ## Where the elbow-forearm goes, in the camera's frame: blended between held ahead (show), low
@@ -360,7 +390,7 @@ var _pull := 0.0
 func _target_xf(g := {}) -> Transform3D:
 	var show_w := Vector3(-0.11, -0.15, -0.34);  var show_e := Vector3(-0.35, -0.35, 0.0)
 	var low_w := Vector3(-0.2, -0.34, -0.3);      var low_e := Vector3(-0.36, -0.52, 0.04)
-	var face_wp := Vector3(-0.04, -0.03, -0.36);  var face_e := Vector3(-0.07, -0.36, -0.6)
+	var face_wp := Vector3(-0.01, -0.1, -0.3);   var face_e := Vector3(-0.24, -0.16, -0.43)
 	var W := show_w.lerp(low_w, pose_low).lerp(face_wp, _face_s)
 	var E := show_e.lerp(low_e, pose_low).lerp(face_e, _face_s)
 	W.y += _p.get("lift", 0.0); W.z -= _p.get("lean", 0.0)
@@ -389,7 +419,7 @@ func _target_xf(g := {}) -> Transform3D:
 		W -= (W - E).normalized() * _pull
 		W.x -= _pull * 0.3
 	var dir := (W - E).normalized()
-	var up := Vector3.UP.lerp(Vector3.FORWARD, _face_s * 0.9).normalized()   # back of the hand away from him: the wrist bends forward and the face comes round to him, top up
+	var up := Vector3.UP   # palm down, always: the thumb stays under the fingers, his head stays the right way up
 	var basis := Basis.looking_at(dir, up)
 	var origin := W - dir * FOREARM
 	return cxf * Transform3D(basis, origin)
@@ -406,8 +436,12 @@ func _gaze(delta: float, still: float) -> Vector3:
 		p = camp + cam.global_transform.basis.y * -0.12   # your mouth, not your eyes: his face tips down to you and his eyes come round
 	elif _intent_t > 0.0 and _intent_gaze != null:
 		p = _intent_gaze
+	elif torch_on:
+		p = _crosshair()                   # he holds the light where you're looking
 	elif _g_target != null and _gesture in ["point", "lean_in"]:
 		p = _g_target
+	elif player and player.get("held") != null and player.get("inspecting"):
+		p = (player.held as Node3D).global_position
 	elif player and player.get("target") is Node3D:
 		p = (player.target as Node3D).global_position
 	else:
@@ -423,6 +457,18 @@ func _gaze(delta: float, still: float) -> Vector3:
 	return _head_on
 
 var _head_on := Vector3.ZERO
+
+## What's under the crosshair (up to the torch's reach), for aiming the light.
+func _crosshair() -> Vector3:
+	var from := cam.global_position
+	var to := from - cam.global_transform.basis.z * 12.0
+	var space := get_world_3d().direct_space_state
+	var q := PhysicsRayQueryParameters3D.create(from, to)
+	if player: q.exclude = [player.get_rid()]
+	var hit := space.intersect_ray(q)
+	var p: Vector3 = hit.position if hit else to
+	_torch_aim = _torch_aim.lerp(p, 0.5) if _torch_aim != Vector3.ZERO else p
+	return _torch_aim
 
 # ---------------------------------------------------------------- gestures (bible §6)
 ## Offsets for the current gesture at its normalised time, with anticipation and settle.

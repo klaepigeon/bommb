@@ -38,9 +38,14 @@ var _shake_t := 0.0
 @onready var torch: SpotLight3D = $Head/Camera/Torch
 
 var feet: Area3D
+var right_hand: RightHand           # the one that does things
+var torch_holder: Node = null       # once Socko has it, the light's his (toggle_torch goes to him)
 
 func _ready() -> void:
 	torch.light_projector = Penumbra.make(0.65)   # three: the torch's penumbra
+	right_hand = RightHand.new(); right_hand.name = "RightHand"
+	right_hand.setup(cam, self)
+	add_child(right_hand)
 	# feet: kick the debris you walk through (it doesn't block you; see prop.gd)
 	feet = Area3D.new(); feet.collision_layer = 0; feet.collision_mask = 2; feet.monitorable = false
 	var fs := CollisionShape3D.new(); var sp := SphereShape3D.new(); sp.radius = 0.3; fs.shape = sp
@@ -211,10 +216,15 @@ func use() -> void:
 	if held:
 		drop()
 	elif target:
+		if ray.is_colliding():
+			right_hand.reach(ray.get_collision_point())   # always the right hand
 		target.call("interact", self)
 
 func toggle_torch() -> void:
-	torch.visible = not torch.visible
+	if torch_holder:
+		torch_holder.call("toggle_torch")
+	else:
+		torch.visible = not torch.visible
 
 func toggle_crouch() -> void:
 	crouched = not crouched
@@ -252,5 +262,6 @@ func throw() -> void:
 	if not held:
 		return
 	var b := held
+	right_hand.throw_flick()
 	drop()
 	b.linear_velocity = -cam.global_transform.basis.z * clampf(9.0 / sqrt(b.mass), 2.0, 9.0)

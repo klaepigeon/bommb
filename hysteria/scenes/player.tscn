@@ -30,7 +30,7 @@ collision_mask = 3
 collide_with_areas = true
 
 [node name="Hold" type="Node3D" parent="Head/Camera"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, -0.12, -0.62)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.14, -0.15, -0.55)
 
 [node name="Torch" type="SpotLight3D" parent="Head/Camera"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, -0.18, 0.05)

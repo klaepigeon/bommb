@@ -45,6 +45,8 @@ func _process(delta: float) -> void:
 				player.head.position.y = 0.25
 				player.set("pitch", 1.25)
 				socko.visible = true; socko.set_process(true)
+				# from now on the light comes out of his mouth; nobody says why
+				socko.take_torch(player.torch); player.set("torch_holder", socko)
 				socko.shown = 0.0; socko.pose_face = 1.0; socko.set_emotion("uncanny")
 				_go(S.RISE)
 		S.RISE:
