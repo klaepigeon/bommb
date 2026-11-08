@@ -160,3 +160,27 @@ export function circuit(name, on = true) {
 export function setCircuit(name, on) {
   const c = circuit(name); c.on = on; c.fns.forEach((f) => f(on));
 }
+
+// ---------------------------------------------------------------- floors and zones
+// Walkable floor regions: flat ({y}) or ramps along z ({za, ya, zb, yb}). The player stands on
+// the highest region under them that isn't more than a step above their feet.
+G.floors = [];
+export function floorRegion(r) { G.floors.push(r); return r; }
+G.floorAt = (x, z, yNow) => {
+  let best = null;
+  for (const r of G.floors) {
+    if (r.off || x < r.x0 || x > r.x1 || z < r.z0 || z > r.z1) continue;
+    const h = r.za === undefined ? r.y : r.ya + (r.yb - r.ya) * Math.max(0, Math.min(1, (z - r.za) / (r.zb - r.za)));
+    if (h > yNow + 0.45) continue;
+    if (best === null || h > best) best = h;
+  }
+  return best;
+};
+// Zones: named volumes (a flat, a stairwell landing) with their own group for culling
+G.zones = [];
+export function zone(z) { G.zones.push(z); return z; }
+G.zoneAt = (x, y, z) => {
+  let best = null;
+  for (const q of G.zones) if (x >= q.x0 && x <= q.x1 && z >= q.z0 && z <= q.z1 && y >= q.y0 && y <= q.y1 && (!best || (q.x1 - q.x0) * (q.z1 - q.z0) < (best.x1 - best.x0) * (best.z1 - best.z0))) best = q;
+  return best;
+};

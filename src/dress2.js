@@ -434,6 +434,11 @@ function bath() {
     const shoe = rbox(0.06, 0.05, 0.15, 0.02, mat('redShoe', {}), { x: 0.3, y: 0.1, base: true, z: 0.05, ry: 2.4, parent: g, static: false });
     const hair = new THREE.Mesh(new THREE.CircleGeometry(0.08, 10), mat('hairClump', { color: 0x2a2018, roughness: 1 })); hair.rotation.x = -Math.PI / 2; hair.position.set(-0.6, 0.101, 0); g.add(hair);
     shoe.visible = false;
+    const keys = group({ x: -0.2, y: 0.1, z: -0.1, parent: g }); keys.visible = false;
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.018, 0.003, 4, 12), M.chrome); ring.rotation.x = Math.PI / 2; keys.add(ring);
+    for (let i = 0; i < 3; i++) box(0.05 - i * 0.01, 0.003, 0.014, mat('keyBrass', { color: 0x9a8450, metalness: 0.8, roughness: 0.4 }), { x: 0.03 + i * 0.004, y: 0.003, z: (i - 1) * 0.012, ry: (i - 1) * 0.4, parent: keys, static: false });
+    box(0.05, 0.006, 0.025, mat('fob', { color: 0x2a5a8a, roughness: 0.5 }), { x: -0.04, parent: keys, static: false });
+    box(0.14, 0.05, 0.1, mat('hitbox', { transparent: true, opacity: 0, depthWrite: false }), { y: 0.02, parent: keys, static: false, cast: false }); // something to aim at
     const chain = [];
     for (let i = 0; i < 8; i++) { const ln = new THREE.Mesh(new THREE.TorusGeometry(0.006, 0.0015, 3, 6), M.chrome); ln.position.set(-0.78 + i * 0.008, 0.52 - i * 0.05, 0); ln.rotation.y = i % 2 * 1.5; g.add(ln); chain.push(ln); }
     let level = 0.46, drain = false;
@@ -441,7 +446,12 @@ function bath() {
       if (!drain || level <= 0.105) return;
       level -= dt * 0.012; water.position.y = level; water.scale.y = 1;
       if (level < 0.16) shoe.visible = true;
-      if (level <= 0.105) { water.visible = false; G.ui.toast('At the bottom, in the silt: the other red shoe. Right foot.'); pickable(shoe, { name: "Child's shoe", desc: 'A girl’s red buckle shoe, right foot. The pair to the one in the hall.', mass: 0.2, sound: 'soft' }); }
+      if (level <= 0.105) {
+        water.visible = false; keys.visible = true;
+        G.ui.toast('At the bottom, in the silt: the other red shoe. Right foot. And a ring of keys.');
+        pickable(shoe, { name: "Child's shoe", desc: 'A girl’s red buckle shoe, right foot. The pair to the one in the hall.', mass: 0.2, sound: 'soft' });
+        pickable(keys, { name: 'Keys', desc: 'His keys, on a plastic fob from the plant. Flat key, letterbox key, and a little brass one for a padlock. Somebody dropped them in the bath, or hid them there.', mass: 0.05, sound: 'can', onTake: () => { G.flags.key = true; } });
+      }
     });
     // the overflow plate the chain hangs from: easier to find with a cold hand than the chain
     const plateO = cyl(0.03, 0.03, 0.01, 12, M.chrome, { x: -0.8, y: 0.56, z: 0, rz: Math.PI / 2, parent: g, static: false });

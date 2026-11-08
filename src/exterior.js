@@ -72,10 +72,10 @@ function sky() {
   const geo = new THREE.SphereGeometry(1200, 32, 16);
   const m = new THREE.ShaderMaterial({
     side: THREE.BackSide, depthWrite: false, fog: false,
-    uniforms: { time: { value: 0 }, noise: { value: new THREE.CanvasTexture(noiseCanvas(256, 8, 5, 404)) } },
+    uniforms: { time: { value: 0 }, decay: { value: 0 }, noise: { value: new THREE.CanvasTexture(noiseCanvas(256, 8, 5, 404)) } },
     vertexShader: 'varying vec3 vD; void main(){ vD = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }',
     fragmentShader: `
-      uniform float time; uniform sampler2D noise; varying vec3 vD;
+      uniform float time, decay; uniform sampler2D noise; varying vec3 vD;
       void main(){
         float h = vD.y;
         // late overcast dusk: a band of dirty amber at the horizon (the last of the light + the city's own glow), slate above
@@ -90,11 +90,13 @@ function sky() {
         float cl = smoothstep(0.35, 0.8, n);
         c = mix(c, c * 0.62 + vec3(0.02, 0.018, 0.016), cl * smoothstep(0.0, 0.15, h));
         c = mix(c, vec3(0.08, 0.075, 0.075), smoothstep(0.0, -0.08, h));
+        // as it goes, the sky stops being a sky: flat, grey, a little too bright, no depth to it
+        c = mix(c, vec3(0.32, 0.32, 0.31), smoothstep(0.2, 0.9, decay) * 0.85);
         gl_FragColor = vec4(c, 1.);
       }`,
   });
   m.uniforms.noise.value.wrapS = m.uniforms.noise.value.wrapT = THREE.RepeatWrapping;
-  const s = new THREE.Mesh(geo, m); s.renderOrder = -10; s.frustumCulled = false;
+  const s = new THREE.Mesh(geo, m); s.renderOrder = -10; s.frustumCulled = false; G.skyMat = m; G.skyMesh = s;
   G.scene.add(s);
   onUpdate((dt, t) => { m.uniforms.time.value = t; s.position.copy(G.camera.position); });
 }
@@ -361,7 +363,8 @@ function peephole() {
     saved = { fov: G.camera.fov, pos: G.camera.position.clone(), q: G.camera.quaternion.clone() };
     G.peeping = true; G.flags.peepFrozen = true;
     // the door across changes between looks: open, shut, open wider. Never while you watch
-    if (G.door48) G.door48.rotation.y = n === 2 ? -Math.PI / 2 : n >= 3 ? -Math.PI / 2 + 1.0 : -Math.PI / 2 + 0.55;
+    const d48 = G.doorsById?.f48dEntry;
+    if (d48) { d48.target = d48.angle = n === 2 ? 0 : n >= 3 ? 1.1 : 0.55; }
     G.ui.toast(n === 1 ? 'The landing. Flat 48’s door, opposite, standing open on the dark.' : n === 2 ? 'Flat 48’s door is shut now.' : 'Flat 48’s door is open again. Wider.', 4);
     if (n === 2) sfx('doorShut', V(13.4, 1, 4.5), { vol: 0.5, room: 'landing' });
     const exit = () => { on = false; G.peeping = false; G.flags.peepFrozen = false; G.camera.fov = saved.fov; G.camera.updateProjectionMatrix(); removeEventListener('keydown', k); removeEventListener('mousedown', exit); };
@@ -398,9 +401,6 @@ export function buildExterior() {
   ground();
   courtyard();
   city();
-  const pre = new Set(G.scene.children);
-  landing();
-  for (const o of G.scene.children) if (!pre.has(o)) o.userData.indoor = true;
   peephole();
   void interactive; void lathe; void DOORS; void STOREY;
 }

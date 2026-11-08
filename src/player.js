@@ -50,6 +50,7 @@ function resolve(pos, c, r) {
 
 const SURF = { living: 'wood', bedroom: 'wood', child: 'wood', kitchen: 'lino', hall: 'lino', bath: 'tile', storage: 'concrete', balcony: 'concrete' };
 function surfaceAt(x, z, room) {
+  if (P.zone) return P.zone.surface || 'concrete';
   for (const s of G.surfaceSpots || []) if (Math.hypot(x - s.x, z - s.z) < s.r) return s.kind;
   return SURF[room] || 'concrete';
 }
@@ -109,10 +110,14 @@ export function updatePlayer(dt, camera) {
   P.speed += (moved - P.speed) * Math.min(1, dt * 10);
 
   // floor height: the balcony slab is a step down
-  const onBal = P.pos.z < -0.25 && P.pos.x > BALCONY.x0 && P.pos.x < BALCONY.x1;
-  const fy = onBal ? BALCONY.y : 0;
-  P.floorY += (fy - P.floorY) * Math.min(1, dt * 12);
-  P.room = roomAt(P.pos.x, P.pos.z) || (onBal ? 'balcony' : P.room);
+  const onBal = P.pos.z < -0.25 && P.pos.x > BALCONY.x0 && P.pos.x < BALCONY.x1 && Math.abs(P.floorY) < 1;
+  const fy = G.floorAt(P.pos.x, P.pos.z, P.floorY) ?? P.floorY;
+  P.floorY += (fy - P.floorY) * Math.min(1, dt * (Math.abs(fy - P.floorY) > 0.3 ? 9 : 16));
+  const zn = G.zoneAt(P.pos.x, P.floorY + 1, P.pos.z);
+  P.zone = zn;
+  G.playerPos = (G.playerPos || new THREE.Vector3()).set(P.pos.x, P.floorY, P.pos.z);
+  P.room = zn ? zn.key : (Math.abs(P.floorY) < 1.5 && roomAt(P.pos.x, P.pos.z)) || (onBal ? 'balcony' : P.room);
+  G.playerZone = P.room;
 
   // crouch (and can't stand up under something low)
   const target = P.crouch ? 1.05 : 1.62;
@@ -130,6 +135,7 @@ export function updatePlayer(dt, camera) {
       sfx('step_' + surf, { x: P.pos.x, y: P.floorY + 0.05, z: P.pos.z }, { vol, room: P.room });
       if (surf === 'wood' && Math.random() < 0.18) sfx('boardCreak', { x: P.pos.x, y: 0, z: P.pos.z }, { vol: 0.5, room: P.room });
       G.onNoise?.(P.pos, vol * 0.5);
+      G.onStep?.(P.pos, P.yaw);
     }
   } else P.stepPhase = Math.min(P.stepPhase, 0.5);
   P.bob += dt * (moving ? P.speed * 5.8 : 1.2);

@@ -7,7 +7,7 @@ and the city beyond the windows. It runs in a browser and builds to one HTML fil
 
 There is no monster and no objective yet. There is the flat, what the Sokolov family
 left in it, the evidence that somebody came back afterwards, and the building, which
-is never quite quiet.
+is never quite quiet — and, once you find a way out of the flat, is not quite real.
 
 ## Play
 
@@ -105,6 +105,45 @@ Every room has its own surfaces, light and story:
 Nothing is explained. The flat is meant to take a while: read things, open things,
 take things down off shelves, knock on the pipes.
 
+## The building (and reality, dying)
+
+The front door is chained and padlocked from the inside. The key is somewhere in the
+flat (where somebody hid it, under something you'd rather not put your arm into); or
+there's an axe in the box room.
+
+Past the door, Building 14:
+
+- **The stairwell**: a Soviet switchback stair from the basement to the ninth floor,
+  green gloss paint to shoulder height, a narrow well down the middle you can look
+  down. Thirty-odd flat doors, nearly all locked; knock and once in a while something
+  knocks back. Climb past the ninth floor and the stairs carry on, to a landing exactly
+  like the ninth, and the numbers on the wall keep going up.
+- **The lobby**: mailboxes (47's is stuffed with post dated after the evacuation), the
+  street door. Outside it there is no street, only white; walk into it and it hands you
+  back in through the door.
+- **The basement door**: chained, warm water seeping under it, and on the other side,
+  right up against the door, three knocks, then three.
+- **Flat 48**, across the landing: the Sokolovs' flat as a draft. Bare grey plaster,
+  pencil setting-out lines, grey blocks where the furniture should be with paper tags
+  ("SOFA — the green one with the burn"), white windows with nothing behind them, and
+  three tall grey shapes tagged MAMA, PAPA, SONYA standing with their faces to the
+  walls. They only move when you aren't looking.
+- **Flat 51**, upstairs, the one from the note in the box room: the same flat, the same
+  paper on the walls, never lived in, the dust unbroken except for one set of footprints
+  going in. Past the living room the building stops: no wall, just a floor going on into
+  grey, his footprints going on with it, things standing a long way off. Follow them far
+  enough and you're standing in 47's hallway again, and something in 47 has moved.
+- **Flat 44**, downstairs: a hallway, then a corridor of identical cells, each with a
+  chair facing the wall. It's longer than the building. It's longer than that.
+
+Underneath all of it, a single number rises as you go further in (the first time you
+reach each of these places, and each time a loop gives you back). As it rises, colour
+drains from surfaces in drifting patches and then the surfaces themselves go, in
+holes, from the edges in; the city dissolves from the horizon toward you; the sky stops
+being a sky; the picture starts to slip and fringe; lights sag; the building hums; and
+sometimes you hear the flat downstairs doing things nobody is there to do. It never
+goes back down.
+
 ## How it's built
 
 Everything is procedural: no image, model or sound files. Walls, floors and ceilings
@@ -137,10 +176,17 @@ src/
   particles.js   dust that only shows where light catches it
   post.js        film grain and vignette
   gamepad.js     controllers: Gamepad API or the Android bridge, menus by pad, rumble
+  zone.js        builds any set of rooms on any floor (skins, cores, collision, floors), mirror/offset plans
+  building.js    the stairwell, landings and their doors, lobby, street, basement, the stair loop, pooled lights
+  flats.js       48 (the draft), 51 (the echo, and the void past it), 44 (the corridor)
+  decay.js       reality dying: the surface shader patch, decay volumes, fog/sky/post/audio, progression
 android/         the Android app: manifest, MainActivity (WebView + controller bridge), build.sh
 ```
 
-Performance notes: static meshes are merged by material after load (and each prop's
+Performance notes: the building outside 47 is split into per-floor and per-flat groups and
+only what's within two floors of you is drawn; its light fittings share a pool of four
+real lights handed to the nearest fittings each frame; static meshes are merged by
+material after load (per group) (and each prop's
 parts are merged into one mesh per material); repeated exterior pieces are instanced;
 distant buildings are textured boxes; outdoor surfaces carry their skylight as emission
 so no hemisphere light floods the interior; shadow maps for slow-changing lights
@@ -157,6 +203,7 @@ node build.mjs --watch
 node tools/smoke.mjs      # boot headless, save screenshots of ~20 viewpoints to shots/
 node tools/play.mjs       # scripted playthrough: walks the flat (A*), uses ~30 things, fails on any error
 node tools/pad.mjs        # drives the game with a fake controller through the Android bridge
+node tools/building.mjs   # key, front door, 48, up to 51 and out into the void, down to 44's corridor, the street
 android/build.sh          # → dist/Flat47.apk
 ```
 

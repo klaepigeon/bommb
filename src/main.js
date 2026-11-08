@@ -20,6 +20,10 @@ import { initAudio, updateAudio, setMasterVolume } from './audio.js';
 import { ROOMS, roomAt } from './plan.js';
 import { grainShader } from './post.js';
 import { PAD, updatePad } from './gamepad.js';
+import { buildStairwell, FLOORS } from './building.js';
+import { buildFlats } from './flats.js';
+import { initDecay, patchAll } from './decay.js';
+import { DOORS } from './openings.js';
 
 const params = new URLSearchParams(location.search);
 const $ = (id) => document.getElementById(id);
@@ -53,6 +57,9 @@ async function boot() {
   buildDaylight();
   msg('Putting their things back where they left them…'); await frame();
   dressFlat();
+  msg('Opening up the rest of the building…'); await frame();
+  buildStairwell();
+  buildFlats();
   msg('Building the city outside…'); await frame();
   const before = new Set(scene.children);
   buildExterior();
@@ -63,14 +70,18 @@ async function boot() {
   if (params.has('bright')) scene.add(new THREE.AmbientLight(0xffffff, +params.get('bright') || 1.5));
   if (params.has('exposure')) renderer.toneMappingExposure = +params.get('exposure');
   msg('Settling the dust…'); await frame();
-  bakeStatics();
+  bakeStatics(scene);
+  scene.traverse((o) => { if (o !== scene && o.userData.noBake && !o.parent?.userData?.noBake) bakeStatics(o); });
   // tiny things don't need to cast shadows
   scene.traverse((o) => { if (o.isMesh && o.castShadow) { if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); const sc = o.getWorldScale(new THREE.Vector3()); if (o.geometry.boundingSphere.radius * Math.max(sc.x, sc.y, sc.z) < 0.06) o.castShadow = false; } });
   for (const s of scene.children) if (s.isMesh && /-(n|s|e|w|ceiling)$/.test(s.name)) { s.castShadow = true; s.userData.blocker = true; I.blockers.push(s); }
+  for (const s of G.zoneSkins || []) I.blockers.push(s);
+  initDecay();
+  patchAll(scene);
 
   composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  grainPass = new ShaderPass(grainShader); composer.addPass(grainPass);
+  grainPass = new ShaderPass(grainShader); composer.addPass(grainPass); G.post = grainPass;
   composer.addPass(new OutputPass());
 
   initPlayer(camera, renderer.domElement);
@@ -101,13 +112,15 @@ function ambientize(objs) {
 }
 
 // merge everything static by material: far fewer draw calls for the same picture
-function bakeStatics() {
+function bakeStatics(root) {
   const groups = new Map();
   scene.updateMatrixWorld(true);
   const keep = [];
-  scene.traverse((o) => {
+  const inv = root === scene ? null : root.matrixWorld.clone().invert();
+  root.traverse((o) => {
     if (!o.isMesh || o.isInstancedMesh || !o.userData.static || Array.isArray(o.material)) return;
-    for (let p = o; p; p = p.parent) if (p.userData.prop || p.userData.it || p.userData.pickSpec || p.userData.noBake) return;
+    for (let p = o; p && p !== root; p = p.parent) if (p.userData.prop || p.userData.it || p.userData.pickSpec || p.userData.noBake) return;
+    if (o.userData.it || o.userData.prop || o.userData.pickSpec) return;
     if (o.material.transparent) return;
     const key = o.material.uuid + (o.castShadow ? 'c' : 'n');
     if (!groups.has(key)) groups.set(key, []);
@@ -121,14 +134,14 @@ function bakeStatics() {
       let g = m.geometry.index ? m.geometry.toNonIndexed() : m.geometry.clone();
       for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(k)) g.deleteAttribute(k);
       if (!g.attributes.uv) continue;
-      g.applyMatrix4(m.matrixWorld);
+      g.applyMatrix4(m.matrixWorld); if (inv) g.applyMatrix4(inv);
       geos.push(g);
     }
     if (geos.length < 2) continue;
     const mg = BufferGeometryUtils.mergeGeometries(geos, false);
     if (!mg) continue;
     const mm = new THREE.Mesh(mg, list[0].material); mm.castShadow = list[0].castShadow; mm.receiveShadow = true;
-    scene.add(mm);
+    root.add(mm);
     for (const m of list) { m.parent.remove(m); m.geometry.dispose(); }
     merged += list.length;
   }
@@ -150,6 +163,33 @@ function applyQuality() {
 }
 
 let last = 0, roomName = '', frameN = 0;
+// what's visible and lit depends on where you are
+function updateWorld(dt, force = false) {
+  const rn = P.room === 'balcony' ? 'Balcony' : P.zone ? P.zone.name : ROOMS[P.room]?.name || '';
+  if (rn !== roomName) {
+    roomName = rn; UI.room(rn); G.onRoom?.(P.room);
+    // occlusion by room: from the windowless rooms none of the city can be seen, so don't draw it
+    const zk = String(P.room).split(':')[0];
+    const sealed = ['bath', 'storage', 'f48', 'f44', 'f51', 'void', 'street', 'stair0', 'stair1'].includes(zk);
+    for (const o of G.outside || []) o.visible = !sealed;
+    for (const o of scene.children) if (o.userData.outdoor) o.visible = !['f51', 'void', 'f44', 'f48'].includes(zk);
+  }
+  // only draw the parts of the building near you (two floors either way)
+  if (force || frameN % 10 === 0) {
+    for (const [f, g] of Object.entries(FLOORS)) g.visible = Math.abs((+f - 4) * 3.1 - P.floorY) < 7.5;
+    for (const z of G.zones) if (z.def?.group) z.def.group.visible = Math.abs(z.y0 - P.floorY) < 4.8;
+  }
+  // the sun only reaches where there are windows; and its shadow map follows you
+  const skyL = G.lights.sky?.l;
+  if (skyL) {
+    const want = (P.zone ? P.zone.sky ?? 1 : 1) * 1.25 * (1 - (G.decay || 0) * 0.5);
+    skyL.intensity += (want - skyL.intensity) * Math.min(1, dt * 3);
+    const sx = Math.round(P.pos.x), sz = Math.round(P.pos.z), sy = Math.round(P.floorY);
+    skyL.target.position.set(sx, sy, sz); skyL.position.set(sx - 7, sy + 13, sz - 17);
+    for (const k of ['winLiving', 'winBal', 'winBed', 'winKit']) { const l = G.lights[k]?.l; if (l) l.intensity = !P.zone && Math.abs(P.floorY) < 2.5 ? (l.userData.k ??= l.intensity) : 0; }
+  }
+}
+
 function loop(now) {
   requestAnimationFrame(loop);
   clock.update(now); const dt = Math.min(0.05, clock.getDelta());
@@ -158,19 +198,16 @@ function loop(now) {
   P.frozen = I.inspecting || !!G.peeping;
   updatePad(dt, padH);
   updatePlayer(dt, camera);
+  G.playerPos = (G.playerPos || new THREE.Vector3()).set(P.pos.x, P.floorY, P.pos.z);
+  G.playerZone = P.room;
   G.phys.step(1 / 60, dt, 3);
   for (const f of G.updates) f(dt, G.time);
   updateLights(dt);
   updateInteract(dt, camera);
   updateAudio(camera, dt, P.room);
   UI.tick(dt);
-  const rn = P.room === 'balcony' ? 'Balcony' : ROOMS[P.room]?.name || '';
-  if (rn !== roomName) {
-    roomName = rn; UI.room(rn); G.onRoom?.(P.room);
-    // occlusion by room: from the windowless rooms none of the city can be seen, so don't draw it
-    const sealed = P.room === 'bath' || P.room === 'storage';
-    for (const o of G.outside || []) o.visible = !sealed;
-  }
+  updateWorld(dt);
+  fade(dt);
   // static-ish shadow maps refresh on alternate frames; lights that are dark skip theirs
   frameN++;
   const sky = G.lights.sky?.l; if (sky) { sky.shadow.autoUpdate = false; sky.shadow.needsUpdate = frameN % 3 === 0; }
@@ -183,6 +220,21 @@ function loop(now) {
 
 // ---------------------------------------------------------------- input / menus
 function lock() { renderer.domElement.requestPointerLock?.(); }
+// white or black fades for the places that give you back
+let fadeK = 0, fadeCol = '#fff';
+function fade(dt) {
+  if (G.whiteout) { fadeCol = '#f2f2ee'; fadeK = Math.min(1, fadeK + dt * 3); G.whiteout -= dt; if (G.whiteout <= 0) G.whiteout = 0; }
+  else if (G.blackout) { fadeCol = '#000'; fadeK = Math.min(1, fadeK + dt * 2); G.blackout -= dt; if (G.blackout <= 0) G.blackout = 0; }
+  else fadeK = Math.max(0, fadeK - dt * 0.8);
+  const el = $('fade'); el.style.background = fadeCol; el.style.opacity = fadeK;
+}
+// move the player somewhere else, keeping (or not) where they were looking
+G.teleport = (x, z, y, yaw = null, keep = false) => {
+  P.pos.x = x; P.pos.z = z; P.floorY = y; if (yaw !== null) { P.yaw = yaw; P.pitch = 0; }
+  if (!keep) P.vel.set(0, 0, 0);
+  if (I.held) { const b = I.held.body; b.position.set(x, y + 1.3, z); }
+  updatePlayer(0, camera);
+};
 $('enter').onclick = () => { initAudio(); G.running = true; $('start').classList.add('hidden'); if (!G.flags.started) { G.flags.started = true; setTimeout(() => UI.toast('The hall bulb is dying. F for the torch.', 5), 2500); } if (PAD.using) P.locked = true; else if (matchMedia('(pointer: coarse)').matches) { $('touch').classList.remove('hidden'); P.locked = true; } else lock(); };
 $('resume').onclick = () => resumeGame();
 document.addEventListener('pointerlockchange', () => {
@@ -277,9 +329,9 @@ window.__pauseGame = pauseGame;
 }
 
 // screenshot hooks for tools/smoke.mjs
-window.__G = G; window.__P = P; window.__I = I;
-window.__view = (x, z, yaw, pitch = 0, crouch = false) => { P.pos.set(x, 0, z); P.yaw = yaw; P.pitch = pitch; P.crouch = crouch; P.height = crouch ? 1.05 : 1.62; for (let i = 0; i < 3; i++) { updatePlayer(0.016, camera); } };
-window.__step = (n = 30) => { renderer.info.autoReset = false; for (let i = 0; i < n; i++) { G.time += 1 / 60; updatePlayer(1 / 60, camera); G.phys.step(1 / 60); for (const f of G.updates) f(1 / 60, G.time); updateLights(1 / 60); updateInteract(1 / 60, camera); } renderer.info.reset(); composer.render(); };
+window.__G = G; window.__P = P; window.__I = I; G.doorsById = DOORS; G.I = I;
+window.__view = (x, z, yaw, pitch = 0, crouch = false, y = 0) => { P.pos.set(x, 0, z); P.floorY = y; P.yaw = yaw; P.pitch = pitch; P.crouch = crouch; P.height = crouch ? 1.05 : 1.62; for (let i = 0; i < 3; i++) { updatePlayer(0.016, camera); } };
+window.__step = (n = 30) => { renderer.info.autoReset = false; for (let i = 0; i < n; i++) { G.playerPos = (G.playerPos || new THREE.Vector3()).set(P.pos.x, P.floorY, P.pos.z); G.playerZone = P.room; updateWorld(1 / 60, true); G.time += 1 / 60; updatePlayer(1 / 60, camera); G.phys.step(1 / 60); for (const f of G.updates) f(1 / 60, G.time); updateLights(1 / 60); updateInteract(1 / 60, camera); } renderer.info.reset(); composer.render(); };
 window.__roomAt = roomAt;
 window.__use = use; window.__throw = throwHeld; window.__inspect = beginInspect; window.__endInspect = endInspect;
 window.__aim = (x, y, z) => { const dx = x - camera.position.x, dy = y - camera.position.y, dz = z - camera.position.z; P.yaw = Math.atan2(-dx, -dz); P.pitch = Math.atan2(dy, Math.hypot(dx, dz)); updatePlayer(0.016, camera); updateInteract(0.016, camera); const t = I.target; return t ? (t.kind === 'use' ? (typeof t.it.prompt === 'function' ? t.it.prompt() : t.it.prompt) : t.kind + ':' + (t.spec?.name || t.prop?.name)) : null; };

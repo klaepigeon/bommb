@@ -2,14 +2,14 @@
 // windows), reveals, thresholds, skirting, the collapsed ceilings, wall collision, and the
 // outside face of Building 14.
 import * as THREE from 'three';
-import { G, mat, box, solid, collider, staticBox, solidMat, texMat } from './core.js';
+import { G, mat, box, solid, collider, staticBox, solidMat, texMat, floorRegion } from './core.js';
 import { H, T, EXT, ROOMS, LINES, OPENINGS, lineById, inner, BALCONY, STOREY, GROUND, LANDING } from './plan.js';
 import { paintWall, paintFloor, paintCeiling } from './surfaces.js';
 import { Surface, underPlaster, blobPath, woodTex, rng } from './textures.js';
 
 const shapeRect = (x0, y0, x1, y1) => { const p = new THREE.Path(); p.moveTo(x0, y0); p.lineTo(x1, y0); p.lineTo(x1, y1); p.lineTo(x0, y1); p.closePath(); return p; };
 
-function faceMaterial(surface, extra = {}) {
+export function faceMaterial(surface, extra = {}) {
   const t = surface.textures();
   const m = new THREE.MeshStandardMaterial({ map: t.map, bumpMap: t.bumpMap, bumpScale: 1.6, roughness: 0.92, ...extra });
   if (t.roughnessMap) { m.roughnessMap = t.roughnessMap; m.roughness = 1; }
@@ -17,7 +17,7 @@ function faceMaterial(surface, extra = {}) {
 }
 
 // flat polygon (in a local u,v frame) with holes -> mesh, uv = (u/W, v/Hh)
-function holedPlane(W, Hh, holes, material, polyHoles = []) {
+export function holedPlane(W, Hh, holes, material, polyHoles = []) {
   const shape = new THREE.Shape(); shape.moveTo(0, 0); shape.lineTo(W, 0); shape.lineTo(W, Hh); shape.lineTo(0, Hh); shape.closePath();
   for (const h of holes) shape.holes.push(shapeRect(Math.max(0.001, h.u0), Math.max(0.001, h.y0), Math.min(W - 0.001, h.u1), Math.min(Hh - 0.001, h.y1)));
   for (const pts of polyHoles) { const p = new THREE.Path(); pts.forEach(([x, y], i) => (i ? p.lineTo(x, y) : p.moveTo(x, y))); p.closePath(); shape.holes.push(p); }
@@ -30,7 +30,7 @@ function holedPlane(W, Hh, holes, material, polyHoles = []) {
 }
 
 // jagged hole outline for a collapse, as [x,z] points
-function jagged(cx, cz, rx, rz, seed) {
+export function jagged(cx, cz, rx, rz, seed) {
   const r = rng(seed), pts = [], n = 22;
   for (let i = 0; i < n; i++) {
     const a = (i / n) * Math.PI * 2, k = 0.7 + r() * 0.45 + 0.15 * Math.sin(a * 3 + seed);
@@ -191,6 +191,9 @@ export function buildShell() {
   // floor hole: you won't step there
   { const f = FLOOR_HOLES.living; collider({ x: f.cx, z: f.cz, hx: 0.3, hz: 0.28, y0: -1, y1: 0.4 }); }
 
+  floorRegion({ x0: -0.1, x1: 10.45, z0: 0, z1: 8, y: 0 });
+  floorRegion({ x0: 2.8, x1: 3.55, z0: -0.45, z1: 0, y: 0 });
+  floorRegion({ x0: BALCONY.x0, x1: BALCONY.x1, z0: BALCONY.z0, z1: -0.42, y: BALCONY.y });
   buildCollapses();
   buildFacade();
 }
@@ -208,13 +211,11 @@ function buildCollapses() {
   for (const [key, ch] of Object.entries(CEILING_HOLES)) {
     // the void above: dark cavity with joists running across, then the floorboards of the flat upstairs
     const cx = ch.cx, cz = ch.cz;
-    box(2.2, 0.02, 2.2, voidM, { x: cx, y: H + 0.42, z: cz, cast: false });
-    for (const side of [[0, 1.1], [0, -1.1], [1.1, 0], [-1.1, 0]]) {
-      box(side[0] ? 0.02 : 2.2, 0.45, side[0] ? 2.2 : 0.02, voidM, { x: cx + side[0], y: H + 0.2, z: cz + side[1], cast: false });
-    }
+    // the slab cavity between this ceiling and Flat 51's floor (which has the same hole in it)
+    const ring = [];
+    for (let i = 0; i < ch.pts.length; i++) { const [x, z] = ch.pts[i], [x2, z2] = ch.pts[(i + 1) % ch.pts.length]; const len = Math.hypot(x2 - x, z2 - z); const m = box(len + 0.02, 0.36, 0.03, voidM, { x: (x + x2) / 2, y: H + 0.17, z: (z + z2) / 2, cast: false }); m.rotation.y = -Math.atan2(z2 - z, x2 - x); ring.push(m); }
     for (let k = -2; k <= 2; k++) box(0.08, 0.2, 2.2, joistM, { x: cx + k * 0.45 + 0.1, y: H + 0.12, z: cz });
     // boards of the floor above (some gaps: dark beyond)
-    for (let k = -8; k <= 8; k++) if (r() > 0.15) box(2.2, 0.025, 0.12, joistM, { x: cx, y: H + 0.235, z: cz + k * 0.13, cast: false });
     // lath strips across the hole, some broken and hanging down
     const pts = ch.pts;
     for (let k = -6; k <= 6; k++) {
@@ -251,7 +252,7 @@ function buildCollapses() {
     // the heap's a low obstacle
     collider({ x: cx, z: cz, hx: 0.32, hz: 0.27, y0: 0, y1: 0.25, heap: true });
     // a little grey light from the flat above, where its own window is out
-    if (key === 'living') { const l = new THREE.PointLight(0x8a96a8, 0.9, 3.5, 2); l.position.set(cx + 0.3, H + 0.3, cz - 0.2); G.scene.add(l); }
+    
     staticBox(cx, 0.05, cz, 0.7, 0.1, 0.56);
     void key;
   }

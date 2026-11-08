@@ -5,6 +5,7 @@
 // another room is muffled by how many walls are in the way.
 import * as THREE from 'three';
 import { roomAt } from './plan.js';
+import { G } from './core.js';
 
 let ctx = null, master, wet, dry, comp;
 const G_rumble = (s, ms) => window.__G?.rumble?.(s, ms);
@@ -134,11 +135,15 @@ function chain(pos, o = {}) {
 // walls in the way, roughly: same room clear; adjacent muffled; across the flat or outside, dull
 function occlusionFor(pos, room) {
   const lr = AUDIO.listenerRoom;
-  const sr = room ?? (pos.y > 2.9 ? 'above' : pos.y < -0.3 ? 'below' : roomAt(pos.x, pos.z) || 'outside');
+  const zn = room ? null : G.zoneAt?.(pos.x, pos.y, pos.z);
+  const sr = room ?? (zn ? zn.key : pos.y > 2.9 ? 'above' : pos.y < -0.3 ? 'below' : roomAt(pos.x, pos.z) || 'outside');
   if (sr === lr) return 20000;
   if (sr === 'outside') return lr === 'balcony' ? 20000 : ['living', 'bedroom', 'kitchen'].includes(lr) ? 5000 : 900;
   if (sr === 'above' || sr === 'below') return 700;
-  if (sr === 'landing') return lr === 'hall' ? 1500 : 500;
+  if (sr === 'landing') return lr === 'hall' ? 1500 : String(lr).startsWith('stair') ? 20000 : 500;
+  if (String(sr).startsWith('stair') && String(lr).startsWith('stair')) return 9000;
+  if (String(sr).startsWith('stair') || String(lr).startsWith('stair')) return lr === 'hall' || sr === 'hall' ? 1500 : 1100;
+  if (String(sr).split(':')[0] === String(lr).split(':')[0] && String(sr).includes(':')) return 3000;
   const open = new Set(['living:hall', 'hall:kitchen', 'hall:bedroom', 'living:balcony']);
   if (open.has(`${sr}:${lr}`) || open.has(`${lr}:${sr}`)) return 4000;
   if (sr === 'hall' || lr === 'hall') return 1600;

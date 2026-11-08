@@ -9,7 +9,7 @@ import { Surface, woodTex, blobPath, rng, metalTex } from './textures.js';
 import { sfx } from './audio.js';
 
 // ---------------------------------------------------------------- door leaf textures
-function panelDoorSurface(w, h, col, seed, opts = {}) {
+export function panelDoorSurface(w, h, col, seed, opts = {}) {
   const s = new Surface(w, h, 160, seed).fill(col);
   s.noise(0.25, 1, 'multiply', 8, seed).grain(0.05);
   const g = s.g, hg = s.hg;
@@ -36,8 +36,8 @@ function panelDoorSurface(w, h, col, seed, opts = {}) {
   if (opts.text) s.scrawl(opts.text, 0.12, 1.75, 0.05, 'rgba(40,30,20,0.7)', -0.03);
   return s;
 }
-function paddedDoorSurface(w, h, seed) { // quilted leatherette over felt, studded in a diamond grid
-  const s = new Surface(w, h, 160, seed).fill('#4a2a22').rough(0.45);
+export function paddedDoorSurface(w, h, seed, num = '47', col = '#4a2a22') { // quilted leatherette over felt, studded in a diamond grid
+  const s = new Surface(w, h, 128, seed).fill(col).rough(0.45);
   s.noise(0.3, 0.7, 'multiply', 6, seed).grain(0.07);
   const g = s.g, hg = s.hg, step = 0.18;
   for (let y = 0.15; y < h - 0.1; y += step) for (let x = 0.08 + ((y / step | 0) % 2) * step / 2; x < w - 0.05; x += step) {
@@ -51,19 +51,19 @@ function paddedDoorSurface(w, h, seed) { // quilted leatherette over felt, studd
     g.fillStyle = '#6e6252'; g.fill(p); hg.fillStyle = '#c0c0c0'; hg.fill(p);
   }
   // a chalk mark from outside, seen when the door is ajar? no - on the inside: a number
-  s.scrawl(['47'], 0.35, 1.85, 0.08, 'rgba(220,210,190,0.35)');
+  if (num) s.scrawl([num], 0.35, 1.85, 0.08, 'rgba(220,210,190,0.35)');
   return s;
 }
 
 // ---------------------------------------------------------------- doors
 export const DOORS = {};
 
-function lining(o, l, woodM) {
-  const depth = l.p1 - l.p0, mid = (l.p0 + l.p1) / 2, t = 0.025, w = o.a1 - o.a0, h = o.y1;
+export function lining(o, l, woodM) {
+  const depth = l.p1 - l.p0, mid = (l.p0 + l.p1) / 2, t = 0.025, w = o.a1 - o.a0, h = o.y1, oy = o.oy || 0;
   const arch = 0.07, archT = 0.018;
   const along = (a, y, sa, sy, sd, p) => (l.axis === 'z'
-    ? box(sa, sy, sd, woodM, { x: a, y, z: p, cast: false })
-    : box(sd, sy, sa, woodM, { x: p, y, z: a, cast: false }));
+    ? box(sa, sy, sd, woodM, { x: a, y: y + oy, z: p, cast: false, parent: o.parent })
+    : box(sd, sy, sa, woodM, { x: p, y: y + oy, z: a, cast: false, parent: o.parent }));
   // jamb linings
   along(o.a0 + t / 2, h / 2, t, h, depth, mid);
   along(o.a1 - t / 2, h / 2, t, h, depth, mid);
@@ -77,21 +77,21 @@ function lining(o, l, woodM) {
 }
 
 // spec: { id, hinge: 'a0'|'a1', swing: +1|-1 (toward +axis or -axis), open: initial angle, max, surface, glazed, stuck, locked }
-function makeDoor(spec) {
-  const o = openById[spec.id], l = lineById[o.line];
+export function makeDoor(spec) {
+  const o = openById[spec.id], l = lineById[o.line], oy = o.oy || 0;
   const woodM = spec.liningMat || mat('lining', { map: woodTex('#b9ae98', 21, 1).map, roughness: 0.75, color: 0xd8cfbc });
   lining(o, l, woodM);
   const w = o.a1 - o.a0 - 0.05, h = o.y1 - 0.03, th = spec.thick || 0.04;
   const hingeA = spec.hinge === 'a0' ? o.a0 + 0.025 : o.a1 - 0.025;
   const dirA = spec.hinge === 'a0' ? 1 : -1;       // along the opening from hinge to latch
   const mid = spec.plane ?? (l.p0 + l.p1) / 2 + (spec.inset || 0);
-  const P = l.axis === 'z' ? new THREE.Vector3(hingeA, 0.012, mid) : new THREE.Vector3(mid, 0.012, hingeA);
+  const P = l.axis === 'z' ? new THREE.Vector3(hingeA, oy + 0.012, mid) : new THREE.Vector3(mid, oy + 0.012, hingeA);
   const d = l.axis === 'z' ? [dirA, 0] : [0, dirA];
   const psi0 = Math.atan2(-d[1], d[0]);
   const n = l.axis === 'z' ? [0, spec.swing] : [spec.swing, 0];
   const sign = Math.sign(n[0] * d[1] + n[1] * -d[0]) || 1;
 
-  const pivot = new THREE.Group(); pivot.position.copy(P); pivot.rotation.y = psi0; G.scene.add(pivot);
+  const pivot = new THREE.Group(); pivot.position.copy(P); pivot.rotation.y = psi0; (o.parent || G.scene).add(pivot);
   const surf = spec.surface || panelDoorSurface(w, h, spec.color || '#d4cbb4', spec.seed || 1, spec);
   const tx = surf.textures();
   const faceM = new THREE.MeshStandardMaterial({ map: tx.map, bumpMap: tx.bumpMap, bumpScale: 2, roughness: tx.roughnessMap ? 1 : 0.7, roughnessMap: tx.roughnessMap || null });
@@ -116,7 +116,7 @@ function makeDoor(spec) {
   // hinges
   for (const y of [0.25, h - 0.25]) cyl(0.009, 0.009, 0.1, 6, brass, { x: 0, y, z: 0, parent: pivot, static: false });
 
-  const col = collider({ hx: w / 2, hz: th / 2 + 0.01, y0: 0, y1: h, door: true });
+  const col = collider({ hx: w / 2, hz: th / 2 + 0.01, y0: oy, y1: oy + h, door: true });
   const body = new CANNON.Body({ mass: 0, type: CANNON.Body.KINEMATIC });
   body.addShape(new CANNON.Box(new CANNON.Vec3(w / 2, h / 2, th / 2 + 0.005)));
   G.phys.addBody(body);
@@ -131,8 +131,8 @@ function makeDoor(spec) {
     pivot.rotation.y = ang;
     const cx = P.x + Math.cos(ang) * w / 2, cz = P.z - Math.sin(ang) * w / 2;
     col.x = cx; col.z = cz; col.rot = ang;
-    body.position.set(cx, h / 2, cz); body.quaternion.setFromEuler(0, ang, 0);
-    door.world.set(cx, 1.1, cz);
+    body.position.set(cx, oy + h / 2, cz); body.quaternion.setFromEuler(0, ang, 0);
+    door.world.set(cx, oy + 1.1, cz);
   };
   sync();
   onUpdate((dt) => {
@@ -160,7 +160,7 @@ function makeDoor(spec) {
 
 // ---------------------------------------------------------------- windows
 const frameMat = () => mat('winFrame', { map: woodTex('#e2dccb', 41, 1).map, color: 0xd9d2bf, roughness: 0.8 });
-function glassMat(dirt = 0) {
+export function glassMat(dirt = 0) {
   return mat('glass' + dirt, { color: dirt ? 0xb8bcb0 : 0xc8d0d0, roughness: dirt ? 0.5 : 0.1, metalness: 0.0, transparent: true, opacity: dirt ? 0.22 : 0.1, depthWrite: false, emissive: 0x30363e, emissiveIntensity: 0.4 });
 }
 
@@ -305,8 +305,7 @@ function buildEntry() {
   }
   const plate = box(0.02, 0.06, 0.1, steel, { x: l.p0 - 0.012, y: 1.55, z: o.a1 + 0.06 });
   void plate;
-  const padlock = box(0.03, 0.035, 0.012, mat('padlock', { color: 0x8b7444, metalness: 0.8, roughness: 0.4 }), { x: l.p0 - 0.02, y: 1.5, z: o.a1 + 0.04 });
-  void padlock;
+  const padlock = box(0.03, 0.035, 0.012, mat('padlock', { color: 0x8b7444, metalness: 0.8, roughness: 0.4 }), { x: l.p0 - 0.02, y: 1.5, z: o.a1 + 0.04, static: false });
   const a = new THREE.Vector3(), b = new THREE.Vector3(l.p0 - 0.03, 1.55, o.a1 + 0.05);
   onUpdate(() => {
     // anchor on the leaf near the latch edge, inside face
@@ -323,9 +322,17 @@ function buildEntry() {
   const ph = cyl(0.012, 0.012, 0.02, 10, brass, { x: 0, y: 1.58, z: 0.04, rx: Math.PI / 2, parent: door.pivot, static: false });
   ph.position.x = (o.a1 - o.a0) / 2;
   interactive(ph, { prompt: () => 'Look through the peephole', use: () => G.peephole?.(), range: 1.4 });
+  const free = (how) => {
+    links.forEach((l) => { l.visible = false; }); padlock.visible = false;
+    door.max = 1.45; door.speed = 2.2; door.locked = null; door.target = 1.45; G.flags.outside = true;
+    sfx(how === 'axe' ? 'metal' : 'click', door.world, { vol: 1, rate: how === 'axe' ? 0.8 : 0.6 }); sfx('chainRattle', door.world, { rate: 0.8 });
+    G.ui.toast(how === 'axe' ? 'Three blows. The chain gives on the third and falls in a heap. The door swings out onto the landing on its own weight.' : 'The little key turns. The padlock drops into your hand, cold. The chain slides off.');
+  };
   door.locked = {
-    prompt: () => (door.target > 0.05 ? 'Close' : 'Open'),
+    prompt: () => (G.I?.held?.name === 'Axe' ? 'Cut the chain with the axe' : G.flags.key ? 'Unlock the padlock' : door.target > 0.05 ? 'Close' : 'Open'),
     use: () => {
+      if (G.I?.held?.name === 'Axe') { free('axe'); return true; }
+      if (G.flags.key) { free('key'); return true; }
       if (door.target > 0.05) { door.target = 0; sfx('doorHeavy', door.world, { vol: 0.5 }); return true; }
       door.target = door.max; sfx('chainRattle', door.world);
       if (!G.flags.chainSeen) { G.flags.chainSeen = true; setTimeout(() => G.ui.toast('The chain is padlocked on this side. No key on the ring by the door.'), 600); }

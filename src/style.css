@@ -42,3 +42,4 @@ button:disabled { opacity: .3; cursor: default; }
 .keys.pad { margin-top: 10px; }
 .padFocus { outline: 1px solid rgba(228,220,203,.7); outline-offset: 6px; background: rgba(228,220,203,.06); }
 body.pad #cross { width: 5px; height: 5px; }
+#fade { position: fixed; inset: 0; pointer-events: none; opacity: 0; z-index: 4; }

@@ -37,6 +37,18 @@ export const VIEWS = {
   balcony: [2.2, -0.9, 0.2, 0.05],
   balcony_down: [2.6, -1.4, 0.3, -0.55],
   balcony_left: [1.2, -1.2, 1.1, 0.05],
+  // the building
+  stair4_landing: [12.2, 7.5, 0, -0.1, false, false, 0],
+  stair4_up: [13.3, 5.2, 0.15, 0.45, false, false, 0],
+  stair_well: [12.21, 3.75, 0, -1.35, false, false, 0],
+  stair_half: [12.2, 0.7, Math.PI, 0.1, false, false, -1.55],
+  f48_hall: [16.2, 4.55, -Math.PI / 2, -0.05, false, false, 0],
+  f48_living: [19.5, 4.0, -Math.PI * 0.75, -0.05, false, false, 0],
+  f51_hall: [9.3, 4.55, Math.PI / 2, -0.05, false, false, 3.1],
+  f51_void: [3.4, 2.6, -0.2, -0.05, false, false, 3.1],
+  f44_corridor: [17.6, 4.75, -Math.PI / 2, 0, false, false, -3.1],
+  lobby: [12.6, 5.0, Math.PI, 0.05, false, false, -9.3],
+  basement: [12.2, 5.5, Math.PI, -0.1, false, true, -12.4],
 };
 
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
@@ -54,8 +66,8 @@ console.log(await page.evaluate(() => { const r = window.__G.renderer.info; retu
 await page.evaluate(() => { document.getElementById('start').classList.add('hidden'); });
 for (const [name, v] of Object.entries(VIEWS)) {
   if (only && !only.split(',').includes(name)) continue;
-  const info = await page.evaluate(([x, z, yaw, pitch, crouch, torch]) => {
-    window.__view(x, z, yaw, pitch, crouch); if (window.__G.torch) window.__G.torch.set(!!torch);
+  const info = await page.evaluate(([x, z, yaw, pitch, crouch, torch, y]) => {
+    window.__view(x, z, yaw, pitch, crouch, y || 0); if (window.__G.torch) window.__G.torch.set(!!torch);
     window.__step(20);
     const r = window.__G.renderer.info.render; return `calls ${r.calls} tris ${(r.triangles / 1000).toFixed(0)}k`;
   }, v);

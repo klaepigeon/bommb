@@ -70,8 +70,25 @@ export const LANDING = { x0: 10 + EXT, x1: 13.6, z0: 2.2, z1: 7.0 };
 // where the player wakes up, and which way they face (yaw)
 export const SPAWN = { x: 9.35, z: 4.55, yaw: Math.PI / 2 + 0.25 };
 
-export function roomAt(x, z) {
+export function roomAt(x, z, y = 0) {
+  if (y < -0.6 || y > 2.95) return null;
   for (const [k, r] of Object.entries(ROOMS)) if (x >= r.x0 && x < r.x1 && z >= r.z0 && z < r.z1) return k;
   if (x >= BALCONY.x0 && x <= BALCONY.x1 && z >= BALCONY.z0 && z < 0) return 'balcony';
   return null;
 }
+
+// ---------------------------------------------------------------- the rest of Building 14
+// Floor f's landing is at y = floorY(f); flat 47 is on floor 4 (y = 0).
+export const floorY = (f) => (f - FLOOR_NO) * STOREY;
+// The stairwell: a switchback stair between the Sokolovs' flat (west) and 48 (east).
+//   landing (floor level):  z STAIR.zl .. STAIR.z1
+//   two flights:            z STAIR.zm .. STAIR.zl — west one down to the half-landing, east one on down
+//   half-landing:           z STAIR.z0 .. STAIR.zm at floor - STOREY/2
+// A narrow well runs down between the flights, all the way.
+export const STAIR = {
+  x0: 10 + EXT, x1: 14.0, z0: 0, z1: 8, zm: 1.25, zl: 3.45,
+  wx1: 12.06, ex0: 12.36,           // west flight x0..wx1, well wx1..ex0, east flight ex0..x1
+  floors: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], top: 9, // 10 exists only to be looked at, then you're back on 9
+};
+// four flats a landing: west (behind the west wall), two east, one south. Floor 4: 47, 48, 49, 50
+export const flatNo = (f, k) => 4 * f + 31 + k; // k: 0 west, 1 east-near, 2 east-far, 3 south

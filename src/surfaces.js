@@ -37,7 +37,7 @@ function oilPaintDado(s, col, top = 1.5, line = '#3b4a3a') { // Soviet kitchen/s
   g.fillStyle = line; g.fillRect(0, y - 3, s.W, 4);
   // chipped gloss
   for (let i = 0; i < 40; i++) {
-    const p = blobPath(s.r() * s.W, y + s.r() * (s.H - y), 3 + s.r() * 14, 2 + s.r() * 8, s.r, 0.6, 14);
+    const k = s.ppm / 128, p = blobPath(s.r() * s.W, y + s.r() * (s.H - y), (3 + s.r() * 12) * k, (2 + s.r() * 7) * k, s.r, 0.6, 14);
     g.fillStyle = 'rgba(190,180,160,0.7)'; g.fill(p); s.hg.fillStyle = '#606060'; s.hg.fill(p);
   }
   if (s.rc) { s.rg.fillStyle = '#606060'; s.rg.fillRect(0, y, s.W, s.H - y); }
@@ -369,3 +369,70 @@ export function paintCeiling(room, W, D) {
 }
 
 void noiseCanvas;
+
+// --------------------------------------------------------------------- Flat 51: the echo
+// The same flat as 47, the same paper on the walls, but nobody has ever lived in it. Pale
+// squares where 47's furniture stands; dust so even it looks like felt.
+const ECHO = {
+  living: ['damask', '#a9aa96', '#6c7360'], bedroom: ['stripe-floral', '#c4b4a6', '#8c6c63'], hall: ['geometric', '#b4a88e', '#7c6e5a'],
+  child: ['kids', '#b6c6d2', '#e6ecef'], kitchen: null, bath: null, storage: null,
+};
+export function paintEcho(room, side, face) {
+  const s = new Surface(face.W, H, 96, seedN++);
+  const e = ECHO[room];
+  if (e) wallpaper(s, e[0], e[1], e[2], 900 + seedN, room === 'child' ? 0.4 : 0.53);
+  else if (room === 'bath') { plasterWall(s, '#c4c6bc', 901); tilesWall(s, 1.65, 0.15, '#cfd8d4', '#9a9a90', 902); }
+  else if (room === 'kitchen') { plasterWall(s, '#d4cfc0', 903); oilPaintDado(s, '#8aa592', 1.5, '#4d5d50'); }
+  else plasterWall(s, '#c4bcaa', 904);
+  // dust over everything, evenly, like a fall of snow
+  s.g.fillStyle = 'rgba(200,196,186,0.28)'; s.g.fillRect(0, 0, s.W, s.H);
+  s.noise(0.2, 1.4, 'soft-light', 9, seedN);
+  // pale ghosts of furniture that was never here
+  for (let i = 0; i < 2; i++) if (s.r() < 0.7) { const w = 0.5 + s.r() * 1.5, h = 0.6 + s.r() * 1.2; s.ghost(0.3 + s.r() * Math.max(0.1, face.W - 0.6), h / 2 + 0.05, w, h, false); }
+  if (s.r() < 0.5) s.ghost(0.4 + s.r() * Math.max(0.1, face.W - 0.8), 1.7, 0.35, 0.45);
+  return s;
+}
+export function paintEchoFloor(room, W, D) {
+  const s = new Surface(W, D, 64, seedN++);
+  if (room === 'living') parquet(s, 950);
+  else if (room === 'kitchen') lino(s, '#a79c84', '#5c5b4e', 0.3, 951);
+  else if (room === 'hall') lino(s, '#76604a', '#6c5743', 0.5, 952);
+  else if (room === 'bath') { s.fill('#8a8a80'); for (let y = 0; y < s.H; y += 6.4) for (let x = 0; x < s.W; x += 6.4) { s.g.fillStyle = ((x + y) / 6.4) % 2 ? '#bab6aa' : '#8a928e'; s.g.fillRect(x + 0.5, y + 0.5, 5.4, 5.4); } }
+  else if (room === 'storage') s.fill('#6f6b62').noise(0.4, 0.6, 'multiply', 5, 953);
+  else floorPlanks(s, '#6a4a32', 0.15, room === 'child', 954);
+  s.g.fillStyle = 'rgba(190,186,176,0.55)'; s.g.fillRect(0, 0, s.W, s.H); // a felt of dust, unbroken
+  s.noise(0.25, 0.8, 'soft-light', 6, seedN);
+  return s;
+}
+
+// --------------------------------------------------------------------- Flat 48: the draft
+// Not decayed: unfinished. Bare skim plaster, pencil setting-out lines, words where
+// things should be.
+export function paintDraft(room, side, face, label) {
+  const s = new Surface(face.W, H, 64, seedN++).fill('#cfcdc6').noise(0.08, 2, 'multiply', 12, seedN);
+  const g = s.g;
+  g.strokeStyle = 'rgba(70,70,80,0.35)'; g.lineWidth = 1;
+  // setting-out: a datum line, verticals, dimension arrows
+  g.beginPath(); g.moveTo(0, s.Y(1.0)); g.lineTo(s.W, s.Y(1.0)); g.stroke();
+  for (let x = 0.6; x < face.W; x += 0.6 + s.r() * 0.8) { g.beginPath(); g.moveTo(s.px(x), s.Y(0.05)); g.lineTo(s.px(x), s.Y(0.4 + s.r() * 0.3)); g.stroke(); }
+  g.font = `${s.px(0.07)}px "Segoe Print","Bradley Hand",cursive`; g.fillStyle = 'rgba(60,60,70,0.55)';
+  g.fillText(`${face.W.toFixed(2)}`, s.px(face.W / 2) - 20, s.Y(1.04));
+  if (label && s.r() < 0.8) { g.font = `${s.px(0.11)}px "Segoe Print","Bradley Hand",cursive`; g.fillText(label, s.px(0.3 + s.r() * Math.max(0, face.W - 1.5)), s.Y(1.6 + s.r() * 0.4)); }
+  // where a window should be, it's been drawn instead
+  for (const h of face.holes) { if (h.kind !== 'window') continue; g.strokeStyle = 'rgba(60,60,70,0.4)'; g.strokeRect(s.px(h.u0) - 6, s.Y(h.y1) - 6, s.px(h.u1 - h.u0) + 12, s.px(h.y1 - h.y0) + 12); }
+  return s;
+}
+
+// --------------------------------------------------------------------- the stairwell
+// Gloss paint to shoulder height (bottle green), whitewash above, a century of hands.
+export function paintStair(W, Hh, seed, o = {}) {
+  const s = new Surface(W, Hh, 64, seed);
+  plasterWall(s, '#c9c6b6', seed);
+  oilPaintDado(s, o.dado || '#4f6e62', 1.45, '#22322c');
+  s.rising(0.5, [30, 28, 22], 0.45).falling(0.8, [40, 36, 30], 0.35);
+  for (let i = 0; i < 6; i++) s.crack(s.r() * W, Hh * (0.5 + s.r() * 0.5), 0.4 + s.r() * 0.8, Math.PI / 2 + (s.r() - 0.5));
+  for (let i = 0; i < 3; i++) s.peel(s.r() * W, 1.6 + s.r() * (Hh - 1.9), 0.3 + s.r() * 0.5, 0.3 + s.r() * 0.5, underPlaster(), false);
+  s.mould(s.r() * W, Hh - 0.2, 0.8, 0.5, 0.8);
+  if (o.tags) { const t = ['ВИТЯ', 'ЦОЙ ЖИВ', '47 ↑', 'Zenit', 'Lena+?', 'XXX', '3 3']; for (let i = 0; i < 2; i++) s.spray(t[(s.r() * t.length) | 0], 0.5 + s.r() * (W - 1), 0.6 + s.r() * 0.6, 0.12 + s.r() * 0.12, s.r() < 0.6 ? '#1c1c1c' : '#6a1a14', (s.r() - 0.5) * 0.3); }
+  return s;
+}
