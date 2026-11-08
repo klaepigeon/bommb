@@ -1940,3 +1940,25 @@ func test_input_bindings() -> void:
 	hud.key_input(key)
 	check(hit[0] == 2, "SPACE does too")
 	hud.queue_free()
+	# a touch screen sends the touch AND a mouse click made from it: one press, once
+	var n := [0]
+	var pb := PartyUi.button("X", func(): n[0] += 1)
+	add_child(pb)
+	pb.pressed.emit()
+	pb.pressed.emit()
+	check(n[0] == 1, "a party button fires once for a touch and its emulated click (%d)" % n[0])
+	pb.queue_free()
+	var taps := [0]
+	var ring: Control = PartyControls.make({"kind": "timing", "do": "pull", "label": "PULL"}, func(_a): taps[0] += 1, "")
+	add_child(ring)
+	var tch := InputEventScreenTouch.new()
+	tch.pressed = true
+	tch.position = ring.size * 0.5
+	ring._gui_input(tch)
+	var emu := InputEventMouseButton.new()
+	emu.button_index = MOUSE_BUTTON_LEFT
+	emu.pressed = true
+	emu.device = InputEvent.DEVICE_ID_EMULATION
+	ring._gui_input(emu)
+	check(taps[0] == 1, "the timing ring counts a touch once, not twice (%d)" % taps[0])
+	ring.queue_free()

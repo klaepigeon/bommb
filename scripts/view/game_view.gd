@@ -100,8 +100,13 @@ func _ready() -> void:
 		c.scale = Vector3.ONE * PUPPET_SCALE
 		c.place(venue.stand_pos(0, int(s.seat)))
 		contestants[int(s.seat)] = c
+		c.impact.connect(feel)
 		_attach_anim(int(s.seat))
 	_seat_guests()
+	Ui.keep_awake(true)
+	tree_exiting.connect(func():
+		Ui.keep_awake(false)
+		Engine.time_scale = 1.0)
 	hud = Hud.new()
 	add_child(hud)
 	hud.act.connect(func(seat, a): Net.send_action(seat, a))
@@ -176,6 +181,31 @@ func viewer_body() -> Dictionary:
 func viewer_sight() -> float:
 	var b := viewer_body()
 	return Body.sight(b) if not b.is_empty() else 1.0
+
+
+## THE FEEL of a hit: the camera kicks, the picture freezes for a beat (hit-stop), a flash
+## and a buzz in the hand, all scaled by how hard it landed. Reduced effects: just the buzz.
+var _stopping := false
+func feel(strength: float) -> void:
+	strength = clampf(strength, 0.0, 2.0)
+	Ui.buzz(int(40 + 120 * strength), clampf(0.3 + 0.4 * strength, 0.0, 1.0))
+	if Ui.reduced_fx:
+		return
+	shake(0.25 + 0.35 * strength)
+	if strength >= 0.6:
+		stage.flash(0.12 + 0.12 * strength)
+	hitstop(0.05 + 0.06 * strength)
+
+
+## Freeze the world for `secs` of real time (everything but the HUD's own clock).
+func hitstop(secs: float) -> void:
+	if _stopping or Ui.reduced_fx:
+		return
+	_stopping = true
+	Engine.time_scale = 0.05
+	get_tree().create_timer(secs, true, false, true).timeout.connect(func():
+		Engine.time_scale = 1.0
+		_stopping = false)
 
 
 func shake(amount: float) -> void:
@@ -407,6 +437,8 @@ func _event(e: Dictionary) -> void:
 			hud.toast(str(e.text), int(e.get("to", -1)) >= 0)
 		"mg_stage":
 			_mg_stage(str(e.stage))
+			if str(e.stage) in ["play", "play_freeze"]:
+				Ui.buzz(70, 0.8)    # GO! / FINISH!
 		"stopped":
 			# LANDING: everything stops; the camera comes to the square
 			director.request("landing", {"at": _puppet_at(s)}, 19, float(view.get("pacing", {}).get("landing", 1.6)) + 1.0)
@@ -417,13 +449,19 @@ func _event(e: Dictionary) -> void:
 			if contestants.has(s):
 				director.request("intro", {"at": _puppet_at(s)}, 15, 1.6)
 				_anim(s, "look_around")
-				pass   # the HUD's turn panel announces it (one message, one place)
+				# the HUD's turn panel announces it; your phone tells you too
+				if Net.my_seats.has(s):
+					Ui.buzz(90, 0.7)
+					Sfx.play("your_turn", -4.0)
 		"roll":
 			var c: Contestant = contestants[s]
 			_anim(s, "dice_throw")
 			if not dice.visible:
 				dice.hover(c.position + Vector3(0, 2.4, 0))
 			dice.hit(int(e.n))
+			shake(0.15)
+			if Net.my_seats.has(s):
+				Ui.buzz(35, 0.6)
 			Sfx.play("dice_rattle", -2.0)
 			stage.hall.flashboard.light(int(e.n))
 			director.request("dice", {"at": _puppet_at(s)}, 18, 1.4)
@@ -474,6 +512,9 @@ func _event(e: Dictionary) -> void:
 				_anim(s, "celebrate")
 				director.request("award", {"at": _puppet_at(s)}, 20, 1.8)
 				Audio.sfx("bell", 0.0, -2.0, 1.6)
+				Audio.sfx("fanfare", 0.0, -4.0)
+				if Net.my_seats.has(s):
+					Ui.buzz(120, 0.7)
 			else:
 				_anim(s, "disbelief")
 		"rat_bought":
@@ -494,9 +535,14 @@ func _event(e: Dictionary) -> void:
 		"injure":
 			_anim(s, "stump" if str(e.status) == "lost" else "hurt")
 			Audio.sfx("hurt", 0.15, -2.0)
+			if contestants.has(s) and DeathFx.gore() and str(e.status) in ["lost", "broken"]:
+				DeathFx.spray(contestants[s].get_parent(), contestants[s].position + Vector3(0, 1.0, 0), Vector3.UP, 18 if str(e.status) == "broken" else 34)
 			if str(e.status) == "lost":
 				Audio.sfx("snap", 0.05, 0.0, 0.7)
-				shake(0.3)
+				Audio.sfx("crunch", 0.05, -2.0)
+			feel(0.7 if str(e.status) == "lost" else 0.3)
+			if Net.my_seats.has(s):
+				Ui.buzz(160 if str(e.status) == "lost" else 70, 0.9)
 		"status":
 			var react := {"rat_fever": "scratch", "paralytic": "twitch", "blindness": "hands_out", "thinner": "flinch", "hallucinogen": "look_around",
 				"stimulant": "dance", "necrosis": "stagger", "memory": "shrug", "hunger": "clutch_stomach", "cure": "relief"}.get(str(e.id), "cough")
@@ -541,17 +587,17 @@ func _event(e: Dictionary) -> void:
 			else:
 				caller.look("you")
 		"death":
-			hud.banner("%s IS DEAD" % str(view.players[s].name).to_upper() if view.has("players") and s >= 0 and s < view.players.size() else "SOMEONE", PartyUi.BLOOD, 1.4)
+			hud.banner("YOU'RE DEAD" if Net.my_seats.has(s) else ("%s IS DEAD" % str(view.players[s].name).to_upper() if view.has("players") and s >= 0 and s < view.players.size() else "SOMEONE IS DEAD"), PartyUi.BLOOD, 1.6)
 			_ghost_t[s] = 3.2
 			_deaths_shown[s] = true
 			contestants[s].die(str(e.anim), on_table(Vector3(0, 3, 0)))
 			if guest_anims.has(s):
 				guest_anims[s].play("collapse")
-			shake(0.5)
-			stage.flash(0.35)
 			Sfx.play("death", -2.0)
+			if Net.my_seats.has(s):
+				Ui.buzz(400, 1.0)    # it's you
 			Audio.duck(2.0)
-			director.request("death", {"at": _puppet_at(s)}, 26, 2.6)
+			director.request("death", {"at": _puppet_at(s)}, 26, 3.6)
 			for q in guest_anims:
 				if q != s:
 					guest_anims[q].play(["panic", "disgust", "disbelief"][q % 3], false)
@@ -754,6 +800,7 @@ func _rebuild(seat: int, ghost: bool) -> void:
 	else:
 		_deaths_shown.erase(seat)
 	contestants[seat] = c
+	c.impact.connect(feel)
 	_attach_anim(seat)
 	if not ghost and guests.has(seat):
 		var g: TableGuest = guests[seat]
@@ -921,6 +968,11 @@ func area_name() -> String:
 
 
 func _unhandled_input(ev: InputEvent) -> void:
+	# Escape / the controller's START opens and closes the pause menu
+	if (ev is InputEventKey and ev.pressed and not ev.echo and ev.keycode == KEY_ESCAPE) or (ev is InputEventJoypadButton and ev.pressed and ev.button_index == JOY_BUTTON_START):
+		hud._toggle_menu()
+		get_viewport().set_input_as_handled()
+		return
 	if hud.key_input(ev):
 		return
 	if ev is InputEventKey and ev.pressed and ev.keycode == KEY_TAB:
@@ -1038,3 +1090,13 @@ static func InputMap_read(dev: String) -> Vector2:
 		v.x += float(Input.is_joy_button_pressed(p, JOY_BUTTON_DPAD_RIGHT)) - float(Input.is_joy_button_pressed(p, JOY_BUTTON_DPAD_LEFT))
 		v.y += float(Input.is_joy_button_pressed(p, JOY_BUTTON_DPAD_DOWN)) - float(Input.is_joy_button_pressed(p, JOY_BUTTON_DPAD_UP))
 	return v.limit_length(1.0)
+
+
+
+## Android's back button (and the gesture): the pause menu, not quitting the app.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST and hud:
+		hud._toggle_menu()
+	elif what == NOTIFICATION_APPLICATION_FOCUS_OUT and hud and not hud._menu_open and Net.role == "offline":
+		# the phone rang, the app went to the background: pause, don't play on without you
+		hud._toggle_menu()

@@ -23,14 +23,14 @@ func _gui_input(e: InputEvent) -> void:
 			_release()
 	elif e is InputEventScreenDrag and e.index == _touch:
 		_move(e.position)
-	elif e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT:
+	elif e is InputEventMouseButton and e.device != InputEvent.DEVICE_ID_EMULATION and e.button_index == MOUSE_BUTTON_LEFT:
 		if e.pressed:
 			_touch = -1
 			_origin = size / 2
 			_move(e.position)
 		else:
 			_release()
-	elif e is InputEventMouseMotion and _touch == -1:
+	elif (e is InputEventMouseMotion and e.device != InputEvent.DEVICE_ID_EMULATION) and _touch == -1:
 		_move(e.position)
 
 

@@ -1,5 +1,8 @@
 class_name Contestant
 extends Node3D
+
+## The instant a death (or a hit) lands: the view shakes, freezes a beat and buzzes on it.
+signal impact(strength: float)
 ## A contestant's puppet. The figures on the Caller's table are puppets of the people
 ## playing, made of meat: cartoon PS1 bodies of rotting muscle and fat, stitched together,
 ## no face (just more meat, a stitched slit for a mouth), and real eyes (wet, veined, the one thing on
@@ -286,10 +289,17 @@ func hop_to(p: Vector3, dur := 0.2) -> void:
 	if Vector2(d.x, d.z).length() > 0.05:
 		face_dir = atan2(d.x, d.z)
 	_hop = create_tween()
+	# squash before, stretch in the air, squash on landing, settle
+	var base := scale
+	_hop.tween_property(self, "scale", base * Vector3(1.15, 0.82, 1.15), dur * 0.15)
 	_hop.tween_method(func(t: float):
 		var q := from.lerp(p, t)
 		q.y += sin(t * PI) * 0.5
-		position = q, 0.0, 1.0, dur).set_trans(Tween.TRANS_SINE)
+		position = q
+		var st := 1.0 + 0.12 * sin(t * PI)
+		scale = base * Vector3(1.0 / sqrt(st), st, 1.0 / sqrt(st)), 0.0, 1.0, dur * 0.7).set_trans(Tween.TRANS_SINE)
+	_hop.tween_property(self, "scale", base * Vector3(1.18, 0.8, 1.18), dur * 0.06)
+	_hop.tween_property(self, "scale", base, dur * 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func look_toward(p: Vector3) -> void:
@@ -478,7 +488,9 @@ func die(anim: String, focus: Vector3 = Vector3.ZERO) -> void:
 			tw.parallel().tween_property(h.arm_r, "rotation", Vector3(-2.9, 0, 0.3), 0.12)
 			tw.tween_interval(0.25)
 			tw.tween_property(self, "position:y", -3.5, 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-			tw.tween_callback(func(): Audio.sfx("fall", 0.05, -4.0))
+			tw.tween_callback(func():
+				Audio.sfx("fall", 0.05, -4.0)
+				impact.emit(0.7))
 			tw.tween_callback(hide)
 		"launch":
 			tw.tween_callback(func(): Audio.sfx("spring", 0.0, 0.0, 0.8))
@@ -498,7 +510,8 @@ func die(anim: String, focus: Vector3 = Vector3.ZERO) -> void:
 				tw.tween_callback(func(): _flash(i % 2 == 0))
 			tw.tween_callback(func():
 				_flash(true)
-				_smoke())
+				_smoke()
+				impact.emit(0.8))
 			tw.tween_property(self, "rotation:x", -PI / 2, 0.5).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
 			tw.tween_callback(func(): Audio.sfx("land", 0.05, -2.0))
 		"pop":
@@ -509,17 +522,25 @@ func die(anim: String, focus: Vector3 = Vector3.ZERO) -> void:
 			tw.tween_interval(0.6)
 			# stiff as a plank, backwards
 			tw.tween_property(self, "rotation:x", -PI / 2, 0.9).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-			tw.tween_callback(func(): Audio.sfx("land", 0.05, 0.0, 0.7))
+			tw.tween_callback(func():
+				Audio.sfx("land", 0.05, 0.0, 0.7)
+				impact.emit(0.7))
 			tw.tween_property(self, "position:y", 0.12, 0.1)
 		"boom":
 			tw.tween_callback(func():
 				Audio.sfx("break", 0.0, 4.0, 0.6)
 				_confetti(Vector3(0, 1.2, 0), 90)
 				_smoke()
-				_scatter())
+				_scatter()
+				DeathFx.spray(get_parent() as Node3D, position + Vector3(0, 1.0, 0), Vector3.UP, 70)
+				DeathFx.pool(get_parent() as Node3D, position, 1.2, 1.5)
+				impact.emit(1.5))
 			tw.tween_callback(func(): h.hide())
 		"jaws":
-			tw.tween_callback(func(): Audio.sfx("squish", 0.05, 2.0))
+			tw.tween_callback(func():
+				Audio.sfx("squish", 0.05, 2.0)
+				DeathFx.spray(get_parent() as Node3D, position + Vector3(0, 0.6, 0), Vector3.UP, 40)
+				impact.emit(1.0))
 			for i in 6:
 				tw.tween_property(self, "position:y", position.y - 0.18 * (i + 1), 0.1)
 				tw.tween_property(self, "rotation:z", 0.2 if i % 2 == 0 else -0.2, 0.08)
@@ -529,7 +550,9 @@ func die(anim: String, focus: Vector3 = Vector3.ZERO) -> void:
 			tw.tween_callback(func(): Audio.sfx("chomp" if false else "squish", 0.05, -2.0, 0.6))
 			tw.tween_callback(hide)
 		"clapper":
-			tw.tween_callback(func(): Audio.sfx("snap", 0.0, 4.0, 0.5))
+			tw.tween_callback(func():
+				Audio.sfx("snap", 0.0, 4.0, 0.5)
+				impact.emit(1.0))
 			tw.tween_property(h.upper, "rotation:x", 1.3, 0.12).set_trans(Tween.TRANS_EXPO)
 			tw.parallel().tween_property(h.head, "rotation:x", 0.6, 0.12)
 			tw.tween_interval(0.5)
@@ -545,11 +568,152 @@ func die(anim: String, focus: Vector3 = Vector3.ZERO) -> void:
 				near.y = 0.0
 				tw.tween_property(self, "position", near, 1.6)
 			tw.tween_interval(0.9)
-			tw.tween_callback(func(): Audio.sfx("slam", 0.0, 2.0))
+			tw.tween_callback(func():
+				Audio.sfx("slam", 0.0, 2.0)
+				impact.emit(1.0))
 			tw.tween_property(h.upper, "rotation:x", 0.9, 0.15)
 			tw.tween_property(self, "rotation:x", PI / 2, 0.6).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+		"shot":
+			# the bang, a jolt back, the knees go, face down
+			var par := get_parent() as Node3D
+			tw.tween_callback(func():
+				Audio.sfx("bang", 0.0, 4.0)
+				Audio.sfx("splat", 0.1, -2.0)
+				DeathFx.spray(par, position + Vector3(0, 1.3, 0), -global_transform.basis.z + Vector3(0, 0.4, 0), 50)
+				impact.emit(1.0))
+			tw.tween_property(h.upper, "rotation:x", -0.6, 0.06).set_trans(Tween.TRANS_EXPO)
+			tw.parallel().tween_property(h.head, "rotation:x", -0.5, 0.06)
+			tw.parallel().tween_property(h.arm_l, "rotation", Vector3(-1.2, 0, -0.9), 0.08)
+			tw.parallel().tween_property(h.arm_r, "rotation", Vector3(-1.2, 0, 0.9), 0.08)
+			tw.tween_interval(0.35)
+			tw.tween_property(h.hips, "position:y", 0.45, 0.25).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+			tw.parallel().tween_property(h.upper, "rotation:x", 0.5, 0.25)
+			tw.tween_interval(0.2)
+			tw.tween_property(self, "rotation:x", PI / 2, 0.45).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+			tw.tween_callback(func():
+				Audio.sfx("land", 0.05, 0.0, 0.8)
+				DeathFx.pool(par, position, 1.0, 2.5))
+		"crushed":
+			# a shadow, a look up, the press
+			var par2 := get_parent() as Node3D
+			tw.tween_property(h.head, "rotation:x", -0.9, 0.25)
+			tw.parallel().tween_property(h.arm_l, "rotation", Vector3(-2.6, 0, -0.4), 0.25)
+			tw.parallel().tween_property(h.arm_r, "rotation", Vector3(-2.6, 0, 0.4), 0.25)
+			tw.tween_callback(func(): DeathFx.slab(par2, Vector3(position.x, 0, position.z), Vector3(0.95, 0.45, 0.95), Color("2c2c32"), 9.0, 0.2))
+			tw.tween_interval(0.2)
+			tw.tween_callback(func():
+				Audio.sfx("slam", 0.0, 6.0, 0.7)
+				Audio.sfx("crunch", 0.05, 2.0)
+				DeathFx.spray(par2, position + Vector3(0, 0.3, 0), Vector3(1, 0.2, 0), 30)
+				DeathFx.spray(par2, position + Vector3(0, 0.3, 0), Vector3(-1, 0.2, 0), 30)
+				DeathFx.cloud(par2, position + Vector3(0, 0.3, 0), Color(0.5, 0.48, 0.45, 0.6), 14, 1.4)
+				impact.emit(1.3))
+			tw.tween_property(self, "scale", Vector3(1.5, 0.12, 1.5), 0.05)
+			tw.tween_callback(func(): DeathFx.pool(par2, position, 1.4, 1.6))
+		"gassed":
+			# coughing, clutching the throat, staggering, sideways
+			var par3 := get_parent() as Node3D
+			tw.tween_callback(func():
+				DeathFx.cloud(par3, position + Vector3(0, 1.0, 0), Color(0.55, 0.75, 0.2, 0.45), 30, 3.0)
+				Audio.sfx("hiss", 0.05, 0.0))
+			tw.tween_property(h.arm_l, "rotation", Vector3(-2.2, 0, 0.9), 0.3)
+			tw.parallel().tween_property(h.arm_r, "rotation", Vector3(-2.2, 0, -0.9), 0.3)
+			for i in 6:
+				tw.tween_property(h.upper, "rotation:x", 0.6 if i % 2 == 0 else 0.15, 0.14)
+				tw.parallel().tween_property(self, "position:x", position.x + (0.12 if i % 2 == 0 else -0.08), 0.14)
+			tw.tween_callback(func(): _tint(Color(0.6, 0.85, 0.45)))
+			tw.tween_property(h.hips, "position:y", 0.5, 0.4)
+			tw.tween_property(self, "rotation:z", 1.5, 0.5).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+			tw.tween_callback(func():
+				Audio.sfx("land", 0.05, -2.0, 0.7)
+				impact.emit(0.5))
+		"blood_loss":
+			# going pale, swaying, down slowly, the pool spreading
+			var par4 := get_parent() as Node3D
+			tw.tween_callback(func(): DeathFx.pool(par4, position, 1.3, 4.0))
+			for i in 4:
+				tw.tween_property(self, "rotation:z", 0.12 if i % 2 == 0 else -0.12, 0.45).set_trans(Tween.TRANS_SINE)
+			tw.parallel().tween_method(func(k: float): _tint(Color(1, 1, 1).lerp(Color(0.75, 0.78, 0.85), k)), 0.0, 1.0, 1.8)
+			tw.tween_property(h.hips, "position:y", 0.45, 0.6).set_trans(Tween.TRANS_SINE)
+			tw.tween_property(self, "rotation:x", PI / 2, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+			tw.tween_callback(func(): impact.emit(0.4))
+		"organ":
+			# on the table: a spasm, another, the arm drops, the line goes flat
+			for i in 3:
+				tw.tween_property(h.upper, "rotation:x", -0.5, 0.06)
+				tw.tween_property(h.upper, "rotation:x", 0.0, 0.18)
+				tw.tween_interval(0.3 - i * 0.08)
+			tw.tween_callback(func():
+				Audio.sfx("flatline", 0.0, -4.0)
+				impact.emit(0.6))
+			tw.tween_property(h.arm_r, "rotation", Vector3(0.2, 0, 0.6), 0.25).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+			tw.parallel().tween_property(h.head, "rotation:z", 0.6, 0.4)
+		"hooks":
+			# hooked in the back, lifted kicking, gone up into the dark
+			tw.tween_callback(func():
+				Audio.sfx("snap", 0.0, 2.0, 0.8)
+				DeathFx.spray(get_parent() as Node3D, position + Vector3(0, 1.4, 0), Vector3(0, 1, 0), 26)
+				impact.emit(0.8))
+			tw.tween_property(self, "position:y", position.y + 1.2, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			for i in 6:
+				tw.tween_property(h.leg_l, "rotation:x", 0.7 if i % 2 == 0 else -0.4, 0.1)
+				tw.parallel().tween_property(h.leg_r, "rotation:x", -0.4 if i % 2 == 0 else 0.7, 0.1)
+			tw.tween_property(self, "position:y", position.y + 14.0, 0.8).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+			tw.tween_callback(hide)
+		"drown":
+			# flailing, under, bubbles, still
+			var par5 := get_parent() as Node3D
+			tw.tween_callback(func():
+				Audio.sfx("splash", 0.05, 0.0)
+				DeathFx.bubbles(par5, position + Vector3(0, 0.6, 0), 40))
+			for i in 6:
+				tw.tween_property(h.arm_l, "rotation", Vector3(-3.0 if i % 2 == 0 else -2.2, 0, -0.4), 0.15)
+				tw.parallel().tween_property(h.arm_r, "rotation", Vector3(-2.2 if i % 2 == 0 else -3.0, 0, 0.4), 0.15)
+				tw.parallel().tween_property(self, "position:y", position.y - 0.2 * (i + 1), 0.15)
+			tw.tween_callback(func(): impact.emit(0.5))
+			tw.tween_property(self, "position:y", position.y - 3.0, 1.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+			tw.tween_callback(func(): DeathFx.bubbles(par5, position + Vector3(0, 3.2, 0), 12))
+			tw.tween_callback(hide)
+		"audit":
+			# THE AUDIT: a spotlight, a rubber stamp the size of a door, folded flat as paperwork
+			var par6 := get_parent() as Node3D
+			tw.tween_callback(func(): _tint(Color(1.3, 1.25, 1.0)))
+			tw.tween_interval(0.5)
+			tw.tween_callback(func(): DeathFx.slab(par6, Vector3(position.x, 0, position.z), Vector3(0.9, 0.3, 0.7), Color("7a1a14"), 10.0, 0.25))
+			tw.tween_interval(0.25)
+			tw.tween_callback(func():
+				Audio.sfx("slam", 0.0, 6.0, 1.1)
+				impact.emit(1.1))
+			tw.tween_property(self, "scale", Vector3(1.3, 0.05, 1.3), 0.05)
+			tw.tween_interval(0.8)
+			tw.tween_property(self, "position:x", position.x + 6.0, 0.6).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+			tw.tween_callback(hide)
 		_:
-			tw.tween_property(self, "rotation:x", -PI / 2, 0.6)
+			# anything else: a shudder, the knees, face down, and the mess
+			var par7 := get_parent() as Node3D
+			tw.tween_property(h.upper, "rotation:x", -0.4, 0.08)
+			tw.tween_callback(func(): impact.emit(0.6))
+			tw.tween_property(h.hips, "position:y", 0.5, 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+			tw.tween_property(self, "rotation:x", PI / 2, 0.45).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+			tw.tween_callback(func(): DeathFx.pool(par7, position, 0.9, 2.0))
+
+
+## Tint the whole puppet (pale, poisoned, in the spotlight).
+func _tint(c: Color) -> void:
+	_modulate_meshes(c)
+
+
+func _modulate_meshes(c: Color) -> void:
+	for mi in human.find_children("*", "MeshInstance3D", true, false):
+		if c == Color.WHITE:
+			(mi as MeshInstance3D).material_overlay = null
+			continue
+		# a translucent wash over the skin: pale, poisoned, lit up
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.albedo_color = Color(c.r * 0.6, c.g * 0.6, c.b * 0.6, 0.45)
+		(mi as MeshInstance3D).material_overlay = m
 
 
 func _flash(on: bool) -> void:

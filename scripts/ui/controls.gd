@@ -88,7 +88,7 @@ class SwipePad:
 		return self
 
 	func _gui_input(e: InputEvent) -> void:
-		if e is InputEventScreenTouch or (e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT):
+		if e is InputEventScreenTouch or (e is InputEventMouseButton and e.device != InputEvent.DEVICE_ID_EMULATION and e.button_index == MOUSE_BUTTON_LEFT):
 			if e.pressed:
 				_down = true
 				_start = e.position
@@ -99,7 +99,7 @@ class SwipePad:
 					# a tap: hop toward where you tapped, from the middle
 					d = e.position - size / 2.0
 				fire(d)
-		elif (e is InputEventScreenDrag or e is InputEventMouseMotion) and _down:
+		elif (e is InputEventScreenDrag or (e is InputEventMouseMotion and e.device != InputEvent.DEVICE_ID_EMULATION)) and _down:
 			var d2: Vector2 = e.position - _start
 			if d2.length() > 70.0:
 				fire(d2)
@@ -179,7 +179,7 @@ class TimingRing:
 		queue_redraw()
 
 	func _gui_input(e: InputEvent) -> void:
-		if (e is InputEventScreenTouch or (e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT)) and e.pressed:
+		if (e is InputEventScreenTouch or (e is InputEventMouseButton and e.device != InputEvent.DEVICE_ID_EMULATION and e.button_index == MOUSE_BUTTON_LEFT)) and e.pressed:
 			tap()
 
 	func tap() -> void:
@@ -221,7 +221,7 @@ class TracePad:
 		return self
 
 	func _gui_input(e: InputEvent) -> void:
-		if e is InputEventScreenTouch or (e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT):
+		if e is InputEventScreenTouch or (e is InputEventMouseButton and e.device != InputEvent.DEVICE_ID_EMULATION and e.button_index == MOUSE_BUTTON_LEFT):
 			if e.pressed:
 				_down = true
 				pts = [e.position]
@@ -232,7 +232,7 @@ class TracePad:
 					norm.append([(p as Vector2).x / size.x, (p as Vector2).y / size.y])
 				send.call({"do": spec.do, "pts": norm})
 			queue_redraw()
-		elif (e is InputEventScreenDrag or e is InputEventMouseMotion) and _down:
+		elif (e is InputEventScreenDrag or (e is InputEventMouseMotion and e.device != InputEvent.DEVICE_ID_EMULATION)) and _down:
 			if pts.is_empty() or (pts[-1] as Vector2).distance_to(e.position) > 6.0:
 				pts.append(e.position)
 				queue_redraw()

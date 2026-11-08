@@ -23,6 +23,8 @@ var _last_size := Vector2.ZERO
 
 func _ready() -> void:
 	ensure_actions()
+	apply_power()
+	Settings.changed.connect(func(_k = null, _v = null): apply_power())
 	Settings.changed.connect(refresh)
 	get_viewport().size_changed.connect(refresh)
 	refresh()
@@ -177,3 +179,36 @@ func control_binding(kind: String, n := 0, dev := "") -> String:
 		"pick", "buttons":
 			return "click a choice" if dev == "keyboard" else "D-PAD + A"
 	return kind
+
+
+
+# --- ANDROID QUALITY OF LIFE -----------------------------------------------------------------
+
+signal tip(text: String)
+
+## A buzz in the hand (Settings: VIBRATION). `ms` long; `amp` 0..1 where the phone supports it.
+func buzz(ms := 30, amp := 0.5) -> void:
+	if not bool(Settings.get_v("vibration", true)):
+		return
+	if OS.has_feature("mobile") or OS.get_name() in ["Android", "iOS"]:
+		Input.vibrate_handheld(ms, amp)
+	for j in Input.get_connected_joypads():
+		Input.start_joy_vibration(j, amp * 0.6, amp, ms / 1000.0)
+
+
+## The screen stays on during a match (nobody wants it dimming mid-minigame).
+func keep_awake(on: bool) -> void:
+	if DisplayServer.get_name() != "headless":
+		DisplayServer.screen_set_keep_on(on)
+
+
+## BATTERY SAVER: 30 frames a second and a lighter picture.
+func apply_power() -> void:
+	var saver := bool(Settings.get_v("battery_saver", false))
+	Engine.max_fps = 30 if saver else 60
+
+
+## A long-press on something with a description: say what it is.
+func show_tip(text: String) -> void:
+	tip.emit(text)
+	buzz(15, 0.3)

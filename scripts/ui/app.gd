@@ -30,6 +30,7 @@ func _ready() -> void:
 
 
 func _swap(n: Node) -> void:
+	_on_main_menu = false
 	if screen:
 		screen.queue_free()
 	screen = n
@@ -104,6 +105,20 @@ func _toast(t: String) -> void:
 
 # --- main menu ----------------------------------------------------------------------
 
+var _on_main_menu := false
+
+
+## Android's back button outside a match: back to the main menu; from there, out.
+func _notification(what: int) -> void:
+	if what != NOTIFICATION_WM_GO_BACK_REQUEST or screen is GameView:
+		return
+	if _on_main_menu:
+		get_tree().quit()
+	else:
+		Net.leave_quiet()
+		menu()
+
+
 func menu() -> void:
 	Audio.music("title")
 	var c := Control.new()
@@ -111,6 +126,7 @@ func menu() -> void:
 	c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_swap(c)
 	bg_stage.set_pose("title", 1.2)
+	_on_main_menu = true
 	var title := PartyUi.shout("MEAT PARTY", 110, PartyUi.PINK)
 	title.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 	title.offset_left = -720

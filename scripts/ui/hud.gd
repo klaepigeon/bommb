@@ -192,6 +192,7 @@ func _ready() -> void:
 	root.add_child(look_btn)
 	root.move_child(top, -1)   # the menu button stays tappable over any panel
 	Ui.changed.connect(_layout)
+	Ui.tip.connect(func(t): toast(t, true))
 	_layout()
 
 
@@ -526,6 +527,8 @@ func _clear(box: Node) -> void:
 
 func _actions(v: Dictionary) -> void:
 	_clear(actions)
+	if _menu_open:
+		return     # the menu has the modal; the actions wait till it's closed
 	modal.visible = false
 	var phase := str(v.phase)
 	var me := _me()
@@ -1223,6 +1226,7 @@ func _results(v: Dictionary) -> void:
 		grid.add_child(PartyUi.label(["", "1ST", "2ND", "3RD", "4TH"][mini(4, int(places.get(s, 4)))], 22, PartyUi.BLOOD, true))
 		grid.add_child(PartyUi.label(str(p.name) + ("" if p.alive else " (DEAD)"), 22, PartyUi.INK, true))
 		grid.add_child(PartyUi.label("%+d TEETH" % int(round(n * k)), 22, PartyUi.MINT.darkened(0.3) if n >= 0 else PartyUi.RED, true))
+	_nowrap(grid)
 	card_box.add_child(grid)
 	if int(r.get("pool", 0)) > 0 and not (r.get("pool_to", []) as Array).is_empty():
 		card_box.add_child(PartyUi.label("THE POT (%d) GOES TO %s." % [int(r.pool), ", ".join(r.pool_to.map(func(s): return str(view.players[int(s)].name)))], 18, PartyUi.BLOOD, true))
@@ -1251,10 +1255,11 @@ func _standings(st: Array) -> void:
 	grid.columns = 4
 	grid.add_theme_constant_override("h_separation", 22)
 	for x in st:
-		grid.add_child(PartyUi.label("%d." % int(x.place), 24, PartyUi.BLOOD, true))
-		grid.add_child(PartyUi.label(str(x.name) + ("" if x.alive else " (GHOST)"), 24, PartyUi.INK, true))
-		grid.add_child(PartyUi.label("%d DEAD RATS" % int(x.rats), 22, PartyUi.INK, true))
-		grid.add_child(PartyUi.label("%d TEETH" % int(x.teeth), 20, PartyUi.DIM, true))
+		for l in [PartyUi.label("%d." % int(x.place), 24, PartyUi.BLOOD, true), PartyUi.label(str(x.name) + ("" if x.alive else " (GHOST)"), 24, PartyUi.INK, true),
+				PartyUi.label("%d DEAD RATS" % int(x.rats), 22, PartyUi.INK, true), PartyUi.label("%d TEETH" % int(x.teeth), 20, PartyUi.DIM, true)]:
+			(l as Label).autowrap_mode = TextServer.AUTOWRAP_OFF   # a grid cell has no width to wrap in
+			grid.add_child(l)
+	_nowrap(grid)
 	card_box.add_child(grid)
 
 
@@ -1301,6 +1306,8 @@ func _cutscene(v: Dictionary) -> void:
 
 func _toggle_menu() -> void:
 	_menu_open = not _menu_open
+	Net.paused = _menu_open and Net.role == "offline"
+	get_tree().paused = false
 	if not _menu_open:
 		modal.visible = false
 		_sig.erase("actions")
@@ -1308,15 +1315,21 @@ func _toggle_menu() -> void:
 	modal.visible = true
 	_clear(modal_box)
 	_clear(modal_footer)
-	_modal_title("MENU")
-	var toggles := [["REDUCED EFFECTS", "reduced_fx"], ["REDUCED GORE", "reduced_gore"], ["LEFT-HANDED", "left_handed"], ["SCREEN SHAKE", "screen_shake"]]
+	_modal_title("PAUSED" if Net.role == "offline" else "MENU", "" if Net.role == "offline" else "(an online match carries on without you)")
+	var toggles := [["REDUCED EFFECTS", "reduced_fx"], ["REDUCED GORE", "reduced_gore"], ["LEFT-HANDED", "left_handed"], ["SCREEN SHAKE", "screen_shake"],
+		["VIBRATION", "vibration"], ["BATTERY SAVER", "battery_saver"]]
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 8)
 	for tg in toggles:
 		var key: String = tg[1]
-		var on := bool(Settings.get_v(key, false))
-		modal_box.add_child(PartyUi.button("%s: %s" % [tg[0], "ON" if on else "OFF"], func():
-			Settings.set_v(key, not bool(Settings.get_v(key, false)))
+		var on := bool(Settings.get_v(key, key in ["screen_shake", "vibration"]))
+		grid.add_child(PartyUi.button("%s: %s" % [tg[0], "ON" if on else "OFF"], func():
+			Settings.set_v(key, not bool(Settings.get_v(key, key in ["screen_shake", "vibration"])))
 			_menu_open = false
-			_toggle_menu(), PartyUi.MINT if on else PartyUi.CREAM, 420.0, 20))
+			_toggle_menu(), PartyUi.MINT if on else PartyUi.CREAM, 260.0, 18))
+	modal_box.add_child(grid)
 	var h := PartyUi.hbox(8)
 	for lbl in [["UI SMALLER", -0.1], ["UI BIGGER", 0.1]]:
 		var d: float = lbl[1]
@@ -1327,8 +1340,9 @@ func _toggle_menu() -> void:
 		var d: float = lbl[1]
 		h2.add_child(PartyUi.button(lbl[0], func(): Settings.set_v("text_size", clampf(float(Settings.get_v("text_size", 1.0)) + d, 0.7, 1.8)), PartyUi.CREAM, 200.0, 18))
 	modal_box.add_child(h2)
-	modal_box.add_child(PartyUi.button("LEAVE THE MATCH", func(): leave_pressed.emit(), PartyUi.RED.lightened(0.3), 420.0, 20))
-	modal_box.add_child(PartyUi.primary("BACK TO THE PARTY", func(): _toggle_menu()))
+	# always on screen: the footer never scrolls away
+	modal_footer.add_child(PartyUi.button("LEAVE THE MATCH", func(): leave_pressed.emit(), PartyUi.RED.lightened(0.3), 240.0, 18))
+	modal_footer.add_child(PartyUi.primary("BACK TO THE PARTY", func(): _toggle_menu(), 260.0))
 
 
 func say(text: String) -> void:
@@ -1382,7 +1396,8 @@ func _show_banner(text: String, col: Color, hold: float) -> void:
 	if not is_instance_valid(p):
 		return
 	var vp := root.get_viewport_rect().size
-	p.position = Vector2((vp.x - p.size.x) * 0.5, vp.y * 0.36)
+	# the upper third: never on top of what it's announcing (that's in the middle)
+	p.position = Vector2((vp.x - p.size.x) * 0.5, vp.y * 0.13)
 	p.pivot_offset = p.size * 0.5
 	p.rotation = -0.03
 	p.scale = Vector2(0.9, 0.9)
@@ -1768,3 +1783,10 @@ func _info(v: Dictionary) -> void:
 		info_panel.add_theme_stylebox_override("panel", PartyUi.box(PartyUi.space_colour(t).lerp(PartyUi.CREAM, 0.45), PartyUi.INK, 16))
 		info_box.add_child(PartyUi.shout(str(info[0]), 40, PartyUi.space_colour(t).lightened(0.25)))
 		info_box.add_child(PartyUi.label(str(info[1]), 22, PartyUi.INK, true))
+
+
+
+## Labels in a grid have no width of their own to wrap in (they'd go one letter a line).
+func _nowrap(c: Node) -> void:
+	for l in c.find_children("*", "Label", true, false):
+		(l as Label).autowrap_mode = TextServer.AUTOWRAP_OFF

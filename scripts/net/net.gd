@@ -22,6 +22,7 @@ signal back_to_lobby
 const SEND_HZ := 15.0
 
 var role := "none"            # none | offline | host | client
+var paused := false           # an offline match, paused from the menu (online can't pause)
 var transport := ""           # enet | relay
 var code := ""
 var core: MatchCore
@@ -189,6 +190,7 @@ func leave() -> void:
 
 
 func leave_quiet() -> void:
+	paused = false
 	beacon.stop()
 	if multiplayer.multiplayer_peer:
 		multiplayer.multiplayer_peer.close()
@@ -415,7 +417,8 @@ func send_move(seat: int, v: Vector2) -> void:
 func _physics_process(delta: float) -> void:
 	if not is_authority() or core == null or not in_match:
 		return
-	core.tick(delta)
+	if not (paused and role == "offline"):
+		core.tick(delta)
 	var evs := core.take_events()
 	# this machine's screen
 	var mine := evs.filter(func(e): return int(e.get("to", -1)) < 0 or my_seats.has(int(e.get("to", -1))))

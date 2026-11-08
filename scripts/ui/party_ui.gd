@@ -178,7 +178,16 @@ static func button(text: String, cb: Callable, colour := CREAM, min_w := 180.0, 
 	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	b.focus_mode = Control.FOCUS_NONE
 	if cb.is_valid():
-		b.pressed.connect(cb)
+		# a touch screen sends the touch AND a mouse click made from it: one press, once
+		b.pressed.connect(func():
+			var now := Time.get_ticks_msec()
+			if now - int(b.get_meta("_last", -1000)) < 150:
+				return
+			if b.get_meta("_long", false):
+				b.set_meta("_long", false)
+				return     # that was a long-press to read it, not to use it
+			b.set_meta("_last", now)
+			cb.call())
 	# respond on touch-down, unless it's in a list you might be scrolling
 	b.tree_entered.connect(func():
 		var n: Node = b.get_parent()
@@ -188,8 +197,20 @@ static func button(text: String, cb: Callable, colour := CREAM, min_w := 180.0, 
 				in_scroll = true
 				break
 			n = n.get_parent()
-		b.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE if in_scroll else BaseButton.ACTION_MODE_BUTTON_PRESS)
+		# something you can long-press to read about acts on release, so holding doesn't use it
+		b.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE if in_scroll or b.tooltip_text != "" else BaseButton.ACTION_MODE_BUTTON_PRESS)
 	b.button_down.connect(func():
+		b.set_meta("_held_at", Time.get_ticks_msec())
+		if b.tooltip_text != "":
+			b.get_tree().create_timer(0.5).timeout.connect(func():
+				if is_instance_valid(b) and b.is_pressed() and Time.get_ticks_msec() - int(b.get_meta("_held_at", 0)) >= 480:
+					b.set_meta("_long", true)
+					var ui = b.get_tree().root.get_node_or_null("Ui")
+					if ui:
+						ui.show_tip(b.tooltip_text))
+		var ui2 = b.get_tree().root.get_node_or_null("Ui")
+		if ui2:
+			ui2.buzz(8, 0.2)
 		Sfx.play("blip", -10.0, 0.08)
 		b.pivot_offset = b.size * 0.5
 		b.scale = Vector2(0.94, 0.94)

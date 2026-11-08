@@ -50,7 +50,12 @@
   "jump": "res://assets/sounds/jump.wav",
   "squeak": "res://assets/sounds/squeak.wav",
   "zip": "res://assets/sounds/zip.wav",
-  "pop": "res://assets/sounds/hail.wav"
+  "pop": "res://assets/sounds/hail.wav",
+  "bang": "res://assets/audio/bang.wav",
+  "hiss": "res://assets/audio/hiss.wav",
+  "flatline": "res://assets/audio/flatline.wav",
+  "splat": "res://assets/audio/splat.wav",
+  "crunch": "res://assets/audio/crunch.wav"
  },
  "ambience": {
   "hall": "res://assets/audio/hall_drone.wav"

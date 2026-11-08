@@ -33,9 +33,10 @@ const PRESETS := {
 	"junction": {"height": 2.2, "back": 1.8, "fov": 50.0, "speed": 0.9},
 	"landing": {"height": 1.7, "back": 1.45, "fov": 50.0, "speed": 0.9},
 	"event": {"height": 1.6, "back": 1.4, "fov": 50.0, "speed": 0.9},
-	"roulette": {"height": 1.4, "back": 1.25, "fov": 50.0, "speed": 0.9},
-	"death": {"height": 1.4, "back": 1.25, "fov": 50.0, "speed": 0.8},
-	"resurrection": {"height": 1.5, "back": 1.3, "fov": 50.0, "speed": 0.8},
+	# the dramatic beats: the one time the camera commits, close and decisive (still smooth)
+	"roulette": {"height": 0.8, "back": 0.9, "fov": 46.0, "speed": 1.6},
+	"death": {"height": 0.65, "back": 0.8, "fov": 44.0, "speed": 2.0},
+	"resurrection": {"height": 0.8, "back": 0.9, "fov": 46.0, "speed": 1.4},
 	"poison": {"height": 1.5, "back": 1.3, "fov": 50.0, "speed": 0.9},
 	"shop": {"height": 1.5, "back": 1.3, "fov": 50.0, "speed": 0.9},
 	"award": {"height": 1.5, "back": 1.3, "fov": 50.0, "speed": 0.8},
