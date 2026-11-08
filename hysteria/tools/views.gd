@@ -3,6 +3,10 @@ extends SceneTree
 ## xvfb-run godot --rendering-driver opengl3 --path hysteria -s tools/views.gd -- out=<dir> set=outside
 var out := "user://views"
 const SETS := {
+	"fightclose": [["fc_1", 10.1, 9.0, PI * 0.85, 0.25, false], ["fc_gun", 10.05, 9.55, PI * 0.75, -1.0, false]],
+	"fight": [["f_from_lane", 10.5, 7.3, PI, 0.08, false], ["f_archer", 8.9, 8.5, PI * 0.75, 0.1, false],
+		["f_mid", 9.6, 9.0, PI * 0.8, 0.25, false], ["f_cafe", 10.6, 10.4, -PI * 0.6, 0.2, false],
+		["f_gun", 9.9, 9.35, PI * 0.95, -0.9, false], ["f_poster", 8.9, 8.85, PI * 0.5, 0.05, true]],
 	"hole": [["hole_lab", 6.5, 1.75, 0.0, -0.12, true], ["hole_lab_dark", 6.4, 1.9, 0.15, -0.05, false]],
 	"shops": [["s_pharmacy", 2.5, 5.0, 0.0, 0.12, false], ["s_bakery", 8.5, 5.0, 0.0, 0.12, false], ["s_tavern", 11.5, 5.0, 0.0, 0.12, false],
 		["s_photo", 3.5, 4.0, PI, 0.12, false], ["s_clock", 7.5, 4.0, PI, 0.12, false], ["s_hotel", 11.0, 8.5, -PI / 2, 0.1, false]],
@@ -26,7 +30,7 @@ func _initialize() -> void:
 	root.add_child(main)
 	await process_frame; await process_frame
 	var p = main.player
-	var lab: bool = which in ["lab", "shops", "hole"]
+	var lab: bool = which in ["lab", "shops", "hole", "fight", "fightclose"]
 	if lab: main.enter_labyrinth()
 	for v in SETS[which]:
 		var at := Vector3(v[1], 0, v[2])

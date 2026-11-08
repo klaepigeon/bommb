@@ -44,7 +44,8 @@ var _hand_world := Transform3D.IDENTITY
 var _reach_t := -1.0                      # time into a reach for the thing being used, or -1
 var _reach_at := Vector3.ZERO             # world point being reached for
 var _reach_pose := "grip"
-var torch_holder: Node = null       # once Socko has it, the light's his (toggle_torch goes to him)
+var torch_holder: Node = null
+var gun: Node3D = null               # the revolver, once he has it (Revolver)       # once Socko has it, the light's his (toggle_torch goes to him)
 
 func _ready() -> void:
 	torch.light_projector = Penumbra.make(0.65)   # three: the torch's penumbra
@@ -201,7 +202,18 @@ func _process(delta: float) -> void:
 	var pose := "relaxed"
 	var hs := Vector2(velocity.x, velocity.z).length()
 	want.origin += Vector3(sin(bob) * 0.006, absf(cos(bob)) * 0.007, 0) * minf(hs, 1.5)   # it swings a little with the walk
-	if held:
+	var on_gun := gun != null and bool(gun.get("drawn")) and not held
+	if on_gun:
+		# the revolver in the right hand: back of the hand out to the right, the fingers wrapped
+		# forward and down round the grip (its rake), the palm on the right-hand panel
+		var g: Transform3D = cam.global_transform.affine_inverse() * gun.call("grip_global")
+		var gx := g.basis.x.normalized(); var gy := g.basis.y.normalized(); var gz := g.basis.z.normalized()
+		var fingers := (-gz * cos(0.35) - gy * sin(0.35) - gx * 0.25).normalized()
+		var hb := KurtArm.frame(fingers, gx)
+		var palm := g.origin + gx * 0.012 - gy * 0.004
+		want = Transform3D(hb, palm - hb.y * 0.058 + hb.z * 0.03)
+		pose = "grip"
+	elif held:
 		# carrying: palm up under it, fingers curled round
 		want = Transform3D(KurtArm.frame(Vector3(-0.35, 0.05, -1.0), Vector3(0.3, -0.92, 0.25)), Vector3(0.09, -0.2, -0.36))
 		pose = "hold"
@@ -234,6 +246,8 @@ func _process(delta: float) -> void:
 	var target_world := cam.global_transform * want
 	var k := 1.0 - exp(-delta * 16.0)
 	_hand_world = Transform3D(_hand_world.basis.slerp(target_world.basis, k).orthonormalized(), _hand_world.origin.lerp(target_world.origin, k))
+	if on_gun:
+		_hand_world = target_world          # the gun carries its own lag; the hand stays on it
 	var local := global_transform.affine_inverse() * _hand_world        # body space (the arm's space)
 	arm.pose_name = pose
 	arm.idle = pose == "relaxed"

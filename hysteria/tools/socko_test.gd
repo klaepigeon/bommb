@@ -116,13 +116,19 @@ func _initialize() -> void:
 	await _shot("8_mouth_torch", 0.3)
 
 	# ---- googly eyes: held still, each pupil runs down to the lowest point it can reach
+	# (wait for him to stop talking: a talking puppet bounces, and so do its pupils)
+	await _until(func(): return not s.talking, 15.0)
+	await _wait(1.2)
 	var eyes_ok := true
 	for e in rig.eyes:
 		var gt: Transform3D = (e.disc as Node3D).global_transform
 		var down := Vector2(Vector3.DOWN.dot(gt.basis.x.normalized()), Vector3.DOWN.dot(gt.basis.z.normalized()))
 		var press := absf(Vector3.DOWN.dot(gt.basis.y.normalized()))
 		if down.length() > 0.6 * press + 0.1:      # clearly steep (near the sticking slope a real googly eye can hang)
-			eyes_ok = eyes_ok and (e.p as Vector2).normalized().dot(down.normalized()) > 0.9 and (e.p as Vector2).length() > (e.r as float) * 0.9
+			var dotv := (e.p as Vector2).normalized().dot(down.normalized())
+			var reach := (e.p as Vector2).length() / (e.r as float)
+			if not (dotv > 0.9 and reach > 0.9): print("    pupil: toward the bottom %.2f, out to the rim %.2f" % [dotv, reach])
+			eyes_ok = eyes_ok and dotv > 0.9 and reach > 0.9
 	ok = _check(eyes_ok, "googly pupils fall to the bottom of the eye when he's still") and ok
 	# a jerk of the arm sends them flying
 	var before: Vector2 = rig.eyes[0].p

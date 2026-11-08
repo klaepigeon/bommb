@@ -39,6 +39,12 @@ const MATS := {
 	"lamp_glass": ["glass", 1.0, 0.2, 0.5, {"color": Color(1.0, 0.85, 0.6), "emit": Vector3(1.15, 0.72, 0.32)}],
 	"window_glow": ["glass", 1.0, 0.3, 0.5, {"emit": Vector3(0.9, 0.55, 0.22)}],
 	"stone": ["trim", 1.5, 0.95, 0.3, {"color": Color(0.62, 0.6, 0.56)}],
+	"sand": ["", 1.0, 1.0, 0.1, {"color": Color(0.16, 0.13, 0.1)}],
+	"awning_red": ["paper", 1.0, 0.95, 0.15, {"color": Color(0.62, 0.16, 0.12)}],
+	"awning_white": ["paper", 1.0, 0.95, 0.15, {"color": Color(0.95, 0.92, 0.85)}],
+	"trail": ["", 1.0, 1.0, 0.0, {"blend": Color(0.75, 0.85, 1.0, 0.16)}],
+	"blued": ["", 1.0, 0.32, 0.85, {"color": Color(0.09, 0.1, 0.12)}],
+	"walnut": ["wood", 0.12, 0.6, 0.4, {"color": Color(0.62, 0.38, 0.22)}],
 	"paper": ["paper", 0.84, 1.0, 0.1, {}],
 	"paper_old": ["paper_old", 0.84, 1.0, 0.1, {"alpha": true}],
 	"leaves": ["leaves", 0.6, 1.0, 0.1, {"alpha": true}],
@@ -104,6 +110,19 @@ func cyl(mat: String, base: Vector3, r: float, h: float, sides := 8, r_top := -1
 			var top := base + Vector3(0, h, 0)
 			_tri(mat, top, top + Vector3(cos(a1), 0, sin(a1)) * rt, top + Vector3(cos(a0), 0, sin(a0)) * rt, Vector3.UP)
 
+## a cylinder from a to b (any direction), capped at both ends
+func cyl_axis(mat: String, a: Vector3, b: Vector3, r: float, sides := 8, r_b := -1.0) -> void:
+	var rb := r if r_b < 0.0 else r_b
+	var ax := (b - a).normalized()
+	var u := ax.cross(Vector3.UP if absf(ax.y) < 0.9 else Vector3.RIGHT).normalized()
+	var v := ax.cross(u)
+	for i in sides:
+		var a0 := TAU * i / sides; var a1 := TAU * (i + 1) / sides
+		var d0 := u * cos(a0) + v * sin(a0); var d1 := u * cos(a1) + v * sin(a1)
+		quad(mat, a + d0 * r, a + d1 * r, b + d1 * rb, b + d0 * rb, (d0 + d1).normalized())
+		_tri(mat, a, a + d1 * r, a + d0 * r, -ax)
+		_tri(mat, b, b + d0 * rb, b + d1 * rb, ax)
+
 func _tri(mat: String, a: Vector3, b: Vector3, c: Vector3, normal: Vector3) -> void:
 	var rep: float = MATS[mat][1]
 	var st := _st(mat, (a + b + c) / 3.0)
@@ -134,10 +153,17 @@ func finish() -> int:
 	tools.clear()
 	return n
 
-func material(mat: String) -> ShaderMaterial:
+func material(mat: String) -> Material:
 	if _mat_cache.has(mat):
 		return _mat_cache[mat]
 	var spec: Array = MATS[mat]
+	if (spec[4] as Dictionary).has("blend"):
+		# see-through, unlit: frozen motion streaks
+		var sm := StandardMaterial3D.new(); sm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		sm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA; sm.albedo_color = spec[4].blend
+		sm.cull_mode = BaseMaterial3D.CULL_DISABLED; sm.no_depth_test = false
+		_mat_cache[mat] = sm
+		return sm
 	var m := ShaderMaterial.new(); m.shader = PS1
 	var ex: Dictionary = spec[4]
 	if spec[0] != "":

@@ -61,6 +61,8 @@ var dome: Node3D
 var arrive := Transform3D.IDENTITY          # where you stand coming out of the hole
 var hole_at := Vector3.ZERO                 # the hole, to go back through
 var _colliders: StaticBody3D
+var fight: FrozenFight
+var revolver: Revolver
 
 func _ready() -> void:
 	build()
@@ -100,6 +102,15 @@ func build() -> void:
 				_street_cell(c, r)
 	_lamps()
 	_dress()
+	# the square: the fight, stopped; and the revolver in it
+	fight = FrozenFight.new(); fight.name = "FrozenFight"; add_child(fight)
+	fight.build(kit, self)
+	revolver = Revolver.new(); revolver.name = "Revolver"; add_child(revolver)
+	revolver.transform = fight.gun_at
+	var pick := StaticBody3D.new(); pick.name = "RevolverPickup"; pick.set_script(load("res://scripts/weapons/revolver_pickup.gd"))
+	pick.set("gun", revolver)
+	var pcs := CollisionShape3D.new(); var pb := BoxShape3D.new(); pb.size = Vector3(0.3, 0.12, 0.3); pcs.shape = pb; pick.add_child(pcs)
+	add_child(pick); pick.position = fight.gun_at.origin + Vector3(0, 0.04, 0)
 	var n := kit.finish()
 	_environment()
 	_dome()

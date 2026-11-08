@@ -78,6 +78,7 @@ func _ready() -> void:
 	back.set("gap", wardrobe); back.set("inward", false)
 	var bcs := CollisionShape3D.new(); var bbox := BoxShape3D.new(); bbox.size = Vector3(1.0, 1.6, 0.2); bcs.shape = bbox; back.add_child(bcs)
 	labyrinth.add_child(back); back.position = labyrinth.hole_at + Vector3(0, 0, 0.2)
+	var whud := WeaponHud.new(); whud.name = "WeaponHud"; whud.setup(player); add_child(whud)
 	pause_menu = PauseMenu.new(); pause_menu.name = "PauseMenu"; pause_menu.setup(player); add_child(pause_menu)
 	socko_hud = SockoHud.new(); socko_hud.name = "SockoHud"; add_child(socko_hud)
 	socko_tutorial = SockoTutorial.new(); socko_tutorial.name = "SockoTutorial"; add_child(socko_tutorial)
