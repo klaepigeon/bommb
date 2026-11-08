@@ -76,6 +76,17 @@ func _physics_process(delta: float) -> void:
 		S.BLACK: _black(delta)
 		S.AWAKE: pass
 
+## Loading a save from past the opening: she's already gone from the chair and Kurt is up.
+func skip() -> void:
+	_cleared = true
+	marta.joints.hips.visible = false
+	marta.flies.emitting = false; marta.flies.visible = false
+	if _strands: _strands.mesh = null
+	if is_instance_valid(collider): collider.queue_free()
+	presence.active = false
+	if is_instance_valid(_heart): _heart.queue_free()
+	_enter(S.AWAKE)
+
 # ---------------------------------------------------------------- still: she's a corpse
 func _still(delta: float) -> void:
 	if dread.room_at(player.global_position) != room:

@@ -15,6 +15,7 @@ var vol: HSlider
 var invert: CheckButton
 var resume_btn: Button
 var skill_menu: Node
+var save_game: Node
 var open := false
 var _was_captured := false
 
@@ -110,6 +111,7 @@ func toggle() -> void:
 	if open:
 		_was_captured = Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		if save_game: save_game.call("save")
 		if Game._voice() != "": DisplayServer.tts_pause()
 		resume_btn.grab_focus()
 	else:
@@ -131,6 +133,7 @@ func _restart() -> void:
 	get_tree().paused = false
 	if Game._voice() != "": DisplayServer.tts_stop()
 	Game.flags.clear()
+	SaveGame.wipe()            # restarting is starting over: the saved game goes too
 	get_tree().reload_current_scene()
 
 # ---------------------------------------------------------------- settings

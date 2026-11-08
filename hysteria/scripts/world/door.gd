@@ -10,6 +10,7 @@ var max_angle := 1.5
 var locked := ""         # "", "chain" (front door), "bolt" (box room)
 var leaf_w := 0.8
 var body: AnimatableBody3D
+var chain_handler: Node = null   # the front door's chain: FlatEscape decides what using it does
 
 func setup(ex: Dictionary) -> void:
 	set_physics_process(true)
@@ -35,11 +36,24 @@ func _physics_process(delta: float) -> void:
 		_apply()
 
 func prompt() -> String:
+	if locked == "chain" and chain_handler:
+		return chain_handler.call("chain_prompt", self)
 	if locked == "bolt":
 		return "Slide the bolt"
 	return "Close" if target > 0.15 else "Open"
 
+## Using what's in the hand on the door (the axe on the chain); "" if it does nothing here.
+func use_with_prompt(item: Node) -> String:
+	if locked == "chain" and chain_handler: return chain_handler.call("use_with_prompt", item)
+	return ""
+
+func use_with(_player: Node, item: Node) -> bool:
+	if locked == "chain" and chain_handler: return chain_handler.call("use_with", item)
+	return false
+
 func interact(_player: Node) -> void:
+	if locked == "chain" and chain_handler and chain_handler.call("chain_use", self, _player):
+		return
 	match locked:
 		"bolt":
 			locked = ""; Game.say("You slide the bolt back.")

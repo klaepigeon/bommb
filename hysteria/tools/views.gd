@@ -19,6 +19,9 @@ const SETS := {
 		["lab_shop", 8.5, 4.9, 0.25, 0.08, false], ["lab_photo", 3.6, 4.6, PI - 0.3, 0.05, false],
 		["lab_square", 10.5, 7.6, PI, -0.05, false], ["lab_square_hotel", 9.0, 9.5, -PI / 2 - 0.2, 0.05, false],
 		["lab_plaza", 10.5, 13.8, PI, 0.1, false], ["lab_izba", 7.4, 15.5, PI / 2, 0.02, false], ["lab_dome", 10.5, 9.0, PI, 0.45, false]],
+	"escape": [["e_chain", 9.45, 4.56, -PI * 0.5, -0.05, true, "ajar"], ["e_chain_close", 9.75, 4.75, -PI * 0.5 - 0.35, -0.12, true, "ajar"],
+		["e_bath_full", 7.4, 6.75, PI, -0.95, true, ""], ["e_bath_drained", 7.4, 6.75, PI, -0.95, true, "drain"],
+		["e_door_out", 9.4, 4.56, -PI * 0.5, 0.0, false, "free"], ["e_heap", 9.55, 4.9, -PI * 0.5 - 0.5, -0.9, true, ""]],
 	"outside": [["living_window", 3.0, 3.6, 0.15, 0.05, false], ["balcony", 2.2, -0.9, 0.2, 0.05, false],
 		["balcony_down", 2.6, -1.4, 0.3, -0.55, false], ["kitchen_window", 8.6, 2.2, -0.1, 0.0, false],
 		["bedroom_window", 6.0, 2.2, 0.0, 0.05, false], ["child_window", 4.6, 6.6, PI, 0.0, false]],
@@ -48,6 +51,13 @@ func _initialize() -> void:
 		if lab: at = main.labyrinth.to_global(at * 4.0)
 		p.global_position = at; p.velocity = Vector3.ZERO
 		p.yaw = v[3]; p.pitch = v[4]; p.torch.visible = v[5]
+		if v.size() > 6:
+			main.encounter.process_mode = Node.PROCESS_MODE_DISABLED
+			match v[6]:
+				"ajar": main.escape.door.target = 0.11
+				"drain": main.escape._level = main.escape.WATER_BOTTOM + 0.001; main.escape.draining = true
+				"free": main.escape._free("axe"); main.escape._ended = true
+			for i in 90: await physics_frame
 		for i in 30: await process_frame
 		root.get_viewport().get_texture().get_image().save_png(out.path_join(v[0] + ".png"))
 		print("view ", v[0])

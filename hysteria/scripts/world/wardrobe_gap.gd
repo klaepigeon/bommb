@@ -81,6 +81,13 @@ func _process(delta: float) -> void:
 		Game.flags["wardrobe_pushed"] = true
 		_open_hole()
 
+## Loading a save: already pushed aside, the hole already there.
+func restore_pushed() -> void:
+	if pushed: return
+	pushed = true; _t = -1.0
+	pivot.transform = Transform3D(Basis(Vector3.UP, -SWING), PIVOT + Vector3(0, 0, SLIDE))
+	_open_hole()
+
 ## The hole: the plaster cut away (the PS1 shader's wall-hole box), broken brick at its edge,
 ## rubble on the floor, and behind it a black that the torch doesn't find the end of.
 func _open_hole() -> void:

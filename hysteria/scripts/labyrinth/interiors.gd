@@ -188,10 +188,10 @@ static func _salon(k: TownKit, owner: Node3D, colliders: StaticBody3D) -> Dictio
 	examine(owner, Vector3(18.0, y + 1.85, 30.15), Vector3(0.36, 0.45, 0.06), "Photograph", "A studio portrait, taken in this room against that garden. A big man in a peasant's shirt and a long black coat, beard to his chest, his hand resting on the head of a young woman who isn't looking at the camera. You know her face. You've seen it at a table upstairs. Not this young.")
 	# his note, on the table, under a candlestick
 	k.box("paper", c + Vector3(0.12, 0.762, -0.18), Vector3(0.1, 0.002, 0.07), Basis(Vector3.UP, 0.3))
-	examine(owner, c + Vector3(0.12, 0.8, -0.18), Vector3(0.12, 0.05, 0.1), "Note", "In a big, uneven hand, in pencil, the spelling bad: \"My swallow. They say I am not to come to you any more, that you see too much. Let them talk. You saw the river before I did. You told me first. — G.\"")
+	examine(owner, c + Vector3(0.12, 0.8, -0.18), Vector3(0.12, 0.05, 0.1), "Note", "In a big, uneven hand, in pencil, the spelling bad: \"My swallow. They say I am not to come to you any more, that you see too much. Let them talk. You saw the river before I did. You told me first. — G.\"").set("more", "The folds are hers: small enough to carry in a glove. She carried it for years. She had it on her the night you met her; you remember the glove.")
 	# and the newspaper on the floor, by the chaise
 	k.box("paper", Vector3(19.9, y + 0.006, 26.9), Vector3(0.26, 0.003, 0.19), Basis(Vector3.UP, -0.4))
-	examine(owner, Vector3(19.9, y + 0.05, 26.9), Vector3(0.3, 0.05, 0.24), "Newspaper", "Petrograd, the nineteenth of December, 1916. A body recovered from the ice of the Malaya Nevka has been identified as that of Grigori Efimovich Rasputin. Someone has folded it so that's the only thing showing.")
+	examine(owner, Vector3(19.9, y + 0.05, 26.9), Vector3(0.3, 0.05, 0.24), "Newspaper", "Petrograd, the nineteenth of December, 1916. A body recovered from the ice of the Malaya Nevka has been identified as that of Grigori Efimovich Rasputin. Someone has folded it so that's the only thing showing.").set("more", "In the margin, in pencil, in a woman's hand you know: two words. «Told him.»")
 	return {"centre": c}
 
 # ---------------------------------------------------------------- the hotel room
@@ -254,7 +254,7 @@ static func _hotel(k: TownKit, owner: Node3D, colliders: StaticBody3D) -> Dictio
 	mir.material_override = mm; owner.add_child(mir)
 	mir.transform = Transform3D(Basis.looking_at(Vector3(-1, 0, 0), Vector3.UP).rotated(Vector3.UP, PI), ws + Vector3(0.015, 1.55, 0))
 	picture(owner, RomanovPortraits.photobooth(), ws + Vector3(0.02, 1.62, 0.33), Vector3(1, 0, 0), Vector2(0.06, 0.22), k.material("paper"))
-	examine(owner, ws + Vector3(0.05, 1.6, 0.3), Vector3(0.05, 0.14, 0.06), "Photo strip", "Four frames from a booth, the kind they had at railway stations in the sixties. A man in a black domino mask and a woman with dark hair, laughing. In the third frame she's kissing his cheek. In the last one neither of them is laughing, and she's looking straight into the lens.")
+	examine(owner, ws + Vector3(0.05, 1.6, 0.3), Vector3(0.05, 0.14, 0.06), "Photo strip", "Four frames from a booth, the kind they had at railway stations in the sixties. A man in a black domino mask and a woman with dark hair, laughing. In the third frame she's kissing his cheek. In the last one neither of them is laughing, and she's looking straight into the lens.").set("more", "On the back, in her hand: «T. and me. The last good night.» The T is the way she always made it, with the little hook. You'd forgotten you knew that.")
 	# a suitcase on the stand, open, a man's things and a woman's mixed in it
 	var sc := Vector3(57.6, y, 40.5)
 	k.box("leather", sc + Vector3(0, 0.25, 0), Vector3(0.36, 0.1, 0.24))
@@ -305,14 +305,14 @@ static func _nursery(k: TownKit, owner: Node3D, colliders: StaticBody3D) -> Dict
 	# her drawings, pinned to the logs; the one of MAMA and a man with a bow walking off the paper
 	var draw_at := Vector3(10.4, y + 1.35, 64.38)
 	picture(owner, RomanovPortraits.drawing(), draw_at, Vector3(0, 0, -1), Vector2(0.42, 0.3), k.material("paper"))
-	examine(owner, draw_at + Vector3(0, 0, -0.04), Vector3(0.24, 0.17, 0.05), "Drawing", "Wax crayon. MAMA, big, in a red dress, a crown of black hair. A girl holding her hand. And right at the edge of the paper, small, a man with a bow on his back, walking off it. He has no face. She drew him the size you draw things that are far away.")
+	examine(owner, draw_at + Vector3(0, 0, -0.04), Vector3(0.24, 0.17, 0.05), "Drawing", "Wax crayon. MAMA, big, in a red dress, a crown of black hair. A girl holding her hand. And right at the edge of the paper, small, a man with a bow on his back, walking off it. He has no face. She drew him the size you draw things that are far away.").set("more", "On the back, in Marta's hand, small, along the bottom edge: «She asked me where he went. I said far.»")
 	picture(owner, RomanovPortraits.drawing2(), draw_at + Vector3(-1.1, 0.15, 0), Vector3(0, 0, -1), Vector2(0.3, 0.3), k.material("paper"))
 	# the letters to Papa on the sill, never posted; the register on the table
 	var sill := Vector3(8.0, y + 0.9, 64.3)
 	k.box("wood", sill, Vector3(0.5, 0.03, 0.08))
 	for i in 6:
 		k.box("paper", sill + Vector3(-0.3 + i * 0.02, 0.04 + i * 0.012, 0.0), Vector3(0.1, 0.006, 0.065), Basis(Vector3.UP, 0.1 * (i - 3)))
-	examine(owner, sill + Vector3(-0.22, 0.08, 0), Vector3(0.16, 0.08, 0.1), "Letters", "Envelopes in a child's printing, a stamp on every one. All of them to PAPA. No street, no city. None of them were ever posted, and none of them are open.")
+	examine(owner, sill + Vector3(-0.22, 0.08, 0), Vector3(0.16, 0.08, 0.1), "Letters", "Envelopes in a child's printing, a stamp on every one. All of them to PAPA. No street, no city. None of them were ever posted, and none of them are open.").set("more", "The P of PAPA is made the way you make yours: a loop at the top, and a tail. Somebody showed her how. You showed her how.")
 	var tb := Vector3(10.6, y, 60.6)
 	k.box("wood", tb + Vector3(0, 0.38, 0), Vector3(0.5, 0.025, 0.35))
 	for lx in [-0.44, 0.44]:
@@ -328,7 +328,7 @@ static func _nursery(k: TownKit, owner: Node3D, colliders: StaticBody3D) -> Dict
 	var klight := OmniLight3D.new(); klight.light_color = Color(1.0, 0.72, 0.42); klight.light_energy = 1.7; klight.omni_range = 5.0
 	klight.omni_attenuation = 1.2; klight.set_script(load("res://scripts/labyrinth/candle_light.gd"))
 	owner.add_child(klight); klight.position = kl + Vector3(0, 0.2, 0)
-	examine(owner, tb + Vector3(0.05, 0.45, 0), Vector3(0.2, 0.06, 0.15), "Register", "A parish birth register, open. SOPHIA — SONYA, in brackets, in another hand. Mother: Marta Sokolova. Father: written in, crossed out, written again and crossed out again, until the pen went through the page.")
+	examine(owner, tb + Vector3(0.05, 0.45, 0), Vector3(0.2, 0.06, 0.15), "Register", "A parish birth register, open. SOPHIA — SONYA, in brackets, in another hand. Mother: Marta Sokolova. Father: written in, crossed out, written again and crossed out again, until the pen went through the page.").set("more", "Under the crossings-out you can still make out the first two letters of the first try. A K, and an F. Her hand. She wrote you in, and then she couldn't leave you there.")
 	# a rag doll on the floor by the stove
 	k.box("cloth_white", Vector3(7.9, y + 0.05, 61.6), Vector3(0.08, 0.05, 0.12), Basis(Vector3.UP, 0.8))
 	k.box("awning_red", Vector3(7.9, y + 0.06, 61.72), Vector3(0.05, 0.05, 0.05), Basis(Vector3.UP, 0.8))

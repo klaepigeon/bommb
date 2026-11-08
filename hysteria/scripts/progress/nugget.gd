@@ -60,6 +60,8 @@ func _process(delta: float) -> void:
 
 func take() -> void:
 	Skills.add_nuggets(1)
+	# remembered by name, so a loaded game doesn't put it back
+	var gone: Dictionary = Game.flags.get("nuggets_taken", {}); gone[String(name)] = true; Game.flags["nuggets_taken"] = gone
 	_blip()
 	taken.emit(self)
 	queue_free()

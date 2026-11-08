@@ -267,6 +267,12 @@ func _aim() -> void:
 		Game.prompt.emit(""); return
 	if held:
 		txt = "Throw  ·  Drop  ·  Turn over" if touch_ui else "[LMB/RT] throw   [E/A] drop   [RMB/LT] turn over"
+		# something that takes what's in the hand (the axe on the chain): use offers that instead
+		var w := _use_with_target()
+		if w:
+			target = w
+			var p2: String = w.call("use_with_prompt", held)
+			txt = p2 if touch_ui else "[E/A] " + p2
 	elif ray.is_colliding():
 		var n: Node = ray.get_collider()
 		while n and not n.has_method("interact"):
@@ -295,7 +301,11 @@ func _unhandled_input(e: InputEvent) -> void:
 func use() -> void:
 	if locked:
 		return
-	if held:
+	if held and target and target.has_method("use_with") and target.call("use_with", self, held):
+		_reach_t = 0.0
+		_reach_at = ray.get_collision_point() if ray.is_colliding() else cam.global_position - cam.global_basis.z * 0.5
+		_reach_pose = "grip"
+	elif held:
 		drop()
 	elif target:
 		# the hand goes to it: flat to push a door, a grip for most things
@@ -303,6 +313,19 @@ func use() -> void:
 		_reach_at = ray.get_collision_point() if ray.is_colliding() else cam.global_position - cam.global_basis.z * 0.5
 		_reach_pose = "flat" if target.get_script() and String(target.get_script().resource_path).ends_with("door.gd") else "grip"
 		target.call("interact", self)
+
+## While holding something: the thing under the crosshair (past the held prop) that would take it.
+func _use_with_target() -> Node:
+	var from := cam.global_position
+	var q := PhysicsRayQueryParameters3D.create(from, from - cam.global_basis.z * 1.6)
+	q.exclude = [get_rid(), held.get_rid()]
+	var hit := get_world_3d().direct_space_state.intersect_ray(q)
+	if not hit: return null
+	var n: Node = hit.collider
+	while n and not n.has_method("use_with_prompt"):
+		n = n.get_parent()
+	if n and String(n.call("use_with_prompt", held)) != "": return n
+	return null
 
 func toggle_torch() -> void:
 	if torch_holder:

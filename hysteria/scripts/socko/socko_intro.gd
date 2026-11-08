@@ -105,6 +105,14 @@ func _process(delta: float) -> void:
 				socko.set_emotion("neutral")
 				_go(S.DONE)
 
+## Loading a save from after the introduction: he's on the hand, the light's in his mouth.
+func skip() -> void:
+	socko.visible = true; socko.set_process(true)
+	socko.take_torch(player.torch); player.set("torch_holder", socko)
+	socko.shown = 1.0; socko.pose_face = 0.0; socko.set_emotion("neutral")
+	player.set("eye_override", -1.0); player.set("locked", false)
+	_go(S.DONE)
+
 ## Is the player looking at the sock? The hand moves with the view, so you can't centre him on
 ## screen: looking at him is looking down at your hand.
 func _looking_at_socko() -> bool:

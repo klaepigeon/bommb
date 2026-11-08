@@ -22,6 +22,8 @@ var wardrobe: WardrobeGap
 var hunter: MartaHunter
 var skill_menu: SkillMenu
 var socko_lab: SockoLabyrinth
+var escape: FlatEscape
+var save_game: SaveGame
 ## gutterspace nuggets: where they hang (the flat, then the labyrinth in its own space)
 const NUGGETS_FLAT := [Vector3(3.4, 1.1, 4.2), Vector3(1.2, 0.9, 1.0), Vector3(8.2, 1.3, 2.6), Vector3(9.3, 0.8, 6.9),
 	Vector3(6.1, 1.0, 0.7), Vector3(5.2, 1.2, 6.6), Vector3(1.6, 1.4, 6.8), Vector3(7.6, 1.5, 4.6)]
@@ -92,9 +94,9 @@ func _ready() -> void:
 	labyrinth.add_child(back); back.position = labyrinth.hole_at + Vector3(0, 0, 0.2)
 	hunter = MartaHunter.new(); hunter.name = "MartaHunter"; hunter.setup(labyrinth, player); labyrinth.add_child(hunter)
 	for p in NUGGETS_FLAT:
-		var n := Nugget.new(); n.position = p; world.add_child(n)        # placed before it's added: it keeps its place
+		var n := Nugget.new(); n.position = p; n.name = "NuggetF%d" % NUGGETS_FLAT.find(p); world.add_child(n)        # placed before it's added: it keeps its place
 	for p in NUGGETS_LAB:
-		var n := Nugget.new(); n.position = p; labyrinth.add_child(n)
+		var n := Nugget.new(); n.position = p; n.name = "NuggetL%d" % NUGGETS_LAB.find(p); labyrinth.add_child(n)
 	var whud := WeaponHud.new(); whud.name = "WeaponHud"; whud.setup(player); add_child(whud)
 	pause_menu = PauseMenu.new(); pause_menu.name = "PauseMenu"; pause_menu.setup(player); add_child(pause_menu)
 	socko_hud = SockoHud.new(); socko_hud.name = "SockoHud"; add_child(socko_hud)
@@ -104,6 +106,10 @@ func _ready() -> void:
 	pause_menu.skill_menu = skill_menu
 	socko_lab = SockoLabyrinth.new(); socko_lab.name = "SockoLabyrinth"; add_child(socko_lab)
 	socko_lab.setup(socko, player, self, socko_hud, hunter, skill_menu)
+	escape = FlatEscape.new(); escape.name = "FlatEscape"; add_child(escape)
+	escape.setup(world, player, self)
+	save_game = SaveGame.new(); save_game.name = "SaveGame"; save_game.setup(self); add_child(save_game)
+	pause_menu.save_game = save_game
 
 	var args := _args()
 	if args.has("torch_exp"):
@@ -116,8 +122,12 @@ func _ready() -> void:
 		dread.level = float(args.dread)
 	if args.has("touch"):
 		touch.visible = true; player.touch_ui = true; pause_menu.pause_btn.visible = true
+	if args.has("fresh"):
+		SaveGame.wipe()          # developer reset
 	if args.has("lab"):
 		enter_labyrinth()
+	if not args.has("shots") and not args.has("lab"):
+		_continue.call_deferred()
 	if args.has("shots"):
 		_shots(args.shots)
 	else:
@@ -126,6 +136,12 @@ func _ready() -> void:
 		else:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 			Game.say("Flat 47. [WASD] move  [Shift] run  [C] crouch  [E] use  [F] torch", 6.0)
+
+## Launching the game continues the saved one (only as the real main scene: not under the tests,
+## which make their own).
+func _continue() -> void:
+	if get_tree().current_scene == self:
+		save_game.load_game()
 
 ## Through the gap behind the wardrobe and back. Only one of the two places exists at a time.
 func enter_labyrinth() -> void:

@@ -145,6 +145,28 @@ scattered through the flat and the labyrinth. They're spent in the skill tree, w
 can be bought in any order** (Memory or Survival). Survival skills make Marta more aggressive;
 Memory skills calm her and reveal more of the story.
 
+**What the Memory skills give back (built; wording new, PROPOSED):**
+- *Her Handwriting* — the written clues say more. Note: the folds are hers, small enough for a
+  glove; she had it on her the night you met her. Newspaper: in the margin, in her pencil,
+  «Told him.» Photo strip, on the back: «T. and me. The last good night.» Drawing, on the back:
+  «She asked me where he went. I said far.» Sonya's letters: the P of PAPA is made the way you
+  make yours; you showed her how. Register: under the crossings-out, a K and an F — she wrote
+  you in, and then she couldn't leave you there.
+- *How She Moves* — near Marta, a low pressure in the ears, louder as she nears, from where she
+  is; the first time: *"You know where she is. Not how. Behind you, the way you know where your
+  own hand is."*
+- *These Streets* — a chalk circle with a cross through it on the cobbles where the main street
+  comes round; the first time through the seam: *"The same chalk circle on the same cobbles.
+  You've come round. The street goes on for ever, and it's thirteen houses long."* Socko:
+  *"Streets are like that. Keep walking."*
+- *Counting* — every minute or so, from the direction of the nursery (never inside it), a
+  girl's voice counting in Russian, hide-and-seek: *«…семь, восемь, девять, десять. Я иду
+  искать.»* It stops when you listen for it. Socko goes dead still.
+
+**Saving (built):** one quiet slot. It saves every 30 s once Socko is on the hand, on pause, and
+when the app is put away; launching continues. "Restart chapter", `-- fresh`, and
+finishing the chapter wipe it.
+
 ## 3. The boxes (the question is load-bearing)
 
 **Owner's direction:** the boxes are **not physical objects**, and they come from **somewhere else
@@ -219,10 +241,16 @@ Timings are targets for pacing, not hard limits.
       room to the chain (three blows, very loud). Socko's preference: kill her first.
     - **Quiet:** the padlock key is at the bottom of the black bath (drain it, ~30 s of gurgling
       noise you have to manage). Or lure her with a thrown object / the radio / the TV into the box
-      room and **slide the bolt** — the same bolt someone used on Ilya.
+      room and **slide the bolt**. *(The old line tied the bolt to Ilya; he is gone from canon.)*
     - **Mixed:** wound her and bolt her in; distract her and shoot the lock while she's away.
     Leaving: the chain falls, the landing, the stairwell. Socko: *"See? Easy. Next time we just
     do it my way."* — or, if she was killed, he is delighted and the player should feel it.
+
+    *Built (Godot, `scripts/world/flat_escape.gd`):* the chain and padlock, the axe (three blows,
+    each heard as a 0.85 noise), the padlock (two rounds), the bath (pull the plug, ~30 s,
+    gurgles every 2.5–4 s heard as 0.42; the keys and the right shoe in the silt; the keys unlock
+    the padlock quietly). Through the door: the white, Socko's line, the end card. The bolt-trap
+    route waits on Marta being loose in the flat.
 
 **End of chapter.** Fade on the landing. The peephole of 48 opposite is dark, then not.
 
