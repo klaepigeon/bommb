@@ -19,19 +19,20 @@ anything is built on it. Nothing in the established opening (prompt §3.1) has b
 
 ## 2. Characters
 
-### The protagonist
-- An older man, about sixty. In the 1960s he was a masked marksman — a Hawkeye-style hero with
-  a bow and later a rifle. Retired for decades. **Name: undecided.** The current build calls him
-  Lebedev; the prompt doesn't name him. **PROPOSED:** keep *Lebedev* as the name on the papers
-  in his coat, which he reads after waking and doesn't recognise.
-- **Why he is at Flat 47 (PROPOSED, consistent with the current cutscene):** Marta Sokolova's
-  sister in Kursk hasn't heard from her in eight days; phones in the district are down. Someone
-  gave her his name as a man who "finds people quietly". He took the job because he takes jobs
-  like it now: small, discreet, paid in cash. He is not a policeman.
+### The protagonist: Kurt Federov
+- Owner's canon (full detail in `docs/KURT.md`): **Kurt Federov**, German-Russian, 177.8 cm, an
+  older retired man in 1996. Circus performer, then assassin, then a superhero in the
+  **Champion's League**, which was absorbed into the **United Front**; since then, freelance
+  investigative work. Dry humour, patience, observation, compassion, restraint, and the capacity
+  for extremely efficient violence.
+- **Why he is at Flat 47:** a wellness check. (The newer documents say the woman is *Sonya, an old
+  villain from his past*; this bible follows the owner's confirmation that she is Marta. See
+  `docs/KURT.md` section 2: unresolved.)
 - **After the attack:** no memory of who he is, why he's here, or his past. His body remembers:
-  how to clear a doorway, how to hold a pistol, how to stay low and quiet, how to weigh an object
-  for throwing. He is surprised by his own competence and never explains it.
-- Old injuries: a stiff left shoulder, a bad right knee. They show in idle, running and crouching.
+  balance, economy of movement, how to hold a weapon, how to stay low and quiet, how to weigh an
+  object for throwing. He is surprised by his own competence and never explains it.
+- Age shows as generic stiffness (neck, shoulders, hands; the hand flexing). No specific
+  injuries: the "stiff left shoulder, bad right knee" of the first draft are withdrawn.
 
 ### Marta Sokolova
 - Forty-one. Lived in 47 with her husband **Ilya** (night shift, Plant No. 3) and daughter
@@ -85,10 +86,10 @@ Rules for Flat 47:
 
 | | Knows at start | Knows at end of Flat 47 |
 |---|---|---|
-| **Protagonist** | Job, client, Marta's name, the address. Then: nothing (amnesia). | His name from papers in his coat; that he came here to check on a woman; that his hands know violence. |
+| **Kurt** | Job, client, Marta's name, the address. Then: nothing (amnesia). | His name from papers in his coat; that he came here to check on a woman; that his hands know violence. |
 | **Player** | Everything in the opening cutscene. | The above, plus whatever they read: the family, the evacuation, Ilya's den, the boxes clues. |
 | **Socko — claims** | "We're mates. I'm on your hand." | Same, plus "Trust me, bud." |
-| **Socko — actually knows** | He is Psygmund. The flat, the infection, the protagonist's past, what the boxes are. | Same. Slips once: calls him by a name the player hasn't heard (**PROPOSED**: his old codename, *Strelok*). Covers it. |
+| **Socko — actually knows** | He is Psygmund. The flat, the infection, the protagonist's past, what the boxes are. | Same. (The codename slip proposed in the first draft is withdrawn: no invented superhero identity.) |
 | **Marta** | Her family, the evacuation, the boxes, that she is waiting. | (Infected; no longer reliable.) |
 
 **Withheld deliberately:** that Socko is Psygmund; the protagonist's past beyond his body's habits; what
@@ -100,8 +101,8 @@ box room.
 Timings are targets for pacing, not hard limits.
 
 1. **Arrival (cutscene, ~40 s).** Courtyard at dusk, lobby, stairs, landing. The door of 47
-   stands ajar. He knocks: "Mrs Sokolova? My name is Lebedev. Your sister asked me to look in on
-   you." He goes in. The door swings shut behind him. *(No chain: he is not trapped yet.)*
+   stands ajar. He knocks: "Mrs Sokolova? My name is Federov. I'm here to look in on you." [the job's client
+   and wording: **PROPOSED**, pending the Marta/Sonya question] He goes in. The door swings shut behind him. *(No chain: he is not trapped yet.)*
 2. **Initial exploration (player control, 2–4 min).** Hallway, kitchen, bedroom open; the
    living-room door is half shut. He reads the flat: the calendar, the fridge note, the water
    jars, the suitcase. A smell, and a slow wet sound of breathing from the living room.
@@ -182,8 +183,7 @@ Delivery notes in brackets. Socko's lines are written to be performed with the h
 - Bath / key: *"Or. Or. We shoot the lock. Takes two seconds. The bath takes forever."*
 - Bolt option: *"You're gonna shut her in a cupboard? Like him?"* [irritated; slips: "like him"]
 - If the player spares her: *"…Fine. Fine. Your way. Slower, but fine."* [passive-aggressive]
-- If the player kills her: *"Strelok's still got it!"* [delighted; the name slips out]
-  *"What? It's a… word. Come on."*
+- If the player kills her: *"There we are. Much simpler."* [delighted; the player should feel it]
 
 ## 7. Tone rules
 

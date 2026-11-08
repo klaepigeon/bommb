@@ -38,6 +38,11 @@ var _shake_t := 0.0
 @onready var torch: SpotLight3D = $Head/Camera/Torch
 
 var feet: Area3D
+var arm: KurtArm
+var _hand_world := Transform3D.IDENTITY
+var _reach_t := -1.0                      # time into a reach for the thing being used, or -1
+var _reach_at := Vector3.ZERO             # world point being reached for
+var _reach_pose := "grip"
 
 func _ready() -> void:
 	torch.light_projector = Penumbra.make(0.65)   # three: the torch's penumbra
@@ -45,6 +50,11 @@ func _ready() -> void:
 	feet = Area3D.new(); feet.collision_layer = 0; feet.collision_mask = 2; feet.monitorable = false
 	var fs := CollisionShape3D.new(); var sp := SphereShape3D.new(); sp.radius = 0.3; fs.shape = sp
 	fs.position = Vector3(0, 0.15, 0); feet.add_child(fs); add_child(feet)
+	# Kurt's right arm, shoulder to fingertips (docs/KURT.md §3.5). It hangs from the body, not the
+	# camera: the shoulder turns with him but doesn't tip when he looks down.
+	arm = KurtArm.new(); arm.name = "RightArm"
+	add_child(arm)
+	_hand_world = cam.global_transform * _arm_rest()
 
 func place(t: Transform3D) -> void:
 	global_position = t.origin
@@ -173,6 +183,66 @@ func _kick(pre: Vector3) -> void:
 			rb.apply_central_impulse((dir * v.length() * 0.45 + Vector3.UP * 0.25) * minf(rb.mass, 2.0) * 0.5)
 			noise = maxf(noise, 0.5)
 
+# ---------------------------------------------------------------- the right arm in first person
+const SHOULDER := Vector3(0.19, -0.26, 0.10)      # from the eye (unpitched): right, below, slightly behind
+const ELBOW_POLE := Vector3(0.7, -1.0, 0.25)
+
+## Where the hand rests: low in the bottom right of view, palm turned in, fingers relaxed.
+func _arm_rest() -> Transform3D:
+	return Transform3D(KurtArm.frame(Vector3(-0.22, -0.32, -1.0), Vector3(0.88, 0.3, 0.12)), Vector3(0.15, -0.235, -0.3))
+
+func _process(delta: float) -> void:
+	if not arm:
+		return
+	arm.visible = eye_override < 0.0 or eye_override > 0.6           # not while lying on the floor
+	var want := _arm_rest()
+	var pose := "relaxed"
+	var hs := Vector2(velocity.x, velocity.z).length()
+	want.origin += Vector3(sin(bob) * 0.006, absf(cos(bob)) * 0.007, 0) * minf(hs, 1.5)   # it swings a little with the walk
+	if held:
+		# carrying: palm up under it, fingers curled round
+		want = Transform3D(KurtArm.frame(Vector3(-0.35, 0.05, -1.0), Vector3(0.3, -0.92, 0.25)), Vector3(0.09, -0.2, -0.36))
+		pose = "hold"
+	elif _reach_t >= 0.0:
+		_reach_t += delta
+		var k := sin(clampf(_reach_t / 0.6, 0.0, 1.0) * PI)
+		var at := cam.global_transform.affine_inverse() * _reach_at
+		var sh_cam := cam.global_transform.affine_inverse() * (global_transform * _shoulder())
+		var to := at - sh_cam
+		at = sh_cam + to.limit_length(KurtArm.UPPER + KurtArm.FOREARM - 0.08) - to.normalized() * 0.07
+		want.origin = want.origin.lerp(at, k)
+		want.basis = want.basis.slerp(KurtArm.frame((at - sh_cam).normalized(), Vector3(0.5, 0.8, 0.2)), k)
+		pose = "reach" if _reach_t < 0.22 else _reach_pose
+		if _reach_t > 0.6:
+			_reach_t = -1.0
+	elif locked and look_target != null:
+		# being pulled: the arm goes out toward what has hold of it
+		var at := cam.global_transform.affine_inverse() * (look_target as Vector3) + Vector3(0.05, -0.2, 0.15)
+		var sh_cam := cam.global_transform.affine_inverse() * (global_transform * _shoulder())
+		want.origin = sh_cam + (at - sh_cam).limit_length(0.55)
+		want.basis = KurtArm.frame((at - sh_cam).normalized(), Vector3(0.2, 1.0, 0.0))
+		pose = "open"
+	# keep the hand out of walls: if something is closer than the hand would reach, draw it back
+	if ray.is_colliding() and not held:
+		var d := cam.global_position.distance_to(ray.get_collision_point())
+		if d < 0.5:
+			want.origin.z = maxf(want.origin.z, -maxf(0.16, d - 0.14))
+			want.origin.y -= (0.5 - d) * 0.25
+	# the hand has weight: it follows the head a beat behind
+	var target_world := cam.global_transform * want
+	var k := 1.0 - exp(-delta * 16.0)
+	_hand_world = Transform3D(_hand_world.basis.slerp(target_world.basis, k).orthonormalized(), _hand_world.origin.lerp(target_world.origin, k))
+	var local := global_transform.affine_inverse() * _hand_world        # body space (the arm's space)
+	arm.pose_name = pose
+	arm.idle = pose == "relaxed"
+	arm.solve_arm(_shoulder(), local, ELBOW_POLE)
+	if held:
+		hold.global_position = global_transform * arm.palm_point() + cam.global_basis.y * 0.035
+
+## The shoulder, in body space: under the eye, following crouch and the head's height, not its pitch.
+func _shoulder() -> Vector3:
+	return head.position + SHOULDER
+
 func _aim() -> void:
 	target = null
 	var txt := ""
@@ -211,6 +281,10 @@ func use() -> void:
 	if held:
 		drop()
 	elif target:
+		# the hand goes to it: flat to push a door, a grip for most things
+		_reach_t = 0.0
+		_reach_at = ray.get_collision_point() if ray.is_colliding() else cam.global_position - cam.global_basis.z * 0.5
+		_reach_pose = "flat" if target.get_script() and String(target.get_script().resource_path).ends_with("door.gd") else "grip"
 		target.call("interact", self)
 
 func toggle_torch() -> void:

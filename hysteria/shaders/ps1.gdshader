@@ -18,6 +18,8 @@ uniform vec3 emission = vec3(0.0);
 uniform sampler2D emission_tex : source_color, filter_nearest;
 uniform bool use_emission_tex = false;
 uniform vec2 snap_res = vec2(320.0, 240.0);
+uniform bool use_vertex_color = false;
+uniform vec2 uv_scale = vec2(1.0);
 
 void vertex() {
 	vec4 clip = PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(VERTEX, 1.0);
@@ -26,13 +28,14 @@ void vertex() {
 }
 
 void fragment() {
-	vec4 c = texture(albedo_tex, UV) * albedo_color;
+	vec4 c = texture(albedo_tex, UV * uv_scale) * albedo_color;
+	if (use_vertex_color) { c.rgb *= COLOR.rgb; }
 	ALBEDO = c.rgb;
-	ROUGHNESS = roughness * (use_roughness_tex ? texture(roughness_tex, UV).g : 1.0);
+	ROUGHNESS = roughness * (use_roughness_tex ? texture(roughness_tex, UV * uv_scale).g : 1.0);
 	METALLIC = 0.0;
 	SPECULAR = specular;
 	if (use_normal_tex) {
-		NORMAL_MAP = texture(normal_tex, UV).rgb;
+		NORMAL_MAP = texture(normal_tex, UV * uv_scale).rgb;
 		NORMAL_MAP_DEPTH = normal_depth;
 	}
 	EMISSION = use_emission_tex ? texture(emission_tex, UV).rgb * emission : emission;
