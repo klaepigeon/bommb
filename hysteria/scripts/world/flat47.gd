@@ -176,7 +176,7 @@ func _lights() -> void:
 				# three: luminance x area, one-sided, never shadowed, no range. Godot's Compatibility
 				# renderer has no area lights: a broad soft spot just inside the glass, facing in.
 				var sp := SpotLight3D.new()
-				sp.spot_range = 30.0; sp.spot_attenuation = 2.0
+				sp.spot_range = 9.0; sp.spot_attenuation = 2.0
 				sp.spot_angle = 85.0; sp.spot_angle_attenuation = 1.6
 				sp.light_specular = 0.2
 				l = sp
@@ -190,7 +190,8 @@ func _lights() -> void:
 		l.shadow_enabled = bool(L.get("shadow", false))
 		l.shadow_bias = 0.05; l.shadow_normal_bias = 1.0
 		l.visible = bool(L.on) and powered(L.get("circuit"))
-		l.set_meta("circuit", L.get("circuit")); l.set_meta("switched", bool(L.on))
+		var circ = L.get("circuit")
+		l.set_meta("circuit", circ if circ is String else ""); l.set_meta("switched", bool(L.on))     # "" = not on the mains
 		add_child(l)
 		if l is SpotLight3D:
 			l.position = pos
@@ -216,19 +217,65 @@ func set_circuit(c: String, on: bool) -> void:
 			l.visible = on and l.get_meta("switched")
 var t := 0.0
 
-## The same flicker models as the JS build: a dying hall bulb, a fluorescent tube, the TV, a candle.
+## The JS build's flicker models (lighting.js flick), line for line, including its random hold
+## states, the fluorescent tube's restarts, and the building's occasional brownout that dims every
+## mains light together.
+var _fl := {}            # light -> {t, timer, state, startup}
+var _brown := 1.0
+var _brown_t := 35.0
+var _brown_steps := []
+
+func _flick(l: Light3D, kind: String, dt: float) -> float:
+	var s: Dictionary = _fl.get(l, {"t": randf() * 9.0, "timer": 0.0, "state": 1.0, "startup": 0.0})
+	_fl[l] = s
+	s.t += dt
+	var tt: float = s.t
+	match kind:
+		"fluoro":
+			if s.startup > 0.0:
+				s.startup -= dt
+				return 1.0 if randf() < 0.35 else (0.25 if randf() < 0.4 else 0.0)
+			if s.timer > 0.0:
+				s.timer -= dt; return s.state
+			if randf() < dt * 0.35:
+				s.timer = 0.04 + randf() * 0.25; s.state = 0.0 if randf() < 0.6 else 0.4; return s.state
+			if randf() < dt * 0.03:
+				s.startup = 0.8 + randf() * 1.5
+			return 0.96 + sin(tt * 314.0) * 0.03
+		"bulb":
+			return 0.94 + sin(tt * 7.1) * 0.02 + sin(tt * 23.3) * 0.015 + (-0.4 if randf() < dt * 0.4 else 0.0)
+		"dying":
+			if s.timer > 0.0:
+				s.timer -= dt; return s.state
+			if randf() < dt * 1.5:
+				s.timer = 0.03 + randf() * 0.3; s.state = randf() * 0.4; return s.state
+			return 0.8 + sin(tt * 11.0) * 0.08
+		"candle":
+			return 0.82 + sin(tt * 9.7) * 0.06 + sin(tt * 23.1 + 1.0) * 0.05 + (randf() - 0.5) * 0.12
+		"tv":
+			return 0.55 + randf() * 0.35 + sin(tt * 2.2) * 0.1
+		"emergency":
+			return 0.65 + 0.35 * maxf(0.0, sin(tt * 2.1))
+	return 1.0
+
 func _process(delta: float) -> void:
-	t += delta
+	# the building's supply sags now and then (every 35-95 s): mains lights dim together
+	_brown_t -= delta
+	if _brown_t <= 0.0:
+		_brown_t = 35.0 + randf() * 60.0
+		_brown = 0.25 + randf() * 0.3
+		_brown_steps = [[0.3 + randf() * 0.9, 0.6], [1.5 + randf() * 1.5, 1.0]]
+	for st in _brown_steps.duplicate():
+		st[0] -= delta
+		if st[0] <= 0.0:
+			_brown = st[1]; _brown_steps.erase(st)
 	for o in flickers:
+		if not o.visible:
+			continue
 		var b: float = o.get_meta("base")
-		var k := 1.0
-		match String(o.get_meta("flicker")):
-			"dying": k = 0.05 if fmod(t * 1.7, 7.3) < 0.18 or (fmod(t, 2.9) < 0.06) else 0.85 + 0.15 * sin(t * 31.0)
-			"fluoro": k = 0.0 if fmod(t * 0.9, 5.1) < 0.12 and sin(t * 90.0) > 0.0 else 1.0
-			"tv": k = 0.6 + 0.4 * absf(sin(t * 7.0) * sin(t * 2.3 + 1.0))
-			"candle": k = 0.8 + 0.12 * sin(t * 13.0) + 0.08 * sin(t * 29.0)
-			"emergency": k = 0.7 + 0.3 * sin(t * 2.0)
-			"bulb": k = 0.97 + 0.03 * sin(t * 50.0)
+		var k := _flick(o, String(o.get_meta("flicker")), delta)
+		if o.get_meta("circuit") != "":                # on the mains
+			k *= _brown
 		o.light_energy = b * k
 
 func _environment() -> void:

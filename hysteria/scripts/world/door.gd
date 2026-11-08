@@ -17,7 +17,9 @@ func setup(ex: Dictionary) -> void:
 	angle = ex.get("open", 0.0); target = angle; leaf_w = ex.get("w", 0.8)
 	var lk = ex.get("locked", null)
 	locked = lk if lk is String else ""
-	body = AnimatableBody3D.new(); body.sync_to_physics = true
+	# not sync_to_physics: in that mode the body only follows its own local transform, and here
+	# it is the parent (the hinge) that turns. Off, it follows its global transform every frame.
+	body = AnimatableBody3D.new(); body.sync_to_physics = false
 	var cs := CollisionShape3D.new(); var b := BoxShape3D.new()
 	b.size = Vector3(leaf_w, ex.get("h", 2.0), 0.06); cs.shape = b
 	cs.position = Vector3(leaf_w * 0.5, ex.get("h", 2.0) * 0.5, 0)
@@ -40,7 +42,7 @@ func prompt() -> String:
 func interact(_player: Node) -> void:
 	match locked:
 		"bolt":
-			locked = ""; Game.say("Bolted from this side.")
+			locked = ""; Game.say("You slide the bolt back.")
 			return
 		"chain":
 			if target > 0.05:

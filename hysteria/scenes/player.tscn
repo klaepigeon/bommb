@@ -7,6 +7,7 @@ radius = 0.24
 height = 1.72
 
 [node name="Player" type="CharacterBody3D"]
+collision_mask = 1
 script = ExtResource("1")
 floor_snap_length = 0.25
 
@@ -25,6 +26,7 @@ far = 60.0
 
 [node name="Ray" type="RayCast3D" parent="Head/Camera"]
 target_position = Vector3(0, 0, -1.7)
+collision_mask = 3
 collide_with_areas = true
 
 [node name="Hold" type="Node3D" parent="Head/Camera"]

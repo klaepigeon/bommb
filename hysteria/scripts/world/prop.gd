@@ -20,6 +20,13 @@ static func make(n: Node3D, ex: Dictionary) -> RigidBody3D:
 	cs.position = Vector3(centre[0], centre[1], centre[2])
 	body.add_child(cs)
 	body.mass = maxf(0.05, float(ex.get("mass", 1.0)))
+	var pm := PhysicsMaterial.new(); pm.friction = 0.35; pm.bounce = 0.05     # slides when shoved (the JS build's slide material)
+	body.physics_material_override = pm
+	# debris (under 4 kg) is on layer 2: it collides with the world and other props but never
+	# stops the player, whose feet kick it instead (player.gd). Furniture is on layer 1.
+	const DEBRIS := 4.0
+	body.collision_layer = 2 if body.mass < DEBRIS else 1
+	body.collision_mask = 1 | 2
 	body.title = ex.get("name", "thing"); body.desc = ex.get("desc", "")
 	body.liftable = body.mass <= 12.0
 	body.can_sleep = true; body.sleeping = true

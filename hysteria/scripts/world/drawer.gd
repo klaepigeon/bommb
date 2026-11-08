@@ -17,7 +17,7 @@ func setup(ex: Dictionary) -> void:
 		a = (global_transform.affine_inverse() * (m as Node3D).global_transform) * a
 		aabb = a if first else aabb.merge(a)
 		first = false
-	var body := AnimatableBody3D.new(); body.sync_to_physics = true
+	var body := AnimatableBody3D.new(); body.sync_to_physics = false   # follows the moving parent (see door.gd)
 	var cs := CollisionShape3D.new(); var b := BoxShape3D.new()
 	b.size = aabb.size.max(Vector3(0.02, 0.02, 0.02)); cs.shape = b; cs.position = aabb.get_center()
 	body.add_child(cs); add_child(body)

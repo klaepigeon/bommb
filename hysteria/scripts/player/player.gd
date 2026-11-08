@@ -37,8 +37,14 @@ var _shake_t := 0.0
 @onready var hold: Node3D = $Head/Camera/Hold
 @onready var torch: SpotLight3D = $Head/Camera/Torch
 
+var feet: Area3D
+
 func _ready() -> void:
 	torch.light_projector = Penumbra.make(0.65)   # three: the torch's penumbra
+	# feet: kick the debris you walk through (it doesn't block you; see prop.gd)
+	feet = Area3D.new(); feet.collision_layer = 0; feet.collision_mask = 2; feet.monitorable = false
+	var fs := CollisionShape3D.new(); var sp := SphereShape3D.new(); sp.radius = 0.3; fs.shape = sp
+	fs.position = Vector3(0, 0.15, 0); feet.add_child(fs); add_child(feet)
 
 func place(t: Transform3D) -> void:
 	global_position = t.origin
@@ -95,7 +101,11 @@ func _physics_process(delta: float) -> void:
 	velocity.x = move_toward(velocity.x, want.x, delta * accel)
 	velocity.z = move_toward(velocity.z, want.z, delta * accel)
 	velocity.y = 0.0 if is_on_floor() else velocity.y - 9.8 * delta
+	var pre := velocity
 	move_and_slide()
+	_step_up(pre, delta)
+	_shove(pre)
+	_kick(pre)
 
 	# eye height, bob with a limp on the right leg
 	var hs := Vector2(velocity.x, velocity.z).length()
@@ -110,6 +120,58 @@ func _physics_process(delta: float) -> void:
 
 	_carry(delta)
 	_aim()
+
+## Thresholds and the balcony sill are low steps (up to 20 cm). If walking into something that
+## low, and there's room above it, step up onto it.
+const STEP := 0.2
+func _step_up(pre: Vector3, delta: float) -> void:
+	if not is_on_wall() or not is_on_floor():
+		return
+	for i in get_slide_collision_count():          # only onto the building, never onto loose things
+		if get_slide_collision(i).get_collider() is RigidBody3D:
+			return
+	var h := Vector3(pre.x, 0, pre.z) * delta
+	if h.length() < 0.0005:
+		return
+	var up := Vector3(0, STEP, 0)
+	if test_move(global_transform, up):
+		return
+	var raised := global_transform.translated(up)
+	if test_move(raised, h * 3.0):
+		return
+	global_position += up + h
+	apply_floor_snap()
+
+## Loose things in the way get shoved (chairs, bottles, the bucket). Props slide on a low-friction
+## material (prop.gd); the shove beats that friction for anything, and heavy furniture moves
+## slower than light things.
+func _shove(pre: Vector3) -> void:
+	var speed := Vector2(pre.x, pre.z).length()
+	if speed < 0.1:
+		return
+	for i in get_slide_collision_count():
+		var c := get_slide_collision(i)
+		var b := c.get_collider() as RigidBody3D
+		if b and b != held:
+			var push := -c.get_normal(); push.y = 0.0
+			if push.length() < 0.1:
+				continue
+			b.sleeping = false
+			var dv := 0.14 * clampf(20.0 / b.mass, 0.35, 1.0) * minf(speed / WALK, 1.0)
+			b.apply_central_impulse(push.normalized() * dv * b.mass)
+
+func _kick(pre: Vector3) -> void:
+	var v := Vector3(pre.x, 0, pre.z)
+	if v.length() < 0.3:
+		return
+	for b in feet.get_overlapping_bodies():
+		var rb := b as RigidBody3D
+		if rb and rb != held:
+			var away := rb.global_position - global_position; away.y = 0.0
+			var dir := (v.normalized() * 0.7 + away.normalized() * 0.3).normalized()
+			rb.sleeping = false
+			rb.apply_central_impulse((dir * v.length() * 0.45 + Vector3.UP * 0.25) * minf(rb.mass, 2.0) * 0.5)
+			noise = maxf(noise, 0.5)
 
 func _aim() -> void:
 	target = null
