@@ -25,9 +25,9 @@ import { buildFlats } from './flats.js';
 import { initDecay, patchAll } from './decay.js';
 import { DOORS } from './openings.js';
 import { playIntro } from './cutscene.js';
-import { buildHands } from './hands.js';
+import { buildHands, HANDS } from './hands.js';
 import { buildMarta } from './marta.js';
-import { objective } from './voice.js';
+import { objective, VOICE } from './voice.js';
 
 const params = new URLSearchParams(location.search);
 const $ = (id) => document.getElementById(id);
@@ -81,12 +81,14 @@ async function boot() {
   scene.traverse((o) => { if (o.isMesh && o.castShadow) { if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); const sc = o.getWorldScale(new THREE.Vector3()); if (o.geometry.boundingSphere.radius * Math.max(sc.x, sc.y, sc.z) < 0.06) o.castShadow = false; } });
   for (const s of scene.children) if (s.isMesh && /-(n|s|e|w|ceiling)$/.test(s.name)) { s.castShadow = true; s.userData.blocker = true; I.blockers.push(s); }
   for (const s of G.zoneSkins || []) I.blockers.push(s);
-  buildHands(camera);
+  buildHands();
   initDecay();
   patchAll(scene);
 
   composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
+  // the hands: their own scene, drawn over the finished world with a fresh depth buffer
+  const handPass = new RenderPass(HANDS.scene, camera); handPass.clear = false; handPass.clearDepth = true; composer.addPass(handPass);
   grainPass = new ShaderPass(grainShader); composer.addPass(grainPass); G.post = grainPass;
   composer.addPass(new OutputPass());
 
@@ -349,7 +351,7 @@ window.__pauseGame = pauseGame;
 }
 
 // screenshot hooks for tools/smoke.mjs
-window.__G = G; window.__P = P; window.__I = I; G.doorsById = DOORS; G.I = I;
+window.__G = G; window.__P = P; window.__I = I; window.__VOICE = VOICE; G.doorsById = DOORS; G.I = I;
 window.__view = (x, z, yaw, pitch = 0, crouch = false, y = 0) => { P.pos.set(x, 0, z); P.floorY = y; P.yaw = yaw; P.pitch = pitch; P.crouch = crouch; P.height = crouch ? 1.05 : 1.62; for (let i = 0; i < 3; i++) { updatePlayer(0.016, camera); } };
 window.__step = (n = 30) => { renderer.info.autoReset = false; for (let i = 0; i < n; i++) { G.playerPos = (G.playerPos || new THREE.Vector3()).set(P.pos.x, P.floorY, P.pos.z); G.playerZone = P.room; updateWorld(1 / 60, true); G.time += 1 / 60; updatePlayer(1 / 60, camera); G.phys.step(1 / 60); for (const f of G.updates) f(1 / 60, G.time); updateLights(1 / 60); updateInteract(1 / 60, camera); } renderer.info.reset(); composer.render(); };
 window.__roomAt = roomAt;

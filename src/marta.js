@@ -248,7 +248,7 @@ function touch(M) {
     // head snaps up to you; her hand comes off the floor, tearing coral, and takes your wrist
     const k = Math.min(1, (t - 1.6) / 0.18);
     M.headP.rotation.z = -0.75 + k * 0.95; M.headP.rotation.y = k * 0.35;
-    const wrist = new THREE.Vector3(); HANDS.right.wrist.getWorldPosition(wrist);
+    const wrist = new THREE.Vector3(); HANDS.right.hand.getWorldPosition(wrist);
     M.rHand.h.position.lerp(wrist, Math.min(1, (t - 1.6) * 5));
     M.rFore.visible = false;
     for (const f of M.rHand.fingers) f.rotation.z = -1.1;
