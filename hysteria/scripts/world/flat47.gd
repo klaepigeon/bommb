@@ -152,9 +152,21 @@ func _collision() -> void:
 ## energy by pi and its omni falloff is the same windowed inverse power, so energy = candela / pi
 ## and attenuation = decay gives the same light on the same surface at the same distance.
 const CD := 1.0 / PI
+## Godot's Compatibility renderer (the one Android runs) shades each mesh with at most
+## MAX_PER_OBJECT omni and MAX_PER_OBJECT spot lights. Past that it drops lights per mesh in
+## culling order, which changes as the camera moves: whole walls pop between lit and unlit.
+## The JS build's light list includes the building around the flat (the stairwell lamps,
+## the courtyard lamp) that only ever reach the flat by shining through walls; with them the
+## flat's meshes see 10-14 lights. So: keep a light only if it's in the flat's footprint (or
+## shadowed, so the walls really do stop it), which keeps every mesh under the limit.
+const MAX_PER_OBJECT := 8
+const FOOTPRINT := AABB(Vector3(-0.3, -0.5, -0.3), Vector3(10.6, H + 3.5, 8.6))
 func _lights() -> void:
 	for L in level.lights:
 		if L.get("broken", false):
+			continue
+		var at := Vector3(L.pos[0], L.pos[1], L.pos[2])
+		if String(L.type) == "PointLight" and not bool(L.get("shadow", false)) and not FOOTPRINT.has_point(at):
 			continue
 		var l: Light3D
 		var pos := Vector3(L.pos[0], L.pos[1], L.pos[2])
