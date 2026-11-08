@@ -31,10 +31,14 @@ collide_with_areas = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, -0.12, -0.62)
 
 [node name="Torch" type="SpotLight3D" parent="Head/Camera"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, -0.15, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, -0.18, 0.05)
 visible = false
-light_color = Color(1, 0.92, 0.78, 1)
-light_energy = 2.2
-spot_range = 12.0
-spot_angle = 26.0
+light_color = Color(1, 0.886, 0.722, 1)
+light_energy = 2.4
+light_specular = 0.6
 shadow_enabled = true
+shadow_bias = 0.02
+spot_range = 14.0
+spot_attenuation = 1.6
+spot_angle = 33.2
+spot_angle_attenuation = 1.0

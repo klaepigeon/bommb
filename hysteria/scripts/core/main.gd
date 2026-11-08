@@ -35,6 +35,12 @@ func _ready() -> void:
 	add_child(preload("res://scripts/ui/hud.gd").new())
 
 	var args := _args()
+	if args.has("torch_exp"):
+		player.torch.spot_angle_attenuation = float(args.torch_exp)
+	if args.has("torch_k"):
+		player.torch.light_energy = float(args.torch_k)
+	if args.has("torch_shadow"):
+		player.torch.shadow_enabled = args.torch_shadow == "1"
 	if args.has("shots"):
 		_shots(args.shots)
 	else:
@@ -57,23 +63,22 @@ func _input(e: InputEvent) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 # ---------------------------------------------------------------- screenshot tour
-const VIEWS := [   # name, eye position, looking at, torch
-	["01_hall", Vector3(9.35, 0, 4.55), Vector3(5.0, 1.3, 4.5), false],
-	["02_kitchen", Vector3(9.3, 0, 3.4), Vector3(8.0, 0.8, 0.5), false],
-	["03_bedroom", Vector3(5.0, 0, 3.3), Vector3(7.0, 0.8, 0.5), false],
-	["04_living", Vector3(4.0, 0, 4.6), Vector3(1.0, 0.8, 1.0), true],
-	["05_sonya", Vector3(5.9, 0, 5.6), Vector3(3.3, 0.8, 7.5), true],
-	["06_boxroom", Vector3(2.4, 0, 5.6), Vector3(0.5, 0.8, 7.5), true],
-	["07_bath", Vector3(6.9, 0, 5.6), Vector3(9.5, 0.6, 7.5), false],
+const VIEWS := [   # the JS build's tools/smoke.mjs views: name, x, z, yaw, pitch, torch
+	["bath", 9.1, 5.6, PI * 0.75, -0.2, true],
+	["bedroom", 7.0, 3.3, PI * 0.25, -0.1, false],
+	["child", 5.6, 5.6, PI - 0.3, -0.1, false],
+	["kitchen", 8.5, 3.5, -0.5, -0.1, false],
+	["living_from_door", 4.15, 4.7, PI / 2 - 0.35, -0.08, false],
+	["spawn", 9.35, 4.55, PI / 2 + 0.25, -0.05, false],
+	["storage", 1.8, 5.6, PI, -0.2, true],
 ]
 
 func _shots(dir: String) -> void:
 	DirAccess.make_dir_recursive_absolute(dir)
 	for v in VIEWS:
-		player.global_position = v[1]; player.velocity = Vector3.ZERO
-		var d: Vector3 = v[2] - (v[1] + Vector3(0, 1.62, 0))
-		player.yaw = atan2(-d.x, -d.z); player.pitch = atan2(d.y, Vector2(d.x, d.z).length())
-		player.torch.visible = v[3]
+		player.global_position = Vector3(v[1], 0, v[2]); player.velocity = Vector3.ZERO
+		player.yaw = v[3]; player.pitch = v[4]
+		player.torch.visible = v[5]
 		for i in 20:
 			await get_tree().process_frame
 		var img := get_viewport().get_texture().get_image()

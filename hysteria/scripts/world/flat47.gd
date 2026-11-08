@@ -10,11 +10,16 @@ const PropScript := preload("res://scripts/world/prop.gd")
 const PickScript := preload("res://scripts/world/pickable.gd")
 
 const H := 2.75
+var ambient := 0.05
 
 var level: Dictionary
+var relief := 0.1     # see tools/export/entry.js: the normal maps are exported at full strength
 var spawn := Transform3D.IDENTITY
 
 func _ready() -> void:
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("relief="): relief = float(a.get_slice("=", 1))
+		if a.begins_with("ambient="): ambient = float(a.get_slice("=", 1))
 	level = JSON.parse_string(FileAccess.get_file_as_string("res://assets/flat47/level.json"))
 	var flat: Node3D = (load("res://assets/flat47/flat47.glb") as PackedScene).instantiate()
 	flat.name = "Apartment"
@@ -35,6 +40,13 @@ func _materials(root: Node) -> void:
 	for mi in root.find_children("*", "MeshInstance3D", true, false):
 		var m: MeshInstance3D = mi
 		m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		var see_through := true
+		for i in m.mesh.get_surface_count():
+			var sm0 := m.get_active_material(i)
+			if not (sm0 is BaseMaterial3D) or (sm0 as BaseMaterial3D).transparency == BaseMaterial3D.TRANSPARENCY_DISABLED:
+				see_through = false
+		if see_through:
+			m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		for i in m.mesh.get_surface_count():
 			var src := m.get_active_material(i)
 			if not (src is StandardMaterial3D):
@@ -56,6 +68,11 @@ func _materials(root: Node) -> void:
 				else:
 					sm.set_shader_parameter("albedo_tex", _white())
 				sm.set_shader_parameter("roughness", std.roughness)
+				if std.roughness_texture:
+					sm.set_shader_parameter("roughness_tex", std.roughness_texture); sm.set_shader_parameter("use_roughness_tex", true)
+				if std.normal_enabled and std.normal_texture:
+					sm.set_shader_parameter("normal_tex", std.normal_texture); sm.set_shader_parameter("use_normal_tex", true)
+					sm.set_shader_parameter("normal_depth", std.normal_scale * relief)
 				if std.emission_enabled:
 					sm.set_shader_parameter("emission", Vector3(std.emission.r, std.emission.g, std.emission.b) * std.emission_energy_multiplier)
 					if std.emission_texture:
@@ -116,34 +133,73 @@ func _collision() -> void:
 	ceil.position = Vector3(5, H + 0.2, 4); walls.add_child(ceil)
 
 # ---------------------------------------------------------------- lights
-## Exported lights become OmniLights. three.js point lights are in candela with physical falloff;
-## Godot's energy is relative, so the conversion is tuned by eye.
+## The JS build's lights, converted, not re-tuned. three.js point lights are physical: candela with
+## an inverse-square falloff (decay 2) and a Lambert BRDF of albedo/pi. Godot multiplies light
+## energy by pi and its omni falloff is the same windowed inverse power, so energy = candela / pi
+## and attenuation = decay gives the same light on the same surface at the same distance.
+const CD := 1.0 / PI
 func _lights() -> void:
 	for L in level.lights:
-		if L.type != "PointLight" or L.get("broken", false):
+		if L.get("broken", false):
 			continue
-		var o := OmniLight3D.new()
-		o.name = "Light_" + str(L.name)
-		o.position = Vector3(L.pos[0], L.pos[1], L.pos[2])
-		o.light_color = Color(L.color)
-		o.light_energy = clampf(float(L.intensity) * 0.15, 0.08, 3.0)
-		o.omni_range = float(L.range) if float(L.range) > 0.0 else 6.0
-		o.omni_attenuation = 1.6
-		o.shadow_enabled = L.name == "hall"
-		o.visible = bool(L.on)
-		o.set_meta("flicker", L.get("flicker", "") if L.get("flicker") is String else "")
-		o.set_meta("base", o.light_energy)
-		add_child(o)
-		flickers.append(o)
-	# the street lamp outside the living-room window
-	for L in level.lights:
-		if L.type == "SpotLight":
-			var sp := SpotLight3D.new(); sp.light_color = Color(L.color); sp.light_energy = 2.0
-			sp.spot_range = 22.0; sp.spot_angle = 40.0
-			sp.position = Vector3(L.pos[0], L.pos[1], L.pos[2])
-			add_child(sp); sp.look_at(Vector3(2.5, 0.0, 2.5))
+		var l: Light3D
+		var pos := Vector3(L.pos[0], L.pos[1], L.pos[2])
+		match String(L.type):
+			"PointLight":
+				var o := OmniLight3D.new()
+				o.omni_range = float(L.range) if float(L.range) > 0.0 else 30.0
+				o.omni_attenuation = float(L.get("decay", 2.0))
+				o.position = pos
+				l = o
+			"SpotLight":
+				var sp := SpotLight3D.new()
+				sp.spot_range = float(L.range) if float(L.range) > 0.0 else 30.0
+				sp.spot_attenuation = float(L.get("decay", 2.0))
+				sp.spot_angle = rad_to_deg(float(L.angle))
+				sp.light_projector = Penumbra.make(float(L.get("penumbra", 0.0)))
+				l = sp
+			"RectAreaLight":
+				# three: luminance x area, one-sided, never shadowed, no range. Godot's Compatibility
+				# renderer has no area lights: a broad soft spot just inside the glass, facing in.
+				var sp := SpotLight3D.new()
+				sp.spot_range = 30.0; sp.spot_attenuation = 2.0
+				sp.spot_angle = 85.0; sp.spot_angle_attenuation = 1.6
+				sp.light_specular = 0.2
+				l = sp
+				L.intensity = float(L.intensity) * float(L.w) * float(L.h)
+				pos += Vector3(L.dir[0], 0, L.dir[2]) * 0.15
+			_:
+				continue
+		l.name = "Light_" + str(L.name)
+		l.light_color = Color(L.color)
+		l.light_energy = float(L.intensity) * CD
+		l.shadow_enabled = bool(L.get("shadow", false))
+		l.shadow_bias = 0.05; l.shadow_normal_bias = 1.0
+		l.visible = bool(L.on) and powered(L.get("circuit"))
+		l.set_meta("circuit", L.get("circuit")); l.set_meta("switched", bool(L.on))
+		add_child(l)
+		if l is SpotLight3D:
+			l.position = pos
+			if L.has("target"):
+				l.look_at(Vector3(L.target[0], L.target[1], L.target[2]))
+			elif L.has("dir"):
+				l.look_at(pos + Vector3(L.dir[0], L.dir[1] - 0.15, L.dir[2]))
+		var fl = L.get("flicker")
+		l.set_meta("flicker", fl if fl is String else "")
+		l.set_meta("base", l.light_energy)
+		flickers.append(l)
 
-var flickers: Array[OmniLight3D] = []
+var flickers: Array[Light3D] = []
+
+## Power circuits from the fuse box (A, B, C). C starts off: it's the one that keeps tripping.
+func powered(c) -> bool:
+	return not (c is String) or bool(level.get("circuits", {}).get(c, true))
+
+func set_circuit(c: String, on: bool) -> void:
+	level.circuits[c] = on
+	for l in flickers:
+		if l.get_meta("circuit") == c:
+			l.visible = on and l.get_meta("switched")
 var t := 0.0
 
 ## The same flicker models as the JS build: a dying hall bulb, a fluorescent tube, the TV, a candle.
@@ -164,20 +220,30 @@ func _process(delta: float) -> void:
 func _environment() -> void:
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.06, 0.07, 0.09)
+	env.background_color = Color("262a31")
+	# three: HemisphereLight(0x6a7890, 0x1a140e, 0.06) and nothing else. The dark is the point.
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.32, 0.34, 0.4)
-	env.ambient_light_energy = 0.38
+	env.ambient_light_color = Color("6a7890").lerp(Color("1a140e"), 0.4)
+	env.ambient_light_energy = ambient
+	env.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
+	# three: FogExp2(0x262a31, 0.0062)
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.12, 0.13, 0.15)
-	env.fog_density = 0.04
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_exposure = 1.1
+	env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
+	env.fog_light_color = Color("262a31")
+	env.fog_density = 0.0062
+	env.fog_sky_affect = 0.0
+	# three: ACESFilmic, exposure 1.15
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
+	env.tonemap_exposure = 1.15
 	var we := WorldEnvironment.new(); we.environment = env; add_child(we)
-	# the grey evening coming in from the courtyard side
-	var sun := DirectionalLight3D.new()
-	sun.light_color = Color(0.62, 0.69, 0.78)
-	sun.light_energy = 0.35
-	sun.rotation_degrees = Vector3(-38, 160, 0)
+	# three: the overcast dusk, DirectionalLight(0x9fb0c8, 1.25) from (-3, 13, -14) toward (4, 0, 3),
+	# shadowed: it only gets in through the windows.
+	var sun := DirectionalLight3D.new(); sun.name = "Sky"
+	sun.light_color = Color("9fb0c8")
+	sun.light_energy = 1.25 * CD
 	sun.shadow_enabled = true
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+	sun.directional_shadow_max_distance = 20.0
+	sun.shadow_bias = 0.03; sun.shadow_normal_bias = 1.2
 	add_child(sun)
+	sun.look_at_from_position(Vector3(-3, 13, -14), Vector3(4, 0, 3))

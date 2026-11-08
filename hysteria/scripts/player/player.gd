@@ -28,6 +28,9 @@ var noise := 0.0    # how loud he is this frame, 0..1 (footsteps, impacts); for 
 @onready var hold: Node3D = $Head/Camera/Hold
 @onready var torch: SpotLight3D = $Head/Camera/Torch
 
+func _ready() -> void:
+	torch.light_projector = Penumbra.make(0.65)   # three: the torch's penumbra
+
 func place(t: Transform3D) -> void:
 	global_position = t.origin
 	yaw = t.basis.get_euler().y

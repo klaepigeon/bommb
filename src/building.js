@@ -33,7 +33,7 @@ function flickerK(f, dt) {
 export function buildLightPool() {
   const pool = [];
   for (let i = 0; i < 4; i++) { const l = new THREE.PointLight(0xffffff, 0, 7, 2); G.scene.add(l); pool.push(l); }
-  G.poolLights = pool;
+  G.poolLights = pool; G.fixtures = fixtures;
   const cam = new THREE.Vector3();
   onUpdate((dt) => {
     G.camera.getWorldPosition(cam);
