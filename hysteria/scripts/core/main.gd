@@ -15,6 +15,7 @@ var encounter: MartaEncounter
 var socko: Socko
 var socko_intro: SockoIntro
 var socko_hud: SockoHud
+var pause_menu: PauseMenu
 var socko_tutorial: SockoTutorial
 
 func _ready() -> void:
@@ -64,6 +65,7 @@ func _ready() -> void:
 	socko_intro = SockoIntro.new(); socko_intro.name = "SockoIntro"
 	add_child(socko_intro)
 	socko_intro.setup(socko, player, encounter)
+	pause_menu = PauseMenu.new(); pause_menu.name = "PauseMenu"; pause_menu.setup(player); add_child(pause_menu)
 	socko_hud = SockoHud.new(); socko_hud.name = "SockoHud"; add_child(socko_hud)
 	socko_tutorial = SockoTutorial.new(); socko_tutorial.name = "SockoTutorial"; add_child(socko_tutorial)
 	socko_tutorial.setup(socko, player, socko_hud)
@@ -78,7 +80,7 @@ func _ready() -> void:
 	if args.has("dread"):
 		dread.level = float(args.dread)
 	if args.has("touch"):
-		touch.visible = true; player.touch_ui = true
+		touch.visible = true; player.touch_ui = true; pause_menu.pause_btn.visible = true
 	if args.has("shots"):
 		_shots(args.shots)
 	else:
@@ -104,8 +106,6 @@ func _args() -> Dictionary:
 func _input(e: InputEvent) -> void:
 	if e is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		player.look(e.relative)
-	elif e.is_action_pressed("pause"):
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED
 	elif e is InputEventMouseButton and e.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 

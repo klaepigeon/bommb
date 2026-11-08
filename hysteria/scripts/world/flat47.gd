@@ -199,7 +199,10 @@ func _lights() -> void:
 		l.name = "Light_" + str(L.name)
 		l.light_color = Color(L.color)
 		l.light_energy = float(L.intensity) * CD
-		l.shadow_enabled = bool(L.get("shadow", false))
+		# no shadowed lights in the flat: each one is another pass over every mesh it touches (and on
+		# phones those passes are where shimmer creeps in). The street lamp shines in unshadowed:
+		# a warm wash through the child's window. The only shadow left is Kurt's torch.
+		l.shadow_enabled = false
 		l.shadow_bias = 0.05; l.shadow_normal_bias = 1.0
 		l.visible = bool(L.on) and powered(L.get("circuit"))
 		var circ = L.get("circuit")
@@ -226,69 +229,131 @@ func set_circuit(c: String, on: bool) -> void:
 	level.circuits[c] = on
 	for l in flickers:
 		if l.get_meta("circuit") == c:
-			l.visible = on and l.get_meta("switched")
+			l.set_meta("powered", on and l.get_meta("switched"))
 var t := 0.0
 
-## The JS build's flicker models (lighting.js flick), line for line, including its random hold
-## states, the fluorescent tube's restarts, and the building's occasional brownout that dims every
-## mains light together.
-var _fl := {}            # light -> {t, timer, state, startup}
+## Flicker, calmed for a screen that refreshes 30-60 times a second. The JS build's models had
+## per-frame random jitter (the TV, the candle) and 50 Hz hum (sin(t * 314)) that alias into
+## strobing on a phone, and random dips on every ordinary bulb. Now: ordinary bulbs are steady
+## with a slow breath; the dying hall bulb and the fluorescent tube are the two that misbehave,
+## in slow, deliberate holds (never fully black for the bulb); the TV and candle wander on smooth
+## noise; the building's brownout fades down and back instead of stepping.
+var _fl := {}            # light -> {t, timer, state, startup, seed}
 var _brown := 1.0
-var _brown_t := 35.0
-var _brown_steps := []
+var _brown_want := 1.0
+var _brown_t := 50.0
+var _brown_hold := 0.0
+var _noise := FastNoiseLite.new()
 
 func _flick(l: Light3D, kind: String, dt: float) -> float:
-	var s: Dictionary = _fl.get(l, {"t": randf() * 9.0, "timer": 0.0, "state": 1.0, "startup": 0.0})
+	var s: Dictionary = _fl.get(l, {"t": randf() * 9.0, "timer": 0.0, "state": 1.0, "startup": 0.0, "seed": randf() * 100.0})
 	_fl[l] = s
 	s.t += dt
 	var tt: float = s.t
+	var nz := func(f: float) -> float: return _noise.get_noise_2d(tt * f, s.seed)   # -1..1, smooth
 	match kind:
 		"fluoro":
+			# a tired tube: now and then it drops out for a few frames, and rarely restarts
 			if s.startup > 0.0:
 				s.startup -= dt
-				return 1.0 if randf() < 0.35 else (0.25 if randf() < 0.4 else 0.0)
+				return 1.0 if fmod(s.startup, 0.35) < 0.12 else 0.15
 			if s.timer > 0.0:
 				s.timer -= dt; return s.state
-			if randf() < dt * 0.35:
-				s.timer = 0.04 + randf() * 0.25; s.state = 0.0 if randf() < 0.6 else 0.4; return s.state
-			if randf() < dt * 0.03:
-				s.startup = 0.8 + randf() * 1.5
-			return 0.96 + sin(tt * 314.0) * 0.03
+			if randf() < dt * 0.06:
+				s.timer = 0.08 + randf() * 0.15; s.state = 0.25
+			elif randf() < dt * 0.008:
+				s.startup = 1.0 + randf()
+			return 0.96 + 0.03 * nz.call(0.6)
 		"bulb":
-			return 0.94 + sin(tt * 7.1) * 0.02 + sin(tt * 23.3) * 0.015 + (-0.4 if randf() < dt * 0.4 else 0.0)
+			return 0.95 + 0.04 * nz.call(0.25)
 		"dying":
+			# the hall bulb: dims and catches, slowly; never quite out
 			if s.timer > 0.0:
 				s.timer -= dt; return s.state
-			if randf() < dt * 1.5:
-				s.timer = 0.03 + randf() * 0.3; s.state = randf() * 0.4; return s.state
-			return 0.8 + sin(tt * 11.0) * 0.08
+			if randf() < dt * 0.22:
+				s.timer = 0.12 + randf() * 0.35; s.state = 0.3 + randf() * 0.25; return s.state
+			return 0.8 + 0.08 * nz.call(0.9)
 		"candle":
-			return 0.82 + sin(tt * 9.7) * 0.06 + sin(tt * 23.1 + 1.0) * 0.05 + (randf() - 0.5) * 0.12
+			return 0.84 + 0.1 * nz.call(1.8)
 		"tv":
-			return 0.55 + randf() * 0.35 + sin(tt * 2.2) * 0.1
+			return 0.65 + 0.25 * nz.call(3.0)
 		"emergency":
 			return 0.65 + 0.35 * maxf(0.0, sin(tt * 2.1))
 	return 1.0
 
+# ---------------------------------------------------------------- which lights are on
+## Fewer lights without losing any you'd notice: each light belongs to a room (by where it
+## shines); a room's lights are on while you're in it or near it (within ROOM_NEAR m of its
+## floor), and fade out over ~0.6 s once you're further. Off lights are hidden, so they cost
+## nothing and can't push a mesh over the renderer's per-object limit. The sky (sun) only lights
+## the balcony: indoors the window lights carry the daylight, and an unshadowed sun would leak
+## through walls; leaving it off indoors also drops a whole shadow pass from every frame.
+const ROOM_NEAR := 3.0
+var _sun: DirectionalLight3D
+
+func room_of(p: Vector3) -> String:
+	for k in level.rooms:
+		var r: Dictionary = level.rooms[k]
+		if p.x >= r.x0 and p.x < r.x1 and p.z >= r.z0 and p.z < r.z1:
+			return k
+	return ""
+
+func _room_dist(k: String, p: Vector3) -> float:
+	if k == "":
+		return 0.0
+	var r: Dictionary = level.rooms[k]
+	var dx := maxf(maxf(r.x0 - p.x, p.x - r.x1), 0.0)
+	var dz := maxf(maxf(r.z0 - p.z, p.z - r.z1), 0.0)
+	return Vector2(dx, dz).length()
+
+func _assign_room(l: Light3D) -> void:
+	var probe := l.global_position
+	if l is SpotLight3D:
+		probe += -l.global_transform.basis.z * 1.2     # where it shines (window lights, the street lamp)
+	var k := room_of(probe)
+	if k == "" and l is SpotLight3D:
+		probe = l.global_position - l.global_transform.basis.z * 6.0
+		k = room_of(probe)
+	l.set_meta("room", k)
+	l.set_meta("powered", l.visible)
+	l.set_meta("near", 1.0)
+
 func _process(delta: float) -> void:
-	# the building's supply sags now and then (every 35-95 s): mains lights dim together
+	var cam := get_viewport().get_camera_3d()
+	var eye := cam.global_position if cam else Vector3(5, 1.6, 4)
+	# the building's supply sags now and then (every 50-110 s): mains lights fade down together
 	_brown_t -= delta
 	if _brown_t <= 0.0:
-		_brown_t = 35.0 + randf() * 60.0
-		_brown = 0.25 + randf() * 0.3
-		_brown_steps = [[0.3 + randf() * 0.9, 0.6], [1.5 + randf() * 1.5, 1.0]]
-	for st in _brown_steps.duplicate():
-		st[0] -= delta
-		if st[0] <= 0.0:
-			_brown = st[1]; _brown_steps.erase(st)
+		_brown_t = 50.0 + randf() * 60.0
+		_brown_want = 0.35 + randf() * 0.25; _brown_hold = 1.2 + randf() * 1.5
+	if _brown_hold > 0.0:
+		_brown_hold -= delta
+		if _brown_hold <= 0.0: _brown_want = 1.0
+	_brown = move_toward(_brown, _brown_want, delta * 1.6)
+	if _sun:
+		_sun.visible = room_of(eye) == "" and eye.z < 0.2     # out on the balcony
 	for o in flickers:
+		if not o.has_meta("room"):
+			_assign_room(o)
+		var near: float = o.get_meta("near")
+		var want := 1.0 if _room_dist(o.get_meta("room"), eye) < ROOM_NEAR else 0.0
+		near = move_toward(near, want, delta / 0.6)
+		o.set_meta("near", near)
+		o.visible = bool(o.get_meta("powered")) and near > 0.001
 		if not o.visible:
 			continue
 		var b: float = o.get_meta("base")
 		var k := _flick(o, String(o.get_meta("flicker")), delta)
 		if o.get_meta("circuit") != "":                # on the mains
 			k *= _brown
-		o.light_energy = b * k
+		o.light_energy = b * k * smoothstep(0.0, 1.0, near)
+
+## How many lights are on right now (for tests and the light budget).
+func active_lights() -> int:
+	var n := 0
+	for o in flickers:
+		if o.visible: n += 1
+	return n
 
 func _environment() -> void:
 	var env := Environment.new()
@@ -312,9 +377,11 @@ func _environment() -> void:
 	# three: the overcast dusk, DirectionalLight(0x9fb0c8, 1.25) from (-3, 13, -14) toward (4, 0, 3),
 	# shadowed: it only gets in through the windows.
 	var sun := DirectionalLight3D.new(); sun.name = "Sky"
+	_sun = sun
 	sun.light_color = Color("9fb0c8")
 	sun.light_energy = 1.25 * CD
-	sun.shadow_enabled = true
+	sun.shadow_enabled = true     # it's only on out on the balcony (see _process)
+	sun.visible = false
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
 	sun.directional_shadow_max_distance = 20.0
 	sun.shadow_bias = 0.03; sun.shadow_normal_bias = 1.2

@@ -14,6 +14,7 @@ const REACH := 1.7
 var yaw := 0.0
 var pitch := 0.0
 var look_sens := 0.0022
+var invert_y := false               # pause menu setting
 var pad_sens := 2.6
 var stamina := 1.0
 var crouched := false
@@ -71,7 +72,7 @@ func look(rel: Vector2) -> void:
 		held.rotate(cam.global_transform.basis.x, rel.y * 0.01)
 		return
 	yaw -= rel.x * look_sens
-	pitch = clampf(pitch - rel.y * look_sens, -1.45, 1.45)
+	pitch = clampf(pitch - rel.y * look_sens * (-1.0 if invert_y else 1.0), -1.45, 1.45)
 
 func _physics_process(delta: float) -> void:
 	# look (pad)

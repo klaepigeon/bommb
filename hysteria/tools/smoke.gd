@@ -80,5 +80,29 @@ func _initialize() -> void:
 	print("lights: worst mesh reached by %d omni, %d spot, %d together (cap %d)" % [worst_omni, worst_spot, worst, cap])
 	# 8 of each is Godot's default; the project raises the cap so even both together fit
 	ok = ok and worst <= cap and worst_omni <= 8 and worst_spot <= 8
+	# fewer lights: only a room's own and its neighbours' are on; no shadowed light in the flat;
+	# and the ordinary ones don't jump frame to frame at a phone's 30 fps
+	var most := 0
+	for spot in [Vector3(9.3, 0, 4.5), Vector3(6.0, 0, 1.9), Vector3(1.5, 0, 6.5), Vector3(2.2, 0, 2.6)]:
+		p.global_position = spot
+		await physics_frame
+		for i in 40: world._process(1.0 / 30.0)
+		most = maxi(most, world.active_lights())
+	var shadowed := 0
+	for l in world.flickers:
+		if l.shadow_enabled: shadowed += 1
+	var jump := 0.0
+	p.global_position = Vector3(7.0, 0, 4.5)
+	await physics_frame
+	var prev := {}
+	for i in 900:
+		world._process(1.0 / 30.0)
+		for l in world.flickers:
+			if not l.visible or String(l.get_meta("flicker")) in ["dying", "fluoro"]: continue
+			if prev.has(l) and prev[l] > 0.01 and float(l.get_meta("near")) >= 1.0:
+				jump = maxf(jump, absf(l.light_energy - prev[l]) / prev[l])
+			prev[l] = l.light_energy
+	print("lights: at most %d of %d on, %d shadowed; steadiest-light jump per frame %.1f%%" % [most, world.flickers.size(), shadowed, jump * 100.0])
+	ok = ok and most <= 8 and shadowed == 0 and jump < 0.08
 	print("SMOKE ", "PASS" if ok else "FAIL")
 	quit(0 if ok else 1)
