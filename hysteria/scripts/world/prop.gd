@@ -31,7 +31,30 @@ static func make(n: Node3D, ex: Dictionary) -> RigidBody3D:
 	body.liftable = body.mass <= 12.0
 	body.can_sleep = true; body.sleeping = true
 	body.continuous_cd = body.mass < 1.0
+	if body.liftable:
+		# things you can throw make a noise when they land (and things hear it: Noise)
+		body.contact_monitor = true; body.max_contacts_reported = 2
+		body.body_entered.connect(body._on_hit)
 	return body
+
+var _hit_cd := 0
+var thrown_by: Node = null      # the player, after a throw or drop, until it settles
+
+var _speed := 0.0               # last frame's speed: by the contact signal the bounce has eaten it
+
+func _physics_process(_d: float) -> void:
+	if contact_monitor and not sleeping:
+		_speed = linear_velocity.length()
+
+func _on_hit(_other: Node) -> void:
+	var v := maxf(linear_velocity.length(), _speed)
+	var now := Time.get_ticks_msec()
+	if v < 1.1 or now < _hit_cd or gravity_scale < 0.5:      # gravity off: it's in someone's hand
+		return
+	_hit_cd = now + 250
+	var loud := clampf(v * pow(mass, 0.35) / 7.0, 0.1, 1.0)
+	Sfx.play(get_parent(), "thud", global_position, linear_to_db(loud) + 2.0)
+	Noises.make(get_tree(), global_position, loud, "impact", thrown_by if thrown_by else self)
 
 func prompt() -> String:
 	return ("Pick up " + title.to_lower()) if liftable else ""

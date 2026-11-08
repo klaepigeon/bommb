@@ -253,6 +253,7 @@ func drop() -> void:
 		return
 	held.gravity_scale = 1.0
 	var b := held
+	if "thrown_by" in b: b.set("thrown_by", self)
 	held = null; inspecting = false
 	await get_tree().create_timer(0.4).timeout
 	if is_instance_valid(b):

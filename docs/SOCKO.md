@@ -12,6 +12,9 @@ tongue on the protagonist's **left** hand, there **only** after he wakes.
 | `scripts/player/right_hand.gd` (`RightHand`) | Kurt's right arm and hand, the one that does everything: reaches for what he uses, grips what he carries, flicks to throw, holds weapons (`hold_weapon`). Jointed PS1-style like Marta. |
 | `scripts/socko/socko.gd` (`Socko`) | The performance controller: the bible's four layers (§3), emotions (§5), gestures (§6), gaze priority (§7.2), speech (§7.5), independent intention (§9). |
 | `scripts/socko/socko_intro.gd` (`SockoIntro`) | Story bible beats 9–10: the hand rising, then the six introduction lines, waiting on the player. |
+| `scripts/socko/socko_tutorial.gd` (`SockoTutorial`) | The bible's tutorial lines, each once, when relevant: walking, crouching (prompted, then "you've done this before"), the first pickup, turning something over too long, the first loud drop or throw. Each comes with a short control hint (keyboard, pad or touch wording). |
+| `scripts/socko/socko_hud.gd` (`SockoHud`) | Top left: "OBJECTIVE · Find Marta Sokolova." before him, then "SOCKO SAYS · Find a way out of Flat 47.", as in the JS build, plus the hint line. |
+| `scripts/core/noise.gd` (`Noises`) | Noises things can hear. Thrown and dropped props thud and report an impact (loudness from speed and mass). Socko turns his head to any noise; Marta's hunting can listen to the same thing. |
 | `shaders/ps1_cloth.gdshader` | The PS1 shader for cloth: unfiltered, vertex-snapped, double-sided, with felt's fuzzy rim. |
 | `scenes/socko_test.tscn` | The test bench (bible §16): first person, close-up and side views, a skeleton overlay, every emotion and gesture on a key, speech, the jaw and fist by hand, the lights, the layer-D switches, playback speed. Keys are listed at the top of `socko_test.gd`. |
 | `tools/socko_test.gd` | Automated check: the rig's mechanics, then the introduction in the real flat with a scripted player, with frames saved at each beat. |
@@ -79,6 +82,8 @@ angry and furious lines open wider and lopsided.
 - **Recorded voice / visemes:** the system is ready for timing data, but there are no recordings.
   TTS can't whisper or rage, so emotional delivery today comes from the puppet, not the voice.
 - **Fabric wrinkles** are static folds plus skinning. There are no dynamic wrinkle maps.
+- **Tutorial lines not yet wired:** the pistol, reloading, the bath, the bolt, and sparing or
+  killing her. They need systems that don't exist in Godot yet.
 - **Weapons:** none exist in Godot yet. `RightHand.hold_weapon()` is where one goes.
 - **Right hand grip** is generic: one grip pose sized to the object, no per-object hand poses.
 - Tested on desktop under software rendering only, not on an Android device yet.

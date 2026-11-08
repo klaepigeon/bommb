@@ -58,6 +58,7 @@ var _segs: Array = []                   # [{t, d, open, round, word}]
 var _speech_t := 0.0
 var _speech_len := 0.0
 var _line := ""
+var history: Array = []                 # every line he's said, in order
 var _utt_id := -1
 var _word_starts: Array = []            # char offset -> segment index, for TTS boundary resync
 
@@ -103,6 +104,7 @@ func setup(p_cam: Camera3D, p_player: Node = null) -> void:
 
 func _ready() -> void:
 	top_level = true
+	add_to_group("listener")
 	_rng.seed = 47
 	rig = SockRig.new(); rig.name = "Rig"
 	add_child(rig)
@@ -158,6 +160,11 @@ func take_torch(lamp: SpotLight3D) -> void:
 func toggle_torch() -> void:
 	torch_on = not torch_on
 
+## A noise (Noises.make): he turns to it, a beat before Kurt would.
+func hear(pos: Vector3, loud: float, _what: String, _source: Node) -> void:
+	if visible and is_processing() and loud > 0.2 and _event_t <= 0.0:
+		notice(pos, 0.8 + loud)
+
 func busy() -> bool:
 	return talking or _gesture != ""
 
@@ -171,6 +178,7 @@ func say(text: String, e := "", volume := 1.0) -> void:
 		set_emotion(e)
 	loud = volume
 	_line = text
+	history.append(text)
 	_build_schedule(text)
 	_speech_t = -0.12            # the mouth opens just before the sound
 	talking = true
