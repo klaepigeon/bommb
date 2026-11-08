@@ -28,7 +28,9 @@ const SETS := {
 		["f48_bedroom", 5.0, 3.3, -0.4, -0.1, false, ""], ["f48_box", 1.8, 6.0, PI - 0.3, -0.15, false, ""],
 		["f48_safe_real", 1.6, 6.5, PI - 0.15, -0.2, false, "safe"], ["f48_safe_open", 1.55, 6.55, PI - 0.1, -0.35, false, "open"],
 		["f48_sofa_real", 2.2, 3.4, 1.05, -0.35, false, "sofa"],
-		["f48_gun_hand", 5.5, 1.9, 0.0, -0.05, true, "gun"], ["f48_papa_aim", 6.0, 2.6, 0.0, 0.05, true, "gun"]],
+		["f48_gun_hand", 5.5, 1.9, 0.0, -0.05, true, "gun"], ["f48_papa_aim", 6.0, 2.6, 0.0, 0.05, true, "gun"],
+		["f48_kurt_mannequin", 6.3, 1.9, 0.25, -0.05, false, "dress"], ["f48_marta_mannequin", 8.3, 3.2, -1.1, -0.1, false, "dress"],
+		["f48_kurt_back", 6.6, 0.95, 1.9, -0.15, false, "dress"]],
 	"escape": [["e_chain", 9.45, 4.56, -PI * 0.5, -0.05, true, "ajar"], ["e_chain_close", 9.75, 4.75, -PI * 0.5 - 0.35, -0.12, true, "ajar"],
 		["e_bath_full", 7.4, 6.75, PI, -0.95, true, ""], ["e_bath_drained", 7.4, 6.75, PI, -0.95, true, "drain"],
 		["e_door_out", 9.4, 4.56, -PI * 0.5, 0.0, false, "free"], ["e_heap", 9.55, 4.9, -PI * 0.5 - 0.5, -0.9, true, ""]],
@@ -65,6 +67,10 @@ func _initialize() -> void:
 			match v[6] if v.size() > 6 else "":
 				"safe": main.flat48.safe.make_real(true)
 				"open": main.flat48.safe.set_open(true, true)
+				"dress":
+					for g in main.flat48.figures:
+						if g.id != "child": g.dress(true)
+						g.set_process(false)
 				"gun":
 					main.flat48.safe.make_real(true); main.flat48.safe.set_open(true, true); main.flat48.safe.take_gun(true)
 				"sofa":

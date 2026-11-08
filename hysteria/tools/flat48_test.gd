@@ -93,6 +93,14 @@ func _initialize() -> void:
 	check(not p.gun.drawn, "put away")
 	main.armory.cycle()
 	check(p.gun.drawn, "out again")
+	# the names: Marta dresses Mama; Kurt dresses Papa (down, but a name still takes? no: not once he's down); Sonya won't stay
+	var mama = f.figures[0]; var child = f.figures[2]
+	note(main, "SONYA").interact(p); await process_frame
+	child.use_with(p, p.held)
+	check(not child.dressed and G.flags.get("f48_sonya_refused", false), "SONYA won't stay on the child: she isn't here")
+	note(main, "MARTA").interact(p); await process_frame
+	mama.use_with(p, p.held)
+	check(mama.dressed, "MARTA: Mama is a mannequin dressed as her")
 	# saved and loaded
 	check(main.save_game.save(), "saved in Flat 48")
 	main = await fresh()
@@ -103,6 +111,7 @@ func _initialize() -> void:
 	check(block(main, "SOFA").real != null and f.safe.real and f.safe.open and f.safe.gun_taken, "the sofa, the safe, open and empty")
 	check(p.gun != null and p.gun.kind == "shotgun" and p.gun.loaded == 2 and p.gun.spare == 9, "the shotgun, with what was left")
 	check(f.figures[1].down and not f.figures[0].down, "Papa still down; Mama standing")
+	check(f.figures[0].dressed and not f.figures[2].dressed, "Mama still dressed as Marta")
 	check(note(main, "GUN SAFE") == null and note(main, "SOFA") == null and note(main, "BED") != null, "the notes he took are gone from the wall")
 	SG.wipe()
 	print("FLAT48 ", "PASS" if ok else "FAIL")

@@ -42,6 +42,13 @@ func _on_transformed(_node: Node, what: String) -> void:
 			if n == 1: _say("shot1", "There we are. Much simpler.", "happy", 1.1)
 			elif n == 2: _say("shot2", "I knew you'd figure it out.", "happy", 1.1)
 			else: _say("shot3", "And that's the family. See? Quiet now.", "uncanny", 0.8)
+		"DRESSED_MAMA":
+			_say("dress_mama", "Huh. Look at that. She cleans up.", "lying", 0.85)
+		"DRESSED_PAPA":
+			_say("dress_papa", "…", "uncanny", 0.4)
+			_say("dress_papa2", "That's not funny. Who's that supposed to be? Don't answer that.", "angry", 0.9)
+		"NOT SONYA":
+			_say("not_sonya", "See? Nothing. Nobody's here. Let's go.", "lying", 0.8)
 		_:
 			# a block made real: he doesn't like the flat explaining itself
 			if said.has("real1"): _say("real2", "You're looking for reasons to trust them.", "impatient", 0.9)

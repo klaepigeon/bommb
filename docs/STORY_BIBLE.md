@@ -358,6 +358,18 @@ simpler."* / *"I knew you'd figure it out."* · refusing (shotgun in hand, near 
 here. We have our own problems."* → *"You can't save everybody, bud."* → and then he never said
 it: *"What? I didn't say shoot them. When did I say shoot them? I said keep your distance."*
 
-**Open (owner decides):** the figures' names on the note wall and who PAPA is, given there is no
-husband in 47 (the JS build tagged MAMA "Marta" and the child "Sonya"); how each figure is helped;
-Suite 51's red-note monologue and CHILD'S CELL → POINTLESS DOOR (preserved for when it's built).
+**Canon (owner): PAPA is Kurt.** Each figure becomes **a mannequin dressed as its character,
+except Sonya.** The names are on the note wall (MARTA, KURT, SONYA). Built:
+- **MARTA on MAMA:** a faceless shop mannequin on its stand in her blue cardigan (buttons down
+  the front), a dark skirt, her dark hair up, and a red mouth painted where a face should be.
+- **KURT on PAPA:** a faceless mannequin, Kurt's height (1.78 m), in a dark jacket and trousers,
+  a domino mask on the face it hasn't got, a bow across its back and a quiver over the shoulder:
+  the man in Sonya's drawing ("He has no face"). *"It's your height. It's you. It was always you."*
+- **SONYA on CHILD:** it won't stay on. *"Not on this. She isn't here."* (Socko: *"See? Nothing.
+  Nobody's here. Let's go."*) Interpretation of "save Sonya", PROPOSED.
+- Socko on Marta's mannequin: *"Huh. Look at that. She cleans up."*; on Kurt's: silence, then
+  *"That's not funny. Who's that supposed to be? Don't answer that."*
+- Dressed mannequins still turn when unseen, and can still be shot.
+
+**Open:** how each figure is helped (beyond naming); Suite 51's red-note monologue and CHILD'S CELL
+→ POINTLESS DOOR (preserved for when it's built).

@@ -59,7 +59,7 @@ const WALL_Z := 3.874
 ## The words on it: everything the blocks need, and some that fit nothing here.
 const WORDS := ["SOFA", "TABLE", "WALL UNIT", "BED", "WARDROBE", "SINK", "COOKER", "FRIDGE", "TABLE",
 	"SONYA'S BED", "BATH", "SINK", "SHELVES", "RADIATOR", "RADIATOR", "RADIATOR", "GUN SAFE",
-	"PIANO", "DOG", "WINDOW", "HOME", "LATER"]
+	"PIANO", "DOG", "WINDOW", "HOME", "LATER", "MARTA", "KURT", "SONYA"]
 
 var main: Node
 var world: Node3D
@@ -130,6 +130,10 @@ func _shell() -> void:
 		add_child(l)
 		l.position = Vector3(r.x0 + 0.5 + (r.x1 - r.x0) * 0.15, 1.72, r.z0 + 0.075)
 		if id == "hall": l.position = Vector3(8.6, 2.25, r.z0 + 0.075)
+		# the rooms whose north walls are mostly window: on the west wall instead, facing in
+		if id in ["living", "bedroom", "kitchen"]:
+			l.position = Vector3(r.x0 + 0.075 + (0.07 if id != "living" else 0.0), 1.72, {"living": 3.4, "bedroom": 3.2, "kitchen": 2.6}[id])
+			l.rotation.y = PI * 0.5
 		l.rotation.z = randf_range(-0.04, 0.04)
 
 func _collision() -> void:
@@ -252,10 +256,11 @@ func take_note(n: WallNote) -> void:
 
 # ---------------------------------------------------------------- the three of them
 func _figures() -> void:
-	for f in [["mama", Vector3(9.2, 0, 2.65), 1.72, "MAMA", "At the stove. A paper tag pinned where a heart would be: MAMA."],
-			["papa", Vector3(6.0, 0, 0.55), 1.84, "PAPA", "At the bedroom window, looking out at the white. The tag: PAPA."],
+	for f in [["mama", Vector3(9.2, 0, 2.65), 1.72, "MAMA", "At the stove. A paper tag pinned where a heart would be: MAMA — hair up, the blue cardigan."],
+			["papa", Vector3(6.0, 0, 0.55), 1.78, "PAPA", "At the bedroom window, looking out at the white. Your height, exactly. The tag: PAPA — nights — the jacket. Gone a lot."],
 			["child", Vector3(3.3, 0, 6.3), 1.22, "CHILD", "By the small bed. The tag says CHILD, and it's the only one with a drawing on it: a house with black windows."]]:
 		var g := Figure48.new(); g.flat = self; g.id = f[0]; g.tall = f[2]; g.tag = f[3]; g.desc = f[4]
+		g.identity = {"mama": "MARTA", "papa": "KURT", "child": "SONYA"}[f[0]]
 		add_child(g); g.position = f[1]; g.build()
 		figures.append(g)
 
@@ -265,8 +270,10 @@ func save_state() -> Dictionary:
 	for p in blocks:
 		if (p as Placeholder).real: real.append((p as Placeholder).index)
 	var shot := {}
-	for g in figures: shot[g.id] = g.down
-	return {"real": real, "safe_real": safe.real, "safe_open": safe.open, "gun_taken": safe.gun_taken, "shells_taken": safe.shells_taken, "shot": shot}
+	var dressed := {}
+	for g in figures:
+		shot[g.id] = g.down; dressed[g.id] = g.dressed
+	return {"real": real, "safe_real": safe.real, "safe_open": safe.open, "gun_taken": safe.gun_taken, "shells_taken": safe.shells_taken, "shot": shot, "dressed": dressed}
 
 func restore(d: Dictionary) -> void:
 	var real: Array = d.get("real", [])
@@ -281,7 +288,9 @@ func restore(d: Dictionary) -> void:
 	if d.get("gun_taken", false): safe.take_gun(true)
 	if d.get("shells_taken", false): safe.take_shells(true)
 	var shot: Dictionary = d.get("shot", {})
+	var dressed: Dictionary = d.get("dressed", {})
 	for g in figures:
+		if dressed.get(g.id, false): g.dress(true)
 		if shot.get(g.id, false): g.fall(true)
 
 # ================================================================ the pieces
@@ -510,6 +519,8 @@ class Figure48 extends StaticBody3D:
 	var down := false
 	var hits := 0
 	var body: Node3D
+	var identity := ""          # the name that dresses it (owner: Papa is Kurt; Sonya isn't here)
+	var dressed := false
 
 	func build() -> void:
 		body = Node3D.new(); add_child(body)
@@ -536,8 +547,105 @@ class Figure48 extends StaticBody3D:
 		return "Look at it" if not down else ""
 
 	func interact(_p: Node) -> void:
-		Game.say(desc, 5.0)
+		if dressed:
+			Game.say({"mama": "A shop mannequin in her cardigan, her hair up, a mouth painted on in her red. Nothing else on the face. It's looking at the stove.",
+				"papa": "A shop mannequin in a dark jacket, a domino mask on a face that isn't there, a bow and a quiver on its back. It's looking out at the white. It's your height."}[id], 6.0)
+		else:
+			Game.say(desc, 5.0)
 		Game.flags["f48_looked_" + id] = true
+
+	func use_with_prompt(item: Node) -> String:
+		return "Stick the note on it" if not down and not dressed and item.has_meta("identity") else ""
+
+	func use_with(p: Node, item: Node) -> bool:
+		if down or dressed or not item.has_meta("identity"): return false
+		var word := String(item.get_meta("identity"))
+		if word == identity and id != "child":
+			p.set("held", null); item.queue_free()
+			dress(false)
+			return true
+		p.call("drop")
+		if id == "child" and word == "SONYA":
+			Game.say("It won't stay on. Not on this. She isn't here.", 4.0)
+			Game.flags["f48_sonya_refused"] = true
+			flat.transformed.emit(self, "NOT SONYA")
+		else:
+			Game.say("It won't stay on. Not that.", 3.0)
+		return true
+
+	## The name, and the white figure is a shop mannequin dressed as them: faceless, jointed,
+	## standing on its stand; Marta in her cardigan with her hair up and a red mouth painted on;
+	## Kurt in a dark jacket with a domino mask on the blank face and a bow on its back (the man
+	## in Sonya's drawing: "He has no face").
+	func dress(quiet: bool) -> void:
+		if dressed: return
+		dressed = true
+		Game.flags["f48_dressed_" + id] = true
+		for c in body.get_children(): c.free()
+		var k := TownKit.new(body)
+		var h := tall
+		var hip := h * 0.52; var sh := h * 0.8
+		# the stand: a round iron base and a rod up the back of the calf
+		k.cyl("iron", Vector3(0, 0, 0.06), 0.17, 0.02, 12)
+		k.cyl("iron", Vector3(-h * 0.05, 0.02, h * 0.02), 0.008, h * 0.2, 6)
+		var top := "cardigan" if id == "mama" else "jacket"
+		var legs := "mannequin" if id == "mama" else "trousers"
+		for s: float in [-1.0, 1.0]:
+			var x := s * h * 0.055
+			k.cyl_axis(legs, Vector3(x, hip, 0), Vector3(x * 1.05, h * 0.28, -h * 0.005), h * 0.05, 8, h * 0.036)
+			k.cyl_axis(legs, Vector3(x * 1.05, h * 0.28, -h * 0.005), Vector3(x * 1.1, h * 0.05, 0), h * 0.034, 8, h * 0.022)
+			k.box("wig" if id == "mama" else "trousers", Vector3(x * 1.1, h * 0.022, -h * 0.03), Vector3(h * 0.028, h * 0.022, h * 0.065))   # shoes
+			# arms: a ball at the shoulder and the elbow, the joints a mannequin has
+			var s0 := Vector3(s * h * 0.125, sh - h * 0.02, 0); var e := Vector3(s * h * 0.145, h * 0.6, -h * 0.01); var w := Vector3(s * h * 0.13, h * 0.44, -h * 0.05)
+			k.cyl_axis(top, s0, e, h * 0.03, 8, h * 0.026)
+			k.cyl_axis(top, e, w, h * 0.026, 8, h * 0.02)
+			k.box("mannequin", w + Vector3(0, -h * 0.05, -h * 0.005), Vector3(h * 0.01, h * 0.045, h * 0.026))
+		# the trunk, flattened front to back
+		var trunk := Node3D.new(); body.add_child(trunk); trunk.scale = Vector3(1, 1, 0.68)
+		var kt := TownKit.new(trunk)
+		kt.cyl_axis(top if id == "papa" else "skirt", Vector3(0, hip - h * 0.03, 0), Vector3(0, h * 0.6, 0), h * 0.105, 10, h * 0.09)
+		kt.cyl_axis(top, Vector3(0, h * 0.6, 0), Vector3(0, sh, 0), h * 0.09, 10, h * 0.115)
+		kt.cyl_axis(top, Vector3(0, sh, 0), Vector3(0, sh + h * 0.012, 0), h * 0.115, 10, h * 0.04)
+		kt.finish()
+		k.cyl_axis("mannequin", Vector3(0, sh, 0), Vector3(0, h * 0.86, 0), h * 0.028, 8)              # the neck
+		if id == "mama":
+			# a skirt to the knee, buttons down the cardigan
+			k.cyl_axis("skirt", Vector3(0, h * 0.58, 0), Vector3(0, h * 0.3, 0), h * 0.085, 10, h * 0.11)
+			k.fine = true
+			for i in 5: k.box("china", Vector3(0, h * 0.62 + i * h * 0.035, -h * 0.078), Vector3(h * 0.006, h * 0.006, h * 0.003))
+			k.fine = false
+		else:
+			# a bow across the back, a quiver over the shoulder, the fletchings showing
+			for i in 9:
+				var a0 := -0.9 + 1.8 * i / 9.0; var a1 := -0.9 + 1.8 * (i + 1) / 9.0
+				var p0 := Vector3(sin(a0) * h * 0.08 + h * 0.03, h * 0.66 + sin(a0 * 1.75) * h * 0.24, h * 0.1 + cos(a0) * h * 0.03)
+				var p1 := Vector3(sin(a1) * h * 0.08 + h * 0.03, h * 0.66 + sin(a1 * 1.75) * h * 0.24, h * 0.1 + cos(a1) * h * 0.03)
+				k.cyl_axis("walnut", p0, p1, h * 0.007, 5)
+			k.cyl_axis("leather", Vector3(-h * 0.05, h * 0.55, h * 0.09), Vector3(h * 0.04, h * 0.86, h * 0.1), h * 0.03, 8)
+			k.fine = true
+			for i in 4: k.box("cloth_white", Vector3(h * (0.03 + i * 0.008), h * 0.9, h * 0.1), Vector3(h * 0.004, h * 0.025, h * 0.012))
+			k.fine = false
+		k.finish()
+		# the head: an egg, no face
+		var head := MeshInstance3D.new(); var sm := SphereMesh.new(); sm.radius = h * 0.06; sm.height = h * 0.15
+		sm.radial_segments = 10; sm.rings = 6; head.mesh = sm; head.material_override = k.material("mannequin")
+		body.add_child(head); head.position = Vector3(0, h * 0.92, 0)
+		var kh := TownKit.new(head)
+		if id == "mama":
+			kh.box("wig", Vector3(0, h * 0.02, h * 0.012), Vector3(h * 0.062, h * 0.05, h * 0.055))     # her hair
+			kh.cyl_axis("wig", Vector3(0, h * 0.05, h * 0.04), Vector3(0, h * 0.075, h * 0.05), h * 0.03, 8)   # up
+			kh.box("lipstick", Vector3(0, -h * 0.035, -h * 0.058), Vector3(h * 0.013, h * 0.004, h * 0.002))   # a mouth, painted
+		else:
+			kh.box("wig", Vector3(0, h * 0.008, -h * 0.052), Vector3(h * 0.05, h * 0.011, h * 0.012))   # the domino mask
+		kh.finish()
+		if not quiet:
+			var l := OmniLight3D.new(); l.light_color = Color(1, 1, 0.95); l.omni_range = 2.5; l.light_energy = 3.0; add_child(l)
+			l.position = Vector3(0, h * 0.6, 0)
+			var tw := create_tween(); tw.tween_property(l, "light_energy", 0.0, 0.7); tw.tween_callback(l.queue_free)
+			var ap := AudioStreamPlayer3D.new(); ap.stream = Flat48._thrum(); add_child(ap); ap.play(); ap.finished.connect(ap.queue_free)
+			Game.say({"mama": "The note stays, over the heart. A shop mannequin, dressed as her: the blue cardigan, her hair up, her red on a mouth painted where a face should be.",
+				"papa": "The note stays. A shop mannequin in a dark jacket, a domino mask on the face it hasn't got, a bow on its back. It's your height. It's you. It was always you."}[id], 6.5)
+			flat.transformed.emit(self, "DRESSED_" + id.to_upper())
 
 	func _process(delta: float) -> void:
 		if down or not flat.visible: return
