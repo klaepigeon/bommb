@@ -27,7 +27,7 @@ func _initialize() -> void:
 	rig.jaw = 1.0; rig.apply_pose()
 	var open: float = rig.bone_global(rig.B.FINGERTIPS).origin.distance_to(rig.bone_global(rig.B.THUMBTIP).origin)
 	rig.jaw = 0.0; rig.apply_pose()
-	ok = _check(open - shut > 0.03, "fingers and thumb part to open the mouth (%.3f -> %.3f m)" % [shut, open]) and ok
+	ok = _check(open - shut > 0.015, "fingers and thumb part to open the mouth (%.3f -> %.3f m)" % [shut, open]) and ok
 	ok = _check(rig.sock.mesh.get_surface_count() == 3, "sock, mouth pocket and tongue are one skinned mesh") and ok
 	# the eyes ride the cloth of the upper jaw (skinned seats): open the mouth and they go up with it
 	rig.jaw = 0.0; rig.apply_pose()

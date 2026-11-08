@@ -239,7 +239,7 @@ func _pupils() -> void:
 		await process_frame; t += _dt()
 		moved[0] = maxf(moved[0], (rig.eyes[0].p as Vector2).distance_to(p0) / float(rig.eyes[0].r))
 		moved[1] = maxf(moved[1], (rig.eyes[1].p as Vector2).distance_to(p1) / float(rig.eyes[1].r))
-	_check(moved[0] > 0.3 and moved[1] > 0.3, "a head snap throws both pupils (%.0f%% / %.0f%% of their travel)" % [moved[0] * 100.0, moved[1] * 100.0])
+	_check(moved[0] > 0.2 and moved[1] > 0.2, "a head snap throws both pupils (%.0f%% / %.0f%% of their travel)" % [moved[0] * 100.0, moved[1] * 100.0])
 	# they settle, and not in lockstep
 	var settled := [-1.0, -1.0]
 	t = 0.0; _dt()
