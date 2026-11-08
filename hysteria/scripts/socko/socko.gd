@@ -18,6 +18,12 @@ extends Node3D
 ##      strength-limited so it never makes him leave the hand.
 ##
 ## Everything blends; nothing snaps. Emotional states are parameter sets lerped over ~0.4 s.
+##
+## On top of the four layers sits the director (SockoDirector): the animation library
+## (SockoClips: idles, faces, head moves, talking styles, physical comedy, entrances and exits) on
+## prioritised layers, the held expression, the emotional performance state (presenter,
+## companion, manipulator, frustrated, angry: from the story and from what the player does), each
+## googly eye's own attention, and dialogue cues. Its output is a set of offsets added here.
 
 signal line_finished(text: String)
 
@@ -41,6 +47,14 @@ var beyond := 0.0                       # D: how far past a wrist's range he's a
 var stillness := 0.0                    # D: 1 is no cloth wobble, no idle, no breath: wrong
 var resist := 0.0                       # D: the hand drags behind the arm, against Kurt
 var ghost_mouth := 0.0                  # D: the mouth keeps moving after the line has ended
+var director: SockoDirector
+var auto_perform := true                # the director may pick idles, states and glances on its own (off during the intro)
+var spoken := 0.0                       # the mouth's spoken opening this frame (0..1)
+var _speech_hold := 0.0                 # a deliberate pause inside a line
+var _seg_now := {}                      # the syllable being spoken (its mouth shape)
+var _st := 0.0; var _st_v := 0.0        # stretch, on a spring (follow-through)
+var _tw := 0.0; var _tw_v := 0.0        # twist
+var _face_ch := {}                      # smoothed mouth corners
 
 # gaze, by priority (bible §7.2)
 var _event_gaze = null; var _event_t := 0.0
@@ -109,6 +123,7 @@ func _ready() -> void:
 	rig = SockRig.new(); rig.name = "Rig"
 	add_child(rig)
 	_p = EMOTIONS.neutral.duplicate()
+	director = SockoDirector.new(self)
 	# a little of the room's light kept on him, as the JS build's hand pass did, so he reads in
 	# the dark (layer 2: it lights nothing else)
 	_spill = OmniLight3D.new(); _spill.name = "Spill"
@@ -164,6 +179,7 @@ func toggle_torch() -> void:
 func hear(pos: Vector3, loud: float, _what: String, _source: Node) -> void:
 	if visible and is_processing() and loud > 0.2 and _event_t <= 0.0:
 		notice(pos, 0.8 + loud)
+		if director: director.sound_glance(pos, 0.5 + loud * 0.5)
 
 func busy() -> bool:
 	return talking or _gesture != ""
@@ -173,7 +189,15 @@ func busy() -> bool:
 ## performed. The mouth follows a syllable schedule made from the text (vowel shape → opening,
 ## m/b/p shut it, punctuation pauses); when the TTS reports word boundaries, the schedule is pulled
 ## onto the voice so the mouth stays with it. Without TTS the schedule alone times the line.
-func say(text: String, e := "", volume := 1.0) -> void:
+## Lines can carry performance cues inline, in {braces} (stripped before they're shown or
+## spoken): {expr:uncomfortable_smile} {eye:R:door:1.2} {eyes:kurt} {divided:agenda} {g:nod}
+## {clip:Head_Tilt_Left} {state:manipulator} {pause:0.8} {interrupt}. Each fires on the word it
+## comes before. `style` picks the talking clip (e.g. "Talking_Sympathetic"); `cues` adds more
+## (dicts as SockoDirector.cue, with "word" or "at" seconds into the line).
+func say(text: String, e := "", volume := 1.0, style := "", cues := []) -> void:
+	var parsed := SockoDirector.parse_line(text)
+	text = parsed[0]
+	var all_cues: Array = parsed[1] + cues
 	if e != "":
 		set_emotion(e)
 	loud = volume
@@ -181,7 +205,13 @@ func say(text: String, e := "", volume := 1.0) -> void:
 	history.append(text)
 	_build_schedule(text)
 	_speech_t = -0.12            # the mouth opens just before the sound
+	_speech_hold = 0.0
 	talking = true
+	var word_times := []
+	for ws in _word_starts:
+		word_times.append(_segs[ws[1]].t if ws[1] < _segs.size() else _speech_len)
+	if director:
+		director.on_line(e, volume, style, all_cues, word_times)
 	Game.toast.emit(text, maxf(2.5, _speech_len + 1.2))
 	var v: String = Game._voice()
 	_utt_id = -1
@@ -222,14 +252,15 @@ func _build_schedule(text: String) -> void:
 				while m < word.length() and VOWELS.contains(word[m]): m += 1
 				var open: float = {"a": 0.95, "o": 0.75, "e": 0.55, "i": 0.4, "u": 0.45, "y": 0.4}.get(v0, 0.6)
 				var rnd := v0 in ["o", "u"]
+				var wid := v0 in ["e", "i", "y"]
 				var shut := k > 0 and word[k - 1] in ["m", "b", "p"]
 				var d := 0.13 + 0.025 * (m - k)
-				_segs.append({"t": t, "d": d, "open": open, "round": rnd, "shut": shut})
+				_segs.append({"t": t, "d": d, "open": open, "round": rnd, "wide": wid, "shut": shut})
 				t += d; k = m; any = true
 			else:
 				k += 1
 		if not any:
-			_segs.append({"t": t, "d": 0.1, "open": 0.3, "round": false, "shut": false}); t += 0.1
+			_segs.append({"t": t, "d": 0.1, "open": 0.3, "round": false, "wide": false, "shut": false}); t += 0.1
 		t += 0.05
 		i = j
 	_speech_len = t
@@ -246,16 +277,39 @@ func _on_ended(id: int) -> void:
 	if id == _utt_id and talking and _speech_t < _speech_len - 0.3:
 		_speech_t = _speech_len - 0.05
 
-func _speech_jaw(delta: float) -> float:
+## A deliberate pause inside a line: the mouth shuts and the line waits (the subtitle stays).
+func pause_speech(secs: float) -> void:
+	if talking: _speech_hold = maxf(_speech_hold, secs)
+
+## Cut himself (or be cut) off mid-line: the mouth snaps shut, the voice stops.
+func interrupt() -> void:
 	if not talking:
+		return
+	talking = false
+	_speech_hold = 0.0
+	if _utt_id >= 0: DisplayServer.tts_stop()
+	if director:
+		director.on_line_end()
+		director.play("Head_Snap", {"amp": 0.35})
+		director.set_expression("irritation", 0.8, 0.6)
+	line_finished.emit(_line)
+
+func _speech_jaw(delta: float) -> float:
+	_seg_now = {}
+	if not talking:
+		return 0.0
+	if _speech_hold > 0.0:
+		_speech_hold -= delta
 		return 0.0
 	_speech_t += delta
 	if _speech_t >= _speech_len:
 		talking = false
+		if director: director.on_line_end()
 		line_finished.emit(_line)
 		return 0.0
 	for s in _segs:
 		if _speech_t >= s.t and _speech_t < s.t + s.d:
+			_seg_now = s
 			var u: float = (_speech_t - s.t) / s.d
 			# fast open, slower close, the lips meeting first on m/b/p
 			var env := sin(PI * pow(u, 0.7))
@@ -278,6 +332,11 @@ func _process(delta: float) -> void:
 	for tk in ["_event_t", "_intent_t", "_kurt_t"]:
 		set(tk, maxf(0.0, get(tk) - delta))
 	var g := _gesture_offsets(delta)
+	var c: Dictionary = director.update(delta)
+	g.head += c.get("head", Vector3.ZERO); g.arm += c.get("arm", Vector3.ZERO)
+	g.jaw += c.get("jaw", 0.0); g.curl += c.get("curl", 0.0); g.squash += c.get("squash", 0.0)
+	g.face += c.get("face", 0.0)
+	_hide = clampf(c.get("hide", 0.0), 0.0, 1.0)
 
 	# ---------------- A: where the hand is
 	# his hand is never busy (Kurt does everything with the right); it drops only when he runs
@@ -302,7 +361,7 @@ func _process(delta: float) -> void:
 	_wrist_prev = wpos; _wrist_vel = wv
 
 	# ---------------- B + D: where he looks
-	var still := clampf(_p.still + stillness, 0.0, 1.0)
+	var still := clampf(_p.still + stillness + c.get("still", 0.0), 0.0, 1.0)
 	var aim := _gaze(delta, still)
 	gaze_point = aim
 	var local := global_transform.affine_inverse() * aim - Vector3(0, 0, -FOREARM)
@@ -336,6 +395,9 @@ func _process(delta: float) -> void:
 	var bounce := 0.0
 	if talking:
 		bounce = _jaw * 0.12 * _p.bounce * loud
+	var tremble: float = c.get("tremble", 0.0)
+	if tremble > 0.0:
+		jitter += Vector3(sin(_t * 37.0) + sin(_t * 53.0), sin(_t * 41.0), sin(_t * 29.0)) * 0.012 * tremble
 	var want: Vector3 = Vector3(pitch + _p.pitch + breath + bounce, yaw, roll + _p.roll) + idle + g.head + jitter
 	# C: the head on a spring behind the wrist; the arm's turn drags it, still damps it
 	var freq := lerpf(8.5, 14.0, still)
@@ -348,11 +410,11 @@ func _process(delta: float) -> void:
 		_head += _head_v * h
 
 	# ---------------- the mouth
-	var spoken := _speech_jaw(delta)
+	spoken = _speech_jaw(delta)
 	if not talking and ghost_mouth > 0.0:
 		ghost_mouth = maxf(0.0, ghost_mouth - delta)
 		spoken = (0.35 + 0.25 * sin(_t * 23.0)) * clampf(ghost_mouth, 0.0, 1.0) * absf(sin(_t * 9.0))
-	var jaw_want := maxf(_p.jaw + g.jaw, spoken * 0.62 * clampf(loud, 0.3, 1.6))
+	var jaw_want := maxf(_p.jaw + g.jaw, spoken * 0.62 * clampf(loud, 0.3, 1.6) * maxf(0.2, 1.0 + c.get("jaw_mul", 0.0)))
 	if torch_on and not talking:
 		jaw_want = maxf(jaw_want, 0.34)      # holds his mouth open for the light
 	if emotion in ["angry", "furious"] and talking: jaw_want *= 1.25
@@ -370,16 +432,46 @@ func _process(delta: float) -> void:
 	rig.wrist = _head
 	rig.jaw = maxf(_jaw, -0.05)
 	rig.skew = (0.35 if emotion in ["angry", "furious", "lying"] else 0.08) * sin(_t * 0.4 + 1.0)
+	# stretch and twist on springs: they overshoot and wobble back (follow-through)
+	var st_want: float = c.get("stretch", 0.0) * (1.0 - still * 0.5)
+	var tw_want: float = c.get("twist", 0.0)
+	for i in n:
+		_st_v += ((st_want - _st) * 110.0 - _st_v * 7.5) * h
+		_st += _st_v * h
+		_tw_v += ((tw_want - _tw) * 90.0 - _tw_v * 7.0) * h
+		_tw += _tw_v * h
+	if not is_finite(_st + _tw):
+		_st = 0.0; _st_v = 0.0; _tw = 0.0; _tw_v = 0.0
+	# the mouth's shape: the expression's corners, plus each syllable's (round o/u purse it, e/i
+	# pull it wide; lips meet on m/b/p)
+	var shape := {"smile_l": c.get("smile_l", 0.0), "smile_r": c.get("smile_r", 0.0), "wide": c.get("wide", 0.0), "pucker": c.get("pucker", 0.0), "skew": c.get("skew", 0.0)}
+	if not _seg_now.is_empty():
+		if _seg_now.round: shape.pucker += 0.55 * spoken
+		if _seg_now.get("wide", false): shape.wide += 0.35 * spoken
+	var kfc := 1.0 - pow(0.0002, delta)
+	for k in shape:
+		_face_ch[k] = lerpf(_face_ch.get(k, 0.0), shape[k], kfc)
 	rig.curl = _p.curl + g.curl
 	rig.squash = _sq
+	rig.stretch = clampf(_st, -1.0, 1.0)
+	rig.twist = clampf(_tw, -1.0, 1.0)
+	rig.smile_l = _face_ch.smile_l; rig.smile_r = _face_ch.smile_r
+	rig.wide = _face_ch.wide; rig.pucker = _face_ch.pucker
+	rig.skew += _face_ch.skew
 	rig.apply_pose()
-	rig.gaze_world = _eyes_on
-	rig.defy_gravity = clampf((stillness - 0.5) * 2.0, 0.0, 1.0) + beyond   # only when he's being wrong
+	# the eyes: each googly eye where the director says (together by default, now and then not)
+	var hold := clampf((stillness - 0.5) * 2.0, 0.0, 1.0) + beyond   # only when he's being wrong
+	for i in 2:
+		var ep: Vector3 = director.eye_points[i]
+		rig.eye_targets[i] = ep if ep != Vector3.ZERO else null
+		rig.eye_rates[i] = director.eye_rates[i]
+		rig.eye_hold[i] = maxf(hold, director.eye_holds[i])
 	rig.update_eyes(delta)
 	_update_torch()
 	_spill.global_position = rig.head_global().origin + cam.global_transform.basis.z * 0.25 + Vector3(0, 0.1, 0)
 
 var _face_s := 0.0
+var _hide := 0.0
 
 func _update_torch() -> void:
 	if not torch:
@@ -402,7 +494,8 @@ func _target_xf(g := {}) -> Transform3D:
 	var W := show_w.lerp(low_w, pose_low).lerp(face_wp, _face_s)
 	var E := show_e.lerp(low_e, pose_low).lerp(face_e, _face_s)
 	W.y += _p.get("lift", 0.0); W.z -= _p.get("lean", 0.0)
-	W.y -= (1.0 - shown) * 0.42; E.y -= (1.0 - shown) * 0.42
+	var vis := shown * (1.0 - _hide)
+	W.y -= (1.0 - vis) * 0.42; E.y -= (1.0 - vis) * 0.42
 	if player:
 		var hs := Vector2(player.velocity.x, player.velocity.z).length()
 		var bob: float = player.get("bob")

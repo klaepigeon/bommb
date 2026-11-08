@@ -174,8 +174,8 @@ func _free(how: String, quiet := false) -> void:
 		"gun": Game.say("The padlock comes apart on the second round. The chain drops. The door swings out.", 5.0)
 	freed.emit(how)
 	match how:
-		"axe", "gun": _socko("freed", "Ha! That's how you open a door.", "happy", 1.0)
-		"key": _socko("freed", "Finally. I aged.", "disappointed", 1.0)
+		"axe", "gun": _socko("freed", "Ha! That's how you open a door.", "happy", 1.0); _socko_judges(1.5)
+		"key": _socko("freed", "Finally. I aged.", "disappointed", 1.0); _socko_judges(-1.5)
 
 # ---------------------------------------------------------------- the bath
 func _bath() -> void:
@@ -199,6 +199,7 @@ func pull_plug() -> void:
 	_sfx(_gurgle(), PLUG, 0.0)
 	Game.say("You put your arm into the cold to the elbow and find the chain. Something gives. The water begins to turn.", 5.0)
 	Game.flags["bath_draining"] = true
+	_socko_judges(-1.0)
 	_socko("bath", "Or. Or. We shoot the lock. Takes two seconds. The bath takes forever.", "impatient", 3.0)
 
 func _drained(quiet := false) -> void:
@@ -289,6 +290,14 @@ func _socko(key: String, text: String, emo := "impatient", delay := 0.0) -> void
 	if delay > 0.0: await get_tree().create_timer(delay).timeout
 	while s.get("talking"): await get_tree().create_timer(0.3).timeout
 	s.call("say", text, emo, 1.0)
+
+## What Socko makes of what Kurt chose: + did it his way (loud, violent), - didn't. His
+## performance state (SockoDirector) follows: enough defiance and the friendliness wears thin.
+func _socko_judges(w: float) -> void:
+	var s = main.get("socko")
+	if not s or not s.get("director"): return
+	if w > 0.0: s.director.obeyed(w)
+	else: s.director.defied(-w)
 
 # ---------------------------------------------------------------- sounds
 func _sfx(w: AudioStreamWAV, at: Vector3, db: float) -> void:
