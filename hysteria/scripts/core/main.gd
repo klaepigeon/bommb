@@ -166,6 +166,13 @@ func leave_labyrinth(to: Transform3D) -> void:
 	(world.get_node("Environment") as WorldEnvironment).environment = world.environment
 	player.global_position = to.origin; player.yaw = to.basis.get_euler().y; player.velocity = Vector3.ZERO
 
+## the screen grain's frame: 12 a second, like film (the shader's comment says why)
+var _grain_t := 0.0
+func _process(delta: float) -> void:
+	_grain_t += delta
+	if container and container.material:
+		(container.material as ShaderMaterial).set_shader_parameter("grain_seed", float(int(_grain_t * 12.0) % 64))
+
 func _physics_process(_d: float) -> void:
 	if Skills.owned("second_wind") and not Input.is_action_pressed("sprint"):
 		player.stamina = minf(1.0, player.stamina + _d * 0.06)

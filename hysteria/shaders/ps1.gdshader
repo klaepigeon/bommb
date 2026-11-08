@@ -34,7 +34,11 @@ void vertex() {
 	POSITION = clip;
 }
 
-float hole_hash(vec2 p) { return fract(sin(dot(floor(p), vec2(127.1, 311.7))) * 43758.5453); }
+float hole_hash(vec2 p) {
+	vec3 p3 = fract(vec3(floor(p).xyx) * 0.1031);
+	p3 += dot(p3, p3.yzx + 33.33);
+	return fract((p3.x + p3.y) * p3.z);
+}
 
 void fragment() {
 	if (hole_max.w > 0.5) {
@@ -47,15 +51,27 @@ void fragment() {
 		}
 	}
 	vec4 c = texture(albedo_tex, UV * uv_scale) * albedo_color;
-	if (use_alpha_cut && c.a < 0.5) discard;
+	// how many texels a pixel covers: past one, detail turns to sparkle (see below)
+	vec2 duv = fwidth(UV * uv_scale) * vec2(textureSize(albedo_tex, 0));
+	float far = clamp(log2(max(max(duv.x, duv.y), 1.0)) / 3.0, 0.0, 1.0);
+	// pierced carving: holes up close; once the piercing's finer than a pixel it's solid, or it
+	// becomes a speckle that crawls as you move
+	if (use_alpha_cut && c.a < 0.5 * (1.0 - far)) discard;
 	if (use_vertex_color) { c.rgb *= COLOR.rgb; }
 	ALBEDO = c.rgb;
-	ROUGHNESS = roughness * (use_roughness_tex ? texture(roughness_tex, UV * uv_scale).g : 1.0);
+	// Specular anti-aliasing. At a third of the screen's resolution a pixel soon covers many
+	// texels, and then painted relief (the normal map) and a glossy highlight turn into sparkle
+	// that crawls as the camera and the snapped vertices move: on a phone it reads as flicker.
+	// So as texels get smaller than a pixel the relief flattens and the surface goes matte, and
+	// where the geometry itself curves fast within a pixel the highlight widens.
+	float rough = roughness * (use_roughness_tex ? texture(roughness_tex, UV * uv_scale).g : 1.0);
+	float curve = length(fwidth(NORMAL));
+	ROUGHNESS = clamp(max(mix(rough, 1.0, far * 0.65), min(curve * 1.5, 1.0)), 0.0, 1.0);
 	METALLIC = 0.0;
-	SPECULAR = specular;
+	SPECULAR = specular * (1.0 - far * 0.6);
 	if (use_normal_tex) {
 		NORMAL_MAP = texture(normal_tex, UV * uv_scale).rgb;
-		NORMAL_MAP_DEPTH = normal_depth;
+		NORMAL_MAP_DEPTH = normal_depth * (1.0 - far * 0.75);
 	}
 	EMISSION = use_emission_tex ? texture(emission_tex, UV).rgb * emission : emission;
 }

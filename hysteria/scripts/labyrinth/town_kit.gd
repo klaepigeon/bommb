@@ -71,14 +71,18 @@ const MATS := {
 }
 
 var parent: Node3D
-var tools := {}          # Vector3i chunk -> {mat: SurfaceTool}
+var tools := {}          # Vector4i chunk (w = 1 for fine detail) -> {mat: SurfaceTool}
+## Fine detail (brackets, balusters, roof seams, dentils): built into its own meshes that are only
+## drawn within FINE_RANGE, where it's more than a pixel or two on a phone's third-res screen.
+var fine := false
+const FINE_RANGE := 26.0
 var _mat_cache := {}
 
 func _init(p_parent: Node3D) -> void:
 	parent = p_parent
 
 func _st(mat: String, at: Vector3) -> SurfaceTool:
-	var key := Vector3i(floori(at.x / CHUNK), floori(at.y / 12.0), floori(at.z / CHUNK))
+	var key := Vector4i(floori(at.x / CHUNK), floori(at.y / 12.0), floori(at.z / CHUNK), 1 if fine else 0)
 	if not tools.has(key): tools[key] = {}
 	var d: Dictionary = tools[key]
 	if not d.has(mat):
@@ -168,6 +172,9 @@ func finish() -> int:
 			mi.mesh = st.commit()
 			mi.material_override = material(mat)
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if not (mat in ["glass", "lamp_glass", "window_glow"] or mat.begins_with("shop")) else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			if (key as Vector4i).w == 1:
+				mi.visibility_range_end = FINE_RANGE; mi.visibility_range_end_margin = 3.0
+				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			parent.add_child(mi)
 			n += 1
 	tools.clear()
