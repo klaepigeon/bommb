@@ -8,6 +8,7 @@ render_mode cull_back, diffuse_lambert, specular_schlick_ggx;
 uniform sampler2D albedo_tex : source_color, filter_nearest_mipmap, repeat_enable;
 uniform vec4 albedo_color : source_color = vec4(1.0);
 uniform float roughness = 0.9;
+uniform float specular = 0.5;
 uniform sampler2D roughness_tex : hint_default_white, filter_nearest_mipmap, repeat_enable;
 uniform bool use_roughness_tex = false;
 uniform sampler2D normal_tex : hint_normal, filter_linear_mipmap, repeat_enable;
@@ -29,7 +30,7 @@ void fragment() {
 	ALBEDO = c.rgb;
 	ROUGHNESS = roughness * (use_roughness_tex ? texture(roughness_tex, UV).g : 1.0);
 	METALLIC = 0.0;
-	SPECULAR = 0.5;
+	SPECULAR = specular;
 	if (use_normal_tex) {
 		NORMAL_MAP = texture(normal_tex, UV).rgb;
 		NORMAL_MAP_DEPTH = normal_depth;

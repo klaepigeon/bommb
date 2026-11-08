@@ -4,8 +4,14 @@ extends CanvasLayer
 var prompt_label: Label
 var toast_label: Label
 var toast_t := 0.0
+var black: ColorRect
 
 func _ready() -> void:
+	black = ColorRect.new(); black.color = Color(0, 0, 0, 0); black.set_anchors_preset(Control.PRESET_FULL_RECT)
+	black.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(black)
+	Game.fade.connect(func(to, sec):
+		var tw := create_tween(); tw.tween_property(black, "color:a", to, sec))
 	var font_size := 18
 	var dot := ColorRect.new(); dot.color = Color(0.85, 0.85, 0.8, 0.6); dot.size = Vector2(3, 3)
 	dot.set_anchors_preset(Control.PRESET_CENTER); dot.position -= Vector2(1.5, 1.5); add_child(dot)

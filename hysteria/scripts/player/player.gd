@@ -1,3 +1,4 @@
+class_name Player
 extends CharacterBody3D
 ## The protagonist: an old man who used to be very good at this. Deliberate walking pace, a
 ## short burst of running that costs him, a crouch his knee complains about. Looks at things,
@@ -22,6 +23,13 @@ var inspecting := false
 var target: Node
 var touch_ui := false   # prompts without key names when playing by touch
 var noise := 0.0    # how loud he is this frame, 0..1 (footsteps, impacts); for the AI later
+# scripted moments take the body away from the player
+var locked := false                 # no walking or looking
+var look_target = null              # Vector3 to turn the head toward (while locked), or null
+var look_speed := 6.0
+var eye_override := -1.0            # forced eye height (lying on the floor, being pulled down)
+var shake := 0.0                    # camera shake, decays
+var _shake_t := 0.0
 
 @onready var head: Node3D = $Head
 @onready var cam: Camera3D = $Head/Camera
@@ -38,6 +46,8 @@ func place(t: Transform3D) -> void:
 	pitch = 0.0
 
 func look(rel: Vector2) -> void:
+	if locked:
+		return
 	if inspecting and held:
 		held.angular_velocity = Vector3.ZERO
 		held.rotate(cam.global_transform.basis.y, rel.x * 0.01)
@@ -51,15 +61,28 @@ func _physics_process(delta: float) -> void:
 	var stick := Vector2(Input.get_joy_axis(0, JOY_AXIS_RIGHT_X), Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y))
 	if stick.length() > 0.15:
 		look(stick * pad_sens * delta / look_sens * 0.5)
+	if look_target != null:
+		var d: Vector3 = (look_target as Vector3) - cam.global_position
+		var want_yaw := atan2(-d.x, -d.z); var want_pitch := atan2(d.y, Vector2(d.x, d.z).length())
+		var k := minf(1.0, delta * look_speed)
+		yaw += wrapf(want_yaw - yaw, -PI, PI) * k
+		pitch += (want_pitch - pitch) * k
 	rotation.y = yaw
 	head.rotation.x = pitch
+	# shake: a jolt that dies away
+	_shake_t += delta
+	shake = maxf(0.0, shake - delta * 1.6)
+	cam.position = Vector3(sin(_shake_t * 61.0), cos(_shake_t * 53.0), 0) * 0.02 * shake * shake
+	cam.rotation.x = sin(_shake_t * 47.0) * 0.03 * shake * shake
 
 	# move
 	var inp := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var pad := Vector2(Input.get_joy_axis(0, JOY_AXIS_LEFT_X), Input.get_joy_axis(0, JOY_AXIS_LEFT_Y))
 	if pad.length() > 0.2:
 		inp = pad.limit_length(1.0)
-	if Input.is_action_just_pressed("crouch"):
+	if locked:
+		inp = Vector2.ZERO
+	elif Input.is_action_just_pressed("crouch"):
 		toggle_crouch()
 	var running := Input.is_action_pressed("sprint") and not crouched and inp.y < -0.3 and stamina > 0.05
 	var speed := CROUCH if crouched else (RUN if running else WALK)
@@ -68,8 +91,9 @@ func _physics_process(delta: float) -> void:
 		speed = minf(speed, WALK * 0.85)     # winded
 	var dir := (transform.basis * Vector3(inp.x, 0, inp.y))
 	var want := dir * speed
-	velocity.x = move_toward(velocity.x, want.x, delta * 9.0)
-	velocity.z = move_toward(velocity.z, want.z, delta * 9.0)
+	var accel := 9.0 if not locked else 4.0      # a shove (recoil, being pulled) carries a moment
+	velocity.x = move_toward(velocity.x, want.x, delta * accel)
+	velocity.z = move_toward(velocity.z, want.z, delta * accel)
 	velocity.y = 0.0 if is_on_floor() else velocity.y - 9.8 * delta
 	move_and_slide()
 
@@ -78,7 +102,9 @@ func _physics_process(delta: float) -> void:
 	bob += hs * delta * 5.2
 	var limp := 0.012 if sin(bob) > 0.0 else 0.022
 	var eye := EYE_CROUCH if crouched else EYE
-	head.position.y = lerpf(head.position.y, eye + sin(bob * 2.0) * limp * minf(hs, 1.0), delta * 8.0)
+	if eye_override >= 0.0:
+		eye = eye_override
+	head.position.y = lerpf(head.position.y, eye + sin(bob * 2.0) * limp * minf(hs, 1.0), delta * (8.0 if eye_override < 0.0 else 2.2))
 	cam.rotation.z = sin(bob) * 0.006 * minf(hs, 1.5)
 	noise = 0.0 if hs < 0.2 else (0.15 if crouched else (0.7 if running else 0.35))
 
@@ -88,6 +114,8 @@ func _physics_process(delta: float) -> void:
 func _aim() -> void:
 	target = null
 	var txt := ""
+	if locked:
+		Game.prompt.emit(""); return
 	if held:
 		txt = "Throw  ·  Drop  ·  Turn over" if touch_ui else "[LMB/RT] throw   [E/A] drop   [RMB/LT] turn over"
 	elif ray.is_colliding():
@@ -101,6 +129,8 @@ func _aim() -> void:
 	Game.prompt.emit(txt)
 
 func _unhandled_input(e: InputEvent) -> void:
+	if locked:
+		return
 	if e.is_action_pressed("interact"):
 		use()
 	elif e.is_action_pressed("torch"):
@@ -114,6 +144,8 @@ func _unhandled_input(e: InputEvent) -> void:
 
 # ---------------------------------------------------------------- actions (keys, pad and touch)
 func use() -> void:
+	if locked:
+		return
 	if held:
 		drop()
 	elif target:

@@ -37,11 +37,15 @@ anything is built on it. Nothing in the established opening (prompt §3.1) has b
 - Forty-one. Lived in 47 with her husband **Ilya** (night shift, Plant No. 3) and daughter
   **Sonya** (seven, eight on the 22nd). The family's story is already told by the flat: the
   calendar, the fridge note, the half-packed suitcase, the made bed, the drawing for Papa.
-- **Her condition:** alive. Fused to a kitchen chair at her place at the dining table, before
-  the uneaten dinner for three. Grey-green mould across her skin and clothes; coral-like growths
-  out of her shoulders, ribs, jaw and hands, rooted through the chair into the floor. Her body
-  has been sitting long enough that chair and woman are one shape.
-- She is lucid in a narrow way: she knows she is waiting. She does not know how long.
+- **Her condition:** to every sense, a corpse three weeks gone, still in her place at the dinner
+  table. The flesh has gone soft and is sliding off her: into her lap, off the chair in strings,
+  into a black puddle spreading under the table. Grey-green and purple-black, marbled, mould in
+  pale fur. Coral (flesh-red at the root, pale at the tips) has grown out of her back, shoulders,
+  arms and face and down through the chair into the floor; her forearms are fused to the cloth.
+  Her lips are gone and her cheeks have split back toward her ears, so she grins, very wide, at
+  her plate. Milky eyes that still catch the light.
+- **She is not dead.** She doesn't breathe, doesn't twitch; only the flies move. The first time
+  she moves must be the last thing the player expects.
 
 ### Socko
 - A dirty striped sock with big googly eyes and a red felt tongue, worn on the protagonist's
@@ -103,17 +107,19 @@ Timings are targets for pacing, not hard limits.
    jars, the suitcase. A smell, and a slow wet sound of breathing from the living room.
 3. **Discovering the apartment's condition.** Mould climbing the hall wall toward the living room;
    coral nubs in the skirting; the dinner table seen through the frosted glass of the door.
-4. **The woman.** He opens the living-room door. Marta at the table, fused to her chair, facing
-   away, in the light from the window. The player can walk round her, look at her, look at the
-   table. **No timer.** Nothing happens until the player comes within arm's reach and looks at
-   her face (or lingers in the room ~45 s).
-5. **The question.** Her head turns, slowly, with a sound like a joint cracking in cold. Her eyes
-   are clear. Quiet, polite, tired: *"Have you seen the boxes?"* A pause the player can fill by
+4. **The woman.** He opens the living-room door. Marta at the table, fused to her chair, her back
+   to him, coral standing out of it against the window light; from behind, plainly dead. The player can walk round her, look at her, look at the
+   table. **No timer.** Nothing happens until the player leans in to look at her face, or touches
+   her (or lingers in the room ~45 s).
+5. **The question.** Her head *snaps* up to him, a crack of bone and coral, the jaw dropping open
+   on the grin; he's thrown back a step. Then she simply watches him, her head following him round
+   the room a beat behind. Quiet, polite, tired: *"Have you seen the boxes?"* A pause the player can fill by
    walking away or staying. If he stays, she asks again, more carefully, as if he might not
    have heard: *"The boxes. Have you seen them?"* If he answers by looking at her (interact):
    *"You haven't. No. Nobody has."*
-6. **The attack.** Without warning — no sting before it — her arm comes off the table, tearing
-   coral, and closes on his wrist. The chair shrieks across the floor as she pulls him down to her.
+6. **The attack.** Once she's asked, coming within reach is enough: without warning — no sting
+   before it — her arm tears up off the table, strings of her stretching and snapping, coral
+   bursting out of the cloth, and closes on his wrist. The chair shrieks across the floor as she pulls him down to her.
    Camera driven by his body: yanked forward and down, his free hand braced on the table, plates
    going over. Her face close: *"Have you seen them?"* Darkness from the edges in.
 7. **Blackout (~5 s of near silence).** A heartbeat, the building's hum, a child's

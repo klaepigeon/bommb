@@ -10,6 +10,8 @@ var player: CharacterBody3D
 var container: SubViewportContainer
 var viewport: SubViewport
 var dread: Dread
+var marta: Marta
+var encounter: MartaEncounter
 
 func _ready() -> void:
 	container = SubViewportContainer.new()
@@ -39,12 +41,18 @@ func _ready() -> void:
 	touch.player = player
 	add_child(touch)
 
-	# Marta at the dinner table (a marker until she is ported): stay in her room and the colour goes
-	var body := Presence.new(); body.name = "Marta"
-	world.add_child(body); body.position = Vector3(2.4, 0.9, 1.9)
+	# Marta, at her place at the dinner table: stay in her room and the colour goes
+	marta = Marta.new(); marta.name = "Marta"
+	world.add_child(marta)
+	marta.position = Vector3(3.0, 0, 1.42); marta.rotation.y = PI / 2
+	world.hide_near(Vector3(3.02, 0.45, 1.45), 0.34, 1.0)      # the chair she replaces
+	var presence := Presence.new(); marta.add_child(presence); presence.position = Vector3(0, 1.2, -0.1)
 	dread = Dread.new(); dread.name = "Dread"
 	add_child(dread)
 	dread.setup(player, world.level.rooms, container.material)
+	encounter = MartaEncounter.new(); encounter.name = "MartaEncounter"
+	add_child(encounter)
+	encounter.setup(marta, player, presence, dread)
 
 	var args := _args()
 	if args.has("torch_exp"):
@@ -98,12 +106,40 @@ const VIEWS := [   # the JS build's tools/smoke.mjs views: name, x, z, yaw, pitc
 	["storage", 1.8, 5.6, PI, -0.2, true],
 ]
 
+const MARTA_VIEWS := [   # free camera: name, eye, looking at, torch (her head is at about (2.91, 1.28, 1.42), facing -X)
+	["m1_doorway", Vector3(4.3, 1.62, 4.4), Vector3(2.9, 1.0, 1.4), false],
+	["m2_behind", Vector3(3.85, 1.55, 2.25), Vector3(2.95, 1.0, 1.42), false],
+	["m3_side", Vector3(3.0, 1.45, 0.4), Vector3(2.9, 1.0, 1.42), false],
+	["m4_across", Vector3(1.75, 1.5, 1.5), Vector3(2.9, 1.1, 1.42), false],
+	["m5_face", Vector3(2.4, 1.3, 1.15), Vector3(2.92, 1.18, 1.42), true],
+	["m6_close", Vector3(2.55, 1.08, 1.42), Vector3(2.92, 1.2, 1.42), true],
+	["m7_standing", Vector3(2.75, 1.62, 1.95), Vector3(2.9, 1.15, 1.42), false],
+	["m8_awake", Vector3(2.62, 1.6, 1.85), Vector3(2.9, 1.28, 1.42), true],
+	["m9_awake_front", Vector3(2.4, 1.4, 1.3), Vector3(2.9, 1.27, 1.42), true],
+	["m11_awake_reach", Vector3(2.62, 1.36, 1.38), Vector3(2.9, 1.28, 1.42), true],
+	["m10_awake_dark", Vector3(2.4, 1.4, 1.3), Vector3(2.9, 1.27, 1.42), false],
+]
+
 func _shots(dir: String) -> void:
 	DirAccess.make_dir_recursive_absolute(dir)
-	for v in VIEWS:
-		player.global_position = Vector3(v[1], 0, v[2]); player.velocity = Vector3.ZERO
-		player.yaw = v[3]; player.pitch = v[4]
-		player.torch.visible = v[5]
+	var views: Array = MARTA_VIEWS if _args().get("views", "") == "marta" else VIEWS
+	var free := views == MARTA_VIEWS
+	if free:
+		player.set_physics_process(false)
+		encounter.process_mode = Node.PROCESS_MODE_DISABLED     # a camera tour mustn't wake her
+	for v in views:
+		if free:
+			var eye: Vector3 = v[1]; var d: Vector3 = v[2] - eye
+			player.global_position = eye - Vector3(0, 1.62, 0)
+			player.rotation.y = atan2(-d.x, -d.z); player.head.position.y = 1.62
+			player.head.rotation.x = atan2(d.y, Vector2(d.x, d.z).length())
+			player.torch.visible = v[3]
+			if String(v[0]).contains("awake"):
+				marta.face(eye)
+		else:
+			player.global_position = Vector3(v[1], 0, v[2]); player.velocity = Vector3.ZERO
+			player.yaw = v[3]; player.pitch = v[4]
+			player.torch.visible = v[5]
 		for i in 20:
 			await get_tree().process_frame
 		var img := get_viewport().get_texture().get_image()

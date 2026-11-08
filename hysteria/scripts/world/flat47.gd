@@ -112,6 +112,20 @@ func _attach(n: Node, script: Script, ex: Dictionary) -> void:
 	n.set_script(script)
 	n.call("setup", ex)
 
+## Hides the exported meshes around a point (smaller than `max_size`): used where a piece of
+## the JS build's dressing is replaced by something built here.
+func hide_near(p: Vector3, radius: float, max_size: float) -> int:
+	var n := 0
+	for mi in find_children("*", "MeshInstance3D", true, false):
+		var m: MeshInstance3D = mi
+		if not m.is_inside_tree() or m.get_parent() is Marta: continue
+		var a: AABB = m.global_transform * m.get_aabb()
+		if a.size.length() > max_size: continue
+		var c := a.get_center()
+		if Vector2(c.x - p.x, c.z - p.z).length() < radius and c.y < p.y + 0.6:
+			m.visible = false; n += 1
+	return n
+
 # ---------------------------------------------------------------- collision
 func _collision() -> void:
 	var walls := StaticBody3D.new(); walls.name = "Collision"; add_child(walls)

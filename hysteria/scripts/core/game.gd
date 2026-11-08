@@ -4,6 +4,7 @@ extends Node
 
 signal toast(text: String, seconds: float)
 signal prompt(text: String)
+signal fade(to: float, seconds: float)    # 0 clear .. 1 black
 
 var flags := {}
 
@@ -44,3 +45,22 @@ func _bind_inputs() -> void:
 
 func say(text: String, seconds := 4.0) -> void:
 	toast.emit(text, seconds)
+
+## A spoken line: subtitled, and voiced by the system's text-to-speech where there is one.
+func speak(text: String, seconds := 4.0, pitch := 0.85, rate := 0.8) -> void:
+	toast.emit(text, seconds)
+	var v := _voice()
+	if v != "":
+		DisplayServer.tts_stop()
+		DisplayServer.tts_speak(text.replace("“", "").replace("”", ""), v, 70, pitch, rate)
+
+var _voice_id = null
+## The first English system voice, looked up once ("" if there's no speech synthesiser).
+func _voice() -> String:
+	if _voice_id == null:
+		_voice_id = ""
+		if DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH) and not (OS.has_feature("linuxbsd") and OS.get_environment("SPEECHD_ADDRESS") == "" and not FileAccess.file_exists("/usr/bin/speech-dispatcher")):
+			var voices := DisplayServer.tts_get_voices_for_language("en")
+			if voices.size() > 0:
+				_voice_id = voices[0]
+	return _voice_id
