@@ -35,9 +35,16 @@ anything is built on it. Nothing in the established opening (prompt §3.1) has b
   injuries: the "stiff left shoulder, bad right knee" of the first draft are withdrawn.
 
 ### Marta Sokolova
-- Forty-one. Lived in 47 with her husband **Ilya** (night shift, Plant No. 3) and daughter
-  **Sonya** (seven, eight on the 22nd). The family's story is already told by the flat: the
-  calendar, the fridge note, the half-packed suitcase, the made bed, the drawing for Papa.
+- **Owner's canon (this session; supersedes the husband and the "forty-one"):** a **psychic**,
+  once the **lover of Rasputin**. Decades later she **fought Trickshot** (Kurt) and became **his
+  lover**. **Kurt is the father of her daughter Sonya, and abandoned Sonya as a child.** There is
+  no husband in Flat 47: the flat is Marta's and Sonya's. All of this is told **only through the
+  environment** (the labyrinth behind the bedroom wardrobe): nobody says it.
+- **Open questions (not invented here):** her age (Rasputin died in December 1916; she looks the
+  same in his photograph as at her table); Sonya's age now and when Kurt left; whether "the woman
+  in 47" of the newer documents (Sonya, "an old villain") is reconciled by this. The flat's
+  child's room, the calendar ("the 22nd") and the fridge note were written for a seven-year-old
+  Sonya and are left as they are until her age is decided.
 - **Her condition:** to every sense, a corpse three weeks gone, still in her place at the dinner
   table. The flesh has gone soft and is sliding off her: into her lap, off the chair in strings,
   into a black puddle spreading under the table. Grey-green and purple-black, marbled, mould in
@@ -62,10 +69,53 @@ anything is built on it. Nothing in the established opening (prompt §3.1) has b
   is the loud, destructive, cruel one. He is never openly evil in Flat 47 — friendly, funny,
   useful, a little impatient when the player looks at things too long.
 
-### Ilya Sokolov (absent)
-- Came back after the evacuation to wait for his family, lived in the box room (the den, the
-  tally marks, the note), was bolted in from the outside by someone. Not found in Flat 47.
-  What happened to him is **withheld**.
+### ~~Ilya Sokolov~~ (removed by the owner)
+- There is no husband. The two pieces of flat text that named him are rewritten in the game
+  (`flat47.gd` TEXT_PATCH): the wedding photograph now has the photograph cut out of the frame;
+  the letters are Marta's own, to a post-box with no name, all returned. Who lived in the box
+  room (the den, the tally marks, the bolt) is **withheld**; the bolt is still the one "someone
+  used".
+
+### Sonya — the heart of HYSTERIA
+- Marta's and Kurt's daughter. **Finding Sonya is the real heart of the game.** Her nursery is in
+  the labyrinth, with a door marked СОНЯ, scratched low down at a child's height, that won't
+  open. Where she is, and what she is now, is withheld.
+
+### Kurt is Trickshot
+- Kurt's hero name in the Champion's League was **Trickshot** (owner's canon): the bow and trick
+  arrows. The old **PROPOSED** codename "Strelok" is withdrawn; Socko's slip when Marta dies is
+  now *"Trickshot's still got it!"*.
+
+## 2b. The labyrinth behind the wardrobe (owner's canon; layout and props PROPOSED)
+
+Shouldering the **bedroom wardrobe** aside along the kitchen wall uncovers a ragged hole in the
+plaster. The kitchen is on the other side of that wall; the hole goes somewhere else. Through it
+is an **impossible labyrinth: Kerzhansk as it was under the Romanovs** (about 1910): cobbled
+streets, ochre façades with carved window frames, gas lamps, pre-reform signs, a church dome that
+stays the same distance away however far you walk, streets that come back to where they began.
+Here Kurt meets Marta again (hunting him by sound, floating, still seated in a chair that isn't
+there) and finds **the gun**. Everything about who she was is told by places and things:
+
+| Place | What it shows |
+|---|---|
+| Séance salon (ФОТОГРАФІЯ above it) | chairs and teacups circling in the air; a studio photograph of Rasputin with his hand on her head; his note ("You saw the river. You told me first. — G."); the Petrograd paper of December 1916 |
+| The frozen fight (a square) | a fight stopped mid-moment: paving stones and chairs hanging in the air, trick arrows frozen in flight toward one point, a black domino mask on the cobbles, a Champion's League poster: TRICKSHOT. The revolver lies in the middle of it |
+| A hotel room (ГОСТИНИЦА) | a bed, a quiver over the chair, two glasses (one with lipstick), a photo-booth strip of the two of them |
+| The nursery | a cradle rocking by itself, a drawing of MAMA and a small man with a bow walking off the edge of the paper, letters to "Papa" never posted, a birth register with the father written in and scratched out; the door СОНЯ |
+
+**The gun (PROPOSED):** a **Nagant M1895 revolver**, seven rounds, loaded a round at a time (it
+belongs to the labyrinth's era; Kurt's hands know it). No firearm canon existed to use instead.
+
+## 2c. Socko in the labyrinth (owner's direction; lines new, PROPOSED wording)
+
+Socko wants Marta dead and the tutorial rushed: no reading, no looking, take the gun, take the
+nuggets, buy the headshot. He guides Kurt straight to the revolver and pushes the skill tree's
+**Headshot** (instant kill). He's dismissive of every clue and goes quiet in the nursery.
+
+**Gutterspace nuggets:** floating pink-and-black shards that look like missing textures,
+scattered through the flat and the labyrinth. They're spent in the skill tree, where **anything
+can be bought in any order** (Memory or Survival). Survival skills make Marta more aggressive;
+Memory skills calm her and reveal more of the story.
 
 ## 3. The boxes (the question is load-bearing)
 

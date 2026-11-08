@@ -20,14 +20,31 @@ uniform bool use_emission_tex = false;
 uniform vec2 snap_res = vec2(320.0, 240.0);
 uniform bool use_vertex_color = false;
 uniform vec2 uv_scale = vec2(1.0);
+// a hole knocked in a wall (the gap behind the bedroom wardrobe): fragments inside the box are
+// cut away, with a ragged edge. w = 1 when it's open.
+global uniform vec4 hole_min;
+global uniform vec4 hole_max;
+varying vec3 world_pos;
 
 void vertex() {
+	world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	vec4 clip = PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(VERTEX, 1.0);
 	clip.xy = floor(clip.xy / clip.w * snap_res * 0.5 + 0.5) / (snap_res * 0.5) * clip.w;
 	POSITION = clip;
 }
 
+float hole_hash(vec2 p) { return fract(sin(dot(floor(p), vec2(127.1, 311.7))) * 43758.5453); }
+
 void fragment() {
+	if (hole_max.w > 0.5) {
+		vec3 lo = hole_min.xyz; vec3 hi = hole_max.xyz;
+		if (all(greaterThan(world_pos, lo)) && all(lessThan(world_pos, hi))) {
+			// ragged: the edge eats in by up to 9 cm in 4 cm chunks of plaster
+			vec2 q = world_pos.zy;
+			float e = min(min(q.x - lo.z, hi.z - q.x), min(q.y - lo.y, hi.y - q.y));
+			if (e > hole_hash(q * 25.0) * 0.09) discard;
+		}
+	}
 	vec4 c = texture(albedo_tex, UV * uv_scale) * albedo_color;
 	if (use_vertex_color) { c.rgb *= COLOR.rgb; }
 	ALBEDO = c.rgb;

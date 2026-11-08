@@ -24,6 +24,7 @@ func _ready() -> void:
 	var flat: Node3D = (load("res://assets/flat47/flat47.glb") as PackedScene).instantiate()
 	flat.name = "Apartment"
 	add_child(flat)
+	_strip_outside(flat)
 	_materials(flat)
 	_behaviours(flat)
 	_collision()
@@ -94,9 +95,19 @@ func _extras(n: Node) -> Dictionary:
 		return n.get_meta("extras")
 	return {}
 
+## The owner's canon changed after the JS build: there is no husband in 47 (docs/STORY_BIBLE.md).
+## The flat's two lines that named him, rewritten.
+const TEXT_PATCH := {
+	"prop_0_Wedding_photograph": "Face down, the glass starred. The photograph itself has been cut out of the frame, carefully, with nail scissors. Someone pulled it off the wall afterwards; the nail came with it.",
+	"pick_129_Bundle_of_letters": "Tied with darning wool. Her handwriting, every one, to a post-office box in Moscow with no name on it. Every one stamped RETURN TO SENDER.",
+}
+
 func _behaviours(root: Node) -> void:
 	# collect first: attaching behaviours can reparent nodes
 	var nodes := root.find_children("*", "Node3D", true, false)
+	for n in nodes:
+		if TEXT_PATCH.has(String(n.name)) and n.has_meta("extras"):
+			var ex: Dictionary = n.get_meta("extras"); ex["desc"] = TEXT_PATCH[String(n.name)]; n.set_meta("extras", ex)
 	for n in nodes:
 		var ex := _extras(n)
 		match ex.get("kind", ""):
@@ -285,11 +296,9 @@ func _flick(l: Light3D, kind: String, dt: float) -> float:
 ## Fewer lights without losing any you'd notice: each light belongs to a room (by where it
 ## shines); a room's lights are on while you're in it or near it (within ROOM_NEAR m of its
 ## floor), and fade out over ~0.6 s once you're further. Off lights are hidden, so they cost
-## nothing and can't push a mesh over the renderer's per-object limit. The sky (sun) only lights
-## the balcony: indoors the window lights carry the daylight, and an unshadowed sun would leak
-## through walls; leaving it off indoors also drops a whole shadow pass from every frame.
+## nothing and can't push a mesh over the renderer's per-object limit. There's no sun: outside is
+## a white void (see _outside); the window lights carry the daylight in.
 const ROOM_NEAR := 3.0
-var _sun: DirectionalLight3D
 
 func room_of(p: Vector3) -> String:
 	for k in level.rooms:
@@ -330,8 +339,6 @@ func _process(delta: float) -> void:
 		_brown_hold -= delta
 		if _brown_hold <= 0.0: _brown_want = 1.0
 	_brown = move_toward(_brown, _brown_want, delta * 1.6)
-	if _sun:
-		_sun.visible = room_of(eye) == "" and eye.z < 0.2     # out on the balcony
 	for o in flickers:
 		if not o.has_meta("room"):
 			_assign_room(o)
@@ -373,17 +380,96 @@ func _environment() -> void:
 	# three: ACESFilmic, exposure 1.15
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
 	env.tonemap_exposure = 1.15
-	var we := WorldEnvironment.new(); we.environment = env; add_child(we)
-	# three: the overcast dusk, DirectionalLight(0x9fb0c8, 1.25) from (-3, 13, -14) toward (4, 0, 3),
-	# shadowed: it only gets in through the windows.
-	var sun := DirectionalLight3D.new(); sun.name = "Sky"
-	_sun = sun
-	sun.light_color = Color("9fb0c8")
-	sun.light_energy = 1.25 * CD
-	sun.shadow_enabled = true     # it's only on out on the balcony (see _process)
-	sun.visible = false
-	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
-	sun.directional_shadow_max_distance = 20.0
-	sun.shadow_bias = 0.03; sun.shadow_normal_bias = 1.2
-	add_child(sun)
-	sun.look_at_from_position(Vector3(-3, 13, -14), Vector3(4, 0, 3))
+	# outside isn't there: the background is a flat, even white (see _outside). No sky light.
+	env.background_color = Color(1, 1, 1)
+	env.background_energy_multiplier = 1.6     # still white after the tonemap
+	var we := WorldEnvironment.new(); we.name = "Environment"; we.environment = env; add_child(we)
+	environment = env
+	_outside()
+
+var environment: Environment
+
+# ---------------------------------------------------------------- outside
+## The model came with the JS build's courtyard and city (trees, cars, lamp posts, wires, other
+## blocks). None of it exists any more: anything whose middle is beyond the building's walls and
+## balcony, or above or below this storey, is removed.
+const BUILDING := AABB(Vector3(-0.6, -0.8, -1.95), Vector3(25.7, 4.3, 10.7))
+func _strip_outside(root: Node) -> void:
+	var gone := 0
+	for mi in root.find_children("*", "MeshInstance3D", true, false):
+		var m: MeshInstance3D = mi
+		var a: AABB = m.global_transform * m.get_aabb()
+		if not BUILDING.has_point(a.get_center()) or a.size.length() > 40.0:
+			m.queue_free(); gone += 1
+	if OS.is_debug_build(): print("outside: removed ", gone, " meshes")
+
+## There is no outside. Through every window and off the balcony: white, even, empty, out of
+## reach (the balcony railing stops you), and hanging in it a giant sticky note that says
+## “outside”, in neat lowercase print. One out the front (courtyard side: the living room,
+## bedroom and kitchen windows, the balcony) and one out the back (between the boards in Sonya's
+## window).
+func _outside() -> void:
+	# the white gives off a soft, shadowless light: enough that the balcony isn't a cut-out
+	var glow := OmniLight3D.new(); glow.name = "Light_void"
+	glow.light_color = Color(0.93, 0.95, 1.0); glow.light_energy = 0.9; glow.light_specular = 0.0
+	glow.omni_range = 3.2; glow.omni_attenuation = 0.8; glow.shadow_enabled = false
+	glow.position = Vector3(2.25, 1.6, -2.4)
+	add_child(glow)
+	_sticky_note(Vector3(3.6, 2.2, -15.0), 0.0, 7.0, -0.035)
+	_sticky_note(Vector3(4.8, 2.0, 21.0), PI, 6.0, 0.03)
+
+func _sticky_note(at: Vector3, yaw: float, size: float, tilt: float) -> void:
+	var note := Node3D.new(); note.name = "Note_outside"
+	add_child(note)
+	note.position = at; note.rotation = Vector3(0, yaw, tilt)
+	# the paper: a square of yellow, the adhesive strip along the top a shade darker and flat
+	# against nothing, the bottom edge lifting away in a soft curl
+	var st := SurfaceTool.new(); st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	const N := 12
+	var pts := []
+	for j in N + 1:
+		var row := []
+		for i in N + 1:
+			var u := float(i) / N; var v := float(j) / N            # v = 0 top, 1 bottom
+			var curl := pow(maxf(0.0, v - 0.55) / 0.45, 2.2) * size * 0.07
+			curl += pow(maxf(0.0, u - 0.7) / 0.3, 2.0) * pow(maxf(0.0, v - 0.6) / 0.4, 1.5) * size * 0.05   # the corner lifts most
+			row.append(Vector3((u - 0.5) * size, (0.5 - v) * size, curl))
+		pts.append(row)
+	for j in N:
+		for i in N:
+			var a0: Vector3 = pts[j][i]; var a1: Vector3 = pts[j][i + 1]; var b1: Vector3 = pts[j + 1][i + 1]; var b0: Vector3 = pts[j + 1][i]
+			var vt := (float(j) + 0.5) / N
+			var c := Color("f4e06a") if vt > 0.14 else Color("e9d35a")
+			c = c.darkened(0.06 * smoothstep(0.55, 1.0, vt))         # the curl turns a little from the light
+			for p in [a0, a1, b1, a0, b1, b0]:
+				st.set_color(c); st.add_vertex(p)
+	var paper := MeshInstance3D.new(); paper.mesh = st.commit()
+	var pm := StandardMaterial3D.new(); pm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	pm.vertex_color_use_as_albedo = true; pm.cull_mode = BaseMaterial3D.CULL_DISABLED; pm.disable_fog = true
+	paper.material_override = pm; paper.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	note.add_child(paper)
+	# its shadow on the white: soft, offset down and away, as if there were a wall there
+	var sh := MeshInstance3D.new(); var qm := QuadMesh.new(); qm.size = Vector2(size * 1.02, size * 1.02); sh.mesh = qm
+	var sm := StandardMaterial3D.new(); sm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	sm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA; sm.disable_fog = true
+	sm.albedo_texture = _soft_square(); sm.albedo_color = Color(0.55, 0.55, 0.58, 0.22)
+	sh.material_override = sm; sh.position = Vector3(size * 0.035, -size * 0.05, -0.25)
+	note.add_child(sh)
+	# the word, printed neatly in felt-tip
+	var word := Label3D.new(); word.text = "\u201coutside\u201d"
+	word.font_size = 160; word.pixel_size = size / 900.0; word.outline_size = 0
+	word.modulate = Color("1d2333"); word.shaded = false; word.double_sided = true
+	word.position = Vector3(0, -size * 0.03, size * 0.004)
+	note.add_child(word)
+
+static var _soft_tex: Texture2D
+static func _soft_square() -> Texture2D:
+	if _soft_tex: return _soft_tex
+	const S := 64
+	var img := Image.create(S, S, false, Image.FORMAT_RGBA8)
+	for y in S:
+		for x in S:
+			var e := minf(minf(x, S - 1 - x), minf(y, S - 1 - y)) / (S * 0.18)
+			img.set_pixel(x, y, Color(1, 1, 1, smoothstep(0.0, 1.0, clampf(e, 0.0, 1.0))))
+	_soft_tex = ImageTexture.create_from_image(img)
+	return _soft_tex
