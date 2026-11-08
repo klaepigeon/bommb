@@ -14,6 +14,8 @@ var marta: Marta
 var encounter: MartaEncounter
 var socko: Socko
 var socko_intro: SockoIntro
+var socko_hud: SockoHud
+var socko_tutorial: SockoTutorial
 
 func _ready() -> void:
 	container = SubViewportContainer.new()
@@ -62,6 +64,9 @@ func _ready() -> void:
 	socko_intro = SockoIntro.new(); socko_intro.name = "SockoIntro"
 	add_child(socko_intro)
 	socko_intro.setup(socko, player, encounter)
+	socko_hud = SockoHud.new(); socko_hud.name = "SockoHud"; add_child(socko_hud)
+	socko_tutorial = SockoTutorial.new(); socko_tutorial.name = "SockoTutorial"; add_child(socko_tutorial)
+	socko_tutorial.setup(socko, player, socko_hud)
 
 	var args := _args()
 	if args.has("torch_exp"):

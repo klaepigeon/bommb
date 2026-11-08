@@ -108,6 +108,8 @@ func _initialize() -> void:
 	await _wait(0.6)
 	ok = _check(s.torch_on != was and s.torch.visible == s.torch_on and not p.torch.visible, "[F] switches the light in his mouth") and ok
 	if not s.torch_on: p.toggle_torch(); await _wait(0.6)
+	await _until(func(): return not s.talking, 15.0)
+	await _wait(0.6)
 	var md: float = s.torch.global_position.distance_to(rig.mouth_global().origin)
 	ok = _check(md < 0.02 and s.rig.jaw > 0.25, "the beam starts between his jaws (%.3f m), mouth held open (%.2f)" % [md, s.rig.jaw]) and ok
 	await _shot("8_mouth_torch", 0.3)
@@ -146,12 +148,52 @@ func _initialize() -> void:
 	await _wait(0.8)
 	var lw: Vector3 = s.rig.bone_global(rig.B.HAND).origin
 	ok = _check((p.cam.global_transform.affine_inverse() * lw).x < 0.0, "Socko stays on the left hand throughout") and ok
+
+	# ---- teaching: walk, pick up, throw (noise), crouch
+	var tut = main.socko_tutorial
+	ok = _check(main.socko_hud.header.text.begins_with("S O C K O") and main.socko_hud.text.text == "Find a way out of Flat 47.", "top left: SOCKO SAYS · Find a way out of Flat 47.") and ok
+	await _until(func(): return not s.talking, 12.0)
+	p.global_position = Vector3(6.0, 0, 4.5)
+	await _wait(0.2)
+	p.global_position = Vector3(8.6, 0, 4.5)
+	await _until(func(): return _said(s, "Walk it off"), 10.0)
+	ok = _check(_said(s, "Walk it off"), "walking: \"Walk it off. Slow…\"") and ok
+	await _until(func(): return not s.talking, 12.0)
+	var prop: RigidBody3D
+	for n in main.world.find_children("*", "RigidBody3D", true, false):
+		if n.liftable and n.mass > 0.3 and n.mass < 3.0: prop = n; break
+	prop.global_position = p.hold.global_position
+	p.grab(prop)
+	await _until(func(): return _said(s, "Heavy end first"), 10.0)
+	ok = _check(_said(s, "Heavy end first"), "first pickup: \"Heavy end first… On her.\"") and ok
+	await _until(func(): return not s.talking, 15.0)
+	p.yaw = -PI / 2; p.pitch = 0.1   # at the front door
+	p.throw()
+	await _until(func(): return Noises.last.get("what", "") == "impact" and Noises.last.get("source") == p, 4.0)
+	ok = _check(Noises.last.get("source") == p, "the throw lands with a noise (%.2f loud)" % float(Noises.last.get("loud", 0.0))) and ok
+	await _until(func(): return _said(s, "Hear that"), 10.0)
+	ok = _check(_said(s, "Hear that"), "…and Socko: \"Hear that? She hears it too.\"") and ok
+	await _shot("11_hear_that", 0.3)
+	await _until(func(): return not s.talking, 12.0)
+	p.toggle_crouch()
+	await _until(func(): return _said(s, "There you go"), 10.0)
+	ok = _check(_said(s, "There you go"), "crouching: \"There you go — you've done this before, huh?\"") and ok
 	print("SOCKO ", "PASS" if ok else "FAIL")
 	quit(0 if ok else 1)
 
 func _aim(p, at: Vector3) -> void:
 	var d: Vector3 = at - p.cam.global_position
 	p.yaw = atan2(-d.x, -d.z); p.pitch = atan2(d.y, Vector2(d.x, d.z).length())
+
+func _said(s, start: String) -> bool:
+	for l in s.history:
+		if String(l).begins_with(start): return true
+	return false
+
+func _until(cond: Callable, limit: float) -> void:
+	var waited := 0.0
+	while not cond.call() and waited < limit:
+		await _wait(0.05); waited += 0.05
 
 func _wait(sec: float) -> void:
 	var end := Time.get_ticks_msec() + int(sec * 1000.0)
