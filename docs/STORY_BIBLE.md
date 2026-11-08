@@ -48,6 +48,8 @@ anything is built on it. Nothing in the established opening (prompt §3.1) has b
   left hand. Appears **only** after the protagonist wakes.
 - **What Socko claims:** that he's always been there ("Course I know you, bud. I'm on your
   hand."); that he's here to help get them both out.
+- **Who Socko is (owner's canon, withheld in Flat 47):** Socko is **Psygmund**. Nothing in
+  Flat 47 names, hints at, or explains Psygmund; his nature beyond that is the owner's to define.
 - **What Socko actually knows (withheld in Flat 47):** the layout of the flat, where useful
   things are, what the infection does, and who the protagonist used to be. He uses that
   knowledge selectively.
@@ -62,23 +64,18 @@ anything is built on it. Nothing in the established opening (prompt §3.1) has b
 
 ## 3. The boxes (the question is load-bearing)
 
-**PROPOSED canonical meaning (bible-only; never stated outright in Flat 47):**
-During the evacuation the city sent workers through every flat with plywood crates stencilled
-with flat numbers. Residents were told their belongings would follow them "in the boxes". The
-boxes went down into the basement, not onto the trucks. The family's things went into box 47 —
-and Marta came to believe her family did too, because she never saw them get on the bus. She has
-been asking everyone who comes to the door whether they've seen the boxes, because she is waiting
-for box 47 to come back up.
+**Owner's direction:** the boxes are **not physical objects**, and they come from **somewhere else
+in the story** (to be defined by the owner). Nothing in Flat 47 may suggest they are crates,
+parcels, luggage or anything you could find in a room.
 
-What the player can find in Flat 47 that supports this without explaining it:
-- Pale rectangles on the floor where crates stood; packing straw; a stencil plate reading **47**.
-- A crate-collection receipt in the hall drawer: "Contents: 1 box. To follow."
-- The notice: "Do not go down to the basements."
-- From the stairwell peephole, a box with a number on it at the foot of the stairs that is not
-  there the second time you look.
-
-How it matters later: the boxes are the spine of the larger game (and of the protagonist's lost
-memory — future memory-tree hook). Flat 47 only plants the question.
+Rules for Flat 47:
+- Marta asks the question as if it were the most important thing in the world, and as if any
+  reasonable person would know what she means.
+- No object, document or line in Flat 47 explains or illustrates the boxes.
+- The protagonist doesn't understand the question. Neither does the player. Socko changes the
+  subject (bible §6) — the one thing he won't joke about.
+- Integration point for later: a narrative flag `heard_boxes_question` and the exact wording of
+  every line that mentions boxes are recorded so the larger story can pay them off.
 
 ## 4. Knowledge ledger
 
@@ -87,10 +84,10 @@ memory — future memory-tree hook). Flat 47 only plants the question.
 | **Protagonist** | Job, client, Marta's name, the address. Then: nothing (amnesia). | His name from papers in his coat; that he came here to check on a woman; that his hands know violence. |
 | **Player** | Everything in the opening cutscene. | The above, plus whatever they read: the family, the evacuation, Ilya's den, the boxes clues. |
 | **Socko — claims** | "We're mates. I'm on your hand." | Same, plus "Trust me, bud." |
-| **Socko — actually knows** | The flat, the infection, the protagonist's past, what the boxes are. | Same. Slips once: calls him by a name the player hasn't heard (**PROPOSED**: his old codename, *Strelok*). Covers it. |
+| **Socko — actually knows** | He is Psygmund. The flat, the infection, the protagonist's past, what the boxes are. | Same. Slips once: calls him by a name the player hasn't heard (**PROPOSED**: his old codename, *Strelok*). Covers it. |
 | **Marta** | Her family, the evacuation, the boxes, that she is waiting. | (Infected; no longer reliable.) |
 
-**Withheld deliberately:** who Socko is; the protagonist's past beyond his body's habits; what
+**Withheld deliberately:** that Socko is Psygmund; the protagonist's past beyond his body's habits; what
 the infection is; what happened to Ilya and Sonya; what the boxes really contain; who bolted the
 box room.
 
@@ -112,12 +109,13 @@ Timings are targets for pacing, not hard limits.
    her face (or lingers in the room ~45 s).
 5. **The question.** Her head turns, slowly, with a sound like a joint cracking in cold. Her eyes
    are clear. Quiet, polite, tired: *"Have you seen the boxes?"* A pause the player can fill by
-   walking away or staying. If he stays: *"They said the boxes would come after us. Ours is
-   forty-seven."* If he answers by looking at her (interact): *"You haven't. No. Nobody has."*
+   walking away or staying. If he stays, she asks again, more carefully, as if he might not
+   have heard: *"The boxes. Have you seen them?"* If he answers by looking at her (interact):
+   *"You haven't. No. Nobody has."*
 6. **The attack.** Without warning — no sting before it — her arm comes off the table, tearing
    coral, and closes on his wrist. The chair shrieks across the floor as she pulls him down to her.
    Camera driven by his body: yanked forward and down, his free hand braced on the table, plates
-   going over. Her face close: *"Did you see where they took it?"* Darkness from the edges in.
+   going over. Her face close: *"Have you seen them?"* Darkness from the edges in.
 7. **Blackout (~5 s of near silence).** A heartbeat, the building's hum, a child's
    counting-under-breath that may be the pipes.
 8. **Waking.** On the living-room floor beside the table, looking at the ceiling. Blurred vision
@@ -150,10 +148,10 @@ Delivery notes in brackets. Socko's lines are written to be performed with the h
 ### Marta
 - **Before the question (breathing only).**
 - *"Have you seen the boxes?"* [soft, ordinary, the way you'd ask a neighbour about the post]
-- *"They said the boxes would come after us. Ours is forty-seven."* [patient]
+- *"The boxes. Have you seen them?"* [patient, careful, as to someone hard of hearing]
 - *"You haven't. No. Nobody has."* [a little disappointed; not sinister]
-- **Attack:** *"Did you see where they took it?"* [very close; urgent; human]
-- **Infected, hunting (fragments, overheard):** "Sonya, shoes." / "Forty-seven." / counting
+- **Attack:** *"Have you seen them?"* [very close; urgent; human — the same question, begged]
+- **Infected, hunting (fragments, overheard):** "Sonya, shoes." / "Have you seen…" / counting
   under her breath. [the same voice, broken up; never shouting]
 
 ### Socko — introduction (beat 10)
@@ -185,5 +183,5 @@ Delivery notes in brackets. Socko's lines are written to be performed with the h
 
 - Marta is frightening because of what has happened to her and how ordinary she sounds.
 - Socko is funny first. The funnier he is, the worse the seeds land later.
-- Nobody explains the boxes. Nobody explains Socko.
+- Nobody explains the boxes. Nobody explains Socko. Nobody says "Psygmund".
 - Silence is a tool: after the attack, after the first shot, after the bolt slides home.

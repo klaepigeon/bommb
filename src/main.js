@@ -351,7 +351,7 @@ window.__pauseGame = pauseGame;
 }
 
 // screenshot hooks for tools/smoke.mjs
-window.__G = G; window.__P = P; window.__I = I; window.__VOICE = VOICE; G.doorsById = DOORS; G.I = I;
+window.__G = G; window.__P = P; window.__I = I; window.__VOICE = VOICE; window.__LIGHTS = LIGHTS; G.doorsById = DOORS; G.I = I;
 window.__view = (x, z, yaw, pitch = 0, crouch = false, y = 0) => { P.pos.set(x, 0, z); P.floorY = y; P.yaw = yaw; P.pitch = pitch; P.crouch = crouch; P.height = crouch ? 1.05 : 1.62; for (let i = 0; i < 3; i++) { updatePlayer(0.016, camera); } };
 window.__step = (n = 30) => { renderer.info.autoReset = false; for (let i = 0; i < n; i++) { G.playerPos = (G.playerPos || new THREE.Vector3()).set(P.pos.x, P.floorY, P.pos.z); G.playerZone = P.room; updateWorld(1 / 60, true); G.time += 1 / 60; updatePlayer(1 / 60, camera); G.phys.step(1 / 60); for (const f of G.updates) f(1 / 60, G.time); updateLights(1 / 60); updateInteract(1 / 60, camera); } renderer.info.reset(); composer.render(); };
 window.__roomAt = roomAt;
