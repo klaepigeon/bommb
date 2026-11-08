@@ -68,6 +68,8 @@ const MATS := {
 	"paper": ["paper", 0.84, 1.0, 0.1, {}],
 	"paper_old": ["paper_old", 0.84, 1.0, 0.1, {"alpha": true}],
 	"leaves": ["leaves", 0.6, 1.0, 0.1, {"alpha": true}],
+	"safe_paint": ["", 1.0, 0.55, 0.45, {"color": Color(0.24, 0.28, 0.25)}],
+	"baize": ["", 1.0, 1.0, 0.05, {"color": Color(0.58, 0.56, 0.47)}],
 	# Flat 47's joinery and plaster
 	"skirting": ["wood", 1.0, 0.55, 0.35, {"color": Color(0.42, 0.26, 0.17)}],
 	"coving": ["", 1.0, 0.95, 0.12, {"color": Color(0.6, 0.58, 0.53)}],

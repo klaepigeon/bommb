@@ -316,3 +316,48 @@ Delivery notes in brackets. Socko's lines are written to be performed with the h
   hunting, the more the world drains to black and white (about 75 s to none, easing in so the
   start goes unnoticed); it seeps back over about 25 s after leaving. Never explained, never
   mentioned by anyone, Socko included.
+
+
+## 2d. Flat 48 (built, first pass; owner's direction + master document Part VI)
+
+Across the landing, through 47's front door after the chapter card. Flat 47 as reality only
+sketched it: the same rooms and doors in pale draft plaster, the room names pencilled on the walls
+(from the JS build: "living room", "box room?", "Sonya's"…), white blocks exactly where 47's
+furniture is, each with a paper tag that says what it was like, not what it is ("the green one
+with the burn"; "two pillows; one side never slept on"; "the back of it isn't the back of it").
+Steady cold light, no flicker, no shadows; the windows are the white.
+
+**The rule:** what something is, is what's written on it. In the hall, a wall headed *what it is*
+of loose sticky notes. Take one (it's a light thing in Kurt's hand); stick it on a block. The
+right word and the block becomes Flat 47's own furniture, there and solid, the note still stuck
+on it. The wrong word won't stay on. Decoy words fit nothing (PIANO, DOG, WINDOW, HOME, LATER).
+
+**The gun safe** (owner: "put a new weapon in the gun safe"): in the box room, a tall narrow block,
+steel-cold to the touch, tagged *PAPA'S. Locked. Nobody touches it.* The GUN SAFE note makes it a
+Soviet hunting-gun cabinet (by law a hunting gun lived in one). It isn't locked. Inside on two
+pegs, standing on what's left of its stock: an **IZh-43 side-by-side, sawn off** — barrels cut a
+hand's width past the fore-end, the stock to a pistol grip, so one hand holds it (the other is
+Socko). Two shells, nine pellets of buckshot each, break-open reload; a box of ten shells on the
+shelf. The revolver stays in the labyrinth; the shotgun is a second gun, carried with it.
+
+**The three figures:** white, wrong in proportion (necks too long, heads too small, arms too
+long), tagged MAMA (at the stove), PAPA (at the bedroom window, looking out at the white), CHILD
+(by the small bed; the only tag with a drawing: a house with black windows). They turn toward Kurt
+when he isn't looking. They can be shot; then they're down for good.
+
+**Socko in 48** (the master document's example lines, used; the rest PROPOSED): *"Well. That's a
+family."* · *"I wouldn't get too close."* · *"Don't let them get close enough to surprise you."* ·
+*"You don't know what they are."* · *"Mama. Papa. Child. That's supposed to make this better?"* ·
+on the notes: *"Words. We're sticking words on furniture now."* · *"I think you're giving this a
+little too much attention."* · on blocks made real: *"Could be someone wanted you to find all
+this."* · *"You're looking for reasons to trust them."* · the safe: *"Ooh. Now that one I like."* ·
+the shotgun: *"Two barrels. That's one each for two of them, and a quick reload."* … *"I'm just
+counting. Somebody has to."* · aiming at one: *"There we are."* · shooting: *"There we are. Much
+simpler."* / *"I knew you'd figure it out."* · refusing (shotgun in hand, near them, not aiming):
+*"You're making this harder than it needs to be."* → *"I thought we were trying to get out of
+here. We have our own problems."* → *"You can't save everybody, bud."* → and then he never said
+it: *"What? I didn't say shoot them. When did I say shoot them? I said keep your distance."*
+
+**Open (owner decides):** the figures' names on the note wall and who PAPA is, given there is no
+husband in 47 (the JS build tagged MAMA "Marta" and the child "Sonya"); how each figure is helped;
+Suite 51's red-note monologue and CHILD'S CELL → POINTLESS DOOR (preserved for when it's built).

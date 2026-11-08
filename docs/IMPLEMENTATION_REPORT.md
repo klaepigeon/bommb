@@ -21,7 +21,7 @@ the later direction is in the game, and the conflict is listed here rather than 
 |---|---|---|---|
 | 1 | The woman in Flat 47 is **Sonya**, "an old villain"; the return to Flat 47 is Sonya curled on the floor | The woman is **Marta Sokolova**, psychic, Rasputin's lover, Trickshot's (Kurt's) lover; **Sonya** is their daughter, whom Kurt abandoned; finding Sonya is the heart of HYSTERIA | The "return to Flat 47" scene is designed for Marta (see §4.8) unless the owner says otherwise |
 | 2 | The **pursuer cannot be killed** through ordinary combat | Socko pushes Kurt to **kill Marta**; Headshot is an insta-kill; she can die (permanently) | Marta is killable. The unkillable-pursuer framework is kept for a future pursuer; Marta also has a non-lethal resolution (Sonya's shoes) |
-| 3 | Kurt's gun is found in **Flat 48's gun safe** | Kurt meets Marta and **gets the gun in the labyrinth** behind the wardrobe | The revolver is in the labyrinth. Flat 48's GUN SAFE can still hold it if Kurt hasn't found it, or the owner may move it |
+| 3 | Kurt's gun is found in **Flat 48's gun safe** | The revolver is in the labyrinth; the owner: **"put a new weapon in the gun safe"** | Flat 48's safe holds a sawn-off IZh-43 shotgun |
 | 4 | "Husband" material in some older text | **No husband** in Flat 47 | Removed from the flat's text |
 | 5 | Kurt "Hawkeye-style marksman" (earlier prompt) | Circus → assassin → Champion's League → freelance | Both may be true; the Trickshot name is the owner's |
 
@@ -39,7 +39,7 @@ the later direction is in the game, and the conflict is listed here rather than 
 | The labyrinth | working: the impossible town under the Romanovs, wrapping main street, modelled facades, interiors, the frozen fight, environmental story (Rasputin, Trickshot, Sonya) | `scripts/labyrinth/` |
 | Marta the hunter | working: hunts by sound and sight, holds Kurt, can be shot dead, or calmed with Sonya's shoes (one for a while, the pair for good) | `marta_hunter.gd` |
 | Noise | working: one hub every listener hears (footsteps, impacts, gunshots, gurgles, axe blows) | `noise.gd` |
-| Revolver | working: draw, fire, reload round by round, holes, skill effects | `scripts/weapons/` |
+| Weapons | working: an armoury (cycle with Q); the Nagant revolver (labyrinth) and the sawn-off IZh-43 (Flat 48's safe: 9-pellet spread, break-open reload, ejected hulls) | `scripts/weapons/` |
 | Skill trees | partial: Memory and Survival trees in data, nuggets, buy anything, effects; Memory skills change play (handwriting, sense, chalk, counting); `Skills.aggression()` scales Marta | `scripts/progress/` |
 | Flat 47 escape | working: axe, bath key, two rounds, thrown objects; the end of the chapter | `flat_escape.gd` |
 | Carrying between places | working: what's in hand goes through the wardrobe gap | `wardrobe_gap.gd` |
@@ -64,7 +64,7 @@ the later direction is in the game, and the conflict is listed here rather than 
 | Threat manager (central, configurable) | partial | `Skills.aggression()` is a single number Marta reads |
 | Persistent monster framework | partial | Marta keeps state across saves; no general identity/encounter-history system |
 | Quest framework (problem / Socko's reading / solutions / consequences) | **missing** as data | The escape and Marta are built systemically, but by hand |
-| Flat 48 (white placeholders, sticky notes, Mama/Papa/Child, GUN SAFE, Suite 51) | **missing** | |
+| Flat 48 (white placeholders, sticky notes, Mama/Papa/Child, GUN SAFE, Suite 51) | partial | Built: the draft flat, 35 blocks, the note wall, right/wrong notes, blocks becoming 47's furniture, the gun safe with the sawn-off, three figures (shootable, persistent), Socko's pressure and refusals, saving. Missing: the figures' identities and helping them, Suite 51 |
 | Return to Flat 47 | **missing** | See conflict 1 |
 | Creator toolkit (asset registry, dialogue/voice/cutscene/quest/skill editors, inspector, localisation, validation) | **missing** | No editor plugins exist |
 | Localisation | **missing** | Text is inline |

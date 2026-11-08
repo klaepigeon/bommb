@@ -32,7 +32,9 @@ func _press(what: String) -> void:
 	match what:
 		"fire": g.call("fire")
 		"reload": g.call("reload")
-		"weapon": g.call("toggle")
+		"weapon":
+			if player.get("armory"): player.get("armory").call("cycle")
+			else: g.call("toggle")
 
 func _process(_d: float) -> void:
 	var g = player.get("gun") if player else null
@@ -48,9 +50,20 @@ func _draw_marks() -> void:
 	var size := marks.size
 	var c := Vector2(size.x - 84, size.y - 64)
 	var loaded: int = g.get("loaded")
-	for i in 7:
-		var a := -PI * 0.5 + TAU * i / 7.0
-		var p := c + Vector2(cos(a), sin(a)) * 17.0
-		if i < loaded: marks.draw_circle(p, 5.0, Color(0.85, 0.75, 0.5, 0.85))
-		else: marks.draw_arc(p, 5.0, 0, TAU, 12, Color(0.85, 0.82, 0.75, 0.45), 1.5)
+	var cap: int = int(g.get("capacity")) if g.get("capacity") != null else 7
+	if cap == 2:
+		# the shotgun: two shells side by side, as they sit in the breech
+		for i in 2:
+			var r := Rect2(c + Vector2(-16 + i * 18, -14), Vector2(12, 28))
+			if i < loaded:
+				marks.draw_rect(r, Color(0.7, 0.18, 0.12, 0.85))
+				marks.draw_rect(Rect2(r.position + Vector2(0, 20), Vector2(12, 8)), Color(0.85, 0.75, 0.5, 0.9))
+			else:
+				marks.draw_rect(r, Color(0.85, 0.82, 0.75, 0.45), false, 1.5)
+	else:
+		for i in cap:
+			var a := -PI * 0.5 + TAU * i / float(cap)
+			var p := c + Vector2(cos(a), sin(a)) * 17.0
+			if i < loaded: marks.draw_circle(p, 5.0, Color(0.85, 0.75, 0.5, 0.85))
+			else: marks.draw_arc(p, 5.0, 0, TAU, 12, Color(0.85, 0.82, 0.75, 0.45), 1.5)
 	marks.draw_string(ThemeDB.fallback_font, c + Vector2(30, 6), "+%d" % int(g.get("spare")), HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.85, 0.82, 0.75, 0.7))

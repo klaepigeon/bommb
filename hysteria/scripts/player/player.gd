@@ -46,6 +46,7 @@ var _reach_at := Vector3.ZERO             # world point being reached for
 var _reach_pose := "grip"
 var torch_holder: Node = null        # once Socko has it, the light's his (toggle_torch goes to him)
 var gun: Node3D = null               # the revolver, once he has it (Revolver)
+var armory: Node = null              # what he carries (Armory): the guns, cycled with [Q]
 var throw_power := 1.0               # The Bow (memory) makes throws flatter and harder
 
 func _ready() -> void:

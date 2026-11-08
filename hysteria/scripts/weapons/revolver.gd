@@ -20,6 +20,8 @@ const RELOAD_EACH := 0.3            # seconds a round; he's fast (bible: "I didn
 const RANGE := 40.0
 const HIP := Vector3(0.15, -0.165, -0.38)
 
+var kind := "revolver"
+var capacity := CAPACITY
 var loaded := CAPACITY
 var spare := 7
 var drawn := false
@@ -66,6 +68,8 @@ func equip(p_player: Node) -> void:
 	top_level = true
 	drawn = true
 	player.set("gun", self)
+	var arm = player.get("armory")
+	if arm: arm.call("add", self)
 	SkillEffects.apply_to_gun(self)
 
 # ---------------------------------------------------------------- the model
@@ -132,8 +136,9 @@ func _process(delta: float) -> void:
 
 func _unhandled_input(e: InputEvent) -> void:
 	if not player or player.get("locked"): return
+	if player.get("gun") != self: return
 	if e.is_action_pressed("weapon"):
-		toggle()
+		if not player.get("armory"): toggle()     # the armoury handles it when there is one
 	elif drawn and e.is_action_pressed("reload"):
 		reload()
 	elif drawn and e.is_action_pressed("throw") and player.get("held") == null:

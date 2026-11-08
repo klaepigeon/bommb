@@ -62,11 +62,12 @@ func _notification(what: int) -> void:
 ## mid-cutscene or mid-push, not once the chapter's over.
 func can_save() -> bool:
 	var f: Dictionary = Game.flags
-	if not f.get("socko_intro_done", false) or f.get("chapter_1_done", false): return false
+	var in48: bool = main.get("in_flat48")
+	if not f.get("socko_intro_done", false) or (f.get("chapter_1_done", false) and not in48): return false
 	var p: Node = main.player
 	if p.locked: return false
 	var esc = main.get("escape")
-	if esc and esc._ended: return false
+	if esc and esc._ended and not in48: return false
 	return true
 
 ## Said in the pause menu when Save can't: what's in the way.
@@ -103,9 +104,14 @@ func save() -> bool:
 		if lab or not _start.has(nm) or (_start[nm] as Transform3D).origin.distance_to(b.global_position) > 0.03:
 			props[nm] = {"lab": lab, "t": _t2a(t)}
 	d["props"] = props
-	var gun = p.get("gun")
-	if gun:
-		d["gun"] = {"loaded": gun.loaded, "spare": gun.spare, "drawn": gun.drawn}
+	# what he carries: each gun's rounds, and which (if any) is out
+	var arm = main.get("armory")
+	var weapons := {}
+	if arm:
+		for w in arm.weapons: weapons[String(w.kind)] = {"loaded": w.loaded, "spare": w.spare, "drawn": w.drawn}
+	d["weapons"] = weapons
+	d["in_flat48"] = main.get("in_flat48")
+	if main.get("flat48"): d["flat48"] = main.flat48.save_state()
 	var f := FileAccess.open(PATH, FileAccess.WRITE)
 	if not f: return false
 	f.store_string(JSON.stringify(d))
@@ -185,16 +191,29 @@ func load_game() -> bool:
 		for n in main.labyrinth.find_children("*", "StaticBody3D", true, false):
 			if n.get_script() and String(n.get_script().resource_path).ends_with("revolver_pickup.gd"):
 				n.interact(p); break
-		var g = p.get("gun")
-		if g and d.has("gun"):
-			g.loaded = int(d.gun.loaded); g.spare = int(d.gun.spare); g.drawn = bool(d.gun.drawn)
+	if main.get("flat48") and d.has("flat48"):
+		main.flat48.restore(d.flat48)
+	var wd: Dictionary = d.get("weapons", {})
+	if d.has("gun") and wd.is_empty(): wd = {"revolver": d.gun}           # saves from before the armoury
+	var out_kind := ""
+	if main.get("armory"):
+		for w in main.armory.weapons:
+			var e: Dictionary = wd.get(String(w.kind), {})
+			if e.is_empty(): continue
+			w.loaded = int(e.loaded); w.spare = int(e.spare)
+			if bool(e.get("drawn", false)): out_kind = String(w.kind)
+		for w in main.armory.weapons:
+			w.drawn = String(w.kind) == out_kind
+		if out_kind != "": p.set("gun", main.armory.get_kind(out_kind))
 	if Game.flags.get("marta_dead", false):
 		main.hunter.wake(); main.hunter._die()
 	elif int(Game.flags.get("marta_shoes", 0)) > 0:
 		_restore_shoes(int(Game.flags.marta_shoes))
 	# where he stood
 	var at := Vector3(d.pos[0], d.pos[1], d.pos[2])
-	if d.get("in_labyrinth", false):
+	if d.get("in_flat48", false):
+		main.enter_flat48()
+	elif d.get("in_labyrinth", false):
 		main.enter_labyrinth()
 		at = main.labyrinth.to_global(at)
 	p.global_position = at; p.velocity = Vector3.ZERO
