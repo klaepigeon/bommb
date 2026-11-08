@@ -8,7 +8,8 @@ tongue on the protagonist's **left** hand, there **only** after he wakes.
 
 | File | What it is |
 |---|---|
-| `scripts/socko/sock_rig.gd` (`SockRig`) | The forearm, hand and sock as **one skinned mesh on one skeleton**: forearm → hand → fingers → fingertips (upper jaw) / thumb → thumbtip (lower jaw). The coat sleeve, the googly eyes (on a `BoneAttachment3D` on the finger bone, with loose simulated pupils). |
+| `scripts/socko/sock_rig.gd` (`SockRig`) | The forearm, hand and sock as **one skinned mesh on one skeleton**: forearm → hand → fingers → fingertips (upper jaw) / thumb → thumbtip (lower jaw). The coat sleeve, the googly eyes (on a `BoneAttachment3D` on the finger bone, with physically simulated pupils). |
+| `scripts/player/right_hand.gd` (`RightHand`) | Kurt's right arm and hand, the one that does everything: reaches for what he uses, grips what he carries, flicks to throw, holds weapons (`hold_weapon`). Jointed PS1-style like Marta. |
 | `scripts/socko/socko.gd` (`Socko`) | The performance controller: the bible's four layers (§3), emotions (§5), gestures (§6), gaze priority (§7.2), speech (§7.5), independent intention (§9). |
 | `scripts/socko/socko_intro.gd` (`SockoIntro`) | Story bible beats 9–10: the hand rising, then the six introduction lines, waiting on the player. |
 | `shaders/ps1_cloth.gdshader` | The PS1 shader for cloth: unfiltered, vertex-snapped, double-sided, with felt's fuzzy rim. |
@@ -25,10 +26,19 @@ tongue on the protagonist's **left** hand, there **only** after he wakes.
 - **Fist / extend** (`curl`) folds the head in or stretches it. **Squash** slumps or tenses the
   cloth. Both are driven by emotion and by jolts of the hand.
 - **The arm is attached to the body**, below and left of the camera. Three held poses are
-  blended: ahead (default), low (running, or both hands busy inspecting something), and turned
-  back to face Kurt (forearm up, back of the hand away, the wrist bent forward so the face comes
-  round to him with the top of the head up). Only the swing from the elbow lags behind a turn. A
-  ray pulls the hand in against walls and doors.
+  blended: ahead (default), low (running), and turned to face Kurt. Facing him works the way
+  people hold a puppet up to themselves: **palm down the whole time** (the thumb stays under the
+  fingers, so his head stays the right way up), elbow out in front, forearm brought across the
+  body toward the right, and the wrist turned in so the face comes round to him at about three
+  quarters. Only the swing from the elbow lags behind a turn. A ray pulls the hand in against
+  walls and doors.
+- **Kurt's hands:** the right does everything (interacting, carrying, throwing, weapons). The left
+  is Socko's and is never busy.
+- **The torch is in his mouth.** From the moment Socko appears, Kurt's torch light comes out from
+  between his jaws, and nobody explains it. [F] / the TORCH button switches it. He holds his mouth
+  open for it and aims it where Kurt is looking (what's under the crosshair). It's as bright as
+  his mouth is open, so it pulses when he talks, and the felt inside his mouth glows. Layer D
+  `attend()` can take the beam off somewhere on its own.
 - **The head aims within a wrist's range** (about ±50° to the side, 60–65° up and down). Layer D's
   `beyond` lets him go up to 70% further: that's the supernatural tell, off by default.
 
@@ -38,8 +48,15 @@ tongue on the protagonist's **left** hand, there **only** after he wakes.
 |---|---|
 | A: hand | arm poses, walk bob, lag, pull-in, hand busy → lowered |
 | B: puppet | 12 emotions (neutral, happy, curious, nervous, impatient, distracted, disappointed, angry, furious, lying, uncanny, sleeping) blended over ~0.4 s; 11 gestures (nod, shake, point, recoil, wave, cover, lean_in, beckon, wince, bounce, look_round) with anticipation and settle |
-| C: secondary | the head on a spring behind the wrist (overshoot, lag from the arm's turn), squash from vertical jolts, loose googly pupils (gravity, the hand's acceleration, rattle on the rim) |
+| C: secondary | the head on a spring behind the wrist (overshoot, lag from the arm's turn), squash from vertical jolts, real googly eyes (below) |
 | D: intention | `attend()` holds his gaze on a point regardless of the arm; `stillness` kills every wobble; `beyond` lets him turn too far; `resist` makes the hand drag behind the arm; `ghost_mouth` keeps the mouth going after the line ends |
+
+**Googly eyes** behave like real ones: each pupil is a loose disc between a card and a clear dome,
+simulated in real units. Gravity, plus the hand's acceleration felt as a push the other way,
+slides it. It sticks on the card when the slope is gentle, bounces off the rim, and runs round the
+rim to the lowest point. The pupils have no idea where he's looking; his attention is in his head.
+The one exception is layer D: when he's being wrong (stillness, `beyond`) the pupils can hold on a
+target against gravity, which no googly eye can do.
 
 **Lying** is precise, not bubbly: high stillness, minimal wobble, eyes held on Kurt, a fixed
 slight smile (bible §5.7). In the introduction, "Physically." and "She's gone. Don't look at the
@@ -62,6 +79,6 @@ angry and furious lines open wider and lopsided.
 - **Recorded voice / visemes:** the system is ready for timing data, but there are no recordings.
   TTS can't whisper or rage, so emotional delivery today comes from the puppet, not the voice.
 - **Fabric wrinkles** are static folds plus skinning. There are no dynamic wrinkle maps.
-- **Hand occupancy** is coarse: he lowers out of the way only while an object is being turned
-  over. The torch and carrying are in the right hand.
+- **Weapons:** none exist in Godot yet. `RightHand.hold_weapon()` is where one goes.
+- **Right hand grip** is generic: one grip pose sized to the object, no per-object hand poses.
 - Tested on desktop under software rendering only, not on an Android device yet.

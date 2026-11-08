@@ -99,6 +99,53 @@ func _initialize() -> void:
 	var q := PhysicsRayQueryParameters3D.create(p.cam.global_position, tip); q.exclude = [p.get_rid()]
 	ok = _check(p.get_world_3d().direct_space_state.intersect_ray(q).is_empty(), "face to the door: the hand pulls in, not through it") and ok
 	await _shot("7_at_the_door", 0.2)
+
+	# ---- the torch is his now: it comes out of his mouth
+	ok = _check(not p.torch.visible and s.torch != null and p.torch_holder == s, "the torch went to Socko when he appeared") and ok
+	p.global_position = Vector3(6.5, 0, 4.5); p.yaw = PI / 2; p.pitch = -0.1
+	var was: bool = s.torch_on
+	p.toggle_torch()
+	await _wait(0.6)
+	ok = _check(s.torch_on != was and s.torch.visible == s.torch_on and not p.torch.visible, "[F] switches the light in his mouth") and ok
+	if not s.torch_on: p.toggle_torch(); await _wait(0.6)
+	var md: float = s.torch.global_position.distance_to(rig.mouth_global().origin)
+	ok = _check(md < 0.02 and s.rig.jaw > 0.25, "the beam starts between his jaws (%.3f m), mouth held open (%.2f)" % [md, s.rig.jaw]) and ok
+	await _shot("8_mouth_torch", 0.3)
+
+	# ---- googly eyes: held still, each pupil runs down to the lowest point it can reach
+	var eyes_ok := true
+	for e in rig.eyes:
+		var gt: Transform3D = (e.disc as Node3D).global_transform
+		var down := Vector2(Vector3.DOWN.dot(gt.basis.x.normalized()), Vector3.DOWN.dot(gt.basis.z.normalized()))
+		var press := absf(Vector3.DOWN.dot(gt.basis.y.normalized()))
+		if down.length() > 0.4 * press + 0.05:     # steep enough that it can't stick
+			eyes_ok = eyes_ok and (e.p as Vector2).normalized().dot(down.normalized()) > 0.9 and (e.p as Vector2).length() > (e.r as float) * 0.9
+	ok = _check(eyes_ok, "googly pupils fall to the bottom of the eye when he's still") and ok
+	# a jerk of the arm sends them flying
+	var before: Vector2 = rig.eyes[0].p
+	p.yaw += 0.9
+	await process_frame; await process_frame; await process_frame
+	ok = _check((rig.eyes[0].p as Vector2).distance_to(before) > 0.002, "…and a jerk of the hand rattles them") and ok
+
+	# ---- the right hand does the doing
+	var rh = p.right_hand
+	p.global_position = Vector3(5.2, 0, 4.5); p.yaw = PI / 2; p.pitch = -0.15   # facing Sonya's room door?
+	var best: RigidBody3D
+	for n in main.world.find_children("*", "RigidBody3D", true, false):
+		if n.liftable and (not best or n.mass < best.mass): best = n
+	best.global_position = p.hold.global_position
+	p.grab(best)
+	await _wait(0.6)
+	var grip: float = rh.wrist.global_position.distance_to(best.global_position)
+	var side: float = (p.cam.global_transform.affine_inverse() * rh.wrist.global_position).x
+	ok = _check(grip < 0.2 and side > 0.0, "carrying: the right hand holds it (%.2f m off, on the right)" % grip) and ok
+	await _shot("9_right_hand_carry", 0.2)
+	p.throw()
+	await _wait(0.15)
+	await _shot("10_throw", 0.0)
+	await _wait(0.8)
+	var lw: Vector3 = s.rig.bone_global(rig.B.HAND).origin
+	ok = _check((p.cam.global_transform.affine_inverse() * lw).x < 0.0, "Socko stays on the left hand throughout") and ok
 	print("SOCKO ", "PASS" if ok else "FAIL")
 	quit(0 if ok else 1)
 

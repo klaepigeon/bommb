@@ -43,6 +43,7 @@ var _hand_world := Transform3D.IDENTITY
 var _reach_t := -1.0                      # time into a reach for the thing being used, or -1
 var _reach_at := Vector3.ZERO             # world point being reached for
 var _reach_pose := "grip"
+var torch_holder: Node = null       # once Socko has it, the light's his (toggle_torch goes to him)
 
 func _ready() -> void:
 	torch.light_projector = Penumbra.make(0.65)   # three: the torch's penumbra
@@ -288,7 +289,10 @@ func use() -> void:
 		target.call("interact", self)
 
 func toggle_torch() -> void:
-	torch.visible = not torch.visible
+	if torch_holder:
+		torch_holder.call("toggle_torch")
+	else:
+		torch.visible = not torch.visible
 
 func toggle_crouch() -> void:
 	crouched = not crouched

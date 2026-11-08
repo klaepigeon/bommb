@@ -9,6 +9,7 @@ uniform sampler2D albedo_tex : source_color, filter_nearest_mipmap, repeat_enabl
 uniform vec4 albedo_color : source_color = vec4(1.0);
 uniform float fuzz = 0.2;
 uniform vec2 snap_res = vec2(426.0, 240.0);
+uniform vec3 glow = vec3(0.0);   // light from inside (the torch in his mouth)
 
 void vertex() {
 	vec4 clip = PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(VERTEX, 1.0);
@@ -26,5 +27,6 @@ void fragment() {
 	ALBEDO = c * (1.0 + rim * fuzz);
 	ROUGHNESS = 1.0;
 	METALLIC = 0.0;
-	BACKLIGHT = vec3(fuzz * 0.25);   // thin cloth lets a little light through
+	BACKLIGHT = vec3(fuzz * 0.25);
+	EMISSION = glow * c;   // thin cloth lets a little light through
 }

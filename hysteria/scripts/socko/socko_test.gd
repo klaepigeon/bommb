@@ -11,7 +11,7 @@ extends Node3D
 ##                bounce look_round  (point and lean_in go to the red marker)
 ##   Space        say a line (cycles through the intro lines)
 ##   J / K        hold: open the jaw by hand / curl into a fist (the puppeteer's hand only)
-##   F            face Kurt (turn the hand back)        L  lights: lamp / torch / dark
+##   F            face Kurt (turn the hand back)        L  lights: lamp / torch (his mouth) / dark
 ##   B            skeleton overlay                       M  move the marker somewhere else
 ##   N            attend: watch the marker on his own (layer D), even as you turn away
 ##   X            uncanny stillness on/off               Z  beyond: let him turn past the wrist
@@ -46,6 +46,7 @@ func _ready() -> void:
 	cam = Camera3D.new(); cam.fov = 72.0; cam.near = 0.04; head.add_child(cam); cam.current = true
 	orbit = Camera3D.new(); orbit.fov = 50.0; orbit.near = 0.01; add_child(orbit)
 	socko = Socko.new(); socko.setup(cam, null); add_child(socko)
+	socko.take_torch(torch)
 	marker = MeshInstance3D.new(); var sm := SphereMesh.new(); sm.radius = 0.04; sm.height = 0.08; marker.mesh = sm
 	var mm := StandardMaterial3D.new(); mm.albedo_color = Color(0.8, 0.1, 0.1); mm.emission_enabled = true; mm.emission = Color(0.5, 0, 0)
 	marker.material_override = mm; marker.position = Vector3(-1.2, 0.9, -0.6); add_child(marker)
@@ -96,7 +97,7 @@ func _unhandled_input(e: InputEvent) -> void:
 			KEY_SPACE: socko.say(LINES[line_i % LINES.size()]); line_i += 1
 			KEY_F: socko.pose_face = 1.0 - socko.pose_face
 			KEY_B: show_bones = not show_bones
-			KEY_L: light_mode = (light_mode + 1) % 3; lamp.visible = light_mode == 0; torch.visible = light_mode == 1
+			KEY_L: light_mode = (light_mode + 1) % 3; lamp.visible = light_mode == 0; socko.torch_on = light_mode == 1
 			KEY_M: marker.position = Vector3(randf_range(-1.8, 1.8), randf_range(0.3, 2.0), randf_range(-1.4, 1.6))
 			KEY_N: socko.attend(marker.global_position, 6.0)
 			KEY_X: socko.stillness = 1.0 - socko.stillness
@@ -112,7 +113,6 @@ func _process(delta: float) -> void:
 	if view == 0:
 		head.position += Basis(Vector3.UP, yaw) * mv * delta * 1.4
 	head.rotation = Vector3(pitch, yaw, 0)
-	torch.global_transform = cam.global_transform.translated_local(Vector3(0.16, -0.18, 0.05))
 	var hp := socko.rig.head_global().origin
 	orbit.global_position = hp + Vector3(sin(orbit_yaw) * cos(orbit_pitch), sin(orbit_pitch), cos(orbit_yaw) * cos(orbit_pitch)) * (orbit_dist if view == 1 else orbit_dist * 3.2)
 	orbit.look_at(hp if view == 1 else socko.rig.bone_global(SockRig.B.HAND).origin.lerp(cam.global_position, 0.3))
@@ -171,6 +171,9 @@ func _shots(dir: String) -> void:
 	for e in ["happy", "nervous", "disappointed", "angry", "lying", "sleeping"]:
 		socko.set_emotion(e); await _wait(45); await _shot(dir, "emo_" + e)
 	socko.set_emotion("neutral")
+	view = 0; lamp.visible = false; socko.torch_on = true; await _wait(40); await _shot(dir, "fp_mouth_torch")
+	socko.say(LINES[6]); await _wait(20); await _shot(dir, "fp_mouth_torch_talking")
+	socko.torch_on = false; lamp.visible = true; socko.talking = false; view = 1
 	for g in ["point", "cover", "recoil"]:
 		socko.gesture(g, marker.global_position); await _wait(22); await _shot(dir, "g_" + g)
 		await _wait(80)
