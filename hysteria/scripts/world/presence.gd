@@ -1,6 +1,6 @@
 class_name Presence
 extends Node3D
-## Marks the thing in the flat: the body at the table, and later the monster. Being in the same
+## Marks Marta: fused to her chair at the table, and later loose in the flat. Being in the same
 ## room as an active Presence feeds Dread (scripts/fx/dread.gd). Attach it to whatever the thing
 ## is; when the thing moves, the Presence moves with it.
 

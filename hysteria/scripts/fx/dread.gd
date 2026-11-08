@@ -1,6 +1,6 @@
 class_name Dread
 extends Node
-## The longer you stay in a room with it (the body, or what the body becomes), the more the
+## The longer you stay in a room with Marta (at the table, or what she becomes), the more the
 ## colour goes out of the world, until it's black and white. It comes back slowly once you leave.
 ## Drives the `bw` uniform of the screen shader.
 

@@ -39,8 +39,8 @@ func _ready() -> void:
 	touch.player = player
 	add_child(touch)
 
-	# the body at the dinner table (a marker until she's ported): stay in her room and the colour goes
-	var body := Presence.new(); body.name = "TheBody"
+	# Marta at the dinner table (a marker until she is ported): stay in her room and the colour goes
+	var body := Presence.new(); body.name = "Marta"
 	world.add_child(body); body.position = Vector3(2.4, 0.9, 1.9)
 	dread = Dread.new(); dread.name = "Dread"
 	add_child(dread)

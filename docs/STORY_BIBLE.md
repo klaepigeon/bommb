@@ -185,3 +185,7 @@ Delivery notes in brackets. Socko's lines are written to be performed with the h
 - Socko is funny first. The funnier he is, the worse the seeds land later.
 - Nobody explains the boxes. Nobody explains Socko. Nobody says "Psygmund".
 - Silence is a tool: after the attack, after the first shot, after the bolt slides home.
+- **The colour goes near Marta.** The longer the player stays in a room with her, at the table or
+  hunting, the more the world drains to black and white (about 75 s to none, easing in so the
+  start goes unnoticed); it seeps back over about 25 s after leaving. Never explained, never
+  mentioned by anyone, Socko included.
