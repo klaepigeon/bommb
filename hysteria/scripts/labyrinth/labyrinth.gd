@@ -63,6 +63,7 @@ var hole_at := Vector3.ZERO                 # the hole, to go back through
 var _colliders: StaticBody3D
 var fight: FrozenFight
 var revolver: Revolver
+var rooms := {}
 
 func _ready() -> void:
 	build()
@@ -111,6 +112,8 @@ func build() -> void:
 	pick.set("gun", revolver)
 	var pcs := CollisionShape3D.new(); var pb := BoxShape3D.new(); pb.size = Vector3(0.3, 0.12, 0.3); pcs.shape = pb; pick.add_child(pcs)
 	add_child(pick); pick.position = fight.gun_at.origin + Vector3(0, 0.04, 0)
+	# the rooms behind the three open doors
+	rooms = Interiors.build(kit, self, _colliders)
 	var n := kit.finish()
 	_environment()
 	_dome()
@@ -157,9 +160,15 @@ func _street_cell(c: int, r: int) -> void:
 		cs.shape = b; cs.position = line - o * 0.3 + Vector3(0, 6, 0)
 		cs.basis = Basis(a, Vector3.UP, o)
 		var front := FRONTS.get("%d,%d,%s" % [_key_col(c, r), r, d], {}) as Dictionary
-		if front.get("door_open", false) or front.get("kind", "") == "hole":
-			cs.set_meta("opening", true)
-		_colliders.add_child(cs)
+		if front.get("door_open", false):
+			# an open door: the wall either side of it and over it, and the doorway to walk through
+			for piece in [[0.0, 1.3, 0.0, 12.0], [2.7, CELL, 0.0, 12.0], [1.3, 2.7, 3.4, 12.0]]:
+				var pc := CollisionShape3D.new(); var pb := BoxShape3D.new()
+				pb.size = Vector3(piece[1] - piece[0], piece[3] - piece[2], 0.6); pc.shape = pb
+				pc.position = f.p((piece[0] + piece[1]) * 0.5, (piece[2] + piece[3]) * 0.5, -0.3); pc.basis = f.basis()
+				_colliders.add_child(pc)
+		else:
+			_colliders.add_child(cs)
 
 ## style a bay from where it is: the main street is merchants' render in ochre and cream, the
 ## square grander and three storeys, the plaza mixed, the western lane log izbas

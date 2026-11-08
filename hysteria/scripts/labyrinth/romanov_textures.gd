@@ -45,6 +45,13 @@ static func get_set(name: String) -> Dictionary:
 		"paper": d = _paper(false)
 		"paper_old": d = _paper(true)
 		"leaves": d = _leaves()
+		"wallpaper_red": d = _wallpaper(Color(0.42, 0.08, 0.07), Color(0.62, 0.45, 0.2), 171)
+		"wallpaper_damask": d = _wallpaper(Color(0.52, 0.58, 0.48), Color(0.78, 0.76, 0.62), 172)
+		"rug": d = _rug()
+		"backdrop": d = _backdrop()
+		"lace": d = _lace()
+		"planks": d = _planks()
+		"wicker": d = _wicker()
 		_: d = _stucco(Color("aaaaaa"), 1)
 	_cache[name] = d
 	return d
@@ -478,3 +485,98 @@ static func _shop_kind(kind: String) -> Dictionary:
 		for x in S:
 			a.set_pixel(x, y, a.get_pixel(x, y).lerp(Color(0.25, 0.22, 0.18), grime.get_pixel(x, y).r * 0.45))
 	return _pack(a, null)
+
+# ---------------------------------------------------------------- interiors
+## flock wallpaper: a damask figure (a lily in a lozenge) repeating in a half-drop, the ground
+## faded unevenly, darker under where pictures hung
+static func _wallpaper(ground: Color, figure: Color, seed: int) -> Dictionary:
+	const S := 128
+	var n := _noise(seed, 0.03, 3).get_seamless_image(S, S)
+	var a := _img(S, S); var h := Image.create(S, S, false, Image.FORMAT_L8)
+	for y in S:
+		for x in S:
+			var col := x / 32; var row := y / 48
+			var lx := fmod(float(x), 32.0) - 16.0; var ly := fmod(float(y + (24 if col % 2 == 1 else 0)), 48.0) - 24.0
+			var lily := (absf(lx) * 1.6 + absf(ly)) < 16.0 and (absf(lx) * 1.6 + absf(ly)) > 12.0
+			lily = lily or (Vector2(lx, ly + 6).length() < 4.0) or (absf(lx) < 1.2 and ly > -6 and ly < 10) or (Vector2(absf(lx) - 4.0, ly - 2).length() < 2.5)
+			var v := n.get_pixel(x, y).r
+			var c := ground * (0.82 + v * 0.3)
+			if lily: c = c.lerp(figure, 0.55)
+			a.set_pixel(x, y, c); h.set_pixel(x, y, Color(0.62 if lily else 0.5, 0, 0))
+	return _pack(a, h, null, 2.0)
+
+static func _rug() -> Dictionary:
+	const S := 128
+	var a := _img(S, S)
+	var n := _noise(181, 0.1, 2).get_seamless_image(S, S)
+	for y in S:
+		for x in S:
+			var u := float(x) / S; var v := float(y) / S
+			var e := minf(minf(u, 1.0 - u), minf(v, 1.0 - v))
+			var c := Color(0.5, 0.1, 0.08)
+			if e < 0.12: c = Color(0.12, 0.15, 0.32)
+			if e < 0.1 and e > 0.08: c = Color(0.82, 0.72, 0.5)
+			if e < 0.03: c = Color(0.82, 0.72, 0.5)
+			var m := absf(u - 0.5) * 1.3 + absf(v - 0.5)
+			if m < 0.25 and m > 0.2: c = Color(0.85, 0.7, 0.4)
+			if m < 0.14: c = Color(0.12, 0.15, 0.32)
+			if m < 0.06: c = Color(0.85, 0.7, 0.4)
+			c = c * (0.85 + n.get_pixel(x, y).r * 0.25)
+			a.set_pixel(x, y, c)
+	return _pack(a, null)
+
+## the photographer's painted backdrop: a garden in soft distemper, a balustrade, an urn
+static func _backdrop() -> Dictionary:
+	const W := 256; const H := 160
+	var a := _img(W, H)
+	var n := _noise(191, 0.025, 4).get_seamless_image(W, H)
+	for y in H:
+		for x in W:
+			var v := n.get_pixel(x, y).r
+			var sky := Color(0.62, 0.62, 0.55).lerp(Color(0.5, 0.56, 0.48), float(y) / H)
+			var edge := 0.28 + 0.1 * sin(float(x) * 0.06) * v + 0.05 * sin(float(x) * 0.17)
+			var c := sky.lerp(Color(0.36, 0.4, 0.3) * (0.8 + v * 0.35), smoothstep(edge - 0.04, edge + 0.04, float(y) / H))
+			if y > H * 0.62:
+				c = Color(0.68, 0.64, 0.54) * (0.85 + v * 0.2)           # the balustrade's stone
+				if y < H * 0.68 or (x % 10 < 5 and y < H * 0.92): c = c.darkened(0.12)
+			a.set_pixel(x, y, c)
+	return _pack(a, null)
+
+static func _lace() -> Dictionary:
+	const S := 64
+	var a := Image.create(S, S, false, Image.FORMAT_RGBA8)
+	for y in S:
+		for x in S:
+			var u := fmod(float(x), 16.0) - 8.0; var v := fmod(float(y), 16.0) - 8.0
+			var ring := absf(Vector2(u, v).length() - 5.0) < 1.0
+			var grid := x % 4 == 0 or y % 4 == 0
+			var alpha := 0.85 if ring else (0.45 if grid else 0.0)
+			a.set_pixel(x, y, Color(0.92, 0.9, 0.85, alpha))
+	return _pack(a, null)
+
+static func _planks() -> Dictionary:
+	const S := 256
+	var grain := _noise(201, 0.012, 3)
+	var a := _img(S, S); var h := Image.create(S, S, false, Image.FORMAT_L8)
+	var rng := _rng(201)
+	var tone := []
+	for i in 8: tone.append(rng.randf_range(0.8, 1.1))
+	for y in S:
+		for x in S:
+			var row := x / 48; var px := x % 48
+			var g := grain.get_noise_2d(x * 5.0, y * 0.5 + row * 50.0) * 0.5 + 0.5
+			var c := Color(0.36, 0.26, 0.17).lerp(Color(0.5, 0.38, 0.26), g) * float(tone[row % 8])
+			if px < 2: c = Color(0.1, 0.07, 0.05)
+			a.set_pixel(x, y, c); h.set_pixel(x, y, Color(0.2 if px < 2 else 0.55 + g * 0.1, 0, 0))
+	return _pack(a, h, null, 4.0)
+
+static func _wicker() -> Dictionary:
+	const S := 64
+	var a := _img(S, S); var h := Image.create(S, S, false, Image.FORMAT_L8)
+	for y in S:
+		for x in S:
+			var over := ((x / 4) + (y / 4)) % 2 == 0
+			var t := sin(PI * fmod(float(x if over else y), 4.0) / 4.0)
+			var c := Color(0.62, 0.48, 0.28) * (0.65 + t * 0.45)
+			a.set_pixel(x, y, c); h.set_pixel(x, y, Color(t * (0.8 if over else 0.6), 0, 0))
+	return _pack(a, h, null, 4.0)

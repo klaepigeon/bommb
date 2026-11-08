@@ -7,6 +7,9 @@ const SETS := {
 	"fight": [["f_from_lane", 10.5, 7.3, PI, 0.08, false], ["f_archer", 8.9, 8.5, PI * 0.75, 0.1, false],
 		["f_mid", 9.6, 9.0, PI * 0.8, 0.25, false], ["f_cafe", 10.6, 10.4, -PI * 0.6, 0.2, false],
 		["f_gun", 9.9, 9.35, PI * 0.95, -0.9, false], ["f_poster", 8.9, 8.85, PI * 0.5, 0.05, true]],
+	"rooms": [["r_salon_door", 4.5, 4.9, PI, 0.0, false], ["r_salon_in", 4.5, 6.35, PI, -0.08, false], ["r_salon_corner", 3.8, 7.4, -0.95, -0.15, false],
+		["r_hotel_in", 13.25, 9.5, -PI * 0.5, -0.12, false], ["r_hotel_corner", 14.45, 9.95, 1.08, -0.1, false],
+		["r_nursery_in", 2.85, 15.5, PI * 0.5, -0.1, false], ["r_nursery_corner", 1.9, 15.35, -2.39, -0.05, false]],
 	"hole": [["hole_lab", 6.5, 1.75, 0.0, -0.12, true], ["hole_lab_dark", 6.4, 1.9, 0.15, -0.05, false]],
 	"shops": [["s_pharmacy", 2.5, 5.0, 0.0, 0.12, false], ["s_bakery", 8.5, 5.0, 0.0, 0.12, false], ["s_tavern", 11.5, 5.0, 0.0, 0.12, false],
 		["s_photo", 3.5, 4.0, PI, 0.12, false], ["s_clock", 7.5, 4.0, PI, 0.12, false], ["s_hotel", 11.0, 8.5, -PI / 2, 0.1, false]],
@@ -30,7 +33,7 @@ func _initialize() -> void:
 	root.add_child(main)
 	await process_frame; await process_frame
 	var p = main.player
-	var lab: bool = which in ["lab", "shops", "hole", "fight", "fightclose"]
+	var lab: bool = which in ["lab", "shops", "hole", "fight", "fightclose", "rooms"]
 	if lab: main.enter_labyrinth()
 	for v in SETS[which]:
 		var at := Vector3(v[1], 0, v[2])
