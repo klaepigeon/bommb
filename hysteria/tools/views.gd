@@ -3,6 +3,7 @@ extends SceneTree
 ## xvfb-run godot --rendering-driver opengl3 --path hysteria -s tools/views.gd -- out=<dir> set=outside
 var out := "user://views"
 const SETS := {
+	"hole": [["hole_lab", 6.5, 1.75, 0.0, -0.12, true], ["hole_lab_dark", 6.4, 1.9, 0.15, -0.05, false]],
 	"shops": [["s_pharmacy", 2.5, 5.0, 0.0, 0.12, false], ["s_bakery", 8.5, 5.0, 0.0, 0.12, false], ["s_tavern", 11.5, 5.0, 0.0, 0.12, false],
 		["s_photo", 3.5, 4.0, PI, 0.12, false], ["s_clock", 7.5, 4.0, PI, 0.12, false], ["s_hotel", 11.0, 8.5, -PI / 2, 0.1, false]],
 	"lab": [["lab_arrive", 6.5, 1.4, PI, 0.0, false], ["lab_lane_out", 6.5, 2.6, PI, 0.05, false],
@@ -25,7 +26,7 @@ func _initialize() -> void:
 	root.add_child(main)
 	await process_frame; await process_frame
 	var p = main.player
-	var lab: bool = which == "lab" or which == "shops"
+	var lab: bool = which in ["lab", "shops", "hole"]
 	if lab: main.enter_labyrinth()
 	for v in SETS[which]:
 		var at := Vector3(v[1], 0, v[2])

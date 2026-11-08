@@ -247,3 +247,25 @@ static func gas_lamp(k: TownKit, at: Vector3, bent := 0.0) -> Vector3:
 	k.cyl("iron", c0 + Vector3(0, HG + 0.03, 0), (T + 0.05) * 1.3, 0.2, 4, 0.03)
 	k.cyl("iron", c0 + Vector3(0, HG + 0.23, 0), 0.025, 0.12, 6, 0.0)
 	return top + Vector3(0, 0.3, 0)
+
+## The broken edge of a hole knocked through a wall: shards of brick and lumps of render, of
+## different sizes, at different depths and angles, round an opening x0..x1, y0..y1 (in the
+## frame), denser at the top where the lintel gave way. `wall_mat` is the render they came from.
+static func ragged_rim(k: TownKit, f: Frame, x0: float, x1: float, y0: float, y1: float, wall_mat: String, rng: RandomNumberGenerator, n := 46) -> void:
+	var per := 2.0 * (y1 - y0) + (x1 - x0)
+	for i in n:
+		var t := rng.randf() * per
+		var p: Vector2; var inward: Vector2
+		if t < y1 - y0:
+			p = Vector2(x0, y0 + t); inward = Vector2(1, 0)
+		elif t < (y1 - y0) + (x1 - x0):
+			p = Vector2(x0 + t - (y1 - y0), y1); inward = Vector2(0, -1)
+		else:
+			p = Vector2(x1, y1 - (t - (y1 - y0) - (x1 - x0))); inward = Vector2(-1, 0)
+		p += inward * rng.randf_range(-0.07, 0.05) + inward.orthogonal() * rng.randf_range(-0.03, 0.03)
+		var brick := rng.randf() < 0.6
+		var sx := rng.randf_range(0.04, 0.12) if brick else rng.randf_range(0.03, 0.09)
+		var sy := sx * rng.randf_range(0.35, 0.6) if brick else sx * rng.randf_range(0.5, 1.0)
+		var depth := rng.randf_range(-0.22, 0.03)
+		var b := f.basis() * Basis.from_euler(Vector3(rng.randf_range(-0.3, 0.3), rng.randf_range(-0.4, 0.4), rng.randf_range(-0.5, 0.5)))
+		k.box("brick" if brick else wall_mat, f.p(p.x, p.y, depth), Vector3(sx, sy, rng.randf_range(0.03, 0.08)), b)

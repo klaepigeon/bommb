@@ -127,9 +127,15 @@ func _street_cell(c: int, r: int) -> void:
 		var a := Vector3.UP.cross(o)
 		var line := ctr - o * h                                # the building line
 		var f := Facades.Frame.new(line - a * h, a, o)
-		# the pavement: granite slabs along the building, a kerb stone
-		Facades.bx(kit, f, "stone", -0.02, CELL + 0.02, 0.0, 0.12, 0.0, walk, 4 | 16 | 1 | 2)
-		Facades.bx(kit, f, "trim", -0.02, CELL + 0.02, 0.0, 0.14, walk - 0.14, walk, 4 | 16)
+		# the pavement: granite slabs along the building, a kerb stone. Where the next side is a
+		# building too (a corner, a dead end), this side's pavement stops where that one starts,
+		# and the kerb turns the corner instead of running through it.
+		var left_wall := not is_street(c + int(-a.x), r + int(-a.z))
+		var right_wall := not is_street(c + int(a.x), r + int(a.z))
+		var x0 := walk if left_wall else -0.02
+		var x1 := CELL - walk if right_wall else CELL + 0.02
+		Facades.bx(kit, f, "stone", x0 - (walk if left_wall else 0.0), x1 + (walk if right_wall else 0.0), 0.0, 0.12, 0.0, walk, 4 | 16 | 1 | 2)
+		Facades.bx(kit, f, "trim", x0 - (0.0 if left_wall else 0.0), x1, 0.0, 0.14, walk - 0.14, walk, 4 | 16 | (2 if left_wall else 0) | (1 if right_wall else 0))
 		_bay(c, r, d, f)
 		# leaves drifted against the kerb, and a few on the pavement
 		var lrng := RandomNumberGenerator.new(); lrng.seed = hash("leaf%d,%d,%s" % [_key_col(c, r), r, d])
@@ -182,16 +188,13 @@ func _hole_bay(f: Facades.Frame) -> void:
 	Facades.bx(kit, f, "stone", 0, CELL, 0, 0.45, 0, 0.07, 4 | 16 | 1 | 2)
 	Facades.wall_hole(kit, f, "stucco_cream", 0, CELL, 0.45, 7.2, 1.45, 2.55, 0.45, 2.1, 0.5, "", "brick")
 	Facades.wall(kit, f, "stucco_cream", 1.45, 2.55, 0.0, 0.45)
-	# the edge of the hole: broken brick standing proud of the render
+	# the edge of the hole: brick and render broken out of it at every angle
 	var rng := RandomNumberGenerator.new(); rng.seed = 47
-	for i in 22:
-		var t := float(i) / 22.0
-		var x: float; var y: float
-		if t < 0.35: x = 1.45; y = 0.45 + t / 0.35 * 1.65
-		elif t < 0.65: x = 1.45 + (t - 0.35) / 0.3 * 1.1; y = 2.1
-		else: x = 2.55; y = 2.1 - (t - 0.65) / 0.35 * 1.65
-		var s := rng.randf_range(0.06, 0.13)
-		Facades.bx(kit, f, "brick", x - s, x + s, y - s * 0.6, y + s * 0.6, -0.05, rng.randf_range(0.0, 0.06))
+	Facades.ragged_rim(kit, f, 1.45, 2.55, 0.45, 2.1, "stucco_cream", rng)
+	# what fell out, on the pavement
+	for i in 10:
+		var s := rng.randf_range(0.03, 0.08)
+		kit.box("brick" if rng.randf() < 0.6 else "stucco_cream", f.p(rng.randf_range(1.2, 2.8), 0.12 + s * 0.5, rng.randf_range(0.1, 0.8)), Vector3(s, s * 0.5, s * 0.7), Basis(Vector3.UP, rng.randf() * TAU))
 	# and through it, nothing: a black that the torch doesn't reach the end of
 	var black := MeshInstance3D.new(); var qm := QuadMesh.new(); qm.size = Vector2(1.1, 1.7); black.mesh = qm
 	var bm := StandardMaterial3D.new(); bm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED; bm.albedo_color = Color.BLACK

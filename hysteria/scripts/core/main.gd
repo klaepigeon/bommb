@@ -18,6 +18,7 @@ var socko_hud: SockoHud
 var pause_menu: PauseMenu
 var labyrinth: Labyrinth
 var in_labyrinth := false
+var wardrobe: WardrobeGap
 const LAB_AT := Vector3(400, 0, 0)      # far from the flat; each is hidden while you're in the other
 var socko_tutorial: SockoTutorial
 
@@ -70,6 +71,13 @@ func _ready() -> void:
 	socko_intro.setup(socko, player, encounter)
 	labyrinth = Labyrinth.new(); labyrinth.name = "Labyrinth"; labyrinth.position = LAB_AT
 	viewport.add_child(labyrinth); labyrinth.visible = false; labyrinth.process_mode = Node.PROCESS_MODE_DISABLED
+	wardrobe = WardrobeGap.new(); wardrobe.name = "WardrobeGap"; add_child(wardrobe)
+	wardrobe.setup(world, player, self)
+	# the way back, at the lane's dead end
+	var back := StaticBody3D.new(); back.name = "GapBack"; back.set_script(load("res://scripts/world/gap_way.gd"))
+	back.set("gap", wardrobe); back.set("inward", false)
+	var bcs := CollisionShape3D.new(); var bbox := BoxShape3D.new(); bbox.size = Vector3(1.0, 1.6, 0.2); bcs.shape = bbox; back.add_child(bcs)
+	labyrinth.add_child(back); back.position = labyrinth.hole_at + Vector3(0, 0, 0.2)
 	pause_menu = PauseMenu.new(); pause_menu.name = "PauseMenu"; pause_menu.setup(player); add_child(pause_menu)
 	socko_hud = SockoHud.new(); socko_hud.name = "SockoHud"; add_child(socko_hud)
 	socko_tutorial = SockoTutorial.new(); socko_tutorial.name = "SockoTutorial"; add_child(socko_tutorial)

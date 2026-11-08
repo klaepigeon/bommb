@@ -32,7 +32,7 @@ const MATS := {
 	"gold": ["gold", 0.8, 0.35, 0.9, {}],
 	"plaster_in": ["plaster_in", 2.0, 0.95, 0.2, {}],
 	"parquet": ["parquet", 2.0, 0.7, 0.4, {}],
-	"brick": ["brick", 2.0, 0.95, 0.25, {}],
+	"brick": ["brick", 2.0, 0.95, 0.25, {"color": Color(0.78, 0.74, 0.72)}],
 	"iron": ["", 1.0, 0.55, 0.6, {"color": Color(0.08, 0.08, 0.085)}],
 	"paint_green": ["", 1.0, 0.7, 0.4, {"color": Color(0.12, 0.22, 0.17)}],
 	"paint_door": ["wood", 1.2, 0.8, 0.3, {"color": Color(0.55, 0.3, 0.22)}],
