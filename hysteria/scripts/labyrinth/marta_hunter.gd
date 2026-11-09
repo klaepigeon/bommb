@@ -17,7 +17,11 @@ extends Node3D
 ##           (owner's canon: she's looking for Sonya; the bible's "Sonya, shoes." The shoe
 ##           solution itself is PROPOSED)
 ##
-## Hearing and sight scale with Skills.aggression(): Survival makes her keener, Memory softer.
+## How dangerous she is comes from the threat manager (content/threat.json): Survival makes her
+## keener, Memory softer. She reads its levers, not a number: how far she hears and sees, how
+## hard she presses, how long she searches where she lost him, how quickly she commits once she's
+## seen him (the beat she holds, facing him, before she comes: the moment to get out of sight),
+## and how long after losing sight she still knows where he really went.
 ## Footsteps carry by how he moves (running far, crouching hardly at all; Quiet Feet less);
 ## a gunshot carries across the whole town; his torch lets her see him from further.
 
@@ -102,7 +106,7 @@ func _enter(s: S) -> void:
 func hear(pos: Vector3, loud: float, what: String, source: Node) -> void:
 	if not awake or state in [S.DEAD, S.HOLD, S.CHASE, S.CALM]: return
 	var here := lab.to_local(pos)
-	var radius := loud * 40.0 * Skills.aggression()
+	var radius := loud * 40.0 * ThreatManager.lever("hearing")
 	if what == "gunshot": radius = 60.0
 	if here.distance_to(position) < radius:
 		_heard_at = here
@@ -117,7 +121,7 @@ func _sees_kurt() -> bool:
 	var th = player.get("torch_holder")
 	if th: torch_on = bool(th.get("torch_on"))
 	else: torch_on = bool(player.torch.visible)
-	var range_m := (17.0 if torch_on else 9.0) * Skills.aggression()
+	var range_m := (17.0 if torch_on else 9.0) * ThreatManager.lever("sight")
 	if player.get("crouched"): range_m *= 0.6
 	if d > range_m: return false
 	# she looks where her head is turned, broadly; she doesn't need eyes to see you close up
@@ -133,7 +137,7 @@ func _footsteps() -> void:
 	if n <= 0.0: return
 	if Skills.owned("quiet_feet"): n *= 0.6
 	var d := lab.to_local(player.global_position).distance_to(position)
-	if d < n * 16.0 * Skills.aggression() and state in [S.DRIFT, S.SEARCH]:
+	if d < n * 16.0 * ThreatManager.lever("hearing") and state in [S.DRIFT, S.SEARCH]:
 		_heard_at = lab.to_local(player.global_position)
 		_enter(S.LISTEN); _route_to(_heard_at)
 
@@ -181,34 +185,38 @@ func _move(speed: float, delta: float) -> bool:
 func _process(delta: float) -> void:
 	if not awake or not lab.visible: return
 	_t += delta; _state_t += delta
-	var agg := Skills.aggression()
+	var pace := ThreatManager.lever("pace")
 	var kurt_local := lab.to_local(player.global_position)
 	var near := kurt_local.distance_to(position)
 	match state:
 		S.DRIFT:
-			if _move(DRIFT_SPEED, delta) or _path.is_empty(): _wander()
+			if not _noticing(delta, kurt_local):
+				if _move(DRIFT_SPEED, delta) or _path.is_empty(): _wander()
 			_footsteps()
-			if _sees_kurt(): _enter(S.CHASE); seen_kurt.emit()
 		S.LISTEN:
-			if _move(LISTEN_SPEED * agg, delta): _enter(S.SEARCH)
+			if not _noticing(delta, kurt_local):
+				if _move(LISTEN_SPEED * pace, delta): _enter(S.SEARCH)
 			_footsteps()
-			if _sees_kurt(): _enter(S.CHASE); seen_kurt.emit()
 		S.SEARCH:
-			_yaw += delta * 1.2 * sin(_state_t * 0.8)
+			if not _noticing(delta, kurt_local):
+				_yaw += delta * 1.2 * sin(_state_t * 0.8)
+				if _state_t > ThreatManager.lever("persistence"): _enter(S.DRIFT); _wander()
 			_footsteps()
-			if _sees_kurt(): _enter(S.CHASE); seen_kurt.emit()
-			elif _state_t > 6.0 / agg: _enter(S.DRIFT); _wander()
 		S.CHASE:
 			if _stagger > 0.0:
 				_stagger -= delta
 			elif _sees_kurt():
+				_lost_t = 0.0
 				_path = [Vector3(kurt_local.x, 0, kurt_local.z)]
-				_move(CHASE_SPEED * agg, delta)
+				_move(CHASE_SPEED * pace, delta)
 				_heard_at = kurt_local
 			else:
-				# lost sight: go to where he was last
+				# lost sight: for a little while she still knows where he went (recovery), and
+				# then only where he was last
+				_lost_t += delta
+				if _lost_t < ThreatManager.lever("recovery"): _heard_at = kurt_local
 				if _path.is_empty() or _state_t > 1.0: _route_to(_heard_at); _state_t = 0.0
-				if _move(CHASE_SPEED * agg * 0.9, delta): _enter(S.SEARCH)
+				if _move(CHASE_SPEED * pace * 0.9, delta): _enter(S.SEARCH)
 			if near < REACH and not player.get("locked"):
 				# a red shoe in his hand: she takes that instead of him
 				if _is_shoe(player.get("held")): take_shoe(player.get("held"))
@@ -314,6 +322,26 @@ func _to_nursery() -> void:
 	_route_to(Vector3(r.x1 + 2.0, 0, z))
 	_path.append(Vector3(r.x1 - 0.8, 0, z))
 	_path.append(Vector3(r.x0 + 1.4, 0, z + 0.4))
+
+## Seeing him: she turns to him and holds for a beat (alertness) before she comes. If he gets out
+## of sight in that beat, she goes to where he was instead. True while she's noticing him.
+var _notice := -1.0
+var _lost_t := 0.0
+func _noticing(delta: float, kurt_local: Vector3) -> bool:
+	if _sees_kurt():
+		if _notice < 0.0: _notice = 0.0
+		_notice += delta
+		var to := kurt_local - position
+		_yaw = lerp_angle(_yaw, atan2(-to.x, -to.z), 1.0 - exp(-delta * 6.0))
+		if _notice >= ThreatManager.lever("alertness"):
+			_notice = -1.0; _lost_t = 0.0
+			_enter(S.CHASE); seen_kurt.emit()
+		return true
+	if _notice >= 0.0:
+		# he broke away mid-beat: she goes to where she saw him
+		_notice = -1.0
+		_heard_at = kurt_local; _enter(S.LISTEN); _route_to(_heard_at)
+	return false
 
 func _hold() -> void:
 	_enter(S.HOLD)

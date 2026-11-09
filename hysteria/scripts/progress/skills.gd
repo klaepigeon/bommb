@@ -68,5 +68,6 @@ static func count(tree: String) -> int:
 	return n
 
 ## How hard the things hunting him come at him: more Survival, harder; more Memory, softer.
+## kept for older callers: the threat manager's score (content/threat.json)
 static func aggression() -> float:
-	return clampf(1.0 + 0.18 * count("survival") - 0.15 * count("memory"), 0.6, 2.0)
+	return ThreatManager.score()

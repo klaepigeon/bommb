@@ -1,0 +1,33 @@
+{
+  "_doc": "The threat manager's tuning (master document §29-30). One score: base, plus each owned skill's contribution (Survival makes the pursuer more dangerous, Memory less), plus story flags, plus what Kurt has done lately (a shot keeps her keyed up), times difficulty. The score drives separate levers, not health or damage: how far she hears and sees, how hard she presses, how long she searches, how quickly she commits, how long she keeps tracking him after losing him. Edit freely; ThreatManager validates nothing it doesn't know.",
+  "base": 1.0,
+  "min": 0.5,
+  "max": 2.2,
+  "skill_default": {"survival": 0.18, "memory": -0.15},
+  "skills": {
+    "headshot": 0.22,
+    "quiet_feet": 0.1,
+    "how_she_moves": -0.2,
+    "sonya": -0.2
+  },
+  "flags": {
+    "marta_woke": 0.05,
+    "socko_hijacked_marta": 0.1,
+    "promised_sonya": -0.1,
+    "talked_to_marta": -0.05
+  },
+  "recent": {
+    "gunshot": {"add": 0.25, "fade": 60.0},
+    "axe": {"add": 0.1, "fade": 30.0},
+    "scrape": {"add": 0.05, "fade": 20.0}
+  },
+  "difficulty": {"easy": 0.8, "normal": 1.0, "hard": 1.25},
+  "levers": {
+    "hearing": {"at_min": 0.6, "at_1": 1.0, "at_max": 1.8},
+    "sight": {"at_min": 0.65, "at_1": 1.0, "at_max": 1.6},
+    "pace": {"at_min": 0.8, "at_1": 1.0, "at_max": 1.35},
+    "persistence": {"at_min": 3.0, "at_1": 6.0, "at_max": 14.0, "_unit": "seconds she searches where she lost him"},
+    "alertness": {"at_min": 1.1, "at_1": 0.55, "at_max": 0.15, "_unit": "seconds between seeing him and coming for him"},
+    "recovery": {"at_min": 0.0, "at_1": 1.0, "at_max": 5.0, "_unit": "seconds she keeps tracking where he really is after losing sight"}
+  }
+}

@@ -13,6 +13,7 @@ var pause_btn: Button
 var sens: HSlider
 var vol: HSlider
 var invert: CheckButton
+var difficulty: OptionButton
 var resume_btn: Button
 var skill_menu: Node
 var save_game: Node
@@ -101,6 +102,12 @@ func _build() -> void:
 	invert.scale = Vector2(2.0, 2.0); invert.pivot_offset = Vector2(0, 28)   # thumb-sized
 	invert.toggled.connect(func(_v): _apply(); _save())
 	box.add_child(_row("Invert look", invert))
+	# how hard the pursuer presses (the threat manager's difficulty)
+	difficulty = OptionButton.new(); difficulty.add_theme_font_size_override("font_size", 20)
+	difficulty.custom_minimum_size = Vector2(240, 56)
+	for d in ["Easy", "Normal", "Hard"]: difficulty.add_item(d)
+	difficulty.item_selected.connect(func(_i): _apply(); _save())
+	box.add_child(_row("Difficulty", difficulty))
 	var skills := _button("Skills"); skills.pressed.connect(func():
 		toggle()
 		if skill_menu: skill_menu.call("toggle"))
@@ -155,12 +162,14 @@ func _apply() -> void:
 		player.set("look_sens", 0.0022 * sens.value)
 		player.set("pad_sens", 2.6 * sens.value)
 		player.set("invert_y", invert.button_pressed)
+	if difficulty: ThreatManager.difficulty = ["easy", "normal", "hard"][max(0, difficulty.selected)]
 	AudioServer.set_bus_volume_db(0, linear_to_db(maxf(vol.value, 0.0001)))
 
 func _save() -> void:
 	var c := ConfigFile.new()
 	c.set_value("controls", "look", sens.value); c.set_value("controls", "invert", invert.button_pressed)
 	c.set_value("audio", "volume", vol.value)
+	c.set_value("game", "difficulty", difficulty.selected)
 	c.save(SETTINGS)
 
 func _load() -> void:
@@ -169,4 +178,5 @@ func _load() -> void:
 	sens.set_value_no_signal(float(c.get_value("controls", "look", 1.0)))
 	invert.set_pressed_no_signal(bool(c.get_value("controls", "invert", false)))
 	vol.set_value_no_signal(float(c.get_value("audio", "volume", 0.9)))
+	difficulty.select(int(c.get_value("game", "difficulty", 1)))
 	_apply()
