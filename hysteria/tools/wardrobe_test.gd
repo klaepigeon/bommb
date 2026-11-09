@@ -16,7 +16,9 @@ func _initialize() -> void:
 	p.global_position = Vector3(5.9, 0, 1.9); _aim(p, Vector3(7.25, 1.0, 0.9))
 	await _wait(0.5)
 	await _shot("1_wardrobe_before")
-	ok = _check(p.target == null or p.target.call("prompt") != "Push the wardrobe", "from the front it doesn't push") and ok
+	var front: String = p.target.call("prompt") if p.target else ""
+	ok = _check(front == "Push the wardrobe", "from the front, it offers: \"%s\"" % front) and ok
+	ok = _check(not main.wardrobe.can_push(), "(but it only moves from its side)") and ok
 	p.global_position = Vector3(7.05, 0, 2.15); _aim(p, Vector3(7.2, 1.1, 1.3))
 	await _wait(0.4)
 	var pr: String = p.target.call("prompt") if p.target else ""
@@ -46,6 +48,25 @@ func _initialize() -> void:
 	p.use()
 	await _wait(1.6)
 	ok = _check(not main.in_labyrinth and p.global_position.distance_to(Vector3(7.05, 0, 1.25)) < 0.6, "and back in the bedroom") and ok
+	# a fresh flat: pushed from in front, with the axe in hand: he puts it down, steps round, pushes
+	main.queue_free(); await process_frame
+	root.get_node("Game").flags.clear()
+	main = load("res://scenes/main.tscn").instantiate(); root.add_child(main)
+	await process_frame; await process_frame
+	p = main.player
+	var axe: RigidBody3D = null
+	for b in main.world.find_children("*", "RigidBody3D", true, false):
+		if String(b.get("title")).to_lower() == "axe": axe = b
+	p.global_position = Vector3(6.6, 0, 0.95); _aim(p, Vector3(7.0, 1.1, 0.95))
+	await _wait(0.3)
+	axe.global_position = p.hold.global_position; p.grab(axe)
+	await _wait(0.3)
+	p._aim()
+	pr = p.target.call("use_with_prompt", axe) if p.target and p.target.has_method("use_with_prompt") else ""
+	ok = _check(pr == "Push the wardrobe", "in front of it, the axe in hand: \"%s\"" % pr) and ok
+	p.use()
+	await _wait(4.5)
+	ok = _check(p.held == null and main.wardrobe.pushed and not p.locked, "he put the axe down, stepped round, and pushed it") and ok
 	print("WARDROBE ", "PASS" if ok else "FAIL")
 	quit(0 if ok else 1)
 

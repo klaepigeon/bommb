@@ -56,7 +56,36 @@ func _gather() -> void:
 func can_push() -> bool:
 	if pushed or _t >= 0.0: return false
 	var p: Vector3 = player.global_position
-	return p.z > 1.45 and p.z < 2.6 and p.x > 6.55 and p.x < 7.55
+	# beside it, toward the bedroom door: anywhere in that gap between the bed's end and the wall
+	return p.z > 1.4 and p.z < 3.0 and p.x > 6.3 and p.x < 7.65
+
+## From in front of it (or anywhere but its side): he steps round to the side, square to it,
+## and pushes. Two short legs round its corner, so he doesn't walk through it.
+const SIDE_SPOT := Vector3(7.05, 0.0, 2.05)
+var _approaching := false
+func approach_and_push() -> void:
+	if pushed or _t >= 0.0 or _approaching: return
+	_approaching = true
+	player.set("locked", true)
+	var from: Vector3 = player.global_position
+	var y := from.y
+	var legs: Array[Vector3] = []
+	if from.z < 1.6: legs.append(Vector3(minf(from.x, 6.62), y, 1.95))     # out past its front corner
+	legs.append(Vector3(SIDE_SPOT.x, y, SIDE_SPOT.z))
+	for to in legs:
+		var a: Vector3 = player.global_position
+		var dist := a.distance_to(to)
+		var t := 0.0; var dur := maxf(0.25, dist / 1.6)
+		while t < dur:
+			await get_tree().process_frame
+			t += get_process_delta_time()
+			player.global_position = a.lerp(to, smoothstep(0.0, 1.0, t / dur))
+	# square to its side
+	player.set("look_target", Vector3(7.23, 1.1, 1.3))
+	await get_tree().create_timer(0.35).timeout
+	_approaching = false
+	player.set("locked", false)
+	push()
 
 func push() -> void:
 	if not can_push(): return

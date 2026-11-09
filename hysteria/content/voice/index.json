@@ -1,0 +1,4 @@
+{
+  "_doc": "The voice library. line id -> takes recorded outside the game and dropped in this folder; 'preferred' is the take that plays. Files are matched by the line id, so a new take never breaks a reference: add it, then point 'preferred' at it. Lines with no takes fall back to the speaker's TTS voice (and the validator lists them as missing).",
+  "lines": {}
+}

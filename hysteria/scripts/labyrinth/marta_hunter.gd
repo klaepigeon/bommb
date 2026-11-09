@@ -250,6 +250,19 @@ func _process(delta: float) -> void:
 			lines = ["“…Sonya's.”", "“She was always losing them.”", "“Buckle. Buckle.”"] if at_peace else ["“…Sonya's.”", "“…and the other one?”"]
 		Game.say(lines[randi() % lines.size()], 2.5)
 
+# ---------------------------------------------------------------- talking to her
+## At peace by Sonya's door, she can be talked to (content/dialogue/marta_nursery.json). She
+## answers in fragments.
+func prompt() -> String:
+	return "Talk to her" if at_peace and state == S.CALM else ""
+
+func interact(_p: Node) -> void:
+	if not (at_peace and state == S.CALM): return
+	var main := get_tree().get_first_node_in_group("main")
+	if not main or main.speech.in_conversation(): return
+	var c := Conversation.new(); c.name = "Conversation"; main.add_child(c)
+	c.start(main, "marta_nursery", {"marta": self})
+
 # ---------------------------------------------------------------- Sonya's shoes
 func _is_shoe(item) -> bool:
 	return item != null and is_instance_valid(item) and String(item.get("title")).to_lower().begins_with("child's shoe")

@@ -277,7 +277,6 @@ func restore(d: Dictionary) -> void:
 func _end() -> void:
 	_ended = true
 	player.set("locked", true)
-	SaveGame.wipe()            # the chapter's done: next time starts at the beginning
 	chapter_end.emit()
 	if Game.flags.get("marta_dead", false): _socko("end", "Look at us. Look at us go. Didn't even need the tutorial.", "happy")
 	elif Game.flags.get("marta_at_peace", false): _socko("end", "Shoes. You gave her shoes. Next time, we do it my way.", "disappointed")
@@ -294,6 +293,18 @@ func _end() -> void:
 		l.add_theme_font_size_override("font_size", line[1]); l.add_theme_color_override("font_color", line[2]); v.add_child(l)
 	main.add_child(card)
 	Game.flags["chapter_1_done"] = true
+	# then the landing, and the door opposite, standing open: Flat 48
+	await get_tree().create_timer(4.5).timeout
+	for l in v.get_children(): l.queue_free()
+	var t := Label.new(); t.text = "The landing. Flat 48's door, opposite, standing open on the white."
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; t.add_theme_font_size_override("font_size", 17)
+	t.add_theme_color_override("font_color", Color(0.72, 0.7, 0.66)); v.add_child(t)
+	await get_tree().create_timer(3.5).timeout
+	if main.has_method("enter_flat48"): main.call("enter_flat48")
+	var tw := card.create_tween(); tw.tween_property(bg, "color:a", 0.0, 2.0); tw.parallel().tween_property(v, "modulate:a", 0.0, 1.0)
+	tw.tween_callback(card.queue_free)
+	Game.fade.emit(0.0, 0.1)
+	player.set("locked", false)
 
 # ---------------------------------------------------------------- Socko on the way out
 ## He wants it done fast and loud. Lines once each; nothing if he isn't on the hand yet.

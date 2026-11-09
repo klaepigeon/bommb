@@ -68,6 +68,15 @@ const MATS := {
 	"paper": ["paper", 0.84, 1.0, 0.1, {}],
 	"paper_old": ["paper_old", 0.84, 1.0, 0.1, {"alpha": true}],
 	"leaves": ["leaves", 0.6, 1.0, 0.1, {"alpha": true}],
+	"safe_paint": ["", 1.0, 0.55, 0.45, {"color": Color(0.24, 0.28, 0.25)}],
+	# Flat 48's mannequins and what they're dressed in
+	"mannequin": ["", 1.0, 0.38, 0.55, {"color": Color(0.86, 0.76, 0.68)}],
+	"cardigan": ["", 1.0, 1.0, 0.1, {"color": Color(0.2, 0.31, 0.52)}],
+	"skirt": ["", 1.0, 0.95, 0.15, {"color": Color(0.16, 0.14, 0.16)}],
+	"wig": ["", 1.0, 0.8, 0.3, {"color": Color(0.06, 0.045, 0.04)}],
+	"jacket": ["", 1.0, 0.9, 0.2, {"color": Color(0.17, 0.16, 0.14)}],
+	"trousers": ["", 1.0, 0.95, 0.15, {"color": Color(0.12, 0.12, 0.14)}],
+	"baize": ["", 1.0, 1.0, 0.05, {"color": Color(0.58, 0.56, 0.47)}],
 	# Flat 47's joinery and plaster
 	"skirting": ["wood", 1.0, 0.55, 0.35, {"color": Color(0.42, 0.26, 0.17)}],
 	"coving": ["", 1.0, 0.95, 0.12, {"color": Color(0.6, 0.58, 0.53)}],

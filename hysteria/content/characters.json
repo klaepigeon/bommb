@@ -1,0 +1,6 @@
+{
+  "_doc": "Who can speak. Stable ids; the dialogue graphs and the voice library refer to these, never to file names. tts: fallback voice when no recording exists (pitch, rate). label: the name on subtitles.",
+  "kurt":  {"label": "KURT",  "tts": {"pitch": 0.72, "rate": 0.9}, "color": "#d9d3c4"},
+  "socko": {"label": "SOCKO", "tts": {"pitch": 1.55, "rate": 1.05}, "color": "#e8c37a"},
+  "marta": {"label": "MARTA", "tts": {"pitch": 0.75, "rate": 0.7}, "color": "#9fc4b4"}
+}

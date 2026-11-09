@@ -25,6 +25,11 @@ var socko_lab: SockoLabyrinth
 var escape: FlatEscape
 var save_game: SaveGame
 var memory: MemoryEffects
+var flat48: Flat48
+var socko_48: SockoFlat48
+var in_flat48 := false
+var armory: Armory
+var speech: Speech
 ## gutterspace nuggets: where they hang (the flat, then the labyrinth in its own space)
 const NUGGETS_FLAT := [Vector3(3.4, 1.1, 4.2), Vector3(1.2, 0.9, 1.0), Vector3(8.2, 1.3, 2.6), Vector3(9.3, 0.8, 6.9),
 	Vector3(6.1, 1.0, 0.7), Vector3(5.2, 1.2, 6.6), Vector3(1.6, 1.4, 6.8), Vector3(7.6, 1.5, 4.6)]
@@ -38,6 +43,7 @@ const LAB_AT := Vector3(400, 0, 0)      # far from the flat; each is hidden whil
 var socko_tutorial: SockoTutorial
 
 func _ready() -> void:
+	add_to_group("main")
 	container = SubViewportContainer.new()
 	container.stretch = true
 	container.stretch_shrink = SHRINK
@@ -100,6 +106,7 @@ func _ready() -> void:
 		var n := Nugget.new(); n.position = p; n.name = "NuggetL%d" % NUGGETS_LAB.find(p); labyrinth.add_child(n)
 	var whud := WeaponHud.new(); whud.name = "WeaponHud"; whud.setup(player); add_child(whud)
 	pause_menu = PauseMenu.new(); pause_menu.name = "PauseMenu"; pause_menu.setup(player); add_child(pause_menu)
+	speech = Speech.new(); speech.name = "Speech"; add_child(speech); speech.setup(self)
 	socko_hud = SockoHud.new(); socko_hud.name = "SockoHud"; add_child(socko_hud)
 	socko_tutorial = SockoTutorial.new(); socko_tutorial.name = "SockoTutorial"; add_child(socko_tutorial)
 	socko_tutorial.setup(socko, player, socko_hud)
@@ -111,6 +118,9 @@ func _ready() -> void:
 	escape = FlatEscape.new(); escape.name = "FlatEscape"; add_child(escape)
 	escape.setup(world, player, self)
 	memory = MemoryEffects.new(); memory.name = "MemoryEffects"; add_child(memory); memory.setup(self)
+	armory = Armory.new(); armory.name = "Armory"; add_child(armory); armory.setup(player)
+	flat48 = Flat48.new(); add_child(flat48); flat48.build(self)
+	socko_48 = SockoFlat48.new(); socko_48.name = "SockoFlat48"; add_child(socko_48); socko_48.setup(self)
 	save_game = SaveGame.new(); save_game.name = "SaveGame"; save_game.setup(self); add_child(save_game)
 	pause_menu.save_game = save_game
 
@@ -129,7 +139,11 @@ func _ready() -> void:
 		SaveGame.wipe()          # developer reset
 	if args.has("lab"):
 		enter_labyrinth()
-	if not args.has("shots") and not args.has("lab"):
+	if args.has("f48"):
+		Game.flags["socko_intro_done"] = true
+		encounter.skip(); socko_intro.skip()
+		enter_flat48()
+	if not args.has("shots") and not args.has("lab") and not args.has("f48"):
 		_continue.call_deferred()
 	if args.has("shots"):
 		_shots(args.shots)
@@ -167,6 +181,18 @@ func enter_labyrinth() -> void:
 	player.global_transform = labyrinth.global_transform * labyrinth.arrive
 	player.yaw = player.global_transform.basis.get_euler().y; player.pitch = 0.0
 	player.velocity = Vector3.ZERO
+
+## Across the landing into Flat 48 (47 and the town hidden; one place at a time).
+func enter_flat48() -> void:
+	if in_labyrinth: leave_labyrinth(Transform3D.IDENTITY)
+	in_flat48 = true
+	flat48.visible = true; flat48.process_mode = Node.PROCESS_MODE_INHERIT
+	world.get_node("Apartment").visible = false
+	(world.get_node("Environment") as WorldEnvironment).environment = flat48.env
+	player.global_transform = flat48.global_transform * flat48.spawn
+	player.yaw = player.global_transform.basis.get_euler().y; player.pitch = 0.0
+	player.velocity = Vector3.ZERO
+	Game.flags["in_flat48"] = true
 
 func leave_labyrinth(to: Transform3D) -> void:
 	in_labyrinth = false

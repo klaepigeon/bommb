@@ -112,7 +112,8 @@ func _process(delta: float) -> void:
 	var now := Time.get_ticks_msec()
 	while _queue.size() > 0 and now > int(_queue[0][4]):
 		_queue.pop_front()                 # gone stale
-	if _queue.size() > 0 and not socko.talking and _gap <= 0.0 and now >= int(_queue[0][3]):
+	var talk_held: bool = main.get("speech") != null and main.speech.in_conversation()
+	if _queue.size() > 0 and not socko.talking and not talk_held and _gap <= 0.0 and now >= int(_queue[0][3]):
 		var q: Array = _queue.pop_front()
 		socko.say(q[0], q[1], q[2])
 		_gap = 0.9
@@ -132,7 +133,7 @@ func _guide(delta: float) -> void:
 		_last_cell = cell; _nudge_t = minf(_nudge_t, 10.0)
 		socko.attend(aim, 2.0)
 	_nudge_t -= delta
-	if _nudge_t <= 0.0 and not socko.talking:
+	if _nudge_t <= 0.0 and not socko.talking and not (main.get("speech") and main.speech.in_conversation()):
 		_nudge_t = randf_range(16.0, 24.0)
 		socko.gesture("point", aim)
 		var lines := ["This way, bud.", "Keep going. Don't read the signs.", "You don't need to see that. Gun first.", "Left, right, whatever. Come on."]

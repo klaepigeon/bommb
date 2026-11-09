@@ -1,0 +1,61 @@
+{
+  "id": "marta_nursery",
+  "title": "Marta, by Sonya's door, with the shoes",
+  "_doc": "Kurt and Marta once she's at peace (both of Sonya's shoes given). She is partially communicative: fragments, repetition, the shoes. Her lines are canon fragments or close to them; the boxes stay unanswered. Socko's hijack on 'what happened' is deliberate: he wants her feared. PROPOSED wording throughout, owner to approve.",
+  "participants": ["kurt", "marta", "socko"],
+  "look_height": 1.25,
+  "start": "open",
+  "nodes": {
+    "open": {"type": "line", "speaker": "marta", "text": "«…buckle. Buckle.»", "next": "open_socko"},
+    "open_socko": {"type": "socko", "mode": "aside", "text": "She's busy, bud. Let's not.", "emotion": "impatient", "next": "choose"},
+
+    "choose": {"type": "choice", "options": [
+      {"id": "name", "intent": "Say her name", "style": "empathetic", "once": true,
+       "line": {"text": "Marta."},
+       "set": ["know:marta:kurt_said_name", "rel:marta.trust+=1"], "react": "she stops turning the shoes",
+       "next": "name_r"},
+      {"id": "boxes", "intent": "Ask about the boxes", "style": "observant", "once": true,
+       "line": {"text": "Upstairs, you asked me if I'd seen the boxes. Which boxes, Marta?"},
+       "set": ["know:marta:asked_boxes"], "next": "boxes_r"},
+      {"id": "sonya", "intent": "Ask where Sonya is", "style": "direct", "once": true,
+       "line": {"text": "Where's Sonya? Where's the girl, Marta?"},
+       "socko": {"mode": "interrupt", "cut": 14, "text": "She doesn't know, bud. Look at her. You'll only set her off.", "emotion": "impatient"},
+       "set": ["set:asked_marta_sonya"], "next": "sonya_r"},
+      {"id": "what", "intent": "Ask what happened here", "style": "empathetic", "once": true,
+       "line": {"text": "What happened here, Marta?"},
+       "socko": {"mode": "hijack", "text": "What did you do to her?"},
+       "set": ["rel:marta.fear+=1", "rel:marta.trust-=1", "set:socko_hijacked_marta"], "react": "she pulls the shoes in to her chest",
+       "next": "what_r"},
+      {"id": "letter", "intent": "Tell her you read his letter", "style": "observant", "once": true,
+       "cond": ["flag:looked_note", "skill:handwriting"],
+       "line": {"text": "I read his letter. \"You saw the river before I did.\""},
+       "socko": {"mode": "aside", "text": "Nobody likes a snoop.", "emotion": "disappointed"},
+       "set": ["know:marta:kurt_read_letter", "rel:marta.trust+=1"], "next": "letter_r"},
+      {"id": "joke", "intent": "Lighten it", "style": "humorous", "once": true,
+       "line": {"text": "Nice place you've got down here. Bit quiet."},
+       "socko": {"mode": "aside", "text": "Tough crowd.", "emotion": "happy"},
+       "next": "joke_r"},
+      {"id": "leave", "intent": "Leave her be", "style": "empathetic",
+       "line": {"text": "I'll find her."},
+       "set": ["set:promised_sonya", "know:marta:kurt_promised"], "next": "leave_socko"}
+    ]},
+
+    "name_r": {"type": "line", "speaker": "marta", "text": "«…»", "next": "name_r2"},
+    "name_r2": {"type": "line", "speaker": "marta", "text": "«Sonya's.»", "next": "choose"},
+
+    "boxes_r": {"type": "line", "speaker": "marta", "text": "«…the boxes…»", "next": "boxes_r2"},
+    "boxes_r2": {"type": "line", "speaker": "marta", "text": "«Have you seen them?»", "next": "choose"},
+
+    "sonya_r": {"type": "line", "speaker": "marta", "text": "«Sonya. Shoes.»", "next": "choose"},
+
+    "what_r": {"type": "line", "speaker": "marta", "text": "«No. No. Shoes.»", "emotion": "afraid", "next": "what_kurt"},
+    "what_kurt": {"type": "line", "speaker": "kurt", "text": "That isn't what I— I didn't mean that.", "next": "choose"},
+
+    "letter_r": {"type": "line", "speaker": "marta", "text": "«…I told him first.»", "next": "choose"},
+
+    "joke_r": {"type": "line", "speaker": "marta", "text": "«…buckle.»", "next": "choose"},
+
+    "leave_socko": {"type": "socko", "mode": "aside", "text": "Find who? There's nobody down here. Come on.", "emotion": "lying", "next": "end"},
+    "end": {"type": "end", "set": ["set:talked_to_marta"]}
+  }
+}
