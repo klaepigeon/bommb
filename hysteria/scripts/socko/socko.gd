@@ -137,7 +137,7 @@ func _ready() -> void:
 		_rig_xf = _target_xf()
 		global_transform = _rig_xf
 	_ang_prev = global_transform.basis
-	if DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
+	if DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH) and not Game.is_phone():
 		DisplayServer.tts_set_utterance_callback(DisplayServer.TTS_UTTERANCE_BOUNDARY, _on_boundary)
 		DisplayServer.tts_set_utterance_callback(DisplayServer.TTS_UTTERANCE_ENDED, _on_ended)
 
@@ -213,6 +213,8 @@ func say(text: String, e := "", volume := 1.0, style := "", cues := []) -> void:
 		word_times.append(_segs[ws[1]].t if ws[1] < _segs.size() else _speech_len)
 	if director:
 		director.on_line(e, volume, style, all_cues, word_times)
+	var m := get_tree().get_first_node_in_group("main") if is_inside_tree() else null
+	if m and m.get("crash"): m.crash.note("socko says: " + text.substr(0, 40))
 	# spoken lines go on the subtitle layer, with his name, when there is one
 	var sub = get_tree().get_first_node_in_group("subtitles") if is_inside_tree() else null
 	if sub: sub.call("show_line", "SOCKO", text, maxf(2.5, _speech_len + 1.2), Color(0.91, 0.76, 0.48))

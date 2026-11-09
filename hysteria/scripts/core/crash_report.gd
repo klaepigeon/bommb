@@ -41,12 +41,18 @@ func _notification(what: int) -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
-	if _t < 2.0: return
+	if _t < 0.5: return
 	_t = 0.0
 	var p: Node3D = main.get("player")
 	var where := "town" if main.get("in_labyrinth") else ("flat 48" if main.get("in_flat48") else "flat 47")
-	_line("%s %s · %d fps · video %d MB · static %d MB · objects %d · time scale %.2f" % [where,
+	var lamps := 0
+	if main.get("labyrinth") and main.get("in_labyrinth"):
+		for l in main.labyrinth.lamps: if l.visible: lamps += 1
+	var torch = main.socko.get("torch") if main.get("socko") else null
+	_line("%s %s · %d fps · %d draws · %dk tris · %d lamps · torch shadow %s · video %d MB · static %d MB · objects %d · time scale %.2f" % [where,
 		str(p.global_position.snapped(Vector3.ONE * 0.1)) if p else "-", Engine.get_frames_per_second(),
+		int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)), int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME) / 1000.0),
+		lamps, str(torch.visible and torch.shadow_enabled) if torch else "-",
 		int(Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0),
 		int(Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0),
 		int(Performance.get_monitor(Performance.OBJECT_COUNT)), Engine.time_scale])
@@ -61,7 +67,10 @@ func _previous() -> String:
 	if not FileAccess.file_exists(CRUMBS): return ""
 	var lines := FileAccess.get_file_as_string(CRUMBS).strip_edges().split("\n")
 	if lines.is_empty() or lines[-1].ends_with("closed"): return ""
-	var out := "\n".join(lines.slice(maxi(0, lines.size() - 30)))
+	# newest first, so the top of the screen (the bit that ends up in a photo) is the last moment
+	var tail := lines.slice(maxi(1, lines.size() - 40))
+	tail.reverse()
+	var out := "newest first —\n" + "\n".join(tail) + "\n" + lines[0]
 	var d := DirAccess.open("user://logs")
 	if d:
 		var files := []

@@ -67,6 +67,11 @@ func speak(text: String, seconds := 4.0, pitch := 0.85, rate := 0.8) -> void:
 var _voice_id = null
 ## The first English system voice, looked up once ("" if there's no speech synthesiser).
 func _voice() -> String:
+	# (on a phone, nobody speaks aloud in the town: the device crash there lines up with Socko's
+	# first spoken line, so the town runs on subtitles alone until that's ruled out)
+	if is_phone():
+		var m := get_tree().get_first_node_in_group("main") if is_inside_tree() else null
+		if m and m.get("in_labyrinth"): return ""
 	if _voice_id == null:
 		_voice_id = ""
 		if DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH) and not (OS.has_feature("linuxbsd") and OS.get_environment("SPEECHD_ADDRESS") == "" and not FileAccess.file_exists("/usr/bin/speech-dispatcher")):

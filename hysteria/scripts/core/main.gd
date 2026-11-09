@@ -180,6 +180,8 @@ func _continue() -> void:
 func enter_labyrinth() -> void:
 	in_labyrinth = true
 	if crash: crash.note("into the town")
+	if Game.is_phone() and DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
+		DisplayServer.tts_stop()     # whatever he was saying on the way through stops at the hole
 	labyrinth.visible = true; labyrinth.process_mode = Node.PROCESS_MODE_INHERIT
 	world.get_node("Apartment").visible = false
 	(world.get_node("Environment") as WorldEnvironment).environment = labyrinth.env

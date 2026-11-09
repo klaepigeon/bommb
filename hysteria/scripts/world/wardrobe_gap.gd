@@ -79,6 +79,7 @@ func approach_and_push() -> void:
 	push()
 
 func push() -> void:
+	if main.get("crash"): main.crash.note("pushing the wardrobe")
 	if not can_push(): return
 	_t = 0.0
 	player.set("locked", true)
@@ -104,6 +105,7 @@ func _process(delta: float) -> void:
 		player.set("locked", false); player.set("look_target", null)
 		Game.flags["wardrobe_pushed"] = true
 		_open_hole()
+		if main.get("crash"): main.crash.note("wardrobe aside, hole open")
 
 ## Loading a save: already pushed aside, the hole already there.
 func restore_pushed() -> void:
@@ -146,6 +148,7 @@ func go_through(inward: bool) -> void:
 	var rel := Transform3D()
 	if held: rel = (player.get("hold") as Node3D).global_transform.affine_inverse() * held.global_transform
 	if inward:
+		if main.get("crash"): main.crash.note("through the gap")
 		main.call("enter_labyrinth")
 	else:
 		main.call("leave_labyrinth", Transform3D(Basis(), BACK_TO))

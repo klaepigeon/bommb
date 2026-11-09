@@ -59,6 +59,8 @@ func _process(delta: float) -> void:
 			take()
 
 func take() -> void:
+	var m := get_tree().get_first_node_in_group("main")
+	if m and m.get("crash"): m.crash.note("nugget " + String(name))
 	Skills.add_nuggets(1)
 	# remembered by name, so a loaded game doesn't put it back
 	var gone: Dictionary = Game.flags.get("nuggets_taken", {}); gone[String(name)] = true; Game.flags["nuggets_taken"] = gone

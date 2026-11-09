@@ -131,6 +131,7 @@ func _guide(delta: float) -> void:
 	socko.director.set_agenda(aim)      # what one of his eyes keeps going back to
 	if cell != _last_cell:
 		_last_cell = cell; _nudge_t = minf(_nudge_t, 10.0)
+		if main.get("crash"): main.crash.note("cell %s" % str(cell))
 		socko.attend(aim, 2.0)
 	_nudge_t -= delta
 	if _nudge_t <= 0.0 and not socko.talking and not (main.get("speech") and main.speech.in_conversation()):
