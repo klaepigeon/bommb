@@ -57,6 +57,7 @@ func face(at: Vector3) -> void:
 	p.yaw = atan2(-d.x, -d.z); p.pitch = atan2(d.y, Vector2(d.x, d.z).length())
 
 func _initialize() -> void:
+	load("res://scripts/core/save_game.gd").wipe()      # a save left by another test puts the title card up
 	change_scene_to_file("res://scenes/main.tscn")
 	await process_frame; await process_frame; await process_frame
 	main = current_scene

@@ -59,7 +59,11 @@ func _process(delta: float) -> void:
 	if main.get("labyrinth") and main.get("in_labyrinth"):
 		for l in main.labyrinth.lamps: if l.visible: lamps += 1
 	var torch = main.socko.get("torch") if main.get("socko") else null
-	_line("%s %s · %d fps · %d draws · %dk tris · %d lamps · torch shadow %s · video %d MB · static %d MB · objects %d · time scale %.2f" % [where,
+	var rss := ""
+	if OS.get_name() == "Android" and FileAccess.file_exists("/proc/self/status"):
+		for ln in FileAccess.get_file_as_string("/proc/self/status").split("\n"):
+			if ln.begins_with("VmRSS"): rss = " · ram " + ln.replace("VmRSS:", "").strip_edges()
+	_line("%s%s %s · %d fps · %d draws · %dk tris · %d lamps · torch shadow %s · video %d MB · static %d MB · objects %d · time scale %.2f" % [where, rss,
 		str(p.global_position.snapped(Vector3.ONE * 0.1)) if p else "-", Engine.get_frames_per_second(),
 		int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)), int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME) / 1000.0),
 		lamps, str(torch.visible and torch.shadow_enabled) if torch else "-",
@@ -77,10 +81,11 @@ func _previous() -> String:
 	if not FileAccess.file_exists(CRUMBS): return ""
 	var lines := FileAccess.get_file_as_string(CRUMBS).strip_edges().split("\n")
 	if lines.is_empty() or lines[-1].ends_with("closed"): return ""
+	var android := ExitInfo.read()
 	# newest first, so the top of the screen (the bit that ends up in a photo) is the last moment
 	var tail := lines.slice(maxi(1, lines.size() - 60))
 	tail.reverse()
-	var out := "newest first —\n" + "\n".join(tail) + "\n" + lines[0]
+	var out := ("— Android's record of how it ended —\n" + android + "\n\n" if android != "" else "") + "newest first —\n" + "\n".join(tail.slice(0, 14)) + "\n" + lines[0]
 	var d := DirAccess.open("user://logs")
 	if d:
 		var files := []
