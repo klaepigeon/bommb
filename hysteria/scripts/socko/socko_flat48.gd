@@ -100,7 +100,7 @@ func _process(delta: float) -> void:
 			Game.flags["socko_advice_rejected"] = int(Game.flags.get("socko_advice_rejected", 0)) + 1
 	# speak when he's free
 	_gap -= delta
-	if _queue.size() > 0 and not socko.get("talking") and _gap <= 0.0:
+	if _queue.size() > 0 and not socko.get("talking") and not main.speech.in_conversation() and _gap <= 0.0:
 		var q: Array = _queue.pop_front()
 		socko.call("say", q[0], q[1], q[2])
 		_gap = 1.2

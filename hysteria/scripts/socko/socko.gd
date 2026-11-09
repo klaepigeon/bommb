@@ -183,7 +183,10 @@ func say(text: String, e := "", volume := 1.0) -> void:
 	_build_schedule(text)
 	_speech_t = -0.12            # the mouth opens just before the sound
 	talking = true
-	Game.toast.emit(text, maxf(2.5, _speech_len + 1.2))
+	# spoken lines go on the subtitle layer, with his name, when there is one
+	var sub = get_tree().get_first_node_in_group("subtitles") if is_inside_tree() else null
+	if sub: sub.call("show_line", "SOCKO", text, maxf(2.5, _speech_len + 1.2), Color(0.91, 0.76, 0.48))
+	else: Game.toast.emit(text, maxf(2.5, _speech_len + 1.2))
 	var v: String = Game._voice()
 	_utt_id = -1
 	if v != "":

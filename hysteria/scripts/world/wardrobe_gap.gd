@@ -56,7 +56,8 @@ func _gather() -> void:
 func can_push() -> bool:
 	if pushed or _t >= 0.0: return false
 	var p: Vector3 = player.global_position
-	return p.z > 1.45 and p.z < 2.6 and p.x > 6.55 and p.x < 7.55
+	# beside it, toward the bedroom door: anywhere in that gap between the bed's end and the wall
+	return p.z > 1.4 and p.z < 3.0 and p.x > 6.3 and p.x < 7.65
 
 func push() -> void:
 	if not can_push(): return
