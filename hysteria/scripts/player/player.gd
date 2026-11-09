@@ -40,6 +40,7 @@ var _shake_t := 0.0
 
 var feet: Area3D
 var arm: KurtArm
+var body: KurtBody
 var _hand_world := Transform3D.IDENTITY
 var _reach_t := -1.0                      # time into a reach for the thing being used, or -1
 var _reach_at := Vector3.ZERO             # world point being reached for
@@ -59,6 +60,9 @@ func _ready() -> void:
 	# camera: the shoulder turns with him but doesn't tip when he looks down.
 	arm = KurtArm.new(); arm.name = "RightArm"
 	add_child(arm)
+	# and the rest of him, for when he looks down (KurtBody: trunk, coat, legs, shoes)
+	body = KurtBody.new(); body.name = "Body"; body.setup(self)
+	add_child(body)
 	_hand_world = cam.global_transform * _arm_rest()
 
 func place(t: Transform3D) -> void:

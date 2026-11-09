@@ -51,17 +51,17 @@ the later direction is in the game, and the conflict is listed here rather than 
 
 | Area | Status | Gap |
 |---|---|---|
-| Kurt's full body (look down: chest to feet) | **missing** | Only the right arm exists; the left hand is Socko. Needs torso, pelvis, legs, feet on the same rig, aligned to the camera at 177.8 cm |
+| Kurt's full body (look down: chest to feet) | partial | `KurtBody`: trunk, coat to mid-thigh, legs (two-bone IK), shoes, the left upper sleeve to Socko's elbow, at 177.8 cm proportions; gait (stance/swing with speed and direction, pelvis roll and counter-turn), an older man's idle stance (weight on the right), crouch. Rigid segments, not yet one skinned mesh; no falls or injury reactions yet |
 | Kurt's movement character (age, balance, economy) | partial | Hand flexing and grips exist; gait, stiffness, recoveries, falls don't |
-| Dialogue runtime (branching, intents, conditions, consequences) | **missing** | Lines are hard-coded in Socko scripts and `Game.say` toasts |
+| Dialogue runtime (branching, intents, conditions, consequences) | partial | `Conversation` plays JSON graphs (content/dialogue): lines, intent choices with styles, branches, conditions/actions, Socko aside/interrupt/proxy/hijack, full history; validator + runtime test. One conversation (Marta). The graph editor plugin is still to come; Socko's ambient lines are still in code |
 | Kurt's voiced lines | **missing** | Kurt never speaks |
 | NPC knowledge and relationships | **missing** | No NPCs besides Marta |
 | Socko in dialogue (interrupt, proxy, reinterpret, hijack) | **missing** | Depends on the dialogue runtime |
 | Contextual bark director (priorities, cooldowns, history) | partial | Socko's queue has stale expiry and urgent cut-in; not shared, not data-driven |
-| Voice library (stable IDs, takes, import) | **missing** | Platform TTS stands in |
-| Subtitles (speaker, timing, safe areas, localisation) | partial | Toasts only; no speaker labels, no safe-area handling |
+| Voice library (stable IDs, takes, import) | partial | `content/voice/index.json`: line id → takes, preferred take, volume; files matched by line id; TTS per character otherwise; the validator lists unvoiced lines. No editor UI yet |
+| Subtitles (speaker, timing, safe areas, localisation) | partial | Speaker label and colour, timed to the line, wrapped, inside the display safe area; Socko's lines use it too. Localisation still to come |
 | Cutscene runtime and timeline editor | **missing** | Scenes are hand-written state machines |
-| Threat manager (central, configurable) | partial | `Skills.aggression()` is a single number Marta reads |
+| Threat manager (central, configurable) | working | `ThreatManager` + `content/threat.json`: skill contributions (Survival up, Memory down, per-skill overrides), story flags, recent noises, difficulty (pause menu) → levers (hearing, sight, pace, persistence, alertness, recovery) that Marta's AI reads. A monster inspector UI is still to come |
 | Persistent monster framework | partial | Marta keeps state across saves; no general identity/encounter-history system |
 | Quest framework (problem / Socko's reading / solutions / consequences) | **missing** as data | The escape and Marta are built systemically, but by hand |
 | Flat 48 (white placeholders, sticky notes, Mama/Papa/Child, GUN SAFE, Suite 51) | partial | Built: the draft flat, 35 blocks, the note wall, right/wrong notes, blocks becoming 47's furniture, the gun safe with the sawn-off, three figures (shootable, persistent), Socko's pressure and refusals, saving. Missing: the figures' identities and helping them, Suite 51 |

@@ -7,6 +7,7 @@ static var last := {}          # the most recent noise, for tests and debugging
 
 static func make(tree: SceneTree, pos: Vector3, loud: float, what: String, source: Node = null) -> void:
 	last = {"pos": pos, "loud": loud, "what": what, "source": source, "time": Time.get_ticks_msec()}
+	ThreatManager.note(what)
 	for n in tree.get_nodes_in_group("listener"):
 		if n.has_method("hear"):
 			n.call("hear", pos, loud, what, source)
