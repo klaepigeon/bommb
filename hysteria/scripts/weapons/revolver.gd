@@ -33,6 +33,9 @@ var reload_each := RELOAD_EACH      # Quick Reload makes it quicker
 var kick_scale := 1.0               # Steady Hand makes it smaller
 
 var _kick := 0.0
+var _kick_v := 0.0
+var _kick_acc := 0.0
+var _next_shot := 0
 var _flash: OmniLight3D
 var _flash_q: MeshInstance3D
 var _flash_t := 0.0
@@ -43,7 +46,7 @@ func _ready() -> void:
 	_model()
 	_flash = OmniLight3D.new(); _flash.light_color = Color(1.0, 0.75, 0.45); _flash.omni_range = 5.0; _flash.light_energy = 0.0
 	_flash.position = Vector3(0, 0.048, -0.2); add_child(_flash)
-	_flash_q = MeshInstance3D.new(); var qm := QuadMesh.new(); qm.size = Vector2(0.09, 0.09); _flash_q.mesh = qm
+	_flash_q = MeshInstance3D.new(); var qm := QuadMesh.new(); qm.size = Vector2(0.17, 0.17); _flash_q.mesh = qm
 	var fm := StandardMaterial3D.new(); fm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED; fm.albedo_color = Color(1.0, 0.82, 0.5)
 	fm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED; fm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	fm.albedo_texture = _star(); _flash_q.material_override = fm; _flash_q.visible = false
@@ -110,6 +113,9 @@ func _model() -> void:
 func grip_global() -> Transform3D:
 	return global_transform
 
+func muzzle_global() -> Transform3D:
+	return global_transform * Transform3D(Basis(), Vector3(0, 0.048, -0.185))
+
 # ---------------------------------------------------------------- in the hand
 func _process(delta: float) -> void:
 	if not player or not cam:
@@ -121,7 +127,12 @@ func _process(delta: float) -> void:
 	# a beat behind the head, as a held weight is; the kick, then back; tilted out to load
 	var target := want.origin
 	var pos := global_position.lerp(target, 1.0 - exp(-delta * 22.0)) if global_position.distance_to(target) < 0.5 else target
-	_kick = move_toward(_kick, 0.0, delta * 4.0)
+	var real := delta / maxf(Engine.time_scale, 0.01)
+	_kick_acc += minf(real, 0.25)
+	while _kick_acc >= 1.0 / 240.0:
+		_kick_acc -= 1.0 / 240.0
+		_kick_v += (-260.0 * _kick - 20.0 * _kick_v) / 240.0
+		_kick += _kick_v / 240.0
 	_reload_tilt = move_toward(_reload_tilt, 1.0 if reloading else 0.0, delta * 6.0)
 	# point it down the line of sight, converging on it some way off (the shot itself goes where
 	# the crosshair is; the hand keeps a steady hold rather than chasing every near surface)
@@ -155,14 +166,21 @@ func fire() -> void:
 	if not drawn or reloading: return
 	if loaded <= 0:
 		_sfx(_click(1.0)); emptied.emit(); return
+	if Time.get_ticks_msec() < _next_shot: return
+	_next_shot = Time.get_ticks_msec() + 140          # as fast as a double-action trigger pulls
 	loaded -= 1
-	_kick = kick_scale; _flash_t = 0.06
-	player.set("shake", 0.6 * kick_scale)
-	player.set("pitch", float(player.get("pitch")) + 0.025 * kick_scale)
+	_kick = 0.2 * kick_scale; _kick_v = 16.0 * kick_scale; _flash_t = 0.09
+	var feel := GunFeel.get_in(get_tree())
+	if feel: feel.kick(self, 1.0 * kick_scale)
+	else:
+		player.set("shake", 0.6 * kick_scale)
+		player.set("pitch", float(player.get("pitch")) + 0.025 * kick_scale)
 	_sfx(_bang())
 	Noises.make(get_tree(), global_position, 1.0, "gunshot", player)
-	var from := cam.global_position; var to := from - cam.global_transform.basis.z * RANGE
-	var q := PhysicsRayQueryParameters3D.create(from, to); q.exclude = [player.get_rid()]; q.collide_with_areas = true
+	var from := cam.global_position
+	var aim: Dictionary = feel.resolve_aim(from, -cam.global_transform.basis.z, RANGE) if feel else {"dir": -cam.global_transform.basis.z}
+	var dir: Vector3 = aim.dir
+	var q := PhysicsRayQueryParameters3D.create(from, from + dir * RANGE); q.exclude = [player.get_rid()]; q.collide_with_areas = true
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
 	if hit:
 		var c: Object = hit.collider
@@ -172,9 +190,13 @@ func fire() -> void:
 			if n.has_method("shot"):
 				took = n.call("shot", hit.position, hit.normal, headshot_kills, hit.get("shape", 0)); break
 			n = n.get_parent()
+		if feel: feel.impact(hit, dir, 1.0)
+		if took and feel:
+			feel.confirm(bool(n.get("last_hit_head")), n.has_method("is_down") and bool(n.call("is_down")))
 		if not took:
 			if c is RigidBody3D:
-				(c as RigidBody3D).apply_impulse(-cam.global_transform.basis.z * 6.0, hit.position - (c as RigidBody3D).global_position)
+				# a round knocks a thing flying: weight, not a nudge
+				(c as RigidBody3D).apply_impulse(dir * 9.0, hit.position - (c as RigidBody3D).global_position)
 			else:
 				_hole(hit.position, hit.normal)
 	fired.emit(hit)

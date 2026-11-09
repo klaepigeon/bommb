@@ -29,6 +29,7 @@ var flat48: Flat48
 var socko_48: SockoFlat48
 var in_flat48 := false
 var armory: Armory
+var gun_feel: GunFeel
 var speech: Speech
 ## gutterspace nuggets: where they hang (the flat, then the labyrinth in its own space)
 const NUGGETS_FLAT := [Vector3(3.4, 1.1, 4.2), Vector3(1.2, 0.9, 1.0), Vector3(8.2, 1.3, 2.6), Vector3(9.3, 0.8, 6.9),
@@ -119,6 +120,7 @@ func _ready() -> void:
 	escape.setup(world, player, self)
 	memory = MemoryEffects.new(); memory.name = "MemoryEffects"; add_child(memory); memory.setup(self)
 	armory = Armory.new(); armory.name = "Armory"; add_child(armory); armory.setup(player)
+	gun_feel = GunFeel.new(); gun_feel.name = "GunFeel"; add_child(gun_feel); gun_feel.setup(self)
 	flat48 = Flat48.new(); add_child(flat48); flat48.build(self)
 	socko_48 = SockoFlat48.new(); socko_48.name = "SockoFlat48"; add_child(socko_48); socko_48.setup(self)
 	save_game = SaveGame.new(); save_game.name = "SaveGame"; save_game.setup(self); add_child(save_game)
