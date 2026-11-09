@@ -169,9 +169,9 @@ func _hunter() -> void:
 	await _secs(0.3)
 	_check(inf.state in [inf.S.LISTEN, inf.S.CHASE], "a loud noise behind them: they go to it (%s)" % ["IDLE", "WANDER", "LISTEN", "SEARCH", "CHASE", "GRAB", "DEAD"][inf.state])
 	var chased := false
-	var t := 0.0
-	while t < 20.0 and not caught[0]:
-		await process_frame; t += 1.0 / 60.0
+	var t0 := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - t0 < 20000 and not caught[0]:     # real time, not frames
+		await process_frame
 		chased = chased or inf.state == inf.S.CHASE
 	_check(chased, "they see him and come for him")
 	_check(caught[0], "and take hold of him when they reach him")
