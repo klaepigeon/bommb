@@ -488,6 +488,14 @@ func _update_torch() -> void:
 	if not torch:
 		return
 	torch.visible = torch_on
+	# on a phone the town's lit without the torch's shadow: every building that comes into the
+	# beam is another shadow pass, and the device crashes walking up the main street with it on
+	if Game.is_phone():
+		var m := get_tree().get_first_node_in_group("main")
+		var want_shadow: bool = not (m and m.get("in_labyrinth"))
+		if torch.shadow_enabled != want_shadow:
+			torch.shadow_enabled = want_shadow
+			if m and m.get("crash"): m.crash.note("torch shadow " + ("on" if want_shadow else "off"))
 	# The light comes out of his mouth, but it's a steady lamp: it doesn't pulse with his jaw (the
 	# whole lit room pulsing with every syllable read as flicker) and it doesn't ride every spring
 	# in the hand. The source sits at the mouth, a little behind; the beam goes mostly where Kurt
