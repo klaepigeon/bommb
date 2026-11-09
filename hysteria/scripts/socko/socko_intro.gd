@@ -30,6 +30,7 @@ func setup(p_socko: Socko, p_player: Node, p_encounter: Node) -> void:
 	socko = p_socko; player = p_player; encounter = p_encounter
 	socko.visible = false; socko.set_process(false)
 	socko.shown = 0.0
+	socko.auto_perform = false        # the introduction is authored beat by beat; the director waits
 
 func _go(s: S) -> void:
 	state = s; t = 0.0
@@ -103,6 +104,7 @@ func _process(delta: float) -> void:
 			if not socko.talking and t > 1.0:
 				Game.flags["socko_intro_done"] = true
 				socko.set_emotion("neutral")
+				socko.auto_perform = true; socko.director.set_stage("presenter")
 				_go(S.DONE)
 
 ## Loading a save from after the introduction: he's on the hand, the light's in his mouth.
@@ -110,6 +112,7 @@ func skip() -> void:
 	socko.visible = true; socko.set_process(true)
 	socko.take_torch(player.torch); player.set("torch_holder", socko)
 	socko.shown = 1.0; socko.pose_face = 0.0; socko.set_emotion("neutral")
+	socko.auto_perform = true
 	player.set("eye_override", -1.0); player.set("locked", false)
 	_go(S.DONE)
 

@@ -51,6 +51,7 @@ func _process(delta: float) -> void:
 	_walked += Vector2(p.x - _last_pos.x, p.z - _last_pos.z).length()
 	_last_pos = p
 	if _walked > 2.0:
+		if not said.has("walk"): socko.director.set_stage("companion")   # he's settled in: your mate now
 		_say("walk", "Walk it off. Slow. Your knee's making noises I don't like.", "nervous", 0.9, _key("[Shift] hurry  ·  [C] crouch", "[L3] hurry  ·  [Y] crouch", "Push the stick to the rim to hurry"))
 		if _since_walk < 0.0: _since_walk = 0.0
 	if _since_walk >= 0.0:
@@ -64,11 +65,13 @@ func _process(delta: float) -> void:
 	# picking up, turning over
 	var held = player.get("held")
 	if held != null:
+		if not said.has("pickup"): socko.director.obeyed(0.5)
 		_say("pickup", "Heavy end first. Throw it like you mean it. Or — you know where it'd really land? On her.", "happy", 1.0,
 			_key("[LMB] throw  ·  [RMB] turn it over  ·  [E] put it down", "[RT] throw  ·  [LT] turn it over  ·  [A] put it down", "THROW  ·  USE to put it down"))
 		if player.get("inspecting"):
 			_inspect_t += delta
 			if _inspect_t > 2.5:
+				if not said.has("inspect"): socko.director.defied(0.7)
 				_say("inspect", "Turn it over. Yeah. Fascinating. Can we go?", "impatient", 0.85)
 		else:
 			_inspect_t = 0.0

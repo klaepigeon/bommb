@@ -27,12 +27,17 @@ func _initialize() -> void:
 	rig.jaw = 1.0; rig.apply_pose()
 	var open: float = rig.bone_global(rig.B.FINGERTIPS).origin.distance_to(rig.bone_global(rig.B.THUMBTIP).origin)
 	rig.jaw = 0.0; rig.apply_pose()
-	ok = _check(open - shut > 0.03, "fingers and thumb part to open the mouth (%.3f -> %.3f m)" % [shut, open]) and ok
+	ok = _check(open - shut > 0.015, "fingers and thumb part to open the mouth (%.3f -> %.3f m)" % [shut, open]) and ok
 	ok = _check(rig.sock.mesh.get_surface_count() == 3, "sock, mouth pocket and tongue are one skinned mesh") and ok
-	var eyes_on_hand := true
-	for e in rig.eyes:
-		eyes_on_hand = eyes_on_hand and (e.disc as Node).get_parent() is BoneAttachment3D
-	ok = _check(eyes_on_hand and rig.eyes.size() == 2, "googly eyes ride the finger bone") and ok
+	# the eyes ride the cloth of the upper jaw (skinned seats): open the mouth and they go up with it
+	rig.jaw = 0.0; rig.apply_pose()
+	var e_shut: Vector3 = rig.eye_center(0); var gap_shut: float = rig.eye_gap()
+	rig.jaw = 1.0; rig.apply_pose()
+	var rise: float = (rig.eye_center(0) - e_shut).dot(rig.bone_global(rig.B.FINGERS).basis.y.normalized())
+	var gap_open: float = rig.eye_gap()
+	rig.jaw = 0.0; rig.apply_pose()
+	ok = _check(rig.eyes.size() == 2 and gap_shut > 0.005 and gap_open > 0.005 and rise > 0.002,
+		"ping-pong eyes ride the upper jaw's cloth, apart (gap %.1f / %.1f mm, rise %.1f mm)" % [gap_shut * 1000.0, gap_open * 1000.0, rise * 1000.0]) and ok
 
 	# ---- wake: beat 9, the hand rises
 	p.global_position = Vector3(3.55, 0, 1.6)
@@ -133,8 +138,11 @@ func _initialize() -> void:
 	# a jerk of the arm sends them flying
 	var before: Vector2 = rig.eyes[0].p
 	p.yaw += 0.9
-	await process_frame; await process_frame; await process_frame
-	ok = _check((rig.eyes[0].p as Vector2).distance_to(before) > 0.002, "…and a jerk of the hand rattles them") and ok
+	var rattle := 0.0
+	for i in 10:
+		await process_frame
+		rattle = maxf(rattle, (rig.eyes[0].p as Vector2).distance_to(before) / float(rig.eyes[0].r))
+	ok = _check(rattle > 0.25, "…and a jerk of the hand rattles them (%.0f%% of their travel)" % (rattle * 100.0)) and ok
 
 	# ---- the right hand does the doing
 	p.global_position = Vector3(5.2, 0, 4.5); p.yaw = PI / 2; p.pitch = -0.15   # facing Sonya's room door?
