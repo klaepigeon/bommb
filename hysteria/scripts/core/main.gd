@@ -152,7 +152,7 @@ func _ready() -> void:
 	if args.has("shots"):
 		_shots(args.shots)
 	else:
-		if DisplayServer.is_touchscreen_available():
+		if Game.has_touch():
 			Game.say("Left thumb: walk (push to the rim to run). Right thumb: look.", 6.0)
 		else:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -179,6 +179,7 @@ func _continue() -> void:
 ## Through the gap behind the wardrobe and back. Only one of the two places exists at a time.
 func enter_labyrinth() -> void:
 	in_labyrinth = true
+	if crash: crash.note("into the town")
 	labyrinth.visible = true; labyrinth.process_mode = Node.PROCESS_MODE_INHERIT
 	world.get_node("Apartment").visible = false
 	(world.get_node("Environment") as WorldEnvironment).environment = labyrinth.env
@@ -190,6 +191,7 @@ func enter_labyrinth() -> void:
 func enter_flat48() -> void:
 	if in_labyrinth: leave_labyrinth(Transform3D.IDENTITY)
 	in_flat48 = true
+	if crash: crash.note("into flat 48")
 	flat48.visible = true; flat48.process_mode = Node.PROCESS_MODE_INHERIT
 	world.get_node("Apartment").visible = false
 	(world.get_node("Environment") as WorldEnvironment).environment = flat48.env
@@ -238,7 +240,11 @@ func _input(e: InputEvent) -> void:
 	if e is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		player.look(e.relative)
 	elif e is InputEventMouseButton and e.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		# a click captures the mouse for looking, on a computer. Never on a phone: there every touch
+		# also arrives as a pretend mouse press, and a captured mouse stops the on-screen buttons
+		# (USE, FIRE, everything) from getting their presses at all.
+		if not Game.has_touch() and e.device != InputEvent.DEVICE_ID_EMULATION:
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 # ---------------------------------------------------------------- screenshot tour
 const VIEWS := [   # the JS build's tools/smoke.mjs views: name, x, z, yaw, pitch, torch

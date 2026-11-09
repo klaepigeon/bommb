@@ -43,6 +43,16 @@ func _bind_inputs() -> void:
 		jb.button_index = pad[action]
 		InputMap.action_add_event(action, jb)
 
+## On a phone (or told to act like one: `-- phone`, for testing the phone build on a desktop).
+static var _phone := -1
+static func is_phone() -> bool:
+	if _phone < 0: _phone = 1 if (OS.has_feature("mobile") or OS.get_cmdline_user_args().has("phone")) else 0
+	return _phone == 1
+
+## A touchscreen to drive the game with (a phone, or `-- phone`).
+static func has_touch() -> bool:
+	return is_phone() or DisplayServer.is_touchscreen_available()
+
 func say(text: String, seconds := 4.0) -> void:
 	toast.emit(text, seconds)
 

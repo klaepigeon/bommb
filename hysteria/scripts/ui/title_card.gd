@@ -32,6 +32,6 @@ func _button(text: String) -> Button:
 
 func _pick(cont: bool) -> void:
 	get_tree().paused = false
-	if not DisplayServer.is_touchscreen_available(): Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	if not Game.has_touch(): Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	chosen.emit(cont)
 	queue_free()

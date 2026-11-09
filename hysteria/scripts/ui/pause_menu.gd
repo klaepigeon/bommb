@@ -32,7 +32,7 @@ func _ready() -> void:
 	_build()
 	_load()
 	panel.visible = false
-	pause_btn.visible = DisplayServer.is_touchscreen_available()
+	pause_btn.visible = Game.has_touch()
 
 func _style(bg: Color, border: Color, radius := 6) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new(); sb.bg_color = bg; sb.border_color = border
@@ -117,7 +117,10 @@ func _build() -> void:
 	# if the last run crashed, its log, to photograph and send
 	crash_btn = _button("Last crash log"); crash_btn.pressed.connect(_show_crash); box.add_child(crash_btn)
 	var restart := _button("Restart chapter"); restart.pressed.connect(_restart); box.add_child(restart)
-	var quit := _button("Quit"); quit.pressed.connect(func(): get_tree().quit()); box.add_child(quit)
+	var quit := _button("Quit"); quit.pressed.connect(func():
+		var m := get_tree().get_first_node_in_group("main")
+		if m and m.get("crash"): m.crash.closed()
+		get_tree().quit()); box.add_child(quit)
 	add_child(panel)
 
 func toggle() -> void:

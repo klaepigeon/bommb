@@ -38,7 +38,7 @@ func _press(what: String) -> void:
 
 func _process(_d: float) -> void:
 	var g = player.get("gun") if player else null
-	var touch := DisplayServer.is_touchscreen_available() or bool(player.get("touch_ui")) if player else false
+	var touch := Game.has_touch() or bool(player.get("touch_ui")) if player else false
 	buttons.weapon.visible = g != null and touch
 	buttons.fire.visible = g != null and touch and bool(g.get("drawn"))
 	buttons.reload.visible = buttons.fire.visible

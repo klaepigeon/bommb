@@ -298,6 +298,12 @@ func _environment() -> void:
 	# a thin, cold moon, high and across the main street: no shadows (a directional light without
 	# them costs nothing extra and never flickers), just enough to model the cornices, the courses
 	# of the rustication, the logs, against the night. It goes with the town (hidden with it).
+	if Game.is_phone():
+		# no moon on a phone: the only directional light in the game, and the first thing the town
+		# asks a phone's GPU driver to compile for (the likeliest cause of the town crashing on
+		# Android). A colder, slightly brighter ambient stands in for it.
+		env.ambient_light_energy = 0.62
+		return
 	var moon := DirectionalLight3D.new(); moon.name = "Moon"
 	moon.light_color = Color(0.55, 0.63, 0.88); moon.light_energy = 0.32; moon.light_specular = 0.15
 	moon.shadow_enabled = false
@@ -354,7 +360,7 @@ func _process(delta: float) -> void:
 	# gas: a slow, soft breathing, never a flicker; lamps beyond the fog are off
 	for l in lamps:
 		var d := l.global_position.distance_to(eye)
-		l.visible = d < (22.0 if OS.has_feature("mobile") else 30.0)   # a phone lights fewer at once
+		l.visible = d < (22.0 if Game.is_phone() else 30.0)   # a phone lights fewer at once
 		if l.visible:
 			var sd: float = l.get_meta("seed")
 			l.light_energy = 2.4 * (0.93 + 0.05 * sin(_t * 1.3 + sd) + 0.02 * sin(_t * 3.1 + sd * 2.0))

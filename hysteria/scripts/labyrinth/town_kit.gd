@@ -177,6 +177,9 @@ func finish() -> int:
 	var n := 0
 	for key in tools:
 		var d: Dictionary = tools[key]
+		# a phone doesn't get the fine detail at all (it's the geometry that starts drawing a few
+		# steps into the town, when the town crashed on Android)
+		if (key as Vector4i).w == 1 and Game.is_phone(): continue
 		for mat in d:
 			var st: SurfaceTool = d[mat]
 			st.index()               # shared corners stored once: about a third less vertex memory
@@ -186,7 +189,7 @@ func finish() -> int:
 			mi.material_override = material(mat)
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if not (mat in ["glass", "lamp_glass", "window_glow"] or mat.begins_with("shop")) else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			if (key as Vector4i).w == 1:
-				mi.visibility_range_end = FINE_RANGE * (0.65 if OS.has_feature("mobile") else 1.0); mi.visibility_range_end_margin = 3.0
+				mi.visibility_range_end = FINE_RANGE * (0.65 if Game.is_phone() else 1.0); mi.visibility_range_end_margin = 3.0
 				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			parent.add_child(mi)
 			n += 1

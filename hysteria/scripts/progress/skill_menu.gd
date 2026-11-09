@@ -87,7 +87,7 @@ func toggle() -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		(rows["headshot"] as Button).grab_focus()
 	else:
-		if not DisplayServer.is_touchscreen_available(): Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		if not Game.has_touch(): Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _input(e: InputEvent) -> void:
 	if e.is_action_pressed("skills") or (open and e.is_action_pressed("ui_cancel")):

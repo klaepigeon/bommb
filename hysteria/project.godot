@@ -39,6 +39,7 @@ pointing/emulate_mouse_from_touch=false
 
 ; headroom over the flat's worst mesh (6 omni + 5 spot): Compatibility silently drops the rest
 limits/opengl/max_lights_per_object=16
+limits/opengl/max_lights_per_object.mobile=8
 
 ; Android: the mobile defaults are 16-bit, half-size, unfiltered shadow maps, which on Adreno and
 ; Mali shimmer and acne as the camera (and the PS1 vertex snapping) moves. Same shadows as desktop.

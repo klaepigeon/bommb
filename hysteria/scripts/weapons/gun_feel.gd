@@ -55,7 +55,7 @@ func kick(gun: Node3D, strength: float) -> void:
 	if gun.has_method("muzzle_global"): _smoke(gun.call("muzzle_global"), strength)
 
 func _haptic(strength: float) -> void:
-	if OS.has_feature("mobile"): Input.vibrate_handheld(int(45 + 35 * strength), clampf(0.5 + 0.25 * strength, 0.0, 1.0))
+	if Game.is_phone(): Input.vibrate_handheld(int(45 + 35 * strength), clampf(0.5 + 0.25 * strength, 0.0, 1.0))
 	for j in Input.get_connected_joypads():
 		Input.start_joy_vibration(j, clampf(0.35 * strength, 0.0, 1.0), clampf(0.6 * strength, 0.0, 1.0), 0.12 + 0.05 * strength)
 
@@ -130,7 +130,7 @@ func _clear(a: Vector3, b: Vector3, target: Node) -> bool:
 func _aim_assist(real: float) -> void:
 	var g = player.get("gun")
 	if not g or not g.get("drawn") or player.get("locked"): return
-	if not (bool(player.get("touch_ui")) or _pad_active or DisplayServer.is_touchscreen_available()): return
+	if not (bool(player.get("touch_ui")) or _pad_active or Game.has_touch()): return
 	var cam: Camera3D = player.get("cam")
 	var fwd := -cam.global_basis.z
 	var best: Vector3 = Vector3.ZERO; var best_ang := deg_to_rad(7.0)
@@ -230,7 +230,7 @@ func confirm(head: bool, kill: bool) -> void:
 		_slow(0.22 if head else 0.3, 650 if head else 420)
 	else:
 		_slow(0.05, 55 if head else 35)          # the hit-stop
-	if OS.has_feature("mobile"): Input.vibrate_handheld(90 if kill else 30, 1.0 if kill else 0.6)
+	if Game.is_phone(): Input.vibrate_handheld(90 if kill else 30, 1.0 if kill else 0.6)
 	_socko_line(head, kill)
 
 func _slow(scale: float, ms: int) -> void:

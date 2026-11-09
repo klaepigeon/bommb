@@ -35,7 +35,7 @@ func _ready() -> void:
 		btn.button_down.connect(_pressed.bind(b[0]))
 		btn.button_up.connect(_released.bind(b[0]))
 		add_child(btn); buttons[b[0]] = btn
-	visible = DisplayServer.is_touchscreen_available()
+	visible = Game.has_touch()
 
 func _circle(d: float, col: Color) -> Panel:
 	var p := Panel.new(); var sb := StyleBoxFlat.new(); sb.bg_color = col; sb.set_corner_radius_all(int(d))
