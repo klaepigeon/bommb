@@ -51,7 +51,7 @@ the later direction is in the game, and the conflict is listed here rather than 
 
 | Area | Status | Gap |
 |---|---|---|
-| Kurt's full body (look down: chest to feet) | **missing** | Only the right arm exists; the left hand is Socko. Needs torso, pelvis, legs, feet on the same rig, aligned to the camera at 177.8 cm |
+| Kurt's full body (look down: chest to feet) | partial | `KurtBody`: trunk, coat to mid-thigh, legs (two-bone IK), shoes, the left upper sleeve to Socko's elbow, at 177.8 cm proportions; gait (stance/swing with speed and direction, pelvis roll and counter-turn), an older man's idle stance (weight on the right), crouch. Rigid segments, not yet one skinned mesh; no falls or injury reactions yet |
 | Kurt's movement character (age, balance, economy) | partial | Hand flexing and grips exist; gait, stiffness, recoveries, falls don't |
 | Dialogue runtime (branching, intents, conditions, consequences) | partial | `Conversation` plays JSON graphs (content/dialogue): lines, intent choices with styles, branches, conditions/actions, Socko aside/interrupt/proxy/hijack, full history; validator + runtime test. One conversation (Marta). The graph editor plugin is still to come; Socko's ambient lines are still in code |
 | Kurt's voiced lines | **missing** | Kurt never speaks |

@@ -31,6 +31,8 @@ const SETS := {
 		["f48_gun_hand", 5.5, 1.9, 0.0, -0.05, true, "gun"], ["f48_papa_aim", 6.0, 2.6, 0.0, 0.05, true, "gun"],
 		["f48_kurt_mannequin", 6.3, 1.9, 0.25, -0.05, false, "dress"], ["f48_marta_mannequin", 8.3, 3.2, -1.1, -0.1, false, "dress"],
 		["f48_kurt_back", 6.6, 0.95, 1.9, -0.15, false, "dress"]],
+	"body": [["b_look_down", 5.6, 3.2, PI + 0.4, -1.3, true, "socko"], ["b_down_ahead", 5.6, 2.9, 0.4, -0.8, true, "socko"],
+		["b_crouch_down", 5.6, 3.2, PI + 0.4, -1.2, true, "crouch"], ["b_ahead", 5.6, 2.9, 0.4, -0.1, true, "socko"]],
 	"escape": [["e_chain", 9.45, 4.56, -PI * 0.5, -0.05, true, "ajar"], ["e_chain_close", 9.75, 4.75, -PI * 0.5 - 0.35, -0.12, true, "ajar"],
 		["e_bath_full", 7.4, 6.75, PI, -0.95, true, ""], ["e_bath_drained", 7.4, 6.75, PI, -0.95, true, "drain"],
 		["e_door_out", 9.4, 4.56, -PI * 0.5, 0.0, false, "free"], ["e_heap", 9.55, 4.9, -PI * 0.5 - 0.5, -0.9, true, ""]],
@@ -78,6 +80,9 @@ func _initialize() -> void:
 						if b.identity == "SOFA": b.make_real(true)
 		p.global_position = at; p.velocity = Vector3.ZERO
 		p.yaw = v[3]; p.pitch = v[4]; p.torch.visible = v[5]
+		if which == "body":
+			main.encounter.skip(); main.socko_intro.skip()
+			p.crouched = v[6] == "crouch"
 		if v.size() > 6:
 			main.encounter.process_mode = Node.PROCESS_MODE_DISABLED
 			match v[6]:

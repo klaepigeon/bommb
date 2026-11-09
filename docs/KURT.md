@@ -143,3 +143,16 @@ Idle: low in the bottom-right of view, palm in, fingers relaxed. Carrying: the o
 curled hand. Using something: the hand reaches for it.
 
 Clothing on the arm (a dark wool coat sleeve and a shirt cuff) is ordinary dress, not lore.
+
+
+## 4. The body below the arm (built; production data, not canon)
+
+`hysteria/scripts/kurt/kurt_body.gd`. Segment heights as fractions of stature H = 1.778 m:
+hip joint 0.53 H (0.94 m), knee 0.285 H, ankle 0.039 H; thigh 0.245 H, shank 0.246 H, foot
+0.152 H; hip joints 0.09 m either side of the midline. The trunk hangs 0.13 m behind the eye (the
+eyes are in front of the neck), so it never enters the forward view; looking down you see the
+coat's front and your shoes beyond it. Gait: a 1.3 m cycle, stance then swing with a 9 cm lift,
+the pelvis rolling ±3° and counter-turning ±4.5° with the stride and bobbing twice a cycle.
+Standing still, the weight is on the right leg (the pelvis shifted right, dropped on the left),
+the left foot a little forward and turned out. Crouched, the hips drop with the eye and the
+knees come forward. Dress: the arm's dark wool coat to mid-thigh, dark trousers, black shoes.
