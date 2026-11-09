@@ -391,8 +391,9 @@ func _dialogue() -> void:
 	var last := -1.0; var held := 0.0
 	t = 0.0; _dt()
 	while s.talking and t < 5.0:
-		await process_frame; t += _dt()
-		if absf(s._speech_t - last) < 1e-6: held += 1.0 / 60.0
+		await process_frame
+		var dt := _dt(); t += dt
+		if absf(s._speech_t - last) < 1e-6: held += dt      # real time the line stood still
 		last = s._speech_t
 	_check(held > 0.8, "{pause} holds the line (%.2f s)" % held)
 	# divided attention from dialogue
