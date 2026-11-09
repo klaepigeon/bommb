@@ -20,7 +20,8 @@ func _ready() -> void:
 	main = get_parent()
 	last_log = _previous()
 	_f = FileAccess.open(CRUMBS, FileAccess.WRITE)
-	_line("started %s · %s" % [Time.get_datetime_string_from_system(), OS.get_model_name()])
+	_line("started %s · %s · %s · %s" % [Time.get_datetime_string_from_system(), OS.get_model_name(),
+		RenderingServer.get_current_rendering_method(), RenderingServer.get_video_adapter_api_version()])
 	if last_log != "": _show_on_launch.call_deferred()
 
 ## something worth knowing happened (entering a place, a fight, a save...)
