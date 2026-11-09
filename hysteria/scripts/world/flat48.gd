@@ -657,8 +657,17 @@ class Figure48 extends StaticBody3D:
 		var want := atan2(cam.global_position.x - global_position.x, cam.global_position.z - global_position.z) + PI
 		rotation.y = lerp_angle(rotation.y, want, minf(1.0, delta * 0.25))
 
-	func shot(_point: Vector3, _n: Vector3, _hk: bool, _shape: int) -> bool:
+	var last_hit_head := false
+	func aim_points() -> Array:
+		if down: return []
+		return [{"pos": global_position + Vector3(0, tall * 0.9, 0), "head": true, "target": self},
+			{"pos": global_position + Vector3(0, tall * 0.6, 0), "head": false, "target": self}]
+	func impact_kind() -> String: return "figure"
+	func is_down() -> bool: return down
+
+	func shot(point: Vector3, _n: Vector3, _hk: bool, _shape: int) -> bool:
 		if down: return false
+		last_hit_head = point.y - global_position.y > tall * 0.8
 		hits += 1
 		Game.flags["f48_shot_" + id] = true
 		fall(false)
@@ -668,13 +677,28 @@ class Figure48 extends StaticBody3D:
 		down = true
 		var tw := create_tween() if not quiet else null
 		if tw:
-			tw.tween_property(body, "rotation:x", -PI * 0.48, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-			tw.parallel().tween_property(body, "position:y", -tall * 0.02, 0.5)
+			# knocked back on its heels first, then it goes over, and lands with its weight
+			tw.tween_property(body, "rotation:x", 0.18, 0.07).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+			tw.tween_property(body, "rotation:x", -PI * 0.48, 0.55).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+			tw.parallel().tween_property(body, "position:y", -tall * 0.02, 0.55)
+			tw.tween_callback(func():
+				var ap := AudioStreamPlayer3D.new(); ap.stream = Flat48._thud(); add_child(ap); ap.play(); ap.finished.connect(ap.queue_free)
+				Noises.make(get_tree(), global_position, 0.5, "impact", self))
 		else:
 			body.rotation.x = -PI * 0.48
 		for c in get_children(): if c is CollisionShape3D: (c as CollisionShape3D).disabled = true
 		if not quiet:
 			flat.transformed.emit(self, "SHOT")
+
+## a body's weight hitting the floor
+static func _thud() -> AudioStreamWAV:
+	const R := 22050
+	var n := int(R * 0.5); var s := PackedFloat32Array(); s.resize(n)
+	var rng := RandomNumberGenerator.new(); rng.seed = 48
+	for i in n:
+		var t := float(i) / R
+		s[i] = sin(TAU * (70.0 - 30.0 * t) * t) * exp(-t * 11.0) + rng.randf_range(-1, 1) * exp(-t * 40.0) * 0.5
+	return FlatEscape._wav(s, R)
 
 ## the sound of a thing becoming what it is: a low swell and a paper snap
 static func _thrum() -> AudioStreamWAV:

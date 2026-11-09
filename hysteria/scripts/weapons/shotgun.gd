@@ -35,6 +35,9 @@ var reload_each := LOAD_EACH
 var kick_scale := 1.0
 
 var _kick := 0.0
+var _kick_v := 0.0
+var _kick_acc := 0.0
+var _next_shot := 0
 var _flash: OmniLight3D
 var _flash_q: MeshInstance3D
 var _flash_t := 0.0
@@ -47,7 +50,7 @@ func _ready() -> void:
 	_model()
 	_flash = OmniLight3D.new(); _flash.light_color = Color(1.0, 0.72, 0.4); _flash.omni_range = 7.0; _flash.light_energy = 0.0
 	_flash.position = Vector3(0, 0.03, -0.38); add_child(_flash)
-	_flash_q = MeshInstance3D.new(); var qm := QuadMesh.new(); qm.size = Vector2(0.16, 0.16); _flash_q.mesh = qm
+	_flash_q = MeshInstance3D.new(); var qm := QuadMesh.new(); qm.size = Vector2(0.28, 0.28); _flash_q.mesh = qm
 	var fm := StandardMaterial3D.new(); fm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED; fm.albedo_color = Color(1.0, 0.8, 0.45)
 	fm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED; fm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	fm.albedo_texture = Revolver._star(); _flash_q.material_override = fm; _flash_q.visible = false
@@ -105,6 +108,9 @@ func _model() -> void:
 func grip_global() -> Transform3D:
 	return global_transform
 
+func muzzle_global() -> Transform3D:
+	return global_transform * Transform3D(Basis(), Vector3(0, 0.028, -0.38))
+
 # ---------------------------------------------------------------- in the hand
 func _process(delta: float) -> void:
 	if not player or not cam:
@@ -115,7 +121,12 @@ func _process(delta: float) -> void:
 	var want := cam.global_transform * Transform3D(Basis(), HIP)
 	var target := want.origin
 	var pos := global_position.lerp(target, 1.0 - exp(-delta * 18.0)) if global_position.distance_to(target) < 0.5 else target
-	_kick = move_toward(_kick, 0.0, delta * 3.0)
+	var real := delta / maxf(Engine.time_scale, 0.01)
+	_kick_acc += minf(real, 0.25)
+	while _kick_acc >= 1.0 / 240.0:
+		_kick_acc -= 1.0 / 240.0
+		_kick_v += (-200.0 * _kick - 17.0 * _kick_v) / 240.0
+		_kick += _kick_v / 240.0
 	var aim_at := cam.global_position - cam.global_transform.basis.z * 7.0
 	var b := Basis.looking_at((aim_at - pos).normalized(), cam.global_transform.basis.y)
 	b = b * Basis(Vector3.UP, 0.12) * Basis(Vector3.BACK, -0.06)
@@ -146,15 +157,22 @@ func fire() -> void:
 	if not drawn or reloading: return
 	if loaded <= 0:
 		_sfx(Revolver._click(0.8)); emptied.emit(); return
+	if Time.get_ticks_msec() < _next_shot: return
+	_next_shot = Time.get_ticks_msec() + 200
 	loaded -= 1
-	_kick = kick_scale; _flash_t = 0.07
-	player.set("shake", 1.1 * kick_scale)
-	player.set("pitch", float(player.get("pitch")) + 0.06 * kick_scale)
+	_kick = 0.3 * kick_scale; _kick_v = 22.0 * kick_scale; _flash_t = 0.1
+	var feel := GunFeel.get_in(get_tree())
+	if feel: feel.kick(self, 1.9 * kick_scale)
+	else:
+		player.set("shake", 1.1 * kick_scale)
+		player.set("pitch", float(player.get("pitch")) + 0.06 * kick_scale)
 	_sfx(_boom())
 	Noises.make(get_tree(), global_position, 1.0, "gunshot", player)
 	var from := cam.global_position
-	var fwd := -cam.global_transform.basis.z
-	var right := cam.global_transform.basis.x; var up := cam.global_transform.basis.y
+	# the pattern's centre goes where a target near the crosshair is (generous; see GunFeel)
+	var fwd: Vector3 = feel.resolve_aim(from, -cam.global_transform.basis.z, RANGE).dir if feel else -cam.global_transform.basis.z
+	var right := fwd.cross(cam.global_transform.basis.y).normalized(); var up := right.cross(fwd).normalized()
+	var bursts := 0
 	var space := get_world_3d().direct_space_state
 	var struck := {}          # node -> [hit, pellets]
 	var hits := []
@@ -172,9 +190,12 @@ func fire() -> void:
 			else: struck[n] = [hit, 1]
 		elif hit.collider is RigidBody3D:
 			var rb := hit.collider as RigidBody3D
-			rb.apply_impulse(dir * 2.6, hit.position - rb.global_position)
+			rb.apply_impulse(dir * 4.5, hit.position - rb.global_position)      # buckshot throws things
 		else:
 			_hole(hit.position, hit.normal)
+		# debris: not for every pellet (a phone has to draw it), but a good spray
+		if feel and bursts < 4:
+			bursts += 1; feel.impact(hit, dir, 0.9)
 	for n in struck:
 		var h: Dictionary = struck[n][0]
 		var pellets: int = struck[n][1]
@@ -182,6 +203,9 @@ func fire() -> void:
 		for k in clampi(int(ceil(pellets / 2.0)), 1, 4):
 			if not is_instance_valid(n): break
 			n.call("shot", h.position, h.normal, headshot_kills, h.get("shape", 0))
+		if feel and is_instance_valid(n):
+			feel.impact(h, fwd, 1.6)
+			feel.confirm(bool(n.get("last_hit_head")), n.has_method("is_down") and bool(n.call("is_down")))
 	fired.emit(hits)
 
 ## Break it open, the spent hulls out over his shoulder, a shell into each empty barrel, shut.

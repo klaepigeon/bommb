@@ -66,6 +66,17 @@ var _whisper_t := 6.0
 func setup(p_lab: Labyrinth, p_player: Node) -> void:
 	lab = p_lab; player = p_player
 	add_to_group("listener")
+	add_to_group("shootable_target")
+
+## for GunFeel: where a round would go, head first
+var last_hit_head := false
+var _jolt := Vector3.ZERO
+func aim_points() -> Array:
+	if not awake or state == S.DEAD: return []
+	return [{"pos": _head_shape.global_position, "head": true, "target": self},
+		{"pos": lab.to_global(position + Vector3(0, HOVER + 0.75, 0)), "head": false, "target": self}]
+func impact_kind() -> String: return "coral"
+func is_down() -> bool: return state == S.DEAD
 
 func _ready() -> void:
 	marta = Marta.new(); marta.name = "Marta"; add_child(marta)
@@ -240,6 +251,10 @@ func _process(delta: float) -> void:
 	position = lab.wrap(position)
 	# floating: a slow bob; leaning a little into her movement; her head on him once she knows
 	marta.position.y = HOVER + sin(_t * 1.1) * 0.05
+	_jolt = _jolt.lerp(Vector3.ZERO, 1.0 - exp(-delta * 7.0))
+	# a round's knock-back, dying away (in her own frame: the hunter turns with her)
+	var j := global_transform.basis.inverse() * _jolt
+	marta.position.x = j.x; marta.position.z = j.z
 	rotation.y = _yaw
 	if state == S.CALM:
 		# head down, to what's in her hands
@@ -364,9 +379,12 @@ func _hold() -> void:
 	Game.fade.emit(0.0, 1.4)
 
 ## a shot from the revolver: true if it hit her
-func shot(point: Vector3, _normal: Vector3, headshot_kills: bool, shape: int) -> bool:
+func shot(point: Vector3, _n: Vector3, headshot_kills: bool, shape: int) -> bool:
 	if state == S.DEAD: return false
-	var head := shape == 1 or point.distance_to(_head_shape.global_position) < 0.2
+	var head := shape == 1 or point.distance_to(_head_shape.global_position) < 0.24
+	last_hit_head = head
+	# the round's weight: she's knocked back off her line, and comes back to it
+	_jolt += (-_n).normalized() * (0.0 if _n == Vector3.ZERO else (0.22 if head else 0.14))
 	hp -= 3 if head else 1
 	hurt.emit(head)
 	_stagger = 0.5 if not head else 0.9
