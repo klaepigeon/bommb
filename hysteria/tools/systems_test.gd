@@ -53,7 +53,7 @@ func _initialize() -> void:
 	main.wardrobe.restore_pushed(); G.flags["wardrobe_pushed"] = true
 	var shoe := prop_titled(main, "child's shoe")
 	check(shoe != null, "the red shoe in the hall")
-	p.global_position = Vector3(7.05, 0.02, 1.25); p.yaw = -PI * 0.5
+	p.global_position = Vector3(3.55, 0.02, 4.45); p.yaw = PI
 	await physics_frame
 	in_hand(p, shoe)
 	for i in 10: await physics_frame
@@ -90,9 +90,28 @@ func _initialize() -> void:
 	await process_frame; await process_frame
 	check(main.memory._sense.playing, "How She Moves: the pressure in the ears")
 
+	# ---- walking into things: a chair kicked out of the way; a door pushed open
+	main.leave_labyrinth(Transform3D(Basis(), Vector3(3.55, 0, 4.5)))
+	var chair := prop_titled(main, "chair")
+	var cpos: Vector3 = chair.global_position
+	p.global_position = Vector3(cpos.x, 0.02, cpos.z) + Vector3(0, 0, 1.1); p.yaw = 0.0; p.velocity = Vector3.ZERO
+	await physics_frame
+	Input.action_press("move_forward")
+	for i in 90: await physics_frame
+	Input.action_release("move_forward")
+	check(chair.global_position.distance_to(cpos) > 0.3, "walking into a chair, he kicks it out of the way (%.2f m)" % chair.global_position.distance_to(cpos))
+	var dchild: Node3D = main.world.find_child("door_dChild", true, false)
+	dchild.target = 0.0; dchild.angle = 0.0; dchild.call("_apply")
+	for i in 5: await physics_frame
+	p.global_position = Vector3(5.65, 0.02, 4.55); p.yaw = PI; p.velocity = Vector3.ZERO
+	await physics_frame
+	Input.action_press("move_forward")
+	for i in 60: await physics_frame
+	Input.action_release("move_forward")
+	check(float(dchild.target) > 0.5, "walking into a closed door, he pushes it open")
 	# ---- things stay where you left them, across a save
 	var bottle := prop_titled(main, "bottle of mineral water")
-	main.leave_labyrinth(Transform3D(Basis(), Vector3(7.05, 0, 1.25)))
+	main.leave_labyrinth(Transform3D(Basis(), Vector3(3.55, 0, 4.5)))
 	bottle.global_position = Vector3(5.0, 0.3, 3.0); bottle.sleeping = true
 	await process_frame
 	check(main.save_game.save(), "saved")

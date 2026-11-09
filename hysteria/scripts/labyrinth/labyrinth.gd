@@ -354,7 +354,7 @@ func _process(delta: float) -> void:
 	# gas: a slow, soft breathing, never a flicker; lamps beyond the fog are off
 	for l in lamps:
 		var d := l.global_position.distance_to(eye)
-		l.visible = d < 30.0
+		l.visible = d < (22.0 if OS.has_feature("mobile") else 30.0)   # a phone lights fewer at once
 		if l.visible:
 			var sd: float = l.get_meta("seed")
 			l.light_energy = 2.4 * (0.93 + 0.05 * sin(_t * 1.3 + sd) + 0.02 * sin(_t * 3.1 + sd * 2.0))

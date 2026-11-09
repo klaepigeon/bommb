@@ -36,6 +36,11 @@ var _dir := Vector3(0, 0, -1)
 var _crouch := 0.0
 var _t := 0.0
 var _mats := {}
+var _kick_t := -1.0          # into a kick (the right foot out and back), or -1
+
+## the right foot out at something in the way, and back: about a third of a second
+func kick() -> void:
+	_kick_t = 0.0
 
 func setup(p_player: Node) -> void:
 	player = p_player
@@ -141,6 +146,9 @@ func _process(delta: float) -> void:
 	if vl.length() > 0.2: _dir = _dir.lerp(vl.normalized(), 1.0 - exp(-delta * 8.0)).normalized()
 	_crouch = lerpf(_crouch, 1.0 if player.get("crouched") else 0.0, 1.0 - exp(-delta * 8.0))
 	_phase = fposmod(_phase + delta * _speed / STRIDE, 1.0)
+	if _kick_t >= 0.0:
+		_kick_t += delta
+		if _kick_t > 0.32: _kick_t = -1.0
 	var moving := smoothstep(0.15, 0.6, _speed)
 	var fwd := Vector3(0, 0, -1)
 	# the pelvis: under the eye, a little behind; it bobs twice a cycle, rolls and counter-turns
@@ -175,6 +183,9 @@ func _process(delta: float) -> void:
 		var stance := Vector3(side * (0.03 if s == "l" else 0.01), 0, (-0.09 if s == "l" else 0.03)) * (1.0 - moving)
 		var ankle := Vector3(side * HIP_X * 1.05, ANKLE_Y + lift, BACK - 0.1) + step + stance
 		ankle.z -= 0.18 * _crouch * (1.0 if s == "l" else 0.4)
+		if s == "r" and _kick_t >= 0.0:
+			var k := sin(clampf(_kick_t / 0.32, 0.0, 1.0) * PI)
+			ankle = ankle.lerp(Vector3(HIP_X * 0.6, 0.32, BACK - 0.6), k)
 		_leg(s, hip, ankle, fwd)
 	# the left upper sleeve, from the shoulder to Socko's elbow
 	var socko = player.get_viewport().find_child("Socko", false, false) if player.is_inside_tree() else null

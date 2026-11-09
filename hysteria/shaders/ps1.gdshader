@@ -45,8 +45,11 @@ void fragment() {
 		vec3 lo = hole_min.xyz; vec3 hi = hole_max.xyz;
 		if (all(greaterThan(world_pos, lo)) && all(lessThan(world_pos, hi))) {
 			// ragged: the edge eats in by up to 9 cm in 4 cm chunks of plaster
-			vec2 q = world_pos.zy;
-			float e = min(min(q.x - lo.z, hi.z - q.x), min(q.y - lo.y, hi.y - q.y));
+			// along whichever way the wall runs (the box is thin across it)
+			bool along_x = (hi.x - lo.x) > (hi.z - lo.z);
+			vec2 q = along_x ? world_pos.xy : world_pos.zy;
+			float a0 = along_x ? lo.x : lo.z; float a1 = along_x ? hi.x : hi.z;
+			float e = min(min(q.x - a0, a1 - q.x), min(q.y - lo.y, hi.y - q.y));
 			if (e > hole_hash(q * 25.0) * 0.09) discard;
 		}
 	}

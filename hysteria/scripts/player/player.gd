@@ -164,18 +164,51 @@ func _step_up(pre: Vector3, delta: float) -> void:
 ## Loose things in the way get shoved (chairs, bottles, the bucket). Props slide on a low-friction
 ## material (prop.gd); the shove beats that friction for anything, and heavy furniture moves
 ## slower than light things.
+## Walking into things: he doesn't stop for them. Anything loose up to about a chair's-and-a-half
+## weight he kicks out of his way (a real kick: the right foot, a thud, a noise anyone listening
+## hears); heavier furniture he leans into and shoves; an unlocked door he walks into, he pushes
+## open with his hand. The doorway and the room stay clear without fiddling.
+const KICK_MAX_KG := 45.0
+var _kicked := {}                   # body id -> time it was last kicked (so it's one kick, not a stream)
 func _shove(pre: Vector3) -> void:
 	var speed := Vector2(pre.x, pre.z).length()
 	if speed < 0.1:
 		return
+	var now := Time.get_ticks_msec()
+	var move := Vector3(pre.x, 0, pre.z).normalized()
 	for i in get_slide_collision_count():
 		var c := get_slide_collision(i)
-		var b := c.get_collider() as RigidBody3D
-		if b and b != held:
-			var push := -c.get_normal(); push.y = 0.0
-			if push.length() < 0.1:
-				continue
-			b.sleeping = false
+		var col := c.get_collider()
+		# a door: open it
+		var dn: Node = (col as Node).get_parent() if col is AnimatableBody3D else null
+		if dn and dn.get_script() and String(dn.get_script().resource_path).ends_with("door.gd"):
+			if String(dn.get("locked")) == "" and float(dn.get("target")) < 0.15 and move.dot(-c.get_normal()) > 0.5:
+				dn.set("target", float(dn.get("max_angle")))
+				_reach_t = 0.0; _reach_at = c.get_position(); _reach_pose = "flat"
+			continue
+		var b := col as RigidBody3D
+		if not b or b == held:
+			continue
+		var push := -c.get_normal(); push.y = 0.0
+		if push.length() < 0.1 or move.dot(push.normalized()) < 0.3:
+			continue
+		b.sleeping = false
+		if b.mass <= KICK_MAX_KG:
+			if now - int(_kicked.get(b.get_instance_id(), 0)) < 450: continue
+			_kicked[b.get_instance_id()] = now
+			# the kick: hard enough to clear his way, by weight (a chair skids off, a box shoves aside)
+			var dir := (move * 0.75 + push.normalized() * 0.25).normalized()
+			var dv := clampf(4.2 / sqrt(maxf(b.mass, 0.5)), 0.6, 3.2)
+			var lift := 0.9 if b.mass < 8.0 else 0.25
+			b.apply_central_impulse((dir * dv + Vector3.UP * lift) * b.mass)
+			b.apply_torque_impulse(Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)) * b.mass * 0.15)
+			if body: body.call("kick")
+			shake = maxf(shake, 0.18)
+			noise = maxf(noise, 0.6)
+			Sfx.play(get_parent(), "thud", c.get_position(), -2.0)
+			Noises.make(get_tree(), c.get_position(), 0.55, "kick", self)
+			if "thrown_by" in b: b.set("thrown_by", self)
+		else:
 			var dv := 0.14 * clampf(20.0 / b.mass, 0.35, 1.0) * minf(speed / WALK, 1.0)
 			b.apply_central_impulse(push.normalized() * dv * b.mass)
 

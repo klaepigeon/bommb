@@ -39,7 +39,7 @@ anything is built on it. Nothing in the established opening (prompt §3.1) has b
   once the **lover of Rasputin**. Decades later she **fought Trickshot** (Kurt) and became **his
   lover**. **Kurt is the father of her daughter Sonya, and abandoned Sonya as a child.** There is
   no husband in Flat 47: the flat is Marta's and Sonya's. All of this is told **only through the
-  environment** (the labyrinth behind the bedroom wardrobe): nobody says it.
+  environment** (the labyrinth behind the wardrobe in the room he wakes in): nobody says it.
 - **Open questions (not invented here):** her age (Rasputin died in December 1916; she looks the
   same in his photograph as at her table); Sonya's age now and when Kurt left; whether "the woman
   in 47" of the newer documents (Sonya, "an old villain") is reconciled by this. The flat's
@@ -88,9 +88,13 @@ anything is built on it. Nothing in the established opening (prompt §3.1) has b
 
 ## 2b. The labyrinth behind the wardrobe (owner's canon; layout and props PROPOSED)
 
-Shouldering the **bedroom wardrobe** aside along the kitchen wall uncovers a ragged hole in the
-plaster. The kitchen is on the other side of that wall; the hole goes somewhere else. Through it
-is an **impossible labyrinth: Kerzhansk as it was under the Romanovs** (about 1910): cobbled
+Shouldering **the wardrobe in the room he wakes up in** (owner) along the wall uncovers a ragged
+hole knocked through low down. It stood in front of the box room door; it's been moved along the
+same wall to where the wall backs onto **Sonya's room**, so the box room stays reachable. The hole
+doesn't go into Sonya's room: it goes into the dark, and the dark is the town (which holds her
+nursery and her door). Kurt pushes it from its free end in three shoves; "Push the wardrobe" is
+offered from anywhere it's in view and he steps to its end himself.
+Through it is an **impossible labyrinth: Kerzhansk as it was under the Romanovs** (about 1910): cobbled
 streets, ochre façades with carved window frames, gas lamps, pre-reform signs, a church dome that
 stays the same distance away however far you walk, streets that come back to where they began.
 Here Kurt meets Marta again (hunting him by sound, floating, still seated in a chair that isn't
@@ -373,3 +377,8 @@ except Sonya.** The names are on the note wall (MARTA, KURT, SONYA). Built:
 
 **Open:** how each figure is helped (beyond naming); Suite 51's red-note monologue and CHILD'S CELL
 → POINTLESS DOOR (preserved for when it's built).
+
+
+**Walking into things (built):** Kurt doesn't stop for loose things in his way: anything up to
+about 45 kg he kicks clear as he walks into it (the right foot, a thud, a noise that carries);
+heavier furniture he shoves; an unlocked door he walks into, he pushes open.

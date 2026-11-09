@@ -18,6 +18,8 @@ var resume_btn: Button
 var skill_menu: Node
 var save_game: Node
 var save_note: Label
+var crash_btn: Button
+var crash_view: TextEdit
 var open := false
 var _was_captured := false
 
@@ -112,6 +114,8 @@ func _build() -> void:
 		toggle()
 		if skill_menu: skill_menu.call("toggle"))
 	box.add_child(skills)
+	# if the last run crashed, its log, to photograph and send
+	crash_btn = _button("Last crash log"); crash_btn.pressed.connect(_show_crash); box.add_child(crash_btn)
 	var restart := _button("Restart chapter"); restart.pressed.connect(_restart); box.add_child(restart)
 	var quit := _button("Quit"); quit.pressed.connect(func(): get_tree().quit()); box.add_child(quit)
 	add_child(panel)
@@ -141,6 +145,18 @@ func _notification(what: int) -> void:
 		toggle()
 	elif what == NOTIFICATION_APPLICATION_PAUSED and not open:
 		toggle()    # switched away from the app: come back paused
+
+func _show_crash() -> void:
+	var cr = get_tree().get_first_node_in_group("main").get("crash") if get_tree().get_first_node_in_group("main") else null
+	if not crash_view:
+		crash_view = TextEdit.new(); crash_view.editable = false
+		crash_view.set_anchors_preset(Control.PRESET_FULL_RECT)
+		crash_view.offset_left = 40; crash_view.offset_right = -40; crash_view.offset_top = 40; crash_view.offset_bottom = -40
+		crash_view.add_theme_font_size_override("font_size", 14)
+		crash_view.gui_input.connect(func(e): if e is InputEventMouseButton and e.pressed and e.double_click: crash_view.visible = false)
+		add_child(crash_view)
+	crash_view.text = ("The end of the last session's log (it didn't close cleanly). Double-tap to close.\n\n" + String(cr.last_log)) if cr and String(cr.last_log) != "" else "The last session closed cleanly. Nothing to show. (Double-tap to close.)"
+	crash_view.visible = true
 
 func _save_game() -> void:
 	if not save_game: return
