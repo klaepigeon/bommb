@@ -12,6 +12,8 @@ var last_log := ""            # the previous session's trail, if it didn't close
 var _f: FileAccess
 var _t := 0.0
 var _events: Array[String] = []
+var _fine := 0.0              # after anything happens: a line every frame for a while
+var last_clip := ""           # Socko's most recent clip (set by his director)
 var main: Node
 
 func _ready() -> void:
@@ -26,6 +28,7 @@ func note(what: String) -> void:
 	_events.append(what)
 	if _events.size() > 6: _events.pop_front()
 	_line("· " + what)
+	_fine = 2.0
 
 func closed() -> void:
 	_line("closed")
@@ -41,6 +44,12 @@ func _notification(what: int) -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
+	if _fine > 0.0:
+		_fine -= delta
+		var s = main.get("socko")
+		_line("  frame %.0f ms · %d draws · socko %s%s · %s" % [delta * 1000.0,
+			int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
+			("talking " if s and s.talking else ""), last_clip, str(main.player.global_position.snapped(Vector3.ONE * 0.1)) if main.get("player") else ""])
 	if _t < 0.5: return
 	_t = 0.0
 	var p: Node3D = main.get("player")
@@ -59,7 +68,7 @@ func _process(delta: float) -> void:
 
 func _line(s: String) -> void:
 	if not _f: return
-	_f.store_line("%.1f  %s" % [Time.get_ticks_msec() / 1000.0, s])
+	_f.store_line("%.2f  %s" % [Time.get_ticks_msec() / 1000.0, s])
 	_f.flush()
 
 ## the last session's trail, if it didn't end with "closed"
@@ -68,7 +77,7 @@ func _previous() -> String:
 	var lines := FileAccess.get_file_as_string(CRUMBS).strip_edges().split("\n")
 	if lines.is_empty() or lines[-1].ends_with("closed"): return ""
 	# newest first, so the top of the screen (the bit that ends up in a photo) is the last moment
-	var tail := lines.slice(maxi(1, lines.size() - 40))
+	var tail := lines.slice(maxi(1, lines.size() - 60))
 	tail.reverse()
 	var out := "newest first —\n" + "\n".join(tail) + "\n" + lines[0]
 	var d := DirAccess.open("user://logs")

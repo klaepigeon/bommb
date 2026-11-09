@@ -82,6 +82,8 @@ func _init(p_socko) -> void:
 ## Play a clip from the library. opts: layer, fade (s), amp, speed, hold (stay on the last frame:
 ## default for exits), restart (default true).
 func play(clip: String, opts := {}) -> bool:
+	var m = socko.get_tree().get_first_node_in_group("main") if socko and socko.is_inside_tree() else null
+	if m and m.get("crash"): m.crash.last_clip = clip
 	if not SockoClips.has(clip):
 		push_warning("SockoDirector: no clip %s" % clip)
 		return false

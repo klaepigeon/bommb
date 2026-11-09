@@ -64,11 +64,22 @@ func take() -> void:
 	Skills.add_nuggets(1)
 	# remembered by name, so a loaded game doesn't put it back
 	var gone: Dictionary = Game.flags.get("nuggets_taken", {}); gone[String(name)] = true; Game.flags["nuggets_taken"] = gone
+	visible = false; set_process(false)
 	_blip()
+	if m and m.get("crash"): m.crash.note("chirp played")
 	taken.emit(self)
-	queue_free()
+	queue_free.call_deferred()
 
+static var _chirp: AudioStreamWAV
+static var _player: AudioStreamPlayer
 func _blip() -> void:
+	if not _chirp: _chirp = _make_chirp()
+	if not is_instance_valid(_player):
+		_player = AudioStreamPlayer.new(); _player.stream = _chirp; _player.volume_db = -6.0
+		get_tree().root.add_child(_player)
+	_player.play()
+
+static func _make_chirp() -> AudioStreamWAV:
 	const RATE := 22050
 	var n := int(RATE * 0.14)
 	var bytes := PackedByteArray(); bytes.resize(n * 2)
@@ -78,5 +89,4 @@ func _blip() -> void:
 		var s := (1.0 if sin(TAU * f * t) > 0.0 else -1.0) * exp(-t * 18.0) * 0.25
 		bytes.encode_s16(i * 2, int(s * 30000.0))
 	var w := AudioStreamWAV.new(); w.format = AudioStreamWAV.FORMAT_16_BITS; w.mix_rate = RATE; w.data = bytes
-	var ap := AudioStreamPlayer.new(); ap.stream = w; ap.volume_db = -6.0
-	get_tree().root.add_child(ap); ap.play(); ap.finished.connect(ap.queue_free)
+	return w
