@@ -35,7 +35,6 @@ var entry: HingeDoor
 var blocks: Array = []
 var figures: Array = []
 var safe: GunSafe
-var pointless: Usable48
 var slots := {}                 ## note id -> {pos, rot, word, node (or null when it's off the wall)}
 var _draft: ShaderMaterial
 var _block_mat: ShaderMaterial
@@ -56,7 +55,6 @@ func build(p_flat47: Flat47, p_weapon: Weapon, p_hud: Hud) -> void:
 	add_child(safe); safe.position = SAFE_AT; safe.build()
 	_note_wall()
 	_figures()
-	_pointless_door()
 
 func text(key: String) -> String:
 	return String(data["captions"].get(key, key))
@@ -317,34 +315,6 @@ func _figures() -> void:
 		g.position = Vector3(f["at"][0], f["at"][1], f["at"][2])
 		g.build()
 		figures.append(g)
-
-## The door that goes nowhere, in Sonya's room: in the outside wall, four floors up.
-func _pointless_door() -> void:
-	var pd: Dictionary = data["pointless_door"]
-	pointless = Usable48.new(); pointless.name = "PointlessDoor"
-	add_child(pointless)
-	pointless.position = Vector3(5.6, 0, 7.93)
-	var k := TownKit.new(pointless)
-	k.box("whitewash", Vector3(0, 1.0, 0.0), Vector3(0.4, 1.0, 0.02))
-	for fr in [[Vector3(-0.43, 1.03, 0), Vector3(0.03, 1.03, 0.03)], [Vector3(0.43, 1.03, 0), Vector3(0.03, 1.03, 0.03)], [Vector3(0, 2.03, 0), Vector3(0.46, 0.03, 0.03)]]:
-		k.box("whitewash", fr[0], fr[1])
-	k.box("iron", Vector3(-0.3, 1.0, -0.04), Vector3(0.05, 0.012, 0.02))
-	k.finish()
-	for mi in pointless.find_children("*", "MeshInstance3D", true, false):
-		(mi as MeshInstance3D).material_override = _block_mat
-	var l := Label3D.new(); l.text = String(pd["label"]); l.font_size = 30; l.pixel_size = 0.0016
-	l.modulate = Color(0.3, 0.3, 0.34); l.shaded = true; l.alpha_cut = Label3D.ALPHA_CUT_DISCARD
-	pointless.add_child(l); l.position = Vector3(0, 1.55, -0.025); l.rotation = Vector3(0, PI, 0.03)
-	var cs := CollisionShape3D.new(); var b := BoxShape3D.new(); b.size = Vector3(0.86, 2.06, 0.08); cs.shape = b
-	cs.position.y = 1.03
-	pointless.add_child(cs)
-	pointless.prompt_fn = func() -> String: return "Stick the note on it" if holding_note() else "Look"
-	pointless.used.connect(func():
-		if holding_note():
-			reject(pointless.global_position + Vector3(0, 1.3, -0.05), "wont_stay")
-		else:
-			Game.set_flag("f48_looked_pointless")
-			hud.caption(String(pd["look"]), 6.0))
 
 # ================================================================== the pieces
 

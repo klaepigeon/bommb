@@ -375,8 +375,10 @@ except Sonya.** The names are on the note wall (MARTA, KURT, SONYA). Built:
   *"That's not funny. Who's that supposed to be? Don't answer that."*
 - Dressed mannequins still turn when unseen, and can still be shot.
 
-**Open:** how each figure is helped (beyond naming); Suite 51's red-note monologue and CHILD'S CELL
-→ POINTLESS DOOR (preserved for when it's built).
+**Owner's direction (latest):** the figures are not helped. The right thing is to leave them alone
+and save the ammunition. Suite 51, the CHILD'S CELL note and the POINTLESS DOOR are cut for now.
+**The main goal of the game is finding Sonya.** The Super (an indestructible, naked, elderly giant
+with the top of his head blown off) roams the halls of Building 14 itself.
 
 
 **Walking into things (built):** Kurt doesn't stop for loose things in his way: anything up to

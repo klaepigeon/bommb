@@ -29,6 +29,8 @@ func _ready() -> void:
 		_touch()
 	elif main.args.has("spin"):
 		_spin()
+	elif main.args.has("super"):
+		_super()
 	elif main.args.has("poses"):
 		_poses()
 	elif main.args.get("start", "") in ["flat48", "landing"]:
@@ -42,6 +44,9 @@ func _fail(why: String) -> void:
 	var st: String = main.scene.stage
 	print("AUTOTEST FAIL: ", why, "  (stage ", st, ", at ", main.player.global_position, ")")
 	print("lines said: ", Speech.history)
+	if main.flat.building.the_super:
+		var su: Super = main.flat.building.the_super
+		print("super at ", su.global_position, " mode ", su.mode, " t ", su.mode_t, " vel ", su.velocity, " floor ", su.is_on_floor(), " next ", su.building.next_step(su.global_position, su.building.landing_point(su.patrol_to)), " proc ", su.can_process())
 	print("paused ", get_tree().paused, " can_move ", main.player.can_move, " busy ", main.chapter.busy if main.chapter else null, " nuggets ", Game.nuggets, " flags ", Game.flags)
 	if main.chapter:
 		for m in [main.chapter.porter, main.chapter.lamplighter, main.chapter.marta]:
@@ -703,4 +708,76 @@ func _spin() -> void:
 		for k in 20:
 			await get_tree().process_frame
 		await _shot("spin_%d" % i)
+	get_tree().quit(0)
+
+
+## The Super: he's there, he walks the stairs, Kurt can climb them, bullets don't stop him, he
+## catches Kurt and Kurt wakes on his landing. With --shots, pictures of him.
+func _super() -> void:
+	var p: Player = main.player
+	if not await _until(func(): return p.can_move, 120.0, "control"): return
+	main.scene.busy = true
+	main.to_landing()
+	if not await _until(func(): return main.flat.building.the_super != null and p.can_move, 30.0, "the Super"): return
+	var b: Building = main.flat.building
+	var sup: Super = b.the_super
+	# Kurt climbs to the fifth floor on his own feet
+	var up: Array = []
+	var i0 := b.nearest(b.landing_point(4)); var i1 := b.nearest(b.landing_point(5))
+	for i in range(i0, i1 + 1):
+		up.append(b.chain[i])
+	sup.wait_for = 9999.0
+	if not await _walk(up): return
+	if absf(p.global_position.y - Building.floor_y(5)) > 0.3:
+		_fail("the stairs didn't take him to the fifth floor (y %.2f)" % p.global_position.y); return
+	print("AUTOTEST: climbed to the fifth floor")
+	# the Super does his round: from the second floor up to where Kurt is
+	if shots != "":
+		p.global_position = b.landing_point(4) + Vector3(-0.9, 0, 1.6)
+		sup.place_at(b.landing_point(4) + Vector3(0.6, 0, -1.0))
+		sup.rotation.y = PI
+		p.can_move = false
+		p.face(sup.global_position + Vector3(0, 1.75, 0))
+		for k in 30: await get_tree().physics_frame
+		await _shot("super_front")
+		sup.rotation.y = PI * 0.5
+		for k in 20: await get_tree().physics_frame
+		await _shot("super_side")
+		p.global_position = sup.global_position + Vector3(0.3, 0, 1.25)
+		p.face(sup.head.global_position + Vector3(0, 0.05, 0))
+		sup.rotation.y = PI
+		for k in 20: await get_tree().physics_frame
+		await _shot("super_head")
+		p.global_position = b.landing_point(5)
+		p.can_move = true
+		sup.place_at(b.landing_point(Building.LOW))
+	sup.wait_for = 0.0
+	var y0 := sup.global_position.y
+	if not await _until(func(): return sup.global_position.y > y0 + 2.5, 60.0, "the Super to climb a storey"): return
+	print("AUTOTEST: the Super climbs")
+	if shots != "":
+		p.global_position = b.landing_point(4) + Vector3(0.9, 0, 1.2)
+		p.face(Vector3(11.2, 0.6, 3.6))
+		if not await _until(func(): return sup.global_position.y > -1.2, 60.0, "him coming up"): return
+		await _shot("super_coming")
+	# shoot him: he staggers and keeps existing
+	main.weapon.give_gun()
+	Game.ammo_loaded = 6; Game.ammo_spare = 12
+	p.global_position = b.landing_point(5) + Vector3(0, 0, 1.5)
+	if not await _until(func(): return sup.mode == Super.Mode.HUNT and sup.global_position.distance_to(p.global_position) < 6.0 and absf(sup.global_position.y - p.global_position.y) < 0.4, 90.0, "him to come for Kurt"): return
+	for n in 6:
+		p.face(sup.head.global_position)
+		for k in 4: await get_tree().physics_frame
+		main.weapon.fire()
+		for k in 30: await get_tree().physics_frame
+	if sup.shots_taken < 3:
+		_fail("the shots didn't land on him (%d)" % sup.shots_taken); return
+	if not is_instance_valid(sup) or sup.state == Monster.S.DEAD:
+		_fail("the Super died"); return
+	print("AUTOTEST: %d shots in him; still coming" % sup.shots_taken)
+	if not await _until(func(): return sup.catches > 0, 60.0, "him to catch Kurt"): return
+	if not await _until(func(): return p.can_move, 30.0, "Kurt to come round"): return
+	if absf(p.global_position.y) > 0.3 or absf(sup.global_position.y) < 3.0:
+		_fail("after the grab: Kurt at y %.1f, the Super at y %.1f" % [p.global_position.y, sup.global_position.y]); return
+	print("AUTOTEST PASS: the Super (stairs, rounds, bullets, the grab)")
 	get_tree().quit(0)

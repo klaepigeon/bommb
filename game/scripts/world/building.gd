@@ -29,7 +29,7 @@ var door48: Node3D
 var door48_spot: Hotspot
 var chain: Array[Vector3] = []     ## the walkable line, bottom to top (local = world: the flat is at the origin)
 var lights := {}                   ## floor -> OmniLight3D
-var the_super: Node3D
+var the_super: Super
 var shadows := true
 var _body: StaticBody3D
 var _kit: TownKit
@@ -71,7 +71,8 @@ func _landing(f: int) -> void:
 	var k := _kit
 	# the slab: floor above, ceiling below
 	k.box("stone", Vector3((X0 + X1) * 0.5, y - 0.1, (Z_STAIR + Z1) * 0.5), Vector3((X1 - X0) * 0.5, 0.1, (Z1 - Z_STAIR) * 0.5))
-	_solid(Vector3((X0 + X1) * 0.5, y - 0.1, (Z_STAIR + Z1) * 0.5), Vector3((X1 - X0) * 0.5 + 0.2, 0.1, (Z1 - Z_STAIR) * 0.5 + 0.2))
+	# (its north edge exactly where the flights end: a lip there stops anything without knees)
+	_solid(Vector3((X0 + X1) * 0.5, y - 0.1, (Z_STAIR + Z1 + 0.2) * 0.5), Vector3((X1 - X0) * 0.5 + 0.2, 0.1, (Z1 + 0.2 - Z_STAIR) * 0.5))
 	k.quad("hall_ceiling", Vector3(X0, y + CEIL, Z1), Vector3(X1, y + CEIL, Z1), Vector3(X1, y + CEIL, Z_STAIR), Vector3(X0, y + CEIL, Z_STAIR), Vector3.DOWN, Vector3(X0, y, Z_STAIR))
 	# the walls: west (the odd flat's door), east (the even one's), south (blind)
 	var fw := Facades.Frame.new(Vector3(X0, y, Z_STAIR), Vector3(0, 0, 1), Vector3(1, 0, 0))
@@ -159,7 +160,7 @@ func _flights(f: int) -> void:
 	_solid(Vector3((X0 + DIV0) * 0.5, y + HALF * 1.5 - 0.1 * cos(ang), (Z_STAIR + Z_MID) * 0.5 + 0.1 * sin(ang)), Vector3((DIV0 - X0) * 0.5, 0.1, length * 0.5), Basis(Vector3.RIGHT, -ang))
 	# the half-landing
 	k.box("stone", Vector3((X0 + X1) * 0.5, y + HALF - 0.1, (Z_END + Z_MID) * 0.5), Vector3((X1 - X0) * 0.5, 0.1, (Z_MID - Z_END) * 0.5))
-	_solid(Vector3((X0 + X1) * 0.5, y + HALF - 0.1, (Z_END + Z_MID) * 0.5), Vector3((X1 - X0) * 0.5, 0.1, (Z_MID - Z_END) * 0.5 + 0.02))
+	_solid(Vector3((X0 + X1) * 0.5, y + HALF - 0.1, (Z_END + Z_MID) * 0.5), Vector3((X1 - X0) * 0.5, 0.1, (Z_MID - Z_END) * 0.5))
 	# handrails on the wall between the flights
 	k.cyl_axis("iron", Vector3(DIV1 + 0.05, y + 0.95, Z_STAIR), Vector3(DIV1 + 0.05, y + HALF + 0.95, Z_MID), 0.02, 6)
 	k.cyl_axis("iron", Vector3(DIV0 - 0.05, y + HALF + 0.95, Z_MID), Vector3(DIV0 - 0.05, y + STOREY + 0.95, Z_STAIR), 0.02, 6)
@@ -196,7 +197,7 @@ func _ends() -> void:
 		for i in 22:
 			var s := rng.randf_range(0.08, 0.3)
 			k.box("stone" if i % 3 else "brick", Vector3(cx + rng.randf_range(-0.7, 0.7), y + rng.randf_range(0.0, 0.9), Z_STAIR - rng.randf_range(0.1, 1.4)), Vector3(s, s * 0.6, s * 0.8), Basis.from_euler(Vector3(rng.randf(), rng.randf() * 3.0, rng.randf())))
-		_solid(Vector3(cx, y + 1.4, Z_STAIR - 0.25), Vector3((spec[2] - spec[1]) * 0.5, 1.5, 0.25))
+		_solid(Vector3(cx, y + 1.0, Z_STAIR - 0.25), Vector3((spec[2] - spec[1]) * 0.5, 1.1, 0.25))    # (kept under the flight that passes over it)
 	# nothing under the lowest west flight's well, nothing over the top east one: floors there too
 	_solid(Vector3((X0 + X1) * 0.5, floor_y(LOW) - 0.3, (Z_END + Z_STAIR) * 0.5), Vector3((X1 - X0) * 0.5, 0.1, (Z_STAIR - Z_END) * 0.5))
 
@@ -282,6 +283,17 @@ func _chain() -> void:
 			chain.append(Vector3(13.2, y, Z_STAIR + 0.35))        # the foot of the east flight
 			chain.append(Vector3(13.2, y + HALF, 0.55))           # the half-landing, east
 			chain.append(Vector3(11.2, y + HALF, 0.55))           # the half-landing, west
+
+## The Super starts his rounds (once; from the bottom of the building).
+func spawn_super(player: Player) -> Super:
+	if the_super:
+		return the_super
+	the_super = Super.new(); the_super.name = "TheSuper"
+	the_super.building = self
+	add_child(the_super)
+	the_super.setup("super", {}, player, landing_point(LOW), 1414)
+	the_super.rotation.y = PI
+	return the_super
 
 func landing_point(f: int) -> Vector3:
 	return Vector3(12.2, floor_y(f), 5.6)

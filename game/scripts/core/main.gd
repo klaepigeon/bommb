@@ -169,6 +169,42 @@ func to_landing() -> void:
 	hud.set_crosshair(true)
 	if not from_48:
 		flat.open_door48()
+	_super_rounds(from_48)
+
+## The Super walks the building from the moment Kurt is out on the landing. (Tests of other
+## things run without him: --super puts him in.)
+func _super_rounds(from_48: bool) -> void:
+	if args.has("autotest") and not args.has("super"):
+		return
+	var b := flat.building
+	if b.the_super == null:
+		Game.set_flag("goal_sonya")
+		hud.caption("Find Sonya.", 5.0)       # what the game is about, from here
+		b.spawn_super(player).caught.connect(_super_caught)
+	elif from_48 and absf(b.the_super.global_position.y - player.global_position.y) < Building.STOREY * 1.5:
+		b.the_super.send_away(4)       # coming out of 48, he isn't standing at the door
+
+## He has hold of Kurt. Black; then Kurt on his own landing, later, and the Super gone off again.
+func _super_caught(_m: Monster) -> void:
+	var sup := flat.building.the_super
+	player.can_move = false
+	player.can_look = false
+	hud.set_crosshair(false)
+	player.look_toward(sup.head.global_position, 0.35)
+	player.shake(0.05, 0.9)
+	Sfx.play("gasp", -2.0)
+	await get_tree().create_timer(0.9, false).timeout
+	Sfx.play("thud", 2.0, 0.6)
+	hud.fade.color.a = 1.0
+	Sfx.play("tinnitus", -10.0)
+	await get_tree().create_timer(3.2, false).timeout
+	sup.send_away(Building.floor_of(player.global_position.y))
+	player.global_position = Vector3(11.2, 0, 6.6)
+	player.face(Vector3(14.0, 1.2, 4.56))
+	await hud.fade_to(0.0, 2.5).finished
+	player.can_move = true
+	player.can_look = true
+	hud.set_crosshair(true)
 
 ## Through 48's door: the same flat, drawn from memory.
 func go_to_flat48() -> void:

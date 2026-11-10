@@ -86,9 +86,25 @@ their backs to the room and turn toward you only while you aren't looking.
 - **MARTA** on MAMA and **KURT** on PAPA dress them as faceless shop mannequins: her cardigan and
   red painted mouth; his jacket, a domino mask on a face that isn't there, a bow on its back.
   Their notes peel off too. **SONYA** won't stay on CHILD: *she isn't here.*
-- Each of the three can be **shot**, separately, and stays down. Nothing requires it.
-- In Sonya's room, a door in the outside wall, pencilled **POINTLESS DOOR**. It takes the note
-  from Suite 51, which isn't built yet.
+- Each of the three can be **shot**, separately, and stays down. Nothing requires it, and nothing
+  is gained by it: the right thing to do with them is **leave them alone and keep the shells**.
+
+## The building, and The Super
+
+**The goal of the game is to find Sonya** (it says so when Kurt comes out onto the landing, and in
+the pause menu).
+
+Building 14 has a stairwell now: floors 2 to 6, switchback flights, two padded doors a landing
+(47 and 48 on the fourth), one bare bulb each, dark between. Above 6 and below 2 the stair has
+come down.
+
+**The Super** walks it: an old man the size of a doorway, naked, the top of his head gone. He does
+rounds from the bottom of the building to the top and back. He hears steps a floor away and shots
+anywhere; he comes at a walk Kurt can outpace and never outlast. **Nothing kills him**: a shot
+staggers him for a second, one in what's left of his head for two or three. If he gets hold of
+Kurt, Kurt comes round on his own landing and the Super has gone off to one end of the building.
+He doesn't come through 48's door. You hear which floor he's on before you see him.
+(`scripts/actors/super.gd`, `scripts/world/building.gd`; `tools/test.sh super`.)
 
 **Socko wants them shot and never says so.** *"Well. That's a family."* *"I wouldn't get too
 close."* *"You don't know what they are."* He sneers at the notes, likes the safe very much,
@@ -164,6 +180,5 @@ godot --path . -- --start=door --poses --shots=DIR    # Kurt himself: looking do
 
 ## Not done yet
 
-In Flat 48: Suite 51 upstairs (the red-note monologue, the CHILD'S CELL note, the POINTLESS DOOR's
-route) and how each of the three is helped. Elsewhere: Sonya's shoes; saving; the dialogue graph
-and cutscene tools.
+Where Sonya is. Suite 51 and the POINTLESS DOOR are cut for now. Sonya's shoes; saving; the
+dialogue graph and cutscene tools. The other floors' flats are shut doors.

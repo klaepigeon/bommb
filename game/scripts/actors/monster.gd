@@ -27,6 +27,9 @@ var body_hp := 4
 var wanders: Array[Vector3] = []   ## patrol points, if any
 var listen_time := 14.0
 var listen_speed := 0.0            ## how fast it goes to a noise (0: its walking pace)            ## how long it keeps after a noise before going back
+var body_radius := 0.3           ## its collision capsule
+var body_height := 1.7
+var talks := true                ## it has a phrase, and can be spoken to
 var _shot_heard_t := -10.0
 var body: Node3D
 var head: Node3D
@@ -50,15 +53,17 @@ func setup(p_id: String, p_data: Dictionary, p_player: Player, at: Vector3, seed
 	collision_layer = 0
 	collision_mask = 1
 	var cs := CollisionShape3D.new()
-	var cap := CapsuleShape3D.new(); cap.radius = 0.3; cap.height = 1.7
-	cs.shape = cap; cs.position.y = 0.85
+	var cap := CapsuleShape3D.new(); cap.radius = body_radius; cap.height = body_height
+	cs.shape = cap; cs.position.y = body_height * 0.5
 	add_child(cs)
 	body = Node3D.new(); add_child(body)
 	build_body()
-	hit_head = _hitbox("head", head if head_follows_bone() else body, Vector3(0.28, 0.3, 0.28), Vector3(0, 0.1, 0))
-	_hitbox("body", body, Vector3(0.5, 1.3, 0.4), Vector3(0, 0.75, 0))
+	var k := body_height / 1.7
+	hit_head = _hitbox("head", head if head_follows_bone() else body, Vector3(0.28, 0.3, 0.28) * k, Vector3(0, 0.1, 0))
+	_hitbox("body", body, Vector3(0.5, 1.3, 0.4) * k, Vector3(0, 0.75 * k, 0))
 	spot = Hotspot.make(self, global_transform * Transform3D(Basis(), Vector3(0, 1.0, 0)), Vector3(0.9, 1.8, 0.9), "Talk")
 	spot.used.connect(_talk_pressed)
+	spot.enabled = talks
 	Noises.heard.connect(_on_noise)
 	global_position = at
 

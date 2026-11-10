@@ -47,11 +47,6 @@
 			"look": "By the small bed. The tag says CHILD, and it's the only one with a drawing on it: a house with black windows.",
 			"refuses": { "SONYA": "It won't stay on. Not on this. She isn't here." } }
 	},
-	"pointless_door": {
-		"_note": "The master document's POINTLESS DOOR (it takes the CHILD'S CELL note from Suite 51, which isn't built yet). Where it stands and what it says when looked at are NEW.",
-		"label": "POINTLESS DOOR",
-		"look": "A door in the outside wall, four floors up. Somebody has pencilled on it what it is: POINTLESS DOOR. The handle turns. Nothing else does."
-	},
 	"captions": {
 		"block_tag": "A white block, the size of something. On a paper tag, in pencil: “%s”.",
 		"block_blank": "A white block, the size of something. No tag. Nobody's said what it is.",

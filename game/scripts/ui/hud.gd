@@ -20,6 +20,7 @@ var _voices_btn: Button
 var _look_lbl: Label
 var _sub_lbl: Label
 var _first_btn: Button
+var _goal: Label
 
 func build() -> void:
 	layer = 10
@@ -142,6 +143,11 @@ func _build_menu() -> void:
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 40)
 	box.add_child(title)
+	_goal = Label.new()
+	_goal.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_goal.add_theme_font_size_override("font_size", 26)
+	_goal.add_theme_color_override("font_color", Color(0.86, 0.8, 0.66))
+	box.add_child(_goal)
 	_first_btn = _button(box, "Resume", toggle_pause)
 	_voices_btn = _button(box, "", func():
 		Settings.voices = not Settings.voices
@@ -187,6 +193,8 @@ func _stepper(parent: Control, cb: Callable) -> Label:
 	return l
 
 func _refresh() -> void:
+	_goal.text = "Find Sonya." if Game.flag("goal_sonya") else ""
+	_goal.visible = _goal.text != ""
 	_voices_btn.text = "Voices: " + ("On" if Settings.voices else "Off (subtitles only)")
 	_look_lbl.text = "Look speed  %.1f" % Settings.look_sensitivity
 	_sub_lbl.text = "Subtitle size  %.1f" % Settings.subtitle_scale
@@ -198,6 +206,7 @@ func toggle_pause() -> void:
 	var p := not get_tree().paused
 	get_tree().paused = p
 	_menu.visible = p
+	_refresh()
 	Speech.pause_voice(p)
 	controls.clear_touches()
 	if p:

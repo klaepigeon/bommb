@@ -3,6 +3,7 @@
 # owner's order), the wardrobe and the hole, then the town, out by each of its three ways.
 #   tools/test.sh                 all three routes, from the first knock (exit code 0 = all pass)
 #   tools/test.sh talk|kill|sneak one route
+#   tools/test.sh super           the stairwell and The Super
 #   tools/test.sh touch           the touch controls, with real touch events
 #   tools/test.sh shots DIR [route] [--start=town]   real speed, rendered, a frame per line in DIR
 set -e
@@ -15,6 +16,11 @@ fi
 if [ "$1" = "touch" ]; then      # fingers on glass: stick, look, pause, resume (needs a display: xvfb)
 	LOG=$(mktemp)
 	timeout 120 xvfb-run -a -s "-screen 0 1280x720x24" "$GODOT" --path . --rendering-driver opengl3 --resolution 1280x720 -- --autotest --touch >"$LOG" 2>&1 || true
+	grep -E "AUTOTEST" "$LOG"; grep -q "AUTOTEST PASS" "$LOG"; exit
+fi
+if [ "$1" = "super" ]; then      # the stairs, the Super's rounds, bullets, the grab
+	LOG=$(mktemp)
+	"$GODOT" --headless --path . -- --autotest --fast --super --start=door >"$LOG" 2>&1 || true
 	grep -E "AUTOTEST" "$LOG"; grep -q "AUTOTEST PASS" "$LOG"; exit
 fi
 ROUTES="${1:-talk kill sneak}"
