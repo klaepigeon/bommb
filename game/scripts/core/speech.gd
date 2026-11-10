@@ -27,6 +27,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	characters = _read_json("res://content/characters.json")
 	lines = _read_json("res://content/scene_a.json").get("lines", {})
+	lines.merge(_read_json("res://content/town.json").get("lines", {}))
 	_build_ui()
 	if DisplayServer.get_name() != "headless" and DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
 		DisplayServer.tts_set_utterance_callback(DisplayServer.TTS_UTTERANCE_ENDED, _on_tts_end)
@@ -99,7 +100,11 @@ func say_id(id: String) -> void:
 	history.append(id)
 	await say(l.get("speaker", "kurt"), l.get("text", ""), l.get("style", ""), l.get("silent", false))
 
+var _gen := 0
+
 func say(speaker: String, text: String, style := "", silent := false) -> void:
+	_gen += 1
+	var gen := _gen
 	var c: Dictionary = characters.get(speaker, {})
 	_text = text
 	_style = style
@@ -133,6 +138,8 @@ func say(speaker: String, text: String, style := "", silent := false) -> void:
 	# Wait for the line (counting only unpaused time), and for the voice if it's still going.
 	while true:
 		await get_tree().process_frame
+		if gen != _gen:
+			return          # a newer line took over
 		if get_tree().paused:
 			continue
 		_elapsed += get_process_delta_time()

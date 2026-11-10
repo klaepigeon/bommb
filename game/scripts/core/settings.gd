@@ -17,9 +17,14 @@ func _ready() -> void:
 	_bind("move_left", [KEY_A, KEY_LEFT])
 	_bind("move_right", [KEY_D, KEY_RIGHT])
 	_bind("interact", [KEY_E, KEY_SPACE], [JOY_BUTTON_A])
-	_bind("pause", [KEY_ESCAPE, KEY_P], [JOY_BUTTON_START, JOY_BUTTON_B])
+	_bind("pause", [KEY_ESCAPE, KEY_P], [JOY_BUTTON_START])
+	_bind("back", [], [JOY_BUTTON_B])
+	_bind("fire", [KEY_F], [], [JOY_AXIS_TRIGGER_RIGHT], [MOUSE_BUTTON_LEFT])
+	_bind("aim", [KEY_Q], [], [JOY_AXIS_TRIGGER_LEFT], [MOUSE_BUTTON_RIGHT])
+	_bind("reload", [KEY_R], [JOY_BUTTON_X])
+	_bind("skills", [KEY_TAB, KEY_K], [JOY_BUTTON_BACK, JOY_BUTTON_Y])
 
-func _bind(action: String, keys: Array, buttons: Array = []) -> void:
+func _bind(action: String, keys: Array, buttons: Array = [], axes: Array = [], mouse: Array = []) -> void:
 	if not InputMap.has_action(action):
 		InputMap.add_action(action, 0.2)
 	for k in keys:
@@ -30,6 +35,15 @@ func _bind(action: String, keys: Array, buttons: Array = []) -> void:
 		var j := InputEventJoypadButton.new()
 		j.button_index = b
 		InputMap.action_add_event(action, j)
+	for a in axes:
+		var m := InputEventJoypadMotion.new()
+		m.axis = a
+		m.axis_value = 1.0
+		InputMap.action_add_event(action, m)
+	for b in mouse:
+		var mb := InputEventMouseButton.new()
+		mb.button_index = b
+		InputMap.action_add_event(action, mb)
 
 func is_touch() -> bool:
 	return DisplayServer.is_touchscreen_available() or OS.has_feature("mobile")

@@ -12,6 +12,8 @@ run/flush_stdout_on_print=true
 [autoload]
 
 Settings="*res://scripts/core/settings.gd"
+Game="*res://scripts/core/game.gd"
+Noises="*res://scripts/core/noise.gd"
 Sfx="*res://scripts/core/sfx.gd"
 Speech="*res://scripts/core/speech.gd"
 
@@ -38,6 +40,8 @@ pointing/emulate_touch_from_mouse=false
 common/physics_ticks_per_second=60
 
 [rendering]
+
+limits/opengl/max_lights_per_object=16
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"

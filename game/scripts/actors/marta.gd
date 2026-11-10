@@ -27,6 +27,8 @@ var _mould: Material
 var _wood: Material
 var _teeth: Material
 
+var chair: Array[Node3D] = []
+
 func build() -> void:
 	_rng.seed = 14
 	_skin = Look.mat(Look.get_tex("skin"))
@@ -38,10 +40,10 @@ func build() -> void:
 	_wood = Look.mat(Look.get_tex("wood"))
 	_teeth = Look.mat(Look.get_tex("paper"), Color("e8dcc0"))
 	# her chair, fused to her and to the floor
-	_part(self, _box(Vector3(0.46, 0.05, 0.46)), _wood, Vector3(0, 0.44, 0))
-	_part(self, _box(Vector3(0.46, 0.55, 0.05)), _wood, Vector3(0, 0.73, -0.22))
+	chair.append(_part(self, _box(Vector3(0.46, 0.05, 0.46)), _wood, Vector3(0, 0.44, 0)))
+	chair.append(_part(self, _box(Vector3(0.46, 0.55, 0.05)), _wood, Vector3(0, 0.73, -0.22)))
 	for c in [Vector3(-0.2, 0.21, -0.2), Vector3(0.2, 0.21, -0.2), Vector3(-0.2, 0.21, 0.2), Vector3(0.2, 0.21, 0.2)]:
-		_part(self, _box(Vector3(0.04, 0.42, 0.04)), _wood, c)
+		chair.append(_part(self, _box(Vector3(0.04, 0.42, 0.04)), _wood, c))
 	# hips and legs
 	var legs := Node3D.new(); add_child(legs); body_parts.append(legs)
 	_part(legs, _box(Vector3(0.36, 0.14, 0.34)), _dress, Vector3(0, 0.53, 0))

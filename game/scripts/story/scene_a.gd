@@ -9,6 +9,7 @@ extends Node
 ## No intro text. Lines live in content/scene_a.json.
 
 signal stage_changed(stage: String)
+signal into_town
 
 var flat: Flat47
 var marta: Marta
@@ -33,23 +34,30 @@ func say(id: String) -> void:
 
 func start(from := "") -> void:
 	marta.spot.used.connect(_examine)
-	flat.front_door_spot.used.connect(_try_front_door)
+	flat.room_door_spot.used.connect(_try_room_door)
+	flat.wardrobe_spot.used.connect(_push_wardrobe)
+	flat.hole_spot.used.connect(_crawl)
 	if from == "wake":
 		hud.fade.color.a = 1.0
 		_seen_flat = true; _seen_marta = true
 		marta.vanish()
-		flat.front_door.set_angle(0.0)
+		flat.room_door.set_angle(0.0)
 		_wake()
 		return
-	if from == "door":
+	if from == "door" or from == "wardrobe":
 		_seen_flat = true; _seen_marta = true
 		marta.vanish()
-		flat.front_door.set_angle(0.0)
-		player.global_position = Vector3(0, 0, -1.2)
-		player.face(Vector3(0, 1.2, 0.5))
+		flat.room_door.set_angle(0.0)
+		player.global_position = Vector3(-1.7, 0, -3.95)
+		player.face(Vector3(-1.0, 1.0, -3.95))
 		player.socko.visible = true
 		player.socko.set_pose("low", 0.0)
 		hud.fade.color.a = 0.0
+		flat.room_door_spot.enabled = true
+		if from == "wardrobe":
+			_door_tried = true
+			flat.wardrobe_spot.enabled = true
+			player.face(flat.wardrobe.global_position + Vector3(0, 1, 0))
 		_free()
 		return
 	_arrival()
@@ -101,6 +109,12 @@ func _control(on: bool) -> void:
 # --- 2. what he sees ---------------------------------------------------------------------------
 
 func _process(_d: float) -> void:
+	# gutterspace nuggets in the room (they're only there after he wakes)
+	if player.socko.visible:
+		for n in flat.flat_nuggets:
+			if not n.taken and n.global_position.distance_to(player.global_position + Vector3(0, 0.6, 0)) < 0.9:
+				n.take()
+				Game.add_nuggets(1)
 	if stage != "explore" or busy:
 		return
 	var p := player.global_position
@@ -180,8 +194,8 @@ func _examine() -> void:
 	await wait(1.0)
 	# while he's out: she goes; the front door shuts
 	marta.vanish()
-	flat.front_door.set_angle(0.0)
-	Sfx.play_at("slam", flat.front_door.handle_position(), -6.0, 0.9)
+	flat.room_door.set_angle(0.0)
+	Sfx.play_at("slam", flat.room_door.handle_position(), -6.0, 0.9)
 	await wait(2.4)
 	_wake()
 
@@ -248,7 +262,7 @@ func _wake() -> void:
 	await say("kurt_sounds")
 	sk.emotion = "curious"
 	sk.gesture("tilt", -1.0)
-	sk.divided_glance(flat.front_door.handle_position(), 1.3)
+	sk.divided_glance(flat.room_door.handle_position(), 1.3)
 	await say("dont_know")
 	await say("got_nothing")
 	# he gets up too fast
@@ -270,7 +284,7 @@ func _wake() -> void:
 	player.body_mesh.visible = true
 	create_tween().tween_property(sk, "face_kurt", 0.0, 0.8)
 	sk.set_pose("low", 1.0)
-	flat.front_door_spot.enabled = true
+	flat.room_door_spot.enabled = true
 	_free()
 
 func _free() -> void:
@@ -278,9 +292,9 @@ func _free() -> void:
 	busy = false
 	_set_stage("explore")
 
-# --- 5. the door they came in by ---------------------------------------------------------------
+# --- 5. the door they came in by (the living room's, shut while he was out) ---------------------
 
-func _try_front_door() -> void:
+func _try_room_door() -> void:
 	if busy:
 		return
 	busy = true
@@ -290,7 +304,7 @@ func _try_front_door() -> void:
 	player.arm.set_pose("handle", 0.4)
 	await wait(0.35)
 	player.arm.rattle = 1.0
-	Sfx.play_at("rattle", flat.front_door.handle_position(), 0.0)
+	Sfx.play_at("rattle", flat.room_door.handle_position(), 0.0)
 	await wait(0.9)
 	player.arm.rattle = 0.0
 	if not first:
@@ -323,6 +337,84 @@ func _try_front_door() -> void:
 	sk.emotion = "neutral"
 	create_tween().tween_property(sk, "face_kurt", 0.0, 0.8)
 	sk.set_pose("low", 1.0)
+	flat.wardrobe_spot.enabled = true
 	_set_stage("scene_a_done")
 	_control(true)
 	busy = false
+
+# --- 6. the wardrobe ---------------------------------------------------------------------------
+
+var _shoves := 0
+
+func _push_wardrobe() -> void:
+	if busy:
+		return
+	busy = true
+	player.can_move = false
+	# he steps to its free end and puts his shoulder and hand to it
+	player.arm.set_pose("push", 0.3)
+	player.shake(0.01, 0.4)
+	await wait(0.25)
+	var clear := flat.shove_wardrobe()
+	_shoves += 1
+	await wait(0.7)
+	player.arm.set_pose("down", 0.4)
+	if not clear:
+		player.can_move = true
+		busy = false
+		return
+	flat.wardrobe_spot.enabled = false
+	_set_stage("hole")
+	_control(false)
+	await wait(0.4)
+	player.look_toward(flat.hole_center + Vector3(0, 0.1, 0), 1.2)
+	var crouch := create_tween()
+	crouch.tween_property(player.head, "position:y", Player.EYE - 0.4, 1.2).set_trans(Tween.TRANS_SINE)
+	await wait(1.4)
+	await say("what_is_that")
+	var sk := player.socko
+	sk.set_pose("talk", 0.6)
+	create_tween().tween_property(sk, "face_kurt", 1.0, 0.5)
+	sk.emotion = "neutral"
+	sk.gesture("tilt", -0.6)
+	await say("dunno")
+	await say("know_anything")
+	sk.emotion = "proud"
+	sk.gesture("bounce", 0.8)
+	await say("can_do_this")
+	# he goes cross-eyed
+	sk.cross_eyes(true)
+	sk.emotion = "happy"
+	await wait(1.6)
+	sk.cross_eyes(false)
+	await wait(0.3)
+	sk.gesture("startle", 0.4)
+	sk.emotion = "happy"
+	sk.point_at(flat.hole_center)
+	await say("smell")
+	await wait(0.4)
+	sk.point_at(Vector3.INF)
+	create_tween().tween_property(sk, "face_kurt", 0.0, 0.6)
+	sk.set_pose("low", 0.8)
+	create_tween().tween_property(player.head, "position:y", Player.EYE, 0.8)
+	flat.hole_spot.enabled = true
+	_set_stage("hole_open")
+	_control(true)
+	busy = false
+
+func _crawl() -> void:
+	if busy:
+		return
+	busy = true
+	_control(false)
+	flat.hole_spot.enabled = false
+	player.look_toward(flat.hole_center, 0.5)
+	var down := create_tween()
+	down.tween_property(player.head, "position:y", 0.6, 0.8).set_trans(Tween.TRANS_SINE)
+	Sfx.play("scrape", -6.0, 0.7)
+	await wait(0.5)
+	await hud.fade_to(1.0, 0.6).finished
+	player.head.position.y = Player.EYE
+	busy = false
+	_set_stage("town")
+	into_town.emit()

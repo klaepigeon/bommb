@@ -6,6 +6,7 @@ extends Control
 
 signal interact_pressed
 signal pause_pressed
+signal action(name: String)          ## fire, aim, reload, skills (touch buttons and keys/pad)
 
 var move := Vector2.ZERO
 var prompt := ""
@@ -20,6 +21,10 @@ var _stick_pos := Vector2.ZERO
 var _look_id := -1
 var _look_last := Vector2.ZERO
 var _use_id := -1
+## Touch buttons shown besides USE and pause: name → visible. Labels below.
+var buttons := {"fire": false, "aim": false, "reload": false, "skills": false}
+var labels := {"fire": "FIRE", "aim": "AIM", "reload": "LOAD", "skills": "SKILLS"}
+var aiming := false
 
 const STICK_R := 90.0
 
@@ -44,6 +49,20 @@ func _use_rect() -> Rect2:
 func _pause_rect() -> Rect2:
 	return Rect2(size.x - 110, 20, 90, 90)
 
+func _button_rect(name: String) -> Rect2:
+	match name:
+		"fire": return Rect2(size.x - 230, size.y - 470, 160, 160)
+		"aim": return Rect2(size.x - 450, size.y - 210, 140, 140)
+		"reload": return Rect2(size.x - 420, size.y - 400, 120, 120)
+		"skills": return Rect2(24, 20, 170, 80)
+	return Rect2()
+
+func _hit_button(p: Vector2) -> String:
+	for b in buttons:
+		if buttons[b] and _button_rect(b).grow(16).has_point(p):
+			return b
+	return ""
+
 func _input(event: InputEvent) -> void:
 	if get_tree().paused:
 		return
@@ -51,8 +70,14 @@ func _input(event: InputEvent) -> void:
 		show_touch = true
 		var p: Vector2 = event.position
 		if event.pressed:
+			var b := _hit_button(p)
 			if _pause_rect().has_point(p):
 				pause_pressed.emit()
+			elif b != "":
+				if b == "aim":
+					aiming = not aiming
+				action.emit(b)
+				queue_redraw()
 			elif prompt != "" and _use_rect().grow(30).has_point(p):
 				_use_id = event.index
 				interact_pressed.emit()
@@ -79,17 +104,22 @@ func _input(event: InputEvent) -> void:
 			var d: Vector2 = event.position - _look_last
 			_look_last = event.position
 			_look += d * 0.0045
-	elif event is InputEventMouseButton and event.pressed and not show_touch:
-		if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
-			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-		elif event.button_index == MOUSE_BUTTON_LEFT:
-			interact_pressed.emit()
+	elif event is InputEventMouseButton and event.pressed and not show_touch and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	elif event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		_look += event.relative * 0.0025
 	elif event.is_action_pressed("interact"):
 		interact_pressed.emit()
 	elif event.is_action_pressed("pause"):
 		pause_pressed.emit()
+	else:
+		for a in ["fire", "reload", "skills"]:
+			if event.is_action_pressed(a):
+				action.emit(a)
+		if event.is_action_pressed("aim"):
+			aiming = true
+		elif event.is_action_released("aim") and not show_touch:
+			aiming = false
 	if event is InputEventJoypadButton or event is InputEventJoypadMotion or event is InputEventKey:
 		if show_touch and not (event is InputEventJoypadMotion and absf(event.axis_value) < 0.3):
 			show_touch = false
@@ -110,6 +140,13 @@ func _process(_d: float) -> void:
 		if ls.length() > 0.18:
 			m = ls.limit_length(1.0)
 	move = m
+
+func show_buttons(d: Dictionary) -> void:
+	for k in d:
+		buttons[k] = d[k]
+	if not buttons["aim"]:
+		aiming = false
+	queue_redraw()
 
 func set_prompt(p: String) -> void:
 	prompt = p
@@ -142,6 +179,22 @@ func _draw() -> void:
 		var fs := 30
 		var w := font.get_string_size(prompt.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 		draw_string(font, c + Vector2(-w * 0.5, fs * 0.35), prompt.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(1, 0.95, 0.85))
+	# the rest
+	for b in buttons:
+		if not buttons[b]:
+			continue
+		var r := _button_rect(b)
+		var c := r.get_center()
+		var on: bool = b == "aim" and aiming
+		if b == "skills":
+			draw_rect(r, Color(0.1, 0.08, 0.06, 0.55))
+			draw_rect(r, Color(1, 0.9, 0.75, 0.6), false, 3.0)
+		else:
+			draw_circle(c, r.size.x * 0.5, Color(0.45, 0.1, 0.08, 0.5) if on else Color(0.1, 0.08, 0.06, 0.5))
+			draw_arc(c, r.size.x * 0.5, 0, TAU, 40, Color(1, 0.9, 0.75, 0.7), 3.0)
+		var t: String = labels[b]
+		var w := font.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, 26).x
+		draw_string(font, c + Vector2(-w * 0.5, 9), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, Color(1, 0.95, 0.85))
 	# pause
 	var pr := _pause_rect()
 	draw_rect(Rect2(pr.position + Vector2(28, 22), Vector2(12, 46)), Color(1, 1, 1, 0.45))

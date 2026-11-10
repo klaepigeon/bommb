@@ -1,29 +1,123 @@
 {
 	"_comment": "Scene A, as written by the owner. Edit the text here; the scene reads it by id. 'style': quiet = said to himself (smaller, dimmer subtitle, softer voice).",
 	"lines": {
-		"door_1":        { "speaker": "kurt",  "text": "Ms. Sokolov? Your sister asked me to come check on you." },
-		"door_2":        { "speaker": "kurt",  "text": "Marta? It's Kurt. I'm coming in." },
-		"see_flat":      { "speaker": "kurt",  "text": "Christ..." },
-		"see_marta":     { "speaker": "kurt",  "text": "Oh... oh no." },
-		"examine":       { "speaker": "kurt",  "text": "What the hell is this?" },
-		"boxes":         { "speaker": "marta", "text": "Little boxes made of boxes with boxes inside of them... Have you seen them? The boxes, I mean. They're scary at first. But then you look at them for a moment" },
-		"marta_q":       { "speaker": "kurt",  "text": "Marta?" },
-		"little_bird":   { "speaker": "marta", "text": "Look at the boxes, my little bird. Do you see them?" },
-		"gasp":          { "speaker": "kurt",  "text": "[gasps]", "silent": true },
-		"smarts":        { "speaker": "kurt",  "text": "Oh, jeez, that smarts" },
-		"hey_buddy":     { "speaker": "socko", "text": "Heyyyy buddyyyy.... You should probably take it slow, a concussion is no joke!" },
-		"wtf":           { "speaker": "kurt",  "text": "What the fuck!?" },
-		"who_me":        { "speaker": "socko", "text": "Who, me?" },
-		"who_are_you":   { "speaker": "kurt",  "text": "Yeah, you. Who the fuck are you?" },
-		"im_socko":      { "speaker": "socko", "text": "I'm Socko! I'm a handy little pal! Who are you?" },
-		"kurt_sounds":   { "speaker": "kurt",  "text": "Uh... Kurt sounds right." },
-		"dont_know":     { "speaker": "socko", "text": "You don't know?" },
-		"got_nothing":   { "speaker": "kurt",  "text": "I... yeah I got nothing." },
-		"too_fast":      { "speaker": "socko", "text": "Shouldn't have stood up so fast." },
-		"wont_open":     { "speaker": "kurt",  "text": "It won't open." },
-		"locked":        { "speaker": "socko", "text": "Maybe it's locked?" },
-		"thanks":        { "speaker": "kurt",  "text": "Wow, thanks. I never would have guessed." },
-		"welcome":       { "speaker": "socko", "text": "You're welcome!" },
-		"like_helping":  { "speaker": "socko", "text": "I like helping.", "style": "quiet" }
+		"door_1": {
+			"speaker": "kurt",
+			"text": "Ms. Sokolov? Your sister asked me to come check on you."
+		},
+		"door_2": {
+			"speaker": "kurt",
+			"text": "Marta? It's Kurt. I'm coming in."
+		},
+		"see_flat": {
+			"speaker": "kurt",
+			"text": "Christ..."
+		},
+		"see_marta": {
+			"speaker": "kurt",
+			"text": "Oh... oh no."
+		},
+		"examine": {
+			"speaker": "kurt",
+			"text": "What the hell is this?"
+		},
+		"boxes": {
+			"speaker": "marta",
+			"text": "Little boxes made of boxes with boxes inside of them... Have you seen them? The boxes, I mean. They're scary at first. But then you look at them for a moment"
+		},
+		"marta_q": {
+			"speaker": "kurt",
+			"text": "Marta?"
+		},
+		"little_bird": {
+			"speaker": "marta",
+			"text": "Look at the boxes, my little bird. Do you see them?"
+		},
+		"gasp": {
+			"speaker": "kurt",
+			"text": "[gasps]",
+			"silent": true
+		},
+		"smarts": {
+			"speaker": "kurt",
+			"text": "Oh, jeez, that smarts"
+		},
+		"hey_buddy": {
+			"speaker": "socko",
+			"text": "Heyyyy buddyyyy.... You should probably take it slow, a concussion is no joke!"
+		},
+		"wtf": {
+			"speaker": "kurt",
+			"text": "What the fuck!?"
+		},
+		"who_me": {
+			"speaker": "socko",
+			"text": "Who, me?"
+		},
+		"who_are_you": {
+			"speaker": "kurt",
+			"text": "Yeah, you. Who the fuck are you?"
+		},
+		"im_socko": {
+			"speaker": "socko",
+			"text": "I'm Socko! I'm a handy little pal! Who are you?"
+		},
+		"kurt_sounds": {
+			"speaker": "kurt",
+			"text": "Uh... Kurt sounds right."
+		},
+		"dont_know": {
+			"speaker": "socko",
+			"text": "You don't know?"
+		},
+		"got_nothing": {
+			"speaker": "kurt",
+			"text": "I... yeah I got nothing."
+		},
+		"too_fast": {
+			"speaker": "socko",
+			"text": "Shouldn't have stood up so fast."
+		},
+		"wont_open": {
+			"speaker": "kurt",
+			"text": "It won't open."
+		},
+		"locked": {
+			"speaker": "socko",
+			"text": "Maybe it's locked?"
+		},
+		"thanks": {
+			"speaker": "kurt",
+			"text": "Wow, thanks. I never would have guessed."
+		},
+		"welcome": {
+			"speaker": "socko",
+			"text": "You're welcome!"
+		},
+		"like_helping": {
+			"speaker": "socko",
+			"text": "I like helping.",
+			"style": "quiet"
+		},
+		"what_is_that": {
+			"speaker": "kurt",
+			"text": "What the hell is that?"
+		},
+		"dunno": {
+			"speaker": "socko",
+			"text": "I don't know."
+		},
+		"know_anything": {
+			"speaker": "kurt",
+			"text": "Do you know anything?"
+		},
+		"can_do_this": {
+			"speaker": "socko",
+			"text": "I know that I can do this!"
+		},
+		"smell": {
+			"speaker": "socko",
+			"text": "Ooh! Ooh! And I can smell important stuff! Go this way!"
+		}
 	}
 }

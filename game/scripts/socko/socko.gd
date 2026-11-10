@@ -28,6 +28,22 @@ var _t := 0.0
 var _g := {"nod": 0.0, "tilt": 0.0, "bounce": 0.0, "startle": 0.0, "wiggle": 0.0}
 var _tween: Tween
 var _squash := 1.0
+var _cross := false
+var _point := Vector3.INF
+
+## Both googly eyes on the end of his own nose.
+func cross_eyes(on: bool) -> void:
+	_cross = on
+	if not on:
+		gaze_override = [null, null]
+
+## Point the whole hand (and his nose) at a world position. Vector3.INF to stop.
+func point_at(world: Vector3) -> void:
+	_point = world
+	if world != Vector3.INF:
+		if _tween and _tween.is_valid():
+			_tween.kill()
+		face_kurt = 0.0
 
 func build() -> void:
 	var lift := Color(0.18, 0.18, 0.18)
@@ -136,6 +152,15 @@ func _process(delta: float) -> void:
 	var target: float = 1.0 + m * 0.08 - startle * 0.05 + bounce * 2.0
 	_squash = lerpf(_squash, target, delta * 10.0)
 	head.scale = Vector3(1.0 / sqrt(_squash), _squash, 1.0)
+	if _point != Vector3.INF:
+		var dir_local := to_local(_point) - rig.position
+		if dir_local.length() > 0.01:
+			var want := Basis.looking_at(dir_local.normalized(), Vector3.UP)
+			rig.basis = rig.basis.slerp(want, minf(delta * 6.0, 1.0)).orthonormalized()
+			rig.position = rig.position.lerp(Vector3(-0.1, -0.13, -0.42), minf(delta * 5.0, 1.0))
+	if _cross and eyes.size() == 2:
+		var mid := (eyes[0].global_position + eyes[1].global_position) * 0.5 - head.global_transform.basis.z * 0.02
+		gaze_override = [mid, mid]
 	# eyes: both on Kurt when facing him, else ahead; per-eye overrides win
 	var kurt_world := get_viewport().get_camera_3d().global_position if get_viewport().get_camera_3d() else global_position
 	for i in eyes.size():

@@ -13,6 +13,13 @@ const T := 0.14           ## interior wall thickness
 
 var front_door: Door
 var front_door_spot: Hotspot
+var room_door: Door              ## the living room's own door: open when he comes in, shut when he wakes
+var room_door_spot: Hotspot
+var wardrobe: AnimatableBody3D
+var wardrobe_spot: Hotspot
+var hole_spot: Hotspot
+var hole_center := Vector3(-2.7, 0.55, -6.0)
+var flat_nuggets: Array[Node3D] = []
 var marta_seat := Vector3(-3.75, 0.0, -3.9)
 var table_top := 0.74
 var stuck_doors: Array[Door] = []
@@ -41,13 +48,20 @@ func build() -> void:
 	_b.material("coral", Look.mat(Look.get_tex("coral")))
 	_b.material("window", Look.mat(Look.get_tex("plaster"), Color("9aa6b0"), 160.0, false, Color(0.9, 0.95, 1.0)))
 	_b.material("dark", Look.mat(Look.get_tex("concrete"), Color("181818")))
+	_b.material("town_glow", Look.mat(Look.get_tex("cobbles"), Color("ffc070"), 160.0, false, Color(1.4, 0.95, 0.45)))
 	_shell()
 	_landing()
 	_hallway()
 	_living_room()
 	_b.finish()
 	_doors()
+	_wardrobe()
 	_lights()
+	for p in [Vector3(-4.0, 0.5, -5.1), Vector3(-5.3, 0.6, -2.0)]:
+		var n := Nugget.new()
+		add_child(n)
+		n.position = p
+		flat_nuggets.append(n)
 
 # --- walls -------------------------------------------------------------------------------------
 
@@ -94,7 +108,11 @@ func _shell() -> void:
 	wall_z(-5.2, -1.0, 1.0, "plaster", "wallpaper", [[-0.4, 0.4, 0.0, 2.05]])
 	floor_ceiling(-1.0, -5.2, 1.0, 0.0, "parquet", "plaster")
 	# Living room: x -6..-1, z -6..-1.2; window in the west wall.
-	wall_z(-6.0, -6.0, -1.0, "plaster", "wallpaper", [], 0.3)
+	wall_z(-6.0, -6.0, -1.0, "plaster", "wallpaper", [[-3.0, -2.4, 0.0, 1.1]], 0.3)
+	# behind the hole: not the next room. Gaslight, and cobbles, a long way down.
+	_b.box("dark", Vector3(-3.1, -0.1, -7.4), Vector3(-2.3, 1.2, -6.15), Transform3D.IDENTITY, false, 1.0, [Vector3.BACK])
+	_b.box("town_glow", Vector3(-3.0, 0.0, -7.3), Vector3(-2.4, 1.1, -7.25), Transform3D.IDENTITY, false)
+	_b.collide(Vector3(-3.0, 0, -7.4), Vector3(-2.4, 1.1, -6.2))
 	wall_z(-1.2, -6.0, -1.0, "wallpaper", "plaster")
 	wall_x(-6.0, -6.0, -1.2, "plaster", "wallpaper", [[-4.6, -2.8, 0.85, 2.15]], 0.3)
 	wall_x(-1.0, -6.0, -5.2, "wallpaper", "plaster")
@@ -228,7 +246,7 @@ func _living_room() -> void:
 		_b.box("mould", Vector3(-0.07, table_top + 0.02, -0.07), Vector3(0.07, table_top + 0.035, 0.07), Transform3D(Basis(), p), false)
 	# the other two chairs: one pushed back, one on its side
 	_chair(Vector3(m.x + 1.2, 0, m.z - 0.95), 160.0, false)
-	_chair(Vector3(m.x + 1.7, 0, m.z - 1.45), -60.0, true)
+	_chair(Vector3(-5.2, 0, -2.4), -60.0, true)
 	# an armchair face down; the bookcase on its face across the room; books everywhere
 	_b.box("cloth_green", Vector3(-0.45, 0, -0.4), Vector3(0.45, 0.85, 0.4), _rot(20, Vector3(-2.0, 0, -1.9), 0, 95), true)
 	_b.box("wood", Vector3(-0.9, 0, -0.2), Vector3(0.9, 0.35, 0.2), _rot(10, Vector3(-4.6, 0, -5.4)), true)
@@ -289,6 +307,16 @@ func _doors() -> void:
 	front_door.set_angle(0.0)
 	front_door_spot = Hotspot.make(self, Transform3D(Basis(), Vector3(0, 1.0, 0)), Vector3(0.9, 2.0, 0.4), "Open")
 	front_door_spot.enabled = false
+	# The living room door: open (flat against nothing, into the room) until he's out cold.
+	room_door = Door.new()
+	room_door.name = "RoomDoor"
+	add_child(room_door)
+	room_door.position = Vector3(-1.0, 0, -3.5)
+	room_door.rotation.y = deg_to_rad(90)
+	room_door.setup(0.9, 2.05, paint, 0.05)
+	room_door.set_angle(165.0)     # back against the wall
+	room_door_spot = Hotspot.make(self, Transform3D(Basis(), Vector3(-1.05, 1.0, -3.95)), Vector3(0.4, 2.0, 0.9), "Open")
+	room_door_spot.enabled = false
 	# Doors that stay shut in this scene. Solid; trying them only rattles them.
 	var specs := [
 		[Vector3(1.0, 0, -2.0), 90.0],     # kitchen
@@ -331,3 +359,33 @@ func _omni(p: Vector3, c: Color, e: float, r: float) -> OmniLight3D:
 	add_child(l)
 	l.position = p
 	return l
+
+func _wardrobe() -> void:
+	# A tall wardrobe against the north wall, in front of the hole. He shoulders it along the wall.
+	wardrobe = AnimatableBody3D.new()
+	wardrobe.name = "Wardrobe"
+	wardrobe.sync_to_physics = false
+	add_child(wardrobe)
+	wardrobe.position = Vector3(-2.7, 0, -5.58)
+	var wood := Look.mat(Look.get_tex("wood"))
+	var parts := [[Vector3(1.0, 2.05, 0.5), Vector3(0, 1.025, 0)], [Vector3(0.48, 1.8, 0.02), Vector3(-0.25, 1.05, 0.26)],
+		[Vector3(0.48, 1.8, 0.02), Vector3(0.25, 1.05, 0.26)], [Vector3(1.06, 0.08, 0.56), Vector3(0, 2.07, 0)]]
+	for p in parts:
+		var mi := MeshInstance3D.new(); var bm := BoxMesh.new(); bm.size = p[0]
+		mi.mesh = bm; mi.material_override = wood; mi.position = p[1]
+		wardrobe.add_child(mi)
+	var cs := CollisionShape3D.new(); var bs := BoxShape3D.new(); bs.size = Vector3(1.0, 2.05, 0.5)
+	cs.shape = bs; cs.position.y = 1.025
+	wardrobe.add_child(cs)
+	wardrobe_spot = Hotspot.make(wardrobe, Transform3D(Basis(), Vector3(-2.7, 1.1, -5.3)), Vector3(1.1, 2.1, 0.7), "Push")
+	wardrobe_spot.enabled = false
+	hole_spot = Hotspot.make(self, Transform3D(Basis(), Vector3(-2.7, 0.55, -5.95)), Vector3(0.7, 1.1, 0.5), "Crawl through")
+	hole_spot.enabled = false
+
+## One shove: it scrapes a hand's breadth along the wall. Returns true when the hole's clear.
+func shove_wardrobe() -> bool:
+	var tw := create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(wardrobe, "position:x", wardrobe.position.x + 0.36, 0.55)
+	Sfx.play_at("scrape", wardrobe.global_position + Vector3(0, 0.5, 0), 2.0, randf_range(0.9, 1.05))
+	Noises.make(wardrobe.global_position, 10.0, "scrape")
+	return wardrobe.position.x + 0.36 > -1.65

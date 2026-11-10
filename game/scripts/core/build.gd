@@ -105,3 +105,30 @@ static func along(dir: Vector3, r: float, length: float) -> Basis:
 	if d.dot(Vector3.UP) < -0.999:
 		d = (d + Vector3(0.001, 0, 0.001)).normalized()
 	return Basis(Quaternion(Vector3.UP, d)).scaled_local(Vector3(r, length, r))
+
+## Wall pieces around holes. holes: [from, to, sill, top] along the wall.
+static func segments(a: float, b: float, holes: Array, h: float) -> Array:
+	var out := []
+	var cur := a
+	var hs := holes.duplicate()
+	hs.sort_custom(func(p, q): return p[0] < q[0])
+	for hole in hs:
+		if hole[0] > cur:
+			out.append([cur, hole[0], 0.0, h])
+		if hole[2] > 0.0:
+			out.append([hole[0], hole[1], 0.0, hole[2]])
+		if hole[3] < h:
+			out.append([hole[0], hole[1], hole[3], h])
+		cur = hole[1]
+	if b > cur:
+		out.append([cur, b, 0.0, h])
+	return out
+
+## A wall at constant z (x from x0 to x1), height h, thickness t; one material both sides.
+func wall_z(z: float, x0: float, x1: float, mat: String, holes := [], t := 0.2, h := 3.0, y0 := 0.0) -> void:
+	for s in segments(x0, x1, holes, h):
+		box(mat, Vector3(s[0], y0 + s[2], z - t * 0.5), Vector3(s[1], y0 + s[3], z + t * 0.5))
+
+func wall_x(x: float, z0: float, z1: float, mat: String, holes := [], t := 0.2, h := 3.0, y0 := 0.0) -> void:
+	for s in segments(z0, z1, holes, h):
+		box(mat, Vector3(x - t * 0.5, y0 + s[2], s[0]), Vector3(x + t * 0.5, y0 + s[3], s[1]))

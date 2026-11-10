@@ -1,5 +1,44 @@
 {
-	"kurt":  { "name": "KURT",  "color": "#d9c7a3", "pitch": 0.75, "rate": 0.95, "volume": 90 },
-	"socko": { "name": "SOCKO", "color": "#ff8a5c", "pitch": 1.7,  "rate": 1.1,  "volume": 100 },
-	"marta": { "name": "MARTA", "color": "#9fb8a8", "pitch": 0.85, "rate": 0.75, "volume": 70 }
+	"kurt": {
+		"name": "KURT",
+		"color": "#d9c7a3",
+		"pitch": 0.75,
+		"rate": 0.95,
+		"volume": 90
+	},
+	"socko": {
+		"name": "SOCKO",
+		"color": "#ff8a5c",
+		"pitch": 1.7,
+		"rate": 1.1,
+		"volume": 100
+	},
+	"marta": {
+		"name": "MARTA",
+		"color": "#9fb8a8",
+		"pitch": 0.85,
+		"rate": 0.75,
+		"volume": 70
+	},
+	"girl": {
+		"name": "?",
+		"color": "#c8c8e8",
+		"pitch": 1.6,
+		"rate": 0.8,
+		"volume": 40
+	},
+	"porter": {
+		"name": "PORTER",
+		"color": "#a8a08c",
+		"pitch": 0.6,
+		"rate": 0.7,
+		"volume": 70
+	},
+	"lamplighter": {
+		"name": "LAMPLIGHTER",
+		"color": "#c8b080",
+		"pitch": 0.8,
+		"rate": 0.7,
+		"volume": 70
+	}
 }

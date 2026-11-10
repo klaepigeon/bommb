@@ -100,6 +100,11 @@ func _set_pitch(p: float) -> void:
 	_pitch = p
 	head.rotation.x = p
 
+## The muzzle climbs; the view goes with it and settles back a little.
+func add_recoil(amount: float) -> void:
+	_set_pitch(clampf(_pitch + amount, -1.35, 1.35))
+	rotation.y += randf_range(-amount, amount) * 0.3
+
 func shake(amount: float, seconds: float) -> void:
 	_shake = amount
 	_shake_t = seconds
@@ -133,6 +138,7 @@ func _physics_process(delta: float) -> void:
 		if _step_dist > 0.72:
 			_step_dist = 0.0
 			Sfx.play("step", -16.0, randf_range(0.85, 1.1))
+			Noises.make(global_position, 2.5 if Game.owned("quiet_feet") else 5.0, "step")
 	else:
 		_bob = lerpf(_bob, round(_bob / PI) * PI, delta * 4.0)
 	var swing := sin(_bob) * clampf(speed / WALK, 0.0, 1.0)

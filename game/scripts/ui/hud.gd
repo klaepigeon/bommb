@@ -7,6 +7,9 @@ signal restart_requested
 
 var controls: Controls
 var fade: ColorRect
+var reader: Reader
+var skills: SkillMenu
+var _status: Label
 var _dot: ColorRect
 var _prompt: Label
 var _menu: Control
@@ -38,6 +41,17 @@ func build() -> void:
 	_prompt.add_theme_color_override("font_outline_color", Color.BLACK)
 	_prompt.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_prompt)
+	_status = Label.new()
+	_status.position = Vector2(30, 110)
+	_status.add_theme_font_size_override("font_size", 24)
+	_status.add_theme_constant_override("outline_size", 5)
+	_status.add_theme_color_override("font_outline_color", Color.BLACK)
+	_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_status)
+	reader = Reader.new()
+	add_child(reader)
+	skills = SkillMenu.new()
+	add_child(skills)
 	fade = ColorRect.new()
 	fade.color = Color.BLACK
 	fade.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -54,6 +68,10 @@ func set_prompt(p: String) -> void:
 	var key := "A" if Input.get_connected_joypads().size() > 0 else "E"
 	_prompt.text = "[%s]  %s" % [key, p]
 	_dot.color.a = 0.9
+
+## Top left: nuggets once he has any; rounds once he has the gun.
+func set_status(text: String) -> void:
+	_status.text = text
 
 func set_crosshair(on: bool) -> void:
 	_dot.visible = on
@@ -153,3 +171,32 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _menu.visible and event.is_action_pressed("pause"):
 		toggle_pause()
 		get_viewport().set_input_as_handled()
+
+## Out of the town. What's past the gate is still to be written.
+func end_card(route: String) -> void:
+	var c := Control.new()
+	c.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(c)
+	var bg := ColorRect.new(); bg.color = Color.WHITE; bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	c.add_child(bg)
+	var v := VBoxContainer.new()
+	v.set_anchors_preset(Control.PRESET_CENTER)
+	v.position = Vector2(-300, -120)
+	v.custom_minimum_size = Vector2(600, 0)
+	v.add_theme_constant_override("separation", 24)
+	c.add_child(v)
+	var t := Label.new()
+	t.text = "HYSTERIA"
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t.add_theme_font_size_override("font_size", 64)
+	t.add_theme_color_override("font_color", Color("1a1410"))
+	v.add_child(t)
+	var b := Button.new()
+	b.text = "Play again"
+	b.custom_minimum_size = Vector2(0, 80)
+	b.add_theme_font_size_override("font_size", 30)
+	b.pressed.connect(func(): get_tree().reload_current_scene())
+	v.add_child(b)
+	b.grab_focus()
+	controls.visible = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE

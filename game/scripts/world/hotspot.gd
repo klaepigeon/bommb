@@ -5,7 +5,11 @@ extends Area3D
 signal used
 
 var prompt := "Use"
-var enabled := true
+## Disabled hotspots are see-through to the crosshair (they don't block what's behind them).
+var enabled := true:
+	set(v):
+		enabled = v
+		collision_layer = 2 if v else 0
 
 static func make(parent: Node, at: Transform3D, size: Vector3, prompt_text: String) -> Hotspot:
 	var h := Hotspot.new()

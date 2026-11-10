@@ -53,6 +53,11 @@ static func get_tex(key: String) -> Texture2D:
 		"felt": return _plain(key, Color("b8362a"), Color("7a1d17"), 41, 0.25)
 		"paper": return _plain(key, Color("d8d0bc"), Color("a59c86"), 17, 0.2)
 		"white": return _plain(key, Color.WHITE, Color.WHITE, 1, 1.0)
+		"cobbles": return _cobbles()
+		"stucco": return _plain(key, Color("e0d2b0"), Color("a89878"), 71, 0.12)
+		"roof": return _plain(key, Color("3a3f45"), Color("22262a"), 73, 0.2)
+		"iron": return _plain(key, Color("2a2a2c"), Color("161617"), 79, 0.3)
+		"nugget": return _nugget()
 		"rubble": return _plain(key, Color("9a948a"), Color("5f5a52"), 51, 0.3)
 	return _plain(key, Color.MAGENTA, Color.MAGENTA, 1, 1.0)
 
@@ -195,3 +200,27 @@ static func _sock_head() -> ImageTexture:
 				c = c.darkened(0.06)
 			img.set_pixel(x, y, _stains(c, x, y, n, m, float(y) / 32.0))
 	return _done("sock_head", img)
+
+static func _cobbles() -> ImageTexture:
+	var img := Image.create(64, 64, false, Image.FORMAT_RGB8)
+	var n := _noise(83, 0.15)
+	for y in 64:
+		for x in 64:
+			var row := int(y / 8)
+			var cx := fposmod(x + (row % 2) * 5, 10.0)
+			var cy := fposmod(y, 8.0)
+			var edge := minf(minf(cx, 10.0 - cx), minf(cy, 8.0 - cy))
+			var c := Color("5d5a55").lerp(Color("3c3a37"), (n.get_noise_2d(x, y) * 0.5 + 0.5))
+			c = c.lerp(Color("4a4a4a"), float((int(x / 10) * 7 + row * 3) % 5) / 10.0)
+			if edge < 1.0:
+				c = Color("1d1c1b")
+			img.set_pixel(x, y, c)
+	return _done("cobbles", img)
+
+static func _nugget() -> ImageTexture:
+	# Gutterspace: the missing-texture checker, pink and black.
+	var img := Image.create(8, 8, false, Image.FORMAT_RGB8)
+	for y in 8:
+		for x in 8:
+			img.set_pixel(x, y, Color("ff00dc") if (int(x / 4) + int(y / 4)) % 2 == 0 else Color("000000"))
+	return _done("nugget", img)

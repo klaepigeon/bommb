@@ -32,6 +32,14 @@ func _ready() -> void:
 	streams["tinnitus"] = _wav(_tinnitus())
 	streams["sting"] = _wav(_sting())
 	streams["pop"] = _wav(_pop())
+	streams["shot"] = _wav(_shot())
+	streams["click"] = _wav(_click())
+	streams["load"] = _wav(_load())
+	streams["clatter"] = _wav(_clatter())
+	streams["whoosh"] = _wav(_whoosh())
+	streams["scrape"] = _wav(_scrape())
+	streams["pressure"] = _wav(_pressure(), true)
+	streams["wind"] = _wav(_wind(), true)
 	streams["room"] = _wav(_room(), true)
 	streams["breath"] = _wav(_breath(), true)
 	print("[sfx] synthesised %d sounds in %d ms" % [streams.size(), Time.get_ticks_msec() - t])
@@ -249,4 +257,84 @@ func _breath() -> PackedFloat32Array:
 		if exhale > 0.1 and _rng.randf() < 0.004:
 			crackle = _rng.randf_range(-1.0, 1.0)
 		a[i] = y * 0.02 * (inhale * 0.8 + exhale) + crackle * 0.3 * exhale
+	return a
+
+func _shot() -> PackedFloat32Array:
+	# A black-powder-era crack and a long slap back off the houses.
+	var a := _buf(1.6)
+	var lp := 0.0
+	for i in a.size():
+		var t := float(i) / RATE
+		lp += 0.35 * (_noise() - lp)
+		var crack := _noise() * exp(-t / 0.008)
+		var body := lp * exp(-t / 0.09)
+		var boom := sin(TAU * 52.0 * t) * exp(-t / 0.18)
+		var echo := lp * 0.35 * exp(-maxf(t - 0.22, 0.0) / 0.35) * smoothstep(0.2, 0.26, t)
+		a[i] = (crack * 0.9 + body * 1.4 + boom * 0.6 + echo) * 0.8
+	return a
+
+func _click() -> PackedFloat32Array:
+	var a := _buf(0.12)
+	_strike(a, 0.0, 0.6, [2600.0, 4100.0], 0.006, 0.6, 0.8)
+	return a
+
+func _load() -> PackedFloat32Array:
+	var a := _buf(0.25)
+	_strike(a, 0.0, 0.4, [1800.0, 3000.0], 0.01, 0.4, 0.7)
+	_strike(a, 0.06, 0.3, [900.0, 1500.0], 0.015, 0.3, 0.5)
+	return a
+
+func _clatter() -> PackedFloat32Array:
+	var a := _buf(0.9)
+	var t := 0.0
+	for k in 5:
+		_strike(a, t, 0.7 / (k + 1), [180.0 + k * 40.0, 420.0, 900.0], 0.03, 1.0, 0.4)
+		t += 0.07 + 0.09 * k
+	return a
+
+func _whoosh() -> PackedFloat32Array:
+	var a := _buf(0.3)
+	var lp := 0.0
+	for i in a.size():
+		var tt := float(i) / RATE
+		lp += 0.15 * (_noise() - lp)
+		a[i] = lp * sin(PI * tt / 0.3) * 0.8
+	return a
+
+func _scrape() -> PackedFloat32Array:
+	# A heavy wardrobe dragged a hand's breadth over parquet.
+	var a := _buf(0.9)
+	var lp := 0.0
+	var y1 := 0.0; var y2 := 0.0
+	for i in a.size():
+		var t := float(i) / RATE
+		lp += 0.2 * (_noise() - lp)
+		var w := TAU * (140.0 + 30.0 * sin(t * 37.0)) / RATE
+		var y := lp + 2.0 * 0.98 * cos(w) * y1 - 0.98 * 0.98 * y2
+		y2 = y1; y1 = y
+		a[i] = y * 0.02 * smoothstep(0.0, 0.1, t) * smoothstep(0.9, 0.6, t)
+	return a
+
+func _pressure() -> PackedFloat32Array:
+	# Like the ears before a storm: two close low tones beating. Loops on whole cycles.
+	var a := _buf(2.0)
+	for i in a.size():
+		var t := float(i) / RATE
+		a[i] = (sin(TAU * 38.0 * t) + sin(TAU * 39.5 * t)) * 0.18
+	return a
+
+func _wind() -> PackedFloat32Array:
+	var a := _buf(5.0)
+	var lp := 0.0
+	var lp2 := 0.0
+	for i in a.size():
+		var t := float(i) / RATE
+		lp += 0.03 * (_noise() - lp)
+		lp2 += 0.3 * (lp - lp2)
+		a[i] = lp2 * (0.6 + 0.4 * sin(TAU * t / 5.0)) * 1.2
+	var fade := int(0.3 * RATE)
+	for i in fade:
+		var k := float(i) / fade
+		a[i] = a[i] * k + a[a.size() - fade + i] * (1.0 - k)
+	a.resize(a.size() - fade)
 	return a
