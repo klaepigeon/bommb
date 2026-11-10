@@ -98,9 +98,9 @@ func _landing(f: int) -> void:
 	var l := OmniLight3D.new()
 	var weak := f % 2 == 1 and f != 4
 	l.light_color = Color(1.0, 0.74, 0.46) if weak else Color(1.0, 0.86, 0.64)
-	l.light_energy = 0.6 if weak else 1.35
+	l.light_energy = 0.8 if weak else 1.7
 	l.omni_range = 6.5; l.omni_attenuation = 2.1; l.light_specular = 0.3
-	l.shadow_enabled = false; l.shadow_bias = 0.06
+	l.shadow_enabled = false; l.shadow_bias = 0.08; l.shadow_normal_bias = 2.0; l.shadow_blur = 2.0
 	add_child(l); l.position = Vector3(12.0, y + 2.18, 6.3)
 	l.set_meta("base", l.light_energy)
 	lights[f] = l

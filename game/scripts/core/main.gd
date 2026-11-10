@@ -23,6 +23,7 @@ var room_tone: AudioStreamPlayer3D
 var args := {}
 var _screen: ShaderMaterial
 var _grain_t := 0.0
+var _trail_t := 0.0
 const SHRINK := 2
 
 func _ready() -> void:
@@ -48,7 +49,7 @@ func _build() -> void:
 	view = SubViewport.new()
 	view.audio_listener_enable_3d = true
 	view.msaa_3d = Viewport.MSAA_DISABLED
-	view.positional_shadow_atlas_size = 1024       # one shadow light at a time (the stairwell's bulb)
+	view.positional_shadow_atlas_size = 2048       # one shadow light at a time (the stairwell's bulb)
 	container.add_child(view)
 	world = Node3D.new(); world.name = "World"
 	view.add_child(world)
@@ -106,16 +107,20 @@ func _build() -> void:
 			"flat48": go_to_flat48()
 		return
 	scene.start(args.get("start", ""))
+	if Trail.last_crash != "" and not args.has("autotest") and not args.has("shots"):
+		hud.show_report(Trail.last_crash)
 
 ## Through the hole: build the town (behind black), hide the flat, and hand over to the chapter.
 func go_to_town() -> void:
 	hud.fade.color.a = 1.0
+	Trail.mark("town: building")
 	await get_tree().process_frame
 	var t := Time.get_ticks_msec()
 	town = Town.new(); town.name = "Town"
 	town.position = Vector3(300, 0, 0)
 	world.add_child(town)        # it builds itself
 	print("[town] built in %d ms" % (Time.get_ticks_msec() - t))
+	Trail.mark("town: built in %d ms, %d MB" % [Time.get_ticks_msec() - t, OS.get_static_memory_usage() / 1048576])
 	flat.visible = false
 	marta.visible = false
 	flat.process_mode = Node.PROCESS_MODE_DISABLED
@@ -132,6 +137,7 @@ func go_to_town() -> void:
 	chapter.setup()
 	chapter.finished.connect(_the_end)
 	chapter.arrive()
+	Trail.mark("town: arrived")
 
 ## Out of the town's gate, into white, and he's on the landing outside 47. The door he went in by
 ## is shut. Across the landing, 48's peephole lights, and its door comes off the latch.
@@ -139,6 +145,7 @@ func _the_end(_route: String) -> void:
 	to_landing()
 
 func to_landing() -> void:
+	Trail.mark("to the landing")
 	if town:
 		town.visible = false
 		town.process_mode = Node.PROCESS_MODE_DISABLED
@@ -208,6 +215,7 @@ func _super_caught(_m: Monster) -> void:
 
 ## Through 48's door: the same flat, drawn from memory.
 func go_to_flat48() -> void:
+	Trail.mark("into flat 48")
 	player.can_move = false
 	await hud.white_to(1.0, 0.5).finished
 	if flat48 == null:
@@ -261,6 +269,7 @@ func _update_hud() -> void:
 	hud.controls.labels["fire"] = "THROW" if weapon.held == "rock" else "FIRE"
 
 func _on_action(name: String) -> void:
+	Trail.mark("button " + name)
 	if not player.can_move:
 		return
 	match name:
@@ -289,6 +298,11 @@ func _process(delta: float) -> void:
 	if weapon and hud:
 		weapon.set_aim(hud.controls.aiming and weapon.held in ["gun", "shotgun"])
 		_update_hud()
+	_trail_t += delta
+	if _trail_t > 1.5 and player:
+		_trail_t = 0.0
+		var pp := player.global_position
+		Trail.mark("%s at %.1f %.1f %.1f, %d fps" % [place, pp.x, pp.y, pp.z, Engine.get_frames_per_second()])
 	_grain_t += delta
 	if _grain_t > 1.0 / 12.0:
 		_grain_t = 0.0

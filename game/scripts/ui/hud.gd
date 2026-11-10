@@ -247,3 +247,26 @@ func end_card(route: String) -> void:
 	b.grab_focus()
 	controls.visible = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
+## Last time, the game stopped without being asked to. What it was doing, to be screenshotted.
+func show_report(text: String) -> void:
+	var c := Control.new()
+	c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	c.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(c)
+	var bg := ColorRect.new(); bg.color = Color(0, 0, 0, 0.92)
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	c.add_child(bg)
+	var l := Label.new()
+	l.text = "The game closed by itself last time. A screenshot of this helps fix it:\n\n" + text
+	l.anchor_left = 0.04; l.anchor_right = 0.8; l.anchor_top = 0.03; l.anchor_bottom = 0.97
+	l.add_theme_font_size_override("font_size", 17)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	c.add_child(l)
+	var b := Button.new(); b.text = "Continue"
+	b.anchor_left = 0.82; b.anchor_right = 0.97; b.anchor_top = 0.42; b.anchor_bottom = 0.58
+	b.add_theme_font_size_override("font_size", 28)
+	b.pressed.connect(c.queue_free)
+	c.add_child(b)

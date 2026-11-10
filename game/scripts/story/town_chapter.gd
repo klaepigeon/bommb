@@ -175,7 +175,9 @@ func _try_nugget(n: Nugget) -> void:
 	if n.global_position.distance_to(player.global_position + Vector3(0, 0.6, 0)) < 0.9:
 		n.take()
 		Game.add_nuggets(1)
+		Trail.mark("nugget counted, hud updated")
 		line("nuggets")
+		Trail.mark("nugget line begun")
 		if Game.nuggets >= 4 and not Game.owned("headshot") and _said.has("nuggets"):
 			get_tree().create_timer(4.0, false).timeout.connect(func(): line("enough"))
 

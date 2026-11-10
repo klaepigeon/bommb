@@ -51,7 +51,7 @@ const MATS := {
 	"planks": ["planks", 2.0, 0.85, 0.3, {}],
 	"wicker": ["wicker", 0.3, 0.9, 0.2, {}],
 	"hall_plaster": ["stucco_cream", 2.6, 0.95, 0.2, {"color": Color(0.74, 0.72, 0.66)}],
-	"hall_green": ["stucco_green", 2.6, 0.7, 0.4, {"color": Color(0.42, 0.56, 0.47)}],
+	"hall_green": ["stucco_green", 2.6, 0.7, 0.4, {"color": Color(0.62, 0.8, 0.68)}],
 	"hall_ceiling": ["stucco_cream", 3.2, 1.0, 0.1, {"color": Color(0.5, 0.5, 0.48)}],
 	"whitewash": ["plaster_in", 2.0, 1.0, 0.1, {"color": Color(1.5, 1.5, 1.55)}],
 	"cloth_dark": ["paper", 1.0, 1.0, 0.1, {"color": Color(0.25, 0.08, 0.1)}],

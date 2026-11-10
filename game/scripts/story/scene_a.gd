@@ -38,6 +38,7 @@ func _look_at(r: Node) -> void:
 func _set_stage(s: String) -> void:
 	stage = s
 	print("[scene_a] ", s)
+	Trail.mark("stage " + s)
 	stage_changed.emit(s)
 
 func wait(seconds: float) -> void:

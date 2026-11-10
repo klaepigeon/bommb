@@ -6,7 +6,7 @@ uniform float levels = 32.0;
 uniform float dither_amount = 1.0;
 uniform float shrink = 3.0;
 uniform float grain = 0.045;     // post.js amount
-uniform float vig = 0.42;        // post.js vig
+uniform float vig = 0.32;        // post.js vig
 uniform float decay = 0.0;       // reality slipping (0..1), for later
 uniform float bw = 0.0;
 // The grain changes at film speed (main.gd steps this 12 times a second), not every frame, and

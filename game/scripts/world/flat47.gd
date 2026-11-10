@@ -97,7 +97,7 @@ func apply_environment(env: Environment) -> void:
 	env.background_energy_multiplier = 1.6        # outside is a flat, even white
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color("6a7890").lerp(Color("1a140e"), 0.4)
-	env.ambient_light_energy = 0.12
+	env.ambient_light_energy = 0.2
 	env.fog_enabled = true
 	env.fog_light_color = Color("262a31")
 	env.fog_density = 0.0062
@@ -365,7 +365,8 @@ func _process(delta: float) -> void:
 			o.set_meta("room", k)
 			o.set_meta("near", 1.0)
 		var near: float = o.get_meta("near")
-		var want := 1.0 if _room_dist(o.get_meta("room"), eye) < ROOM_NEAR else 0.0
+		var want := 1.0        # all of them, always: there are eleven, under the phone renderer's limit, and a
+		                       # light going out on the wall beside you as you leave a room is worse than its cost
 		near = move_toward(near, want, delta / 1.2)
 		o.set_meta("near", near)
 		o.visible = near > 0.001

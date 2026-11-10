@@ -23,7 +23,9 @@ func _process(delta: float) -> void:
 
 func take() -> void:
 	taken = true
+	Trail.mark("nugget take")
 	Sfx.play("pop", -4.0, 1.6)
+	Trail.mark("nugget popped")
 	var tw := create_tween()
 	tw.tween_property(self, "scale", Vector3.ONE * 0.01, 0.2)
 	tw.tween_callback(func(): visible = false)

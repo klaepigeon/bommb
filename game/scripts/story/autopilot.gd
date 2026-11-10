@@ -29,6 +29,8 @@ func _ready() -> void:
 		_touch()
 	elif main.args.has("spin"):
 		_spin()
+	elif main.args.has("townwalk"):
+		_townwalk()
 	elif main.args.has("superview"):
 		_superview()
 	elif main.args.has("super"):
@@ -849,4 +851,29 @@ func _superview() -> void:
 		sup.rig.animate(1.0 / 60.0, {"speed": 0.0, "mode": "stagger", "look": null})
 	await get_tree().process_frame
 	await _shot("v_stagger")
+	get_tree().quit(0)
+
+
+## Walks into the town on his own feet (the other town tests move by teleport): forward along
+## the first street for a while, with the monsters awake and hearing him.
+func _townwalk() -> void:
+	var p: Player = main.player
+	if not await _until(func(): return main.place == "town" and p.can_move, 200.0, "the town"): return
+	var c: Controls = main.hud.controls
+	var start := p.global_position
+	for leg in [[Vector2(0, -1), 6.0], [Vector2(0.6, -0.8), 4.0], [Vector2(-0.6, -0.8), 4.0], [Vector2(0, 1), 3.0]]:
+		c.autopilot_move = leg[0]
+		var t := 0.0
+		var said := 0.0
+		while t < float(leg[1]):
+			await get_tree().physics_frame
+			t += get_physics_process_delta_time()
+			if t - said > 1.0:
+				said = t
+				var ms := ""
+				for m in [main.chapter.porter, main.chapter.lamplighter, main.chapter.marta]:
+					ms += " %s:%d@%.0f" % [m.id, m.state, m.global_position.distance_to(p.global_position)]
+				print("walk ", p.global_position, " can_move ", p.can_move, " yaw ", p.rotation.y, ms, " said ", Speech.history.slice(-2))
+	c.autopilot_move = Vector2.ZERO
+	print("AUTOTEST PASS: walked the town (%.1f m from where he came in)" % p.global_position.distance_to(start))
 	get_tree().quit(0)

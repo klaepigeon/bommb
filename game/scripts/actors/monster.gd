@@ -168,6 +168,8 @@ func _on_noise(pos: Vector3, radius: float, _source: String) -> void:
 			_shot_heard_t = now
 		elif now - _shot_heard_t < 0.5:
 			return
+		if state != S.LISTEN:
+			Trail.mark(id + " heard " + _source)
 		state = S.LISTEN
 		_target = _clamp(pos)
 		_state_t = 0.0
@@ -249,6 +251,7 @@ func _flat(v: Vector3) -> Vector3:
 	return Vector3(v.x, 0, v.z)
 
 func _start_chase() -> void:
+	Trail.mark(id + " chases")
 	state = S.CHASE
 	_state_t = 0.0
 

@@ -100,6 +100,7 @@ func say_id(id: String) -> void:
 		push_error("no line " + id)
 		return
 	history.append(id)
+	Trail.mark("line " + id)
 	line_cue.emit(id, l)
 	await say(l.get("speaker", "kurt"), l.get("text", ""), l.get("style", ""), l.get("silent", false))
 
@@ -125,8 +126,13 @@ func say(speaker: String, text: String, style := "", silent := false) -> void:
 		col = Color(col).darkened(0.25).to_html(false)
 	_label.text = "[color=%s][b]%s[/b][/color]   %s" % [col, name, body]
 	_panel.visible = true
+	# Never cut one utterance off with another: on a phone, stopping the voice mid-word and starting
+	# again in the same frame is the one thing here that talks to another process. The new line is
+	# read (subtitle) and the old voice finishes.
+	var voice_busy := not _tts_done and OS.has_feature("mobile")
 	_tts_done = true
-	if not silent and Settings.voices and _tts_available():
+	if not silent and Settings.voices and not voice_busy and _tts_available():
+		Trail.mark("tts speak")
 		_tts_done = false
 		_tts_id += 1
 		if _tts_voice == "":
@@ -136,7 +142,8 @@ func say(speaker: String, text: String, style := "", silent := false) -> void:
 		var vol := int(c.get("volume", 100))
 		if style == "quiet":
 			vol = int(vol * 0.6)
-		DisplayServer.tts_speak(text, _tts_voice, vol, float(c.get("pitch", 1.0)), float(c.get("rate", 1.0)), _tts_id, true)
+		DisplayServer.tts_speak(text, _tts_voice, vol, float(c.get("pitch", 1.0)), float(c.get("rate", 1.0)), _tts_id, not OS.has_feature("mobile"))
+		Trail.mark("tts spoken")
 	line_started.emit(speaker, text)
 	# Wait for the line (counting only unpaused time), and for the voice if it's still going.
 	while true:
