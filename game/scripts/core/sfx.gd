@@ -34,6 +34,9 @@ func _ready() -> void:
 	streams["pop"] = _wav(_pop())
 	streams["shot"] = _wav(_shot())
 	streams["click"] = _wav(_click())
+	streams["boom"] = _wav(_boom())
+	streams["thrum"] = _wav(_thrum())
+	streams["paper"] = _wav(_paper())
 	streams["load"] = _wav(_load())
 	streams["clatter"] = _wav(_clatter())
 	streams["whoosh"] = _wav(_whoosh())
@@ -337,4 +340,36 @@ func _wind() -> PackedFloat32Array:
 		var k := float(i) / fade
 		a[i] = a[i] * k + a[a.size() - fade + i] * (1.0 - k)
 	a.resize(a.size() - fade)
+	return a
+
+func _boom() -> PackedFloat32Array:
+	# Twelve-bore indoors: a wall of it, then the room ringing.
+	var a := _buf(2.0)
+	var lp := 0.0
+	for i in a.size():
+		var t := float(i) / RATE
+		lp += 0.22 * (_noise() - lp)
+		var crack := _noise() * exp(-t / 0.012)
+		var body := lp * exp(-t / 0.16)
+		var low := sin(TAU * 38.0 * t) * exp(-t / 0.28)
+		var tail := lp * 0.4 * exp(-maxf(t - 0.15, 0.0) / 0.5) * smoothstep(0.12, 0.2, t)
+		a[i] = clampf((crack + body * 1.8 + low * 0.9 + tail) * 0.9, -1.0, 1.0)
+	return a
+
+func _thrum() -> PackedFloat32Array:
+	# A thing becoming what it is: a low swell and a paper snap.
+	var a := _buf(0.9)
+	for i in a.size():
+		var t := float(i) / RATE
+		a[i] = sin(TAU * 110.0 * t) * sin(PI * t / 0.9) * 0.5 + sin(TAU * 220.5 * t) * sin(PI * t / 0.9) * 0.2 + _noise() * exp(-t * 40.0) * 0.3
+	return a
+
+func _paper() -> PackedFloat32Array:
+	# A sticky note coming off a wall.
+	var a := _buf(0.18)
+	var lp := 0.0
+	for i in a.size():
+		var t := float(i) / RATE
+		lp += 0.6 * (_noise() - lp)
+		a[i] = (_noise() - lp) * 0.5 * exp(-t / 0.035) * smoothstep(0.0, 0.01, t)
 	return a

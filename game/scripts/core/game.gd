@@ -13,6 +13,9 @@ var flags := {}
 var ammo_loaded := 0
 var ammo_spare := 0
 var has_gun := false
+var has_shotgun := false
+var shells_loaded := 0
+var shells_spare := 0
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -34,6 +37,9 @@ func reset() -> void:
 	ammo_loaded = 0
 	ammo_spare = 0
 	has_gun = false
+	has_shotgun = false
+	shells_loaded = 0
+	shells_spare = 0
 
 func owned(id: String) -> bool:
 	return skills.get(id, false)

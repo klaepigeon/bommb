@@ -44,8 +44,8 @@ func build() -> void:
 	camera.far = 60.0
 	shake_node.add_child(camera)
 	camera.make_current()
-	arm = KurtArm.new(); camera.add_child(arm); arm.build()
-	socko = Socko.new(); camera.add_child(socko); socko.build()
+	arm = KurtArm.new(); camera.add_child(arm); arm.build(); arm.body = self
+	socko = Socko.new(); camera.add_child(socko); socko.build(); socko.body = self
 	_build_body()
 
 func _build_body() -> void:

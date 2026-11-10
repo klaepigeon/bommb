@@ -57,7 +57,6 @@ func setup() -> void:
 	weapon.reloaded_first.connect(func(): line("reloaded"))
 	weapon.emptied.connect(func(): line("empty"))
 	Game.skill_bought.connect(_on_bought)
-	hud.controls.action.connect(_on_action)
 
 func _spawn(cls, id: String, d: Dictionary, local_at: Vector3, seed: int, local_bounds: Rect2) -> Monster:
 	var m: Monster = cls.new()
@@ -115,7 +114,6 @@ func arrive() -> void:
 	player.can_look = true
 	hud.set_crosshair(true)
 	busy = false
-	_update_hud()
 
 # --- every frame -------------------------------------------------------------------------------
 
@@ -170,9 +168,6 @@ func _physics_process(delta: float) -> void:
 	# the gate: through it and out
 	if town.gate_open and lp.z > Town.GATE_Z + 2.5 and lp.x > Town.GATE_X0 and lp.x < Town.GATE_X1:
 		_leave()
-	# aiming follows the AIM button / trigger
-	weapon.set_aim(hud.controls.aiming and weapon.held == "gun")
-	_update_hud()
 
 func _try_nugget(n: Nugget) -> void:
 	if n.taken or not n.visible:
@@ -183,25 +178,6 @@ func _try_nugget(n: Nugget) -> void:
 		line("nuggets")
 		if Game.nuggets >= 4 and not Game.owned("headshot") and _said.has("nuggets"):
 			get_tree().create_timer(4.0, false).timeout.connect(func(): line("enough"))
-
-func _update_hud() -> void:
-	var t := ""
-	if Game.nuggets > 0 or Game.skills.size() > 0:
-		t += "Nuggets  %d" % Game.nuggets
-	if Game.has_gun:
-		t += ("\n" if t != "" else "") + "Nagant  %d / %d" % [Game.ammo_loaded, Game.ammo_spare]
-	hud.set_status(t)
-	var armed := weapon.held != ""
-	hud.controls.show_buttons({"fire": armed, "aim": weapon.held == "gun", "reload": weapon.held == "gun", "skills": Game.nuggets > 0 or Game.skills.size() > 0})
-	hud.controls.labels["fire"] = "THROW" if weapon.held == "rock" else "FIRE"
-
-func _on_action(name: String) -> void:
-	if not player.can_move:
-		return
-	match name:
-		"fire": weapon.fire()
-		"reload": weapon.reload()
-		"skills": hud.skills.open()
 
 # --- things ------------------------------------------------------------------------------------
 
@@ -385,13 +361,9 @@ func _leave() -> void:
 	else:
 		route = "sneak"
 	print("[town] out by the gate: ", route)
-	var white := hud.fade.duplicate() as ColorRect
-	white.color = Color(1, 1, 1, 0)
-	hud.add_child(white)
-	hud.move_child(white, hud.fade.get_index())
-	var tw := create_tween()
-	tw.tween_property(white, "color:a", 1.0, 2.0)
+	var tw := hud.white_to(1.0, 2.0)
 	await Speech.say_id("out_" + route)
-	await tw.finished
+	if tw.is_running():
+		await tw.finished
 	await wait(0.5)
 	finished.emit(route)

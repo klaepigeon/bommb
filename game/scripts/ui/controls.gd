@@ -22,8 +22,8 @@ var _look_id := -1
 var _look_last := Vector2.ZERO
 var _use_id := -1
 ## Touch buttons shown besides USE and pause: name → visible. Labels below.
-var buttons := {"fire": false, "aim": false, "reload": false, "skills": false}
-var labels := {"fire": "FIRE", "aim": "AIM", "reload": "LOAD", "skills": "SKILLS"}
+var buttons := {"fire": false, "aim": false, "reload": false, "skills": false, "swap": false}
+var labels := {"fire": "FIRE", "aim": "AIM", "reload": "LOAD", "skills": "SKILLS", "swap": "SWAP"}
 var aiming := false
 
 const STICK_R := 90.0
@@ -55,6 +55,7 @@ func _button_rect(name: String) -> Rect2:
 		"aim": return Rect2(size.x - 450, size.y - 210, 140, 140)
 		"reload": return Rect2(size.x - 420, size.y - 400, 120, 120)
 		"skills": return Rect2(24, 20, 170, 80)
+		"swap": return Rect2(size.x - 560, size.y - 360, 110, 110)
 	return Rect2()
 
 func _hit_button(p: Vector2) -> String:
@@ -113,7 +114,7 @@ func _input(event: InputEvent) -> void:
 	elif event.is_action_pressed("pause"):
 		pause_pressed.emit()
 	else:
-		for a in ["fire", "reload", "skills"]:
+		for a in ["fire", "reload", "skills", "swap"]:
 			if event.is_action_pressed(a):
 				action.emit(a)
 		if event.is_action_pressed("aim"):

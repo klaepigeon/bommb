@@ -37,6 +37,8 @@ const TALK_FOR := {"smile": "Talking_Excited", "wide_smile": "Talking_Excited", 
 	"nervousness": "Talking_Desperate", "forced_happiness": "Talking_Excited", "uncomfortable_smile": "Talking_Sympathetic"}
 var gaze_override := [null, null]
 var rig: SockRig
+var body: CollisionObject3D      ## Kurt (rays that look for walls leave him out)
+var _pull := 0.0
 
 var _w := Vector3.ZERO
 var _e := Vector3.ZERO
@@ -175,6 +177,25 @@ func _process(delta: float) -> void:
 	W += arm_add
 	W.y -= float(ch.get("hide", 0.0)) * 0.42
 	E.y -= float(ch.get("hide", 0.0)) * 0.42
+	# don't put the hand through a wall: draw it back along the forearm, and in a little
+	var cam_node := get_parent() as Node3D
+	if cam_node and is_inside_tree():
+		var tip := W + (W - E).normalized() * 0.15
+		var from := cam_node.global_position
+		var to: Vector3 = cam_node.global_transform * tip
+		var ray_dir := (to - from).normalized()
+		var q := PhysicsRayQueryParameters3D.create(from, to + ray_dir * 0.05, 1)
+		if body:
+			q.exclude = [body.get_rid()]
+		var hit := get_world_3d().direct_space_state.intersect_ray(q)
+		var over := 0.0
+		if hit:
+			over = clampf(from.distance_to(to) + 0.05 - from.distance_to(hit.position), 0.0, 0.3)
+		_pull = lerpf(_pull, over, 0.3 if over > _pull else 0.1)
+		if _pull > 0.001:
+			W -= tip.normalized() * _pull
+			E -= tip.normalized() * _pull * 0.5
+			W.y -= _pull * 0.25
 	_w = W
 	_e = E
 	var dir := (W - E).normalized()

@@ -182,7 +182,7 @@ func _process(delta: float) -> void:
 		var step := _dir * along * moving
 		# standing: the left a little forward and turned out, the weight on the right
 		var stance := Vector3(side * (0.03 if s == "l" else 0.01), 0, (-0.09 if s == "l" else 0.03)) * (1.0 - moving)
-		var ankle := Vector3(side * HIP_X * 1.05, ANKLE_Y + lift, BACK - 0.1) + step + stance
+		var ankle := Vector3(side * HIP_X * 1.05, ANKLE_Y + lift, BACK - 0.05) + step + stance      # toes inside his own width: not through a wall he's against
 		ankle.z -= 0.18 * _crouch * (1.0 if s == "l" else 0.4)
 		if s == "r" and _kick_t >= 0.0:
 			var k := sin(clampf(_kick_t / 0.32, 0.0, 1.0) * PI)

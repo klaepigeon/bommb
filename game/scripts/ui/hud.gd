@@ -7,9 +7,12 @@ signal restart_requested
 
 var controls: Controls
 var fade: ColorRect
+var white: ColorRect            ## the other fade: the town's gate, 48's door
 var reader: Reader
 var skills: SkillMenu
 var _status: Label
+var _caption: Label
+var _caption_n := 0
 var _dot: ColorRect
 var _prompt: Label
 var _menu: Control
@@ -48,10 +51,27 @@ func build() -> void:
 	_status.add_theme_color_override("font_outline_color", Color.BLACK)
 	_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_status)
+	_caption = Label.new()
+	_caption.anchor_left = 0.14; _caption.anchor_right = 0.86
+	_caption.anchor_top = 0.62; _caption.anchor_bottom = 0.62
+	_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_caption.add_theme_font_size_override("font_size", 24)
+	_caption.add_theme_color_override("font_color", Color(0.86, 0.84, 0.78))
+	_caption.add_theme_constant_override("outline_size", 6)
+	_caption.add_theme_color_override("font_outline_color", Color.BLACK)
+	_caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_caption.modulate.a = 0.0
+	add_child(_caption)
 	reader = Reader.new()
 	add_child(reader)
 	skills = SkillMenu.new()
 	add_child(skills)
+	white = ColorRect.new()
+	white.color = Color(1, 1, 1, 0)
+	white.set_anchors_preset(Control.PRESET_FULL_RECT)
+	white.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(white)
 	fade = ColorRect.new()
 	fade.color = Color.BLACK
 	fade.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -73,9 +93,27 @@ func set_prompt(p: String) -> void:
 func set_status(text: String) -> void:
 	_status.text = text
 
+## What Kurt sees when he looks at something: a quiet line above the subtitles, then gone.
+func caption(text: String, seconds := 4.5) -> void:
+	_caption_n += 1
+	var n := _caption_n
+	_caption.text = text
+	last_caption = text
+	create_tween().tween_property(_caption, "modulate:a", 1.0, 0.15)
+	await get_tree().create_timer(seconds, false).timeout
+	if n == _caption_n:
+		create_tween().tween_property(_caption, "modulate:a", 0.0, 0.5)
+
+var last_caption := ""
+
 func set_crosshair(on: bool) -> void:
 	_dot.visible = on
 	_prompt.visible = on
+
+func white_to(alpha: float, seconds: float) -> Tween:
+	var tw := create_tween()
+	tw.tween_property(white, "color:a", alpha, seconds)
+	return tw
 
 func fade_to(alpha: float, seconds: float) -> Tween:
 	var tw := create_tween()

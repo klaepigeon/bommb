@@ -21,6 +21,20 @@ var _seen_flat := false
 var _seen_marta := false
 var _door_tried := false
 
+## The flat's own things (the first build's text): a line for small things, the paper for notes.
+func _look_at(r: Node) -> void:
+	var title := String(r.get_meta("title", ""))
+	var desc := String(r.get_meta("desc", ""))
+	if desc == "":
+		desc = title
+	if String(r.get("prompt")) == "Read" and desc.length() > 90:
+		hud.reader.open({"title": title, "text": desc})
+		get_tree().paused = true
+		await hud.reader.closed
+		get_tree().paused = false
+	else:
+		hud.caption(desc, clampf(desc.length() * 0.06, 3.0, 9.0))
+
 func _set_stage(s: String) -> void:
 	stage = s
 	print("[scene_a] ", s)
@@ -36,6 +50,8 @@ func start(from := "") -> void:
 	marta.spot.used.connect(_examine)
 	flat.room_door.tried.connect(func(_d): _try_room_door())
 	flat.wardrobe_spot.used.connect(_push_wardrobe)
+	for r in flat.readables:
+		r.connect("used", _look_at.bind(r))
 	flat.hole_spot.used.connect(_crawl)
 	if from == "wake":
 		hud.fade.color.a = 1.0

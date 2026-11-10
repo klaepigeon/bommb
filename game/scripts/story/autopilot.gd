@@ -27,6 +27,8 @@ func _ready() -> void:
 		Engine.time_scale = 4.0
 	if main.args.has("poses"):
 		_poses()
+	elif main.args.get("start", "") in ["flat48", "landing"]:
+		_flat48.call_deferred()
 	elif main.args.get("start", "") == "town":
 		_town.call_deferred()
 	else:
@@ -220,10 +222,8 @@ func _town() -> void:
 	if ch.route != route:
 		_fail("went out by '%s', expected '%s'" % [ch.route, route])
 		return
-	await _idle(4.0)
-	print("AUTOTEST PASS: Scene A, then out of the town by '%s' (%d lines)" % [route, Speech.history.size()])
-	await _shot("99_end")
-	get_tree().quit(0)
+	print("AUTOTEST: out of the town by '%s'" % route)
+	await _flat48()
 
 func _route_talk(ch: TownChapter, town: Town) -> void:
 	for id in ["handwriting", "these_streets", "old_name"]:
@@ -332,6 +332,8 @@ func _route_sneak(ch: TownChapter, town: Town) -> void:
 	main.player.face(_g(Vector3(41.0, 3.0, 48.0)))
 	await _idle(0.2)
 	main.weapon.fire()
+	await _idle(0.4)
+	await _tp(Vector3(31.0, 0, 64.5))          # out of her way: she comes up the lane to look
 	if not await _until(func(): return m.state == Monster.S.LISTEN, 6.0, "Marta to hear the cobble"):
 		return
 	if not await _until(func(): return m.global_position.distance_to(town.lever_spot.global_position) > 9.0, 25.0, "Marta to drift off"):
@@ -349,7 +351,21 @@ func _poses() -> void:
 		p.face(v[1])
 		await _idle(0.8)
 		await _shot(v[0])
+	# right up against a wall: nothing of his should go into it
+	p.global_position = Vector3(7.6, 0, 4.7)
+	p.socko.set_pose("up", 0.0)
+	for k in 40:
+		p.face(Vector3(7.6, 1.45, 6.0))
+		main.hud.controls.autopilot_move = Vector2(0, -1)
+		await get_tree().physics_frame
+	main.hud.controls.autopilot_move = Vector2.ZERO
+	await _idle(0.8)
+	await _shot("wall_hands")
 	main.weapon.give_gun()
+	await _idle(0.8)
+	await _shot("wall_gun")
+	p.socko.set_pose("low", 0.0)
+	p.global_position = Vector3(3.4, 0, 3.4)
 	p.face(Vector3(2.0, 1.4, 1.0))
 	await _idle(0.8)
 	await _shot("gun_hold")
@@ -357,6 +373,227 @@ func _poses() -> void:
 	main.weapon.set_aim(true)
 	await _idle(0.8)
 	await _shot("gun_aim")
+	get_tree().quit(0)
+
+# --- Flat 48 ----------------------------------------------------------------------------------------
+
+func _g48(local: Vector3) -> Vector3:
+	return main.flat48.to_global(local)
+
+## Stand `dist` from a point in 48 (local), on the side toward `toward`, and use it.
+func _use48(target: Vector3, toward: Vector3, prompt: String, dist := 1.0) -> bool:
+	if not await _until(func(): return main.player.can_move, 30.0, "Kurt to be free to move"):
+		return false
+	var d := Vector3(toward.x - target.x, 0, toward.z - target.z).normalized()
+	main.player.global_position = _g48(Vector3(target.x, 0, target.z) + d * dist)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	return await _use(_g48(target), prompt)
+
+## Use this very thing in 48 (not whatever's in front of it): try standing round it until the
+## crosshair has it.
+func _use_thing48(thing: Object, target: Vector3, prompt: String) -> bool:
+	if not await _until(func(): return main.player.can_move, 30.0, "Kurt to be free to move"):
+		return false
+	var p: Player = main.player
+	for dist in [1.0, 0.8, 1.3]:
+		for i in 12:
+			var a := TAU * i / 12.0
+			p.global_position = _g48(Vector3(target.x + cos(a) * dist, 0, target.z + sin(a) * dist))
+			p.velocity = Vector3.ZERO
+			for k in 4:
+				await get_tree().physics_frame
+				p.face(_g48(target))
+			if p.focus == thing and String(thing.get("prompt")).begins_with(prompt):
+				p.try_interact()
+				return true
+	_fail("couldn't get at %s to '%s' (focus %s)" % [thing, prompt, p.focus])
+	return false
+
+func _note48(word: String) -> bool:
+	var f: Flat48 = main.flat48
+	for id in f.slots:
+		var s: Dictionary = f.slots[id]
+		if s["word"] == word and s["node"] != null:
+			return await _use48(s["pos"], Vector3(s["pos"].x, 0, 4.9), "Take", 0.75)
+	_fail("no '%s' note on the wall" % word)
+	return false
+
+func _block48(index: int) -> Flat48.Placeholder:
+	for b in main.flat48.blocks:
+		if b.index == index:
+			return b
+	return null
+
+func _flat48() -> void:
+	# on the landing: 48's door comes off the latch; through it
+	if main.args.get("start", "") != "flat48":
+		if not await _until(func(): return main.place == "flat47" and main.flat.door48_spot.enabled and main.player.can_move, 40.0, "48's door to open"):
+			return
+		if shots != "":
+			await _shot("20_landing")
+		main.player.global_position = Vector3(12.9, 0, 4.56)
+		await _idle(0.2)
+		if not await _use(main.flat.door48_spot.global_position, "Go in"):
+			return
+	if not await _until(func(): return main.place == "flat48" and main.chapter48 != null and main.chapter48.active and main.player.can_move, 30.0, "Flat 48"):
+		return
+	var f: Flat48 = main.flat48
+	var w: Weapon = main.weapon
+	if shots != "":
+		await _idle(1.0)
+		await _shot("21_flat48_hall")
+	# a block: look at it, the wrong word, the right word, peel it, stick it again
+	var sofa := _block48(23)
+	var top := sofa.position + Vector3(0, sofa.half.y, 0)
+	if not await _use48(top, Vector3(2.2, 0, 2.6), "Look", 1.2):
+		return
+	if not main.hud.last_caption.contains("the green one with the burn"):
+		_fail("looking at the sofa block didn't read its tag: '%s'" % main.hud.last_caption)
+		return
+	if not await _note48("PIANO"):
+		return
+	if w.held != "note" or w.note_word != "PIANO":
+		_fail("the PIANO note isn't in his hand")
+		return
+	if shots != "":
+		await _idle(0.5)
+		await _shot("22_note_in_hand")
+	if not await _use48(top, Vector3(2.2, 0, 2.6), "Stick", 1.2):
+		return
+	await _idle(1.2)
+	if sofa.real != null or w.note_word != "PIANO":
+		_fail("the wrong word stayed on the sofa block")
+		return
+	if not await _use48(Vector3(5.5, 1.1, Flat48.WALL_Z), Vector3(5.5, 0, 4.9), "Put the note back", 0.8):
+		return
+	if w.held == "note" or f.slots[17]["node"] == null:
+		_fail("the PIANO note didn't go back on the wall")
+		return
+	if not await _note48("SOFA"):
+		return
+	if not await _use48(top, Vector3(2.2, 0, 2.6), "Stick", 1.2):
+		return
+	await _idle(0.8)
+	if sofa.real == null or int(sofa.real.get_meta("count", 0)) < 1 or w.held == "note":
+		_fail("SOFA on the sofa block didn't make it real")
+		return
+	if shots != "":
+		await _shot("23_sofa_real")
+	if not await _use(sofa.note.global_position, "Peel"):
+		return
+	await _idle(0.3)
+	if sofa.real != null or w.note_word != "SOFA":
+		_fail("peeling the note didn't give the block back")
+		return
+	if not await _use48(top, Vector3(2.2, 0, 2.6), "Stick", 1.2):
+		return
+	await _idle(0.6)
+	if sofa.real == null:
+		_fail("the sofa wouldn't come back")
+		return
+	# the gun safe: the note, the door, the shotgun on its pegs, the shells
+	if not await _note48("GUN SAFE"):
+		return
+	var safe_front := Flat48.SAFE_AT + Vector3(0.1, 1.05, -Flat48.SAFE_HALF.z)
+	if not await _use48(safe_front, Vector3(1.35, 0, 6.0), "Stick", 1.0):
+		return
+	await _idle(0.6)
+	if not f.safe.real:
+		_fail("GUN SAFE didn't make the safe")
+		return
+	if not await _use48(safe_front, Vector3(1.35, 0, 6.0), "Open the safe", 1.0):
+		return
+	await _idle(1.0)
+	if shots != "":
+		main.player.global_position = _g48(Vector3(1.25, 0, 6.75))
+		main.player.face(_g48(Flat48.SAFE_AT + Vector3(-0.03, 0.75, 0)))
+		await _idle(7.5)
+		await _shot("24_safe_open")
+	if f.safe.gun == null:
+		_fail("there's no shotgun to see in the safe")
+		return
+	if not await _use48(f.to_local(f.safe.gun_spot.global_position), Vector3(1.35, 0, 6.0), "Take the shotgun", 1.0):
+		return
+	await _idle(0.5)
+	if not Game.has_shotgun or w.held != "shotgun" or Game.shells_loaded != 2:
+		_fail("the shotgun isn't in his hand, loaded")
+		return
+	if not await _use48(f.to_local(f.safe.shells_spot.global_position), Vector3(1.35, 0, 6.0), "Take the shells", 1.0):
+		return
+	if Game.shells_spare != 10:
+		_fail("the shells didn't come")
+		return
+	# the three of them: MARTA, KURT, and SONYA, who isn't here
+	var names := {"mama": "MARTA", "papa": "KURT"}
+	for g in f.figures:
+		var chest: Vector3 = g.position + Vector3(0, g.tall * 0.55, 0)
+		if not await _use_thing48(g, chest, "Look"):
+			return
+		if g.id == "child":
+			continue
+		if not await _note48(names[g.id]):
+			return
+		if not await _use_thing48(g, chest, "Stick"):
+			return
+		await _idle(0.8)
+		if not g.dressed:
+			_fail("%s didn't take the name %s" % [g.id, names[g.id]])
+			return
+		if shots != "":
+			await _shot("25_dressed_" + g.id)
+	var child = f.figures[2]
+	if not await _note48("SONYA"):
+		return
+	if not await _use_thing48(child, child.position + Vector3(0, child.tall * 0.55, 0), "Stick"):
+		return
+	await _idle(1.0)
+	if child.dressed or w.note_word != "SONYA" or not Game.flag("f48_child_refused_sonya"):
+		_fail("SONYA stayed on the child")
+		return
+	if not await _use48(Vector3(5.5, 1.1, Flat48.WALL_Z), Vector3(5.5, 0, 4.9), "Put the note back", 0.8):
+		return
+	if w.held != "shotgun":
+		_fail("the shotgun didn't come back to his hand after the note")
+		return
+	# the gun is real, and so is the choice: only the gun route takes it
+	if route == "kill":
+		var mama = f.figures[0]
+		main.player.global_position = _g48(Vector3(8.75, 0, 1.25))
+		await _idle(0.3)
+		main.player.face(mama.global_position + Vector3(0, mama.tall * 0.6, 0))
+		main.hud.controls.aiming = true
+		await _idle(1.5)
+		w.fire()
+		main.hud.controls.aiming = false
+		await _idle(1.5)
+		if not mama.down or not Game.flag("f48_shot_mama") or Game.shells_loaded != 1:
+			var cam: Camera3D = main.player.camera
+			var q := PhysicsRayQueryParameters3D.create(cam.global_position, cam.global_position - cam.global_transform.basis.z * 20.0, 1 | 4, [(main.player as Player).get_rid()])
+			q.collide_with_areas = true
+			var hit: Dictionary = (main.player as Player).get_world_3d().direct_space_state.intersect_ray(q)
+			_fail("the shot didn't put her down (held %s, shells %d, busy %s, down %s, centre ray hits %s)" % [w.held, Game.shells_loaded, w.busy, mama.down, hit.get("collider")])
+			return
+		if f.figures[1].down or f.figures[2].down:
+			_fail("one shot put more than one of them down")
+			return
+		if shots != "":
+			await _shot("26_shot")
+	else:
+		for g in f.figures:
+			if g.down:
+				_fail("%s is down and nobody shot it" % g.id)
+				return
+	# and out again, by the door he came in by
+	main.player.global_position = _g48(Vector3(9.3, 0, 4.56))
+	await _idle(0.3)
+	if not await _use(f.entry.handle_position(), "Leave"):
+		return
+	if not await _until(func(): return main.place == "flat47" and main.player.can_move, 20.0, "the landing again"):
+		return
+	await _idle(1.0)
+	print("AUTOTEST PASS: Scene A, the town by '%s', Flat 48 (%d lines)" % [route, Speech.history.size()])
+	await _shot("99_end")
 	get_tree().quit(0)
 
 func _shot_later(name: String, delay: float) -> void:

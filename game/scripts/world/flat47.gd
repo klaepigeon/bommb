@@ -30,6 +30,8 @@ var flat_nuggets: Array[Node3D] = []
 var lights: Array[Light3D] = []
 var readables: Array = []       ## usable bodies carrying "title"/"desc" metas
 var env_settings := {}
+var door48: Node3D              ## Flat 48's door, across the landing (a hinge; the scene opens it)
+var door48_spot: Hotspot
 
 ## Where things are, for the scene and the tests.
 const POINTS := {
@@ -62,6 +64,7 @@ func build() -> void:
 	_collision()
 	_lights()
 	_outside()
+	_landing()
 	_wardrobe()
 	# a lamp on the dinner table, still on (the first build had Kurt's torch to see her by)
 	add_lamp(Vector3(2.6, 1.0, 2.05), Color("ffb070"), 1.1, 2.8)
@@ -261,10 +264,10 @@ func _collision() -> void:
 	var ceil := CollisionShape3D.new(); var cb := BoxShape3D.new(); cb.size = Vector3(15, 0.4, 9)
 	ceil.shape = cb; ceil.position = Vector3(7, H + 0.2, 4)
 	walls.add_child(ceil)
-	# the landing: you don't go down the stairs (not yet)
-	for z in [[3.4, 8.5]]:
-		var sh := CollisionShape3D.new(); var b := BoxShape3D.new(); b.size = Vector3(0.3, 3.0, z[1] - z[0])
-		sh.shape = b; sh.position = Vector3(13.4, 1.5, (z[0] + z[1]) * 0.5)
+	# the landing: you don't take the stairs (not yet), and 48's doorway is its door's to stop
+	for box in [[Vector3(12.2, 1.5, 3.3), Vector3(3.8, 3.0, 0.3)], [Vector3(11.1, 1.5, 8.15), Vector3(1.4, 3.0, 0.3)]]:
+		var sh := CollisionShape3D.new(); var b := BoxShape3D.new(); b.size = box[1]
+		sh.shape = b; sh.position = box[0]
 		walls.add_child(sh)
 
 # --- light: steady, few, by room --------------------------------------------------------------
@@ -489,3 +492,101 @@ func _open_hole() -> void:
 	var tunnel := StaticBody3D.new(); add_child(tunnel)
 	var cs := CollisionShape3D.new(); var b := BoxShape3D.new(); b.size = Vector3(0.7, 2.0, 0.2); cs.shape = b
 	tunnel.add_child(cs); tunnel.position = Vector3((HOLE_MIN.x + HOLE_MAX.x) * 0.5, 1.0, WALL_Z + 0.25)
+
+# --- the landing --------------------------------------------------------------------------------
+
+const LANDING := Rect2(10.42, 3.45, 3.58, 4.55)       # x, z, width, depth
+const DOOR48_Z0 := 4.12
+const DOOR48_Z1 := 5.0
+
+## The fourth-floor landing between 47 and 48: green gloss to shoulder height, whitewash above,
+## a concrete floor, the stair going down and up at the north end into the dark. 48's door is
+## opposite 47's. (The exported model has no landing: this is built here, in the town's kit.)
+func _landing() -> void:
+	var k := TownKit.new(self)
+	var x0 := LANDING.position.x; var x1 := LANDING.end.x
+	var z0 := LANDING.position.y; var z1 := LANDING.end.y
+	k.quad("stone", Vector3(x0, 0, z0), Vector3(x1, 0, z0), Vector3(x1, 0, z1), Vector3(x0, 0, z1), Vector3.UP, Vector3(x0, 0, z0))
+	k.quad("whitewash", Vector3(x0, H, z1), Vector3(x1, H, z1), Vector3(x1, H, z0 - 3.0), Vector3(x0, H, z0 - 3.0), Vector3.DOWN, Vector3(x0, H, z0))
+	# 47's side (west): the wall round its door
+	var fw := Facades.Frame.new(Vector3(x0, 0, z0), Vector3(0, 0, 1), Vector3(1, 0, 0))
+	_two_tone(k, fw, z1 - z0, [4.145 - z0, 4.975 - z0, 2.07])
+	# 48's side (east)
+	var fe := Facades.Frame.new(Vector3(x1, 0, z1), Vector3(0, 0, -1), Vector3(-1, 0, 0))
+	_two_tone(k, fe, z1 - z0, [z1 - DOOR48_Z1, z1 - DOOR48_Z0, 2.07])
+	# the south wall, blind
+	var fs := Facades.Frame.new(Vector3(x0, 0, z1), Vector3(1, 0, 0), Vector3(0, 0, -1))
+	_two_tone(k, fs, x1 - x0, [])
+	# the stairwell to the north: a flight down (west), a flight up (east), a wall between, dark
+	for i in 7:
+		var d := 0.17 * (i + 1)
+		k.box("stone", Vector3((x0 + 12.04) * 0.5, -d + 0.085 - 0.17, z0 - 0.14 - i * 0.28), Vector3((12.04 - x0) * 0.5, 0.085, 0.14))
+		k.box("stone", Vector3((12.38 + x1) * 0.5, d - 0.085, z0 - 0.14 - i * 0.28), Vector3((x1 - 12.38) * 0.5, 0.085, 0.14))
+	k.box("paint_green", Vector3(12.21, 0.75, z0 - 1.1), Vector3(0.17, 0.75, 1.1))
+	k.box("whitewash", Vector3(12.21, 1.5 + (H - 1.5) * 0.5, z0 - 1.1), Vector3(0.17, (H - 1.5) * 0.5, 1.1))
+	for wx in [x0, x1]:
+		var fn := Facades.Frame.new(Vector3(wx, -1.4, z0), Vector3(0, 0, -1), Vector3(1 if wx == x0 else -1, 0, 0))
+		Facades.wall(k, fn, "paint_green", 0, 3.0, 0, 2.9)
+		Facades.wall(k, fn, "whitewash", 0, 3.0, 2.9, 1.4 + H + 1.4)
+	k.box("iron", Vector3(12.21, 0.9, z0 + 0.02), Vector3(0.02, 0.02, 0.02))
+	# the flat numbers, stencilled
+	for spec in [["47", Vector3(x0 + 0.012, 2.25, 4.56), PI * 0.5], ["48", Vector3(x1 - 0.012, 2.25, 4.56), -PI * 0.5]]:
+		var l := Label3D.new(); l.text = spec[0]; l.font_size = 64; l.pixel_size = 0.0022
+		l.modulate = Color(0.12, 0.12, 0.12); l.outline_size = 0; l.shaded = true
+		add_child(l); l.position = spec[1]; l.rotation.y = spec[2]
+	k.finish()
+	# 48's door: the same padded door, hung the other way; shut, its peephole dark
+	door48 = Node3D.new(); door48.name = "Door48"; add_child(door48)
+	door48.position = Vector3(x1 + 0.06, 0, DOOR48_Z1)
+	var kd := TownKit.new(door48)
+	var w := DOOR48_Z1 - DOOR48_Z0
+	kd.box("velvet", Vector3(-0.03, 1.035, -w * 0.5), Vector3(0.035, 1.035, w * 0.5 - 0.01))
+	for i in 5:
+		for j in 3:
+			kd.box("gold", Vector3(-0.068, 0.35 + i * 0.36, -0.2 - j * 0.24), Vector3(0.004, 0.012, 0.012))
+	kd.box("gold", Vector3(-0.075, 1.02, -w + 0.1), Vector3(0.02, 0.012, 0.05))
+	kd.finish()
+	var body := AnimatableBody3D.new(); body.sync_to_physics = false
+	var cs := CollisionShape3D.new(); var b := BoxShape3D.new(); b.size = Vector3(0.08, 2.07, w)
+	cs.shape = b; cs.position = Vector3(-0.03, 1.035, -w * 0.5)
+	body.add_child(cs); door48.add_child(body)
+	var peep := MeshInstance3D.new(); var pm := SphereMesh.new(); pm.radius = 0.012; pm.height = 0.024
+	peep.mesh = pm; peep.name = "Peephole"
+	var pmat := StandardMaterial3D.new(); pmat.albedo_color = Color(0.02, 0.02, 0.02)
+	pmat.emission_enabled = true; pmat.emission = Color(0, 0, 0)
+	peep.material_override = pmat
+	door48.add_child(peep); peep.position = Vector3(-0.07, 1.5, -w * 0.5)
+	# what's through it, when it opens: white
+	var white := MeshInstance3D.new(); var qm := QuadMesh.new(); qm.size = Vector2(w, 2.07); white.mesh = qm
+	var wm := StandardMaterial3D.new(); wm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	wm.albedo_color = Color(1.3, 1.3, 1.35); wm.disable_fog = true
+	white.material_override = wm; white.name = "White48"
+	add_child(white); white.position = Vector3(x1 + 0.3, 1.035, (DOOR48_Z0 + DOOR48_Z1) * 0.5); white.rotation.y = -PI * 0.5
+	door48_spot = Hotspot.make(self, Transform3D(Basis(), Vector3(x1 - 0.1, 1.1, (DOOR48_Z0 + DOOR48_Z1) * 0.5)), Vector3(0.5, 2.0, w), "Go in")
+	door48_spot.enabled = false
+
+func _two_tone(k: TownKit, f: Facades.Frame, length: float, door: Array) -> void:
+	if door.is_empty():
+		Facades.wall(k, f, "paint_green", 0, length, 0, 1.5)
+		Facades.wall(k, f, "whitewash", 0, length, 1.5, H)
+		return
+	var d0: float = door[0]; var d1: float = door[1]; var dh: float = door[2]
+	for seg in [[0.0, d0], [d1, length]]:
+		Facades.wall(k, f, "paint_green", seg[0], seg[1], 0, 1.5)
+		Facades.wall(k, f, "whitewash", seg[0], seg[1], 1.5, H)
+	Facades.wall(k, f, "whitewash", d0, d1, dh, H)
+	# the doorway's reveals: the two sides and the head, in wood
+	const DEPTH := 0.22
+	k.quad("wood", f.p(d0, 0, 0), f.p(d0, 0, -DEPTH), f.p(d0, dh, -DEPTH), f.p(d0, dh, 0), f.x, f.o)
+	k.quad("wood", f.p(d1, 0, -DEPTH), f.p(d1, 0, 0), f.p(d1, dh, 0), f.p(d1, dh, -DEPTH), -f.x, f.o)
+	k.quad("wood", f.p(d0, dh, 0), f.p(d1, dh, 0), f.p(d1, dh, -DEPTH), f.p(d0, dh, -DEPTH), -f.y, f.o)
+
+## 48's peephole lights; the door comes off its latch and stands ajar.
+func open_door48() -> void:
+	var peep: MeshInstance3D = door48.get_node("Peephole")
+	(peep.material_override as StandardMaterial3D).emission = Color(1.6, 1.5, 1.2)
+	await get_tree().create_timer(1.6, false).timeout
+	Sfx.play_at("click", door48.global_position + Vector3(0, 1, -0.4), 4.0, 0.7)
+	create_tween().set_trans(Tween.TRANS_SINE).tween_property(door48, "rotation:y", deg_to_rad(-28.0), 1.8)
+	Sfx.play_at("creak", door48.global_position + Vector3(0, 1, -0.4), -6.0, 1.1)
+	door48_spot.enabled = true

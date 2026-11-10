@@ -20,6 +20,7 @@ const POSES := {
 	"aim":    [Vector3(0.055, -0.11, -0.36), Vector3(0, -0.36, -1), Vector3(-1, -0.05, 0), "grip"],
 	"loading":[Vector3(0.07, -0.22, -0.32), Vector3(-0.5, 0.45, -0.75), Vector3(-0.6, -0.8, 0), "grip"],
 	"hold":   [Vector3(0.12, -0.2, -0.36), Vector3(-0.35, 0.05, -1.0), Vector3(-0.3, 0.92, -0.25), "hold"],
+	"note":   [Vector3(0.135, -0.235, -0.33), Vector3(-0.12, 0.95, -0.1), Vector3(-0.5, 0.05, 1.0), "pinch"],
 	"throw":  [Vector3(0.2, 0.05, -0.15), Vector3(0, 1, 0.3), Vector3(0, 0, -1), "hold"],
 	"brace":  [Vector3(0.12, -0.04, -0.34), Vector3(0.1, 1, -0.3), Vector3(0, 0, -1), "open"],
 }
@@ -29,6 +30,9 @@ var wrist: Node3D
 var pose := "down"
 var rub := 0.0
 var rattle := 0.0
+var body: CollisionObject3D      ## Kurt (rays that look for walls leave him out)
+var reach_extra := 0.0           ## how far what's in the hand sticks out past the fingers
+var pull := 0.0                  ## how far the hand is drawn back from a wall right now
 var _from := Transform3D.IDENTITY
 var _to := Transform3D.IDENTITY
 var _k := 1.0
@@ -77,6 +81,7 @@ func _process(delta: float) -> void:
 	xf.origin += Vector3(sin(_t * 24.0) * 0.012 * rattle, 0, cos(_t * 24.0) * 0.01 * rattle)
 	if rub > 0.0:
 		xf.basis = xf.basis.rotated(Vector3.BACK, sin(_t * 9.0) * 0.15 * rub)
+	xf = _clear_of_walls(xf)
 	rig.idle = pose == "down"
 	rig.solve_arm(SHOULDER, xf, ELBOW_POLE)
 	# where things in his hand hang: the middle of the palm, in our old convention
@@ -87,3 +92,28 @@ func _process(delta: float) -> void:
 	var y := back
 	var x := y.cross(z).normalized()
 	wrist.transform = Transform3D(Basis(x, y, z), h.origin + fingers * 0.05 - back * 0.02)
+
+## Keep the hand (and what's in it) out of walls: if something solid is nearer than the hand
+## reaches, draw it back along the line of sight to it, and down a little. Eased, so brushing past
+## a door frame is a movement of the arm, not a jump.
+func _clear_of_walls(xf: Transform3D) -> Transform3D:
+	var cam := get_parent() as Node3D
+	if cam == null or not is_inside_tree():
+		return xf
+	var tip := xf.origin + xf.basis.y * (0.19 + reach_extra)      # the rig's hand frame: +Y along the fingers
+	var from := cam.global_position
+	var to: Vector3 = cam.global_transform * tip
+	var dir := (to - from).normalized()
+	var q := PhysicsRayQueryParameters3D.create(from, to + dir * 0.06, 1)
+	if body:
+		q.exclude = [body.get_rid()]
+	var hit := get_world_3d().direct_space_state.intersect_ray(q)
+	var over := 0.0
+	if hit:
+		over = clampf(from.distance_to(to) + 0.06 - from.distance_to(hit.position), 0.0, 0.3 + reach_extra)
+	pull = lerpf(pull, over, 0.3 if over > pull else 0.1)
+	if pull > 0.001:
+		var back := tip.normalized() * pull
+		xf.origin -= back
+		xf.origin.y -= pull * 0.35
+	return xf

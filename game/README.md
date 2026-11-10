@@ -1,6 +1,6 @@
 # HYSTERIA: the Android-first rebuild (Godot 4.7)
 
-**Scene A**, then **the town** behind the wardrobe. New code throughout for everything that
+**Scene A**, **the town** behind the wardrobe, then **Flat 48** across the landing. New code throughout for everything that
 broke in the first Godot build (lighting, sound, the scene's logic, doors, controls, the test),
 carrying that build's **art**: the textured flat, the old town's modelled streets, Socko's skinned
 sock with his expression library, Kurt's anatomical arm and body, Marta, the infected. The old
@@ -53,10 +53,52 @@ prompt says **Talk (?)**), Kurt gets as far as *"Hey. Hey, easy..."* and they co
 **Three ways out:** the gun (the Nagant: seven rounds, loaded one at a time; taking it wakes
 Marta and she comes for him; four hits drive her off the gate for 25 s, or Headshot ends her);
 sneaking (everything hears: steps, shots, a thrown cobble where it lands, the lever, which is
-loud); talking. Caught, he comes to where he came in. Through the gate: white, and the title.
+loud); talking. Caught, he comes to where he came in. Through the gate: white, and he's standing
+on the landing outside 47, its door shut behind him. Across the landing, 48's peephole lights and
+its door comes off the latch.
 
 Nuggets (14, plus one per monster talked down) buy skills from two trees in any order
 (`content/skills.json`); the talk route alone costs 8.
+
+## Flat 48
+
+Flat 47 as reality only sketched it (master document Part VI; story bible §2d): the same rooms and
+doors in pale draft plaster, the room names pencilled on the walls, every piece of furniture a
+white block where 47's is, each with a paper tag that says what it was like, not what it is. Three
+white figures (MAMA at the stove, PAPA at the bedroom window, CHILD by the small bed) stand with
+their backs to the room and turn toward you only while you aren't looking.
+
+**The rule: what something is, is what's written on it.**
+
+- In the hall, under *what it is*, a wall of 25 loose sticky notes. **Take** one and it's in
+  Kurt's hand, held up so you can read it. Taking another puts the first one back.
+- **Stick** it on a block. The right word and the block becomes the thing: Flat 47's own
+  furniture, copied in, solid, with the note stuck on it. The wrong word is on for a moment, lets
+  go, and is back in his hand. Some words fit nothing (PIANO, DOG, WINDOW, HOME, LATER).
+- **Peel** a stuck note off and the thing is a white block again, the note back in his hand.
+  **Put it back** on the wall where it came from.
+- **GUN SAFE** on the tall cold block in the box room (*PAPA'S. Locked. Nobody touches it.*) makes
+  it a steel hunting-gun cabinet. It isn't locked. Inside, hanging on two pegs where you can see
+  it: a sawn-off **IZh-43** shotgun, and a box of shells on the shelf. Take them. It's a second
+  working gun (two barrels, nine pellets each, breaks open to reload; SWAP changes guns).
+- **MARTA** on MAMA and **KURT** on PAPA dress them as faceless shop mannequins: her cardigan and
+  red painted mouth; his jacket, a domino mask on a face that isn't there, a bow on its back.
+  Their notes peel off too. **SONYA** won't stay on CHILD: *she isn't here.*
+- Each of the three can be **shot**, separately, and stays down. Nothing requires it.
+- In Sonya's room, a door in the outside wall, pencilled **POINTLESS DOOR**. It takes the note
+  from Suite 51, which isn't built yet.
+
+**Socko wants them shot and never says so.** *"Well. That's a family."* *"I wouldn't get too
+close."* *"You don't know what they are."* He sneers at the notes, likes the safe very much,
+counts the barrels, approves quietly the moment a gun points at one of them (*"There we are."*),
+and when Kurt has the shotgun and won't use it he escalates: impatience, *"we have our own
+problems"*, *"you can't save everybody, bud"*, and finally *"What? I didn't say shoot them."*
+What Kurt did is remembered (`socko_advice_followed` / `socko_advice_rejected`, and a flag per
+block, note and figure) for later chapters.
+
+Looking at things gives a quiet line of text above the subtitles. All of Flat 48's data (blocks,
+tags, the words on the wall, the figures, every text, Socko's lines) is `content/flat48.json`.
+The door you came in by takes you back to the landing.
 
 ## Socko's face
 
@@ -75,7 +117,7 @@ they're Socko's reaction. Every line of Scene A and the town has them.
 
 ## Content
 
-`content/scene_a.json` and `content/town.json`: every line (text, speaker, Socko's cues), the
+`content/scene_a.json`, `content/town.json` and `content/flat48.json`: every line (text, speaker, Socko's cues), the
 monsters (what they say, what Kurt needs, his words, their answer), and what Socko says the first
 time Kurt looks at each thing. `content/characters.json`: speakers' colours and voices.
 `content/skills.json`: the trees. New writing is marked NEW / PROPOSED for you to rewrite.
@@ -90,6 +132,7 @@ time Kurt looks at each thing. `content/characters.json`: speakers' colours and 
 | Fire / throw | FIRE (THROW with a cobble) | RT | left mouse / F |
 | Aim | AIM (toggle) | LT | right mouse / Q |
 | Reload | LOAD | X | R |
+| Swap guns | SWAP (with both) | RB | V |
 | Skills | SKILLS | Y / Back | Tab / K |
 | Pause | ‖ or Back | Start | Esc |
 
@@ -101,19 +144,23 @@ time Kurt looks at each thing. `content/characters.json`: speakers' colours and 
 | No sound | All sound is synthesised in the game at start-up; voices use the phone's text-to-speech. |
 | Broken animations | One controller per character, posing the first build's rigs by name, eased; tested through every beat. |
 | Door out of the waking room not locked | The living room door is shut and locked after the blackout; tested at the end of Scene A. |
+| Hands going into walls | Kurt's hand, what's in it, and Socko draw back from anything solid that's nearer than they reach. |
 | Crash through the gap on Android | The town is built behind the black once, the flat switched off while you're in it; lamps beyond 22 m are off on phones; no moon light on phones. Not yet tried on a phone. |
 
 ## Build and test
 
 ```
-tools/test.sh                 # three full playthroughs from the first knock (talk, gun, sneak)
+tools/test.sh                 # three full playthroughs from the first knock (talk, gun, sneak),
+                              # each on through the landing and all of Flat 48
 tools/test.sh kill            # one
 tools/test.sh shots DIR talk  # rendered, a frame per line
 tools/build_apk.sh            # → ../dist/Hysteria.apk, signed, or it fails
-godot --path . -- --start=wake|door|wardrobe|town
+godot --path . -- --start=wake|door|wardrobe|town|landing|flat48
 godot --path . -- --start=door --poses --shots=DIR    # Kurt himself: looking down, the gun
 ```
 
 ## Not done yet
 
-What's past the gate; Flat 48; Sonya's shoes; saving; the dialogue graph and cutscene tools.
+In Flat 48: Suite 51 upstairs (the red-note monologue, the CHILD'S CELL note, the POINTLESS DOOR's
+route) and how each of the three is helped. Elsewhere: Sonya's shoes; saving; the dialogue graph
+and cutscene tools.

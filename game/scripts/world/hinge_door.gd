@@ -12,6 +12,7 @@ var sign_ := 1.0
 var angle := 0.0                     ## degrees, now
 var max_angle := 85.0
 var locked := false
+var custom := false                  ## used does nothing here but say so (`tried`): the scene decides
 var leaf_w := 0.8
 var leaf_h := 2.0
 var body: StaticBody3D
@@ -41,9 +42,13 @@ func _apply() -> void:
 	rotation.y = psi0 + sign_ * deg_to_rad(angle)
 
 func _refresh() -> void:
-	body.set("prompt", "Close" if angle > 10.0 else "Open")
+	if not custom:
+		body.set("prompt", "Close" if angle > 10.0 else "Open")
 
 func _use() -> void:
+	if custom:
+		tried.emit(self)
+		return
 	if locked:
 		Sfx.play_at("rattle", handle_position(), -2.0)
 		tried.emit(self)

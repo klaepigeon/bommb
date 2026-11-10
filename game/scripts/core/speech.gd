@@ -29,6 +29,7 @@ func _ready() -> void:
 	characters = _read_json("res://content/characters.json")
 	lines = _read_json("res://content/scene_a.json").get("lines", {})
 	lines.merge(_read_json("res://content/town.json").get("lines", {}))
+	lines.merge(_read_json("res://content/flat48.json").get("lines", {}))
 	_build_ui()
 	if DisplayServer.get_name() != "headless" and DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
 		DisplayServer.tts_set_utterance_callback(DisplayServer.TTS_UTTERANCE_ENDED, _on_tts_end)

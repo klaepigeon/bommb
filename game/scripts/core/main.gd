@@ -13,6 +13,10 @@ var hud: Hud
 var scene: SceneA
 var town: Town
 var chapter: TownChapter
+var flat48: Flat48
+var chapter48: Flat48Chapter
+var place := "flat47"           ## where Kurt is: flat47 (and its landing), town, flat48
+var wind: AudioStreamPlayer3D
 var weapon: Weapon
 var env: Environment
 var room_tone: AudioStreamPlayer3D
@@ -77,6 +81,8 @@ func _build() -> void:
 	player.focus_changed.connect(hud.set_prompt)
 	hud.controls.interact_pressed.connect(player.try_interact)
 	hud.controls.pause_pressed.connect(hud.toggle_pause)
+	hud.controls.action.connect(_on_action)
+	flat.door48_spot.used.connect(go_to_flat48)
 	hud.restart_requested.connect(func(): get_tree().reload_current_scene())
 	room_tone = Sfx.loop_at("room", Vector3(0, 1.5, -2.0), -14.0)
 	scene = SceneA.new(); scene.name = "SceneA"
@@ -88,11 +94,16 @@ func _build() -> void:
 		ap.main = self
 		add_child(ap)
 	Game.reset()
-	if args.get("start", "") == "town":
+	var start: String = args.get("start", "")
+	if start in ["town", "landing", "flat48"]:
 		player.socko.visible = true
 		player.socko.set_pose("low", 0.0)
-		scene.stage = "town"
-		go_to_town()
+		scene.stage = start
+		marta.vanish()
+		match start:
+			"town": go_to_town()
+			"landing": to_landing()
+			"flat48": go_to_flat48()
 		return
 	scene.start(args.get("start", ""))
 
@@ -110,7 +121,8 @@ func go_to_town() -> void:
 	flat.process_mode = Node.PROCESS_MODE_DISABLED
 	if is_instance_valid(room_tone):
 		room_tone.queue_free()
-	Sfx.loop_at("wind", town.to_global(Vector3(30, 6, 20)), -12.0)
+	wind = Sfx.loop_at("wind", town.to_global(Vector3(30, 6, 20)), -12.0)
+	place = "town"
 	var te: Environment = town.env
 	for prop in ["background_color", "background_energy_multiplier", "ambient_light_color", "ambient_light_energy", "fog_light_color", "fog_density", "tonemap_mode", "tonemap_exposure"]:
 		env.set(prop, te.get(prop))
@@ -121,8 +133,105 @@ func go_to_town() -> void:
 	chapter.finished.connect(_the_end)
 	chapter.arrive()
 
-func _the_end(route: String) -> void:
-	hud.end_card(route)
+## Out of the town's gate, into white, and he's on the landing outside 47. The door he went in by
+## is shut. Across the landing, 48's peephole lights, and its door comes off the latch.
+func _the_end(_route: String) -> void:
+	to_landing()
+
+func to_landing() -> void:
+	if town:
+		town.visible = false
+		town.process_mode = Node.PROCESS_MODE_DISABLED
+	if is_instance_valid(wind):
+		wind.queue_free()
+	if flat48:
+		flat48.visible = false
+		flat48.process_mode = Node.PROCESS_MODE_DISABLED
+		chapter48.active = false
+	flat.visible = true
+	flat.process_mode = Node.PROCESS_MODE_INHERIT
+	flat.apply_environment(env)
+	flat.front_door.set_angle(0.0)
+	flat.front_door.locked = true
+	flat.front_door.set_usable(true)
+	if not is_instance_valid(room_tone):
+		room_tone = Sfx.loop_at("room", Vector3(11.5, 1.5, 5.5), -14.0)
+	place = "flat47"
+	scene.stage = "landing"
+	var from_48 := flat48 != null
+	player.global_position = Vector3(12.9, 0, 4.56) if from_48 else Vector3(11.2, 0, 6.0)
+	player.face(Vector3(10.4, 1.4, 4.56) if from_48 else Vector3(14.0, 1.45, 4.56))
+	player.head.position.y = Player.EYE
+	hud.fade_to(0.0, 0.8)
+	await hud.white_to(0.0, 2.5 if not from_48 else 0.6).finished
+	player.can_move = true
+	player.can_look = true
+	hud.set_crosshair(true)
+	if not from_48:
+		flat.open_door48()
+
+## Through 48's door: the same flat, drawn from memory.
+func go_to_flat48() -> void:
+	player.can_move = false
+	await hud.white_to(1.0, 0.5).finished
+	if flat48 == null:
+		var t := Time.get_ticks_msec()
+		flat48 = Flat48.new()
+		world.add_child(flat48)
+		flat48.build(flat, weapon, hud)
+		print("[flat48] built in %d ms" % (Time.get_ticks_msec() - t))
+		chapter48 = Flat48Chapter.new(); chapter48.name = "Flat48Chapter"
+		chapter48.flat = flat48; chapter48.player = player; chapter48.weapon = weapon; chapter48.hud = hud
+		add_child(chapter48)
+		chapter48.setup()
+		chapter48.left.connect(func():
+			player.can_move = false
+			await hud.white_to(1.0, 0.4).finished
+			to_landing())
+	flat48.visible = true
+	flat48.process_mode = Node.PROCESS_MODE_INHERIT
+	flat.visible = false
+	flat.process_mode = Node.PROCESS_MODE_DISABLED
+	if town:
+		town.visible = false
+		town.process_mode = Node.PROCESS_MODE_DISABLED
+	flat48.apply_environment(env)
+	place = "flat48"
+	scene.stage = "flat48"
+	var sp := flat48.global_transform * flat48.spawn
+	player.global_position = sp.origin
+	player.face(sp.origin - sp.basis.z * 3.0 + Vector3(0, 1.5, 0))
+	hud.fade.color.a = 0.0
+	await hud.white_to(0.0, 1.2).finished
+	chapter48.active = true
+	player.can_move = true
+	player.can_look = true
+	hud.set_crosshair(true)
+
+## What's in his hands, on the screen: nuggets, rounds; the buttons that go with what he's holding.
+func _update_hud() -> void:
+	var t := ""
+	if Game.nuggets > 0 or Game.skills.size() > 0:
+		t += "Nuggets  %d" % Game.nuggets
+	if Game.has_gun and weapon.held != "shotgun":
+		t += ("\n" if t != "" else "") + "Nagant  %d / %d" % [Game.ammo_loaded, Game.ammo_spare]
+	if Game.has_shotgun and (weapon.held == "shotgun" or not Game.has_gun):
+		t += ("\n" if t != "" else "") + "IZh-43  %d / %d" % [Game.shells_loaded, Game.shells_spare]
+	hud.set_status(t)
+	var gun := weapon.held in ["gun", "shotgun"]
+	hud.controls.show_buttons({"fire": gun or weapon.held == "rock", "aim": gun, "reload": gun,
+		"skills": Game.nuggets > 0 or Game.skills.size() > 0,
+		"swap": gun and Game.has_gun and Game.has_shotgun})
+	hud.controls.labels["fire"] = "THROW" if weapon.held == "rock" else "FIRE"
+
+func _on_action(name: String) -> void:
+	if not player.can_move:
+		return
+	match name:
+		"fire": weapon.fire()
+		"reload": weapon.reload()
+		"skills": hud.skills.open()
+		"swap": weapon.swap()
 
 func _notification(what: int) -> void:
 	match what:
@@ -141,6 +250,9 @@ func _fit_screen() -> void:
 	_screen.set_shader_parameter("shrink", SHRINK * maxf(scale, 0.5))
 
 func _process(delta: float) -> void:
+	if weapon and hud:
+		weapon.set_aim(hud.controls.aiming and weapon.held in ["gun", "shotgun"])
+		_update_hud()
 	_grain_t += delta
 	if _grain_t > 1.0 / 12.0:
 		_grain_t = 0.0
