@@ -10,12 +10,12 @@ var _body: Label
 var _more: Label
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
 	var bg := ColorRect.new()
 	bg.color = Color(0, 0, 0, 0.7)
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	bg.gui_input.connect(func(e): if e is InputEventScreenTouch and e.pressed or e is InputEventMouseButton and e.pressed: close())
 	add_child(bg)
 	var paper := PanelContainer.new()

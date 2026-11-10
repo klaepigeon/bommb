@@ -34,7 +34,7 @@ func _ready() -> void:
 
 func _build() -> void:
 	var container := SubViewportContainer.new()
-	container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	container.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	container.stretch = true
 	container.stretch_shrink = SHRINK
 	container.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -48,7 +48,7 @@ func _build() -> void:
 	view = SubViewport.new()
 	view.audio_listener_enable_3d = true
 	view.msaa_3d = Viewport.MSAA_DISABLED
-	view.positional_shadow_atlas_size = 0
+	view.positional_shadow_atlas_size = 1024       # one shadow light at a time (the stairwell's bulb)
 	container.add_child(view)
 	world = Node3D.new(); world.name = "World"
 	view.add_child(world)
@@ -235,7 +235,7 @@ func _on_action(name: String) -> void:
 
 func _notification(what: int) -> void:
 	match what:
-		NOTIFICATION_APPLICATION_PAUSED, NOTIFICATION_APPLICATION_FOCUS_OUT:
+		NOTIFICATION_APPLICATION_PAUSED:        # really in the background (not a moment of lost focus)
 			if hud and not hud.is_paused() and not args.has("autotest") and not args.has("shots"):
 				hud.toggle_pause()
 		NOTIFICATION_WM_GO_BACK_REQUEST:

@@ -334,12 +334,25 @@ func _head(flesh: SkinB) -> void:
 			var th := TAU * float(j) / cols
 			var dir := Vector3(sin(ph) * cos(th), cos(ph), sin(ph) * sin(th))
 			var p := c + dir * r * (1.0 + 0.06 * noise.get_noise_3d(dir.x * 4.0, dir.y * 4.0 + float(genome.seed % 31), dir.z * 4.0))
+			if st == "blown" and dir.y > 0.28:
+				# the top of the skull is gone: what's left is a ragged rim and a crater inside it
+				var k := (dir.y - 0.28) / 0.72
+				var rim := 0.012 * s * noise.get_noise_3d(dir.x * 9.0, 3.0, dir.z * 9.0)
+				p = Vector3(c.x + dir.x * r.x * (1.0 - k * 0.55), c.y + r.y * (0.3 - k * 0.42) + rim * (1.0 - k), c.z + dir.z * r.z * (1.0 - k * 0.55))
 			if sunk and dir.x * side > 0.2: p.x -= (dir.x * side - 0.2) * side * 0.05 * s       # one side caved in
 			if st == "split" and absf(p.y - jaw_line) < 0.012 * s and dir.z < 0.2: p.z += 0.012 * s   # the grin torn back
 			row.append(flesh.add(p, Vector2(float(j) / cols, float(i) / rows), wf.call(p), dir))
 		g.append(row)
 	for i in rows:
 		for j in cols: flesh.quad(g[i][j], g[i][j + 1], g[i + 1][j + 1], g[i + 1][j])
+	if st == "blown":
+		# what's in the crater: raw, wet, and a rim of bone
+		var rawk := _sk("raw", 0.3, 0.7)
+		_ellipsoid(rawk, c + Vector3(0, r.y * 0.02, 0), Vector3(r.x * 0.62, r.y * 0.16, r.z * 0.62), func(p): return {hb: 1.0}, 4, 10, 0.25)
+		var bonek := _sk("bone", 0.6, 0.4)
+		for i in 9:
+			var a := TAU * i / 9.0 + 0.3
+			_ellipsoid(bonek, c + Vector3(cos(a) * r.x * 0.86, r.y * (0.27 + 0.05 * sin(a * 3.0)), sin(a) * r.z * 0.86), Vector3(0.016, 0.02 + 0.012 * absf(sin(a * 2.0)), 0.012) * s, func(p): return {hb: 1.0}, 2, 5)
 	# the mouth: a dark inside, teeth along the jaw
 	var black := _sk("black", 1.0, 0.0)
 	var grin := 1.6 if st == "split" else 1.0
@@ -445,6 +458,8 @@ func _growth_piece(gs: SkinB, p: Vector3, n: Vector3, b: int, size := 1.0) -> vo
 
 func _growth() -> void:
 	var gs := _growth_skin()
+	if float(genome.growth_amount) <= 0.0:
+		return
 	var n := int(lerpf(4.0, 16.0, float(genome.growth_amount)))
 	var bw := _bw()
 	for i in n:

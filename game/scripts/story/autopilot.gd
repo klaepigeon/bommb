@@ -25,7 +25,11 @@ func _ready() -> void:
 	main.hud.controls.autopilot = true
 	if main.args.has("fast"):
 		Engine.time_scale = 4.0
-	if main.args.has("poses"):
+	if main.args.has("touch"):
+		_touch()
+	elif main.args.has("spin"):
+		_spin()
+	elif main.args.has("poses"):
 		_poses()
 	elif main.args.get("start", "") in ["flat48", "landing"]:
 		_flat48.call_deferred()
@@ -606,3 +610,97 @@ func _shot(name: String) -> void:
 	await RenderingServer.frame_post_draw
 	var img := get_viewport().get_texture().get_image()
 	img.save_png(shots.path_join(name + ".png"))
+
+
+## Fingers on glass: real touch events through the engine's input, as a phone sends them.
+## Walks with the stick, turns with a drag, taps USE, opens the pause menu and taps Resume.
+func _tap(index: int, at: Vector2, down: bool) -> void:
+	var e := InputEventScreenTouch.new()
+	e.index = index; e.position = at; e.pressed = down
+	Input.parse_input_event(e)
+
+func _drag(index: int, from: Vector2, to: Vector2) -> void:
+	var e := InputEventScreenDrag.new()
+	e.index = index; e.position = to; e.relative = to - from
+	Input.parse_input_event(e)
+
+func _touch() -> void:
+	var c: Controls = main.hud.controls
+	var p: Player = main.player
+	c.autopilot = false
+	if not await _until(func(): return p.can_move, 120.0, "control"): return
+	var size := c.size
+	var start := p.global_position
+	var a := Vector2(200, size.y - 200)
+	_tap(0, a, true)
+	await get_tree().process_frame
+	_drag(0, a, a + Vector2(0, -80))
+	for i in 90:
+		await get_tree().physics_frame
+	var walked := p.global_position.distance_to(start)
+	if walked < 0.5:
+		print("DBG move ", c.move, " stick ", c._stick_id, " origin ", c._stick_origin, " pos ", c._stick_pos, " size ", c.size, " vel ", p.velocity, " floor ", p.is_on_floor(), " paused ", get_tree().paused)
+		_fail("the stick didn't move him (%.2f m)" % walked); return
+	# a second finger turns him while the first still walks
+	var yaw := p.rotation.y
+	var b := Vector2(size.x * 0.7, size.y * 0.5)
+	_tap(1, b, true)
+	await get_tree().process_frame
+	_drag(1, b, b + Vector2(120, 0))
+	for i in 10:
+		await get_tree().physics_frame
+	_tap(1, b + Vector2(120, 0), false)
+	_tap(0, a + Vector2(0, -80), false)
+	if absf(angle_difference(p.rotation.y, yaw)) < 0.2:
+		_fail("the drag didn't turn him"); return
+	for i in 30:
+		await get_tree().physics_frame
+	# losing focus for a moment (a notification, the voice engine starting) must not stop the game
+	main.notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
+	main.notification(NOTIFICATION_APPLICATION_FOCUS_IN)
+	await get_tree().process_frame
+	if get_tree().paused:
+		_fail("a moment's lost focus paused the game"); return
+	# pause, and out of it again, by touch alone
+	var pr := c._pause_rect().get_center()
+	_tap(0, pr, true); _tap(0, pr, false)
+	await get_tree().process_frame
+	if not get_tree().paused:
+		_fail("the pause button didn't pause"); return
+	var rb: Button = main.hud._first_btn
+	var at := rb.get_global_rect().get_center()
+	_tap(0, at, true)
+	await get_tree().process_frame
+	_tap(0, at, false)
+	for i in 5:
+		await get_tree().process_frame
+	if get_tree().paused:
+		_fail("Resume can't be tapped"); return
+	# and he still walks afterwards
+	start = p.global_position
+	_tap(0, a, true)
+	await get_tree().process_frame
+	_drag(0, a, a + Vector2(0, 80))
+	for i in 60:
+		await get_tree().physics_frame
+	_tap(0, a + Vector2(0, 80), false)
+	if p.global_position.distance_to(start) < 0.3:
+		_fail("no walking after the pause menu"); return
+	print("AUTOTEST PASS: touch (stick, look, pause, resume)")
+	get_tree().quit(0)
+
+
+## Looks all the way round from where he stands, and up the stairs: a frame each (for the eye).
+func _spin() -> void:
+	var p: Player = main.player
+	if not await _until(func(): return p.can_move, 120.0, "control"): return
+	if main.args.has("at"):
+		var v: PackedStringArray = String(main.args["at"]).split(",")
+		p.global_position = Vector3(float(v[0]), float(v[1]), float(v[2]))
+	for i in 8:
+		p.rotation.y = i * TAU / 8.0
+		p._set_pitch(0.25 if i % 2 else -0.1)
+		for k in 20:
+			await get_tree().process_frame
+		await _shot("spin_%d" % i)
+	get_tree().quit(0)

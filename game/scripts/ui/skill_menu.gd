@@ -9,12 +9,12 @@ var _count: Label
 var _first: Button
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
 	var bg := ColorRect.new()
 	bg.color = Color(0.03, 0.02, 0.03, 0.92)
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 	var root := VBoxContainer.new()
 	root.anchor_left = 0.04; root.anchor_right = 0.96; root.anchor_top = 0.04; root.anchor_bottom = 0.96

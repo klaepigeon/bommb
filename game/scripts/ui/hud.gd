@@ -69,12 +69,12 @@ func build() -> void:
 	add_child(skills)
 	white = ColorRect.new()
 	white.color = Color(1, 1, 1, 0)
-	white.set_anchors_preset(Control.PRESET_FULL_RECT)
+	white.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	white.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(white)
 	fade = ColorRect.new()
 	fade.color = Color.BLACK
-	fade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	fade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(fade)
 	_build_menu()
@@ -124,12 +124,12 @@ func fade_to(alpha: float, seconds: float) -> Tween:
 
 func _build_menu() -> void:
 	_menu = Control.new()
-	_menu.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_menu.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_menu.visible = false
 	add_child(_menu)
 	var bg := ColorRect.new()
 	bg.color = Color(0, 0, 0, 0.78)
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_menu.add_child(bg)
 	var box := VBoxContainer.new()
 	box.set_anchors_preset(Control.PRESET_CENTER)
@@ -213,9 +213,9 @@ func _unhandled_input(event: InputEvent) -> void:
 ## Out of the town. What's past the gate is still to be written.
 func end_card(route: String) -> void:
 	var c := Control.new()
-	c.set_anchors_preset(Control.PRESET_FULL_RECT)
+	c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(c)
-	var bg := ColorRect.new(); bg.color = Color.WHITE; bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var bg := ColorRect.new(); bg.color = Color.WHITE; bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	c.add_child(bg)
 	var v := VBoxContainer.new()
 	v.set_anchors_preset(Control.PRESET_CENTER)
