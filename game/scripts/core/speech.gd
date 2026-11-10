@@ -5,6 +5,7 @@ extends CanvasLayer
 
 signal line_started(speaker: String, text: String)
 signal line_finished(speaker: String)
+signal line_cue(id: String, line: Dictionary)     ## a line from content, with its cues (Socko's face...)
 
 var characters := {}
 var lines := {}
@@ -98,6 +99,7 @@ func say_id(id: String) -> void:
 		push_error("no line " + id)
 		return
 	history.append(id)
+	line_cue.emit(id, l)
 	await say(l.get("speaker", "kurt"), l.get("text", ""), l.get("style", ""), l.get("silent", false))
 
 var _gen := 0

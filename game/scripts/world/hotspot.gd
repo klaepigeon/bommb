@@ -9,12 +9,12 @@ var prompt := "Use"
 var enabled := true:
 	set(v):
 		enabled = v
-		collision_layer = 2 if v else 0
+		collision_layer = 8 if v else 0
 
 static func make(parent: Node, at: Transform3D, size: Vector3, prompt_text: String) -> Hotspot:
 	var h := Hotspot.new()
 	h.prompt = prompt_text
-	h.collision_layer = 2
+	h.collision_layer = 8
 	h.collision_mask = 0
 	h.monitoring = false
 	var cs := CollisionShape3D.new()

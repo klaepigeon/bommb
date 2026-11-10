@@ -20,6 +20,13 @@ func _ready() -> void:
 	var d = JSON.parse_string(f.get_as_text())
 	trees = {"memory": d["memory"], "survival": d["survival"]}
 
+static var _phone := -1
+## A phone (or tablet): the old town code asks this to keep its budgets down.
+static func is_phone() -> bool:
+	if _phone < 0:
+		_phone = 1 if (OS.has_feature("mobile") or OS.get_cmdline_user_args().has("--phone")) else 0
+	return _phone == 1
+
 func reset() -> void:
 	nuggets = 0
 	skills = {}

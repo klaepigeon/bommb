@@ -1,391 +1,491 @@
 class_name Flat47
 extends Node3D
-## Flat 47 and the landing outside it, built in code. Metres; floor at y=0; north is -Z.
+## Flat 47: the exported apartment from the first build (assets/flat47/flat47.glb + level.json),
+## textured and dressed, made a level: PS1 materials, collision, steady lights, doors and drawers
+## that work, the notes and papers you can read, and the landing outside the front door.
+## Metres; floor at y=0. The flat runs x 0..10, z 0..8; the landing is east of the front door.
 ##
-##            z=-6 ┌────────────── LIVING ROOM ─────┐┌──── bedroom door (shut)
-##                 │ window     Marta at the table  ││ HALLWAY
-##                 │                         doorway ─  kitchen / bathroom doors (shut)
-##          z=-1.2 └────────────────────────────────┘│
-##                                    front door z=0 ┴── LANDING (start), stairs east
+##   living (x0-4.4, z0-5.2)   bedroom (4.4-7.6, 0-3.8)   kitchen (7.6-10, 0-3.8)
+##   hall (4.4-10, 3.8-5.2) ── front door at x=10.06 ── landing (x 10.4-14)
+##   box room (0-2.8, 5.2-8)   Sonya's room (2.8-6.4)    bathroom (6.4-10)
 
-const H := 2.7            ## ceiling height
-const T := 0.14           ## interior wall thickness
+const PS1 := preload("res://shaders/ps1_lit.gdshader")
+const H := 2.75
+const KEEP := AABB(Vector3(-0.6, -0.8, -1.95), Vector3(14.6, 4.3, 10.4))     # the flat, its balcony, the landing
+const LIGHT_AREA := AABB(Vector3(-0.3, -0.5, -0.3), Vector3(14.2, H + 3.5, 8.6))
+const ROOM_NEAR := 3.0
 
-var front_door: Door
-var front_door_spot: Hotspot
-var room_door: Door              ## the living room's own door: open when he comes in, shut when he wakes
-var room_door_spot: Hotspot
-var wardrobe: AnimatableBody3D
+var level: Dictionary
+var doors := {}                 ## id -> HingeDoor
+var front_door: HingeDoor
+var room_door: HingeDoor        ## the living room's: open when he goes in, shut while he's out
+var room_door_spot: Hotspot     ## (kept for the scene's API: the door's own leaf is what you use)
+var marta_seat := Vector3(3.0, 0, 1.42)
+var marta_yaw := PI * 0.5
+var wardrobe: Node3D
 var wardrobe_spot: Hotspot
 var hole_spot: Hotspot
-var hole_center := Vector3(-2.7, 0.55, -6.0)
+var hole_center := Vector3(3.55, 0.55, 5.13)
 var flat_nuggets: Array[Node3D] = []
-var marta_seat := Vector3(-3.75, 0.0, -3.9)
-var table_top := 0.74
-var stuck_doors: Array[Door] = []
 var lights: Array[Light3D] = []
+var readables: Array = []       ## usable bodies carrying "title"/"desc" metas
+var env_settings := {}
 
-var _b: Build
-var _rng := RandomNumberGenerator.new()
+## Where things are, for the scene and the tests.
+const POINTS := {
+	"landing": Vector3(11.3, 0, 4.55),
+	"door_out": Vector3(10.06, 1.35, 4.55),
+	"hall": Vector3(8.6, 0, 4.5),
+	"hall_west": Vector3(5.1, 0, 4.55),
+	"living_in": Vector3(3.9, 0, 4.55),
+	"approach": Vector3(3.4, 0, 3.6),
+	"near_marta": Vector3(3.4, 0, 2.5),
+	"wake": Vector3(3.55, 0, 1.0),
+	"by_door": Vector3(3.98, 0, 3.95),
+	"by_wardrobe": Vector3(3.9, 0, 4.25),
+}
+
+const WARDROBE_AT := Vector3(3.35, 0.0, 4.84)
+const WALL_Z := 5.13
+const SLIDE := -0.62
+const HOLE_MIN := Vector3(3.27, 0.04, 5.04)
+const HOLE_MAX := Vector3(3.83, 1.8, 5.36)
 
 func build() -> void:
-	_rng.seed = 1996
-	_b = Build.new(self, "Shell")
-	_b.material("wallpaper", Look.mat(Look.get_tex("wallpaper")))
-	_b.material("plaster", Look.mat(Look.get_tex("plaster")))
-	_b.material("green", Look.mat(Look.get_tex("paint_green")))
-	_b.material("concrete", Look.mat(Look.get_tex("concrete")))
-	_b.material("parquet", Look.mat(Look.get_tex("parquet")))
-	_b.material("wood", Look.mat(Look.get_tex("wood")))
-	_b.material("wood_light", Look.mat(Look.get_tex("wood_light")))
-	_b.material("paper", Look.mat(Look.get_tex("paper")))
-	_b.material("mould", Look.mat(Look.get_tex("mould")))
-	_b.material("rubble", Look.mat(Look.get_tex("rubble")))
-	_b.material("cloth_red", Look.mat(Look.get_tex("cloth"), Color("6a3a32")))
-	_b.material("cloth_green", Look.mat(Look.get_tex("cloth"), Color("3f5a4a")))
-	_b.material("cloth_coat", Look.mat(Look.get_tex("cloth"), Color("3b3128")))
-	_b.material("white_cloth", Look.mat(Look.get_tex("cloth"), Color("cfcab8")))
-	_b.material("coral", Look.mat(Look.get_tex("coral")))
-	_b.material("window", Look.mat(Look.get_tex("plaster"), Color("9aa6b0"), 160.0, false, Color(0.9, 0.95, 1.0)))
-	_b.material("dark", Look.mat(Look.get_tex("concrete"), Color("181818")))
-	_b.material("town_glow", Look.mat(Look.get_tex("cobbles"), Color("ffc070"), 160.0, false, Color(1.4, 0.95, 0.45)))
-	_shell()
-	_landing()
-	_hallway()
-	_living_room()
-	_b.finish()
-	_doors()
-	_wardrobe()
+	level = JSON.parse_string(FileAccess.get_file_as_string("res://assets/flat47/level.json"))
+	var flat: Node3D = (load("res://assets/flat47/flat47.glb") as PackedScene).instantiate()
+	flat.name = "Apartment"
+	add_child(flat)
+	_strip_outside(flat)
+	_materials(flat)
+	_behaviours(flat)
+	_collision()
 	_lights()
-	for p in [Vector3(-4.0, 0.5, -5.1), Vector3(-5.3, 0.6, -2.0)]:
+	_outside()
+	_wardrobe()
+	# a lamp on the dinner table, still on (the first build had Kurt's torch to see her by)
+	add_lamp(Vector3(2.6, 1.0, 2.05), Color("ffb070"), 1.1, 2.8)
+	RenderingServer.global_shader_parameter_set("hole_min", Vector4(HOLE_MIN.x, HOLE_MIN.y, HOLE_MIN.z, 0.0))
+	RenderingServer.global_shader_parameter_set("hole_max", Vector4(HOLE_MAX.x, HOLE_MAX.y, HOLE_MAX.z, 0.0))
+	front_door = doors.get("dEntry")
+	room_door = doors.get("dLiving")
+	front_door.max_angle = 85.0
+	front_door.set_angle(0.0)
+	front_door.set_usable(false)     # the scene opens it
+	doors["dStore"].locked = true    # bolted from the outside
+	room_door_spot = Hotspot.make(self, Transform3D(Basis(), Vector3(-50, -50, -50)), Vector3(0.1, 0.1, 0.1), "")
+	room_door_spot.enabled = false
+	for p in [Vector3(0.6, 0.45, 3.4), Vector3(1.2, 0.5, 0.6)]:
 		var n := Nugget.new()
 		add_child(n)
 		n.position = p
+		n.visible = false          # they're only there after he wakes
 		flat_nuggets.append(n)
 
-# --- walls -------------------------------------------------------------------------------------
+## The environment the flat wants (Main applies it while you're here).
+func apply_environment(env: Environment) -> void:
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color(1, 1, 1)
+	env.background_energy_multiplier = 1.6        # outside is a flat, even white
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color("6a7890").lerp(Color("1a140e"), 0.4)
+	env.ambient_light_energy = 0.12
+	env.fog_enabled = true
+	env.fog_light_color = Color("262a31")
+	env.fog_density = 0.0062
+	env.fog_sky_affect = 0.0
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
+	env.tonemap_exposure = 1.15
 
-func _segments(a: float, b: float, holes: Array) -> Array:
-	var out := []
-	var cur := a
-	var hs := holes.duplicate()
-	hs.sort_custom(func(p, q): return p[0] < q[0])
-	for h in hs:
-		if h[0] > cur:
-			out.append([cur, h[0], 0.0, H])
-		if h[2] > 0.0:
-			out.append([h[0], h[1], 0.0, h[2]])
-		if h[3] < H:
-			out.append([h[0], h[1], h[3], H])
-		cur = h[1]
-	if b > cur:
-		out.append([cur, b, 0.0, H])
-	return out
+# --- the model --------------------------------------------------------------------------------
 
-## Wall at constant z from x0 to x1. neg/pos: materials facing -z and +z. holes: [x0, x1, sill, top].
-func wall_z(z: float, x0: float, x1: float, neg: String, pos: String, holes := [], t := T) -> void:
-	for s in _segments(x0, x1, holes):
-		_b.box(neg, Vector3(s[0], s[2], z - t * 0.5), Vector3(s[1], s[3], z), Transform3D.IDENTITY, true, 1.0, [Vector3.BACK])
-		_b.box(pos, Vector3(s[0], s[2], z), Vector3(s[1], s[3], z + t * 0.5), Transform3D.IDENTITY, false, 1.0, [Vector3.FORWARD])
+func _strip_outside(root: Node) -> void:
+	for mi in root.find_children("*", "MeshInstance3D", true, false):
+		var m: MeshInstance3D = mi
+		var a: AABB = m.global_transform * m.get_aabb()
+		if not KEEP.has_point(a.get_center()) or a.size.length() > 40.0:
+			m.queue_free()
 
-## Wall at constant x from z0 to z1. neg/pos: materials facing -x and +x. holes: [z0, z1, sill, top].
-func wall_x(x: float, z0: float, z1: float, neg: String, pos: String, holes := [], t := T) -> void:
-	for s in _segments(z0, z1, holes):
-		_b.box(neg, Vector3(x - t * 0.5, s[2], s[0]), Vector3(x, s[3], s[1]), Transform3D.IDENTITY, true, 1.0, [Vector3.RIGHT])
-		_b.box(pos, Vector3(x, s[2], s[0]), Vector3(x + t * 0.5, s[3], s[1]), Transform3D.IDENTITY, false, 1.0, [Vector3.LEFT])
+func _materials(root: Node) -> void:
+	var cache := {}
+	for mi in root.find_children("*", "MeshInstance3D", true, false):
+		var m: MeshInstance3D = mi
+		m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		for i in m.mesh.get_surface_count():
+			var src := m.get_active_material(i)
+			if not (src is StandardMaterial3D):
+				continue
+			if cache.has(src):
+				m.set_surface_override_material(i, cache[src])
+				continue
+			var std: StandardMaterial3D = src
+			var out: Material
+			if std.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED:
+				var t := std.duplicate() as StandardMaterial3D
+				t.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
+				out = t
+			else:
+				var sm := ShaderMaterial.new()
+				sm.shader = PS1
+				sm.set_shader_parameter("albedo_color", std.albedo_color)
+				sm.set_shader_parameter("albedo_tex", std.albedo_texture if std.albedo_texture else _white())
+				sm.set_shader_parameter("roughness", std.roughness)
+				if std.roughness_texture:
+					sm.set_shader_parameter("roughness_tex", std.roughness_texture)
+					sm.set_shader_parameter("use_roughness_tex", true)
+				if std.normal_enabled and std.normal_texture:
+					sm.set_shader_parameter("normal_tex", std.normal_texture)
+					sm.set_shader_parameter("use_normal_tex", true)
+					sm.set_shader_parameter("normal_depth", std.normal_scale * 0.1)
+				if std.emission_enabled:
+					sm.set_shader_parameter("emission", Vector3(std.emission.r, std.emission.g, std.emission.b) * std.emission_energy_multiplier)
+					if std.emission_texture:
+						sm.set_shader_parameter("emission_tex", std.emission_texture)
+						sm.set_shader_parameter("use_emission_tex", true)
+				out = sm
+			cache[src] = out
+			m.set_surface_override_material(i, out)
 
-func floor_ceiling(x0: float, z0: float, x1: float, z1: float, floor_mat: String, ceil_mat: String) -> void:
-	_b.box(floor_mat, Vector3(x0, -0.1, z0), Vector3(x1, 0.0, z1), Transform3D.IDENTITY, true, 1.0)
-	_b.box(ceil_mat, Vector3(x0, H, z0), Vector3(x1, H + 0.1, z1), Transform3D.IDENTITY, false, 1.0)
+static var _white_tex: Texture2D
+static func _white() -> Texture2D:
+	if not _white_tex:
+		var img := Image.create(2, 2, false, Image.FORMAT_RGB8)
+		img.fill(Color.WHITE)
+		_white_tex = ImageTexture.create_from_image(img)
+	return _white_tex
 
-func _shell() -> void:
-	# Front wall of the flat (landing side is green paint, hallway side wallpaper), door 0.9 wide.
-	wall_z(0.0, -1.5, 1.5, "wallpaper", "green", [[-0.45, 0.45, 0.0, 2.05]], 0.24)
-	# Hallway: x -1..1, z -5.2..0
-	wall_x(-1.0, -1.2, 0.0, "plaster", "wallpaper")                                    # box room side
-	wall_x(-1.0, -5.2, -1.2, "wallpaper", "wallpaper", [[-4.4, -3.5, 0.0, 2.05]])     # living room doorway
-	wall_x(1.0, -5.2, 0.0, "wallpaper", "plaster", [[-2.8, -2.0, 0.0, 2.05], [-4.7, -4.0, 0.0, 2.05]])
-	wall_z(-5.2, -1.0, 1.0, "plaster", "wallpaper", [[-0.4, 0.4, 0.0, 2.05]])
-	floor_ceiling(-1.0, -5.2, 1.0, 0.0, "parquet", "plaster")
-	# Living room: x -6..-1, z -6..-1.2; window in the west wall.
-	wall_z(-6.0, -6.0, -1.0, "plaster", "wallpaper", [[-3.0, -2.4, 0.0, 1.1]], 0.3)
-	# behind the hole: not the next room. Gaslight, and cobbles, a long way down.
-	_b.box("dark", Vector3(-3.1, -0.1, -7.4), Vector3(-2.3, 1.2, -6.15), Transform3D.IDENTITY, false, 1.0, [Vector3.BACK])
-	_b.box("town_glow", Vector3(-3.0, 0.0, -7.3), Vector3(-2.4, 1.1, -7.25), Transform3D.IDENTITY, false)
-	_b.collide(Vector3(-3.0, 0, -7.4), Vector3(-2.4, 1.1, -6.2))
-	wall_z(-1.2, -6.0, -1.0, "wallpaper", "plaster")
-	wall_x(-6.0, -6.0, -1.2, "plaster", "wallpaper", [[-4.6, -2.8, 0.85, 2.15]], 0.3)
-	wall_x(-1.0, -6.0, -5.2, "wallpaper", "plaster")
-	floor_ceiling(-6.0, -6.0, -1.0, -1.2, "parquet", "plaster")
-	# the window: glass glowing grey daylight, a cross of frame
-	_b.box("window", Vector3(-6.16, 0.85, -4.6), Vector3(-6.1, 2.15, -2.8), Transform3D.IDENTITY, true)
-	_b.box("wood_light", Vector3(-6.12, 1.45, -4.6), Vector3(-6.04, 1.52, -2.8), Transform3D.IDENTITY, false)
-	_b.box("wood_light", Vector3(-6.12, 0.85, -3.74), Vector3(-6.04, 2.15, -3.66), Transform3D.IDENTITY, false)
-	_b.box("wood_light", Vector3(-6.15, 0.82, -4.7), Vector3(-5.86, 0.86, -2.7), Transform3D.IDENTITY, false)  # sill
+## Some of the first build's text named a husband; there's none in canon (story bible).
+const TEXT_PATCH := {
+	"prop_0_Wedding_photograph": "Face down, the glass starred. The photograph itself has been cut out of the frame, carefully, with nail scissors. Someone pulled it off the wall afterwards; the nail came with it.",
+	"pick_129_Bundle_of_letters": "Tied with darning wool. Her handwriting, every one, to a post-office box in Moscow with no name on it. Every one stamped RETURN TO SENDER.",
+}
 
-func _landing() -> void:
-	# Landing: x -1.5..1.5, z 0..2.8; the stair goes down to the east, into the dark.
-	wall_x(-1.5, 0.0, 2.8, "concrete", "green", [], 0.24)
-	wall_z(2.8, -1.5, 1.5, "green", "concrete", [], 0.24)
-	_b.box("concrete", Vector3(-1.5, -0.1, 0.0), Vector3(1.5, 0.0, 2.8))
-	_b.box("plaster", Vector3(-1.5, H, 0.0), Vector3(3.6, H + 0.1, 2.8), Transform3D.IDENTITY, false)
-	wall_z(0.0, 1.5, 3.6, "concrete", "green", [], 0.24)
-	wall_z(2.8, 1.5, 3.6, "green", "concrete", [], 0.24)
-	wall_x(3.6, 0.0, 2.8, "green", "concrete", [], 0.24)
-	# steps down, and the well going on below
-	for i in 8:
-		var y := -0.17 * (i + 1)
-		_b.box("concrete", Vector3(1.5 + i * 0.27, y - 0.1, 0.1), Vector3(1.5 + (i + 1) * 0.27, y, 1.3), Transform3D.IDENTITY, false)
-	_b.box("dark", Vector3(1.5, -3.0, 1.3), Vector3(3.6, -1.5, 2.8), Transform3D.IDENTITY, false)
-	_b.box("concrete", Vector3(1.5, -0.1, 1.3), Vector3(3.6, 0.0, 2.8))       # the half landing
-	_b.box("wood", Vector3(1.5, 0.0, 1.26), Vector3(3.6, 0.9, 1.32), Transform3D.IDENTITY, true)   # banister
-	_b.collide(Vector3(1.5, -2.0, 0.0), Vector3(1.56, 3.0, 1.3))              # don't go down (yet)
-	# the green paint stops at shoulder height; whitewash above
-	_b.box("plaster", Vector3(-1.38, 1.5, 0.12), Vector3(-1.37, H, 2.68), Transform3D.IDENTITY, false)
-	_b.box("plaster", Vector3(-1.38, 1.5, 2.67), Vector3(1.5, H, 2.68), Transform3D.IDENTITY, false)
-	_b.box("plaster", Vector3(-1.5, 1.5, 0.121), Vector3(-0.45, H, 0.13), Transform3D.IDENTITY, false)
-	_b.box("plaster", Vector3(0.45, 1.5, 0.121), Vector3(1.5, H, 0.13), Transform3D.IDENTITY, false)
-	_b.box("plaster", Vector3(-0.45, 2.05, 0.121), Vector3(0.45, H, 0.13), Transform3D.IDENTITY, false)
-	# a doormat; the flat number
-	_b.box("cloth_red", Vector3(-0.4, 0.0, 0.15), Vector3(0.4, 0.02, 0.65), Transform3D.IDENTITY, false)
-	_b.box("paper", Vector3(-0.08, 2.15, 0.12), Vector3(0.08, 2.3, 0.14), Transform3D.IDENTITY, false)
+func _behaviours(root: Node) -> void:
+	var nodes := root.find_children("*", "Node3D", true, false)
+	for n in nodes:
+		if not n.has_meta("extras"):
+			continue
+		var ex: Dictionary = n.get_meta("extras")
+		if TEXT_PATCH.has(String(n.name)):
+			ex["desc"] = TEXT_PATCH[String(n.name)]
+		match String(ex.get("kind", "")):
+			"door":
+				n.set_script(load("res://scripts/world/hinge_door.gd"))
+				n.call("setup", ex)
+				doors[String(ex.get("id", n.name))] = n
+			"drawer":
+				n.set_script(load("res://scripts/world/slide_drawer.gd"))
+				n.call("setup", ex)
+	for n in nodes:
+		if not is_instance_valid(n) or not n.has_meta("extras"):
+			continue
+		var ex: Dictionary = n.get_meta("extras")
+		match String(ex.get("kind", "")):
+			"prop": _prop(n, ex)
+			"pick": _readable(n, ex)
 
-# --- what's in the rooms -----------------------------------------------------------------------
-
-func _mould(center: Vector3, normal: Vector3, size: float) -> void:
-	# A creeping patch on a wall or floor: overlapping thin plates, darker in the middle.
-	var t := Basis(Quaternion(Vector3.BACK, normal.normalized()))
-	for i in 12:
-		var r := size * _rng.randf_range(0.12, 0.38) * (1.3 - i * 0.06)
-		var off := Vector3(_rng.randf_range(-1, 1), _rng.randf_range(-1, 1), 0) * size * 0.5 * (0.4 + i * 0.06)
-		var spin := Basis(Vector3.BACK, _rng.randf_range(0, PI))
-		var xf := Transform3D(t * spin, center + t * off + normal * (0.004 + i * 0.0012))
-		_b.box("mould", Vector3(-r, -r * 0.7, 0), Vector3(r, r * 0.7, 0.002), xf, false)
-
-func _coral(p: Vector3, dir: Vector3, length: float, r: float, depth: int) -> void:
-	var cyl := _cyl()
-	var d := dir.normalized()
-	_b.mesh("coral", cyl, Transform3D(Build.along(d, r, length), p + d * length * 0.5))
-	_b.mesh("coral", _ball(), Transform3D(Basis().scaled(Vector3.ONE * r * 1.25), p + d * length))
-	if depth <= 0:
+## Furniture is solid; small things are just there (nothing here is physics: steadier on a phone).
+## Anything with a description can be looked at.
+func _prop(n: Node3D, ex: Dictionary) -> void:
+	var mass := float(ex.get("mass", 1.0))
+	var size: Array = ex.get("size", [0.2, 0.2, 0.2])
+	var centre: Array = ex.get("centre", [0, 0, 0])
+	var desc := String(ex.get("desc", ""))
+	if mass < 4.0 and desc == "":
 		return
-	for k in _rng.randi_range(1, 3):
-		var nd := (d + Vector3(_rng.randf_range(-1, 1), _rng.randf_range(-0.6, 0.8), _rng.randf_range(-1, 1)) * 0.9).normalized()
-		_coral(p + d * length * _rng.randf_range(0.6, 1.0), nd, length * _rng.randf_range(0.55, 0.8), r * 0.7, depth - 1)
+	var sb := StaticBody3D.new()
+	sb.set_script(load("res://scripts/world/usable.gd"))
+	var cs := CollisionShape3D.new(); var b := BoxShape3D.new()
+	b.size = Vector3(maxf(size[0], 0.04), maxf(size[1], 0.04), maxf(size[2], 0.04)); cs.shape = b
+	cs.position = Vector3(centre[0], centre[1], centre[2])
+	sb.add_child(cs)
+	n.add_child(sb)
+	sb.collision_layer = 1 if mass >= 4.0 else 8
+	sb.set("enabled", desc != "")
+	sb.set("prompt", "Look")
+	sb.set_meta("title", String(ex.get("name", "")))
+	sb.set_meta("desc", desc)
+	readables.append(sb)
 
-static var _cyl_m: CylinderMesh
-static var _ball_m: SphereMesh
-static func _cyl() -> CylinderMesh:
-	if _cyl_m == null:
-		_cyl_m = CylinderMesh.new()
-		_cyl_m.top_radius = 0.7; _cyl_m.bottom_radius = 1.0; _cyl_m.height = 1.0
-		_cyl_m.radial_segments = 6; _cyl_m.rings = 1
-	return _cyl_m
-static func _ball() -> SphereMesh:
-	if _ball_m == null:
-		_ball_m = SphereMesh.new()
-		_ball_m.radius = 1.0; _ball_m.height = 2.0
-		_ball_m.radial_segments = 6; _ball_m.rings = 4
-	return _ball_m
+func _readable(n: Node3D, ex: Dictionary) -> void:
+	var aabb := AABB()
+	var first := true
+	var meshes: Array = n.find_children("*", "MeshInstance3D", true, false)
+	if n is MeshInstance3D:
+		meshes.append(n)
+	for m in meshes:
+		var a: AABB = (m as MeshInstance3D).get_aabb()
+		a = (n.global_transform.affine_inverse() * (m as Node3D).global_transform) * a
+		aabb = a if first else aabb.merge(a)
+		first = false
+	var sb := StaticBody3D.new()
+	sb.set_script(load("res://scripts/world/usable.gd"))
+	var cs := CollisionShape3D.new(); var b := BoxShape3D.new()
+	b.size = aabb.size.max(Vector3(0.06, 0.06, 0.06)); cs.shape = b
+	cs.position = aabb.get_center()
+	sb.add_child(cs)
+	n.add_child(sb)
+	sb.collision_layer = 8
+	sb.set("prompt", "Read" if ex.get("read", false) else "Look")
+	sb.set_meta("title", String(ex.get("name", "")))
+	sb.set_meta("desc", String(ex.get("desc", "")))
+	readables.append(sb)
 
-func _rot(yaw_deg: float, at: Vector3, roll_deg := 0.0, pitch_deg := 0.0) -> Transform3D:
-	var b := Basis.from_euler(Vector3(deg_to_rad(pitch_deg), deg_to_rad(yaw_deg), deg_to_rad(roll_deg)))
-	return Transform3D(b, at)
+## Hides the exported meshes around a point (where something built here takes their place).
+func hide_near(p: Vector3, radius: float, max_size: float) -> void:
+	for mi in find_children("*", "MeshInstance3D", true, false):
+		var m: MeshInstance3D = mi
+		if not m.is_inside_tree() or m.get_parent() is MartaModel:
+			continue
+		var a: AABB = m.global_transform * m.get_aabb()
+		if a.size.length() > max_size:
+			continue
+		var c := a.get_center()
+		if Vector2(c.x - p.x, c.z - p.z).length() < radius and c.y < p.y + 0.6:
+			m.visible = false
 
-func _papers(center: Vector3, spread: float, count: int) -> void:
-	for i in count:
-		var p := center + Vector3(_rng.randf_range(-spread, spread), 0.003 + i * 0.0006, _rng.randf_range(-spread, spread))
-		_b.box("paper", Vector3(-0.1, 0, -0.14), Vector3(0.1, 0.002, 0.14), _rot(_rng.randf_range(0, 360), p), false)
+func _collision() -> void:
+	var walls := StaticBody3D.new(); walls.name = "Collision"; add_child(walls)
+	for c in level.colliders:
+		var sh := CollisionShape3D.new(); var b := BoxShape3D.new()
+		var h: float = c.y1 - c.y0
+		b.size = Vector3(c.hx * 2.0, h, c.hz * 2.0)
+		sh.shape = b
+		sh.transform = Transform3D(Basis(Vector3.UP, c.rot), Vector3(c.x, c.y0 + h * 0.5, c.z))
+		walls.add_child(sh)
+	for f in level.floors:
+		var sh := CollisionShape3D.new(); var b := BoxShape3D.new()
+		b.size = Vector3(f.x1 - f.x0, 0.4, f.z1 - f.z0); sh.shape = b
+		sh.position = Vector3((f.x0 + f.x1) * 0.5, f.y - 0.2, (f.z0 + f.z1) * 0.5)
+		walls.add_child(sh)
+	var ceil := CollisionShape3D.new(); var cb := BoxShape3D.new(); cb.size = Vector3(15, 0.4, 9)
+	ceil.shape = cb; ceil.position = Vector3(7, H + 0.2, 4)
+	walls.add_child(ceil)
+	# the landing: you don't go down the stairs (not yet)
+	for z in [[3.4, 8.5]]:
+		var sh := CollisionShape3D.new(); var b := BoxShape3D.new(); b.size = Vector3(0.3, 3.0, z[1] - z[0])
+		sh.shape = b; sh.position = Vector3(13.4, 1.5, (z[0] + z[1]) * 0.5)
+		walls.add_child(sh)
 
-func _rubble(center: Vector3, spread: float, count: int) -> void:
-	for i in count:
-		var s := _rng.randf_range(0.04, 0.16)
-		var p := center + Vector3(_rng.randf_range(-spread, spread), s * 0.3, _rng.randf_range(-spread, spread))
-		_b.box("rubble", Vector3(-s, -s * 0.3, -s * 0.8), Vector3(s, s * 0.3, s * 0.8), _rot(_rng.randf_range(0, 360), p, _rng.randf_range(-20, 20)), false)
+# --- light: steady, few, by room --------------------------------------------------------------
 
-func _hallway() -> void:
-	# coat hooks on the west wall; one coat still up, two pulled down onto the floor
-	_b.box("wood", Vector3(-0.99, 1.62, -1.1), Vector3(-0.95, 1.7, -0.3), Transform3D.IDENTITY, false)
-	_b.box("cloth_coat", Vector3(-0.96, 0.85, -0.85), Vector3(-0.8, 1.66, -0.45), Transform3D.IDENTITY, false)
-	_b.box("cloth_red", Vector3(-0.3, 0, -0.3), Vector3(0.3, 0.06, 0.3), _rot(35, Vector3(-0.55, 0.0, -1.5)), false)
-	_b.box("cloth_coat", Vector3(-0.35, 0, -0.25), Vector3(0.35, 0.07, 0.25), _rot(-20, Vector3(-0.5, 0.06, -1.7)), false)
-	# shoe rack kicked over; shoes everywhere
-	_b.box("wood", Vector3(-0.4, 0, -0.15), Vector3(0.4, 0.3, 0.15), _rot(80, Vector3(0.75, 0.15, -0.8), 90), true)
-	for i in 5:
-		var p := Vector3(_rng.randf_range(-0.6, 0.7), 0.04, _rng.randf_range(-2.5, -0.6))
-		_b.box("dark", Vector3(-0.05, -0.04, -0.13), Vector3(0.05, 0.05, 0.13), _rot(_rng.randf_range(0, 360), p), false)
-	# a wardrobe come down across the hallway, wedged at an angle against the wall
-	_b.box("wood", Vector3(-0.3, 0, -0.9), Vector3(0.3, 1.9, 0.0), _rot(0, Vector3(0.7, 0.0, -3.1), 0, 0) * Transform3D(Basis.from_euler(Vector3(0, 0, deg_to_rad(10))), Vector3.ZERO), true)
-	# the ceiling's let go over the bedroom door
-	_b.box("rubble", Vector3(-0.6, H - 0.05, -5.0), Vector3(0.3, H, -4.2), Transform3D.IDENTITY, false)
-	_rubble(Vector3(0.0, 0.0, -4.6), 0.55, 14)
-	_papers(Vector3(0.0, 0.0, -2.0), 0.6, 10)
-	# mould climbing out of the corners; coral reaching in from the living room doorway
-	_mould(Vector3(0.99 - 0.07, 0.4, -1.2), Vector3.LEFT, 0.5)
-	_mould(Vector3(-0.93, 2.3, -2.5), Vector3.RIGHT, 0.7)
-	_mould(Vector3(0.93, 2.4, -4.6), Vector3.LEFT, 0.6)
-	_mould(Vector3(-0.3, H - 0.005, -3.3), Vector3.DOWN, 0.7)
-	_mould(Vector3(-0.92, 0.3, -4.9), Vector3.RIGHT, 0.5)
-	for i in 4:
-		_coral(Vector3(-1.0, 0.0, -3.6 - i * 0.22), Vector3(1.0, 0.15, _rng.randf_range(-0.5, 0.5)), 0.35, 0.025, 2)
-	# the bulb: a bare one on its flex
-	_b.box("dark", Vector3(-0.005, 2.35, -2.505), Vector3(0.005, H, -2.495), Transform3D.IDENTITY, false)
-
-func _living_room() -> void:
-	var m := marta_seat
-	# the table, set for dinner for three, a long time ago
-	var t0 := Vector3(m.x + 0.45, 0, m.z - 0.65)
-	var t1 := Vector3(m.x + 1.35, table_top, m.z + 0.65)
-	_b.box("wood", Vector3(t0.x, table_top - 0.04, t0.z), t1, Transform3D.IDENTITY, false)
-	_b.box("white_cloth", Vector3(t0.x - 0.03, table_top, t0.z - 0.03), Vector3(t1.x + 0.03, table_top + 0.006, t1.z + 0.03), Transform3D.IDENTITY, false)
-	for c in [Vector3(t0.x + 0.05, 0, t0.z + 0.05), Vector3(t1.x - 0.1, 0, t0.z + 0.05), Vector3(t0.x + 0.05, 0, t1.z - 0.1), Vector3(t1.x - 0.1, 0, t1.z - 0.1)]:
-		_b.box("wood", c, c + Vector3(0.05, table_top - 0.04, 0.05), Transform3D.IDENTITY, false)
-	_b.collide(Vector3(t0.x, 0, t0.z), Vector3(t1.x, table_top + 0.05, t1.z))
-	for p in [Vector3(m.x + 0.7, 0, m.z), Vector3(m.x + 1.0, 0, m.z - 0.42), Vector3(m.x + 1.0, 0, m.z + 0.42)]:
-		_b.box("white_cloth", Vector3(-0.11, table_top + 0.006, -0.11), Vector3(0.11, table_top + 0.02, 0.11), Transform3D(Basis(), p), false)
-		_b.box("mould", Vector3(-0.07, table_top + 0.02, -0.07), Vector3(0.07, table_top + 0.035, 0.07), Transform3D(Basis(), p), false)
-	# the other two chairs: one pushed back, one on its side
-	_chair(Vector3(m.x + 1.2, 0, m.z - 0.95), 160.0, false)
-	_chair(Vector3(-5.2, 0, -2.4), -60.0, true)
-	# an armchair face down; the bookcase on its face across the room; books everywhere
-	_b.box("cloth_green", Vector3(-0.45, 0, -0.4), Vector3(0.45, 0.85, 0.4), _rot(20, Vector3(-2.0, 0, -1.9), 0, 95), true)
-	_b.box("wood", Vector3(-0.9, 0, -0.2), Vector3(0.9, 0.35, 0.2), _rot(10, Vector3(-4.6, 0, -5.4)), true)
-	for i in 16:
-		var p := Vector3(_rng.randf_range(-5.5, -3.8), 0.03, _rng.randf_range(-5.6, -4.7))
-		var col: String = ["cloth_red", "cloth_green", "cloth_coat", "paper"][i % 4]
-		_b.box(col, Vector3(-0.08, -0.03, -0.11), Vector3(0.08, 0.03, 0.11), _rot(_rng.randf_range(0, 360), p), false)
-	# the wall unit, doors hanging, the good china smashed on the floor
-	_b.box("wood", Vector3(-5.8, 0, -1.6), Vector3(-3.6, 2.0, -1.2), Transform3D.IDENTITY, true)
-	_b.box("dark", Vector3(-5.6, 0.9, -1.62), Vector3(-4.8, 1.5, -1.6), Transform3D.IDENTITY, false)   # the TV's dead face
-	_rubble(Vector3(-4.6, 0, -1.9), 0.4, 10)
-	_papers(Vector3(-2.2, 0, -4.4), 0.7, 12)
-	# the plaster's down in the corner by the window
-	_b.box("rubble", Vector3(-6.0, H - 0.06, -6.0), Vector3(-4.8, H, -5.0), Transform3D.IDENTITY, false)
-	_rubble(Vector3(-5.4, 0, -5.4), 0.5, 12)
-	# the standard lamp knocked over, still lit, lying by her chair
-	_b.box("wood_light", Vector3(-0.015, 0, -0.015), Vector3(0.015, 1.4, 0.015), _rot(40, Vector3(m.x - 0.3, 0.03, m.z + 1.4), 0, 84), false)
-	_b.box("paper", Vector3(-0.17, -0.12, -0.17), Vector3(0.17, 0.12, 0.17), _rot(40, Vector3(m.x - 1.1, 0.17, m.z + 0.45), 0, 75), false)
-	# the coral: out of her, into her chair, the floor, the wall behind her and up onto the ceiling
-	for i in 9:
-		var a := TAU * i / 9.0
-		_coral(Vector3(m.x, 0.0, m.z), Vector3(cos(a), 0.12, sin(a)), _rng.randf_range(0.45, 0.8), 0.04, 3)
-	for i in 5:
-		_coral(Vector3(m.x - 0.25, 0.9 + i * 0.12, m.z + _rng.randf_range(-0.25, 0.25)), Vector3(-1, 0.4, _rng.randf_range(-0.6, 0.6)), 0.5, 0.035, 3)
-	for i in 6:
-		_coral(Vector3(-6.0 + 0.16, _rng.randf_range(0.3, 2.3), m.z + _rng.randf_range(-1.2, 1.2)), Vector3(1, _rng.randf_range(-0.3, 0.5), _rng.randf_range(-0.5, 0.5)), 0.4, 0.035, 2)
-	for i in 4:
-		_coral(Vector3(m.x + _rng.randf_range(-1, 0.6), H, m.z + _rng.randf_range(-1, 1)), Vector3(_rng.randf_range(-0.5, 0.5), -1, _rng.randf_range(-0.5, 0.5)), 0.35, 0.03, 2)
-	_b.collide(Vector3(m.x - 1.4, 0, m.z - 1.0), Vector3(m.x - 0.6, 0.5, m.z + 1.0))
-	# mould: thick around her, up the wall behind her, across the ceiling
-	_mould(Vector3(m.x, 0.001, m.z), Vector3.UP, 1.6)
-	_mould(Vector3(m.x + 0.8, 0.001, m.z - 0.3), Vector3.UP, 1.0)
-	_mould(Vector3(-5.85, 1.3, m.z), Vector3.RIGHT, 1.5)
-	_mould(Vector3(-5.85, 2.2, m.z - 1.4), Vector3.RIGHT, 0.9)
-	_mould(Vector3(m.x, H - 0.005, m.z), Vector3.DOWN, 1.6)
-	_mould(Vector3(-1.16, 1.7, -5.0), Vector3.LEFT, 0.8)
-	_mould(Vector3(-2.5, 2.4, -1.35), Vector3.FORWARD, 0.7)
-
-func _chair(at: Vector3, yaw: float, fallen: bool) -> void:
-	var base := _rot(yaw, at)
-	if fallen:
-		base = base * Transform3D(Basis.from_euler(Vector3(0, 0, deg_to_rad(90))), Vector3(0.22, 0.22, 0))
-	_b.box("wood", Vector3(-0.21, 0.42, -0.21), Vector3(0.21, 0.46, 0.21), base, false)
-	_b.box("wood", Vector3(-0.21, 0.46, 0.17), Vector3(0.21, 0.95, 0.21), base, false)
-	for c in [Vector3(-0.2, 0, -0.2), Vector3(0.16, 0, -0.2), Vector3(-0.2, 0, 0.16), Vector3(0.16, 0, 0.16)]:
-		_b.box("wood", c, c + Vector3(0.04, 0.42, 0.04), base, false)
-	_b.collide(Vector3(-0.22, 0, -0.22), Vector3(0.22, 0.5, 0.22), base)
-
-func _doors() -> void:
-	var leather := Look.mat(Look.get_tex("leather"), Color.WHITE, 0.0)
-	var paint := Look.mat(Look.get_tex("plaster"), Color("d8d2bf"), 0.0)
-	# The front door: hinged at x=-0.45, opens inward (toward -z), padded.
-	front_door = Door.new()
-	front_door.name = "FrontDoor"
-	add_child(front_door)
-	front_door.position = Vector3(-0.45, 0, 0.0)
-	front_door.setup(0.9, 2.05, leather, 0.08)
-	front_door.set_angle(0.0)
-	front_door_spot = Hotspot.make(self, Transform3D(Basis(), Vector3(0, 1.0, 0)), Vector3(0.9, 2.0, 0.4), "Open")
-	front_door_spot.enabled = false
-	# The living room door: open (flat against nothing, into the room) until he's out cold.
-	room_door = Door.new()
-	room_door.name = "RoomDoor"
-	add_child(room_door)
-	room_door.position = Vector3(-1.0, 0, -3.5)
-	room_door.rotation.y = deg_to_rad(90)
-	room_door.setup(0.9, 2.05, paint, 0.05)
-	room_door.set_angle(165.0)     # back against the wall
-	room_door_spot = Hotspot.make(self, Transform3D(Basis(), Vector3(-1.05, 1.0, -3.95)), Vector3(0.4, 2.0, 0.9), "Open")
-	room_door_spot.enabled = false
-	# Doors that stay shut in this scene. Solid; trying them only rattles them.
-	var specs := [
-		[Vector3(1.0, 0, -2.0), 90.0],     # kitchen
-		[Vector3(1.0, 0, -4.0), 90.0],     # bathroom
-		[Vector3(-0.4, 0, -5.2), 0.0],     # bedroom
-	]
-	for s in specs:
-		var d := Door.new()
-		add_child(d)
-		d.position = s[0]
-		d.rotation.y = deg_to_rad(s[1])
-		d.setup(0.8 if s[1] == 0.0 else 0.7, 2.05, paint, 0.05)
-		stuck_doors.append(d)
-		var spot := Hotspot.make(self, d.global_transform * Transform3D(Basis(), Vector3(d.width * 0.5, 1.0, 0)), Vector3(d.width, 2.0, 0.3), "Open")
-		spot.used.connect(func():
-			Sfx.play_at("rattle", d.handle_position(), -4.0, 1.05))
+const CD := 1.0 / PI
 
 func _lights() -> void:
-	# Steady lights only. Few of them (phones): none cast shadows.
-	lights.append(_omni(Vector3(0, 2.45, 1.4), Color("ffd9a0"), 1.1, 5.0))     # landing
-	lights.append(_omni(Vector3(0, 2.3, -2.5), Color("ffc87a"), 0.75, 5.5))    # hallway bulb
-	lights.append(_omni(Vector3(-5.2, 1.7, -3.7), Color("aebccc"), 1.2, 6.5))  # window daylight
-	lights.append(_omni(Vector3(marta_seat.x - 1.0, 0.25, marta_seat.z + 0.5), Color("ff9a55"), 0.9, 3.6))  # the fallen lamp
-	# the bulbs themselves
-	for p in [Vector3(0, 2.32, -2.5), Vector3(0, 2.6, 1.4)]:
-		var mi := MeshInstance3D.new()
-		var sm := SphereMesh.new(); sm.radius = 0.04; sm.height = 0.1
-		mi.mesh = sm
-		mi.material_override = Look.mat(Look.get_tex("white"), Color("ffe2b0"), 160.0, false, Color(3, 2.5, 1.6))
-		add_child(mi)
-		mi.position = p
+	for L in level.lights:
+		if L.get("broken", false) or not bool(L.on):
+			continue
+		var pos := Vector3(L.pos[0], L.pos[1], L.pos[2])
+		if String(L.type) == "PointLight" and not LIGHT_AREA.has_point(pos):
+			continue
+		if not powered(L.get("circuit")):
+			continue
+		var l: Light3D
+		match String(L.type):
+			"PointLight":
+				var o := OmniLight3D.new()
+				o.omni_range = float(L.range) if float(L.range) > 0.0 else 30.0
+				o.omni_attenuation = float(L.get("decay", 2.0))
+				l = o
+			"SpotLight":
+				var sp := SpotLight3D.new()
+				sp.spot_range = float(L.range) if float(L.range) > 0.0 else 30.0
+				sp.spot_attenuation = float(L.get("decay", 2.0))
+				sp.spot_angle = rad_to_deg(float(L.angle))
+				sp.light_projector = Penumbra.make(float(L.get("penumbra", 0.0)))
+				l = sp
+			"RectAreaLight":
+				var sp := SpotLight3D.new()
+				sp.spot_range = 9.0; sp.spot_attenuation = 2.0
+				sp.spot_angle = 85.0; sp.spot_angle_attenuation = 1.6
+				sp.light_specular = 0.2
+				l = sp
+				L.intensity = float(L.intensity) * float(L.w) * float(L.h)
+				pos += Vector3(L.dir[0], 0, L.dir[2]) * 0.15
+			_:
+				continue
+		l.name = "Light_" + str(L.name)
+		l.light_color = Color(L.color)
+		var k := 1.0
+		var fl = L.get("flicker")
+		match (fl if fl is String else ""):        # every light steady; the failing ones just dimmer
+			"dying": k = 0.8
+			"fluoro": k = 0.95
+			"emergency": k = 0.8
+		l.light_energy = float(L.intensity) * CD * k
+		l.shadow_enabled = false
+		add_child(l)
+		l.position = pos
+		if l is SpotLight3D:
+			if L.has("target"):
+				l.look_at(Vector3(L.target[0], L.target[1], L.target[2]))
+			elif L.has("dir"):
+				l.look_at(pos + Vector3(L.dir[0], L.dir[1] - 0.15, L.dir[2]))
+		l.set_meta("base", l.light_energy)
+		lights.append(l)
 
-func _omni(p: Vector3, c: Color, e: float, r: float) -> OmniLight3D:
+func powered(c) -> bool:
+	return not (c is String) or bool(level.get("circuits", {}).get(c, true))
+
+func room_of(p: Vector3) -> String:
+	for k in level.rooms:
+		var r: Dictionary = level.rooms[k]
+		if p.x >= r.x0 and p.x < r.x1 and p.z >= r.z0 and p.z < r.z1:
+			return k
+	return ""
+
+func _room_dist(k: String, p: Vector3) -> float:
+	if k == "":
+		return 0.0
+	var r: Dictionary = level.rooms[k]
+	var dx := maxf(maxf(r.x0 - p.x, p.x - r.x1), 0.0)
+	var dz := maxf(maxf(r.z0 - p.z, p.z - r.z1), 0.0)
+	return Vector2(dx, dz).length()
+
+## A room's lights are on while you're in it or near it, and fade (slowly: no popping) when you're
+## further. Off lights cost nothing and keep every mesh under the phone renderer's light limit.
+func _process(delta: float) -> void:
+	if not visible:
+		return
+	var cam := get_viewport().get_camera_3d()
+	var eye := cam.global_position if cam else Vector3(5, 1.6, 4)
+	for o in lights:
+		if not o.has_meta("room"):
+			var probe := o.global_position
+			if o is SpotLight3D:
+				probe += -o.global_transform.basis.z * 1.2
+			var k := room_of(probe)
+			if k == "" and o is SpotLight3D:
+				k = room_of(o.global_position - o.global_transform.basis.z * 6.0)
+			o.set_meta("room", k)
+			o.set_meta("near", 1.0)
+		var near: float = o.get_meta("near")
+		var want := 1.0 if _room_dist(o.get_meta("room"), eye) < ROOM_NEAR else 0.0
+		near = move_toward(near, want, delta / 1.2)
+		o.set_meta("near", near)
+		o.visible = near > 0.001
+		o.light_energy = float(o.get_meta("base")) * smoothstep(0.0, 1.0, near)
+
+## A light by the table, low and warm, so she can be seen (the first build had Kurt's torch).
+func add_lamp(at: Vector3, color: Color, energy: float, reach: float) -> OmniLight3D:
 	var l := OmniLight3D.new()
-	l.light_color = c
-	l.light_energy = e
-	l.omni_range = r
-	l.omni_attenuation = 1.2
+	l.light_color = color; l.light_energy = energy; l.omni_range = reach; l.omni_attenuation = 1.4
 	l.shadow_enabled = false
 	add_child(l)
-	l.position = p
+	l.position = at
+	l.set_meta("base", energy)
+	lights.append(l)
 	return l
 
+# --- outside: there isn't one --------------------------------------------------------------------
+
+func _outside() -> void:
+	var glow := OmniLight3D.new(); glow.name = "Light_void"
+	glow.light_color = Color(0.93, 0.95, 1.0); glow.light_energy = 0.9; glow.light_specular = 0.0
+	glow.omni_range = 3.2; glow.omni_attenuation = 0.8; glow.shadow_enabled = false
+	glow.position = Vector3(2.25, 1.6, -2.4)
+	add_child(glow)
+	_sticky_note(Vector3(3.6, 2.2, -15.0), 0.0, 7.0, -0.035)
+	_sticky_note(Vector3(4.8, 2.0, 21.0), PI, 6.0, 0.03)
+
+func _sticky_note(at: Vector3, yaw: float, size: float, tilt: float) -> void:
+	var note := Node3D.new(); note.name = "Note_outside"
+	add_child(note)
+	note.position = at; note.rotation = Vector3(0, yaw, tilt)
+	var st := SurfaceTool.new(); st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	const N := 12
+	var pts := []
+	for j in N + 1:
+		var row := []
+		for i in N + 1:
+			var u := float(i) / N; var v := float(j) / N
+			var curl := pow(maxf(0.0, v - 0.55) / 0.45, 2.2) * size * 0.07
+			curl += pow(maxf(0.0, u - 0.7) / 0.3, 2.0) * pow(maxf(0.0, v - 0.6) / 0.4, 1.5) * size * 0.05
+			row.append(Vector3((u - 0.5) * size, (0.5 - v) * size, curl))
+		pts.append(row)
+	for j in N:
+		for i in N:
+			var a0: Vector3 = pts[j][i]; var a1: Vector3 = pts[j][i + 1]; var b1: Vector3 = pts[j + 1][i + 1]; var b0: Vector3 = pts[j + 1][i]
+			var vt := (float(j) + 0.5) / N
+			var c := Color("f4e06a") if vt > 0.14 else Color("e9d35a")
+			c = c.darkened(0.06 * smoothstep(0.55, 1.0, vt))
+			for p in [a0, a1, b1, a0, b1, b0]:
+				st.set_color(c); st.add_vertex(p)
+	var paper := MeshInstance3D.new(); paper.mesh = st.commit()
+	var pm := StandardMaterial3D.new(); pm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	pm.vertex_color_use_as_albedo = true; pm.cull_mode = BaseMaterial3D.CULL_DISABLED; pm.disable_fog = true
+	paper.material_override = pm
+	note.add_child(paper)
+	var word := Label3D.new(); word.text = "“outside”"
+	word.font_size = 160; word.pixel_size = size / 900.0; word.outline_size = 0
+	word.modulate = Color("1d2333"); word.shaded = false; word.double_sided = true
+	word.position = Vector3(0, -size * 0.03, size * 0.004)
+	note.add_child(word)
+
+# --- the wardrobe, and what's behind it ---------------------------------------------------------
+
 func _wardrobe() -> void:
-	# A tall wardrobe against the north wall, in front of the hole. He shoulders it along the wall.
-	wardrobe = AnimatableBody3D.new()
-	wardrobe.name = "Wardrobe"
-	wardrobe.sync_to_physics = false
+	wardrobe = Node3D.new(); wardrobe.name = "Wardrobe"
 	add_child(wardrobe)
-	wardrobe.position = Vector3(-2.7, 0, -5.58)
-	var wood := Look.mat(Look.get_tex("wood"))
-	var parts := [[Vector3(1.0, 2.05, 0.5), Vector3(0, 1.025, 0)], [Vector3(0.48, 1.8, 0.02), Vector3(-0.25, 1.05, 0.26)],
-		[Vector3(0.48, 1.8, 0.02), Vector3(0.25, 1.05, 0.26)], [Vector3(1.06, 0.08, 0.56), Vector3(0, 2.07, 0)]]
-	for p in parts:
-		var mi := MeshInstance3D.new(); var bm := BoxMesh.new(); bm.size = p[0]
-		mi.mesh = bm; mi.material_override = wood; mi.position = p[1]
-		wardrobe.add_child(mi)
-	var cs := CollisionShape3D.new(); var bs := BoxShape3D.new(); bs.size = Vector3(1.0, 2.05, 0.5)
-	cs.shape = bs; cs.position.y = 1.025
-	wardrobe.add_child(cs)
-	wardrobe_spot = Hotspot.make(wardrobe, Transform3D(Basis(), Vector3(-2.7, 1.1, -5.3)), Vector3(1.1, 2.1, 0.7), "Push")
+	wardrobe.position = WARDROBE_AT
+	var model: Node3D = find_child("prop_34_Wardrobe", true, false)
+	if model:
+		var rot := model.global_basis
+		model.reparent(wardrobe, false)
+		model.transform = Transform3D(rot, Vector3.ZERO)
+		for c in model.find_children("*", "StaticBody3D", true, false):
+			c.queue_free()
+	var body := AnimatableBody3D.new(); body.sync_to_physics = false
+	var shape := CollisionShape3D.new(); var b := BoxShape3D.new(); b.size = Vector3(1.0, 1.9, 0.59)
+	shape.shape = b; shape.position = Vector3(0, 0.95, -0.025)
+	body.add_child(shape)
+	wardrobe.add_child(body)
+	wardrobe_spot = Hotspot.make(wardrobe, wardrobe.global_transform * Transform3D(Basis(), Vector3(0, 1.0, -0.3)), Vector3(1.1, 1.9, 0.2), "Push")
 	wardrobe_spot.enabled = false
-	hole_spot = Hotspot.make(self, Transform3D(Basis(), Vector3(-2.7, 0.55, -5.95)), Vector3(0.7, 1.1, 0.5), "Crawl through")
+	hole_spot = Hotspot.make(self, Transform3D(Basis(), hole_center + Vector3(0, 0, -0.12)), Vector3(0.6, 1.1, 0.3), "Crawl through")
 	hole_spot.enabled = false
 
-## One shove: it scrapes a hand's breadth along the wall. Returns true when the hole's clear.
+var _shoves := 0
+
+## One shove: it grinds a third of the way along the wall. True when the hole's clear.
 func shove_wardrobe() -> bool:
-	var tw := create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tw.tween_property(wardrobe, "position:x", wardrobe.position.x + 0.36, 0.55)
+	_shoves += 1
+	var to := WARDROBE_AT + Vector3(SLIDE * _shoves / 3.0, 0, 0)
+	create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT).tween_property(wardrobe, "position", to, 0.6)
 	Sfx.play_at("scrape", wardrobe.global_position + Vector3(0, 0.5, 0), 2.0, randf_range(0.9, 1.05))
 	Noises.make(wardrobe.global_position, 10.0, "scrape")
-	return wardrobe.position.x + 0.36 > -1.65
+	if _shoves >= 3:
+		_open_hole()
+		return true
+	return false
+
+## The plaster cut away (the shader's wall-hole box), broken brick at its edge, rubble on the floor,
+## and through it: gaslight and cobbles, a long way off.
+func _open_hole() -> void:
+	RenderingServer.global_shader_parameter_set("hole_min", Vector4(HOLE_MIN.x, HOLE_MIN.y, HOLE_MIN.z, 1.0))
+	RenderingServer.global_shader_parameter_set("hole_max", Vector4(HOLE_MAX.x, HOLE_MAX.y, HOLE_MAX.z, 1.0))
+	var kit := TownKit.new(self)
+	var rng := RandomNumberGenerator.new(); rng.seed = 47
+	var f := Facades.Frame.new(Vector3(HOLE_MIN.x, 0, WALL_Z - 0.01), Vector3(1, 0, 0), Vector3(0, 0, -1))
+	Facades.ragged_rim(kit, f, 0.0, HOLE_MAX.x - HOLE_MIN.x, 0.04, 1.76, "stucco_cream", rng, 38)
+	for i in 14:
+		var p := Vector3(HOLE_MIN.x + rng.randf() * 0.6, 0.0, WALL_Z - 0.08 - rng.randf() * 0.45)
+		var s := rng.randf_range(0.02, 0.07)
+		kit.box("brick" if rng.randf() < 0.5 else "stucco_cream", p + Vector3(0, s * 0.5, 0), Vector3(s, s * 0.5, s * 0.8), Basis(Vector3.UP, rng.randf() * TAU))
+	kit.finish()
+	# the far side: dark, and at the end of it a street under gas
+	var back := MeshInstance3D.new(); var bx := BoxMesh.new(); bx.size = Vector3(0.75, 2.1, 0.06); back.mesh = bx
+	var bm := StandardMaterial3D.new(); bm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	bm.albedo_color = Color(0.0, 0.0, 0.0)
+	back.material_override = bm; add_child(back)
+	back.position = Vector3((HOLE_MIN.x + HOLE_MAX.x) * 0.5, 0.95, WALL_Z + 0.24)
+	bm.disable_fog = true
+	var far := MeshInstance3D.new(); var fm := QuadMesh.new(); fm.size = Vector2(0.08, 0.12); far.mesh = fm
+	var fmat := StandardMaterial3D.new(); fmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	fmat.albedo_color = Color(0.75, 0.5, 0.25); fmat.disable_fog = true
+	far.material_override = fmat; add_child(far)
+	far.position = Vector3((HOLE_MIN.x + HOLE_MAX.x) * 0.5 + 0.05, 0.45, WALL_Z + 0.215)
+	far.rotation.y = PI
+	var tunnel := StaticBody3D.new(); add_child(tunnel)
+	var cs := CollisionShape3D.new(); var b := BoxShape3D.new(); b.size = Vector3(0.7, 2.0, 0.2); cs.shape = b
+	tunnel.add_child(cs); tunnel.position = Vector3((HOLE_MIN.x + HOLE_MAX.x) * 0.5, 1.0, WALL_Z + 0.25)

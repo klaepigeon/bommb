@@ -17,14 +17,13 @@ var camera: Camera3D
 var arm: KurtArm
 var socko: Socko
 var body_mesh: Node3D
-var focus: Hotspot
+var focus: Object        ## a Hotspot, or anything with `used`, `enabled` and `prompt`
 
 var _pitch := 0.0
 var _step_dist := 0.0
 var _bob := 0.0
 var _shake := 0.0
 var _shake_t := 0.0
-var _legs: Array[Node3D] = []
 
 func build() -> void:
 	collision_layer = 1
@@ -50,29 +49,13 @@ func build() -> void:
 	_build_body()
 
 func _build_body() -> void:
-	# What he sees looking down: coat, trousers, shoes. Rigid, cheap, and it walks.
-	body_mesh = Node3D.new(); add_child(body_mesh)
-	var coat := Look.mat(Look.get_tex("cloth"), Color("3b3128"), 0.0)
-	var trousers := Look.mat(Look.get_tex("cloth"), Color("2a2a2e"), 0.0)
-	var shoes := Look.mat(Look.get_tex("white"), Color("120d0a"), 0.0)
-	var torso := MeshInstance3D.new()
-	var tm := BoxMesh.new(); tm.size = Vector3(0.38, 0.5, 0.2)
-	torso.mesh = tm; torso.material_override = coat
-	torso.position = Vector3(0, 1.08, 0.17)
-	body_mesh.add_child(torso)
-	for s in [-1.0, 1.0]:
-		var hip := Node3D.new(); hip.position = Vector3(0.1 * s, 0.9, 0.06); body_mesh.add_child(hip)
-		var leg := MeshInstance3D.new()
-		var lm := BoxMesh.new(); lm.size = Vector3(0.14, 0.86, 0.15)
-		leg.mesh = lm; leg.material_override = trousers; leg.position.y = -0.45
-		hip.add_child(leg)
-		var shoe := MeshInstance3D.new()
-		var sm := BoxMesh.new(); sm.size = Vector3(0.11, 0.08, 0.27)
-		shoe.mesh = sm; shoe.material_override = shoes; shoe.position = Vector3(0, -0.86, -0.06)
-		hip.add_child(shoe)
-		_legs.append(hip)
-	for mi in body_mesh.find_children("*", "MeshInstance3D", true, false):
-		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	# the rest of him, for when he looks down: the first build's body (trunk, coat, legs, shoes,
+	# the left upper sleeve to Socko's elbow), stepping with his speed
+	var kb := KurtBody.new()
+	kb.name = "Body"
+	kb.setup(self)
+	add_child(kb)
+	body_mesh = kb
 
 func yaw() -> float:
 	return rotation.y
@@ -129,7 +112,9 @@ func _physics_process(delta: float) -> void:
 		velocity.y -= 9.8 * delta
 	else:
 		velocity.y = -0.1
+	var pre := velocity
 	move_and_slide()
+	_step_up(pre, delta)
 	var speed := Vector2(velocity.x, velocity.z).length()
 	# footsteps, bob, legs
 	if is_on_floor() and speed > 0.2:
@@ -141,10 +126,6 @@ func _physics_process(delta: float) -> void:
 			Noises.make(global_position, 2.5 if Game.owned("quiet_feet") else 5.0, "step")
 	else:
 		_bob = lerpf(_bob, round(_bob / PI) * PI, delta * 4.0)
-	var swing := sin(_bob) * clampf(speed / WALK, 0.0, 1.0)
-	if _legs.size() == 2:
-		_legs[0].rotation.x = swing * 0.45
-		_legs[1].rotation.x = -swing * 0.45
 	# camera: bob, shake
 	var off := Vector3(0, absf(sin(_bob)) * 0.025 * clampf(speed / WALK, 0.0, 1.0), 0)
 	if _shake_t > 0.0:
@@ -153,20 +134,42 @@ func _physics_process(delta: float) -> void:
 	shake_node.position = off
 	_update_focus()
 
+## Thresholds, door steps, the raised floors of the town's rooms: low steps (up to 25 cm). Walking
+## into something that low with room above it, he steps up onto it.
+const STEP := 0.25
+func _step_up(pre: Vector3, delta: float) -> void:
+	if not is_on_wall() or not is_on_floor():
+		return
+	var h := Vector3(pre.x, 0, pre.z) * delta
+	if h.length() < 0.0005:
+		return
+	var up := Vector3(0, STEP, 0)
+	if test_move(global_transform, up):
+		return
+	var raised := global_transform.translated(up)
+	if test_move(raised, h * 3.0):
+		return
+	global_position += up + h
+	apply_floor_snap()
+
 func _update_focus() -> void:
-	var found: Hotspot = null
+	var found: Object = null
 	if can_move:
 		var from := camera.global_position
 		var to := from + -camera.global_transform.basis.z * 2.0
-		var q := PhysicsRayQueryParameters3D.create(from, to, 1 | 2, [get_rid()])
+		var q := PhysicsRayQueryParameters3D.create(from, to, 1 | 8, [get_rid()])
 		q.collide_with_areas = true
 		var hit := get_world_3d().direct_space_state.intersect_ray(q)
-		if hit and hit.collider is Hotspot and (hit.collider as Hotspot).enabled:
+		if hit and hit.collider and hit.collider.has_signal("used") and hit.collider.get("enabled"):
 			found = hit.collider
-	if found != focus:
+	var p: String = String(found.get("prompt")) if found else ""
+	if found != focus or p != _focus_prompt:
 		focus = found
-		focus_changed.emit(focus.prompt if focus else "")
+		_focus_prompt = p
+		focus_changed.emit(p)
+
+var _focus_prompt := ""
 
 func try_interact() -> void:
-	if focus and focus.enabled and can_move:
-		focus.used.emit()
+	if focus and is_instance_valid(focus) and focus.get("enabled") and can_move:
+		focus.emit_signal("used")

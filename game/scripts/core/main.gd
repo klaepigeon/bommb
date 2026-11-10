@@ -17,6 +17,9 @@ var weapon: Weapon
 var env: Environment
 var room_tone: AudioStreamPlayer3D
 var args := {}
+var _screen: ShaderMaterial
+var _grain_t := 0.0
+const SHRINK := 2
 
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
@@ -29,10 +32,15 @@ func _build() -> void:
 	var container := SubViewportContainer.new()
 	container.set_anchors_preset(Control.PRESET_FULL_RECT)
 	container.stretch = true
-	container.stretch_shrink = 2
+	container.stretch_shrink = SHRINK
 	container.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_screen = ShaderMaterial.new()
+	_screen.shader = load("res://shaders/ps1_screen.gdshader")
+	container.material = _screen
 	add_child(container)
+	get_window().size_changed.connect(_fit_screen)
+	_fit_screen()
 	view = SubViewport.new()
 	view.audio_listener_enable_3d = true
 	view.msaa_3d = Viewport.MSAA_DISABLED
@@ -56,10 +64,12 @@ func _build() -> void:
 	world_env.environment = e
 	world.add_child(world_env)
 	flat = Flat47.new(); flat.name = "Flat47"; world.add_child(flat); flat.build()
+	flat.apply_environment(e)
 	marta = Marta.new(); marta.name = "Marta"; world.add_child(marta)
 	marta.position = flat.marta_seat
-	marta.rotation.y = deg_to_rad(90)
+	marta.rotation.y = flat.marta_yaw
 	marta.build()
+	flat.hide_near(Vector3(3.02, 0.45, 1.45), 0.34, 1.0)      # the chair she's grown into replaces the flat's
 	player = Player.new(); player.name = "Kurt"; world.add_child(player); player.build()
 	hud = Hud.new(); add_child(hud); hud.build()
 	player.controls = hud.controls
@@ -92,21 +102,18 @@ func go_to_town() -> void:
 	await get_tree().process_frame
 	var t := Time.get_ticks_msec()
 	town = Town.new(); town.name = "Town"
-	world.add_child(town)
 	town.position = Vector3(300, 0, 0)
-	town.build()
+	world.add_child(town)        # it builds itself
 	print("[town] built in %d ms" % (Time.get_ticks_msec() - t))
 	flat.visible = false
 	marta.visible = false
 	flat.process_mode = Node.PROCESS_MODE_DISABLED
 	if is_instance_valid(room_tone):
 		room_tone.queue_free()
-	Sfx.loop_at("wind", town.to_global(Vector3(26, 6, 0)), -12.0)
-	env.background_color = Color("101828")
-	env.ambient_light_color = Color("5a6a8c")
-	env.ambient_light_energy = 0.95
-	env.fog_light_color = Color("26324a")
-	env.fog_density = 0.04
+	Sfx.loop_at("wind", town.to_global(Vector3(30, 6, 20)), -12.0)
+	var te: Environment = town.env
+	for prop in ["background_color", "background_energy_multiplier", "ambient_light_color", "ambient_light_energy", "fog_light_color", "fog_density", "tonemap_mode", "tonemap_exposure"]:
+		env.set(prop, te.get(prop))
 	chapter = TownChapter.new(); chapter.name = "TownChapter"
 	chapter.main = self; chapter.town = town; chapter.player = player; chapter.hud = hud; chapter.weapon = weapon
 	add_child(chapter)
@@ -125,3 +132,16 @@ func _notification(what: int) -> void:
 		NOTIFICATION_WM_GO_BACK_REQUEST:
 			if hud:
 				hud.toggle_pause()
+
+## The screen pass (dither, grain, vignette) works in physical pixels: tell it how big a
+## low-resolution pixel is on this screen.
+func _fit_screen() -> void:
+	var win := Vector2(get_window().size)
+	var scale := minf(win.x / 1280.0, win.y / 720.0)
+	_screen.set_shader_parameter("shrink", SHRINK * maxf(scale, 0.5))
+
+func _process(delta: float) -> void:
+	_grain_t += delta
+	if _grain_t > 1.0 / 12.0:
+		_grain_t = 0.0
+		_screen.set_shader_parameter("grain_seed", randf())

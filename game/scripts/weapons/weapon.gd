@@ -26,13 +26,16 @@ func setup(p: Player) -> void:
 	player = p
 	gun_mesh = _build_gun()
 	player.arm.wrist.add_child(gun_mesh)
-	gun_mesh.position = Vector3(0.0, 0.035, -0.05)
+	var gx := Vector3(0, 1, 0)
+	var gz := Vector3(0.343, 0, 0.939)
+	var gy := Vector3(-0.939, 0, 0.343)
+	gun_mesh.transform = Transform3D(Basis(gx, gy, gz), Vector3(-0.005, -0.028, 0.0))
 	gun_mesh.visible = false
 	rock_mesh = MeshInstance3D.new()
 	var rm := BoxMesh.new(); rm.size = Vector3(0.07, 0.05, 0.08)
 	rock_mesh.mesh = rm
 	rock_mesh.material_override = Look.mat(Look.get_tex("rubble"), Color.WHITE, 0.0, false, Color(0.2, 0.2, 0.2))
-	rock_mesh.position = Vector3(0, 0.04, -0.07)
+	rock_mesh.position = Vector3(0, -0.045, 0.0)
 	rock_mesh.visible = false
 	player.arm.wrist.add_child(rock_mesh)
 	_flash = OmniLight3D.new()
@@ -42,33 +45,45 @@ func setup(p: Player) -> void:
 	_flash.position = Vector3(0, 0, -0.6)
 
 func _build_gun() -> Node3D:
-	var n := Node3D.new()
-	var steel := Look.mat(Look.get_tex("white"), Color("2a2a2e"), 0.0, false, Color(0.15, 0.15, 0.17))
-	var wood := Look.mat(Look.get_tex("wood"), Color.WHITE, 0.0, false, Color(0.2, 0.2, 0.2))
-	var parts := [
-		[Vector3(0.022, 0.024, 0.12), Vector3(0, 0.02, -0.115), steel],    # barrel
-		[Vector3(0.03, 0.036, 0.06), Vector3(0, 0.012, -0.03), steel],     # frame
-		[Vector3(0.026, 0.07, 0.03), Vector3(0, -0.035, 0.01), wood],      # grip
-		[Vector3(0.008, 0.012, 0.01), Vector3(0, 0.038, -0.17), steel],    # front sight
-		[Vector3(0.006, 0.02, 0.02), Vector3(0, -0.012, -0.03), steel],    # trigger
-	]
-	for p in parts:
-		var mi := MeshInstance3D.new()
-		var bm := BoxMesh.new(); bm.size = p[0]
-		mi.mesh = bm; mi.position = p[1]; mi.material_override = p[2]
-		n.add_child(mi)
-	var drum := MeshInstance3D.new()
-	var cm := CylinderMesh.new(); cm.top_radius = 0.022; cm.bottom_radius = 0.022; cm.height = 0.04; cm.radial_segments = 7
-	drum.mesh = cm; drum.material_override = steel
-	drum.rotation.x = PI * 0.5; drum.position = Vector3(0, 0.012, -0.03)
-	n.add_child(drum)
+	var n := make_gun_model()
 	_flash_mesh = MeshInstance3D.new()
 	var fm := SphereMesh.new(); fm.radius = 0.035; fm.height = 0.07
 	_flash_mesh.mesh = fm
 	_flash_mesh.material_override = Look.mat(Look.get_tex("white"), Color("ffd28a"), 0.0, false, Color(4, 3, 1.5))
-	_flash_mesh.position = Vector3(0, 0.02, -0.2)
+	_flash_mesh.position = Vector3(0, 0.048, -0.2)
 	_flash_mesh.visible = false
 	n.add_child(_flash_mesh)
+	return n
+
+## The Nagant M1895, from the first build: modelled to its real proportions (0.235 m), walnut
+## grip, blued steel, a fluted seven-chamber cylinder. Origin: the middle of the grip. -Z: the muzzle.
+static func make_gun_model() -> Node3D:
+	var n := Node3D.new()
+	n.name = "Nagant"
+	var k := TownKit.new(n)
+	var gb := Basis(Vector3.RIGHT, 0.32)
+	k.box("walnut", Vector3(0, -0.012, 0.012), Vector3(0.0145, 0.052, 0.0165), gb)
+	k.box("blued", Vector3(0, -0.012, 0.012), Vector3(0.0105, 0.054, 0.0175), gb, 4 | 8 | 16 | 32)
+	k.cyl_axis("blued", Vector3(-0.002, -0.064, 0.03), Vector3(0.002, -0.064, 0.03), 0.006, 8)
+	k.box("blued", Vector3(0, 0.038, -0.008), Vector3(0.0125, 0.018, 0.03))
+	k.box("blued", Vector3(0, 0.066, -0.05), Vector3(0.007, 0.004, 0.032))
+	var cy0 := Vector3(0, 0.045, -0.026); var cy1 := Vector3(0, 0.045, -0.066)
+	k.cyl_axis("blued", cy0, cy1, 0.0195, 14)
+	for i in 7:
+		var a := TAU * i / 7.0
+		var o := Vector3(cos(a), sin(a), 0) * 0.0195
+		k.box("iron", (cy0 + cy1) * 0.5 + o * 1.01, Vector3(0.0025, 0.0025, 0.014), Basis(Vector3.BACK, a))
+	k.cyl_axis("blued", Vector3(0, 0.048, -0.066), Vector3(0, 0.048, -0.18), 0.0078, 10)
+	k.cyl_axis("iron", Vector3(0, 0.048, -0.179), Vector3(0, 0.048, -0.181), 0.0035, 8)
+	k.box("blued", Vector3(0, 0.0585, -0.174), Vector3(0.0012, 0.003, 0.004))
+	k.cyl_axis("blued", Vector3(0, 0.035, -0.07), Vector3(0, 0.035, -0.165), 0.0028, 6)
+	k.box("blued", Vector3(0.012, 0.042, -0.022), Vector3(0.002, 0.012, 0.007))
+	k.box("blued", Vector3(0, 0.062, 0.012), Vector3(0.004, 0.012, 0.004), Basis(Vector3.RIGHT, -0.5))
+	k.box("blued", Vector3(0, 0.016, -0.006), Vector3(0.0025, 0.01, 0.0025), Basis(Vector3.RIGHT, 0.3))
+	for i in 7:
+		var a := PI * (0.05 + 0.9 * i / 6.0)
+		k.box("blued", Vector3(0, 0.022 - sin(a) * 0.017, -0.006 - cos(a) * 0.018), Vector3(0.003, 0.0025, 0.004), Basis(Vector3.RIGHT, a))
+	k.finish()
 	for mi in n.find_children("*", "MeshInstance3D", true, false):
 		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return n
@@ -103,7 +118,7 @@ func _process(delta: float) -> void:
 	if player == null:
 		return
 	_kick = move_toward(_kick, 0.0, delta * (9.0 if Game.owned("steady") else 5.5))
-	gun_mesh.rotation.x = _kick * 0.5
+	gun_mesh.position.z = _kick * 0.02
 	if _flash.light_energy > 0.0:
 		_flash.light_energy = maxf(_flash.light_energy - delta * 60.0, 0.0)
 		if _flash.light_energy <= 0.0:

@@ -44,80 +44,120 @@
 		},
 		"hey_buddy": {
 			"speaker": "socko",
-			"text": "Heyyyy buddyyyy.... You should probably take it slow, a concussion is no joke!"
+			"text": "Heyyyy buddyyyy.... You should probably take it slow, a concussion is no joke!",
+			"socko_face": "smile",
+			"socko_clip": "Head_Tilt_Left",
+			"socko_talk": "Talking_Sympathetic"
 		},
 		"wtf": {
 			"speaker": "kurt",
-			"text": "What the fuck!?"
+			"text": "What the fuck!?",
+			"socko_face": "surprise",
+			"socko_clip": "Sudden_Surprise"
 		},
 		"who_me": {
 			"speaker": "socko",
-			"text": "Who, me?"
+			"text": "Who, me?",
+			"socko_face": "confusion",
+			"socko_clip": "Head_Tilt_Right"
 		},
 		"who_are_you": {
 			"speaker": "kurt",
-			"text": "Yeah, you. Who the fuck are you?"
+			"text": "Yeah, you. Who the fuck are you?",
+			"socko_face": "uncomfortable_smile"
 		},
 		"im_socko": {
 			"speaker": "socko",
-			"text": "I'm Socko! I'm a handy little pal! Who are you?"
+			"text": "I'm Socko! I'm a handy little pal! Who are you?",
+			"socko_face": "excitement",
+			"socko_clip": "Head_Bob",
+			"socko_talk": "Talking_Excited"
 		},
 		"kurt_sounds": {
 			"speaker": "kurt",
-			"text": "Uh... Kurt sounds right."
+			"text": "Uh... Kurt sounds right.",
+			"socko_face": "smile",
+			"socko_clip": "Head_Nod"
 		},
 		"dont_know": {
 			"speaker": "socko",
-			"text": "You don't know?"
+			"text": "You don't know?",
+			"socko_face": "suspicion",
+			"socko_clip": "Head_Tilt_Left",
+			"socko_talk": "Talking_Sympathetic"
 		},
 		"got_nothing": {
 			"speaker": "kurt",
-			"text": "I... yeah I got nothing."
+			"text": "I... yeah I got nothing.",
+			"socko_face": "uncomfortable_smile"
 		},
 		"too_fast": {
 			"speaker": "socko",
-			"text": "Shouldn't have stood up so fast."
+			"text": "Shouldn't have stood up so fast.",
+			"socko_face": "smile",
+			"socko_clip": "Head_Nod",
+			"socko_talk": "Talking_Sympathetic"
 		},
 		"wont_open": {
 			"speaker": "kurt",
-			"text": "It won't open."
+			"text": "It won't open.",
+			"socko_clip": "Head_Tilt_Forward"
 		},
 		"locked": {
 			"speaker": "socko",
-			"text": "Maybe it's locked?"
+			"text": "Maybe it's locked?",
+			"socko_face": "confusion",
+			"socko_clip": "Head_Tilt_Left"
 		},
 		"thanks": {
 			"speaker": "kurt",
-			"text": "Wow, thanks. I never would have guessed."
+			"text": "Wow, thanks. I never would have guessed.",
+			"socko_face": "smile"
 		},
 		"welcome": {
 			"speaker": "socko",
-			"text": "You're welcome!"
+			"text": "You're welcome!",
+			"socko_face": "wide_smile",
+			"socko_clip": "Head_Bob",
+			"socko_talk": "Talking_Excited"
 		},
 		"like_helping": {
 			"speaker": "socko",
 			"text": "I like helping.",
-			"style": "quiet"
+			"style": "quiet",
+			"socko_face": "smile",
+			"socko_talk": "Talking_Whispering"
 		},
 		"what_is_that": {
 			"speaker": "kurt",
-			"text": "What the hell is that?"
+			"text": "What the hell is that?",
+			"socko_clip": "Peeking"
 		},
 		"dunno": {
 			"speaker": "socko",
-			"text": "I don't know."
+			"text": "I don't know.",
+			"socko_face": "confusion",
+			"socko_clip": "Head_Shake"
 		},
 		"know_anything": {
 			"speaker": "kurt",
-			"text": "Do you know anything?"
+			"text": "Do you know anything?",
+			"socko_face": "uncomfortable_smile"
 		},
 		"can_do_this": {
 			"speaker": "socko",
-			"text": "I know that I can do this!"
+			"text": "I know that I can do this!",
+			"socko_face": "excitement",
+			"socko_clip": "Head_Raise",
+			"socko_talk": "Talking_Excited"
 		},
 		"smell": {
 			"speaker": "socko",
-			"text": "Ooh! Ooh! And I can smell important stuff! Go this way!"
+			"text": "Ooh! Ooh! And I can smell important stuff! Go this way!",
+			"socko_face": "excitement",
+			"socko_clip": "Head_Bob",
+			"socko_talk": "Talking_Excited"
 		}
-	}
+	},
+	"_comment_socko": "socko_face: the expression Socko holds from this line on (SockoClips.EXPRESSIONS); socko_clip: a clip he plays (SockoClips.INFO: Head_Nod, Laughing, Peeking...); socko_talk: how he talks it (Talking_*). On Kurt's lines they're Socko's reaction."
 }

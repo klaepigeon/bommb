@@ -1,67 +1,234 @@
 {
 	"_comment": "The town behind the wardrobe. Lines marked PROPOSED in the bible are its earlier wording, carried over; lines marked NEW are this build's, for the owner to rewrite. Nobody in the town talks back like a person: the monsters were people, and Kurt can talk to them once he knows who they were.",
 	"lines": {
-		"steer_1":      { "speaker": "socko", "text": "This way, bud." },
-		"steer_2":      { "speaker": "socko", "text": "Keep going. Don't read the signs." },
-		"steer_3":      { "speaker": "socko", "text": "You don't need to see that. Gun first." },
-		"nuggets":      { "speaker": "socko", "text": "Ooh, shiny. Grab those. Grab all of those." },
-		"gun":          { "speaker": "socko", "text": "Ooh. Now we're talking. You know what that's for." },
-		"gun_hint":     { "speaker": "socko", "text": "Hold it up to your eye, then squeeze. Don't yank. Squeeze.", "_note": "NEW" },
-		"reloaded":     { "speaker": "socko", "text": "Look at you go. Did you see your hands? I didn't teach you that." },
-		"empty":        { "speaker": "socko", "text": "Click. That's the sad noise. Load it.", "_note": "NEW" },
-		"enough":       { "speaker": "socko", "text": "You've got enough. Headshot. Trust me." },
-		"bought_headshot": { "speaker": "socko", "text": "There we go. Now we're friends." },
-		"bought_memory":   { "speaker": "socko", "text": "...Really? That? Okay. Your nuggets." },
-		"marta_here":   { "speaker": "socko", "text": "There she is. Don't think. Aim for the head." },
-		"hit_1":        { "speaker": "socko", "text": "Again! Again!" },
-		"hit_2":        { "speaker": "socko", "text": "Oh, that's it. That's it!" },
-		"caught":       { "speaker": "socko", "text": "Up. Up. She's had her go. Now we have ours." },
-		"caught_other": { "speaker": "socko", "text": "Up you get. That one's got a grip on it, huh?", "_note": "NEW" },
-		"monster_dead": { "speaker": "socko", "text": "Ha! Next!", "_note": "NEW" },
-		"marta_dead":   { "speaker": "socko", "text": "Trickshot's still got it!" },
-		"marta_dead_2": { "speaker": "socko", "text": "What? It's a... word. Come on." },
-		"talk_fail":    { "speaker": "kurt",  "text": "Hey. Hey, easy. Easy..." },
-		"talked":       { "speaker": "socko", "text": "...Huh. Okay. We're talking to them now. Great. Love that for us.", "_note": "NEW" },
-		"loop_kurt":    { "speaker": "kurt",  "text": "Same chalk circle. Same cobbles. This street goes on forever, and it's thirteen houses long.", "_note": "PROPOSED, reworded as Kurt's" },
-		"loop_socko":   { "speaker": "socko", "text": "Streets are like that. Keep walking." },
-		"senses":       { "speaker": "kurt",  "text": "She's close. Don't ask me how I know.", "_note": "NEW" },
-		"poster_known": { "speaker": "kurt",  "text": "...That's me. That's me.", "_note": "NEW" },
-		"gate_seen":    { "speaker": "socko", "text": "Ooh, a gate! Gates go places.", "_note": "NEW" },
-		"gate_shut":    { "speaker": "socko", "text": "Lever. On the post. Pull the lever, bud.", "_note": "NEW" },
-		"out_kill":     { "speaker": "socko", "text": "See? Easy. My way's the easy way.", "_note": "NEW" },
-		"out_talk":     { "speaker": "socko", "text": "Talking. You talked us out. Next time, we do it my way.", "_note": "PROPOSED, adapted" },
-		"out_sneak":    { "speaker": "socko", "text": "Sneaky. I like sneaky. I'd like it more with bang.", "_note": "NEW" },
-		"count":        { "speaker": "girl",  "text": "...семь, восемь, девять, десять. Я иду искать.", "style": "quiet" },
-		"sonya_door":   { "speaker": "socko", "text": "Leave it." },
-		"nursery":      { "speaker": "socko", "text": "Nothing in here. Let's go." }
-	},
-	"documents": {
-		"photo":    { "title": "A photograph", "text": "A studio portrait. A big bearded man in a peasant's shirt, his hand on the head of a young woman who looks straight at the camera.", "handwriting": "", "socko": "Old photo. Dead people. Come on." },
-		"g_note":   { "title": "A note, folded small", "text": "You saw the river. You told me first.  — G.", "handwriting": "The folds are hers, small enough for a glove. She had it on her the night you met her.", "socko": "Don't read other people's mail, bud." },
-		"paper":    { "title": "Petrogradskaya Gazeta, December 1916", "text": "The front page is about a body found in the river.", "handwriting": "In the margin, in her pencil: «Told him.»", "socko": "Old news. Literally." },
-		"poster":   { "title": "A poster", "text": "THE CHAMPION'S LEAGUE. A man in a domino mask, a bow drawn, an arrow on the string. TRICKSHOT.", "handwriting": "", "socko": "Huh. Some fella. Gun's that way." },
-		"mask":     { "title": "A domino mask", "text": "Black, cheap, the elastic gone.", "handwriting": "", "socko": "Nope. Not your colour. Put it down." },
-		"register": { "title": "The hotel register", "text": "Room four. Two names, the second in the same hand as the first: T., and M. Sokolova.", "handwriting": "Both in her hand. You never signed for anything. The porter carried her case up, and never said a word about it.", "socko": "Paperwork. Boring.", "_note": "register text NEW" },
-		"strip":    { "title": "A photo-booth strip", "text": "Four frames. A man and a woman, laughing at something off to the side.", "handwriting": "On the back: «T. and me. The last good night.»", "socko": "...Anyway." },
-		"quiver":   { "title": "A quiver", "text": "Leather, worn pale where it rubbed a shoulder. Empty.", "handwriting": "", "socko": "Arrows? We're past arrows. We've got a gun." },
-		"glasses":  { "title": "Two glasses", "text": "One with lipstick on the rim.", "handwriting": "", "socko": "Somebody had a nice night. Come on." },
-		"drawing":  { "title": "A child's drawing", "text": "MAMA, big, and a small man with a bow walking off the edge of the paper.", "handwriting": "On the back: «She asked me where he went. I said far.»", "socko": "Paperwork. Boring." },
-		"letters":  { "title": "Letters", "text": "To Papa. Never posted.", "handwriting": "The P of PAPA is made the way you make yours. You showed her how.", "socko": "Nobody's reading those, bud." },
-		"lamps":    { "title": "A lamplighter's tally, chalked on a post", "text": "Thirteen strokes, rubbed out. Thirteen strokes, rubbed out. Thirteen strokes.", "handwriting": "", "socko": "Somebody can count. Good for them.", "_note": "NEW" }
+		"steer_1": {
+			"speaker": "socko",
+			"text": "This way, bud.",
+			"socko_face": "smile",
+			"socko_clip": "Head_Nod"
+		},
+		"steer_2": {
+			"speaker": "socko",
+			"text": "Keep going. Don't read the signs.",
+			"socko_face": "forced_happiness"
+		},
+		"steer_3": {
+			"speaker": "socko",
+			"text": "You don't need to see that. Gun first.",
+			"socko_face": "irritation",
+			"socko_clip": "Head_Shake"
+		},
+		"nuggets": {
+			"speaker": "socko",
+			"text": "Ooh, shiny. Grab those. Grab all of those.",
+			"socko_face": "excitement",
+			"socko_clip": "Giggling",
+			"socko_talk": "Talking_Excited"
+		},
+		"gun": {
+			"speaker": "socko",
+			"text": "Ooh. Now we're talking. You know what that's for.",
+			"socko_face": "wide_smile",
+			"socko_clip": "Head_Raise",
+			"socko_talk": "Talking_Excited"
+		},
+		"gun_hint": {
+			"speaker": "socko",
+			"text": "Hold it up to your eye, then squeeze. Don't yank. Squeeze.",
+			"_note": "NEW",
+			"socko_face": "smile",
+			"socko_talk": "Talking_Explaining"
+		},
+		"reloaded": {
+			"speaker": "socko",
+			"text": "Look at you go. Did you see your hands? I didn't teach you that.",
+			"socko_face": "excitement",
+			"socko_clip": "Laughing"
+		},
+		"empty": {
+			"speaker": "socko",
+			"text": "Click. That's the sad noise. Load it.",
+			"_note": "NEW",
+			"socko_face": "irritation",
+			"socko_talk": "Talking_Annoyed"
+		},
+		"enough": {
+			"speaker": "socko",
+			"text": "You've got enough. Headshot. Trust me.",
+			"socko_face": "suspicion",
+			"socko_talk": "Talking_Sarcastic"
+		},
+		"bought_headshot": {
+			"speaker": "socko",
+			"text": "There we go. Now we're friends.",
+			"socko_face": "wide_smile",
+			"socko_clip": "Head_Bob"
+		},
+		"bought_memory": {
+			"speaker": "socko",
+			"text": "...Really? That? Okay. Your nuggets.",
+			"socko_face": "disappointment",
+			"socko_clip": "Head_Drop",
+			"socko_talk": "Talking_Sarcastic"
+		},
+		"marta_here": {
+			"speaker": "socko",
+			"text": "There she is. Don't think. Aim for the head.",
+			"socko_face": "unnatural_stillness",
+			"socko_talk": "Talking_Threatening"
+		},
+		"hit_1": {
+			"speaker": "socko",
+			"text": "Again! Again!",
+			"socko_face": "excitement",
+			"socko_clip": "Head_Snap"
+		},
+		"hit_2": {
+			"speaker": "socko",
+			"text": "Oh, that's it. That's it!",
+			"socko_face": "excitement",
+			"socko_clip": "Laughing"
+		},
+		"caught": {
+			"speaker": "socko",
+			"text": "Up. Up. She's had her go. Now we have ours.",
+			"socko_face": "irritation",
+			"socko_talk": "Talking_Annoyed"
+		},
+		"caught_other": {
+			"speaker": "socko",
+			"text": "Up you get. That one's got a grip on it, huh?",
+			"_note": "NEW",
+			"socko_face": "uncomfortable_smile"
+		},
+		"monster_dead": {
+			"speaker": "socko",
+			"text": "Ha! Next!",
+			"_note": "NEW",
+			"socko_face": "wide_smile",
+			"socko_clip": "Head_Bob"
+		},
+		"marta_dead": {
+			"speaker": "socko",
+			"text": "Trickshot's still got it!",
+			"socko_face": "excitement",
+			"socko_clip": "Laughing",
+			"socko_talk": "Talking_Excited"
+		},
+		"marta_dead_2": {
+			"speaker": "socko",
+			"text": "What? It's a... word. Come on.",
+			"socko_face": "nervousness",
+			"socko_clip": "Retreating"
+		},
+		"talk_fail": {
+			"speaker": "kurt",
+			"text": "Hey. Hey, easy. Easy...",
+			"socko_face": "frown"
+		},
+		"talked": {
+			"speaker": "socko",
+			"text": "...Huh. Okay. We're talking to them now. Great. Love that for us.",
+			"_note": "NEW",
+			"socko_face": "disappointment",
+			"socko_clip": "Head_Shake",
+			"socko_talk": "Talking_Sarcastic"
+		},
+		"loop_socko": {
+			"speaker": "socko",
+			"text": "Streets are like that. Keep walking.",
+			"socko_face": "forced_happiness"
+		},
+		"senses": {
+			"speaker": "kurt",
+			"text": "She's close. Don't ask me how I know.",
+			"_note": "NEW",
+			"socko_face": "unnatural_stillness"
+		},
+		"poster_known": {
+			"speaker": "kurt",
+			"text": "...That's me. That's me.",
+			"_note": "NEW",
+			"socko_face": "unnatural_stillness",
+			"socko_clip": "Head_Drop"
+		},
+		"gate_seen": {
+			"speaker": "socko",
+			"text": "Ooh, a gate! Gates go places.",
+			"_note": "NEW",
+			"socko_face": "excitement",
+			"socko_clip": "Head_Raise"
+		},
+		"gate_shut": {
+			"speaker": "socko",
+			"text": "Lever. On the post. Pull the lever, bud.",
+			"_note": "NEW",
+			"socko_face": "smile",
+			"socko_talk": "Talking_Explaining"
+		},
+		"out_kill": {
+			"speaker": "socko",
+			"text": "See? Easy. My way's the easy way.",
+			"_note": "NEW",
+			"socko_face": "wide_smile",
+			"socko_clip": "Laughing"
+		},
+		"out_talk": {
+			"speaker": "socko",
+			"text": "Talking. You talked us out. Next time, we do it my way.",
+			"_note": "PROPOSED, adapted",
+			"socko_face": "irritation",
+			"socko_talk": "Talking_Annoyed"
+		},
+		"out_sneak": {
+			"speaker": "socko",
+			"text": "Sneaky. I like sneaky. I'd like it more with bang.",
+			"_note": "NEW",
+			"socko_face": "suspicion",
+			"socko_talk": "Talking_Sarcastic"
+		},
+		"count": {
+			"speaker": "girl",
+			"text": "...семь, восемь, девять, десять. Я иду искать.",
+			"style": "quiet",
+			"socko_face": "unnatural_stillness"
+		},
+		"sonya_door": {
+			"speaker": "socko",
+			"text": "Leave it.",
+			"socko_face": "unnatural_stillness",
+			"socko_talk": "Talking_Whispering"
+		},
+		"nursery": {
+			"speaker": "socko",
+			"text": "Nothing in here. Let's go.",
+			"socko_face": "forced_happiness"
+		},
+		"loop_kurt": {
+			"speaker": "kurt",
+			"text": "Same chalk circle. Same cobbles. This street goes on forever, and it's thirteen houses long.",
+			"_note": "PROPOSED, reworded as Kurt's"
+		}
 	},
 	"monsters": {
 		"porter": {
 			"_note": "NEW: who he was, his words, Kurt's, are this build's",
 			"says": "Room four. Room four.",
-			"needs": { "skill": "handwriting", "read": "register" },
-			"hint": "He keeps saying a room number. Somewhere in this town it's written down who had that room.",
-			"kurt": "Room four. That was us. You carried her case up the stairs and you never said a word. It's alright. Nobody's coming down.",
+			"needs": {
+				"skill": "handwriting",
+				"read": "photo strip"
+			},
+			"hint": "He keeps saying a room number. Something in that room says who had it.",
+			"kurt": "Room four. That was us. You carried her case up and you never said a word about it. It's alright. Nobody's coming down.",
 			"answer": "...Room four."
 		},
 		"lamplighter": {
 			"_note": "NEW",
 			"says": "Thirteen... thirteen...",
-			"needs": { "skill": "these_streets", "flag": "looped" },
+			"needs": {
+				"skill": "these_streets",
+				"flag": "looped"
+			},
 			"hint": "He counts lamps. He'd need someone who knows how long this street really is.",
 			"kurt": "It's thirteen. That's all of them. They're lit. You can stop now.",
 			"answer": "...Thirteen."
@@ -69,10 +236,28 @@
 		"marta": {
 			"_note": "NEW. Her fragments are the bible's.",
 			"says": "...Have you seen...",
-			"needs": { "skill": "old_name", "read": "poster" },
+			"needs": {
+				"skill": "old_name",
+				"read": "poster"
+			},
 			"hint": "She knows you. You'd have to know who you were to her.",
 			"kurt": "Marta. It's me. It's Trickshot.",
 			"answer": "...You came back. You said far."
 		}
-	}
+	},
+	"socko_on": {
+		"photograph": "Old photo. Dead people. Come on.",
+		"note": "Don't read other people's mail, bud.",
+		"newspaper": "Old news. Literally.",
+		"poster": "Huh. Some fella. Gun's that way.",
+		"mask": "Nope. Not your colour. Put it down.",
+		"photo strip": "...Anyway.",
+		"quiver": "Arrows? We're past arrows. We've got a gun.",
+		"glasses": "Somebody had a nice night. Come on.",
+		"drawing": "Paperwork. Boring.",
+		"letters": "Nobody's reading those, bud.",
+		"register": "Paperwork. Boring."
+	},
+	"_comment_socko_on": "What Socko says the first time Kurt looks at each thing in the town (keyed by the thing's title, lower case). The things themselves, and their text, are the first build's (scripts/labyrinth/interiors.gd, frozen_fight.gd).",
+	"_comment_socko": "socko_face: the expression Socko holds from this line on (SockoClips.EXPRESSIONS); socko_clip: a clip he plays (SockoClips.INFO: Head_Nod, Laughing, Peeking...); socko_talk: how he talks it (Talking_*). On Kurt's lines they're Socko's reaction."
 }

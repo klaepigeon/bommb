@@ -36,24 +36,23 @@ func setup() -> void:
 	add_to_group("director")
 	var f := FileAccess.open("res://content/town.json", FileAccess.READ)
 	data = JSON.parse_string(f.get_as_text())
-	for id in town.docs:
-		var h: Hotspot = town.docs[id]
-		h.used.connect(_read.bind(id))
+	for e in get_tree().get_nodes_in_group("examine"):
+		e.connect("used", _read.bind(e))
+	for d in get_tree().get_nodes_in_group("sonya_door"):
+		d.connect("used", _sonya_door)
 	for p in town.pickups:
 		var h: Hotspot = p[0]
 		h.used.connect(_take.bind(h, String(p[1])))
 	town.revolver_spot.used.connect(_take_revolver)
 	town.lever_spot.used.connect(_pull_lever)
-	town.sonya_spot.used.connect(_sonya_door)
 	var mons: Dictionary = data["monsters"]
-	porter = _spawn(Monster, "porter", mons["porter"], town.porter_home, 4, Rect2(8.5, 4.6, 7.0, 5.0))
-	porter.rotation.y = -PI * 0.5      # facing the wall of room four, his back to the door
-	lamplighter = _spawn(Monster, "lamplighter", mons["lamplighter"], town.lamplighter_path[0], 13, Rect2(1.0, -3.5, 50.0, 7.0))
+	porter = _spawn(Monster, "porter", mons["porter"], town.porter_home, 4, Rect2(52.4, 34.7, 5.9, 6.6))
+	porter.rotation.y = -PI * 0.5      # facing the wall of the hotel room, his back to the door
+	lamplighter = _spawn(Monster, "lamplighter", mons["lamplighter"], town.lamplighter_path[0], 13, Rect2(4.5, 16.5, 51.0, 7.0))
 	lamplighter.wanders = [town.to_global(town.lamplighter_path[0]), town.to_global(town.lamplighter_path[1])]
 	lamplighter.speed = 0.8
-	marta = _spawn(MartaHunter, "marta", mons["marta"], town.marta_post, 47, Rect2(16.5, -23.5, 19.0, 19.0)) as MartaHunter
+	marta = _spawn(MartaHunter, "marta", mons["marta"], town.marta_post, 47, Rect2(28.5, 32.5, 27.0, 35.0)) as MartaHunter
 	marta.away_point = town.to_global(town.marta_away)
-	marta.rotation.y = PI
 	weapon.fired.connect(_on_fired)
 	weapon.reloaded_first.connect(func(): line("reloaded"))
 	weapon.emptied.connect(func(): line("empty"))
@@ -66,7 +65,8 @@ func _spawn(cls, id: String, d: Dictionary, local_at: Vector3, seed: int, local_
 	town.add_child(m)
 	var at := town.to_global(local_at)
 	m.setup(id, d, player, at, seed)
-	m.bounds = Rect2(Vector2(town.to_global(Vector3(local_bounds.position.x, 0, 0)).x, local_bounds.position.y), local_bounds.size)
+	m.town = town
+	m.bounds = local_bounds
 	m.caught.connect(_caught)
 	m.died.connect(_died)
 	m.calmed.connect(_calmed)
@@ -85,12 +85,17 @@ func line(id: String, again := false) -> void:
 func local_pos() -> Vector3:
 	return town.to_local(player.global_position)
 
+## Where he comes out of the hole, facing down the lane.
+func _to_arrival() -> void:
+	var a: Transform3D = town.arrive
+	player.global_position = town.to_global(a.origin)
+	player.face(town.to_global(a.origin - a.basis.z * 3.0 + Vector3(0, 1.5, 0)))
+
 # --- arriving ----------------------------------------------------------------------------------
 
 func arrive() -> void:
 	busy = true
-	player.global_position = town.to_global(town.arrival)
-	player.face(town.to_global(town.arrival + Vector3(0.5, 1.5, -3.0)))
+	_to_arrival()
 	player.can_move = false
 	player.can_look = false
 	hud.set_crosshair(false)
@@ -119,9 +124,9 @@ func _physics_process(delta: float) -> void:
 		return
 	var lp := local_pos()
 	# the street comes round on itself
-	if absf(lp.z) < Town.STREET_W + 0.5 and (lp.x < 0.0 or lp.x > Town.LOOP):
-		var shift := Town.LOOP if lp.x < 0.0 else -Town.LOOP
-		player.global_position.x += shift
+	var wrapped := town.wrap(lp)
+	if wrapped != lp:
+		player.global_position = town.to_global(Vector3(wrapped.x, player.global_position.y - town.global_position.y, wrapped.z))
 		if not Game.flag("looped"):
 			Game.set_flag("looped")
 		if Game.owned("these_streets"):
@@ -135,8 +140,6 @@ func _physics_process(delta: float) -> void:
 	# nuggets
 	for n in town.nuggets:
 		_try_nugget(n)
-	if main.flat.visible == false:
-		pass
 	# Socko steers to the gun, now and then
 	if not Game.has_gun and not busy:
 		_steer_t -= delta
@@ -146,7 +149,7 @@ func _physics_process(delta: float) -> void:
 			player.socko.point_at(town.to_global(town.revolver_at + Vector3(0, 1, 0)))
 			get_tree().create_timer(2.0, false).timeout.connect(func(): player.socko.point_at(Vector3.INF))
 	# Counting: a girl's voice from the nursery's direction, never in it
-	var near_nursery := lp.distance_to(town.nursery_center) < 4.0
+	var near_nursery := town.nursery.has_point(Vector2(lp.x, lp.z))
 	if near_nursery and not _in_nursery:
 		_in_nursery = true
 		if not _said.has("nursery"):
@@ -160,12 +163,12 @@ func _physics_process(delta: float) -> void:
 		if _count_t <= 0.0 and Speech.speaking == "":
 			_count_t = 50.0
 			Speech.say_id("count")
-	if lp.z < -15.0 and lp.x > 16.0 and lp.x < 36.0:
+	if lp.z > 57.0 and lp.x > 28.0 and lp.x < 56.0:
 		line("gate_seen")
-	if not town.gate_open and lp.z < -22.4 and lp.x > 23.0 and lp.x < 29.0:
+	if not town.gate_open and lp.z > Town.GATE_Z - 1.6 and lp.x > Town.GATE_X0 and lp.x < Town.GATE_X1:
 		line("gate_shut")
 	# the gate: through it and out
-	if town.gate_open and lp.z < -28.0 and lp.x > 22.0 and lp.x < 30.0:
+	if town.gate_open and lp.z > Town.GATE_Z + 2.5 and lp.x > Town.GATE_X0 and lp.x < Town.GATE_X1:
 		_leave()
 	# aiming follows the AIM button / trigger
 	weapon.set_aim(hud.controls.aiming and weapon.held == "gun")
@@ -202,18 +205,22 @@ func _on_action(name: String) -> void:
 
 # --- things ------------------------------------------------------------------------------------
 
-func _read(id: String) -> void:
-	var doc: Dictionary = data["documents"].get(id, {})
-	Game.set_flag("read_" + id)
-	hud.reader.open(doc)
+## The town's things to look at (the first build's text): what it is, and with Her Handwriting,
+## what's written on the back. Socko waves most of them away, once each.
+func _read(e: Node) -> void:
+	var title := String(e.get("title"))
+	var key := title.to_lower()
+	Game.set_flag("read_" + key)
+	hud.reader.open({"title": title, "text": String(e.get("desc")), "handwriting": String(e.get("more"))})
 	get_tree().paused = true
 	await hud.reader.closed
 	get_tree().paused = false
-	if id == "poster" and Game.owned("old_name"):
+	var waves: Dictionary = data.get("socko_on", {})
+	if key == "poster" and Game.owned("old_name"):
 		line("poster_known")
-	elif doc.has("socko") and not _said.has("doc_" + id):
-		_said["doc_" + id] = true
-		Speech.say("socko", String(doc["socko"]))
+	elif waves.has(key) and not _said.has("doc_" + key):
+		_said["doc_" + key] = true
+		Speech.say("socko", String(waves[key]))
 
 func _take(h: Hotspot, kind: String) -> void:
 	if not h.enabled:
@@ -247,11 +254,11 @@ func _take_revolver() -> void:
 	await wait(3.0)
 	if marta.state != Monster.S.CALM and marta.state != Monster.S.DEAD:
 		marta.wake()
-		marta.state = Monster.S.CHASE
+		marta.listen_to(player.global_position)    # she heard him take it; she comes
 		line("marta_here")
 
 func _sonya_door() -> void:
-	Sfx.play_at("rattle", town.to_global(Vector3(6, 1, -9.8)), -4.0, 1.1)
+	Sfx.play_at("rattle", town.to_global(Vector3(6.3, 1.4, 63.2)), -4.0, 1.1)
 	line("sonya_door")
 
 func _pull_lever() -> void:
@@ -355,8 +362,7 @@ func _caught(m: Monster) -> void:
 	await wait(1.5)
 	for x in [porter, lamplighter, marta]:
 		x.reset_to_home()
-	player.global_position = town.to_global(town.arrival)
-	player.face(town.to_global(town.arrival + Vector3(0.5, 1.5, -3.0)))
+	_to_arrival()
 	hud.fade_to(0.0, 1.5)
 	await wait(1.2)
 	Speech.say_id("caught" if m == marta else "caught_other")

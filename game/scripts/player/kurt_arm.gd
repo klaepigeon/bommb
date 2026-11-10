@@ -1,94 +1,89 @@
 class_name KurtArm
 extends Node3D
-## Kurt's right arm in first person: coat sleeve, hand, fingers that curl. Posed by name, eased
-## between poses; small procedural motion on top (rubbing, rattling, a tremor after the blow).
-## A pose is where the wrist is (camera space), where the fingers point and where the palm faces.
+## Kurt's right arm in first person: the first build's anatomical arm (ArmRig: one skeleton,
+## coat sleeve, cuff, jointed fingers), placed by IK from his shoulder to where the scene wants
+## his hand. A pose is where the wrist is (camera space), where the fingers point, where the palm
+## faces, and what the fingers do. Small procedural layers on top: rubbing, rattling.
+## `wrist` follows the hand (things he holds hang off it): -Z along the fingers, -Y the palm.
 
+const SHOULDER := Vector3(0.19, -0.26, 0.10)
+const ELBOW_POLE := Vector3(0.7, -1.0, 0.25)
+
+## name: [wrist (camera space), fingers, palm normal, finger pose]
 const POSES := {
-	"down":   [Vector3(0.28, -0.62, -0.25), Vector3(0, 0, -1), Vector3(0, -1, 0), 0.3],
-	"push":   [Vector3(0.1, -0.14, -0.42), Vector3(0, 1, -0.15), Vector3(0, 0, -1), 0.05],
-	"reach":  [Vector3(0.1, -0.2, -0.42), Vector3(-0.15, -0.1, -1), Vector3(0, -1, 0), 0.25],
-	"rub":    [Vector3(0.1, 0.04, -0.31), Vector3(-0.65, 0.75, -0.15), Vector3(0, 0, 1), 0.35],
-	"handle": [Vector3(0.12, -0.3, -0.42), Vector3(-0.2, 0, -1), Vector3(-1, 0, 0), 0.85],
-	"gun":    [Vector3(0.17, -0.2, -0.36), Vector3(0, 0.05, -1), Vector3(-1, -0.3, 0), 0.8],
-	"aim":    [Vector3(0.0, -0.105, -0.34), Vector3(0, 0.0, -1), Vector3(-1, -0.15, 0), 0.8],
-	"loading":[Vector3(0.08, -0.24, -0.33), Vector3(-0.5, 0.45, -0.75), Vector3(-0.6, -0.8, 0), 0.8],
-	"hold":   [Vector3(0.17, -0.2, -0.38), Vector3(0, 0.2, -1), Vector3(0, 1, 0), 0.6],
-	"throw":  [Vector3(0.2, 0.05, -0.15), Vector3(0, 1, 0.3), Vector3(0, 0, -1), 0.6],
-	"brace":  [Vector3(0.14, -0.06, -0.3), Vector3(0.1, 1, -0.3), Vector3(0, 0, -1), 0.0],
+	"down":   [Vector3(0.15, -0.235, -0.3), Vector3(-0.22, -0.32, -1.0), Vector3(-0.88, -0.3, -0.12), "relaxed"],
+	"push":   [Vector3(0.09, -0.1, -0.42), Vector3(0.05, 1.0, -0.25), Vector3(0, 0.15, -1), "flat"],
+	"reach":  [Vector3(0.08, -0.17, -0.42), Vector3(-0.15, -0.05, -1), Vector3(0, -1, 0), "reach"],
+	"rub":    [Vector3(0.1, 0.06, -0.24), Vector3(-0.65, 0.75, -0.15), Vector3(0, 0, 1), "open"],
+	"handle": [Vector3(0.1, -0.25, -0.42), Vector3(-0.25, 0, -1), Vector3(-1, 0, 0), "grip"],
+	"gun":    [Vector3(0.23, -0.2, -0.38), Vector3(0, -0.33, -1), Vector3(-1, -0.3, 0), "grip"],
+	"aim":    [Vector3(0.055, -0.11, -0.36), Vector3(0, -0.36, -1), Vector3(-1, -0.05, 0), "grip"],
+	"loading":[Vector3(0.07, -0.22, -0.32), Vector3(-0.5, 0.45, -0.75), Vector3(-0.6, -0.8, 0), "grip"],
+	"hold":   [Vector3(0.12, -0.2, -0.36), Vector3(-0.35, 0.05, -1.0), Vector3(-0.3, 0.92, -0.25), "hold"],
+	"throw":  [Vector3(0.2, 0.05, -0.15), Vector3(0, 1, 0.3), Vector3(0, 0, -1), "hold"],
+	"brace":  [Vector3(0.12, -0.04, -0.34), Vector3(0.1, 1, -0.3), Vector3(0, 0, -1), "open"],
 }
 
+var rig: ArmRig
 var wrist: Node3D
 var pose := "down"
-var curl := 0.3
-var rub := 0.0          ## 0..1: rubbing his head
-var rattle := 0.0       ## 0..1: trying a handle
-var _fingers: Array[Node3D] = []
+var rub := 0.0
+var rattle := 0.0
+var _from := Transform3D.IDENTITY
+var _to := Transform3D.IDENTITY
+var _k := 1.0
+var _dur := 0.0
 var _t := 0.0
-var _tween: Tween
 
 func build() -> void:
-	var lift := Color(0.22, 0.22, 0.22)   # a little self-light so the hands read in the dark, on a phone
-	var skin := Look.mat(Look.get_tex("skin_kurt"), Color.WHITE, 0.0, false, lift)
-	var coat := Look.mat(Look.get_tex("cloth"), Color("3b3128"), 0.0, false, lift)
-	var cuff := Look.mat(Look.get_tex("cloth"), Color("bfb7a6"), 0.0)
-	wrist = Node3D.new(); add_child(wrist)
-	_mesh(wrist, _cyl(0.042, 0.5), coat, Vector3(0, 0, 0.27), Vector3(PI * 0.5, 0, 0))
-	_mesh(wrist, _cyl(0.034, 0.03), cuff, Vector3(0, 0, 0.02), Vector3(PI * 0.5, 0, 0))
-	_mesh(wrist, _box(Vector3(0.085, 0.028, 0.095)), skin, Vector3(0, 0, -0.045), Vector3.ZERO)
-	for i in 4:
-		var x := -0.03 + i * 0.02
-		var f := Node3D.new(); f.position = Vector3(x, 0, -0.092); wrist.add_child(f)
-		var length: float = [0.045, 0.05, 0.047, 0.037][i]
-		_mesh(f, _box(Vector3(0.017, 0.017, length)), skin, Vector3(0, 0, -length * 0.5), Vector3.ZERO)
-		var tip := Node3D.new(); tip.position = Vector3(0, 0, -length); f.add_child(tip)
-		_mesh(tip, _box(Vector3(0.016, 0.016, length * 0.8)), skin, Vector3(0, 0, -length * 0.4), Vector3.ZERO)
-		_fingers.append(f)
-	var thumb := Node3D.new(); thumb.position = Vector3(-0.045, -0.006, -0.03); thumb.rotation = Vector3(0, 0.7, 0)
-	wrist.add_child(thumb)
-	_mesh(thumb, _box(Vector3(0.02, 0.02, 0.06)), skin, Vector3(0, 0, -0.03), Vector3.ZERO)
-	set_pose("down", 0.0)
+	rig = ArmRig.new()
+	rig.name = "Arm"
+	add_child(rig)
+	wrist = Node3D.new()
+	wrist.name = "Wrist"
+	add_child(wrist)
+	_to = _pose_xf("down")
+	_from = _to
+	for mi in rig.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
-func _mesh(p: Node3D, m: Mesh, mat: Material, at: Vector3, rot: Vector3) -> void:
-	var mi := MeshInstance3D.new()
-	mi.mesh = m; mi.material_override = mat; mi.position = at; mi.rotation = rot
-	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	p.add_child(mi)
-
-func _box(s: Vector3) -> BoxMesh:
-	var m := BoxMesh.new(); m.size = s; return m
-func _cyl(r: float, h: float) -> CylinderMesh:
-	var m := CylinderMesh.new(); m.top_radius = r; m.bottom_radius = r * 1.15; m.height = h; m.radial_segments = 8; m.rings = 1; return m
-
-static func _basis(fingers: Vector3, palm: Vector3) -> Basis:
-	var z := -fingers.normalized()
-	var y := -palm.normalized()
-	var x := y.cross(z).normalized()
-	y = z.cross(x).normalized()
-	return Basis(x, y, z)
-
-func set_pose(name: String, seconds := 0.45) -> Tween:
-	pose = name
+func _pose_xf(name: String) -> Transform3D:
 	var p: Array = POSES[name]
-	var xf := Transform3D(_basis(p[1], p[2]), p[0])
-	if _tween and _tween.is_valid():
-		_tween.kill()
-	if seconds <= 0.0:
-		wrist.transform = xf
-		curl = p[3]
-		return null
-	_tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	_tween.tween_property(wrist, "transform", xf, seconds)
-	_tween.tween_property(self, "curl", p[3], seconds)
-	return _tween
+	var palm: Vector3 = p[2]
+	return Transform3D(ArmRig.frame(p[1], -palm), p[0])
+
+func set_pose(name: String, seconds := 0.45) -> void:
+	pose = name
+	_from = _current()
+	_to = _pose_xf(name)
+	_dur = maxf(seconds, 0.0001)
+	_k = 0.0 if seconds > 0.0 else 1.0
+	rig.pose_name = POSES[name][3]
+
+func _current() -> Transform3D:
+	var e := _ease(_k)
+	return Transform3D(_from.basis.slerp(_to.basis, e).orthonormalized(), _from.origin.lerp(_to.origin, e))
+
+static func _ease(k: float) -> float:
+	return k * k * (3.0 - 2.0 * k)
 
 func _process(delta: float) -> void:
+	if rig == null:
+		return
 	_t += delta
-	for i in _fingers.size():
-		var c := curl + sin(_t * 1.3 + i) * 0.03
-		_fingers[i].rotation.x = -c * 1.3
-		(_fingers[i].get_child(1) as Node3D).rotation.x = -c * 1.5
-	# procedural layers on top of the pose
-	position = Vector3(sin(_t * 9.0) * 0.022 * rub, cos(_t * 18.0) * 0.008 * rub, 0)
-	position += Vector3(sin(_t * 24.0) * 0.012 * rattle, 0, cos(_t * 24.0) * 0.01 * rattle)
-	rotation.z = sin(_t * 9.0) * 0.15 * rub
+	_k = minf(_k + delta / maxf(_dur, 0.0001), 1.0)
+	var xf := _current()
+	xf.origin += Vector3(sin(_t * 9.0) * 0.022 * rub, cos(_t * 18.0) * 0.01 * rub, 0)
+	xf.origin += Vector3(sin(_t * 24.0) * 0.012 * rattle, 0, cos(_t * 24.0) * 0.01 * rattle)
+	if rub > 0.0:
+		xf.basis = xf.basis.rotated(Vector3.BACK, sin(_t * 9.0) * 0.15 * rub)
+	rig.idle = pose == "down"
+	rig.solve_arm(SHOULDER, xf, ELBOW_POLE)
+	# where things in his hand hang: the middle of the palm, in our old convention
+	var h: Transform3D = rig.skeleton.get_bone_global_pose(rig.B.hand)
+	var fingers := h.basis.y.normalized()
+	var back := h.basis.z.normalized()
+	var z := -fingers
+	var y := back
+	var x := y.cross(z).normalized()
+	wrist.transform = Transform3D(Basis(x, y, z), h.origin + fingers * 0.05 - back * 0.02)

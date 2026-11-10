@@ -15,23 +15,32 @@ var awake := false      ## until the revolver's taken she sits by the gate, head
 func wake() -> void:
 	awake = true
 	sight = 11.0
+	listen_speed = 1.5
+
+func head_follows_bone() -> bool:
+	return false
+
+func _animate(_delta: float, _spd: float) -> void:
+	pass
 
 func build_body() -> void:
 	marta = Marta.new()
 	body.add_child(marta)
 	marta.build()
 	marta.spot.queue_free()
+	if is_instance_valid(marta._breath):
+		marta._breath.volume_db = -16.0
 	for c in marta.chair:
 		c.visible = false        # still seated, in a chair that isn't there
 	marta.breathing = true
 	marta.head_lift = 0.6
 	marta.position.y = 0.35
-	marta.rotation.y = PI    # she faces +Z in her own space; we go along -Z
 	head = marta.head
 	speed = 0.9
 	chase_speed = 1.8
 	hearing = 1.4
 	sight = 0.0
+	listen_time = 40.0
 	head_hp = 999
 	body_hp = 999
 	_light = OmniLight3D.new()
@@ -66,9 +75,6 @@ func _physics_process(delta: float) -> void:
 			get_tree().call_group("director", "line", "senses")
 	elif _pressure.playing:
 		_pressure.stop()
-
-func head_follows_bone() -> bool:
-	return false      # her chest breathes (scales); the head box follows from outside
 
 func can_see_player() -> bool:
 	if not awake and state == S.IDLE:

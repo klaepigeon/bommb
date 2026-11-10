@@ -34,7 +34,7 @@ func say(id: String) -> void:
 
 func start(from := "") -> void:
 	marta.spot.used.connect(_examine)
-	flat.room_door_spot.used.connect(_try_room_door)
+	flat.room_door.tried.connect(func(_d): _try_room_door())
 	flat.wardrobe_spot.used.connect(_push_wardrobe)
 	flat.hole_spot.used.connect(_crawl)
 	if from == "wake":
@@ -48,12 +48,12 @@ func start(from := "") -> void:
 		_seen_flat = true; _seen_marta = true
 		marta.vanish()
 		flat.room_door.set_angle(0.0)
-		player.global_position = Vector3(-1.7, 0, -3.95)
-		player.face(Vector3(-1.0, 1.0, -3.95))
+		flat.room_door.locked = true
+		player.global_position = Flat47.POINTS["by_door"]
+		player.face(flat.room_door.handle_position())
 		player.socko.visible = true
 		player.socko.set_pose("low", 0.0)
 		hud.fade.color.a = 0.0
-		flat.room_door_spot.enabled = true
 		if from == "wardrobe":
 			_door_tried = true
 			flat.wardrobe_spot.enabled = true
@@ -69,10 +69,10 @@ func _arrival() -> void:
 	_set_stage("arrival")
 	hud.fade.color.a = 1.0
 	hud.set_crosshair(false)
-	player.global_position = Vector3(0.05, 0, 1.15)
-	player.face(Vector3(0.0, 1.45, 0.0))
+	player.global_position = Flat47.POINTS["landing"]
+	player.face(Flat47.POINTS["door_out"])
 	await wait(1.4)
-	var knock_at := Vector3(0.1, 1.3, 0.05)
+	var knock_at := flat.front_door.handle_position() + Vector3(0.05, 0.3, 0)
 	_knocks(knock_at, 3, 0.0)
 	hud.fade_to(0.0, 3.0)
 	await wait(1.8)
@@ -86,7 +86,7 @@ func _arrival() -> void:
 	player.arm.set_pose("push", 0.6)
 	await wait(0.55)
 	Sfx.play_at("creak", flat.front_door.handle_position(), -2.0)
-	flat.front_door.swing(96.0, 2.6)
+	flat.front_door.swing(80.0, 2.6)
 	await wait(0.8)
 	player.arm.set_pose("down", 0.7)
 	await wait(0.6)
@@ -112,13 +112,14 @@ func _process(_d: float) -> void:
 	# gutterspace nuggets in the room (they're only there after he wakes)
 	if player.socko.visible:
 		for n in flat.flat_nuggets:
+			n.visible = true
 			if not n.taken and n.global_position.distance_to(player.global_position + Vector3(0, 0.6, 0)) < 0.9:
 				n.take()
 				Game.add_nuggets(1)
 	if stage != "explore" or busy:
 		return
 	var p := player.global_position
-	if not _seen_flat and p.z < -0.6 and absf(p.x) < 1.0:
+	if not _seen_flat and p.x < 9.7 and p.z > 3.8 and p.z < 5.2:
 		_seen_flat = true
 		_line_in_play("see_flat")
 	elif _seen_flat and not _seen_marta and _can_see_marta():
@@ -151,7 +152,7 @@ func _examine() -> void:
 	marta.spot.enabled = false
 	# he goes close: round to her side of the table, down to her level
 	var face := marta.head.global_position + Vector3(0, 0.05, 0)
-	var stand := marta.global_transform * Vector3(-0.15, 0, 0.95)
+	var stand := marta.global_transform * Vector3(-0.75, 0, 0.05)    # at her left, beside the table
 	var tw := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tw.tween_property(player, "global_position", Vector3(stand.x, player.global_position.y, stand.z), 1.4)
 	player.look_toward(face, 1.4)
@@ -195,6 +196,7 @@ func _examine() -> void:
 	# while he's out: she goes; the front door shuts
 	marta.vanish()
 	flat.room_door.set_angle(0.0)
+	flat.room_door.locked = true
 	Sfx.play_at("slam", flat.room_door.handle_position(), -6.0, 0.9)
 	await wait(2.4)
 	_wake()
@@ -207,9 +209,9 @@ func _wake() -> void:
 	_control(false)
 	player.arm.set_pose("down", 0.0)
 	player.head.position.y = Player.EYE
-	var where := marta.global_transform * Vector3(-1.25, 0, 0.45)   # on the floor this side of the table
+	var where := marta.global_transform * Vector3(0.55, 0, -0.1)    # on the floor at her right, where she let him fall
 	player.global_position = Vector3(where.x, 0, where.z)
-	player.face(marta.global_transform * Vector3(0.3, 0.5, 0.6))
+	player.face(marta.global_transform * Vector3(0.0, 0.6, 0.2))
 	# on the floor, on his side, looking at the ceiling
 	player.head.position.y = 0.28
 	player.shake_node.rotation.z = 0.9
@@ -284,7 +286,6 @@ func _wake() -> void:
 	player.body_mesh.visible = true
 	create_tween().tween_property(sk, "face_kurt", 0.0, 0.8)
 	sk.set_pose("low", 1.0)
-	flat.room_door_spot.enabled = true
 	_free()
 
 func _free() -> void:
@@ -304,7 +305,6 @@ func _try_room_door() -> void:
 	player.arm.set_pose("handle", 0.4)
 	await wait(0.35)
 	player.arm.rattle = 1.0
-	Sfx.play_at("rattle", flat.room_door.handle_position(), 0.0)
 	await wait(0.9)
 	player.arm.rattle = 0.0
 	if not first:
@@ -344,8 +344,6 @@ func _try_room_door() -> void:
 
 # --- 6. the wardrobe ---------------------------------------------------------------------------
 
-var _shoves := 0
-
 func _push_wardrobe() -> void:
 	if busy:
 		return
@@ -356,7 +354,6 @@ func _push_wardrobe() -> void:
 	player.shake(0.01, 0.4)
 	await wait(0.25)
 	var clear := flat.shove_wardrobe()
-	_shoves += 1
 	await wait(0.7)
 	player.arm.set_pose("down", 0.4)
 	if not clear:

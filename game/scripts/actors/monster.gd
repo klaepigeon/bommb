@@ -16,7 +16,8 @@ var data := {}               ## from content/town.json monsters
 var player: Player
 var state := S.IDLE
 var home := Vector3.ZERO
-var bounds := Rect2()        ## where it may go (x, z) in world space
+var bounds := Rect2()        ## where it may go (x, z), in the town's space
+var town: Town               ## its streets: it walks them cell to cell
 var speed := 1.3
 var chase_speed := 2.3
 var hearing := 1.0
@@ -24,6 +25,9 @@ var sight := 13.0
 var head_hp := 2
 var body_hp := 4
 var wanders: Array[Vector3] = []   ## patrol points, if any
+var listen_time := 14.0
+var listen_speed := 0.0            ## how fast it goes to a noise (0: its walking pace)            ## how long it keeps after a noise before going back
+var _shot_heard_t := -10.0
 var body: Node3D
 var head: Node3D
 var arms: Array[Node3D] = []
@@ -60,8 +64,6 @@ func setup(p_id: String, p_data: Dictionary, p_player: Player, at: Vector3, seed
 
 ## False when the head sits under a non-uniformly scaled bone (physics shapes can't take that):
 ## the head box then lives on the body and follows the head each frame.
-func head_follows_bone() -> bool:
-	return true
 
 func _hitbox(part: String, parent: Node3D, size: Vector3, at: Vector3) -> Area3D:
 	var a := Area3D.new()
@@ -78,45 +80,33 @@ func _hitbox(part: String, parent: Node3D, size: Vector3, at: Vector3) -> Area3D
 	a.position = at
 	return a
 
-# --- the body: one of the infected, from primitives, different per seed -----------------------
+# --- the body: one of the infected, from the generator (a different person for every seed) -----
+
+var flesh: InfectedBody
+var genome := {}
 
 func build_body() -> void:
-	var skin := Look.mat(Look.get_tex("skin"), Color.WHITE.lerp(Color("c8b8a0"), _rng.randf()))
-	var cloth := Look.mat(Look.get_tex("cloth"), [Color("3a3328"), Color("2c3440"), Color("4a3a30"), Color("2a2a2a")][_rng.randi() % 4])
-	var growth_kind := _rng.randi() % 3
-	var growth := Look.mat(Look.get_tex("coral"), [Color.WHITE, Color("9a8a60"), Color("e8e0d0")][growth_kind])
-	var dark := Look.mat(Look.get_tex("white"), Color("060505"))
-	var h := _rng.randf_range(0.92, 1.08)
-	body.scale = Vector3(h, h, h)
-	for s in [-1.0, 1.0]:
-		var leg := Node3D.new(); leg.position = Vector3(0.1 * s, 0.85, 0); body.add_child(leg)
-		_part(leg, _box(Vector3(0.14, 0.85, 0.15)), cloth, Vector3(0, -0.42, 0))
-		_part(leg, _box(Vector3(0.11, 0.07, 0.24)), dark, Vector3(0, -0.84, -0.05))
-		arms.append(leg)    # legs swing with the gait; kept with the arms for simplicity
-	var torso := Node3D.new(); torso.name = "Torso"; torso.position = Vector3(0, 0.85, 0); body.add_child(torso)
-	torso.rotation.x = -_rng.randf_range(0.05, 0.35)   # hunched
-	_part(torso, _box(Vector3(0.42, 0.62, 0.24)), cloth, Vector3(0, 0.31, 0))
-	head = Node3D.new(); head.position = Vector3(0, 0.72, -0.02); torso.add_child(head)
-	_part(head, _sphere(0.12), skin, Vector3(0, 0.1, 0)).scale = Vector3(0.9, 1.1, 1)
-	_part(head, _box(Vector3(0.13, 0.025, 0.02)), dark, Vector3(0, 0.05, -0.11))
-	for s in [-1.0, 1.0]:
-		_part(head, _sphere(0.022), dark, Vector3(0.04 * s, 0.13, -0.1))
-	var missing := _rng.randi() % 4 == 0
-	for s in [-1.0, 1.0]:
-		if missing and s < 0:
-			continue
-		var arm := Node3D.new(); arm.position = Vector3(0.25 * s, 0.56, 0); torso.add_child(arm)
-		_part(arm, _box(Vector3(0.1, 0.62, 0.1)), cloth, Vector3(0, -0.28, 0))
-		_part(arm, _box(Vector3(0.08, 0.12, 0.05)), skin, Vector3(0, -0.64, 0))
-		arms.append(arm)
-	if _rng.randi() % 3 == 0:
-		var extra := Node3D.new(); extra.position = Vector3(0.1, 0.45, 0.12); extra.rotation = Vector3(0.9, 0, -0.6); torso.add_child(extra)
-		_part(extra, _box(Vector3(0.07, 0.5, 0.07)), skin, Vector3(0, -0.25, 0))
-	# growth over the back and shoulders, where Marta's came out
-	for i in 9:
-		var p := Vector3(_rng.randf_range(-0.2, 0.2), _rng.randf_range(0.2, 0.75), _rng.randf_range(0.08, 0.18))
-		var g := _part(torso, _sphere(_rng.randf_range(0.04, 0.09)), growth, p)
-		g.scale = Vector3(1, [1.0, 0.35, 1.8][growth_kind], 1)
+	genome = InfectedGenome.generate(_rng.seed)
+	flesh = InfectedBody.new()
+	flesh.name = "Flesh"
+	body.add_child(flesh)
+	flesh.build(genome)
+	for mi in flesh.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	head = Node3D.new()
+	head.name = "Head"
+	body.add_child(head)
+	_follow_head()
+
+## The head node rides the head bone (scenes look at it; the head's hit box goes with it).
+func _follow_head() -> void:
+	if flesh == null or flesh.skel == null:
+		return
+	var hb: Transform3D = flesh.skel.global_transform * flesh.skel.get_bone_global_pose(flesh.bones.head)
+	head.global_position = hb.origin + Vector3(0, 0.08 * flesh.s, 0)
+
+func head_follows_bone() -> bool:
+	return false
 
 func _part(parent: Node3D, m: Mesh, mat: Material, at: Vector3) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
@@ -151,19 +141,28 @@ func calm() -> void:
 	state = S.CALM
 	spot.enabled = false
 	velocity = Vector3.ZERO
-	var tw := create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE)
-	tw.tween_property(body, "position:y", -0.45, 1.6)
-	tw.tween_property(head, "rotation:x", 0.7, 1.6)
-	for a in arms:
-		tw.tween_property(a, "rotation", Vector3(0.3, 0, 0), 1.2)
+	# down onto its knees, quiet: it keeps its habit, nothing else
+	create_tween().set_trans(Tween.TRANS_SINE).tween_property(body, "position:y", -0.35, 1.6)
 	calmed.emit(self)
 
 # --- senses and behaviour ---------------------------------------------------------------------
+
+## Something it can hear: go and see.
+func listen_to(pos: Vector3) -> void:
+	state = S.LISTEN
+	_target = _clamp(pos)
+	_state_t = 0.0
 
 func _on_noise(pos: Vector3, radius: float, _source: String) -> void:
 	if state in [S.DEAD, S.CALM, S.GRAB, S.CHASE, S.AWAY] or not is_inside_tree():
 		return
 	if global_position.distance_to(pos) <= radius * hearing:
+		# a shot, then where the bullet hit: it goes to the shot, not the wall beside it
+		var now := Time.get_ticks_msec() / 1000.0
+		if _source == "gunshot":
+			_shot_heard_t = now
+		elif now - _shot_heard_t < 0.5:
+			return
 		state = S.LISTEN
 		_target = _clamp(pos)
 		_state_t = 0.0
@@ -183,14 +182,17 @@ func can_see_player() -> bool:
 	return get_world_3d().direct_space_state.intersect_ray(q).is_empty()
 
 func _clamp(p: Vector3) -> Vector3:
-	if bounds.size == Vector2.ZERO:
+	if bounds.size == Vector2.ZERO or town == null:
 		return p
-	return Vector3(clampf(p.x, bounds.position.x, bounds.end.x), p.y, clampf(p.z, bounds.position.y, bounds.end.y))
+	var l := town.to_local(p)
+	l = Vector3(clampf(l.x, bounds.position.x, bounds.end.x), l.y, clampf(l.z, bounds.position.y, bounds.end.y))
+	return town.to_global(l)
 
 func _physics_process(delta: float) -> void:
 	_t += delta
 	_state_t += delta
 	if state in [S.DEAD, S.CALM]:
+		_animate(delta, 0.0)
 		return
 	var move_to := Vector3.INF
 	var spd := speed
@@ -206,7 +208,8 @@ func _physics_process(delta: float) -> void:
 				_start_chase()
 		S.LISTEN:
 			move_to = _target
-			if _flat(global_position).distance_to(_flat(_target)) < 0.8 and _state_t > 2.0 or _state_t > 14.0:
+			spd = listen_speed if listen_speed > 0.0 else speed
+			if _flat(global_position).distance_to(_flat(_target)) < 0.8 and _state_t > 2.0 or _state_t > listen_time:
 				state = S.IDLE
 			if can_see_player():
 				_start_chase()
@@ -246,6 +249,8 @@ func _start_chase() -> void:
 
 func _move(to: Vector3, spd: float, delta: float) -> void:
 	var v := Vector3.ZERO
+	if to != Vector3.INF and town:
+		to = town.to_global(town.next_step(town.to_local(global_position), town.to_local(to)))
 	if to != Vector3.INF:
 		var d := _flat(to) - _flat(global_position)
 		if d.length() > 0.3:
@@ -254,16 +259,27 @@ func _move(to: Vector3, spd: float, delta: float) -> void:
 			rotation.y = lerp_angle(rotation.y, want, minf(delta * 5.0, 1.0))
 	velocity.x = v.x
 	velocity.z = v.z
-	velocity.y = -1.0
+	velocity.y = -1.0 if is_on_floor() else velocity.y - 9.8 * delta
 	move_and_slide()
-	var moving := v.length() > 0.1
-	var gait := sin(_t * (9.0 if state == S.CHASE else 5.5)) * (0.5 if moving else 0.0)
-	if arms.size() >= 2:
-		arms[0].rotation.x = gait
-		arms[1].rotation.x = -gait
-	for i in range(2, arms.size()):
-		arms[i].rotation.x = lerpf(arms[i].rotation.x, -1.3 if state == S.CHASE else sin(_t * 1.3 + i) * 0.1, delta * 4.0)
-	body.position.y = absf(gait) * 0.04
+	_animate(delta, Vector2(velocity.x, velocity.z).length())
+
+func _animate(delta: float, spd: float) -> void:
+	if flesh == null:
+		return
+	var mode := "idle"
+	if spd > 0.05:
+		mode = "move"
+	if state == S.GRAB:
+		mode = "attack"
+	elif state == S.DEAD:
+		mode = "dead"
+	var look = null
+	if player and state in [S.CHASE, S.GRAB, S.LISTEN, S.CALM]:
+		look = flesh.skel.global_transform.affine_inverse() * (player.camera.global_position if state != S.LISTEN else _target + Vector3(0, 1.5, 0))
+	flesh.animate(delta, {"speed": spd, "mode": mode, "attack": 1.0 if state == S.GRAB else 0.0, "look": look})
+	_follow_head()
+	if hit_head:
+		hit_head.global_position = head.global_position + Vector3(0, 0.02, 0)
 
 # --- shot ---------------------------------------------------------------------------------------
 
@@ -285,9 +301,8 @@ func shot(part: String) -> void:
 	_state_t = 0.0
 	if was_calm:
 		spot.enabled = false
-	var tw := create_tween()
-	tw.tween_property(body, "rotation:x", 0.35, 0.08)
-	tw.tween_property(body, "rotation:x", 0.0, 0.4)
+	if flesh:
+		flesh.flinch((global_position - player.global_position).normalized(), 1.0)
 
 func die() -> void:
 	state = S.DEAD
