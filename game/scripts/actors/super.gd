@@ -1,7 +1,7 @@
 class_name Super
 extends Monster
-## The Super. Building 14's superintendent: an old man the size of a doorway, naked, the top of
-## his head gone. He walks the stairs of the building itself, top to bottom and back, and he does
+## The Super. Building 14's superintendent: an old man the height of a doorway, skin and bone and
+## loose skin, naked, the top of his head gone (his body is SuperRig). He walks the stairs of the building itself, top to bottom and back, and he does
 ## not stop. Nothing Kurt carries puts him down: a shot staggers him (in what's left of his head,
 ## for longer) and that is all it does. He hears; he comes; if he gets hold of Kurt, Kurt wakes up
 ## on his own landing a while later. Flat 48's door is the one he doesn't come through.
@@ -27,23 +27,6 @@ const WALK_SPEED := 0.95        ## Kurt walks at 1.5: he can always be outwalked
 const HUNT_SPEED := 1.38
 const REACH := 1.3
 
-static func make_genome() -> Dictionary:
-	var arm := func(side: int) -> Dictionary:
-		return {"kind": "arm", "anchor": "shoulder", "side": side, "extra": false, "state": "whole",
-			"length": 1.2, "thick": 2.1, "joints": 2, "out": Vector3(side * 0.07, -1.0, -0.05).normalized(), "pos": 0.5}
-	var leg := func(side: int) -> Dictionary:
-		return {"kind": "leg", "anchor": "hip", "side": side, "extra": false, "state": "whole",
-			"length": 1.0, "thick": 1.8, "joints": 2, "out": Vector3(side * 0.12, -1.0, 0.0).normalized(), "pos": 0.5}
-	var limbs := [arm.call(-1), arm.call(1), leg.call(-1), leg.call(1)]
-	for i in limbs.size():
-		limbs[i].id = "%s%d" % [limbs[i].kind, i]
-	return {"seed": 1414, "height": 2.42, "build": 0.55, "hunch": 0.75, "lean": 0.08, "brute": true, "old": true, "head_scale": 1.5,
-		"skin": "pallid", "growth": "bone", "growth_amount": 0.0, "clothes": "none",
-		"quirk": "still", "fragment": "", "speed": 1.0, "hearing": 1.0, "sight": 1.0, "persistence": 1.0,
-		"twitch": 0.25, "palette": 0,
-		"head": {"state": "blown", "jaw": 0.4, "eyes": 2, "tilt": 0.12},
-		"limbs": limbs, "locomotion": "walk"}
-
 func _init() -> void:
 	body_radius = 0.4
 	body_height = 2.3
@@ -52,15 +35,34 @@ func _init() -> void:
 	floor_snap_length = 0.5
 	floor_max_angle = deg_to_rad(50.0)
 
+var rig: SuperRig
+
 func build_body() -> void:
-	genome = make_genome()
-	flesh = InfectedBody.new()
-	flesh.name = "Flesh"
-	body.add_child(flesh)
-	flesh.build(genome)
+	rig = SuperRig.new(); rig.name = "Rig"
+	body.add_child(rig)
+	rig.build()
 	head = Node3D.new(); head.name = "Head"
 	body.add_child(head)
 	_follow_head()
+
+func _follow_head() -> void:
+	if rig:
+		head.global_position = rig.bone_global("head").origin + Vector3(0, 0.1, 0)
+
+func _animate(delta: float, spd: float) -> void:
+	var m := "idle"
+	match mode:
+		Mode.GRAB: m = "grab"
+		Mode.STAGGER: m = "stagger"
+		Mode.HUNT: m = "hunt"
+		_: m = "walk" if spd > 0.05 else "idle"
+	var look = null
+	if player and mode in [Mode.HUNT, Mode.GRAB]:
+		look = rig.skel.global_transform.affine_inverse() * player.camera.global_position
+	rig.animate(delta, {"speed": spd, "mode": m, "look": look})
+	_follow_head()
+	if hit_head:
+		hit_head.global_position = head.global_position
 
 func place_at(p: Vector3) -> void:
 	global_position = p
@@ -154,7 +156,7 @@ func _walk_to(to: Vector3, spd: float, delta: float) -> void:
 	var moved := Vector2(velocity.x, velocity.z).length()
 	# his weight on the stairs: you hear which floor he's on before you see him
 	_step += moved * delta
-	if _step > 0.95:
+	if _step > 0.95:              # (the rig's stride: a foot down every 0.95 m)
 		_step = 0.0
 		Sfx.play_at("thud", global_position, 1.0, randf_range(0.5, 0.58)).max_distance = 40.0
 		if player and player.global_position.distance_to(global_position) < 5.0:
@@ -170,7 +172,7 @@ func shot(part: String) -> void:
 	stagger_for = 2.4 if part == "head" else 0.9
 	if player:
 		last_known = player.global_position
-		flesh.flinch((global_position - player.global_position).normalized(), 1.6 if part == "head" else 0.9)
+		rig.flinch((global_position - player.global_position).normalized(), 1.6 if part == "head" else 0.9, part == "head")
 	Sfx.play_at("thud", global_position + Vector3(0, 1.6, 0), -4.0, 1.3)
 	_set_mode(Mode.STAGGER)
 

@@ -740,6 +740,16 @@ func _super() -> void:
 		p.face(sup.global_position + Vector3(0, 1.75, 0))
 		for k in 30: await get_tree().physics_frame
 		await _shot("super_front")
+		p.global_position = sup.global_position + Vector3(-0.25, 0, 1.5)
+		p.face(sup.global_position + Vector3(0, 1.5, 0))
+		for k in 20: await get_tree().physics_frame
+		await _shot("super_body")
+		p.global_position = sup.global_position + Vector3(1.3, 0, -1.0)
+		p.face(sup.global_position + Vector3(0, 1.5, 0))
+		for k in 20: await get_tree().physics_frame
+		await _shot("super_back")
+		p.global_position = main.flat.building.landing_point(4) + Vector3(-0.9, 0, 1.6)
+		p.face(sup.global_position + Vector3(0, 1.75, 0))
 		sup.rotation.y = PI * 0.5
 		for k in 20: await get_tree().physics_frame
 		await _shot("super_side")

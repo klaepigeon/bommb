@@ -98,7 +98,10 @@ Building 14 has a stairwell now: floors 2 to 6, switchback flights, two padded d
 (47 and 48 on the fourth), one bare bulb each, dark between. Above 6 and below 2 the stair has
 come down.
 
-**The Super** walks it: an old man the size of a doorway, naked, the top of his head gone. He does
+**The Super** walks it: an old man the height of a doorway, starved to the bone, the skin of a
+much heavier man hanging off him in flaps, naked (all of him, always in plain sight), the top of
+his head gone. He has his own rig (`scripts/actors/super_rig.gd`: his own skeleton, skin, sprung
+bones for everything that hangs, and his own walk, hunt, stagger and grab). He does
 rounds from the bottom of the building to the top and back. He hears steps a floor away and shots
 anywhere; he comes at a walk Kurt can outpace and never outlast. **Nothing kills him**: a shot
 staggers him for a second, one in what's left of his head for two or three. If he gets hold of

@@ -89,7 +89,7 @@ func _skeleton() -> void:
 		var side := float(l.side)
 		var anchor := ""; var at := Vector3.ZERO
 		match String(l.anchor):
-			"shoulder": anchor = "chest"; at = Vector3(side * (0.245 if genome.get("brute", false) else 0.19) * s * bw, 1.40 * s, 0.0)
+			"shoulder": anchor = "chest"; at = Vector3(side * 0.19 * s * bw, 1.40 * s, 0.0)
 			"back": anchor = "chest"; at = Vector3(side * 0.1 * s, (1.3 + float(l.pos) * 0.08) * s, 0.12 * s * bw)
 			"ribs": anchor = "spine"; at = Vector3(side * 0.16 * s * bw, (1.14 + float(l.pos) * 0.1) * s, -0.02 * s)
 			"hip": anchor = "hips"; at = Vector3(side * 0.1 * s * bw, 0.9 * s, 0.0)
@@ -270,8 +270,6 @@ func _mesh() -> void:
 	# ---- limbs
 	for l in genome.limbs:
 		_limb(l, flesh, raw)
-	if genome.get("brute", false):
-		_brute(flesh)
 	# ---- clothes, growth
 	_clothes()
 	_growth()
@@ -284,28 +282,9 @@ func _mesh() -> void:
 	hit_parts.append({"bone": bones.chest, "a": Vector3(0, 0.95 * s, 0), "b": Vector3(0, 1.4 * s, 0), "r": 0.17 * s * bw, "part": "torso"})
 	hit_parts.append({"bone": bones.head, "a": Vector3(0, 1.58 * s, -0.01), "b": Vector3(0, 1.7 * s, -0.01), "r": 0.1 * s, "part": "head"})
 
-## What's hung on a big frame: the shoulders, the hump of the back, a chest gone slack, the belly's
-## apron, the backside. All skinned to the trunk.
-func _brute(flesh: SkinB) -> void:
-	var bw := _bw()
-	var cb: int = bones.chest; var sb: int = bones.spine; var pb: int = bones.hips
-	var u := s * bw
-	for sx in [-1.0, 1.0]:
-		_ellipsoid(flesh, Vector3(sx * 0.25 * u, 1.4 * s, 0.0), Vector3(0.105, 0.095, 0.105) * u, func(p): return {cb: 1.0}, 4, 8, 0.1)       # shoulder
-		_ellipsoid(flesh, Vector3(sx * 0.105 * u, 1.255 * s, -0.115 * u), Vector3(0.115, 0.085, 0.06) * u, func(p): return {cb: 1.0}, 4, 8, 0.12)   # chest, slack
-		_ellipsoid(flesh, Vector3(sx * 0.09 * u, 0.9 * s, 0.09 * u), Vector3(0.11, 0.11, 0.09) * u, func(p): return {pb: 1.0}, 4, 8, 0.1)       # backside
-		_ellipsoid(flesh, Vector3(sx * 0.17 * u, 1.1 * s, 0.03 * u), Vector3(0.07, 0.1, 0.11) * u, func(p): return {sb: 1.0}, 4, 8, 0.15)        # flank
-	_ellipsoid(flesh, Vector3(0, 1.4 * s, 0.07 * u), Vector3(0.21, 0.1, 0.12) * u, func(p): return {cb: 1.0}, 4, 10, 0.1)                # the hump
-	_ellipsoid(flesh, Vector3(0, 0.99 * s, -0.17 * u), Vector3(0.2, 0.15, 0.12) * u, func(p): return {sb: 0.6, pb: 0.4}, 5, 10, 0.12)    # the belly's apron
-
 ## The trunk's cross-section by height (y in a 1.75 m body): half-width, half-depth.
 func _levels() -> Array:
 	var bl := float(genome.build)
-	if genome.get("brute", false):
-		# a big man gone old: the shoulders and the barrel of the chest still there, the belly
-		# hanging off the front of it, a neck like a post
-		return [[0.86, 0.16, 0.12], [0.93, 0.19, 0.14], [0.99, 0.2, 0.2], [1.06, 0.2, 0.22], [1.14, 0.2, 0.17],
-			[1.24, 0.22, 0.155], [1.33, 0.25, 0.15], [1.41, 0.255, 0.13], [1.46, 0.11, 0.09], [1.53, 0.075, 0.07]]
 	return [[0.86, 0.15, 0.1], [0.93, 0.17, 0.11], [1.02, 0.15 + bl * 0.06, 0.11 + bl * 0.1], [1.1, 0.145 + bl * 0.06, 0.11 + bl * 0.11],
 		[1.2, 0.16 + bl * 0.03, 0.115 + bl * 0.05], [1.32, 0.18, 0.12], [1.4, 0.19, 0.11], [1.45, 0.08, 0.07], [1.53, 0.055, 0.055]]
 
@@ -377,15 +356,6 @@ func _head(flesh: SkinB) -> void:
 		for i in 13:
 			var a := TAU * i / 13.0 + 0.3
 			_ellipsoid(bonek, c + Vector3(cos(a) * r.x * 0.9, r.y * (0.25 + 0.03 * sin(a * 3.0)), sin(a) * r.z * 0.9), Vector3(0.013, 0.008 + 0.012 * absf(sin(a * 2.0)), 0.008) * s, func(p): return {hb: 1.0}, 2, 5)
-	if genome.get("old", false):
-		# what hair he has left: white, at the sides and the back, under the rim
-		var hair := _sk("bone", 1.0, 0.05)
-		for spec in [[-1.0, 0.25], [1.0, 0.25], [-0.75, 0.75], [0.75, 0.75], [0.0, 1.0]]:
-			_ellipsoid(hair, c + Vector3(float(spec[0]) * r.x * 0.93, r.y * 0.02, float(spec[1]) * r.z * 0.9), Vector3(0.022, 0.034, 0.03) * s, func(p): return {hb: 1.0}, 3, 6, 0.5)
-		# and his brows, and the ears gone long
-		for sx in [-1.0, 1.0]:
-			_ellipsoid(hair, c + Vector3(sx * 0.034 * s, 0.043 * s, -r.z * 0.9), Vector3(0.02, 0.006, 0.008) * s, func(p): return {hb: 1.0}, 2, 5)
-			_ellipsoid(flesh, c + Vector3(sx * r.x * 1.0, -0.012 * s, 0.01 * s), Vector3(0.012, 0.034, 0.02) * s, func(p): return {hb: 1.0}, 3, 5)
 	# the mouth: a dark inside, teeth along the jaw
 	var black := _sk("black", 1.0, 0.0)
 	var grin := 1.6 if st == "split" else 1.0
@@ -401,7 +371,7 @@ func _head(flesh: SkinB) -> void:
 	var eyes := int(h.eyes)
 	for i in eyes:
 		var ex := (0.032 * s) * (1.0 if (i == 0) != (eyes == 1 and side < 0) else -1.0)
-		_ellipsoid(eye, Vector3(ex, c.y + 0.025 * s, c.z - r.z * (0.93 if genome.get("brute", false) else 0.86)), Vector3(0.014, 0.012, 0.01) * s, func(p): return {hb: 1.0}, 3, 6)
+		_ellipsoid(eye, Vector3(ex, c.y + 0.025 * s, c.z - r.z * 0.86), Vector3(0.014, 0.012, 0.01) * s, func(p): return {hb: 1.0}, 3, 6)
 
 func _limb(l: Dictionary, flesh: SkinB, raw: SkinB) -> void:
 	var chain: Array = limb_bones[l.id]
