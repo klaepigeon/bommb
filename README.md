@@ -1,3 +1,13 @@
+# HYSTERIA
+
+**The game is now `game/`, an Android-first rebuild in Godot 4.7, starting with Scene A.** See
+[`game/README.md`](game/README.md). Install `dist/Hysteria.apk`.
+
+Older code kept for reference: `legacy/hysteria/` (the previous Godot project) and, below, the
+original browser build (`src/`, `dist/index.html`, `dist/Flat47.apk`).
+
+---
+
 # FLAT 47
 
 A first-person survival-horror environment: a flat on the fourth floor of Building 14,
