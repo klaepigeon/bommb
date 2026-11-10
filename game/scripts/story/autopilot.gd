@@ -29,6 +29,8 @@ func _ready() -> void:
 		_touch()
 	elif main.args.has("spin"):
 		_spin()
+	elif main.args.has("superview"):
+		_superview()
 	elif main.args.has("super"):
 		_super()
 	elif main.args.has("poses"):
@@ -790,4 +792,61 @@ func _super() -> void:
 	if absf(p.global_position.y) > 0.3 or absf(sup.global_position.y) < 3.0:
 		_fail("after the grab: Kurt at y %.1f, the Super at y %.1f" % [p.global_position.y, sup.global_position.y]); return
 	print("AUTOTEST PASS: the Super (stairs, rounds, bullets, the grab)")
+	get_tree().quit(0)
+
+
+## The Super on his own, lit to be looked at: all round, his face, walking, hunting, staggered.
+func _superview() -> void:
+	var p: Player = main.player
+	if not await _until(func(): return p.can_move, 120.0, "control"): return
+	main.scene.busy = true
+	main.to_landing()
+	if not await _until(func(): return main.flat.building.the_super != null and p.can_move, 30.0, "the Super"): return
+	var b: Building = main.flat.building
+	var sup: Super = b.the_super
+	sup.wait_for = 9999.0
+	p.can_move = false
+	p.global_position = b.landing_point(6)
+	var at := b.landing_point(4) + Vector3(0, 0, 0.1)
+	sup.place_at(at)
+	sup.rotation.y = 0.0
+	b.shadows = false
+	var cam := Camera3D.new(); cam.fov = 62.0
+	sup.get_parent().add_child(cam)
+	cam.current = true
+	var fill := OmniLight3D.new(); fill.light_energy = 1.2; fill.omni_range = 9.0; fill.omni_attenuation = 0.6
+	fill.light_color = Color(1.0, 0.95, 0.88)
+	cam.add_child(fill); fill.position = Vector3(0.6, 0.5, 0.3)
+	main.hud.visible = false
+	var views := [["front", Vector3(0, 1.25, -2.15), 1.2], ["threeq", Vector3(1.35, 1.4, -1.75), 1.2], ["side", Vector3(1.75, 1.3, 0), 1.2],
+		["back", Vector3(-1.0, 1.4, 2.1), 1.2], ["face", Vector3(0.08, 2.3, -0.75), 2.3], ["face_side", Vector3(0.7, 2.3, -0.35), 2.28],
+		["face_low", Vector3(0, 0, 0), 0.0], ["torso", Vector3(0.4, 1.5, -1.3), 1.5], ["top", Vector3(0.2, 2.7, -0.6), 2.15]]
+	for v in views:
+		cam.global_position = at + (v[1] as Vector3)
+		cam.look_at(at + Vector3(0, float(v[2]), 0))
+		if String(v[0]).begins_with("face"):          # his face, wherever he's carrying it
+			var hp: Vector3 = sup.rig.bone_global("head").origin + Vector3(0, 0.1, 0)
+			cam.global_position = hp + (Vector3(0.1, -0.2, -0.7) if v[0] == "face" else (Vector3(0.6, -0.12, -0.4) if v[0] == "face_side" else Vector3(0.2, -0.5, -0.8)))
+			cam.look_at(hp)
+		for k in 12: await get_tree().physics_frame
+		await _shot("v_" + String(v[0]))
+	# moving: frames of the walk, the hunt, the grab, a stagger
+	cam.global_position = at + Vector3(1.4, 1.3, -1.8)
+	cam.look_at(at + Vector3(0, 1.2, 0))
+	sup.set_physics_process(false)
+	for m in [["walk", 0.95], ["hunt", 1.38]]:
+		for f in 3:
+			for k in 14:
+				sup.rig.animate(1.0 / 60.0, {"speed": float(m[1]), "mode": m[0], "look": null})
+			await get_tree().process_frame
+			await _shot("v_%s_%d" % [m[0], f])
+	for k in 20:
+		sup.rig.animate(1.0 / 60.0, {"speed": 0.0, "mode": "grab", "look": null})
+	await get_tree().process_frame
+	await _shot("v_grab")
+	sup.rig.flinch(Vector3(0, 0, 1), 1.6, true)
+	for k in 18:
+		sup.rig.animate(1.0 / 60.0, {"speed": 0.0, "mode": "stagger", "look": null})
+	await get_tree().process_frame
+	await _shot("v_stagger")
 	get_tree().quit(0)
