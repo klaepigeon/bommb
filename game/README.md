@@ -9,7 +9,9 @@ project is kept, untouched, in `legacy/hysteria/`.
 ## Install
 
 `dist/Hysteria.apk` (arm64, Android 7+), signed with the repo's key in `android/` (the same key
-as the earlier builds, so it installs over them).
+as the earlier builds, so it installs over them). The icon is Socko, rendered from the game's
+own model (`tools/make_icon.sh` remakes `icon/`: the adaptive foreground and background, the
+one-colour version for themed icons, and the legacy icon).
 
 ## Scene A, as written
 
@@ -155,6 +157,7 @@ tools/test.sh                 # three full playthroughs from the first knock (ta
 tools/test.sh kill            # one
 tools/test.sh shots DIR talk  # rendered, a frame per line
 tools/build_apk.sh            # → ../dist/Hysteria.apk, signed, or it fails
+tools/make_icon.sh            # re-render Socko and rebuild the launcher icons in icon/
 godot --path . -- --start=wake|door|wardrobe|town|landing|flat48
 godot --path . -- --start=door --poses --shots=DIR    # Kurt himself: looking down, the gun
 ```
