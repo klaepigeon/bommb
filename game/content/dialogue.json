@@ -1,0 +1,682 @@
+{
+ "_comment": "Every spoken line, by id. Scene A, the balcony and the random conversations are the owner's, verbatim. Lines marked NEW are this build's and are for the owner to rewrite. socko_face / socko_clip / socko_talk cue Socko's performance (scripts/art/socko_clips.gd).",
+ "scene_a": {
+  "door_1": {
+   "speaker": "kurt",
+   "text": "Ms. Sokolov? Your sister asked me to come check on you."
+  },
+  "door_2": {
+   "speaker": "kurt",
+   "text": "Marta? It's Kurt. I'm coming in."
+  },
+  "see_flat": {
+   "speaker": "kurt",
+   "text": "Christ..."
+  },
+  "see_marta": {
+   "speaker": "kurt",
+   "text": "Oh... oh no."
+  },
+  "examine": {
+   "speaker": "kurt",
+   "text": "What the hell is this?"
+  },
+  "boxes": {
+   "speaker": "marta",
+   "text": "Little boxes made of boxes with boxes inside of them... Have you seen them? The boxes, I mean. They're scary at first. But then you look at them for a moment"
+  },
+  "marta_q": {
+   "speaker": "kurt",
+   "text": "Marta?"
+  },
+  "little_bird": {
+   "speaker": "marta",
+   "text": "Look at the boxes, my little bird. Do you see them?"
+  },
+  "gasp": {
+   "speaker": "kurt",
+   "text": "[gasps]",
+   "silent": true
+  },
+  "smarts": {
+   "speaker": "kurt",
+   "text": "Oh, jeez, that smarts"
+  },
+  "hey_buddy": {
+   "speaker": "socko",
+   "text": "Heyyyy buddyyyy.... You should probably take it slow, a concussion is no joke!",
+   "socko_face": "smile",
+   "socko_clip": "Head_Tilt_Left",
+   "socko_talk": "Talking_Sympathetic"
+  },
+  "wtf": {
+   "speaker": "kurt",
+   "text": "What the fuck!?",
+   "socko_face": "surprise",
+   "socko_clip": "Sudden_Surprise"
+  },
+  "who_me": {
+   "speaker": "socko",
+   "text": "Who, me?",
+   "socko_face": "confusion",
+   "socko_clip": "Head_Tilt_Right"
+  },
+  "who_are_you": {
+   "speaker": "kurt",
+   "text": "Yeah, you. Who the fuck are you?",
+   "socko_face": "uncomfortable_smile"
+  },
+  "im_socko": {
+   "speaker": "socko",
+   "text": "I'm Socko! I'm a handy little pal! Who are you?",
+   "socko_face": "excitement",
+   "socko_clip": "Head_Bob",
+   "socko_talk": "Talking_Excited"
+  },
+  "kurt_sounds": {
+   "speaker": "kurt",
+   "text": "Uh... Kurt sounds right.",
+   "socko_face": "smile",
+   "socko_clip": "Head_Nod"
+  },
+  "dont_know": {
+   "speaker": "socko",
+   "text": "You don't know?",
+   "socko_face": "suspicion",
+   "socko_clip": "Head_Tilt_Left",
+   "socko_talk": "Talking_Sympathetic"
+  },
+  "got_nothing": {
+   "speaker": "kurt",
+   "text": "I... yeah I got nothing.",
+   "socko_face": "uncomfortable_smile"
+  },
+  "too_fast": {
+   "speaker": "socko",
+   "text": "Shouldn't have stood up so fast.",
+   "socko_face": "smile",
+   "socko_clip": "Head_Nod",
+   "socko_talk": "Talking_Sympathetic"
+  },
+  "wont_open": {
+   "speaker": "kurt",
+   "text": "It won't open.",
+   "socko_clip": "Head_Tilt_Forward"
+  },
+  "locked": {
+   "speaker": "socko",
+   "text": "Maybe it's locked?",
+   "socko_face": "confusion",
+   "socko_clip": "Head_Tilt_Left"
+  },
+  "thanks": {
+   "speaker": "kurt",
+   "text": "Wow, thanks. I never would have guessed.",
+   "socko_face": "smile"
+  },
+  "welcome": {
+   "speaker": "socko",
+   "text": "You're welcome!",
+   "socko_face": "wide_smile",
+   "socko_clip": "Head_Bob",
+   "socko_talk": "Talking_Excited"
+  },
+  "like_helping": {
+   "speaker": "socko",
+   "text": "I like helping.",
+   "style": "quiet",
+   "socko_face": "smile",
+   "socko_talk": "Talking_Whispering"
+  },
+  "what_is_that": {
+   "speaker": "kurt",
+   "text": "What the hell is that?",
+   "socko_clip": "Peeking"
+  },
+  "dunno": {
+   "speaker": "socko",
+   "text": "I don't know.",
+   "socko_face": "confusion",
+   "socko_clip": "Head_Shake"
+  },
+  "know_anything": {
+   "speaker": "kurt",
+   "text": "Do you know anything?",
+   "socko_face": "uncomfortable_smile"
+  },
+  "can_do_this": {
+   "speaker": "socko",
+   "text": "I know that I can do this!",
+   "socko_face": "excitement",
+   "socko_clip": "Head_Raise",
+   "socko_talk": "Talking_Excited"
+  },
+  "smell": {
+   "speaker": "socko",
+   "text": "Ooh! Ooh! And I can smell important stuff! Go this way!",
+   "socko_face": "excitement",
+   "socko_clip": "Head_Bob",
+   "socko_talk": "Talking_Excited"
+  }
+ },
+ "balcony": {
+  "bal_1": {
+   "speaker": "kurt",
+   "text": "You seeing this?"
+  },
+  "bal_2": {
+   "speaker": "socko",
+   "text": "Is something unusual?",
+   "socko_face": "confusion",
+   "socko_clip": "Head_Tilt_Left"
+  },
+  "bal_3": {
+   "speaker": "kurt",
+   "text": "To my recollection, typically there's more to the world than a sticky note that says \"outside\""
+  },
+  "bal_4": {
+   "speaker": "socko",
+   "text": "I wouldn't know, I'm more of an indoor person",
+   "socko_face": "smile",
+   "socko_talk": "Talking_Sympathetic"
+  }
+ },
+ "random": {
+  "ra_1": {
+   "speaker": "kurt",
+   "text": "Hey, uh, Socko. I have a question."
+  },
+  "ra_2": {
+   "speaker": "socko",
+   "text": "What's up?",
+   "socko_face": "smile"
+  },
+  "ra_3": {
+   "speaker": "kurt",
+   "text": "Where did you come from?"
+  },
+  "ra_4": {
+   "speaker": "socko",
+   "text": "Wow, what a great question, Kurt! When a mommy sock puppet and a daddy sock puppet love each other very much, they...",
+   "socko_face": "excitement",
+   "socko_talk": "Talking_Excited"
+  },
+  "ra_5": {
+   "speaker": "kurt",
+   "text": "Forget I asked.",
+   "socko_face": "disappointment"
+  },
+  "rb_1": {
+   "speaker": "socko",
+   "text": "Hey, Kurt, can I ask you a question?",
+   "socko_face": "smile"
+  },
+  "rb_2": {
+   "speaker": "kurt",
+   "text": "Sure, Socko."
+  },
+  "rb_3": {
+   "speaker": "socko",
+   "text": "Thanks, I really appreciate that.",
+   "socko_face": "wide_smile",
+   "socko_clip": "Head_Nod"
+  },
+  "rb_4": {
+   "speaker": "kurt",
+   "text": "What?",
+   "socko_face": "confusion"
+  },
+  "rb_5": {
+   "speaker": "socko",
+   "text": "You're a tough crowd, Kurt.",
+   "socko_face": "disappointment",
+   "socko_talk": "Talking_Sarcastic"
+  },
+  "rc_1": {
+   "speaker": "socko",
+   "text": "Kurt, have you ever had a sandwich?",
+   "socko_face": "confusion"
+  },
+  "rc_2a": {
+   "speaker": "kurt",
+   "text": "Uh, I think so"
+  },
+  "rc_2b": {
+   "speaker": "kurt",
+   "text": "Yeah."
+  },
+  "rc_3": {
+   "speaker": "socko",
+   "text": "What are they like?",
+   "socko_face": "excitement"
+  },
+  "rc_4a": {
+   "speaker": "kurt",
+   "text": "It's... Impossible to describe"
+  },
+  "rc_4b": {
+   "speaker": "kurt",
+   "text": "There's lots of different kinds of sandwiches, buddy. I'm gonna need you to be more specific."
+  },
+  "rc_5": {
+   "speaker": "socko",
+   "text": "Oh...",
+   "socko_face": "disappointment"
+  },
+  "rc_6": {
+   "speaker": "socko",
+   "text": "Could I be a sandwich?",
+   "socko_face": "confusion",
+   "socko_clip": "Head_Tilt_Right"
+  },
+  "rc_7": {
+   "speaker": "kurt",
+   "text": "Probably not, buddy."
+  }
+ },
+ "_comment_socko": "Socko's lines past Scene A are NEW (this build's), for the owner to rewrite. Stages: 1 friendly, 2 confused, 3 insistent, 4 passive-aggressive, 5 irritated, 6 manipulative, 7 hostile.",
+ "socko": {
+  "sug_wardrobe_a": {
+   "speaker": "socko",
+   "text": "Ooh, that wardrobe looks heavy. Heavy things are fun to push!",
+   "socko_face": "excitement"
+  },
+  "sug_gun_a": {
+   "speaker": "socko",
+   "text": "I can smell it from here, buddy. Something shiny. This way!",
+   "socko_face": "excitement",
+   "socko_clip": "Head_Bob"
+  },
+  "sug_gun_b": {
+   "speaker": "socko",
+   "text": "The shiny thing. Still that way. Still shiny.",
+   "socko_face": "smile"
+  },
+  "sug_gun_c": {
+   "speaker": "socko",
+   "text": "Every second you're not holding it, she's getting closer. Just so you know.",
+   "socko_face": "forced_happiness"
+  },
+  "sug_marta_a": {
+   "speaker": "socko",
+   "text": "She's around here somewhere. You've got a gun. I'm just saying things that are true!",
+   "socko_face": "smile"
+  },
+  "sug_marta_b": {
+   "speaker": "socko",
+   "text": "You know what fixes a problem like her? Seven of the things in your pocket.",
+   "socko_face": "suspicion",
+   "socko_talk": "Talking_Sarcastic"
+  },
+  "sug_marta_c": {
+   "speaker": "socko",
+   "text": "She'd do it to you, Kurt. She already did. Look at your head.",
+   "socko_face": "disappointment",
+   "socko_talk": "Talking_Sympathetic"
+  },
+  "sug_marta_d": {
+   "speaker": "socko",
+   "text": "Kill her. Kill her kill her kill her. What part of that is hard?",
+   "socko_face": "anger",
+   "socko_talk": "Talking_Threatening"
+  },
+  "sug_door_a": {
+   "speaker": "socko",
+   "text": "Locked doors are just doors that need a little encouragement!",
+   "socko_face": "excitement"
+  },
+  "sug_padlock_a": {
+   "speaker": "socko",
+   "text": "Shoot the lock. Takes two seconds. I timed it. In my head.",
+   "socko_face": "smile"
+  },
+  "sug_padlock_b": {
+   "speaker": "socko",
+   "text": "Or we could stand here. Or. We could shoot it.",
+   "socko_face": "irritation"
+  },
+  "sug_exit_a": {
+   "speaker": "socko",
+   "text": "There's a way out, bud. There's always a way out. Sometimes it's through somebody.",
+   "socko_face": "smile"
+  },
+  "sug_none_a": {
+   "speaker": "socko",
+   "text": "Let's keep moving! Moving is good. Standing still is how things find you.",
+   "socko_face": "smile"
+  },
+  "sug_none_c": {
+   "speaker": "socko",
+   "text": "I'd tell you, but you don't listen.",
+   "socko_face": "disappointment",
+   "socko_talk": "Talking_Sarcastic"
+  },
+  "sug_none_d": {
+   "speaker": "socko",
+   "text": "Figure it out yourself, 'hero'.",
+   "socko_face": "anger"
+  },
+  "gun_taken": {
+   "speaker": "socko",
+   "text": "Ooh. Now we're talking. You know what that's for.",
+   "socko_face": "wide_smile",
+   "socko_clip": "Head_Bob"
+  },
+  "reloaded": {
+   "speaker": "socko",
+   "text": "Look at you go. Did you see your hands? I didn't teach you that.",
+   "socko_face": "suspicion"
+  },
+  "read_a": {
+   "speaker": "socko",
+   "text": "Don't read other people's mail, buddy.",
+   "socko_face": "uncomfortable_smile"
+  },
+  "read_c": {
+   "speaker": "socko",
+   "text": "Reading. Again. Great. Love that for us.",
+   "socko_face": "irritation"
+  },
+  "memory_skill": {
+   "speaker": "socko",
+   "text": "...Really? That? Okay. Your shards. Your memories. Whatever.",
+   "socko_face": "disappointment"
+  },
+  "infection_skill": {
+   "speaker": "socko",
+   "text": "There we go. Now we're friends.",
+   "socko_face": "wide_smile"
+  },
+  "headshot_skill": {
+   "speaker": "socko",
+   "text": "Ooh, good choice. Great choice. The best choice.",
+   "socko_face": "excitement",
+   "socko_clip": "Head_Bob"
+  },
+  "kill_marta": {
+   "speaker": "socko",
+   "text": "Trickshot's still got it!",
+   "socko_face": "wide_smile",
+   "socko_clip": "Head_Bob"
+  },
+  "kill_marta_2": {
+   "speaker": "socko",
+   "text": "What? It's a... word. Come on.",
+   "socko_face": "uncomfortable_smile"
+  },
+  "kill_other": {
+   "speaker": "socko",
+   "text": "There we are. Much simpler.",
+   "socko_face": "smile"
+  },
+  "calm_one": {
+   "speaker": "socko",
+   "text": "No. No no no. What are you doing? She was RIGHT THERE.",
+   "socko_face": "panic",
+   "socko_talk": "Talking_Desperate"
+  },
+  "calm_two": {
+   "speaker": "socko",
+   "text": "...Fine. Your way. Your slow, slow way.",
+   "socko_face": "disappointment"
+  },
+  "calm_forever": {
+   "speaker": "socko",
+   "text": "She's still in there, you know. In case you were wondering. Gun works fine on sad people.",
+   "socko_face": "unnatural_stillness"
+  },
+  "known": {
+   "speaker": "socko",
+   "text": "...",
+   "socko_face": "unnatural_stillness"
+  },
+  "talked_down": {
+   "speaker": "socko",
+   "text": "You know you can't talk to all of them, right? Eventually one of them talks back.",
+   "socko_face": "irritation"
+  },
+  "porter_alarm": {
+   "speaker": "socko",
+   "text": "Oh, now you've done it.",
+   "socko_face": "panic"
+  },
+  "shocked": {
+   "speaker": "socko",
+   "text": "OW. Okay. Water and electricity. Noted. NOTED.",
+   "socko_face": "panic"
+  },
+  "marta_shocked": {
+   "speaker": "socko",
+   "text": "Huh. That's one way. Not MY way, but a way.",
+   "socko_face": "suspicion"
+  },
+  "caught_marta": {
+   "speaker": "socko",
+   "text": "Up. Up. She's had her go. Now we have ours.",
+   "socko_face": "anger"
+  },
+  "caught_super": {
+   "speaker": "socko",
+   "text": "Okay, so, the big guy. Let's not do that again.",
+   "socko_face": "nervousness"
+  },
+  "figures": {
+   "speaker": "socko",
+   "text": "Well. That's a family.",
+   "socko_face": "uncomfortable_smile"
+  },
+  "figures_2": {
+   "speaker": "socko",
+   "text": "Don't let them get close enough to surprise you. Or. You know. Take care of it.",
+   "socko_face": "suspicion"
+  },
+  "tv": {
+   "speaker": "socko",
+   "text": "Ooh, TV! Nothing like a little noise to bring the neighbours round.",
+   "socko_face": "excitement"
+  },
+  "bath_black": {
+   "speaker": "socko",
+   "text": "Your hand went in that. Your hand. Which is next to ME.",
+   "socko_face": "panic"
+  },
+  "hurt": {
+   "speaker": "socko",
+   "text": "You're leaking, buddy. Maybe stop doing that.",
+   "socko_face": "nervousness"
+  },
+  "fell_white": {
+   "speaker": "socko",
+   "text": "...and we're back! Outside's overrated. I said that. I'm an indoor person.",
+   "socko_face": "smile"
+  },
+  "warn_marta": {
+   "speaker": "socko",
+   "text": "Shh. Shh shh shh. Something's close.",
+   "socko_face": "nervousness",
+   "style": "quiet"
+  },
+  "warn_super": {
+   "speaker": "socko",
+   "text": "Big footsteps. Big, big footsteps.",
+   "socko_face": "panic",
+   "style": "quiet"
+  },
+  "look_at_you": {
+   "speaker": "socko",
+   "text": "...",
+   "socko_face": "unnatural_stillness"
+  },
+  "stage2": {
+   "speaker": "socko",
+   "text": "Huh? Oh. Okay. We're doing it like that. Okay!",
+   "socko_face": "confusion"
+  },
+  "stage3": {
+   "speaker": "socko",
+   "text": "Buddy. Buddy. Buddy. The gun. The gun, buddy.",
+   "socko_face": "irritation"
+  },
+  "stage4": {
+   "speaker": "socko",
+   "text": "No, no, take your time. It's not like anything in here wants to eat us.",
+   "socko_face": "forced_happiness",
+   "socko_talk": "Talking_Sarcastic"
+  },
+  "stage5": {
+   "speaker": "socko",
+   "text": "Why don't you EVER listen to me?",
+   "socko_face": "anger",
+   "socko_talk": "Talking_Annoyed"
+  },
+  "stage6": {
+   "speaker": "socko",
+   "text": "I'm scared, Kurt. I'm just a sock. If you die, I die. Don't you care about me at all?",
+   "socko_face": "nervousness",
+   "socko_talk": "Talking_Desperate"
+  },
+  "stage7": {
+   "speaker": "socko",
+   "text": "I made you. Do you understand that? I MADE you.",
+   "socko_face": "anger",
+   "socko_talk": "Talking_Threatening"
+  },
+  "cmd_poke": {
+   "speaker": "socko",
+   "text": "Poke poke poke! I'm a natural.",
+   "socko_face": "excitement"
+  },
+  "cmd_poke_fall": {
+   "speaker": "socko",
+   "text": "Oops. Was that important?",
+   "socko_face": "uncomfortable_smile"
+  },
+  "cmd_fetch": {
+   "speaker": "socko",
+   "text": "Ninja mode. Shhhhh.",
+   "socko_face": "suspicion",
+   "style": "quiet"
+  },
+  "cmd_fetch_ok": {
+   "speaker": "socko",
+   "text": "Got it! I'm so helpful.",
+   "socko_face": "wide_smile"
+  },
+  "cmd_bath": {
+   "speaker": "socko",
+   "text": "In THERE? With my FACE? ...Fine. For you.",
+   "socko_face": "disappointment"
+  },
+  "cmd_bath_ok": {
+   "speaker": "socko",
+   "text": "Something hard. Something... shoe-shaped. Can I come out now?",
+   "socko_face": "nervousness"
+  },
+  "cmd_refuse": {
+   "speaker": "socko",
+   "text": "No. Do it yourself.",
+   "socko_face": "anger"
+  },
+  "cmd_look": {
+   "speaker": "socko",
+   "text": "It's dark in there. Darker than dark. I love it.",
+   "socko_face": "smile"
+  },
+  "mx_1": {
+   "speaker": "marta",
+   "text": "Hhrrkh... nnhh. Hhaa-rrkh.",
+   "gibberish": true
+  },
+  "mx_2": {
+   "speaker": "socko",
+   "text": "Bweebee doo! Mabba-mabba, hoo.",
+   "gibberish": true,
+   "socko_face": "smile"
+  },
+  "mx_3": {
+   "speaker": "marta",
+   "text": "Rrrhh. Kkhh-nnaa... hhrrh?",
+   "gibberish": true
+  },
+  "mx_4": {
+   "speaker": "socko",
+   "text": "Peeba. Nep nep. Wubboo dee doo dah.",
+   "gibberish": true,
+   "socko_face": "suspicion"
+  },
+  "mx_5": {
+   "speaker": "marta",
+   "text": "...Hhhh.",
+   "gibberish": true
+  },
+  "mx_6": {
+   "speaker": "socko",
+   "text": "Doo-dah!",
+   "gibberish": true,
+   "socko_face": "wide_smile",
+   "socko_clip": "Head_Bob"
+  },
+  "mx_k1": {
+   "speaker": "kurt",
+   "text": "...What was that?"
+  },
+  "mx_s1": {
+   "speaker": "socko",
+   "text": "What was what?",
+   "socko_face": "smile"
+  },
+  "mx_k2": {
+   "speaker": "kurt",
+   "text": "You. And her. You were talking."
+  },
+  "mx_s2": {
+   "speaker": "socko",
+   "text": "Kurt. Buddy. I'm a sock.",
+   "socko_face": "uncomfortable_smile",
+   "socko_talk": "Talking_Sympathetic"
+  },
+  "tut_move": {
+   "speaker": "socko",
+   "text": "Take it slow. Little steps. Then big steps. Then little steps again!",
+   "socko_face": "smile"
+  },
+  "tut_crouch": {
+   "speaker": "socko",
+   "text": "Get low. Lower. There you go. You've done this before, huh?",
+   "socko_face": "suspicion"
+  },
+  "tut_carry": {
+   "speaker": "socko",
+   "text": "Ooh, you can carry stuff! And throw stuff. Things that get thrown make noise. Things that make noise make friends.",
+   "socko_face": "excitement"
+  },
+  "tut_noise": {
+   "speaker": "socko",
+   "text": "Hear that? Everything in here hears that.",
+   "socko_face": "nervousness",
+   "style": "quiet"
+  },
+  "tut_mantle": {
+   "speaker": "socko",
+   "text": "Whoa! Up you go! Where'd you learn that?",
+   "socko_face": "surprise"
+  }
+ },
+ "end": {
+  "end_out": {
+   "speaker": "socko",
+   "text": "See? Easy. Next time we just do it my way.",
+   "socko_face": "smile"
+  },
+  "end_out_kill": {
+   "speaker": "socko",
+   "text": "That was fun! Wasn't that fun? Let's do more of that.",
+   "socko_face": "wide_smile"
+  },
+  "end_out_calm": {
+   "speaker": "socko",
+   "text": "Shoes. You gave her shoes. Next time, we do it my way.",
+   "socko_face": "irritation"
+  }
+ }
+}

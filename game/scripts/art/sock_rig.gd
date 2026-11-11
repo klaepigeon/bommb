@@ -68,7 +68,7 @@ var eye_rates: Array = [14.0, 11.0]
 var eye_hold: Array = [0.0, 0.0]
 var pupil_gain := 1.0
 
-const CLOTH := preload("res://shaders/ps1_cloth.gdshader")
+const CLOTH := preload("res://shaders/cloth.gdshader")
 
 func _ready() -> void:
 	_skeleton()

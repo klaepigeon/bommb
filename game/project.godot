@@ -1,4 +1,5 @@
-; HYSTERIA, Android-first rebuild. Godot 4.7, GL Compatibility on every platform.
+; HYSTERIA — Flat 47, rebuilt (Godot 4.7, GL Compatibility everywhere: the phone's renderer is the only renderer).
+; Lighting is the game's own (scripts/render/lights.gd + shaders/world.gdshaderinc): no Light3D nodes at all.
 config_version=5
 
 [application]
@@ -8,17 +9,21 @@ config/icon="res://icon/icon.png"
 run/main_scene="res://main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/quit_on_go_back=false
-config/version="0.8"
+config/version="1.0"
 run/flush_stdout_on_print=true
 
 [autoload]
 
-Trail="*res://scripts/core/trail.gd"
+Log="*res://scripts/core/log.gd"
 Settings="*res://scripts/core/settings.gd"
-Game="*res://scripts/core/game.gd"
+World="*res://scripts/core/world.gd"
+Lights="*res://scripts/render/lights.gd"
 Noises="*res://scripts/core/noise.gd"
-Sfx="*res://scripts/core/sfx.gd"
+Audio="*res://scripts/core/audio.gd"
+Controls="*res://scripts/ui/controls.gd"
+Power="*res://scripts/sim/power.gd"
 Speech="*res://scripts/core/speech.gd"
+Progress="*res://scripts/core/progress.gd"
 
 [audio]
 
@@ -41,26 +46,141 @@ pointing/emulate_touch_from_mouse=false
 [physics]
 
 common/physics_ticks_per_second=60
+common/max_physics_steps_per_frame=4
+3d/physics_engine="GodotPhysics3D"
 
 [rendering]
-
-limits/opengl/max_lights_per_object=16
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 textures/canvas_textures/default_texture_filter=0
+textures/default_filters/use_nearest_mipmap_filter=true
 textures/vram_compression/import_etc2_astc=true
 anti_aliasing/quality/msaa_3d=0
-lights_and_shadows/directional_shadow/size=1024
-lights_and_shadows/positional_shadow/atlas_size=1024
+lights_and_shadows/directional_shadow/size=256
+lights_and_shadows/positional_shadow/atlas_size=256
+environment/defaults/default_clear_color=Color(0, 0, 0, 1)
+gl_compatibility/item_buffer_size=16384
 
 [shader_globals]
 
-hole_min={
+l0_pos={
 "type": "vec4",
 "value": Vector4(0, 0, 0, 0)
 }
-hole_max={
+l0_col={
 "type": "vec4",
 "value": Vector4(0, 0, 0, 0)
+}
+l0_zone={
+"type": "vec4",
+"value": Vector4(-2, -2, -2, -2)
+}
+l1_pos={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+l1_col={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+l1_zone={
+"type": "vec4",
+"value": Vector4(-2, -2, -2, -2)
+}
+l2_pos={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+l2_col={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+l2_zone={
+"type": "vec4",
+"value": Vector4(-2, -2, -2, -2)
+}
+l3_pos={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+l3_col={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+l3_zone={
+"type": "vec4",
+"value": Vector4(-2, -2, -2, -2)
+}
+l4_pos={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+l4_col={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+l4_zone={
+"type": "vec4",
+"value": Vector4(-2, -2, -2, -2)
+}
+l5_pos={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+l5_col={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+l5_zone={
+"type": "vec4",
+"value": Vector4(-2, -2, -2, -2)
+}
+l6_pos={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+l6_col={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+l6_zone={
+"type": "vec4",
+"value": Vector4(-2, -2, -2, -2)
+}
+l7_pos={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+l7_col={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+l7_zone={
+"type": "vec4",
+"value": Vector4(-2, -2, -2, -2)
+}
+torch_pos={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+torch_dir={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+torch_col={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+fog={
+"type": "vec4",
+"value": Vector4(0.02, 0.02, 0.025, 14)
+}
+world_tint={
+"type": "vec4",
+"value": Vector4(1, 1, 1, 1)
+}
+snap_res={
+"type": "vec2",
+"value": Vector2(320, 180)
 }

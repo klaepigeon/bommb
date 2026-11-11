@@ -1,18 +1,19 @@
 {
-	"_comment": "The two trees. Anything can be bought in any order. Names and most effects are carried over from the earlier build (story bible 2c); 'Old Name' is PROPOSED for the gate conversation. Costs are tuned so there aren't enough nuggets for everything: the talk route takes three Memory skills.",
-	"memory": [
-		{ "id": "handwriting",   "name": "Her Handwriting", "cost": 3, "desc": "You know whose hand that is. Letters and notes tell you more." },
-		{ "id": "these_streets", "name": "These Streets",   "cost": 2, "desc": "You know this town. You notice when a street comes round on itself." },
-		{ "id": "old_name",      "name": "Old Name",        "cost": 3, "desc": "Somebody used to shout a name at you across rooftops, and you'd turn round. (PROPOSED)" },
-		{ "id": "how_she_moves", "name": "How She Moves",   "cost": 2, "desc": "You've known her a long time. You can feel where she is when she's close." },
-		{ "id": "the_bow",       "name": "The Bow",         "cost": 2, "desc": "Your shoulders remember drawing it. Things you throw go further, and land where you mean." },
-		{ "id": "counting",      "name": "Counting",        "cost": 1, "desc": "A girl's voice, counting, somewhere. You know which way it is." }
-	],
-	"survival": [
-		{ "id": "headshot",      "name": "Headshot",        "cost": 4, "desc": "A shot to the head kills outright. Anything.", "socko": true },
-		{ "id": "steady",        "name": "Steady Hand",     "cost": 2, "desc": "The revolver kicks less and comes back on target faster." },
-		{ "id": "quick_reload",  "name": "Quick Reload",    "cost": 2, "desc": "A round into the gate twice as fast." },
-		{ "id": "quiet_feet",    "name": "Quiet Feet",      "cost": 2, "desc": "You walk like a man who's been somewhere he shouldn't. Footsteps carry half as far." },
-		{ "id": "deep_pockets",  "name": "Deep Pockets",    "cost": 1, "desc": "Seven more rounds, from a coat pocket you didn't know you had." }
-	]
+ "_comment": "Two trees, two currencies. MEMORY is bought with memories (understanding things: the right objects, the right people). GAMEPLAY is the infection's: bought with shards (Gutterspace nuggets, and what the god gives for a kill). Gameplay makes the hunters keener; Memory calms them. Names and descriptions NEW unless noted (carried from the earlier build).",
+ "memory": [
+  {"id": "faces", "name": "Faces", "cost": 1, "desc": "You've been in rooms with these people before. You know them when you see them, and they can tell."},
+  {"id": "handwriting", "name": "Her Handwriting", "cost": 1, "desc": "You know whose hand that is. Letters and notes tell you more. (earlier build)"},
+  {"id": "old_name", "name": "Old Name", "cost": 2, "desc": "Somebody used to shout a name at you across rooftops, and you'd turn round. (earlier build)"},
+  {"id": "how_she_moves", "name": "How She Moves", "cost": 1, "desc": "You've known her a long time. You can feel where she is when she's close. (earlier build)"},
+  {"id": "these_walls", "name": "These Walls", "cost": 1, "desc": "You've been inside walls before. You see the chalk marks somebody left, and where the passages double back."},
+  {"id": "the_bow", "name": "The Bow", "cost": 2, "desc": "Your shoulders remember drawing it. Things you throw go further, and land where you mean. (earlier build)"}
+ ],
+ "gameplay": [
+  {"id": "quiet_feet", "name": "Quiet Feet", "cost": 1, "desc": "Footsteps carry half as far. (earlier build)"},
+  {"id": "deep_lungs", "name": "Deep Lungs", "cost": 1, "desc": "Something in your chest that wasn't there. You run longer and breathe quieter."},
+  {"id": "the_pull", "name": "The Pull", "cost": 2, "desc": "Want a thing hard enough and it comes to your hand. Six metres. It's not a nice feeling."},
+  {"id": "coral_grip", "name": "Coral Grip", "cost": 2, "desc": "Your right hand closes harder than a hand should. Locks, chains, hinges."},
+  {"id": "dark_eyes", "name": "Dark Eyes", "cost": 2, "desc": "The dark stops being dark. Things in it see you seeing."},
+  {"id": "headshot", "name": "Headshot", "cost": 3, "desc": "A shot to the head kills outright. Anything. (earlier build)"}
+ ]
 }

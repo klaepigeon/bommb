@@ -1,0 +1,18 @@
+{
+	"_comment": "The two trees. Anything can be bought in any order. Names and most effects are carried over from the earlier build (story bible 2c); 'Old Name' is PROPOSED for the gate conversation. Costs are tuned so there aren't enough nuggets for everything: the talk route takes three Memory skills.",
+	"memory": [
+		{ "id": "handwriting",   "name": "Her Handwriting", "cost": 3, "desc": "You know whose hand that is. Letters and notes tell you more." },
+		{ "id": "these_streets", "name": "These Streets",   "cost": 2, "desc": "You know this town. You notice when a street comes round on itself." },
+		{ "id": "old_name",      "name": "Old Name",        "cost": 3, "desc": "Somebody used to shout a name at you across rooftops, and you'd turn round. (PROPOSED)" },
+		{ "id": "how_she_moves", "name": "How She Moves",   "cost": 2, "desc": "You've known her a long time. You can feel where she is when she's close." },
+		{ "id": "the_bow",       "name": "The Bow",         "cost": 2, "desc": "Your shoulders remember drawing it. Things you throw go further, and land where you mean." },
+		{ "id": "counting",      "name": "Counting",        "cost": 1, "desc": "A girl's voice, counting, somewhere. You know which way it is." }
+	],
+	"survival": [
+		{ "id": "headshot",      "name": "Headshot",        "cost": 4, "desc": "A shot to the head kills outright. Anything.", "socko": true },
+		{ "id": "steady",        "name": "Steady Hand",     "cost": 2, "desc": "The revolver kicks less and comes back on target faster." },
+		{ "id": "quick_reload",  "name": "Quick Reload",    "cost": 2, "desc": "A round into the gate twice as fast." },
+		{ "id": "quiet_feet",    "name": "Quiet Feet",      "cost": 2, "desc": "You walk like a man who's been somewhere he shouldn't. Footsteps carry half as far." },
+		{ "id": "deep_pockets",  "name": "Deep Pockets",    "cost": 1, "desc": "Seven more rounds, from a coat pocket you didn't know you had." }
+	]
+}

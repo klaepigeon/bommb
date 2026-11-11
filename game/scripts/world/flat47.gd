@@ -1,500 +1,579 @@
 class_name Flat47
 extends Node3D
-## Flat 47: the exported apartment from the first build (assets/flat47/flat47.glb + level.json),
-## textured and dressed, made a level: PS1 materials, collision, steady lights, doors and drawers
-## that work, the notes and papers you can read, and the landing outside the front door.
-## Metres; floor at y=0. The flat runs x 0..10, z 0..8; the landing is east of the front door.
-##
+## Flat 47: the first build's painted flat (assets/flat47/flat47.glb + level.json), made a place
+## that works. Every surface on the game's own lighting, by room. Doors, drawers and ~140 loose
+## things are physical; the papers can be read; the fuse box, the TV, the radio, the bath and the
+## front door's chain are systems. Behind the wardrobe the box room has gone through into the walls.
+## Metres; floor at y=0; the flat runs x 0..10, z 0..8; the landing is east of the front door.
 ##   living (x0-4.4, z0-5.2)   bedroom (4.4-7.6, 0-3.8)   kitchen (7.6-10, 0-3.8)
-##   hall (4.4-10, 3.8-5.2) ── front door at x=10.06 ── landing (x 10.4-14)
-##   box room (0-2.8, 5.2-8)   Sonya's room (2.8-6.4)    bathroom (6.4-10)
+##   hall (4.4-10, 3.8-5.2) ── front door x=10.06 ── landing (x 10.4-14)
+##   box room (0-2.8, 5.2-8)   Sonya's room (2.8-6.4)    bathroom (6.4-10)    balcony (z<0)
 
-const PS1 := preload("res://shaders/ps1_lit.gdshader")
 const H := 2.75
-const KEEP := AABB(Vector3(-0.6, -0.8, -1.95), Vector3(14.6, 4.3, 10.4))     # the flat, its balcony, the landing
-const LIGHT_AREA := AABB(Vector3(-0.3, -0.5, -0.3), Vector3(14.2, H + 3.5, 8.6))
-const ROOM_NEAR := 3.0
-
-var level: Dictionary
-var doors := {}                 ## id -> HingeDoor
-var front_door: HingeDoor
-var room_door: HingeDoor        ## the living room's: open when he goes in, shut while he's out
-var room_door_spot: Hotspot     ## (kept for the scene's API: the door's own leaf is what you use)
-var marta_seat := Vector3(3.0, 0, 1.42)
-var marta_yaw := PI * 0.5
-var wardrobe: Node3D
-var wardrobe_spot: Hotspot
-var hole_spot: Hotspot
-var hole_center := Vector3(3.55, 0.55, 5.13)
-var flat_nuggets: Array[Node3D] = []
-var lights: Array[Light3D] = []
-var readables: Array = []       ## usable bodies carrying "title"/"desc" metas
-var env_settings := {}
-var building: Building          ## the stairwell and landings outside
-var door48: Node3D              ## Flat 48's door, across the landing (a hinge; the scene opens it)
-var door48_spot: Hotspot
-
-## Where things are, for the scene and the tests.
+const KEEP := AABB(Vector3(-0.6, -0.8, -1.95), Vector3(14.6, 4.3, 10.45))
+const ROOMS := {"living": 1, "bedroom": 2, "kitchen": 3, "hall": 4, "storage": 5, "child": 6, "bath": 7}
+const BALCONY := 8
+const LANDING := 9
+const MARTA_SEAT := Vector3(3.02, 0.0, 1.45)
+const TABLE := Vector3(2.4, 0.78, 1.35)
+const WARDROBE_AT := Vector3(1.95, 0.005, 4.84)
+const WARDROBE_END := Vector3(2.92, 0.005, 4.84)
+## Holes knocked through into the walls (the maze): [min, max] boxes through the wall.
+const HOLES := {
+	"boxroom": [Vector3(1.28, -0.1, 7.9), Vector3(2.38, 2.05, 8.5)],
+	"child": [Vector3(5.25, -0.1, 7.9), Vector3(5.95, 1.22, 8.5)],
+	"bath": [Vector3(8.22, -0.1, 7.9), Vector3(8.92, 1.4, 8.5)],
+}
 const POINTS := {
-	"landing": Vector3(11.3, 0, 4.55),
-	"door_out": Vector3(10.06, 1.35, 4.55),
-	"hall": Vector3(8.6, 0, 4.5),
-	"hall_west": Vector3(5.1, 0, 4.55),
-	"living_in": Vector3(3.9, 0, 4.55),
-	"approach": Vector3(3.4, 0, 3.6),
-	"near_marta": Vector3(3.4, 0, 2.5),
-	"wake": Vector3(3.55, 0, 1.0),
-	"by_door": Vector3(3.98, 0, 3.95),
-	"by_wardrobe": Vector3(3.9, 0, 4.25),
+	"landing": Vector3(11.4, 0, 4.55), "door_out": Vector3(10.06, 1.35, 4.55), "hall": Vector3(8.6, 0, 4.5),
+	"hall_west": Vector3(5.1, 0, 4.55), "living_in": Vector3(3.9, 0, 4.4), "near_marta": Vector3(3.55, 0, 1.9),
+	"wake": Vector3(3.5, 0, 1.2), "by_door": Vector3(3.95, 0, 4.4), "by_wardrobe": Vector3(2.0, 0, 4.2),
+	"boxroom": Vector3(1.8, 0, 6.6), "balcony": Vector3(2.2, -0.12, -1.0), "fusebox": Vector3(8.95, 0, 4.3),
+	"bath": Vector3(7.4, 0, 6.8), "child": Vector3(4.6, 0, 6.4),
 }
 
-const WARDROBE_AT := Vector3(3.35, 0.0, 4.84)
-const WALL_Z := 5.13
-const SLIDE := -0.62
-const HOLE_MIN := Vector3(3.27, 0.04, 5.04)
-const HOLE_MAX := Vector3(3.83, 1.8, 5.36)
+var level: Dictionary
+var docs: Dictionary
+var doors := {}                ## id -> Door
+var props := {}                ## key -> Prop
+var lamps := {}                ## name -> Lamp
+var wardrobe: Node3D
+var wardrobe_body: AnimatableBody3D
+var wardrobe_shoves := 0
+var wardrobe_toppled := false
+var bath: WaterBody
+var marta_chair: Node3D
+var tv_on := false
+var radio_on := false
+var _tv_lamp: Lamp
+var _tv_snd: AudioStreamPlayer3D
+var _radio_snd: AudioStreamPlayer3D
+var _lure_t := 0.0
+var _hole_mats := {}           ## hole name -> [materials cut]
 
 func build() -> void:
 	level = JSON.parse_string(FileAccess.get_file_as_string("res://assets/flat47/level.json"))
+	docs = JSON.parse_string(FileAccess.get_file_as_string("res://content/docs.json"))
 	var flat: Node3D = (load("res://assets/flat47/flat47.glb") as PackedScene).instantiate()
-	flat.name = "Apartment"
+	flat.name = "Model"
 	add_child(flat)
-	_strip_outside(flat)
-	_materials(flat)
+	_surfaces(flat)
 	_behaviours(flat)
 	_collision()
-	_lights()
+	_lamps()
 	_outside()
-	building = Building.new()
-	add_child(building)
-	building.build()
-	door48 = building.door48
-	door48_spot = building.door48_spot
+	_systems()
 	_wardrobe()
-	# a lamp on the dinner table, still on (the first build had Kurt's torch to see her by)
-	add_lamp(Vector3(2.6, 1.0, 2.05), Color("ffb070"), 1.1, 2.8)
-	RenderingServer.global_shader_parameter_set("hole_min", Vector4(HOLE_MIN.x, HOLE_MIN.y, HOLE_MIN.z, 0.0))
-	RenderingServer.global_shader_parameter_set("hole_max", Vector4(HOLE_MAX.x, HOLE_MAX.y, HOLE_MAX.z, 0.0))
-	front_door = doors.get("dEntry")
-	room_door = doors.get("dLiving")
-	front_door.max_angle = 85.0
-	front_door.set_angle(0.0)
-	front_door.set_usable(false)     # the scene opens it
-	doors["dStore"].locked = true    # bolted from the outside
-	room_door_spot = Hotspot.make(self, Transform3D(Basis(), Vector3(-50, -50, -50)), Vector3(0.1, 0.1, 0.1), "")
-	room_door_spot.enabled = false
-	for p in [Vector3(0.6, 0.45, 3.4), Vector3(1.2, 0.5, 0.6)]:
-		var n := Nugget.new()
-		add_child(n)
-		n.position = p
-		n.visible = false          # they're only there after he wakes
-		flat_nuggets.append(n)
+	_holes()
+	World.register("flat47", _save, _load)
+	Log.mark("flat47 built: %d props, %d doors" % [props.size(), doors.size()])
 
-## The environment the flat wants (Main applies it while you're here).
-func apply_environment(env: Environment) -> void:
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(1, 1, 1)
-	env.background_energy_multiplier = 1.6        # outside is a flat, even white
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color("6a7890").lerp(Color("1a140e"), 0.4)
-	env.ambient_light_energy = 0.2
-	env.fog_enabled = true
-	env.fog_light_color = Color("262a31")
-	env.fog_density = 0.0062
-	env.fog_sky_affect = 0.0
-	env.tonemap_mode = Environment.TONE_MAPPER_ACES
-	env.tonemap_exposure = 1.15
+# ------------------------------------------------------------------------------- where is what
+func zone_of(p: Vector3) -> int:
+	if p.z < -0.05 and p.x > 0.3 and p.x < 4.3 and p.z > -2.0: return BALCONY
+	if p.x > 10.3 and p.x < 14.5 and p.z > 3.3 and p.z < 8.3: return LANDING
+	for k in level.rooms:
+		var r: Dictionary = level.rooms[k]
+		if p.x >= r.x0 and p.x < r.x1 and p.z >= r.z0 and p.z < r.z1:
+			return int(ROOMS.get(k, -1))
+	return -1
 
-# --- the model --------------------------------------------------------------------------------
-
-func _strip_outside(root: Node) -> void:
-	for mi in root.find_children("*", "MeshInstance3D", true, false):
-		var m: MeshInstance3D = mi
-		var a: AABB = m.global_transform * m.get_aabb()
-		if not KEEP.has_point(a.get_center()) or a.size.length() > 40.0:
-			m.queue_free()
-
-func _materials(root: Node) -> void:
-	var cache := {}
-	for mi in root.find_children("*", "MeshInstance3D", true, false):
-		var m: MeshInstance3D = mi
-		m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		for i in m.mesh.get_surface_count():
-			var src := m.get_active_material(i)
-			if not (src is StandardMaterial3D):
-				continue
-			if cache.has(src):
-				m.set_surface_override_material(i, cache[src])
-				continue
-			var std: StandardMaterial3D = src
-			var out: Material
-			if std.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED:
-				var t := std.duplicate() as StandardMaterial3D
-				t.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
-				out = t
-			else:
-				var sm := ShaderMaterial.new()
-				sm.shader = PS1
-				sm.set_shader_parameter("albedo_color", std.albedo_color)
-				sm.set_shader_parameter("albedo_tex", std.albedo_texture if std.albedo_texture else _white())
-				sm.set_shader_parameter("roughness", std.roughness)
-				if std.roughness_texture:
-					sm.set_shader_parameter("roughness_tex", std.roughness_texture)
-					sm.set_shader_parameter("use_roughness_tex", true)
-				if std.normal_enabled and std.normal_texture:
-					sm.set_shader_parameter("normal_tex", std.normal_texture)
-					sm.set_shader_parameter("use_normal_tex", true)
-					sm.set_shader_parameter("normal_depth", std.normal_scale * 0.1)
-				if std.emission_enabled:
-					sm.set_shader_parameter("emission", Vector3(std.emission.r, std.emission.g, std.emission.b) * std.emission_energy_multiplier)
-					if std.emission_texture:
-						sm.set_shader_parameter("emission_tex", std.emission_texture)
-						sm.set_shader_parameter("use_emission_tex", true)
-				out = sm
-			cache[src] = out
-			m.set_surface_override_material(i, out)
-
-static var _white_tex: Texture2D
-static func _white() -> Texture2D:
-	if not _white_tex:
-		var img := Image.create(2, 2, false, Image.FORMAT_RGB8)
-		img.fill(Color.WHITE)
-		_white_tex = ImageTexture.create_from_image(img)
-	return _white_tex
-
-## Some of the first build's text named a husband; there's none in canon (story bible).
-const TEXT_PATCH := {
-	"prop_0_Wedding_photograph": "Face down, the glass starred. The photograph itself has been cut out of the frame, carefully, with nail scissors. Someone pulled it off the wall afterwards; the nail came with it.",
-	"pick_129_Bundle_of_letters": "Tied with darning wool. Her handwriting, every one, to a post-office box in Moscow with no name on it. Every one stamped RETURN TO SENDER.",
-}
-
-func _behaviours(root: Node) -> void:
-	var nodes := root.find_children("*", "Node3D", true, false)
-	for n in nodes:
-		if not n.has_meta("extras"):
-			continue
-		var ex: Dictionary = n.get_meta("extras")
-		if TEXT_PATCH.has(String(n.name)):
-			ex["desc"] = TEXT_PATCH[String(n.name)]
-		match String(ex.get("kind", "")):
-			"door":
-				n.set_script(load("res://scripts/world/hinge_door.gd"))
-				n.call("setup", ex)
-				doors[String(ex.get("id", n.name))] = n
-			"drawer":
-				n.set_script(load("res://scripts/world/slide_drawer.gd"))
-				n.call("setup", ex)
-	for n in nodes:
-		if not is_instance_valid(n) or not n.has_meta("extras"):
-			continue
-		var ex: Dictionary = n.get_meta("extras")
-		match String(ex.get("kind", "")):
-			"prop": _prop(n, ex)
-			"pick": _readable(n, ex)
-
-## Furniture is solid; small things are just there (nothing here is physics: steadier on a phone).
-## Anything with a description can be looked at.
-func _prop(n: Node3D, ex: Dictionary) -> void:
-	var mass := float(ex.get("mass", 1.0))
-	var size: Array = ex.get("size", [0.2, 0.2, 0.2])
-	var centre: Array = ex.get("centre", [0, 0, 0])
-	var desc := String(ex.get("desc", ""))
-	if mass < 4.0 and desc == "":
-		return
-	var sb := StaticBody3D.new()
-	sb.set_script(load("res://scripts/world/usable.gd"))
-	var cs := CollisionShape3D.new(); var b := BoxShape3D.new()
-	b.size = Vector3(maxf(size[0], 0.04), maxf(size[1], 0.04), maxf(size[2], 0.04)); cs.shape = b
-	cs.position = Vector3(centre[0], centre[1], centre[2])
-	sb.add_child(cs)
-	n.add_child(sb)
-	sb.collision_layer = 1 if mass >= 4.0 else 8
-	sb.set("enabled", desc != "")
-	sb.set("prompt", "Look")
-	sb.set_meta("title", String(ex.get("name", "")))
-	sb.set_meta("desc", desc)
-	readables.append(sb)
-
-func _readable(n: Node3D, ex: Dictionary) -> void:
-	var aabb := AABB()
-	var first := true
-	var meshes: Array = n.find_children("*", "MeshInstance3D", true, false)
-	if n is MeshInstance3D:
-		meshes.append(n)
-	for m in meshes:
-		var a: AABB = (m as MeshInstance3D).get_aabb()
-		a = (n.global_transform.affine_inverse() * (m as Node3D).global_transform) * a
-		aabb = a if first else aabb.merge(a)
-		first = false
-	var sb := StaticBody3D.new()
-	sb.set_script(load("res://scripts/world/usable.gd"))
-	var cs := CollisionShape3D.new(); var b := BoxShape3D.new()
-	b.size = aabb.size.max(Vector3(0.06, 0.06, 0.06)); cs.shape = b
-	cs.position = aabb.get_center()
-	sb.add_child(cs)
-	n.add_child(sb)
-	sb.collision_layer = 8
-	sb.set("prompt", "Read" if ex.get("read", false) else "Look")
-	sb.set_meta("title", String(ex.get("name", "")))
-	sb.set_meta("desc", String(ex.get("desc", "")))
-	readables.append(sb)
-
-## Hides the exported meshes around a point (where something built here takes their place).
-func hide_near(p: Vector3, radius: float, max_size: float) -> void:
-	for mi in find_children("*", "MeshInstance3D", true, false):
-		var m: MeshInstance3D = mi
-		if not m.is_inside_tree() or m.get_parent() is MartaModel:
-			continue
-		var a: AABB = m.global_transform * m.get_aabb()
-		if a.size.length() > max_size:
-			continue
-		var c := a.get_center()
-		if Vector2(c.x - p.x, c.z - p.z).length() < radius and c.y < p.y + 0.6:
-			m.visible = false
-
-func _collision() -> void:
-	var walls := StaticBody3D.new(); walls.name = "Collision"; add_child(walls)
-	for c in level.colliders:
-		var sh := CollisionShape3D.new(); var b := BoxShape3D.new()
-		var h: float = c.y1 - c.y0
-		b.size = Vector3(c.hx * 2.0, h, c.hz * 2.0)
-		sh.shape = b
-		sh.transform = Transform3D(Basis(Vector3.UP, c.rot), Vector3(c.x, c.y0 + h * 0.5, c.z))
-		walls.add_child(sh)
-	for f in level.floors:
-		var sh := CollisionShape3D.new(); var b := BoxShape3D.new()
-		b.size = Vector3(f.x1 - f.x0, 0.4, f.z1 - f.z0); sh.shape = b
-		sh.position = Vector3((f.x0 + f.x1) * 0.5, f.y - 0.2, (f.z0 + f.z1) * 0.5)
-		walls.add_child(sh)
-	var ceil := CollisionShape3D.new(); var cb := BoxShape3D.new(); cb.size = Vector3(10.9, 0.4, 9)
-	ceil.shape = cb; ceil.position = Vector3(4.95, H + 0.2, 4)       # over the flat only: the stair goes up past it
-	walls.add_child(ceil)
-
-# --- light: steady, few, by room --------------------------------------------------------------
-
-const CD := 1.0 / PI
-
-func _lights() -> void:
-	for L in level.lights:
-		if L.get("broken", false) or not bool(L.on):
-			continue
-		var pos := Vector3(L.pos[0], L.pos[1], L.pos[2])
-		if String(L.type) == "PointLight" and not LIGHT_AREA.has_point(pos):
-			continue
-		if not powered(L.get("circuit")):
-			continue
-		if str(L.name).begins_with("stair"):
-			continue                              # the stairwell lights itself (Building)
-		var l: Light3D
-		match String(L.type):
-			"PointLight":
-				var o := OmniLight3D.new()
-				o.omni_range = float(L.range) if float(L.range) > 0.0 else 30.0
-				o.omni_attenuation = float(L.get("decay", 2.0))
-				l = o
-			"SpotLight":
-				var sp := SpotLight3D.new()
-				sp.spot_range = float(L.range) if float(L.range) > 0.0 else 30.0
-				sp.spot_attenuation = float(L.get("decay", 2.0))
-				sp.spot_angle = rad_to_deg(float(L.angle))
-				sp.light_projector = Penumbra.make(float(L.get("penumbra", 0.0)))
-				l = sp
-			"RectAreaLight":
-				var sp := SpotLight3D.new()
-				sp.spot_range = 9.0; sp.spot_attenuation = 2.0
-				sp.spot_angle = 85.0; sp.spot_angle_attenuation = 1.6
-				sp.light_specular = 0.2
-				l = sp
-				L.intensity = float(L.intensity) * float(L.w) * float(L.h)
-				pos += Vector3(L.dir[0], 0, L.dir[2]) * 0.15
-			_:
-				continue
-		l.name = "Light_" + str(L.name)
-		l.light_color = Color(L.color)
-		var k := 1.0
-		var fl = L.get("flicker")
-		match (fl if fl is String else ""):        # every light steady; the failing ones just dimmer
-			"dying": k = 0.8
-			"fluoro": k = 0.95
-			"emergency": k = 0.8
-		l.light_energy = float(L.intensity) * CD * k
-		l.shadow_enabled = false
-		add_child(l)
-		l.position = pos
-		if l is SpotLight3D:
-			if L.has("target"):
-				l.look_at(Vector3(L.target[0], L.target[1], L.target[2]))
-			elif L.has("dir"):
-				l.look_at(pos + Vector3(L.dir[0], L.dir[1] - 0.15, L.dir[2]))
-		l.set_meta("base", l.light_energy)
-		lights.append(l)
-
-func powered(c) -> bool:
-	return not (c is String) or bool(level.get("circuits", {}).get(c, true))
-
-func room_of(p: Vector3) -> String:
+func room_name(p: Vector3) -> String:
 	for k in level.rooms:
 		var r: Dictionary = level.rooms[k]
 		if p.x >= r.x0 and p.x < r.x1 and p.z >= r.z0 and p.z < r.z1:
 			return k
 	return ""
 
-func _room_dist(k: String, p: Vector3) -> float:
-	if k == "":
-		return 0.0
-	var r: Dictionary = level.rooms[k]
-	var dx := maxf(maxf(r.x0 - p.x, p.x - r.x1), 0.0)
-	var dz := maxf(maxf(r.z0 - p.z, p.z - r.z1), 0.0)
-	return Vector2(dx, dz).length()
+func surface_of(p: Vector3) -> String:
+	match zone_of(p):
+		3, 7: return "step_tile"
+		8, 9: return "step_tile"
+	return "step_wood"
 
-## A room's lights are on while you're in it or near it, and fade (slowly: no popping) when you're
-## further. Off lights cost nothing and keep every mesh under the phone renderer's light limit.
-func _process(delta: float) -> void:
-	if not visible:
+# ------------------------------------------------------------------------------- the model
+func _surfaces(root: Node) -> void:
+	for mi in root.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		var a: AABB = m.global_transform * m.get_aabb()
+		var c := a.get_center()
+		if not KEEP.has_point(c) or a.size.length() > 40.0 or c.x > 14.2:
+			m.queue_free(); continue
+		m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var z := -2
+		var n: Node = m
+		while n and n != root:
+			var nm := String(n.name)
+			var room := nm.split("-")[0] if "-" in nm else ""
+			if ROOMS.has(room): z = ROOMS[room]; break
+			n = n.get_parent()
+		if z == -2:
+			z = zone_of(c)
+		for i in m.mesh.get_surface_count():
+			var src := m.get_active_material(i)
+			if src: m.set_surface_override_material(i, Mats.convert(src, z))
+		m.set_meta("zone", z)
+
+func _behaviours(root: Node) -> void:
+	var nodes := root.find_children("*", "Node3D", true, false)
+	for n in nodes:
+		if not n.has_meta("extras"): continue
+		var ex: Dictionary = n.get_meta("extras")
+		match String(ex.get("kind", "")):
+			"door": _door(n, ex)
+			"drawer": _drawer(n, ex)
+	for n in nodes:
+		if not is_instance_valid(n) or not n.has_meta("extras") or not n.is_inside_tree(): continue
+		var ex: Dictionary = n.get_meta("extras")
+		match String(ex.get("kind", "")):
+			"prop", "pick": _prop(n, ex)
+
+func _door(n: Node3D, ex: Dictionary) -> void:
+	var id := String(ex.get("id", n.name))
+	if id == "dStore":
+		# torn off its hinges: the doorway behind the wardrobe goes into the walls
+		n.position = Vector3(0.35, 0.03, 6.9)
+		n.rotation = Vector3(-PI * 0.5, 0.4, 0.0)
 		return
-	var cam := get_viewport().get_camera_3d()
-	var eye := cam.global_position if cam else Vector3(5, 1.6, 4)
-	for o in lights:
-		if not o.has_meta("room"):
-			var probe := o.global_position
-			if o is SpotLight3D:
-				probe += -o.global_transform.basis.z * 1.2
-			var k := room_of(probe)
-			if k == "" and o is SpotLight3D:
-				k = room_of(o.global_position - o.global_transform.basis.z * 6.0)
-			o.set_meta("room", k)
-			o.set_meta("near", 1.0)
-		var near: float = o.get_meta("near")
-		var want := 1.0        # all of them, always: there are eleven, under the phone renderer's limit, and a
-		                       # light going out on the wall beside you as you leave a room is worse than its cost
-		near = move_toward(near, want, delta / 1.2)
-		o.set_meta("near", near)
-		o.visible = near > 0.001
-		o.light_energy = float(o.get_meta("base")) * smoothstep(0.0, 1.0, near)
+	var d := Door.new(); d.name = "Door_" + id
+	var xf := n.global_transform
+	n.get_parent().add_child(d)
+	d.global_transform = xf
+	n.reparent(d, true)
+	n.transform = Transform3D.IDENTITY
+	d.setup(id, ex)
+	var shut := Transform3D(Basis(Vector3.UP, d.psi0), d.position)
+	d.zone_a = zone_of(shut * Vector3(d.w * 0.5, 1.0, 0.5))
+	d.zone_b = zone_of(shut * Vector3(d.w * 0.5, 1.0, -0.5))
+	d.set_angle(d.angle)
+	doors[id] = d
+	for mi in d.find_children("*", "MeshInstance3D", true, false):
+		Mats.own_zone(mi, -1)
 
-## A light by the table, low and warm, so she can be seen (the first build had Kurt's torch).
-func add_lamp(at: Vector3, color: Color, energy: float, reach: float) -> OmniLight3D:
-	var l := OmniLight3D.new()
-	l.light_color = color; l.light_energy = energy; l.omni_range = reach; l.omni_attenuation = 1.4
-	l.shadow_enabled = false
-	add_child(l)
-	l.position = at
-	l.set_meta("base", energy)
-	lights.append(l)
-	return l
+func _drawer(n: Node3D, ex: Dictionary) -> void:
+	var dr := Drawer.new()
+	n.get_parent().add_child(dr)
+	dr.global_transform = n.global_transform
+	n.reparent(dr, true)
+	dr.setup(float(ex.get("max", 0.3)))
 
-# --- outside: there isn't one --------------------------------------------------------------------
+func _prop(n: Node3D, ex: Dictionary) -> void:
+	var key := String(n.name)
+	var mass := float(ex.get("mass", 1.0))
+	var d: Dictionary = docs.get(key, {})
+	var title := String(ex.get("name", "")).replace("_", " ")
+	var desc := String(d.get("desc", ex.get("desc", "")))
+	if key == "prop_34_Wardrobe":
+		return
+	var size := Vector3.ZERO; var centre := Vector3.ZERO
+	if ex.has("size") and (ex.size as Array).size() == 3:
+		size = Vector3(ex.size[0], ex.size[1], ex.size[2]); centre = Vector3(ex.centre[0], ex.centre[1], ex.centre[2]) if ex.has("centre") else Vector3(0, size.y * 0.5, 0)
+	else:
+		var aabb := AABB(); var first := true
+		for m in n.find_children("*", "MeshInstance3D", true, false) + ([n] if n is MeshInstance3D else []):
+			var a: AABB = (n.global_transform.affine_inverse() * (m as Node3D).global_transform) * (m as MeshInstance3D).get_aabb()
+			aabb = a if first else aabb.merge(a); first = false
+		size = aabb.size; centre = aabb.get_center()
+	if key == "prop_8_Chair":
+		marta_chair = n          # hers: it's grown into the floor
+		var sb := StaticBody3D.new(); var cs := CollisionShape3D.new(); var b := BoxShape3D.new()
+		b.size = size; cs.shape = b; cs.position = centre; sb.add_child(cs); n.add_child(sb)
+		return
+	if mass >= 30.0:
+		var sb := StaticBody3D.new(); var cs := CollisionShape3D.new(); var b := BoxShape3D.new()
+		b.size = size; cs.shape = b; cs.position = centre; sb.add_child(cs); n.add_child(sb)
+		return
+	var p := Prop.new()
+	p.mass = maxf(mass, 0.05)
+	var cs := CollisionShape3D.new(); var b := BoxShape3D.new()
+	b.size = size.max(Vector3(0.04, 0.04, 0.04)); cs.shape = b; cs.position = centre
+	p.add_child(cs)
+	var xf := n.global_transform.orthonormalized()
+	n.get_parent().add_child(p)
+	p.global_transform = xf
+	n.reparent(p, true)
+	p.key = key; p.title = title; p.desc = desc
+	p.stuff = _stuff(title)
+	if d.has("text"): p.doc = key; p.title = String(d.get("title", title))
+	if String(ex.get("kind", "")) == "pick" and ex.get("read", false): p.doc = key
+	match key:
+		"prop_37_Magazine": p.item = "magazine"
+		"prop_40_Child_s_shoe": p.item = "shoe_left"
+		"pick_127_Matches": p.item = "matches"
+	if title.begins_with("Three litre jar") and desc.begins_with("Water"): p.contents = "water"
+	if p.stuff in ["cloth", "paper", "plastic"] or (mass < 0.4 and p.stuff == "wood"): p.floats = true
+	props[key] = p
 
+static func _stuff(t: String) -> String:
+	var l := t.to_lower()
+	for w in ["glass", "jar", "bottle", "shade"]:
+		if w in l: return "glass"
+	for w in ["cup", "tureen", "ashtray", "plate"]:
+		if w in l: return "china"
+	for w in ["tin", "saucepan", "kettle", "hammer", "axe", "bucket", "stove", "battery", "canister", "razor", "knife"]:
+		if w in l: return "metal"
+	for w in ["pillow", "doll", "bear", "slipper", "socks", "sock", "teddy"]:
+		if w in l: return "cloth"
+	for w in ["book", "magazine", "newspaper", "notice", "note", "letters", "papers", "drawing", "calendar", "photo", "album"]:
+		if w in l: return "paper"
+	return "wood"
+
+func _collision() -> void:
+	var walls := StaticBody3D.new(); walls.name = "Walls"; add_child(walls)
+	for c in level.colliders:
+		if float(c.x) > 14.2: continue
+		var h: float = c.y1 - c.y0
+		var box := AABB(Vector3(c.x - c.hx, c.y0, c.z - c.hz), Vector3(c.hx * 2.0, h, c.hz * 2.0))
+		var pieces: Array = [box]
+		if absf(float(c.rot)) < 0.01:
+			for hk in HOLES:
+				var hb := AABB(HOLES[hk][0], HOLES[hk][1] - HOLES[hk][0])
+				var next: Array = []
+				for pc in pieces: next.append_array(_carve(pc, hb))
+				pieces = next
+		for pc in pieces:
+			var sh := CollisionShape3D.new(); var b := BoxShape3D.new()
+			b.size = pc.size; sh.shape = b
+			sh.transform = Transform3D(Basis(Vector3.UP, c.rot), pc.get_center())
+			walls.add_child(sh)
+	for f in level.floors:
+		if float(f.x0) > 14.0: continue
+		var sh := CollisionShape3D.new(); var b := BoxShape3D.new()
+		b.size = Vector3(f.x1 - f.x0, 0.4, f.z1 - f.z0); sh.shape = b
+		sh.position = Vector3((f.x0 + f.x1) * 0.5, f.y - 0.2, (f.z0 + f.z1) * 0.5)
+		walls.add_child(sh)
+	var ceil := CollisionShape3D.new(); var cb := BoxShape3D.new(); cb.size = Vector3(10.9, 0.4, 9.0)
+	ceil.shape = cb; ceil.position = Vector3(4.95, H + 0.2, 4.0)
+	walls.add_child(ceil)
+	# the balcony rail
+	var rail := CollisionShape3D.new(); var rb := BoxShape3D.new(); rb.size = Vector3(3.6, 1.2, 0.08)
+	rail.shape = rb; rail.position = Vector3(2.25, 0.5, -1.78); walls.add_child(rail)
+
+## A box with a hole box taken out of it, as up to six boxes.
+static func _carve(b: AABB, h: AABB) -> Array:
+	if not b.intersects(h): return [b]
+	var out: Array = []
+	var i := b.intersection(h)
+	if i.position.x > b.position.x: out.append(AABB(b.position, Vector3(i.position.x - b.position.x, b.size.y, b.size.z)))
+	if i.end.x < b.end.x: out.append(AABB(Vector3(i.end.x, b.position.y, b.position.z), Vector3(b.end.x - i.end.x, b.size.y, b.size.z)))
+	var mid := AABB(Vector3(i.position.x, b.position.y, b.position.z), Vector3(i.size.x, b.size.y, b.size.z))
+	if i.position.y > mid.position.y: out.append(AABB(mid.position, Vector3(mid.size.x, i.position.y - mid.position.y, mid.size.z)))
+	if i.end.y < mid.end.y: out.append(AABB(Vector3(mid.position.x, i.end.y, mid.position.z), Vector3(mid.size.x, mid.end.y - i.end.y, mid.size.z)))
+	var mid2 := AABB(Vector3(i.position.x, i.position.y, b.position.z), Vector3(i.size.x, i.size.y, b.size.z))
+	if i.position.z > mid2.position.z: out.append(AABB(mid2.position, Vector3(mid2.size.x, mid2.size.y, i.position.z - mid2.position.z)))
+	if i.end.z < mid2.end.z: out.append(AABB(Vector3(mid2.position.x, mid2.position.y, i.end.z), Vector3(mid2.size.x, mid2.size.y, mid2.end.z - i.end.z)))
+	return out
+
+# ------------------------------------------------------------------------------- light
+const LAMP_SCALE := 0.15
+
+func _lamps() -> void:
+	var i := 0
+	for L in level.lights:
+		i += 1
+		var pos := Vector3(L.pos[0], L.pos[1], L.pos[2])
+		var name := String(L.name)
+		if name.begins_with("stair") or not KEEP.has_point(pos) or name == "street": continue
+		var col := Color(String(L.color))
+		var circ = L.get("circuit")
+		var circuit := String(circ) if circ is String else ""
+		var z := zone_of(pos)
+		var l: Lamp
+		if String(L.type) == "RectAreaLight":
+			# a window: the white outside, coming in flat and cold
+			var inside := pos + Vector3(L.dir[0], 0, L.dir[2]) * 0.9
+			l = Lamp.make(self, inside, Color(0.82, 0.86, 0.92), float(L.intensity) * 0.09, 5.0, PackedInt32Array([zone_of(inside)]))
+		else:
+			var fl = L.get("flicker")
+			var flick := String(fl) if fl is String else ""
+			if flick == "bulb": flick = ""
+			l = Lamp.make(self, pos, col, float(L.intensity) * LAMP_SCALE, float(L.range) * 0.8, PackedInt32Array([z]), circuit, flick)
+			l.on = bool(L.on)
+		lamps[name + str(i)] = l
+		l.name = "Lamp_" + name
+		if name == "tv":
+			_tv_lamp = l; l.on = false
+	# a lamp still on by the table (her lamp): she's seen by it
+	lamps["table"] = Lamp.make(self, Vector3(2.55, 1.05, 2.0), Color(1.0, 0.72, 0.45), 0.55, 3.2, PackedInt32Array([1]), "A", "candle")
+	# the den's camping lantern, still going, low (the box room: lived in)
+	lamps["den"] = Lamp.make(self, Vector3(2.25, 0.5, 7.15), Color(1.0, 0.7, 0.42), 0.5, 3.6, PackedInt32Array([5, 20]), "", "candle")
+	# the landing's bulb
+	lamps["landing"] = Lamp.make(self, Vector3(11.6, 2.4, 5.0), Color(1.0, 0.9, 0.75), 0.7, 6.0, PackedInt32Array([LANDING, 4]))
+	Power.add("A", "Living room · hall", true)
+	Power.add("B", "Kitchen", true)
+	Power.add("C", "Bedroom · Sonya's room", false)
+
+# ------------------------------------------------------------------------------- outside
 func _outside() -> void:
-	var glow := OmniLight3D.new(); glow.name = "Light_void"
-	glow.light_color = Color(0.93, 0.95, 1.0); glow.light_energy = 0.9; glow.light_specular = 0.0
-	glow.omni_range = 3.2; glow.omni_attenuation = 0.8; glow.shadow_enabled = false
-	glow.position = Vector3(2.25, 1.6, -2.4)
-	add_child(glow)
-	_sticky_note(Vector3(3.6, 2.2, -15.0), 0.0, 7.0, -0.035)
-	_sticky_note(Vector3(4.8, 2.0, 21.0), PI, 6.0, 0.03)
+	# There's no outside. Just white, and a note.
+	var void_mat := Mats.flat(Color(0.93, 0.94, 0.95), -1, 1.0)
+	var k := Kit.new()
+	k.box(void_mat, Vector3(5, 2, -14), Vector3(60, 40, 0.2), Basis(), 16)
+	k.box(void_mat, Vector3(5, -8, -6), Vector3(60, 0.2, 20), Basis(), 4)
+	k.commit(self, "White")
+	_sticky_note(Vector3(3.0, 3.0, -13.7), 0.0, 7.5, -0.035, "“outside”")
+	# the balcony's ledge out over nothing
+	var ledge := StaticBody3D.new(); add_child(ledge)
+	var cs := CollisionShape3D.new(); var b := BoxShape3D.new(); b.size = Vector3(3.6, 0.2, 0.4); cs.shape = b
+	cs.position = Vector3(2.25, -0.22, -1.6); ledge.add_child(cs)
+	# fall out into the white and it hands you back
+	var catch := Area3D.new(); catch.collision_mask = 16; add_child(catch)
+	var cc := CollisionShape3D.new(); var cb := BoxShape3D.new(); cb.size = Vector3(60, 2, 30); cc.shape = cb
+	cc.position = Vector3(5, -5, -12); catch.add_child(cc)
+	catch.body_entered.connect(func(body): if body is Kurt: World.emit_event("fell_into_white", {}))
 
-func _sticky_note(at: Vector3, yaw: float, size: float, tilt: float) -> void:
-	var note := Node3D.new(); note.name = "Note_outside"
+func _sticky_note(at: Vector3, yaw: float, size: float, tilt: float, word: String) -> void:
+	var note := Node3D.new(); note.name = "Note"
 	add_child(note)
 	note.position = at; note.rotation = Vector3(0, yaw, tilt)
-	var st := SurfaceTool.new(); st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	const N := 12
-	var pts := []
-	for j in N + 1:
-		var row := []
-		for i in N + 1:
-			var u := float(i) / N; var v := float(j) / N
-			var curl := pow(maxf(0.0, v - 0.55) / 0.45, 2.2) * size * 0.07
-			curl += pow(maxf(0.0, u - 0.7) / 0.3, 2.0) * pow(maxf(0.0, v - 0.6) / 0.4, 1.5) * size * 0.05
-			row.append(Vector3((u - 0.5) * size, (0.5 - v) * size, curl))
-		pts.append(row)
-	for j in N:
-		for i in N:
-			var a0: Vector3 = pts[j][i]; var a1: Vector3 = pts[j][i + 1]; var b1: Vector3 = pts[j + 1][i + 1]; var b0: Vector3 = pts[j + 1][i]
-			var vt := (float(j) + 0.5) / N
-			var c := Color("f4e06a") if vt > 0.14 else Color("e9d35a")
-			c = c.darkened(0.06 * smoothstep(0.55, 1.0, vt))
-			for p in [a0, a1, b1, a0, b1, b0]:
-				st.set_color(c); st.add_vertex(p)
-	var paper := MeshInstance3D.new(); paper.mesh = st.commit()
-	var pm := StandardMaterial3D.new(); pm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	pm.vertex_color_use_as_albedo = true; pm.cull_mode = BaseMaterial3D.CULL_DISABLED; pm.disable_fog = true
-	paper.material_override = pm
-	note.add_child(paper)
-	var word := Label3D.new(); word.text = "“outside”"
-	word.font_size = 160; word.pixel_size = size / 900.0; word.outline_size = 0
-	word.modulate = Color("1d2333"); word.shaded = false; word.double_sided = true
-	word.position = Vector3(0, -size * 0.03, size * 0.004)
-	note.add_child(word)
+	var mi := MeshInstance3D.new(); var qm := QuadMesh.new(); qm.size = Vector2(size, size); mi.mesh = qm
+	mi.material_override = Mats.flat(Color("f2df67"), -1, 1.0)
+	note.add_child(mi)
+	var lbl := Label3D.new(); lbl.text = word; lbl.font_size = 160; lbl.pixel_size = size / 900.0
+	lbl.modulate = Color("1d2333"); lbl.shaded = false; lbl.outline_size = 0; lbl.position = Vector3(0, 0, 0.01)
+	note.add_child(lbl)
 
-# --- the wardrobe, and what's behind it ---------------------------------------------------------
+# ------------------------------------------------------------------------------- systems
+func _systems() -> void:
+	# the front door: chained, and a padlock through the chain, from inside
+	var fd: Door = doors.get("dEntry")
+	if fd:
+		fd.max_angle = 1.45; fd.inside = fd.side_of(Vector3(8.5, 0, 4.5)); fd.chained = true; fd.padlock = true; fd.set_angle(0.0)
+		fd.set_meta("lock_at", fd.global_transform * Vector3(fd.w - 0.12, 1.35, 0.05))
+	var ld: Door = doors.get("dLiving")
+	if ld:
+		ld.key_id = "living_key"
+	for id in ["dBed", "dChild", "dBath"]:
+		if doors.has(id): doors[id].key_id = ""
+	# the fuse box, by the front door
+	FuseBox.place(self, Vector3(9.05, 1.62, 3.9), Vector3(0, 0, 1), ["A", "B", "C"], "Fuse box", 4)
+	# the TV (circuit A): noise and light; something to make noise with
+	var tv := Usable.make(self, Transform3D(Basis(), Vector3(1.62, 0.75, 2.6)), Vector3(0.5, 0.45, 0.5), [])
+	tv.title = "Television"
+	tv.offer = func(_k): return [{"id": "tv", "label": "Turn off" if tv_on else "Turn on"}]
+	tv.acted.connect(func(_v, _k): set_tv(not tv_on))
+	_tv_snd = Audio.loop("static", tv, -80.0, 3.0)
+	# the radio in the kitchen (circuit B)
+	var radio := Usable.make(self, Transform3D(Basis(), Vector3(9.7, 1.0, 1.35)), Vector3(0.3, 0.2, 0.2), [])
+	radio.title = "Radio"
+	radio.offer = func(_k): return [{"id": "radio", "label": "Turn off" if radio_on else "Turn on"}]
+	radio.acted.connect(func(_v, _k): set_radio(not radio_on))
+	_radio_snd = Audio.loop("radio", radio, -80.0, 3.0)
+	Power.changed.connect(func(_c): _appliances())
+	# the bath: full of black water. The key and her other shoe are down in it.
+	bath = WaterBody.new(); bath.name = "Bath"; add_child(bath)
+	bath.setup("bath", Rect2(6.62, 7.3, 1.5, 0.62), 0.12, 0.52, 0.36, 7)
+	bath.gurgle = true
+	var plug := Usable.make(self, Transform3D(Basis(), Vector3(6.75, 0.62, 7.6)), Vector3(0.24, 0.16, 0.34), [])
+	plug.title = "Bath"
+	plug.offer = func(k): return _bath_verbs(k)
+	plug.acted.connect(_bath)
+	plug.socko_offer = func(_k): return [{"id": "socko_bath", "label": "Feel around in there"}] if not World.flag("bath_searched") else []
+	plug.socko_do = func(_id, k, m):
+		await m.bark("cmd_bath", true)
+		m.socko.set_pose("low", 0.6)
+		m.socko.rig.set_stains(1.0, 1.0, 1.6, 1.0)
+		Audio.play("splash", Vector3(7.3, 0.4, 7.6), -6.0)
+		await get_tree().create_timer(2.0, false).timeout
+		m.socko.set_pose("up", 0.6)
+		World.set_flag("bath_searched")
+		k.give_item("padlock_key", "Small key", "A small brass key on a loop of string. Padlock size.")
+		k.give_item("shoe_right", "Red shoe (right)", "A girl's red buckle shoe, right foot. Silt in it.")
+		m.defy(-0.3, "used")
+		m.bark("cmd_bath_ok", true)
+	var tap := Usable.make(self, Transform3D(Basis(), Vector3(6.55, 0.75, 7.62)), Vector3(0.14, 0.2, 0.2), [])
+	tap.title = "Bath tap"
+	tap.offer = func(_k): return [{"id": "tap", "label": "Turn the tap off" if bath.inflow > 0.0 else "Turn the tap on"}]
+	tap.acted.connect(func(_v, _k):
+		bath.inflow = 0.0 if bath.inflow > 0.0 else (0.004 if World.flag("mains_on", false) else 0.0)
+		Audio.play("latch", tap.global_position, -6.0)
+		if bath.inflow == 0.0 and not World.flag("mains_on", false): World.emit_event("tap_dry", {}))
+	# the bath overflows onto the bathroom floor, and that floor runs under the door into the hall
+	var floor_water := WaterBody.new(); floor_water.name = "BathFloor"; add_child(floor_water)
+	floor_water.setup("bathfloor", Rect2(6.45, 5.25, 3.5, 2.7), 0.0, 0.06, 0.0, 7)
+	floor_water.colour = Color(0.05, 0.05, 0.04, 0.6)
+	floor_water.live_circuit = "A"     # the extension lead on the bathroom floor (the washing machine)
+	bath.overflow_to = floor_water
+	# the hall's switch for her lamp, etc: kept simple. Ends: the landing.
+	var out := Area3D.new(); out.collision_mask = 16; add_child(out)
+	var oc := CollisionShape3D.new(); var ob := BoxShape3D.new(); ob.size = Vector3(2.6, 2.5, 4.0); oc.shape = ob
+	oc.position = Vector3(12.4, 1.2, 5.6); out.add_child(oc)
+	out.body_entered.connect(func(b): if b is Kurt: World.emit_event("reached_landing", {"via": "front_door"}))
 
+func set_tv(on: bool) -> void:
+	tv_on = on
+	_appliances()
+
+func set_radio(on: bool) -> void:
+	radio_on = on
+	_appliances()
+
+func _appliances() -> void:
+	var tv := tv_on and Power.live("A")
+	if _tv_lamp: _tv_lamp.on = tv
+	_tv_snd.volume_db = -6.0 if tv else -80.0
+	var r := radio_on and Power.live("B")
+	_radio_snd.volume_db = -8.0 if r else -80.0
+
+func _process(delta: float) -> void:
+	# a set left on is a lure: it keeps making noise anything can come to
+	_lure_t -= delta
+	if _lure_t <= 0.0:
+		_lure_t = 1.2
+		if tv_on and Power.live("A"): Noises.make(Vector3(1.62, 0.9, 2.6), 14.0, "tv", self)
+		if radio_on and Power.live("B"): Noises.make(Vector3(9.7, 1.0, 1.35), 12.0, "radio", self)
+
+func _bath_verbs(k) -> Array:
+	var v: Array = []
+	v.append({"id": "plug", "label": "Put the plug in" if bath.outflow == 0.0 and World.flag("bath_drained_once") else ("Pull the plug" if bath.outflow == 0.0 else "Put the plug back")})
+	if not World.flag("bath_searched"):
+		v.append({"id": "reach", "label": "Reach into the water" if bath.level > 0.08 else "Feel through the silt"})
+	return v
+
+func _bath(verb: String, k) -> void:
+	match verb:
+		"plug":
+			if bath.outflow == 0.0:
+				bath.outflow = 0.011
+				World.set_flag("bath_drained_once")
+				Audio.play("gurgle", bath.global_position + Vector3(6.75, 0.3, 7.6), 0.0)
+				Noises.make(Vector3(7.3, 0.3, 7.6), 9.0, "gurgle", self)
+			else:
+				bath.outflow = 0.0
+		"reach":
+			World.set_flag("bath_searched")
+			var black := bath.level > 0.08
+			World.emit_event("bath_reach", {"black": black})
+			if black:
+				# the water is the infection's: it gets into the hand
+				World.count("infected_touch")
+				Progress.gain_shards("bath_water", 1)
+			k.give_item("padlock_key", "Small key", "A small brass key on a loop of string. Padlock size.")
+			k.give_item("shoe_right", "Red shoe (right)", "A girl's red buckle shoe, right foot. Silt in it.")
+			Audio.play("splash", Vector3(7.3, 0.4, 7.6), -4.0)
+
+# ------------------------------------------------------------------------------- the wardrobe
 func _wardrobe() -> void:
 	wardrobe = Node3D.new(); wardrobe.name = "Wardrobe"
 	add_child(wardrobe)
-	wardrobe.position = WARDROBE_AT
+	wardrobe.global_position = WARDROBE_AT
 	var model: Node3D = find_child("prop_34_Wardrobe", true, false)
 	if model:
-		var rot := model.global_basis
+		var b := model.global_basis
 		model.reparent(wardrobe, false)
-		model.transform = Transform3D(rot, Vector3.ZERO)
-		for c in model.find_children("*", "StaticBody3D", true, false):
-			c.queue_free()
-	var body := AnimatableBody3D.new(); body.sync_to_physics = false
-	var shape := CollisionShape3D.new(); var b := BoxShape3D.new(); b.size = Vector3(1.0, 1.9, 0.59)
-	shape.shape = b; shape.position = Vector3(0, 0.95, -0.025)
-	body.add_child(shape)
-	wardrobe.add_child(body)
-	wardrobe_spot = Hotspot.make(wardrobe, wardrobe.global_transform * Transform3D(Basis(), Vector3(0, 1.0, -0.3)), Vector3(1.1, 1.9, 0.2), "Push")
-	wardrobe_spot.enabled = false
-	hole_spot = Hotspot.make(self, Transform3D(Basis(), hole_center + Vector3(0, 0, -0.12)), Vector3(0.6, 1.1, 0.3), "Crawl through")
-	hole_spot.enabled = false
+		model.transform = Transform3D(b, Vector3.ZERO)
+	wardrobe_body = AnimatableBody3D.new(); wardrobe_body.sync_to_physics = false
+	wardrobe_body.collision_layer = 1
+	var cs := CollisionShape3D.new(); var bx := BoxShape3D.new(); bx.size = Vector3(1.0, 1.9, 0.55)
+	cs.shape = bx; cs.position = Vector3(0, 0.95, 0)
+	wardrobe_body.add_child(cs)
+	wardrobe_body.set_meta("actor", self)
+	wardrobe.add_child(wardrobe_body)
 
-var _shoves := 0
+## The wardrobe is the flat's own Usable (its body points here).
+func get_verbs(k) -> Array:
+	if wardrobe_toppled or wardrobe_shoves >= 3: return []
+	var v: Array = [{"id": "push", "label": "Push"}]
+	v.append({"id": "topple", "label": "Pull it over"})
+	return v
 
-## One shove: it grinds a third of the way along the wall. True when the hole's clear.
-func shove_wardrobe() -> bool:
-	_shoves += 1
-	var to := WARDROBE_AT + Vector3(SLIDE * _shoves / 3.0, 0, 0)
-	create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT).tween_property(wardrobe, "position", to, 0.6)
-	Sfx.play_at("scrape", wardrobe.global_position + Vector3(0, 0.5, 0), 2.0, randf_range(0.9, 1.05))
-	Noises.make(wardrobe.global_position, 10.0, "scrape")
-	if _shoves >= 3:
-		_open_hole()
+func act(verb: String, k) -> void:
+	match verb:
+		"push": shove_wardrobe(k)
+		"topple": topple_wardrobe(k)
+
+## One shove (three clear the doorway; one, with a grip like that).
+func shove_wardrobe(k = null) -> bool:
+	wardrobe_shoves = 3 if Progress.has("coral_grip") else wardrobe_shoves + 1
+	var to := WARDROBE_AT.lerp(WARDROBE_END, wardrobe_shoves / 3.0)
+	create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT).tween_property(wardrobe, "global_position", to, 0.6)
+	Audio.play("scrape", wardrobe.global_position + Vector3(0, 0.5, 0), 2.0, randf_range(0.9, 1.05))
+	Noises.make(wardrobe.global_position, 10.0, "scrape", k)
+	World.emit_event("wardrobe_shoved", {"n": wardrobe_shoves})
+	if wardrobe_shoves >= 3:
+		World.set_flag("wardrobe_moved")
 		return true
 	return false
 
-## The plaster cut away (the shader's wall-hole box), broken brick at its edge, rubble on the floor,
-## and through it: gaslight and cobbles, a long way off.
-func _open_hole() -> void:
-	RenderingServer.global_shader_parameter_set("hole_min", Vector4(HOLE_MIN.x, HOLE_MIN.y, HOLE_MIN.z, 1.0))
-	RenderingServer.global_shader_parameter_set("hole_max", Vector4(HOLE_MAX.x, HOLE_MAX.y, HOLE_MAX.z, 1.0))
-	var kit := TownKit.new(self)
-	var rng := RandomNumberGenerator.new(); rng.seed = 47
-	var f := Facades.Frame.new(Vector3(HOLE_MIN.x, 0, WALL_Z - 0.01), Vector3(1, 0, 0), Vector3(0, 0, -1))
-	Facades.ragged_rim(kit, f, 0.0, HOLE_MAX.x - HOLE_MIN.x, 0.04, 1.76, "stucco_cream", rng, 38)
-	for i in 14:
-		var p := Vector3(HOLE_MIN.x + rng.randf() * 0.6, 0.0, WALL_Z - 0.08 - rng.randf() * 0.45)
-		var s := rng.randf_range(0.02, 0.07)
-		kit.box("brick" if rng.randf() < 0.5 else "stucco_cream", p + Vector3(0, s * 0.5, 0), Vector3(s, s * 0.5, s * 0.8), Basis(Vector3.UP, rng.randf() * TAU))
-	kit.finish()
-	# the far side: dark, and at the end of it a street under gas
-	var back := MeshInstance3D.new(); var bx := BoxMesh.new(); bx.size = Vector3(0.75, 2.1, 0.06); back.mesh = bx
-	var bm := StandardMaterial3D.new(); bm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	bm.albedo_color = Color(0.0, 0.0, 0.0)
-	back.material_override = bm; add_child(back)
-	back.position = Vector3((HOLE_MIN.x + HOLE_MAX.x) * 0.5, 0.95, WALL_Z + 0.24)
-	bm.disable_fog = true
-	var far := MeshInstance3D.new(); var fm := QuadMesh.new(); fm.size = Vector2(0.08, 0.12); far.mesh = fm
-	var fmat := StandardMaterial3D.new(); fmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	fmat.albedo_color = Color(0.75, 0.5, 0.25); fmat.disable_fog = true
-	far.material_override = fmat; add_child(far)
-	far.position = Vector3((HOLE_MIN.x + HOLE_MAX.x) * 0.5 + 0.05, 0.45, WALL_Z + 0.215)
-	far.rotation.y = PI
-	var tunnel := StaticBody3D.new(); add_child(tunnel)
-	var cs := CollisionShape3D.new(); var b := BoxShape3D.new(); b.size = Vector3(0.7, 2.0, 0.2); cs.shape = b
-	tunnel.add_child(cs); tunnel.position = Vector3((HOLE_MIN.x + HOLE_MAX.x) * 0.5, 1.0, WALL_Z + 0.25)
+## Over on its face: quicker, and the whole building hears it. Then it's something to climb over.
+func topple_wardrobe(k = null) -> void:
+	wardrobe_toppled = true
+	var t := create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	t.tween_property(wardrobe, "rotation:x", -PI * 0.5, 0.7)
+	t.parallel().tween_property(wardrobe, "global_position", WARDROBE_AT + Vector3(0, 0.28, 0.25), 0.7)
+	t.tween_callback(func():
+		Audio.play("slam", wardrobe.global_position, 4.0)
+		Audio.play("splinter", wardrobe.global_position, 0.0)
+		Noises.make(wardrobe.global_position, 28.0, "crash", k)
+		World.set_flag("wardrobe_moved")
+		World.set_flag("wardrobe_toppled")
+		World.emit_event("wardrobe_shoved", {"n": 3, "toppled": true}))
 
-func open_door48() -> void:
-	building.open_door48()
+# ------------------------------------------------------------------------------- the holes
+## Each hole: the flat's wall surfaces inside the box are cut away (cleanly, in the shader), and
+## the broken edge is built: the wall's thickness (plaster, brick, lath) and chunks of rubble.
+func _holes() -> void:
+	for hk in HOLES:
+		var a: Vector3 = HOLES[hk][0]; var b: Vector3 = HOLES[hk][1]
+		for mi in find_children("*", "MeshInstance3D", true, false):
+			var m := mi as MeshInstance3D
+			var bb: AABB = m.global_transform * m.get_aabb()
+			if not bb.intersects(AABB(a, b - a)) or bb.size.y < 1.0: continue
+			for i in m.mesh.get_surface_count():
+				var mat := m.get_active_material(i)
+				if mat is ShaderMaterial:
+					var own := (mat as ShaderMaterial).duplicate() as ShaderMaterial
+					own.set_shader_parameter("hole_a", a); own.set_shader_parameter("hole_b", b)
+					m.set_surface_override_material(i, own)
+		_rim(a, b, hk)
+
+func _rim(a: Vector3, b: Vector3, seed_name: String) -> void:
+	var rng := RandomNumberGenerator.new(); rng.seed = seed_name.hash()
+	var kit := Kit.new()
+	var brick := Mats.tex(Tex.get_tex("brick"), -1)
+	var plaster := Mats.tex(Tex.get_tex("plaster"), -1)
+	var z0 := 7.96; var z1 := 8.44
+	var x0 := a.x; var x1 := b.x; var y1 := b.y; var y0 := 0.0
+	# the reveal: brick in the thickness of the wall
+	kit.quad(brick, Vector3(x0, y0, z1), Vector3(x0, y0, z0), Vector3(x0, y1, z0), Vector3(x0, y1, z1))
+	kit.quad(brick, Vector3(x1, y0, z0), Vector3(x1, y0, z1), Vector3(x1, y1, z1), Vector3(x1, y1, z0))
+	kit.quad(brick, Vector3(x0, y1, z0), Vector3(x1, y1, z0), Vector3(x1, y1, z1), Vector3(x0, y1, z1))
+	# broken plaster round the edge on the room side, sticking out
+	var n := int((x1 - x0) * 10.0 + (y1 - y0) * 10.0)
+	for i in n:
+		var t := rng.randf()
+		var p: Vector3
+		if t < 0.5: p = Vector3(x0 if t < 0.25 else x1, rng.randf_range(y0, y1), z0 - 0.02)
+		else: p = Vector3(rng.randf_range(x0, x1), y1, z0 - 0.02)
+		var s := Vector3(rng.randf_range(0.04, 0.14), rng.randf_range(0.04, 0.12), rng.randf_range(0.02, 0.05))
+		kit.box(plaster if rng.randf() < 0.6 else brick, p, s, Basis(Vector3.FORWARD, rng.randf_range(-0.6, 0.6)))
+	for i in 10:
+		var p := Vector3(rng.randf_range(x0 - 0.2, x1 + 0.2), 0.03, rng.randf_range(z0 - 0.5, z0 - 0.05))
+		var s := rng.randf_range(0.04, 0.11)
+		kit.box(brick if rng.randf() < 0.5 else plaster, p, Vector3(s, s * 0.6, s * 0.8), Basis(Vector3.UP, rng.randf() * TAU))
+	kit.commit(self, "Rim_" + seed_name)
+
+# ------------------------------------------------------------------------------- saving
+func _save() -> Dictionary:
+	var d := {"doors": {}, "props": {}, "ward": wardrobe_shoves, "topple": wardrobe_toppled, "tv": tv_on, "radio": radio_on}
+	for id in doors: d.doors[id] = doors[id].save()
+	for k in props:
+		var p: Prop = props[k]
+		if is_instance_valid(p) and p.awake: d.props[k] = p.save()
+		elif not is_instance_valid(p): d.props[k] = {"gone": true}
+	return d
+
+func _load(d: Dictionary) -> void:
+	for id in d.get("doors", {}):
+		if doors.has(id): doors[id].load_state(d.doors[id])
+	for k in d.get("props", {}):
+		var p: Prop = props.get(k)
+		if p == null or not is_instance_valid(p): continue
+		if d.props[k].get("gone", false): p.queue_free()
+		else: p.load_state(d.props[k])
+	wardrobe_shoves = int(d.get("ward", 0))
+	if wardrobe_shoves > 0: wardrobe.global_position = WARDROBE_AT.lerp(WARDROBE_END, wardrobe_shoves / 3.0)
+	if bool(d.get("topple", false)):
+		wardrobe_toppled = true; wardrobe.rotation.x = -PI * 0.5; wardrobe.global_position = WARDROBE_AT + Vector3(0, 0.28, 0.25)
+	tv_on = bool(d.get("tv", false)); radio_on = bool(d.get("radio", false))
+	_appliances()

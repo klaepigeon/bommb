@@ -1,272 +1,259 @@
 class_name Hud
 extends CanvasLayer
-## Crosshair, the use prompt (keyboard/pad), the controls, the black that scenes fade through,
-## and the pause menu.
+## What sits over the picture that isn't Socko: reading a paper, a quiet line when Kurt looks at
+## something, a small dot to aim by, the fades, the menus (pause and settings, pockets, the two
+## trees), and Continue. Socko is the HUD in the game's sense (see SockoHud); this is what must
+## never depend on him: the controls, the text of things, the settings.
 
-signal restart_requested
-
-var controls: Controls
+var main: Node
 var fade: ColorRect
-var white: ColorRect            ## the other fade: the town's gate, 48's door
-var reader: Reader
-var skills: SkillMenu
-var _status: Label
-var _caption: Label
-var _caption_n := 0
-var _dot: ColorRect
-var _prompt: Label
-var _menu: Control
-var _voices_btn: Button
-var _look_lbl: Label
-var _sub_lbl: Label
-var _first_btn: Button
-var _goal: Label
+var dot: Control
+var look_line: Label
+var reader: PanelContainer
+var reader_text: RichTextLabel
+var menu: Control
+var notice: Label
+var _look_t := 0.0
+var _notice_t := 0.0
+var _pages := {}
 
-func build() -> void:
-	layer = 10
+func setup(m: Node) -> void:
+	main = m
+	layer = 30
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	controls = Controls.new()
-	controls.process_mode = Node.PROCESS_MODE_PAUSABLE
-	add_child(controls)
-	_dot = ColorRect.new()
-	_dot.color = Color(1, 1, 1, 0.5)
-	_dot.size = Vector2(4, 4)
-	_dot.set_anchors_preset(Control.PRESET_CENTER)
-	_dot.position = -_dot.size * 0.5
-	_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_dot)
-	_prompt = Label.new()
-	_prompt.set_anchors_preset(Control.PRESET_CENTER)
-	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_prompt.position = Vector2(-200, 26)
-	_prompt.size = Vector2(400, 40)
-	_prompt.add_theme_font_size_override("font_size", 24)
-	_prompt.add_theme_constant_override("outline_size", 5)
-	_prompt.add_theme_color_override("font_outline_color", Color.BLACK)
-	_prompt.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_prompt)
-	_status = Label.new()
-	_status.position = Vector2(30, 110)
-	_status.add_theme_font_size_override("font_size", 24)
-	_status.add_theme_constant_override("outline_size", 5)
-	_status.add_theme_color_override("font_outline_color", Color.BLACK)
-	_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_status)
-	_caption = Label.new()
-	_caption.anchor_left = 0.14; _caption.anchor_right = 0.86
-	_caption.anchor_top = 0.62; _caption.anchor_bottom = 0.62
-	_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_caption.add_theme_font_size_override("font_size", 24)
-	_caption.add_theme_color_override("font_color", Color(0.86, 0.84, 0.78))
-	_caption.add_theme_constant_override("outline_size", 6)
-	_caption.add_theme_color_override("font_outline_color", Color.BLACK)
-	_caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_caption.modulate.a = 0.0
-	add_child(_caption)
-	reader = Reader.new()
-	add_child(reader)
-	skills = SkillMenu.new()
-	add_child(skills)
-	white = ColorRect.new()
-	white.color = Color(1, 1, 1, 0)
-	white.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	white.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(white)
-	fade = ColorRect.new()
-	fade.color = Color.BLACK
-	fade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	fade = ColorRect.new(); fade.color = Color(0, 0, 0, 0); fade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(fade)
-	_build_menu()
+	dot = Control.new(); dot.set_anchors_preset(Control.PRESET_CENTER); dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dot.draw.connect(func(): dot.draw_circle(Vector2.ZERO, 2.0, Color(1, 1, 1, 0.55)))
+	add_child(dot)
+	look_line = Label.new(); look_line.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	look_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; look_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	look_line.modulate = Color(1, 1, 1, 0); look_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(look_line)
+	notice = Label.new(); notice.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	notice.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; notice.modulate = Color(1, 1, 1, 0)
+	notice.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(notice)
+	_reader()
+	Controls.pressed.connect(_on_pressed)
+	World.event.connect(_on_event)
+	get_viewport().size_changed.connect(_layout)
+	_layout()
 
-func set_prompt(p: String) -> void:
-	controls.set_prompt(p)
-	if p == "" or controls.show_touch:
-		_prompt.text = ""
-		_dot.color.a = 0.35
+func _layout() -> void:
+	var vp := get_viewport().get_visible_rect().size
+	var fs := int(clampf(vp.y * 0.03, 14, 48) * float(Settings.get_v("subtitle_size")))
+	look_line.add_theme_font_size_override("font_size", fs)
+	look_line.size = Vector2(vp.x * 0.7, fs * 4)
+	look_line.position = Vector2(vp.x * 0.15, vp.y * 0.72)
+	notice.add_theme_font_size_override("font_size", fs)
+	notice.size = Vector2(vp.x * 0.8, fs * 2); notice.position = Vector2(vp.x * 0.1, vp.y * 0.08)
+	dot.position = vp * 0.5
+	if reader:
+		reader.size = Vector2(minf(vp.x * 0.62, vp.y * 1.1), vp.y * 0.78)
+		reader.position = (vp - reader.size) * 0.5
+		reader_text.add_theme_font_size_override("normal_font_size", int(fs * 1.05))
+
+func _reader() -> void:
+	reader = PanelContainer.new()
+	var sb := StyleBoxFlat.new(); sb.bg_color = Color("e9e3cf"); sb.set_content_margin_all(28)
+	sb.shadow_size = 12; sb.shadow_color = Color(0, 0, 0, 0.6)
+	reader.add_theme_stylebox_override("panel", sb)
+	var box := VBoxContainer.new(); reader.add_child(box)
+	reader_text = RichTextLabel.new(); reader_text.bbcode_enabled = true
+	reader_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	reader_text.add_theme_color_override("default_color", Color("23263a"))
+	box.add_child(reader_text)
+	var close := Button.new(); close.text = "Put it down"; close.custom_minimum_size.y = 56
+	close.pressed.connect(close_reader)
+	box.add_child(close)
+	reader.visible = false
+	add_child(reader)
+
+func reading() -> bool:
+	return reader.visible
+
+func show_text(title: String, text: String) -> void:
+	reader_text.text = "[b]%s[/b]\n\n%s" % [title, text]
+	reader.visible = true
+	Controls.enabled = false
+	Controls.capture_mouse(false)
+
+func close_reader() -> void:
+	reader.visible = false
+	Controls.enabled = true
+	Controls.capture_mouse(true)
+	World.emit_event("reader_closed", {})
+
+func say_look(t: String) -> void:
+	look_line.text = t
+	_look_t = 3.0 + t.length() * 0.045
+
+func flash(t: String, secs := 3.0) -> void:
+	notice.text = t
+	_notice_t = secs
+
+func fade_to(a: float, secs: float) -> void:
+	var tw := create_tween(); tw.tween_property(fade, "color:a", a, secs)
+	await tw.finished
+
+func _process(delta: float) -> void:
+	_look_t -= delta
+	look_line.modulate.a = clampf(_look_t, 0.0, 1.0) * 0.85
+	_notice_t -= delta
+	notice.modulate.a = clampf(_notice_t, 0.0, 1.0)
+	var k = main.kurt if main else null
+	dot.visible = k != null and (k.target_verbs.size() > 0 or k.gun_out) and not reader.visible
+	if k and k.target and String(Settings.get_v("prompts")) == "text" and k.target_verbs.size() > 0 and _look_t <= 0.0:
+		look_line.text = String(k.target_verbs[0].label); look_line.modulate.a = 0.6
+
+func _on_event(name: String, d: Dictionary) -> void:
+	match name:
+		"read":
+			var doc: Dictionary = main.level.flat.docs.get(d.doc, {})
+			var text := String(doc.get("text", "(The writing has run. You can't read it.)"))
+			if Progress.has("handwriting") and doc.has("hand"):
+				text += "\n\n[i]" + String(doc.hand) + "[/i]"
+			show_text(String(doc.get("title", d.title)), text)
+			if doc.has("memory") and (not doc.has("memory_needs") or Progress.has(String(doc.memory_needs))):
+				if Progress.remember(String(doc.memory)): flash("Something comes back.")
+		"looked":
+			var doc: Dictionary = main.level.flat.docs.get(d.key, {})
+			var t := String(d.desc)
+			if Progress.has("handwriting") and doc.has("hand"): t += " " + String(doc.hand)
+			say_look(t)
+			if doc.has("memory") and (not doc.has("memory_needs") or Progress.has(String(doc.memory_needs))):
+				if Progress.remember(String(doc.memory)): flash("Something comes back.")
+		"memory": flash("A memory.  (%d to spend)" % Progress.memories, 2.5)
+		"shard": flash("Something gets in.  (%d)" % Progress.shards, 2.5)
+
+func _on_pressed(a: String) -> void:
+	match a:
+		"pause": toggle_menu("pause")
+		"bag": toggle_menu("pockets")
+		"skills": toggle_menu("skills")
+		"use":
+			if reader.visible: close_reader()
+
+# --------------------------------------------------------------------------------------- menus
+func toggle_menu(which: String) -> void:
+	if menu:
+		menu.queue_free(); menu = null
+		get_tree().paused = false
+		Controls.capture_mouse(true)
 		return
-	var key := "A" if Input.get_connected_joypads().size() > 0 else "E"
-	_prompt.text = "[%s]  %s" % [key, p]
-	_dot.color.a = 0.9
+	if reader.visible: close_reader()
+	get_tree().paused = true
+	Controls.capture_mouse(false)
+	menu = _panel()
+	match which:
+		"pause": _pause_menu()
+		"pockets": _pockets_menu()
+		"skills": _skills_menu()
 
-## Top left: nuggets once he has any; rounds once he has the gun.
-func set_status(text: String) -> void:
-	_status.text = text
+func _panel() -> Control:
+	var root := ColorRect.new(); root.color = Color(0, 0, 0, 0.72)
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(root)
+	var sc := ScrollContainer.new(); sc.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var vp := get_viewport().get_visible_rect().size
+	sc.offset_left = vp.x * 0.12; sc.offset_right = -vp.x * 0.12; sc.offset_top = vp.y * 0.06; sc.offset_bottom = -vp.y * 0.06
+	root.add_child(sc)
+	var box := VBoxContainer.new(); box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.add_theme_constant_override("separation", int(vp.y * 0.012))
+	sc.add_child(box)
+	root.set_meta("box", box)
+	return root
 
-## What Kurt sees when he looks at something: a quiet line above the subtitles, then gone.
-func caption(text: String, seconds := 4.5) -> void:
-	_caption_n += 1
-	var n := _caption_n
-	_caption.text = text
-	last_caption = text
-	create_tween().tween_property(_caption, "modulate:a", 1.0, 0.15)
-	await get_tree().create_timer(seconds, false).timeout
-	if n == _caption_n:
-		create_tween().tween_property(_caption, "modulate:a", 0.0, 0.5)
+func _box() -> VBoxContainer:
+	return menu.get_meta("box")
 
-var last_caption := ""
-
-func set_crosshair(on: bool) -> void:
-	_dot.visible = on
-	_prompt.visible = on
-
-func white_to(alpha: float, seconds: float) -> Tween:
-	var tw := create_tween()
-	tw.tween_property(white, "color:a", alpha, seconds)
-	return tw
-
-func fade_to(alpha: float, seconds: float) -> Tween:
-	var tw := create_tween()
-	tw.tween_property(fade, "color:a", alpha, seconds)
-	return tw
-
-# --- pause -------------------------------------------------------------------------------------
-
-func _build_menu() -> void:
-	_menu = Control.new()
-	_menu.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_menu.visible = false
-	add_child(_menu)
-	var bg := ColorRect.new()
-	bg.color = Color(0, 0, 0, 0.78)
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_menu.add_child(bg)
-	var box := VBoxContainer.new()
-	box.set_anchors_preset(Control.PRESET_CENTER)
-	box.custom_minimum_size = Vector2(560, 0)
-	box.position = Vector2(-280, -280)
-	box.add_theme_constant_override("separation", 14)
-	_menu.add_child(box)
-	var title := Label.new()
-	title.text = "PAUSED"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 40)
-	box.add_child(title)
-	_goal = Label.new()
-	_goal.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_goal.add_theme_font_size_override("font_size", 26)
-	_goal.add_theme_color_override("font_color", Color(0.86, 0.8, 0.66))
-	box.add_child(_goal)
-	_first_btn = _button(box, "Resume", toggle_pause)
-	_voices_btn = _button(box, "", func():
-		Settings.voices = not Settings.voices
-		if not Settings.voices:
-			Speech.stop()
-		Settings.save()
-		_refresh())
-	_look_lbl = _stepper(box, func(d):
-		Settings.look_sensitivity = clampf(Settings.look_sensitivity + d * 0.1, 0.3, 2.5)
-		Settings.save(); _refresh())
-	_sub_lbl = _stepper(box, func(d):
-		Settings.subtitle_scale = clampf(Settings.subtitle_scale + d * 0.1, 0.7, 1.6)
-		Settings.save(); _refresh())
-	_button(box, "Restart scene", func():
-		toggle_pause()
-		restart_requested.emit())
-	if not OS.has_feature("mobile"):
-		_button(box, "Quit", func(): get_tree().quit())
-	_refresh()
-
-func _button(parent: Control, text: String, cb: Callable) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.custom_minimum_size = Vector2(0, 72)
-	b.add_theme_font_size_override("font_size", 30)
+func _btn(text: String, cb: Callable) -> Button:
+	var b := Button.new(); b.text = text
+	var vp := get_viewport().get_visible_rect().size
+	b.custom_minimum_size.y = maxf(vp.y * 0.075, 44)
+	b.add_theme_font_size_override("font_size", int(clampf(vp.y * 0.03, 14, 40)))
 	b.pressed.connect(cb)
-	parent.add_child(b)
+	_box().add_child(b)
 	return b
 
-func _stepper(parent: Control, cb: Callable) -> Label:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	parent.add_child(row)
-	var minus := _button(row, "−", func(): cb.call(-1))
-	minus.custom_minimum_size = Vector2(90, 72)
-	var l := Label.new()
-	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.add_theme_font_size_override("font_size", 28)
-	row.add_child(l)
-	var plus := _button(row, "+", func(): cb.call(1))
-	plus.custom_minimum_size = Vector2(90, 72)
+func _label(text: String, big := false) -> Label:
+	var l := Label.new(); l.text = text; l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var vp := get_viewport().get_visible_rect().size
+	l.add_theme_font_size_override("font_size", int(clampf(vp.y * (0.04 if big else 0.028), 14, 52)))
+	_box().add_child(l)
 	return l
 
-func _refresh() -> void:
-	_goal.text = "Find Sonya." if Game.flag("goal_sonya") else ""
-	_goal.visible = _goal.text != ""
-	_voices_btn.text = "Voices: " + ("On" if Settings.voices else "Off (subtitles only)")
-	_look_lbl.text = "Look speed  %.1f" % Settings.look_sensitivity
-	_sub_lbl.text = "Subtitle size  %.1f" % Settings.subtitle_scale
+func _pause_menu() -> void:
+	_label("HYSTERIA", true)
+	if Log.previous != "":
+		_label("Last time, the game stopped here:\n" + Log.previous)
+	_btn("Resume", func(): toggle_menu(""))
+	_btn("Save", func(): flash("Saved." if World.save_game() else "Couldn't save.")); 
+	var opts := [
+		["Look sensitivity", "look_sensitivity", [0.5, 0.75, 1.0, 1.5, 2.0]],
+		["Brightness", "brightness", [0.8, 1.0, 1.2, 1.4, 1.6]],
+		["Subtitle size", "subtitle_size", [0.75, 1.0, 1.25, 1.5, 1.75]],
+		["Subtitles", "subtitles", [true, false]],
+		["Voices", "voices", [true, false]],
+		["Socko and the stick on the", "socko_side", ["left", "right"]],
+		["Prompts", "prompts", ["socko", "text"]],
+		["Buttons", "hud_opacity", [1.0, 0.6, 0.3]],
+		["Invert look", "invert_y", [false, true]],
+		["Picture", "quality", ["auto", "low", "high"]],
+		["Volume", "master_volume", [1.0, 0.7, 0.4, 0.0]],
+	]
+	for o in opts:
+		var b := _btn("", func(): pass)
+		var upd := func(): b.text = "%s: %s" % [o[0], str(Settings.get_v(o[1]))]
+		upd.call()
+		b.pressed.connect(func():
+			var vals: Array = o[2]
+			var i := vals.find(Settings.get_v(o[1]))
+			Settings.set_v(o[1], vals[(i + 1) % vals.size()])
+			upd.call()
+			_layout())
+	_btn("Start again", func():
+		toggle_menu("")
+		World.wipe()
+		get_tree().reload_current_scene())
 
-func is_paused() -> bool:
-	return _menu.visible
+func _pockets_menu() -> void:
+	var k: Kurt = main.kurt
+	_label("Pockets", true)
+	if k.pockets.is_empty() and not k.has_item("revolver"):
+		_label("Nothing.")
+	for p in k.pockets:
+		var id := String(p.id)
+		if id == "revolver":
+			_btn("Revolver (%d loaded, %d loose) — %s" % [k.rounds, k.spare, "put it away" if k.gun_out else "take it out"], func():
+				if k.gun_out: k.holster()
+				else: k.draw_gun()
+				toggle_menu(""))
+			continue
+		_btn("%s — hold it" % p.title, func(): k.hold_from_pocket(id); toggle_menu(""))
+	if k.has_item("revolver") or true:
+		_label("\nMemories to spend: %d     Shards: %d" % [Progress.memories, Progress.shards])
 
-func toggle_pause() -> void:
-	var p := not get_tree().paused
-	get_tree().paused = p
-	_menu.visible = p
-	_refresh()
-	Speech.pause_voice(p)
-	controls.clear_touches()
-	if p:
-		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-		_first_btn.grab_focus()
+func _skills_menu() -> void:
+	_label("What you are", true)
+	_label("Memories: %d        Shards: %d" % [Progress.memories, Progress.shards])
+	for tree in ["memory", "gameplay"]:
+		_label("\n" + ("MEMORY — what you were" if tree == "memory" else "THE INFECTION — what you could be"), true)
+		for s in Progress.trees[tree]:
+			var id := String(s.id)
+			var owned := Progress.has(id)
+			var b := _btn("%s%s  (%d)  %s" % ["✓ " if owned else "", s.name, int(s.cost), s.desc], func():
+				if Progress.buy(id):
+					toggle_menu(""); toggle_menu("skills"))
+			b.disabled = owned or not Progress.can_buy(id)
+			b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 
-func _unhandled_input(event: InputEvent) -> void:
-	if _menu.visible and event.is_action_pressed("pause"):
-		toggle_pause()
-		get_viewport().set_input_as_handled()
-
-## Out of the town. What's past the gate is still to be written.
-func end_card(route: String) -> void:
-	var c := Control.new()
-	c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(c)
-	var bg := ColorRect.new(); bg.color = Color.WHITE; bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	c.add_child(bg)
-	var v := VBoxContainer.new()
-	v.set_anchors_preset(Control.PRESET_CENTER)
-	v.position = Vector2(-300, -120)
-	v.custom_minimum_size = Vector2(600, 0)
-	v.add_theme_constant_override("separation", 24)
-	c.add_child(v)
-	var t := Label.new()
-	t.text = "HYSTERIA"
-	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	t.add_theme_font_size_override("font_size", 64)
-	t.add_theme_color_override("font_color", Color("1a1410"))
-	v.add_child(t)
-	var b := Button.new()
-	b.text = "Play again"
-	b.custom_minimum_size = Vector2(0, 80)
-	b.add_theme_font_size_override("font_size", 30)
-	b.pressed.connect(func(): get_tree().reload_current_scene())
-	v.add_child(b)
-	b.grab_focus()
-	controls.visible = false
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-
-
-## Last time, the game stopped without being asked to. What it was doing, to be screenshotted.
-func show_report(text: String) -> void:
-	var c := Control.new()
-	c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	c.process_mode = Node.PROCESS_MODE_ALWAYS
-	add_child(c)
-	var bg := ColorRect.new(); bg.color = Color(0, 0, 0, 0.92)
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	c.add_child(bg)
-	var l := Label.new()
-	l.text = "The game closed by itself last time. A screenshot of this helps fix it:\n\n" + text
-	l.anchor_left = 0.04; l.anchor_right = 0.8; l.anchor_top = 0.03; l.anchor_bottom = 0.97
-	l.add_theme_font_size_override("font_size", 17)
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	c.add_child(l)
-	var b := Button.new(); b.text = "Continue"
-	b.anchor_left = 0.82; b.anchor_right = 0.97; b.anchor_top = 0.42; b.anchor_bottom = 0.58
-	b.add_theme_font_size_override("font_size", 28)
-	b.pressed.connect(c.queue_free)
-	c.add_child(b)
+func offer_continue(cont: Callable, fresh: Callable) -> void:
+	get_tree().paused = true
+	menu = _panel()
+	_label("HYSTERIA", true)
+	_btn("Continue", func(): menu.queue_free(); menu = null; get_tree().paused = false; cont.call())
+	_btn("Begin again", func(): menu.queue_free(); menu = null; get_tree().paused = false; fresh.call())

@@ -13,7 +13,7 @@ extends Node3D
 ## (flex, deviation) and `pronation` are separate. `idle` adds the drift, tremor and the periodic
 ## slow flex-and-release of a stiff hand. In first person, `solve_arm()` places the arm by IK.
 
-const PS1 := preload("res://shaders/ps1_lit.gdshader")
+const PS1 := preload("res://shaders/world.gdshader")
 
 # ------------------------------------------------------------------ anatomy (metres)
 const FOREARM := 0.265
@@ -256,7 +256,7 @@ func _material(tex: String, rough: float, spec: float, uvs := Vector2.ONE) -> Sh
 	m.set_shader_parameter("roughness", rough)
 	m.set_shader_parameter("specular", spec)
 	m.set_shader_parameter("use_vertex_color", true)
-	m.set_shader_parameter("snap_res", Vector2(640, 480))     # it's close to the eye: snap finer
+	m.set_shader_parameter("snap", 0.0)     # close to the eye: no wobble
 	m.set_shader_parameter("uv_scale", uvs)
 	return m
 

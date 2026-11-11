@@ -1,8 +1,7 @@
 #!/bin/sh
-# Builds ../dist/Hysteria.apk from this project, signed with the repo's key (android/), and
+# Builds ../dist/Hysteria.apk (arm64, GL Compatibility), signed with the repo's key (android/), and
 # refuses to finish unless the signature is there. Needs Godot 4.7 + its export templates, the
-# Android SDK (build-tools) and a JDK, set in Godot's editor settings.
-#   GODOT=/path/to/godot tools/build_apk.sh
+# Android SDK (build-tools) and a JDK, named in Godot's editor settings.
 set -e
 cd "$(dirname "$0")/.."
 export GODOT_ANDROID_KEYSTORE_RELEASE_PATH="$(cd .. && pwd)/android/flat47-debug.keystore"

@@ -1,0 +1,58 @@
+{
+ "_comment": "What the flat's things say. Keys are the model's node names. 'text' is what you read; 'hand' is what Her Handwriting adds; 'memory' gives a memory the first time it's understood (with 'needs' a skill, or always). Texts are the first build's, with the husband removed (owner's canon).",
+ "pick_132_Note": {
+  "title": "Note on the fridge",
+  "text": "K. —\n\nthey are saying the buses go from the school yard at six. One bag each. Documents.\n\nIf you get home and we are gone, do not wait here for us.\nDo NOT drink from the tap. Not even boiled.\n\nSonya made you a drawing. It's on the table.\n\n— M.",
+  "hand": "Her K has a tail on it. She made it that way so you'd know it was yours. She knew you'd come. She didn't know when.",
+  "memory": "fridge_note",
+  "memory_needs": "handwriting"
+ },
+ "pick_143_Note_in_pencil": {
+  "title": "Note in pencil",
+  "text": "Day 23?\n\nWater came on again for an hour. Brown, then clear. I did not drink it.\n\nThe knocking answered me tonight. Three, then three. I did not knock back.\n\nWhoever is upstairs walks all night but there is nobody upstairs. I went up to 51. The door is open and the rooms are empty and the dust on the floor has no footprints in it.\n\nI'll wait for them here. This was the only room with a bolt.\n\nSomebody has bolted it. From the other side.",
+  "memory": "den_note"
+ },
+ "pick_144_Drawing": {
+  "title": "Drawing",
+  "text": "A crayon drawing. A tall man and a girl holding hands in front of a building with three chimneys. \"PAPA\". \"ME\". Underneath: \"come home soon\".\n\nIt has been folded and unfolded so many times it is soft as cloth.",
+  "hand": "The P of PAPA is made the way you make yours. You showed her how. You were here for that, at least.",
+  "memory": "drawing"
+ },
+ "pick_133_Calendar": {
+  "title": "Calendar",
+  "text": "OCTOBER. Every day crossed through up to the 14th.\n3 — S. doctor · 6, 7 — water off · 9 — DO NOT drink (red) · 12 — no light · 13 — meeting, yard 7pm\n15 — circled hard in red: BUS 6:00 school\n22 — Sonya 8, with a little drawn balloon.\n\nNothing after the 15th is crossed out."
+ },
+ "pick_126_Notice": {
+  "title": "Notice",
+  "text": "NOTICE — District Administration, Leninsky District.\n\nTo all residents of Buildings 12, 14 and 16, Ulitsa Gagarina. A temporary relocation of residents will take place on 15 October beginning 06:00. Residents must assemble in the yard of School No. 9 with identity documents and ONE bag per person. Pets may not be brought. Do not lock your apartments. Leave interior doors open to permit inspection. Until relocation: do not use tap water for drinking, cooking or washing. Do not use the lifts. Do not go down to the basements. Remain calm. The measure is precautionary and residents will be informed of their return.\n\nHandwritten at the bottom: \"47 — 2 people. Sokolova.\" The bottom corner is torn away."
+ },
+ "pick_122_Newspaper": {
+  "title": "Newspaper",
+  "text": "VECHERNY KERZHANSK — 12 October.\n\nWATER SUPPLY \"SAFE\", SAYS ADMINISTRATION. Residents of districts 4–7 asked to remain calm.\n\n(photo) Residents on Ulitsa Gagarina collect water from a tanker.\n\nThird night of power cuts in the Leninsky district.\nPlant No. 3: night shift \"continues as normal\".",
+  "hand": "In the margin, in her pencil: «Told him.»"
+ },
+ "prop_0_Wedding_photograph": {
+  "desc": "Face down, the glass starred. The photograph itself has been cut out of the frame, carefully, with nail scissors. Someone pulled it off the wall afterwards; the nail came with it."
+ },
+ "pick_129_Bundle_of_letters": {
+  "desc": "Tied with darning wool. Her handwriting, every one, to a post-office box in Moscow with no name on it. Every one stamped RETURN TO SENDER.",
+  "hand": "The box number is one you know. You never went to collect them.",
+  "memory": "letters",
+  "memory_needs": "handwriting"
+ },
+ "prop_54_Book": {
+  "desc": "A detective novel, open face-down at chapter nine. Somebody's bedtime."
+ },
+ "pick_141_Razor": {
+  "desc": "A man's. Rusted shut. Nobody's shaved with it in years."
+ },
+ "prop_49_Pillow": {
+  "desc": "Still a hollow in it. Brown hair. The other pillow's never been slept on."
+ },
+ "prop_40_Child_s_shoe": {
+  "desc": "A girl's red buckle shoe, left foot. Only the one."
+ },
+ "prop_37_Magazine": {
+  "desc": "Rabotnitsa, the women's monthly. A knitting pattern for a child's cardigan, the page corner turned down. Glossy, thin, wide."
+ }
+}
