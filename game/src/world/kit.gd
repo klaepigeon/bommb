@@ -224,9 +224,11 @@ func _wardrobe(ctx: Ctx) -> Node:
 	ctx.block(Vector3.ZERO, Vector3(w * 0.5, 0, d * 0.5))
 	if ctx.def.get("hide", true):
 		var hs := Fixtures.HideSpot.new(); hs.kind = "wardrobe"; hs.spot_id = String(ctx.def.get("id", "wardrobe"))
-		hs.exit_pos = Vector3(0, 0, -0.9)
 		hs.door = dl
-		ctx.node(hs, Transform3D(Basis(Vector3.UP, PI), Vector3(0, 1.55, 0.05)))
+		dl.hide_spot = hs
+		dr.hide_spot = hs
+		ctx.node(hs, Transform3D(Basis.IDENTITY, Vector3(0, 1.55, 0.05)))
+		hs.exit_pos = hs.global_transform.affine_inverse() * ctx.at(Vector3(0, 0, -0.95))
 		var hb := StaticBody3D.new(); hb.collision_layer = 32       # interact-only layer
 		var cs := CollisionShape3D.new(); var bs := BoxShape3D.new(); bs.size = Vector3(w * 0.8, 1.6, 0.3); cs.shape = bs
 		hb.add_child(cs); hs.add_child(hb); hb.position = Vector3(0, -0.6, 0.0)
@@ -296,8 +298,8 @@ func _bed(ctx: Ctx) -> Node:
 	ctx.block(Vector3.ZERO, Vector3(w * 0.5, 0, l * 0.5))
 	if ctx.def.get("hide", true):
 		var hs := Fixtures.HideSpot.new(); hs.kind = "bed"; hs.crouched = true; hs.spot_id = String(ctx.def.get("id", "bed"))
-		hs.exit_pos = Vector3(w * 0.5 + 0.5, 0, 0)
 		ctx.node(hs, Transform3D(Basis(Vector3.UP, -PI * 0.5), Vector3(0, 0.14, 0)))
+		hs.exit_pos = hs.global_transform.affine_inverse() * ctx.at(Vector3(w * 0.5 + 0.45, 0, 0))
 		var hb := StaticBody3D.new(); hb.collision_layer = 32
 		var cs := CollisionShape3D.new(); var bs := BoxShape3D.new(); bs.size = Vector3(0.4, 0.25, l * 0.8); cs.shape = bs
 		hb.add_child(cs); hs.add_child(hb)
@@ -393,8 +395,8 @@ func _bath(ctx: Ctx) -> Node:
 	ctx.block(Vector3.ZERO, Vector3(w * 0.5, 0, l * 0.5))
 	if ctx.def.get("hide", true):
 		var hs := Fixtures.HideSpot.new(); hs.kind = "bath"; hs.crouched = true; hs.spot_id = String(ctx.def.get("id", "bath"))
-		hs.exit_pos = Vector3(w + 0.2, 0, 0)
 		ctx.node(hs, Transform3D(Basis(Vector3.RIGHT, 0.9), Vector3(0, 0.35, -0.3)))
+		hs.exit_pos = hs.global_transform.affine_inverse() * ctx.at(Vector3(w * 0.5 + 0.45, 0, 0))
 		var hb := StaticBody3D.new(); hb.collision_layer = 32
 		var cs := CollisionShape3D.new(); var bs := BoxShape3D.new(); bs.size = Vector3(w, 0.3, l * 0.8); cs.shape = bs
 		hb.add_child(cs); hs.add_child(hb)
@@ -654,6 +656,14 @@ func _hiding_closet(ctx: Ctx) -> Node:
 	ctx.def["w"] = 0.7
 	ctx.def["h"] = 2.1
 	return _wardrobe(ctx)
+
+## standing water on the floor (a hazard when its circuit's live)
+func _water(ctx: Ctx) -> Node:
+	var w := float(ctx.def.get("w", 2.0)); var l := float(ctx.def.get("l", 2.0))
+	ctx.mb.xf = ctx.xf
+	ctx.mb.plane("water", Vector3(-w * 0.5, 0.012, l * 0.5), Vector3(w, 0, 0), Vector3(0, 0, -l), Vector3.UP, w, 1.0)
+	ctx.mb.xf = Transform3D.IDENTITY
+	return null
 
 ## Flat 48's furniture: a pale block, the size of what should be there
 func _draft_block(ctx: Ctx) -> Node:

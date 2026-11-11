@@ -78,12 +78,24 @@ func _ready() -> void:
 	socko.visible = false
 	socko.set_pose("hidden", 0.0)
 	kbody = KurtBody.new(); kbody.name = "KurtBody"; add_child(kbody); kbody.setup(self)
+	# his own hands and Socko live on the character layer; a faint fill so they read in the dark
+	for n in [arm, socko, kbody]:
+		Player.set_layer(n, Level.CHAR_LAYER)
+	var fill := OmniLight3D.new(); fill.light_cull_mask = Level.CHAR_LAYER; fill.omni_range = 1.2
+	fill.light_energy = 0.35; fill.light_color = Color(0.85, 0.8, 0.75); fill.position = Vector3(0, 0.15, 0.1)
+	camera.add_child(fill)
 	torch = SpotLight3D.new(); torch.name = "Torch"; torch.spot_range = 9.0; torch.spot_angle = 26.0
 	torch.light_color = Color(1.0, 0.86, 0.62); torch.light_energy = 2.2; torch.spot_attenuation = 1.2
 	torch.position = Vector3(0.12, -0.1, 0.0); torch.visible = false
 	camera.add_child(torch)
 	Perf.quality_changed.connect(_apply_quality)
 	_apply_quality(Perf.current)
+
+static func set_layer(n: Node, layer: int) -> void:
+	for c in n.find_children("*", "VisualInstance3D", true, false):
+		(c as VisualInstance3D).layers = layer
+	if n is VisualInstance3D:
+		(n as VisualInstance3D).layers = layer
 
 func _apply_quality(q: Dictionary) -> void:
 	camera.far = float(q.get("far", 32.0))
@@ -101,6 +113,8 @@ func _physics_process(delta: float) -> void:
 	if not locked and mode == "normal":
 		var mi := move_input.limit_length(1.0)
 		want = (global_transform.basis * Vector3(mi.x, 0, -mi.y))
+		if String(_hold_verb.get("id", "")) == "pull":
+			want = global_transform.basis.z * 0.55      # he backs up with what he's pulling
 	var spd := WALK
 	if crouching:
 		spd = CROUCH
@@ -187,11 +201,29 @@ func _update_focus() -> void:
 		var to := from - camera.global_transform.basis.z * REACH
 		var q := PhysicsRayQueryParameters3D.create(from, to, 1 | 2 | 8 | 32)
 		q.exclude = [get_rid()]
-		var hit := get_world_3d().direct_space_state.intersect_ray(q)
+		var space := get_world_3d().direct_space_state
+		var hit := space.intersect_ray(q)
 		if not hit.is_empty():
 			f = Interactable.find(hit.collider)
 			if f and not (f as Interactable).enabled:
 				f = null
+		# forgiving aim (thumbs aren't mice): nothing usable right under the crosshair, so take the
+		# nearest usable thing within a hand's width of where the look lands
+		if f == null:
+			var at: Vector3 = hit.position if not hit.is_empty() else to
+			var sq := PhysicsShapeQueryParameters3D.new()
+			var sph := SphereShape3D.new(); sph.radius = 0.16
+			sq.shape = sph
+			sq.transform = Transform3D(Basis.IDENTITY, at - (to - from).normalized() * 0.05)
+			sq.collision_mask = 2 | 8 | 32 | 1
+			sq.exclude = [get_rid()]
+			var best := INF
+			for r in space.intersect_shape(sq, 12):
+				var cand := Interactable.find(r.collider)
+				if cand and cand.enabled and not cand.get_verbs(self).is_empty():
+					var dd := cand.focus_point().distance_to(at)
+					if dd < best and cand.focus_point().distance_to(from) < REACH + 0.3:
+						best = dd; f = cand
 	elif mode == "hidden":
 		f = null
 	var new_verbs: Array = []
@@ -249,6 +281,7 @@ func _update_hold(delta: float) -> void:
 	if _hold_verb.is_empty():
 		return
 	if focus != _hold_focus or not is_instance_valid(_hold_focus):
+		print_verbose("hold cancelled: focus changed")
 		end_verb()
 		return
 	_hold_t += delta
@@ -506,6 +539,9 @@ func use_item(id: String) -> void:
 		"revolver":
 			if gun:
 				gun.toggle_equip()
+		"check_cylinder":
+			if gun:
+				gun.check_cylinder()
 		"alarm_clock", "music_box":
 			# set it down in front of him and start it
 			if inv.remove(id):

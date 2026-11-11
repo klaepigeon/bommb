@@ -58,8 +58,10 @@ static func load_game(main: Node) -> bool:
 	p.set_state(d.get("player", {}))
 	var gun_d: Dictionary = d.get("gun", {})
 	if not gun_d.is_empty():
-		main.director.give_gun(false) if main.director and main.director.has_method("give_gun") else null
-		if p.gun: p.gun.set_state(gun_d)
+		if main.director and main.director.has_method("give_gun"):
+			main.director.give_gun(false)
+		if p.gun:
+			p.gun.set_state(gun_d)
 	lvl.power.set_state(d.get("power", {}))
 	var objs: Dictionary = d.get("objects", {})
 	for n in lvl.get_tree().get_nodes_in_group("persist"):

@@ -635,6 +635,27 @@
    "proposed": true,
    "socko_face": "excitement",
    "socko_clip": "Peeking"
+  },
+  "s_giggle": {
+   "speaker": "socko",
+   "text": "(giggles) Hee hee hee!",
+   "proposed": true,
+   "socko_clip": "Giggling",
+   "socko_face": "wide_smile",
+   "duration": 1.6
+  },
+  "k_crawl": {
+   "speaker": "kurt",
+   "text": "...Okay.",
+   "style": "quiet",
+   "proposed": true
+  },
+  "s_after_crawl": {
+   "speaker": "socko",
+   "text": "See? Same flat! Mostly!",
+   "proposed": true,
+   "socko_face": "wide_smile",
+   "socko_clip": "Looking_Around"
   }
  }
 }

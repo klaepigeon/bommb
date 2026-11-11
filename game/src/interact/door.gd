@@ -39,6 +39,7 @@ var jammed := ""              # reason id, "" = not jammed
 var broken := false
 var hp := 100.0
 var padlock: Node = null      # Padlock, while fitted and locked it holds the door shut
+var hide_spot: Node = null    # a wardrobe's door also offers its hiding place
 
 var open_k := 0.0             # 0 shut .. 1 fully open
 var _target := 0.0
@@ -108,6 +109,12 @@ func _p_side(p: Node) -> int:
 	return side_of((p as Node3D).global_position)
 
 func iverbs(p: Node) -> Array:
+	var out := _verbs(p)
+	if hide_spot and hide_spot.occupant == null:
+		out.append(Interactable.v("hide", "Hide inside"))
+	return out
+
+func _verbs(p: Node) -> Array:
 	var inv: Inventory = p.inv
 	var s := _p_side(p)
 	var out := []
@@ -145,6 +152,9 @@ func iverbs(p: Node) -> Array:
 func iverb(id: String, p: Node) -> void:
 	var s := _p_side(p)
 	match id:
+		"hide":
+			if hide_spot:
+				hide_spot.iverb("hide", p)
 		"toggle":
 			if is_closed() or _chain_stop:
 				try_open(s, p)
@@ -310,6 +320,14 @@ func pound(damage: float) -> bool:
 		state_changed.emit(self)
 		return true
 	return false
+
+## a bullet: near the lock, the lock's gone; anywhere else, a hole and a bang
+func shot(pos: Vector3) -> void:
+	if pos.distance_to(ifocus()) < 0.4 and (locked or bolt_on) and not cabinet:
+		_force()
+		Story.record("route.shot_lock", {"door": door_id})
+	else:
+		hp -= 15.0
 
 func get_state() -> Dictionary:
 	return {"open": _target, "locked": locked, "bolt": bolt_on, "chain": chain_on, "broken": broken, "hp": hp, "jammed": jammed}

@@ -21,7 +21,7 @@ const LAYER := 2
 @export var doc_id := ""
 @export var noise_k := 1.0
 @export var sound := "thud"
-@export var hp := 30.0
+@export var hp := 999.0
 @export var fragile := false
 @export var break_speed := 4.0
 @export var inspect_text := ""
@@ -36,6 +36,7 @@ var _last_noise := 0.0
 var _relit := true
 var hook: Hook
 var behaviour: Node = null        ## optional: radio, alarm clock... (has iverbs_extra / iverb_extra)
+var _born := 0.0                  ## props settle when a level loads: no breaking, no noise, for a moment
 
 func _ready() -> void:
 	collision_layer = LAYER
@@ -72,8 +73,8 @@ func iverbs(p: Node) -> Array:
 	if behaviour and behaviour.has_method("iverbs_extra"):
 		out.append_array(behaviour.iverbs_extra(p))
 	if is_heavy():
-		out.append(Interactable.v("push", "Push", {"noise": 5.0}))
-		out.append(Interactable.v("pull", "Pull", {"noise": 5.0}))
+		out.append(Interactable.v("push", "Push", {"noise": 5.0, "time": 1.0}))
+		out.append(Interactable.v("pull", "Pull", {"noise": 5.0, "time": 1.0}))
 	elif not freeze or freeze_mode == RigidBody3D.FREEZE_MODE_KINEMATIC:
 		if item_id == "":
 			out.append(Interactable.v("hold", "Pick up"))
@@ -99,15 +100,6 @@ func iverb(id: String, p: Node) -> void:
 		"inspect":
 			p.inspect(self)
 		"push", "pull":
-			var dir: Vector3 = -p.camera.global_transform.basis.z
-			dir.y = 0.0
-			dir = dir.normalized() * (1.0 if id == "push" else -1.0)
-			sleeping = false
-			freeze = false
-			apply_impulse(dir * mass * 1.5, Vector3(0, -0.2, 0))
-			Sfx.play_at("scrape", global_position, -2.0, randf_range(0.8, 1.0), 6.0, "scrape", self)
-			if p.has_method("kick") and id == "push":
-				p.kick()
 			Story.record("moved:" + (persist_id if persist_id != "" else display_name))
 		"strike":
 			damage(25.0, p)
@@ -116,10 +108,31 @@ func iverb(id: String, p: Node) -> void:
 			if behaviour and behaviour.has_method("iverb_extra"):
 				behaviour.iverb_extra(id, p)
 
-func ifocus() -> Vector3:
-	return global_position
+## pushing and pulling are held: he keeps shoving while the button's down
+func iprogress(id: String, k: float, p: Node) -> void:
+	if id != "push" and id != "pull":
+		return
+	var dir: Vector3 = -p.camera.global_transform.basis.z
+	dir.y = 0.0
+	dir = dir.normalized() * (1.0 if id == "push" else -1.0)
+	sleeping = false
+	freeze = false
+	apply_central_force(dir * mass * 13.0)
+	if fmod(k * 4.0, 1.0) < 0.05:
+		Sfx.play_at("scrape", global_position, -4.0, randf_range(0.8, 1.0), 6.0, "scrape", self)
+		if id == "push" and p.has_method("kick"):
+			p.kick()
 
-func _physics_process(_delta: float) -> void:
+func ifocus() -> Vector3:
+	return global_position + Vector3(0, 0.4 if is_heavy() else 0.0, 0)
+
+func _physics_process(delta: float) -> void:
+	_born += delta
+	# a physics spike (two things spawned overlapping, a squeeze) must never fling anything
+	if linear_velocity.length() > 14.0:
+		linear_velocity = linear_velocity.normalized() * 14.0
+	if angular_velocity.length() > 25.0:
+		angular_velocity = angular_velocity.normalized() * 25.0
 	if not sleeping:
 		_prev_v = linear_velocity
 		_relit = false
@@ -135,7 +148,7 @@ func relight() -> void:
 
 func _on_body_entered(other: Node) -> void:
 	var speed := _prev_v.length()
-	if held or speed < 1.2:
+	if held or speed < 1.2 or _born < 1.5:
 		return
 	var now := Time.get_ticks_msec() / 1000.0
 	if now - _last_noise < 0.15:
@@ -148,7 +161,7 @@ func _on_body_entered(other: Node) -> void:
 		other.hit_by_object(self, speed)
 	if fragile and speed > break_speed:
 		break_apart()
-	elif speed > 6.0:
+	elif speed > 6.0 and tags.has("breakable"):
 		damage(speed * mass * 0.5, null)
 
 func damage(amount: float, _by: Node) -> void:

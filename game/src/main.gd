@@ -20,8 +20,11 @@ var level: Level
 var player: Player
 var director: Node
 var args := {}
+var no_autostart := false
 
 func _ready() -> void:
+	if not args.is_empty():
+		pass
 	for a in OS.get_cmdline_user_args():
 		var kv := a.trim_prefix("--").split("=", true, 1)
 		args[kv[0]] = kv[1] if kv.size() > 1 else true
@@ -35,8 +38,15 @@ func _ready() -> void:
 	add_child(hud)
 	Events.request_level.connect(func(n, s): load_level(n, s))
 	var start := String(args.get("start", "flat47"))
+	if args.get("autotest", "") == "none":
+		return
 	if args.has("autotest"):
-		var t: Node = load("res://src/tests/autotest.gd").new()
+		var script: GDScript = load("res://src/tests/autotest.gd")
+		if not script or not script.can_instantiate():
+			print("AUTOTEST FAIL load: the test script doesn't compile")
+			get_tree().quit(2)
+			return
+		var t: Node = script.new()
 		t.name = "Autotest"
 		add_child(t)
 		t.begin(self, String(args.autotest) if args.autotest is String else "all")

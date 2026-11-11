@@ -21,6 +21,7 @@ signal trigger_entered(id: String)
 signal room_entered(room: String)
 
 const T := 0.06               # half the thickness of an interior wall
+const CHAR_LAYER := 2         # visual layer for characters (lit by real lights; rooms are baked)
 
 var data := {}
 var rooms := {}
@@ -179,7 +180,7 @@ func _init_room(id: String, d: Dictionary) -> void:
 		"lights": d.get("lights", []), "mats": Mats.RoomMats.new(alter), "mb": MB.new(), "body": body,
 		"alter": alter, "acoustics": d.get("acoustics", {"size": 0.3, "damp": 0.6, "wet": 0.15}),
 		"ambience": d.get("ambience", ""), "surface": d.get("surface", "wood"), "open": d.get("open", []),
-		"no_ceiling": d.get("no_ceiling", false), "ambient": d.get("ambient", [0.03, 0.03, 0.035]),
+		"no_ceiling": d.get("no_ceiling", false), "ambient": d.get("ambient", [0.05, 0.047, 0.05]),
 		"skirting": d.get("skirting", true),
 	}
 	if d.has("circuit"):
@@ -213,9 +214,20 @@ func _room_shell(id: String) -> void:
 		if sd[0] in r.open:
 			continue
 		_wall(id, sd[1], sd[2], sd[3], sd[4], sd[5])
-	# fixtures (the light sources themselves)
+	# fixtures (the light sources themselves), and a real light that touches only characters
+	r["char_lights"] = []
 	for l in r.lights:
 		var lp := Vector3(l.p[0], l.p[1], l.p[2])
+		var ol := OmniLight3D.new()
+		ol.light_color = Color(String(l.get("c", "#ffd9a8")))
+		ol.light_energy = float(l.get("e", 1.0)) * 1.4
+		ol.omni_range = float(l.get("r", 5.0))
+		ol.light_cull_mask = CHAR_LAYER
+		ol.shadow_enabled = false
+		ol.light_specular = 0.2
+		add_child(ol)
+		ol.position = lp - Vector3(0, 0.15, 0)
+		r.char_lights.append(ol)
 		match String(l.get("fix", "bulb")):
 			"bulb":
 				mb.cyl("rubber", lp + Vector3(0, 0.05, 0), 0.005, y0 + H - lp.y - 0.05, 4, -1.0, false)
@@ -463,6 +475,8 @@ func refresh_power() -> void:
 	for id in rooms:
 		var lit := power.room_lit(id)
 		(rooms[id].mats as Mats.RoomMats).set_power(1.0 if lit else 0.0)
+		for l in rooms[id].get("char_lights", []):
+			(l as Light3D).visible = lit
 	for p in get_tree().get_nodes_in_group("props"):
 		if is_ancestor_of(p):
 			p.relight()
@@ -496,6 +510,8 @@ func _process(delta: float) -> void:
 		if n > 1.2 - k:
 			f = randf_range(0.1, 0.6)
 		(rooms[id].mats as Mats.RoomMats).set_power(f)
+		for l in rooms[id].get("char_lights", []):
+			(l as Light3D).light_energy = f * 1.2
 
 func _physics_process(_delta: float) -> void:
 	# live hazards: water on a live circuit
