@@ -84,7 +84,7 @@ func save() -> bool:
 		"version": VERSION,
 		"flags": Game.flags.duplicate(true),
 		"pos": [p.global_position.x, p.global_position.y, p.global_position.z],
-		"yaw": p.yaw, "pitch": p.pitch,
+		"yaw": p.yaw, "pitch": p.pitch, "health": p.health,
 		"in_labyrinth": main.in_labyrinth,
 		"socko_said": main.socko_tutorial.said.duplicate(),
 		"lab_said": main.socko_lab.said.duplicate(),
@@ -171,6 +171,7 @@ func load_game() -> bool:
 	Game.flags.clear()
 	Game.flags.merge(d.get("flags", {}), true)
 	if Game.flags.has("nuggets"): Game.flags["nuggets"] = int(Game.flags.nuggets)   # JSON made it a float
+	p.health = clampf(float(d.get("health", 1.0)), 0.05, 1.0)
 	# the opening's done: Marta gone from the chair, Socko on the hand
 	main.encounter.skip()
 	main.socko_intro.skip()

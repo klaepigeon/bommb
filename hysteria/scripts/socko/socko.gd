@@ -90,6 +90,8 @@ var _rng := RandomNumberGenerator.new()
 var _snap_t := 0.0; var _snap := Vector3.ZERO
 var _spill: OmniLight3D
 # the torch: once Socko's there, Kurt's light comes out of his mouth. Nobody explains it.
+var vitals := SockoVitals.new()     # he is the health bar (SockoVitals)
+var _vt := {}
 var torch: SpotLight3D
 var torch_on := false
 var _torch_aim := Vector3.ZERO
@@ -124,6 +126,7 @@ func _ready() -> void:
 	add_child(rig)
 	_p = EMOTIONS.neutral.duplicate()
 	director = SockoDirector.new(self)
+	vitals.tier_changed.connect(_on_tier)
 	# a little of the room's light kept on him, as the JS build's hand pass did, so he reads in
 	# the dark (layer 2: it lights nothing else)
 	_spill = OmniLight3D.new(); _spill.name = "Spill"
@@ -161,6 +164,25 @@ func attend(p: Vector3, seconds := 4.0) -> void:
 
 func look_at_kurt(seconds := 3.0) -> void:
 	_kurt_t = seconds
+
+## Kurt was hurt: Socko feels it first (same arm).
+func hurt(amount: float) -> void:
+	vitals.hit(amount)
+	_head_v += Vector3(-6.0, 5.0 * (1.0 if _rng.randf() < 0.5 else -1.0), 3.0) * clampf(0.6 + amount, 0.6, 1.4)
+	var lines := ["Ow! That's both of us, you know!", "Agh— hey! I felt that!", "Hnn! Not the arm! Not the arm!"]
+	if not talking: say(lines[_rng.randi() % lines.size()], "nervous", 1.1)
+
+const _TIER_LINES := {       # PROPOSED wording
+	1: ["That's… that's ours. That's our blood. It's fine. We're fine."],
+	2: ["Kurt. Kurt, we're leaking. I can feel it in my… everything."],
+	3: ["…cold, bud. Don't… don't put me down. Don't you put me down."],
+}
+func _on_tier(tier: int, worse: bool) -> void:
+	if worse and _TIER_LINES.has(tier):
+		_tier_line = [_TIER_LINES[tier][0], "nervous" if tier < 3 else "uncanny", 1.0 if tier < 3 else 0.5, 1.6]
+	elif not worse:
+		_tier_line = [["There we are. Good as… well. There we are.", "Ohh, that's better. Don't do that again."][_rng.randi() % 2], "happy", 0.9, 0.6]
+var _tier_line := []
 
 ## Take over Kurt's torch: from now on the light comes out of Socko's mouth (same lamp, same
 ## beam), aimed where Kurt is looking, as bright as his mouth is open.
@@ -339,6 +361,13 @@ func _process(delta: float) -> void:
 		set(tk, maxf(0.0, get(tk) - delta))
 	var g := _gesture_offsets(delta)
 	var c: Dictionary = director.update(delta)
+	# how Kurt's doing shows in him, on top of everything else he's doing
+	if player and player.get("health") != null: vitals.health = float(player.get("health"))
+	_vt = vitals.update(delta)
+	if not _tier_line.is_empty():            # the line for how bad it's got, once he's free to say it
+		_tier_line[3] -= delta
+		if _tier_line[3] <= 0.0 and not talking and visible:
+			say(_tier_line[0], _tier_line[1], _tier_line[2]); _tier_line = []
 	g.head += c.get("head", Vector3.ZERO); g.arm += c.get("arm", Vector3.ZERO)
 	g.jaw += c.get("jaw", 0.0); g.curl += c.get("curl", 0.0); g.squash += c.get("squash", 0.0)
 	g.face += c.get("face", 0.0)
@@ -387,7 +416,7 @@ func _process(delta: float) -> void:
 	yaw = clampf(yaw, -0.85 * lim, 0.85 * lim)
 	pitch = clampf(pitch, -1.05 * lim, 1.15 * lim)
 	var idle := Vector3(sin(_t * 0.7) * 0.05 + sin(_t * 1.9) * 0.02, sin(_t * 0.53 + 1.0) * 0.06, sin(_t * 0.31) * 0.04) * (1.0 - still)
-	var breath := sin(_t * 1.6) * 0.015 * (1.0 - still)
+	var breath: float = _vt.breath * (1.0 - still * (1.0 - vitals.d))    # he can't hold his breath still when he's hurt
 	var jitter := Vector3.ZERO
 	if _p.jitter > 0.01 and _rng.randf() < delta * 3.0 * _p.jitter:
 		_head_v += Vector3(_rng.randf_range(-1, 1), _rng.randf_range(-1, 1), _rng.randf_range(-0.5, 0.5)) * 4.0 * _p.jitter
@@ -401,10 +430,10 @@ func _process(delta: float) -> void:
 	var bounce := 0.0
 	if talking:
 		bounce = _jaw * 0.12 * _p.bounce * loud
-	var tremble: float = c.get("tremble", 0.0)
+	var tremble: float = c.get("tremble", 0.0) + _vt.tremble
 	if tremble > 0.0:
 		jitter += Vector3(sin(_t * 37.0) + sin(_t * 53.0), sin(_t * 41.0), sin(_t * 29.0)) * 0.012 * tremble
-	var want: Vector3 = Vector3(pitch + _p.pitch + breath + bounce, yaw, roll + _p.roll) + idle + g.head + jitter
+	var want: Vector3 = Vector3(pitch + _p.pitch + breath + bounce + _vt.pitch, yaw + _vt.yaw, roll + _p.roll + _vt.roll) + idle + g.head + jitter
 	# C: the head on a spring behind the wrist; the arm's turn drags it, still damps it
 	var freq := lerpf(8.5, 14.0, still)
 	var zeta := lerpf(0.42, 1.0, still)
@@ -423,12 +452,13 @@ func _process(delta: float) -> void:
 	var jaw_want := maxf(_p.jaw + g.jaw, spoken * 0.62 * clampf(loud, 0.3, 1.6) * maxf(0.2, 1.0 + c.get("jaw_mul", 0.0)))
 	if torch_on and not talking:
 		jaw_want = maxf(jaw_want, 0.34)      # holds his mouth open for the light
+	if not talking: jaw_want = maxf(jaw_want, _vt.jaw)      # panting
 	if emotion in ["angry", "furious"] and talking: jaw_want *= 1.25
 	for i in n:
 		_jaw_v += ((jaw_want - _jaw) * 380.0 - _jaw_v * 2.0 * 0.6 * 19.5) * h
 		_jaw += _jaw_v * h
 	# squash: jolts compress the cloth; the posture slumps or tenses it
-	var sq_want: float = _p.squash + g.squash + clampf(-wacc.y * 0.012, -0.4, 0.4) * (1.0 - still)
+	var sq_want: float = _p.squash + g.squash + _vt.squash + clampf(-wacc.y * 0.012, -0.4, 0.4) * (1.0 - still)
 	for i in n:
 		_sq_v += ((sq_want - _sq) * 120.0 - _sq_v * 8.0) * h
 		_sq += _sq_v * h
@@ -439,7 +469,7 @@ func _process(delta: float) -> void:
 	rig.jaw = maxf(_jaw, -0.05)
 	rig.skew = (0.35 if emotion in ["angry", "furious", "lying"] else 0.08) * sin(_t * 0.4 + 1.0)
 	# stretch and twist on springs: they overshoot and wobble back (follow-through)
-	var st_want: float = c.get("stretch", 0.0) * (1.0 - still * 0.5)
+	var st_want: float = c.get("stretch", 0.0) * (1.0 - still * 0.5) + _vt.stretch
 	var tw_want: float = c.get("twist", 0.0)
 	for i in n:
 		_st_v += ((st_want - _st) * 110.0 - _st_v * 7.5) * h
@@ -457,7 +487,7 @@ func _process(delta: float) -> void:
 	var kfc := 1.0 - pow(0.0002, delta)
 	for k in shape:
 		_face_ch[k] = lerpf(_face_ch.get(k, 0.0), shape[k], kfc)
-	rig.curl = _p.curl + g.curl
+	rig.curl = _p.curl + g.curl + _vt.curl
 	rig.squash = _sq
 	rig.stretch = clampf(_st, -1.0, 1.0)
 	rig.twist = clampf(_tw, -1.0, 1.0)
@@ -470,9 +500,10 @@ func _process(delta: float) -> void:
 	for i in 2:
 		var ep: Vector3 = director.eye_points[i]
 		rig.eye_targets[i] = ep if ep != Vector3.ZERO else null
-		rig.eye_rates[i] = director.eye_rates[i]
+		rig.eye_rates[i] = director.eye_rates[i] * (1.0 - 0.88 * _vt.lazy if i == 1 else 1.0)    # hurt: one eye slow to follow
 		rig.eye_hold[i] = maxf(hold, director.eye_holds[i])
 	rig.update_eyes(delta)
+	rig.set_wound(vitals.wound)
 	_update_torch()
 	_spill.global_position = rig.head_global().origin + cam.global_transform.basis.z * 0.25 + Vector3(0, 0.1, 0)
 
@@ -524,7 +555,7 @@ func _target_xf(g := {}) -> Transform3D:
 	var face_wp := Vector3(-0.01, -0.1, -0.3);   var face_e := Vector3(-0.24, -0.16, -0.43)
 	var W := show_w.lerp(low_w, pose_low).lerp(face_wp, _face_s)
 	var E := show_e.lerp(low_e, pose_low).lerp(face_e, _face_s)
-	W.y += _p.get("lift", 0.0); W.z -= _p.get("lean", 0.0)
+	W.y += _p.get("lift", 0.0) + _vt.get("lift", 0.0); W.z -= _p.get("lean", 0.0)
 	var vis := shown * (1.0 - _hide)
 	W.y -= (1.0 - vis) * 0.42; E.y -= (1.0 - vis) * 0.42
 	if player:

@@ -17,6 +17,9 @@ uniform vec3 glow = vec3(0.0);   // light from inside (the torch in his mouth)
 uniform sampler2D stain_tex : filter_linear, repeat_enable;
 uniform float stain_amount = 0.0;
 uniform vec3 stain_mix = vec3(1.0);   // blood, mould, urine
+// fresh blood, 0..1 (Kurt's health: Socko is the health bar). It comes up through the knit from
+// where the old blood already is and spreads from there; wet, so darker, redder, and matted flat.
+uniform float wound = 0.0;
 
 void vertex() {
 	vec4 clip = PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(VERTEX, 1.0);
@@ -47,6 +50,17 @@ void fragment() {
 		vec3 old = mix(vec3(0.74, 0.47, 0.40), vec3(0.40, 0.17, 0.13), smoothstep(0.5, 0.95, m.r));
 		c *= mix(vec3(1.0), old, clamp(smoothstep(0.0, 0.5, bl), 0.0, 1.0) * 0.72);
 		matted = clamp(ur * 0.5 + bl * 0.8 + mo * 0.3, 0.0, 0.8);
+	}
+	if (wound > 0.0) {
+		vec4 m = texture(stain_tex, UV2);
+		// where it comes through: the old stains first, then broad patches round the arm, so the
+		// red covers about as much of him as Kurt has lost
+		float patch = 0.5 + 0.5 * sin(UV2.x * 12.566 + sin(UV2.y * 9.0) * 1.7) * cos(UV2.y * 7.0 + UV2.x * 3.0);
+		float seed = clamp(m.r * 0.45 + patch * 0.62 + (m.a - 0.5) * 0.14 + COLOR.r * 0.08, 0.0, 1.0);
+		float edge = 1.0 - min(1.0, wound * 1.12);
+		float wet = smoothstep(edge, edge + 0.12, seed);
+		c *= mix(vec3(1.0), vec3(0.66, 0.05, 0.04), wet * (0.7 + 0.25 * wound));
+		matted = max(matted, wet * 0.8);
 	}
 	float rim = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 2.5) * (1.0 - matted * 0.6);
 	ALBEDO = c * (1.0 + rim * fuzz);

@@ -364,13 +364,21 @@ func _hold() -> void:
 	player.set("locked", true)
 	player.set("look_target", lab.to_global(position + Vector3(0, HOVER + 1.15, 0)))
 	player.set("shake", 1.0)
+	if player.has_method("hurt"): player.call("hurt", 0.4)       # her hands: it shows on Socko
+	var spent: bool = float(player.get("health")) <= 0.0 if player.get("health") != null else false
 	Game.speak("Have you seen them?", 3.0, 0.75, 0.7)
 	await get_tree().create_timer(1.2).timeout
 	Game.fade.emit(1.0, 0.6)
 	await get_tree().create_timer(1.6).timeout
 	# he comes to by the hole, and she's somewhere else
-	player.global_transform = lab.global_transform * lab.arrive
-	player.set("yaw", player.global_transform.basis.get_euler().y)
+	var m := get_tree().get_first_node_in_group("main")
+	if spent and m and m.has_method("leave_labyrinth"):
+		# nothing left in him: he comes to back in the flat, by the wardrobe, some of it slept off
+		m.call("leave_labyrinth", Transform3D(Basis(), WardrobeGap.BACK_TO))
+		player.set("health", 0.6)
+	else:
+		player.global_transform = lab.global_transform * lab.arrive
+		player.set("yaw", player.global_transform.basis.get_euler().y)
 	player.set("look_target", null)
 	position = lab.center(12, 15)
 	_path.clear(); _enter(S.DRIFT)

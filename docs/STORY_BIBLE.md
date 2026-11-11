@@ -382,3 +382,22 @@ except Sonya.** The names are on the note wall (MARTA, KURT, SONYA). Built:
 **Walking into things (built):** Kurt doesn't stop for loose things in his way: anything up to
 about 45 kg he kicks clear as he walks into it (the right foot, a thud, a noise that carries);
 heavier furniture he shoves; an unlocked door he walks into, he pushes open.
+
+
+## Socko is the health bar
+
+There is no health meter. Kurt's health (0..1, `player.health`) shows only in Socko, because it is
+the same arm (`scripts/socko/socko_vitals.gd`):
+
+| Health | Socko |
+|---|---|
+| above 3/4 | as ever |
+| above 1/2 | sags a little, breathes faster, fresh blood starting through the knit |
+| above 1/4 | slumped and curled, panting with his mouth open, shaking, one eye slow to follow the other, a soft pulse through the cloth, red in broad stripes |
+| below 1/4 | hangs off the wrist, heaving; a hard double heartbeat squeezes him; he nods off and jerks awake; soaked red |
+
+A hit makes him flinch (shrinks, snaps away, shakes it off) and yelp. When Kurt recovers a state he
+perks: a stretch and a shake. Health comes back slowly after nine seconds unhurt; the blood dries
+far more slowly than he heals. Marta's hands cost 0.4; with nothing left Kurt comes to back in
+Flat 47 by the wardrobe at 0.6. Health is saved with the game. Socko's lines for this are PROPOSED
+wording. Test: `tools/vitals_test.gd`.

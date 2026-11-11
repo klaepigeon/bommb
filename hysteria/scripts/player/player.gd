@@ -17,6 +17,11 @@ var look_sens := 0.0022
 var invert_y := false               # pause menu setting
 var pad_sens := 2.6
 var stamina := 1.0
+## Kurt's health, 0..1. Nothing on the screen shows it but Socko (SockoVitals). It comes back on
+## its own, slowly, once nothing's hurt him for a while.
+signal damaged(amount: float)
+var health := 1.0
+var _unhurt := 99.0
 var crouched := false
 var bob := 0.0
 var held: RigidBody3D
@@ -81,7 +86,15 @@ func look(rel: Vector2) -> void:
 	yaw -= rel.x * look_sens
 	pitch = clampf(pitch - rel.y * look_sens * (-1.0 if invert_y else 1.0), -1.45, 1.45)
 
+func hurt(amount: float) -> void:
+	health = clampf(health - amount, 0.0, 1.0)
+	_unhurt = 0.0
+	shake = maxf(shake, 0.5 + amount)
+	damaged.emit(amount)
+
 func _physics_process(delta: float) -> void:
+	_unhurt += delta
+	if _unhurt > 9.0 and health < 1.0: health = minf(1.0, health + delta * 0.035)
 	# look (pad)
 	var stick := Vector2(Input.get_joy_axis(0, JOY_AXIS_RIGHT_X), Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y))
 	if stick.length() > 0.15:

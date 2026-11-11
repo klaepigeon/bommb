@@ -88,6 +88,7 @@ func _ready() -> void:
 	# Socko: on his left hand, from the moment he comes to (story bible beats 9-10), not before
 	socko = Socko.new(); socko.name = "Socko"
 	socko.setup(player.cam, player)
+	player.damaged.connect(socko.hurt)
 	viewport.add_child(socko)
 	socko_intro = SockoIntro.new(); socko_intro.name = "SockoIntro"
 	add_child(socko_intro)

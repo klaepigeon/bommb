@@ -553,6 +553,13 @@ static func _stain_tex() -> Texture2D:
 static func _wrap_d(d: float) -> float:
 	return d - round(d)
 
+## Fresh blood coming through the cloth, 0..1 (Kurt's health; SockoVitals).
+var _wound_set := -1.0
+func set_wound(w: float) -> void:
+	if sock_mat and absf(w - _wound_set) > 0.004:
+		_wound_set = w
+		sock_mat.set_shader_parameter("wound", w)
+
 ## Stain controls (the test bench's inspection sliders): overall amount and each layer's.
 func set_stains(amount: float, blood := 1.0, mould := 1.0, urine := 1.0) -> void:
 	if sock_mat:
