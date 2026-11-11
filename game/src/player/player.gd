@@ -207,23 +207,29 @@ func _update_focus() -> void:
 			f = Interactable.find(hit.collider)
 			if f and not (f as Interactable).enabled:
 				f = null
-		# forgiving aim (thumbs aren't mice): nothing usable right under the crosshair, so take the
-		# nearest usable thing within a hand's width of where the look lands
+		# forgiving aim (thumbs aren't mice): nothing usable right under the crosshair, so look
+		# along the line of sight (up to whatever it hits) for the usable thing nearest that line
 		if f == null:
-			var at: Vector3 = hit.position if not hit.is_empty() else to
+			var dir := (to - from).normalized()
+			var end_d: float = from.distance_to(hit.position) + 0.12 if not hit.is_empty() else REACH
 			var sq := PhysicsShapeQueryParameters3D.new()
-			var sph := SphereShape3D.new(); sph.radius = 0.16
+			var sph := SphereShape3D.new(); sph.radius = 0.14
 			sq.shape = sph
-			sq.transform = Transform3D(Basis.IDENTITY, at - (to - from).normalized() * 0.05)
 			sq.collision_mask = 2 | 8 | 32 | 1
 			sq.exclude = [get_rid()]
 			var best := INF
-			for r in space.intersect_shape(sq, 12):
-				var cand := Interactable.find(r.collider)
-				if cand and cand.enabled and not cand.get_verbs(self).is_empty():
-					var dd := cand.focus_point().distance_to(at)
-					if dd < best and cand.focus_point().distance_to(from) < REACH + 0.3:
-						best = dd; f = cand
+			var dd := 0.35
+			while dd <= minf(end_d, REACH):
+				sq.transform = Transform3D(Basis.IDENTITY, from + dir * dd)
+				for r in space.intersect_shape(sq, 8):
+					var cand := Interactable.find(r.collider)
+					if cand and cand.enabled and cand != f:
+						var fp := cand.focus_point()
+						var off := (fp - from) - dir * (fp - from).dot(dir)
+						var score := off.length()
+						if score < best and score < 0.35 and not cand.get_verbs(self).is_empty():
+							best = score; f = cand
+				dd += 0.25
 	elif mode == "hidden":
 		f = null
 	var new_verbs: Array = []
@@ -363,7 +369,15 @@ func _update_held(_delta: float) -> void:
 		drop()
 		return
 	held.linear_velocity = (d * 14.0).limit_length(7.0)
-	held.angular_velocity *= 0.6
+	# long things (a plank) are carried end-first and turn with him, so they go through doors
+	if held.tags.has("plank"):
+		var fwd := -global_transform.basis.z
+		var want := Basis.looking_at(-fwd, Vector3.UP)       # local +Z (the plank's length) along his facing
+		var cur := held.global_transform.basis.orthonormalized()
+		var diff := (want * cur.inverse()).get_rotation_quaternion()
+		held.angular_velocity = diff.get_axis() * diff.get_angle() * 10.0 if diff.get_angle() > 0.01 else Vector3.ZERO
+	else:
+		held.angular_velocity *= 0.6
 
 func drop(gentle := true) -> Prop:
 	if not held:

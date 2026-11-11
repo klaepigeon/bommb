@@ -5,61 +5,21 @@ func _ready() -> void:
 	main.args = {"autotest": "none"}
 	add_child(main)
 	await get_tree().process_frame
-	await main.load_level("flat47", "")
-	for i in 20: await get_tree().process_frame
-	var hud = main.hud
-	var tb := Button.new(); tb.text = "TEST"; tb.position = Vector2(500, 500); tb.size = Vector2(200, 80)
-	tb.pressed.connect(func(): print("PROBE bare button pressed"))
-	get_tree().root.add_child(tb)
-	await get_tree().process_frame
-	var bc := tb.get_global_rect().get_center()
-	for pr in [true, false]:
-		var m := InputEventMouseButton.new(); m.button_index = MOUSE_BUTTON_LEFT; m.position = bc; m.global_position = bc; m.pressed = pr; m.button_mask = 1 if pr else 0
-		get_viewport().push_input(m)
-		await get_tree().process_frame
-	print("PROBE bare done; HUD visible ", hud.visible, " root size ", hud.root.size, " pause size ", hud.pause.size)
-	hud.open_pause()
-	for i in 5: await get_tree().process_frame
-	var res: Button
-	for b in hud.root.find_children("*", "Button", true, false):
-		if (b as Button).text.strip_edges() == "Resume": res = b
-	print("PROBE resume rect ", res.get_global_rect(), " visible ", res.is_visible_in_tree(), " paused ", get_tree().paused)
-	res.pressed.connect(func(): print("PROBE PRESSED"))
-	res.gui_input.connect(func(e): print("PROBE gui_input ", e))
-	var c := res.get_global_rect().get_center()
-	for n in get_tree().root.find_children("*", "Control", true, false):
-		var cc := n as Control
-		if cc.is_visible_in_tree() and cc.get_global_rect().has_point(c) and cc.mouse_filter != Control.MOUSE_FILTER_IGNORE:
-			print("PROBE ctl under point: ", cc.get_path(), " filter ", cc.mouse_filter, " pm ", cc.process_mode, " can_process ", cc.can_process())
-			cc.gui_input.connect(func(e): if e is InputEventMouseButton: print("PROBE gui at ", cc.name))
-	var hit = get_viewport().gui_get_hovered_control()
-	print("PROBE hovered before ", hit)
-	var vm := InputEventMouseMotion.new(); vm.position = c; vm.global_position = c
-	get_viewport().push_input(vm)
-	await get_tree().process_frame
-	print("PROBE hovered after motion ", get_viewport().gui_get_hovered_control())
-	var pm := InputEventMouseButton.new(); pm.button_index = MOUSE_BUTTON_LEFT; pm.position = c; pm.global_position = c; pm.pressed = true; pm.button_mask = 1
-	get_viewport().push_input(pm)
-	await get_tree().process_frame
-	pm = pm.duplicate(); pm.pressed = false; pm.button_mask = 0
-	get_viewport().push_input(pm)
-	await get_tree().process_frame
-	print("PROBE after push_input: pause visible ", hud.pause.visible)
-	hud.open_pause()
-	await get_tree().process_frame
-	for kind in ["touch", "mouse"]:
-		if kind == "touch":
-			var e := InputEventScreenTouch.new(); e.index = 0; e.position = c; e.pressed = true
-			Input.parse_input_event(e)
-			for i in 3: await get_tree().process_frame
-			e = InputEventScreenTouch.new(); e.index = 0; e.position = c; e.pressed = false
-			Input.parse_input_event(e)
-		else:
-			var m := InputEventMouseButton.new(); m.button_index = MOUSE_BUTTON_LEFT; m.position = c; m.global_position = c; m.pressed = true; m.button_mask = 1
-			Input.parse_input_event(m)
-			for i in 3: await get_tree().process_frame
-			m = InputEventMouseButton.new(); m.button_index = MOUSE_BUTTON_LEFT; m.position = c; m.global_position = c; m.pressed = false
-			Input.parse_input_event(m)
-		for i in 3: await get_tree().process_frame
-		print("PROBE after ", kind, ": pause visible ", hud.pause.visible, " control at point: ", get_viewport().gui_find_control(c) if get_viewport().has_method("gui_find_control") else "?")
+	await main.load_level("backrooms", "arrival")
+	for i in 150: await get_tree().physics_frame
+	var p: Player = main.player
+	print("PROBE player at ", p.global_position, " eye ", p._eye, " mode ", p.mode, " locked ", p.locked)
+	var fb = main.level.power.fuse_box
+	print("PROBE fusebox ", fb, " at ", fb.global_position if fb else null)
+	for test in [[Vector3(7.1, 0, 7.4), Vector3(7.9, 1.6, 7.4)], [Vector3(6.5, 0, 9.3), Vector3(6.875, 1.0, 10.0)], [Vector3(7.2, 0, 11.6), Vector3(7.93, 1.05, 12.0)]]:
+		p.global_position = test[0]
+		var d: Vector3 = test[1] - (test[0] + Vector3(0, p._eye, 0))
+		p.rotation.y = atan2(-d.x, -d.z)
+		p._pitch = atan2(d.y, Vector2(d.x, d.z).length()); p.head.rotation.x = p._pitch
+		for i in 4: await get_tree().physics_frame
+		var cam := p.camera
+		var q := PhysicsRayQueryParameters3D.create(cam.global_position, cam.global_position - cam.global_transform.basis.z * 2.2, 0xFFFF)
+		q.exclude = [p.get_rid()]
+		var hit := p.get_world_3d().direct_space_state.intersect_ray(q)
+		print("PROBE at ", p.global_position, " cam ", cam.global_position, " -> hit ", (str(hit.collider.get_path()) + " layer " + str(hit.collider.collision_layer)) if hit else "nothing", " @", hit.get("position"), " verbs ", p.verbs.map(func(v): return v.id))
 	get_tree().quit()

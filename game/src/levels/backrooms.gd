@@ -92,7 +92,7 @@ static func layout() -> Dictionary:
 		{"p": [8.0, 11.6], "axis": "z", "w": 0.95, "h": 2.1, "door": {"id": "flat48_door", "style": "door_padded", "swing": -1, "padlock": "key:padlock48", "padlock_side": 1.0}},
 		# the bathroom's vent (a panel over it: see furniture) and Sonya's boarded window
 		{"p": [9.6, 10.0], "axis": "x", "w": 0.6, "h": 0.6, "sill": 0.3, "ai": false},
-		{"p": [2.0, 10.0], "axis": "x", "w": 1.0, "h": 1.25, "sill": 0.0, "ai": false},
+		{"p": [3.0, 10.0], "axis": "x", "w": 1.0, "h": 1.25, "sill": 0.0, "ai": false},
 		# living again: balcony door
 		{"p": [15.5, 11.0], "axis": "x", "w": 0.8, "h": 2.1, "door": {"id": "b_balcony", "swing": -1}, "ai": false},
 		# windows that look at nothing
@@ -141,7 +141,6 @@ static func layout() -> Dictionary:
 		{"t": "dresser", "room": "bedtall", "p": [13.25, 3.4], "r": -90, "id": "b_dresser"},
 		{"t": "mirror", "room": "bedtall", "p": [13.04, 3.4], "r": -90},
 		# ---- the corridor: the plank, closets to hide in, doors that go nowhere
-		{"t": "prop", "room": "corridor", "kind": "plank", "p": [12.6, 6.3], "lift": 0.05, "id": "the_plank"},
 		{"t": "hiding_closet", "room": "corridor", "p": [18.0, 5.32], "r": 180, "id": "b_closet1"},
 		{"t": "hiding_closet", "room": "corridor", "p": [4.4, 6.28], "r": 0, "id": "b_closet2"},
 		{"t": "radiator", "room": "corridor", "p": [9.0, 5.07], "r": 180, "w": 0.6},
@@ -153,9 +152,8 @@ static func layout() -> Dictionary:
 		# ---- Sonya's room, wrong: three of her bed, the chest, the boards over the window
 		{"t": "bed", "room": "sonya_w", "p": [0.55, 8.3], "r": 0, "w": 0.9, "l": 1.8, "id": "b_bed_s1"},
 		{"t": "bed", "room": "sonya_w", "p": [1.6, 8.3], "r": 0, "w": 0.9, "l": 1.8, "id": "b_bed_s2", "hide": false},
-		{"t": "bed", "room": "sonya_w", "p": [2.65, 8.3], "r": 0, "w": 0.9, "l": 1.8, "id": "b_bed_s3", "hide": false},
 		{"t": "toy_chest", "room": "sonya_w", "p": [4.3, 9.65], "r": 0, "id": "b_chest", "contents": {"inside": ["ammo", "ammo"]}},
-		{"t": "hole", "room": "sonya_w", "p": [2.0, 9.97], "r": 0, "id": "crawl_boards", "w": 1.0, "hh": 1.25, "y0": 0.62, "hp": 45.0},
+		{"t": "hole", "room": "sonya_w", "p": [3.0, 9.97], "r": 0, "id": "crawl_boards", "w": 1.0, "hh": 1.25, "y0": 0.62, "hp": 45.0},
 		# ---- the entrance: the fuse box (A: corridor and hall, B: rooms, C: the wet rooms)
 		{"t": "fuse_box", "room": "entrance_w", "p": [7.96, 7.4], "r": 90},
 		{"t": "coat_rack", "room": "entrance_w", "p": [5.04, 8.2], "r": -90},
@@ -175,10 +173,11 @@ static func layout() -> Dictionary:
 		{"t": "table", "room": "living_again", "p": [15.5, 8.8], "w": 1.4, "d": 0.85, "cloth": true, "on": ["plate", "plate", "plate"]},
 		{"t": "prop", "room": "living_again", "kind": "chair", "p": [14.55, 8.8], "lift": 0.46},
 		{"t": "prop", "room": "living_again", "kind": "chair", "p": [16.45, 8.8], "lift": 0.46},
-		{"t": "sofa", "room": "living_again", "p": [15.5, 7.0], "r": 180, "w": 1.8},
-		{"t": "armchair", "room": "living_again", "p": [17.2, 7.3], "r": 140, "id": "b_armchair"},
+		{"t": "sofa", "room": "living_again", "p": [17.5, 8.6], "r": 90, "w": 1.8},
+		{"t": "armchair", "room": "living_again", "p": [14.0, 7.4], "r": -140, "id": "b_armchair"},
 		{"t": "wardrobe", "room": "living_again", "p": [13.35, 9.0], "r": -90, "id": "b_wardrobe_l2"},
 		{"t": "paper", "room": "living_again", "p": [17.95, 10.0], "r": 90, "doc": "plank_note"},
+		{"t": "prop", "room": "living_again", "kind": "plank", "p": [14.7, 10.5], "r": 90, "lift": 0.05, "id": "the_plank"},
 		# ---- balconies, and nothing between them
 		{"t": "railing", "room": "balcony", "p": [14.02, 11.7], "r": 90, "w": 1.4},
 		{"t": "railing", "room": "balcony", "p": [16.98, 11.7], "r": 90, "w": 1.4},
@@ -207,7 +206,7 @@ static func layout() -> Dictionary:
 			{"id": "living_again", "p": [15.5, 1.2, 8.0], "size": [4.0, 2.4, 3.0], "once": true},
 			{"id": "to48_door", "p": [8.65, 1.2, 11.6], "size": [0.5, 2.4, 1.0]},
 			{"id": "to48_balcony", "p": [15.5, 1.2, 14.4], "size": [2.6, 2.4, 1.0]},
-			{"id": "crawlspace", "p": [2.0, 0.6, 10.6], "size": [2.6, 1.2, 1.0], "once": true},
+			{"id": "crawlspace", "p": [2.2, 0.6, 10.6], "size": [2.6, 1.2, 1.0], "once": true},
 			{"id": "fall", "p": [15.5, -6.0, 13.0], "size": [20.0, 4.0, 20.0]},
 		],
 		"seams": [{"a": [23.0, 0.0, 5.8], "b": [3.0, 0.0, 5.8], "size": [0.4, 2.4, 1.5]}],

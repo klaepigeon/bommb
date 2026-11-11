@@ -22,7 +22,7 @@ func begin(p_main: Node, which: String) -> void:
 	if shots_dir != "":
 		DirAccess.make_dir_recursive_absolute(shots_dir)
 	await get_tree().process_frame
-	var suites := ["systems", "scene_a", "routes"] if which == "all" else [which]
+	var suites := ["systems", "touch", "scene_a", "routes", "ai", "soak"] if which == "all" else [which]
 	for s in suites:
 		if has_method("t_" + s):
 			print("AUTOTEST begin ", s)
@@ -105,7 +105,11 @@ func use_on(point: Vector3, verb_id: String, from := Vector3.INF) -> bool:
 				await until(func(): return p._hold_verb.is_empty(), t + 3.0)
 			await frames(2)
 			return true
-	print("AUTOTEST note: no verb '%s' at %s; have %s" % [verb_id, point, p.verbs.map(func(v): return v.id)])
+	var cam := p.camera
+	var q := PhysicsRayQueryParameters3D.create(cam.global_position, cam.global_position - cam.global_transform.basis.z * 2.2, 0xFFFF)
+	q.exclude = [p.get_rid()]
+	var hit := p.get_world_3d().direct_space_state.intersect_ray(q)
+	print("AUTOTEST note: no verb '%s' at %s; have %s; kurt %s cam %s mode %s; ray hit %s" % [verb_id, point, p.verbs.map(func(v): return v.id), p.global_position, cam.global_position, p.mode, (str(hit.collider.name) + " in " + str(hit.collider.get_parent().name)) if hit else "nothing"])
 	return false
 
 func walk_to(target: Vector3, timeout := 12.0, run := false) -> bool:
@@ -478,3 +482,360 @@ func t_touch() -> void:
 		ok("layout_fits_%dx%d" % [sz.x, sz.y], inside, "a button is off screen")
 	get_window().size = Vector2i(1280, 720)
 	_completed = "touch"
+
+# ---------------------------------------------------------------------------------- scene A
+
+func t_scene_a() -> void:
+	fresh()
+	await start("flat47")
+	var d: Node = main.director
+	var p: Player = main.player
+	ok("intro_runs", await until(func(): return d.state == "explore", 40.0), "state %s" % d.state)
+	ok("intro_lines", Story.play_time > 0.0, "")
+	await place(Vector3(2.5, 0, 4.4), Vector3(2.5, 1.1, 1.3))
+	ok("sees_marta", await until(func(): return d.state == "seen", 3.0), "state %s" % d.state)
+	await skip_speech()
+	ok("examine", await use_on(Vector3(2.5, 1.0, 1.3), "examine", Vector3(3.3, 0, 2.95)), "no examine verb")
+	ok("wakes", await until(func(): return d.state == "awake", 90.0), "state %s" % d.state)
+	ok("socko_appears", p.socko.visible and SockoDirector.inst.awake, "no Socko")
+	ok("player_has_control", not p.locked and p.mode == "normal", "locked %s mode %s" % [p.locked, p.mode])
+	# the door he came through won't open
+	await use_on(door("living_door").ifocus(), "toggle", door_from("living_door", -1))
+	ok("door_wont_open", await until(func(): return d._tried_door, 3.0) and door("living_door").is_closed(), "")
+	await skip_speech()
+	# the balcony: a sticky note where the world should be
+	await use_on(door("balcony_door").ifocus(), "toggle", door_from("balcony_door", 1))
+	await wait(0.8)
+	await place(Vector3(2.5, 0, -0.7), Vector3(2.5, 1.4, -2.4))
+	ok("balcony_scene", await until(func(): return d._balcony_done, 3.0), "")
+	await skip_speech()
+	# the wardrobe: shove it along the wall
+	var w: Prop = d.wardrobe
+	for i in 5:
+		if d.state == "revealed": break
+		await use_on(w.global_position + Vector3(0, 1.0, 0), "push", Vector3(0.45, 0, w.global_position.z - 1.1))
+		await place(Vector3(1.6, 0, 2.6), Vector3(0.0, 0.7, 3.4))
+		await wait(0.5)
+	ok("wardrobe_reveals", await until(func(): return d.state == "revealed", 8.0), "wardrobe moved %.2f" % w.global_position.distance_to(d._wardrobe_start))
+	await skip_speech()
+	await use_on(Vector3(0.0, 0.7, 3.4), "crawl", Vector3(0.9, 0, 3.4))
+	ok("crawl_to_backrooms", await until(func(): return main.level != null and main.level.level_name == "backrooms" and main.director != null, 15.0), "level %s" % (main.level.level_name if main.level else "none"))
+	ok("backrooms_from_flat47_inventory", main.player.inv.has("telegram"), "inventory lost")
+	await skip_speech()
+	_completed = "scene_a"
+
+# ---------------------------------------------------------------------------------- routes
+
+func backrooms(quiet := true) -> void:
+	fresh()
+	await main.load_level("backrooms", "arrival")
+	await until(func(): return main.director != null, 10.0)
+	if quiet:
+		main.director.encounter_done = true       # she stays where she is: these are route tests
+	await until(func(): return not main.player.locked and not main.player.crouching, 10.0)
+	await wait(0.5)
+	await skip_speech()
+
+func open_container_of(item: String) -> bool:
+	var pr := prop_item(item)
+	if not pr:
+		return false
+	var n: Node = pr.get_parent()
+	while n and not (n is Fixtures.Drawer) and not (n is Door) and n != main.level:
+		n = n.get_parent()
+	var p: Player = main.player
+	if n is Fixtures.Drawer:
+		var dr := n as Fixtures.Drawer
+		var front := -dr.global_transform.basis.z
+		var stand := dr.global_position + front * 0.8
+		stand.y = main.level.room_floor(main.level.room_at(dr.global_position + Vector3(0, 0.3, 0)))
+		p.crouching = true
+		await wait(0.4)
+		return await use_on(dr.ifocus(), "open", stand)
+	# loose in a cupboard / wardrobe: open the nearest cabinet door to it
+	var best: Door = null
+	var bd := INF
+	for dd in main.level.find_children("Cab_*", "Node3D", true, false):
+		var dist := (dd as Node3D).global_position.distance_to(pr.global_position)
+		if dist < bd: bd = dist; best = dd
+	if best and bd < 1.5:
+		var stand: Vector3 = best.global_position + best.global_transform.basis.z * 0.9 * best.swing
+		stand.y = main.level.room_floor(main.level.room_at(best.global_position + Vector3(0, 0.3, 0)))
+		if best.height < 1.0:
+			p.crouching = true
+			await wait(0.4)
+		return await use_on(best.ifocus(), "toggle", stand)
+	return true
+
+func to_48(spawn_check: String, route_flag: String) -> void:
+	ok("reach48_" + spawn_check, await until(func(): return main.level != null and main.level.level_name == "flat48" and main.director != null, 15.0), "level %s" % (main.level.level_name if main.level else "none"))
+	await wait(1.2)
+	await place(Vector3(2.5, 0, 2.8), Vector3(2.5, 1.2, 0.0))
+	ok("arrive48_" + spawn_check, await until(func(): return Story.has("arrived48"), 30.0), "no arrival")
+	ok("route_recorded_" + spawn_check, String(Story.flag("route48", "")).begins_with(route_flag), "route48 = %s" % Story.flag("route48", ""))
+	await until(func(): return get_tree().paused, 20.0)
+	get_tree().paused = false
+	for c in main.hud.root.get_children():
+		if c is Control and c != main.hud.reader and c != main.hud.inventory and c != main.hud.pause and c.get_child_count() > 0 and c.get_child(0) is ColorRect and not (c is PanelContainer):
+			c.queue_free()
+
+func t_routes() -> void:
+	var p: Player
+	# --- 1. the key: kitchen B's drawer (circuit C off first: the water's live), the box room, the jar, the padlock
+	await backrooms()
+	p = main.player
+	await use_on(Vector3(7.9, 1.6, 7.4), "brk:C", Vector3(7.1, 0, 7.4))
+	ok("route_key_power_off", not main.level.power.is_live("C"), "C still live")
+	await open_container_of("key_storage")
+	await wait(0.6)
+	ok("route_key_storage_key", await take_item("key_storage"), "no storage key")
+	p.crouching = false
+	await use_on(door("b_box").ifocus(), "unlock", door_from("b_box", -1))
+	await wait(0.6)
+	ok("route_key_box_open", not door("b_box").locked, "box room still locked")
+	var jar: Prop = null
+	for x in get_tree().get_nodes_in_group("props"):
+		if x is Prop and (x as Prop).persist_id == "key_jar": jar = x
+	await use_on(jar.global_position, "hold", Vector3(12.1, 0, jar.global_position.z))
+	ok("route_key_hold_jar", p.held == jar, "not holding the jar")
+	p._pitch = deg_to_rad(-60); p.head.rotation.x = p._pitch
+	await frames(2)
+	p.throw()
+	await wait(1.5)
+	ok("route_key_jar_breaks", prop_item("key_padlock") != null, "no key fell out")
+	ok("route_key_padlock_key", await take_item("key_padlock"), "couldn't take it")
+	await _through_front_door()
+	var lock = door("flat48_door").padlock
+	await use_on((lock as Node3D).global_position, "unlock", Vector3(7.2, 0, 11.6))
+	ok("route_key_unlocks", not lock.is_locked(), "padlock still locked")
+	await _into_48()
+	await to_48("door", "door:key")
+	# --- 2. the bolt cutters (quiet)
+	await backrooms()
+	p = main.player
+	await open_container_of("bolt_cutters")
+	await wait(0.6)
+	ok("route_cut_cutters", await take_item("bolt_cutters"), "no cutters")
+	p.crouching = false
+	await _through_front_door()
+	lock = door("flat48_door").padlock
+	await use_on((lock as Node3D).global_position, "cut", Vector3(7.2, 0, 11.6))
+	ok("route_cut_padlock", not lock.is_locked(), "padlock still locked")
+	await _into_48()
+	await to_48("door_cut", "door:cut")
+	# --- 3. the gun (loud)
+	await backrooms()
+	p = main.player
+	ok("route_gun_take", await take_item("revolver"), "couldn't take the revolver")
+	await skip_speech()
+	ok("route_gun_given", p.gun != null and p.gun.loaded == 2, "gun %s" % p.gun)
+	p.gun.toggle_equip()
+	await _through_front_door()
+	lock = door("flat48_door").padlock
+	var heard := []
+	var cb := func(_pos, r, kind, _s): if kind == "gunshot": heard.append(r)
+	Events.noise.connect(cb)
+	await place(Vector3(7.0, 0, 11.6), (lock as Node3D).global_position)
+	p.gun.set_aim(true)
+	await wait(0.3)
+	p.gun.fire()
+	await wait(0.3)
+	Events.noise.disconnect(cb)
+	ok("route_gun_shot_lock", not lock.is_locked(), "padlock survived")
+	ok("route_gun_noise", not heard.is_empty() and heard[0] >= 25.0, "gunshot noise %s" % [heard])
+	ok("route_gun_ammo_spent", p.gun.loaded == 1, "loaded %d" % p.gun.loaded)
+	await _into_48()
+	await to_48("door_shot", "door:shot")
+	# --- 4. the vent (unscrew the panel, crawl)
+	await backrooms()
+	p = main.player
+	p.inv.add("screwdriver")
+	var vent: Node = null
+	for b in main.level.breakables:
+		if b.break_id == "vent": vent = b
+	await use_on((vent as Node3D).global_position, "unscrew", Vector3(9.6, 0, 9.2))
+	ok("route_vent_panel_off", vent.done, "panel still on")
+	await use_on((vent as Node3D).global_position, "crawl", Vector3(9.6, 0, 9.3))
+	await to_48("vent", "vent")
+	# --- 5. the plank across to 48's balcony
+	await backrooms()
+	p = main.player
+	var plank: Prop = main.director._plank
+	await use_on(door("b_living2").ifocus(), "toggle", door_from("b_living2", -1))
+	await use_on(door("b_balcony").ifocus(), "toggle", Vector3(15.5, 0, 10.3))
+	await wait(0.6)
+	await use_on(plank.global_position, "hold", Vector3(plank.global_position.x, 0, 9.6))
+	ok("route_plank_hold", p.held == plank, "not holding the plank")
+	# carry it, walking, out through the balcony door
+	for wp in [Vector3(15.5, 0, 9.9), Vector3(15.5, 0, 10.5), Vector3(15.5, 0, 12.0)]:
+		await walk_to(wp, 10.0)
+	ok("route_plank_carried", p.held == plank and p.global_position.z > 11.5, "held %s at %s" % [p.held, p.global_position])
+	p.rotation.y = PI          # facing south, over the gap
+	await wait(0.8)
+	p.drop()
+	ok("route_plank_bridge", await until(func(): return main.director.bridged, 4.0), "plank at %s" % plank.global_position)
+	await wait(0.5)
+	ok("route_plank_walk", await walk_to(Vector3(15.5, 0, 14.5), 8.0), "couldn't cross; at %s" % p.global_position)
+	await to_48("balcony", "balcony")
+	_completed = "routes"
+
+func _through_front_door() -> void:
+	var fd := door("b_front")
+	await use_on(fd.ifocus(), "chain", door_from("b_front", -1))
+	await use_on(fd.ifocus(), "toggle", door_from("b_front", -1))
+	await wait(0.8)
+	await place(Vector3(6.5, 0, 11.0), Vector3(8.0, 1.2, 11.6))
+
+func _into_48() -> void:
+	var d := door("flat48_door")
+	await use_on(d.ifocus(), "toggle", Vector3(7.2, 0, 11.6))
+	await wait(0.9)
+	ok("door48_opens", d.open_k > 0.5, "open_k %.2f; verbs %s" % [d.open_k, main.player.verbs])
+	await place(Vector3(8.6, 0, 11.6), Vector3(10, 1.2, 11.6))
+
+# ---------------------------------------------------------------------------------- AI
+
+func t_ai() -> void:
+	await backrooms(false)
+	var p: Player = main.player
+	var m: MartaHunter = main.director.marta
+	# the encounter: she's at the far end of the corridor, Kurt sees her
+	await place(Vector3(3.0, 0, 5.8), Vector3(21.0, 1.3, 5.8))
+	await wait(0.5)
+	await place(Vector3(14.0, 0, 5.8), Vector3(21.0, 1.3, 5.8))
+	main.level.trigger_entered.emit("corridor_first")
+	ok("ai_encounter", await until(func(): return main.director.encounter_done, 3.0), "no encounter")
+	ok("ai_wakes", await until(func(): return m.state != "dormant", 30.0), "still dormant")
+	# a quiet noise behind closed doors goes unheard; a gunshot is heard
+	m.reset_to(Vector3(7.0, 0, 2.6))
+	m.suspicion = 0.0
+	m.set_state("patrol")
+	m._ids = PackedInt64Array()
+	await place(Vector3(2.5, 0, 8.3), Vector3(2.5, 1.2, 6.0))       # Sonya's room, door shut
+	door("b_sonya").close(); door("b_kitchen_a").close()
+	await wait(0.6)
+	m.suspicion = 0.0
+	Events.noise.emit(p.global_position, 4.5, "footstep", p)
+	await frames(2)
+	ok("ai_no_hearing_through_walls", m.suspicion < 0.2 and m.state != "investigate", "suspicion %.2f state %s" % [m.suspicion, m.state])
+	Events.noise.emit(p.global_position, 30.0, "gunshot", p)
+	await frames(2)
+	ok("ai_hears_gunshot", m.state == "investigate" or m.state == "chase", "state %s" % m.state)
+	# sight: lit and in the open, she sees him; crouched in the dark, at the same distance, she doesn't
+	m.reset_to(Vector3(4.0, 0, 5.8)); m.set_state("patrol"); m.suspicion = 0.0
+	m.rotation.y = -PI * 0.5; m._yaw = m.rotation.y           # facing east
+	await place(Vector3(10.0, 0, 5.8), Vector3(4.0, 1.4, 5.8))
+	p.crouching = false
+	m._ids = PackedInt64Array(); m.velocity = Vector3.ZERO
+	ok("ai_sees_in_light", m._visibility() > 0.0, "she can't see him in the lit corridor")
+	main.level.power.set_live("A", false)
+	p.crouching = true
+	await wait(0.5)
+	ok("ai_blind_in_dark", m._visibility() == 0.0, "visibility %.2f in the dark" % m._visibility())
+	main.level.power.set_live("A", true)
+	p.crouching = false
+	# a chase, and a catch: injury, she goes elsewhere, Kurt wakes up
+	var inj0 := p.injury
+	m.reset_to(p.global_position + Vector3(-0.8, 0, 0))
+	m._start_chase()
+	ok("ai_catches", await until(func(): return Story.count("caught") >= 1, 5.0), "never caught")
+	ok("ai_caught_hurts", await until(func(): return p.injury > inj0 and not p.locked, 10.0), "injury %d locked %s" % [p.injury, p.locked])
+	await skip_speech()
+	# a bolted door: she can't open it, she pounds it, it gives
+	var ad := door("b_arrival")
+	await place(Vector3(2.5, 0, 3.8), Vector3(2.5, 1.0, 5.0))
+	ad.close()
+	await wait(0.5)
+	await use_on(ad.ifocus(), "bolt", door_from("b_arrival", -1))
+	ok("ai_bolt_on", ad.bolt_on, "no bolt")
+	m.reset_to(Vector3(2.5, 0, 6.0))
+	m._start_chase()
+	m.last_known = p.global_position
+	m._repath = 0.0
+	ok("ai_pounds_secured_door", await until(func(): return m.state == "pound", 6.0), "state %s" % m.state)
+	var hp0 := ad.hp
+	await wait(3.0)
+	ok("ai_pounding_damages", ad.hp < hp0, "door hp %.0f" % ad.hp)
+	# distraction: the radio, switched on in another room; she goes and silences it
+	m.reset_to(Vector3(12.0, 0, 5.8)); m.set_state("patrol"); m.suspicion = 0.0
+	await place(Vector3(14.0, 0, 9.0), Vector3(15.5, 1.0, 8.8))
+	var radio: Prop = null
+	for x in get_tree().get_nodes_in_group("props"):
+		if x is Prop and x.name == "radio": radio = x
+	radio.behaviour.set_on(true)
+	ok("ai_goes_to_radio", await until(func(): return m.state == "investigate", 6.0), "state %s" % m.state)
+	ok("ai_silences_radio", await until(func(): return not radio.behaviour.on, 30.0), "radio still on; she's %s at %s" % [m.state, m.global_position])
+	# the music box: she stops, and sits
+	m.reset_to(Vector3(12.0, 0, 5.8)); m._start_chase()
+	p.inv.add("music_box")
+	await place(Vector3(6.0, 0, 5.8), Vector3(12.0, 1.2, 5.8))
+	p.use_item("music_box")
+	ok("ai_pacified", await until(func(): return m.state == "pacified", 5.0), "state %s" % m.state)
+	ok("ai_pacified_recorded", Story.has("stealth.pacified"), "")
+	# the gun: shot, she staggers, then pulls back; shot enough, she dies
+	main.director.give_gun(false)
+	p.inv.add("ammo", 5)
+	p.gun.loaded = 7
+	p.gun.toggle_equip()
+	m.reset_to(Vector3(10.0, 0, 5.8)); m._start_chase()
+	m.velocity = Vector3.ZERO
+	await place(Vector3(6.0, 0, 5.8), m.global_position + Vector3(0, 0.9, 0))
+	p.gun.set_aim(true)
+	await wait(0.3)
+	await place(Vector3(6.0, 0, 5.8), m.global_position + Vector3(0, 0.9, 0))
+	p.gun.fire()
+	await frames(3)
+	ok("ai_shot_stuns", m.state == "stunned" and m.hp < 100.0, "state %s hp %.0f" % [m.state, m.hp])
+	ok("ai_shot_recorded", Story.has("violence.shot_marta"), "")
+	for i in 6:
+		if m.state == "dead": break
+		await wait(0.8)
+		await place(Vector3(6.0, 0, 5.8), m.global_position + Vector3(0, 0.9, 0))
+		p.gun.fire()
+		await frames(3)
+	ok("ai_can_die", m.state == "dead" and Story.has("violence.killed_marta"), "state %s hp %.0f" % [m.state, m.hp])
+	ok("ai_killing_infects", Infection.level > 0.2, "infection %.2f" % Infection.level)
+	_completed = "ai"
+
+# ---------------------------------------------------------------------------------- soak (crash safety)
+
+## random thumbs on the glass for a while in every level, Marta hunting: nothing may error
+func t_soak() -> void:
+	var rng := RandomNumberGenerator.new(); rng.seed = 47
+	for lv in ["flat47", "backrooms", "flat48"]:
+		fresh()
+		if lv == "backrooms":
+			await main.load_level("backrooms", "arrival")
+			await until(func(): return main.director != null, 10.0)
+			main.director.marta.wake()
+			main.director.give_gun(false)
+			main.player.inv.add("ammo", 3)
+		elif lv == "flat48":
+			await main.load_level("flat48", "door")
+		else:
+			await start("flat47")
+		var vp: Vector2 = main.hud.root.get_viewport_rect().size
+		var t := 0.0
+		while t < 25.0:
+			var r := rng.randf()
+			if r < 0.35:
+				touch(0, Vector2(vp.x * 0.15, vp.y * 0.7), true)
+				await swipe(0, Vector2(vp.x * 0.15, vp.y * 0.7), Vector2(vp.x * 0.15, vp.y * 0.7) + Vector2(rng.randf_range(-80, 80), rng.randf_range(-80, 80)), 6)
+				touch(0, _touch_idx[0], false)
+			elif r < 0.6:
+				touch(1, Vector2(vp.x * 0.7, vp.y * 0.5), true)
+				await swipe(1, Vector2(vp.x * 0.7, vp.y * 0.5), Vector2(vp.x * 0.7 + rng.randf_range(-200, 200), vp.y * 0.5 + rng.randf_range(-60, 60)), 6)
+				touch(1, _touch_idx[1], false)
+			elif r < 0.85:
+				var ids: Array = main.hud._buttons.keys()
+				var id: String = ids[rng.randi() % ids.size()]
+				if main.hud._buttons[id].shown and id != "pause" and id != "inv":
+					await tap(main.hud._buttons[id].center, 2)
+			else:
+				await tap(Vector2(vp.x * rng.randf_range(0.5, 0.95), vp.y * rng.randf_range(0.2, 0.8)), 3)
+			if get_tree().paused:
+				main.hud.close_all()
+			await frames(2)
+			t += 0.12
+		ok("soak_" + lv, true)
+	_completed = "soak"

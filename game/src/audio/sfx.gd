@@ -240,8 +240,8 @@ func _process(delta: float) -> void:
 	if _occ_t > 0.1 and not _loops.is_empty():
 		_occ_t = 0.0
 		_loop_i = (_loop_i + 1) % _loops.size()
-		var lp: AudioStreamPlayer3D = _loops[_loop_i]
+		var lp = _loops[_loop_i]                  # untyped: it may already be freed
 		if not is_instance_valid(lp):
 			_loops.remove_at(_loop_i)
-		elif lp.is_inside_tree():
-			lp.bus = "Muffled" if _occluded(lp.global_position) else "SFX"
+		elif (lp as AudioStreamPlayer3D).is_inside_tree():
+			(lp as AudioStreamPlayer3D).bus = "Muffled" if _occluded((lp as AudioStreamPlayer3D).global_position) else "SFX"
