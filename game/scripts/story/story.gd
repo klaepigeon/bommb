@@ -11,7 +11,7 @@ var level: Level
 var hud: Hud
 var socko: Socko
 var mind: SockoMind
-var marta_table: Body              ## Marta at her table, before
+var marta_table: CreatureBody.MartaBody   ## Marta at her table, before
 var marta: Marta
 var super_: Super
 var porter: Porter
@@ -42,14 +42,16 @@ func _beat(id: String) -> bool:
 
 # ------------------------------------------------------------------------------ the people
 func _marta_at_table() -> void:
-	marta_table = Body.new(); marta_table.name = "MartaAtTable"
+	marta_table = CreatureBody.MartaBody.new(); marta_table.name = "MartaAtTable"
 	level.flat.add_child(marta_table)
-	var spec := Marta.design_spec(); spec.name = "marta_table"
-	marta_table.build(spec)
-	marta_table.global_position = Flat47.MARTA_SEAT + Vector3(0, 0.02, 0)
+	marta_table.build(true)
+	marta_table.global_position = Flat47.MARTA_SEAT
 	marta_table.rotation.y = PI * 0.5 + 0.12           # facing the table, west
+	# her own chair is the one grown into her: the flat's chair at her place goes
+	if level.flat.marta_chair:
+		for mi in level.flat.marta_chair.find_children("*", "MeshInstance3D", true, false): (mi as MeshInstance3D).visible = false
 	marta_table.set_zone(1)
-	marta_table.pose({"sit": 1.0, "stoop": 0.9, "look": Vector2(0, -0.6)})
+	marta_table.pose({"stoop": 1.0})
 	var u := Usable.make(level.flat, Transform3D(Basis(), Flat47.MARTA_SEAT + Vector3(0, 0.8, 0)), Vector3(0.6, 1.2, 0.6), [])
 	u.title = "Marta"
 	u.name = "MartaSpot"
@@ -376,14 +378,14 @@ func _examine() -> void:
 	await Speech.say_id("examine")
 	# her head comes up
 	var lift := create_tween()
-	lift.tween_method(func(v): marta_table.pose({"sit": 1.0, "stoop": lerpf(0.9, 0.1, v), "look": Vector2(0.9 * v, -0.6 + 0.9 * v), "twitch": 0.3 * v}), 0.0, 1.0, 1.2)
+	lift.tween_method(func(v): marta_table.pose({"dt": 0.05, "stoop": 1.0 - v, "look_at": kurt.cam.global_position, "twitch": 0.3 * v}), 0.0, 1.0, 1.2)
 	Audio.play("coral", Flat47.MARTA_SEAT + Vector3(0, 1.2, 0), 0.0)
 	await lift.finished
 	await Speech.say_id("boxes")
 	await Speech.say_id("marta_q")
 	await Speech.say_id("little_bird")
 	# she takes hold of him
-	marta_table.pose({"sit": 1.0, "stoop": 0.0, "look": Vector2(0.9, 0.3), "reach": 1.0, "twitch": 1.0})
+	for i in 6: marta_table.pose({"dt": 0.05, "stoop": 0.0, "look_at": kurt.cam.global_position, "reach": 1.0, "twitch": 1.0})
 	Audio.play("gasp", kurt.global_position + Vector3(0, 1.5, 0), 0.0)
 	Audio.play("hit", kurt.global_position, -2.0)
 	var yank := create_tween()
@@ -406,7 +408,7 @@ func _blackout() -> void:
 ## (the key still in it, on that side); the front door's chained and padlocked from the inside.
 func _after_blackout() -> void:
 	if is_instance_valid(marta_table):
-		marta_table.queue_free()
+		marta_table.vanish()            # gone: what she grew into stays (the chair, the coral, the puddle)
 		var spot := level.flat.get_node_or_null("MartaSpot")
 		if spot: spot.queue_free()
 	var kit := Kit.new()
@@ -492,7 +494,7 @@ func _on_event(name: String, d: Dictionary) -> void:
 			kurt.global_position = Flat47.POINTS.balcony; kurt.velocity = Vector3.ZERO
 			await hud.fade_to(0.0, 1.0)
 		"reached_landing":
-			_end(String(d.via))
+			if phase == "awake": _end(String(d.via))      # (Scene A starts on the landing)
 		"pocketed":
 			if d.item == "revolver":
 				kurt.rounds = 4

@@ -60,6 +60,7 @@ func _skeleton() -> void:
 		P[side + "_r"] = Vector3(-p.x, p.y, p.z)
 	skel = Skeleton3D.new(); skel.name = "Skeleton"
 	add_child(skel)
+	skel.rotation.y = PI          # built facing +Z (toes, jaw, face); the game's forward is -Z
 	for b in BONES:
 		var i := skel.add_bone(b)
 		bone[b] = i
@@ -82,19 +83,29 @@ func _segments() -> Array:
 	var R := _rest
 	var hr := _f("head", 0.11) * _f("height", 1.7) / 1.7
 	var s := [
-		["hips", R.hips + Vector3(0, -0.06, 0), R.spine, 0.15 * g, 0.13 * g, "cloth_low"],
-		["spine", R.spine, R.chest, 0.13 * g, 0.15 * g, "cloth_top"],
-		["chest", R.chest, R.neck + Vector3(0, -0.03, 0), 0.16 * g, 0.12 * g, "cloth_top"],
-		["neck", R.neck, R.head, 0.05 * g, 0.045 * g, "skin"],
+		["hips", R.hips + Vector3(0, -0.08, 0), R.spine, 0.17 * g, 0.15 * g, "cloth_low"],
+		["spine", R.spine, R.chest, 0.15 * g, 0.17 * g, "cloth_top"],
+		["chest", R.chest, R.neck + Vector3(0, -0.04, 0), 0.19 * g, 0.13 * g, "cloth_top"],
+		["chest", R.arm_l + Vector3(0.03, 0.02, 0), R.arm_r + Vector3(-0.03, 0.02, 0), 0.075 * g, 0.075 * g, "cloth_top"],
+		["neck", R.neck + Vector3(0, -0.03, 0), R.head, 0.06 * g, 0.05 * g, "skin"],
 	]
 	for side in ["l", "r"]:
-		s.append(["arm_" + side, R["arm_" + side], R["forearm_" + side], 0.055 * g, 0.042 * g, "cloth_arm"])
-		s.append(["forearm_" + side, R["forearm_" + side], R["hand_" + side], 0.042 * g, 0.03 * g, "skin" if spec.get("bare_arms", false) else "cloth_arm"])
-		s.append(["hand_" + side, R["hand_" + side], R["hand_" + side] + Vector3(0, -0.17 * _f("hands", 1.0), 0.01), 0.032 * g, 0.018 * g, "skin"])
-		s.append(["thigh_" + side, R["thigh_" + side], R["shin_" + side], 0.075 * g, 0.055 * g, "cloth_leg"])
-		s.append(["shin_" + side, R["shin_" + side], R["foot_" + side], 0.05 * g, 0.035 * g, "cloth_shin"])
-		s.append(["foot_" + side, R["foot_" + side], R["foot_" + side] + Vector3(0, -0.06, 0.2), 0.04 * g, 0.035 * g, "foot"])
-	s.append(["head", R.head + Vector3(0, -hr * 0.2, 0), R.head + Vector3(0, hr * 1.7, 0), hr, hr * 0.7, "head"])
+		s.append(["arm_" + side, R["arm_" + side], R["forearm_" + side], 0.068 * g, 0.052 * g, "cloth_arm"])
+		s.append(["forearm_" + side, R["forearm_" + side], R["hand_" + side], 0.052 * g, 0.04 * g, "skin" if spec.get("bare_arms", false) else "cloth_arm"])
+		s.append(["hand_" + side, R["hand_" + side], R["hand_" + side] + Vector3(0, -0.17 * _f("hands", 1.0), 0.015), 0.045 * g, 0.026 * g, "skin"])
+		s.append(["thigh_" + side, R["thigh_" + side], R["shin_" + side], 0.095 * g, 0.068 * g, "cloth_leg"])
+		s.append(["shin_" + side, R["shin_" + side], R["foot_" + side], 0.064 * g, 0.044 * g, "cloth_shin"])
+		s.append(["foot_" + side, R["foot_" + side] + Vector3(0, 0.02, -0.03), R["foot_" + side] + Vector3(0, -0.05, 0.2), 0.05 * g, 0.042 * g, "foot"])
+	# the head: a skull, a jaw coming forward and down under it, a nose
+	s.append(["head", R.head + Vector3(0, -hr * 0.1, 0), R.head + Vector3(0, hr * 1.9, 0), hr, hr * 0.75, "head"])
+	s.append(["head", R.head + Vector3(0, hr * 0.15, hr * 0.05), R.head + Vector3(0, -hr * 0.25, hr * 0.75 * _f("jaw", 1.0)), hr * 0.62, hr * 0.38, "head"])
+	s.append(["head", R.head + Vector3(0, hr * 0.75, hr * 0.7), R.head + Vector3(0, hr * 0.55, hr * 1.05), hr * 0.16, hr * 0.08, "skin"])
+	# what's worn: a skirt from the hips to the knee, a long coat to the shin or the floor
+	var hem := String(spec.get("hem", ""))
+	if hem != "":
+		var to: float = R.shin_l.y + 0.02 if hem == "knee" else (R.foot_l.y + 0.12 if hem == "shin" else R.foot_l.y + 0.02)
+		var flare := float(spec.get("flare", 1.35))
+		s.append(["hips", R.hips + Vector3(0, 0.06, 0), Vector3(0, to, 0.02), 0.18 * g, 0.18 * g * flare, "cloth_low"])
 	return s
 
 func _mat_for(part: String) -> int:

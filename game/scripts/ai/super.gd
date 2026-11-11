@@ -26,6 +26,13 @@ func design() -> Dictionary:
 		"eyes": Color(0.75, 0.75, 0.7), "stoop": 0.55, "flaps": 9,
 		"growths": [["head", 4, 0.06, "flesh"], ["chest", 3, 0.05, "flesh"]]}
 
+## His own rig (SuperRig, ported): skin and bone, the loose skin on springs, his own walk and hunt.
+func make_body() -> Node3D:
+	var b := CreatureBody.SuperBody.new()
+	add_child(b)
+	b.build()
+	return b
+
 func after_setup() -> void:
 	for key in level.maze.cells:
 		if level.maze.cells[key] == "X": ring.append(level.maze.center(key.x, key.y))
@@ -44,9 +51,7 @@ func animate(delta: float) -> void:
 		_step_t = 0.75
 		Audio.play("step_heavy", global_position, -4.0, randf_range(0.8, 1.0))
 		Noises.make(global_position, 0.1, "super_step", self)
-	var reach_k := 1.0 if state == S.HUNT and dist_to_kurt() < 3.0 else 0.0
-	body.pose({"phase": _anim_phase * 0.8, "stride": clampf(spd / 1.2, 0.0, 1.0), "reach": reach_k, "stoop": 0.55 + (0.2 if state == S.STAGGER else 0.0),
-		"twitch": 0.15, "look": Vector2.ZERO})
+	body.pose(pose_ctx(delta))
 
 func think(delta: float) -> void:
 	var agg := Progress.aggression()
@@ -89,3 +94,4 @@ func shot(part: String, by, at: Vector3) -> void:
 	Audio.play("hit", at, 0.0)
 	World.emit_event("monster_shot", {"id": id, "part": part, "m": self})
 	stagger(3.0 if part == "head" else 1.2)
+	(body as CreatureBody.SuperBody).flinch(global_position - at, part == "head")

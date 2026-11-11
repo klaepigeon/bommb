@@ -29,12 +29,20 @@ func _init() -> void:
 
 static func design_spec() -> Dictionary:
 	return {"name": "marta", "height": 1.62, "neck": 0.17, "head": 0.1, "arm": 1.22, "hands": 1.45, "girth": 0.82,
-		"skin": "skin_grey", "skin_tint": Color(0.82, 0.9, 0.8), "cloth": Color(0.24, 0.3, 0.48), "cloth_to": "knee",
+		"skin": "skin_grey", "skin_tint": Color(0.82, 0.9, 0.8), "cloth": Color(0.24, 0.3, 0.48), "cloth_to": "knee", "hem": "knee",
 		"face": "grin", "eyes": Color(0.85, 0.88, 0.86), "hair": Color(0.11, 0.09, 0.08), "face_flat": 0.8,
 		"growths": [["chest", 6, 0.07, "coral"], ["arm_r", 4, 0.05, "coral"], ["neck", 3, 0.04, "coral"], ["head", 3, 0.05, "coral"], ["spine", 5, 0.08, "coral"], ["thigh_l", 3, 0.05, "coral"], ["forearm_l", 2, 0.04, "coral"]]}
 
 func design() -> Dictionary:
 	return design_spec()
+
+## Her own model (the first builds' MartaModel, ported): seated on nothing, the chair gone, coral
+## roots trailing from under her where they tore out of the floor.
+func make_body() -> Node3D:
+	var b := CreatureBody.MartaBody.new()
+	add_child(b)
+	b.build(false)
+	return b
 
 func after_setup() -> void:
 	glow = Lamp.make(self, global_position + Vector3(0, 1.3, 0.3), Color(0.62, 0.78, 0.86), 0.45, 2.8)
@@ -48,14 +56,14 @@ func float_above_floor() -> bool:
 func animate(delta: float) -> void:
 	var t := Time.get_ticks_msec() / 1000.0
 	var hunting := state == S.HUNT
-	var look := Vector2.ZERO
-	if state in [S.HUNT, S.TALK, S.GRAB] or (sees and state != S.DEAD):
-		var to := global_transform.affine_inverse() * kurt.cam.global_position
-		look = Vector2(clampf(atan2(-to.x, -to.z), -1.0, 1.0), clampf(atan2(to.y - 1.0, Vector2(to.x, to.z).length()), -0.6, 0.6))
 	var calm := state in [S.CALM, S.SIT]
-	body.pose({"sit": 1.0, "float_y": 0.38 + sin(t * 0.9) * 0.04, "reach": 0.9 if hunting and dist_to_kurt() < 2.6 else (0.35 if state == S.TALK else 0.0),
-		"stoop": 0.55 if calm else (0.25 if state == S.IDLE else 0.05), "look": look if not calm else Vector2(0, -0.5),
-		"twitch": 0.6 if hunting else 0.25, "tilt": sin(t * 0.37) * 0.2})
+	var ctx := pose_ctx(delta)
+	if calm: ctx.look_at = null
+	ctx["stoop"] = 0.9 if calm else (0.6 if state == S.IDLE else 0.0)
+	ctx["reach"] = 0.9 if hunting and dist_to_kurt() < 2.6 else (0.3 if state == S.TALK else 0.0)
+	ctx["twitch"] = 0.6 if hunting else 0.2
+	body.pose(ctx)
+	body.position.y = 0.32 + sin(t * 0.9) * 0.04          # seated on nothing, a hand's width off the floor
 	glow.global_position = global_position + Vector3(0, 1.3, 0) - global_transform.basis.z * 0.3
 	glow.color = Color(1.0, 0.75, 0.55) if calm else Color(0.62, 0.78, 0.86)
 	# near her the colour goes out of things

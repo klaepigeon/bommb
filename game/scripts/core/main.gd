@@ -39,8 +39,8 @@ func _ready() -> void:
 		hud.offer_continue(func(): World.restore(save); story.resume(), func(): World.wipe(); story.begin(String(args.get("start", "knock"))))
 	else:
 		story.begin(String(args.get("start", "knock")))
-	if args.has("autotest") or args.has("views"):
-		var t: Node = load("res://tools/%s.gd" % ("shot" if args.has("views") else "autotest")).new()
+	if args.has("autotest") or args.has("views") or args.has("gallery"):
+		var t: Node = load("res://tools/%s.gd" % ("shot" if args.has("views") or args.has("gallery") else "autotest")).new()
 		t.name = "Autotest"
 		add_child(t)
 		t.run(self)

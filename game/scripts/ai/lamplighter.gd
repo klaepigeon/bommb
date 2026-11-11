@@ -23,8 +23,20 @@ func _init() -> void:
 
 func design() -> Dictionary:
 	return {"name": "lamplighter", "height": 2.15, "neck": 0.22, "head": 0.08, "arm": 1.4, "hands": 1.3, "girth": 0.7,
-		"skin": "skin_grey", "cloth": Color(0.12, 0.11, 0.1), "cloth_to": "foot", "shoes": true, "face": "lamp",
+		"skin": "skin_grey", "cloth": Color(0.12, 0.11, 0.1), "cloth_to": "foot", "hem": "floor", "shoes": true, "face": "lamp",
 		"eyes": Color(1.0, 0.85, 0.5), "stoop": 0.25}
+
+## One of the infected (InfectedBody, ported): a person the building took, built from a genome,
+## with who they were written into it.
+func make_body() -> Node3D:
+	var g := InfectedGenome.generate(13)
+	var over := {"height": 2.02, "hunch": 0.15, "build": 0.05, "clothes": "coat", "skin": "char", "growth": "bone", "growth_amount": 0.35, "quirk": "searching"}
+	for k in over: g[k] = over[k]
+	g.head.state = "whole" if g.head.state == "overgrown" else g.head.state
+	var b := CreatureBody.InfectedFlesh.new()
+	add_child(b)
+	b.build(g)
+	return b
 
 func after_setup() -> void:
 	light = Lamp.make(self, global_position + Vector3(0, 2.0, 0), Color(1.0, 0.8, 0.45), 0.5, 3.0)
@@ -36,9 +48,7 @@ func after_setup() -> void:
 	if route.size() > 0: go_to(route[0])
 
 func animate(delta: float) -> void:
-	var spd := Vector2(velocity.x, velocity.z).length()
-	body.pose({"phase": _anim_phase * 0.7, "stride": clampf(spd, 0.0, 1.0), "reach": 0.6 if state == S.HUNT else 0.15,
-		"stoop": 0.25, "look": Vector2(0, 0.35 if state == S.IDLE else 0.0), "twitch": 0.2, "sit": 1.0 if state == S.SIT else 0.0})
+	body.pose(pose_ctx(delta))
 	light.global_position = body.head_pos + Vector3(0, 0.05, 0)
 
 func _bulb_live() -> bool:

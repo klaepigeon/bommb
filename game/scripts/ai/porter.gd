@@ -23,21 +23,30 @@ func _init() -> void:
 
 func design() -> Dictionary:
 	return {"name": "porter", "height": 1.55, "neck": 0.28, "head": 0.095, "arm": 1.05, "girth": 0.95, "stoop": 0.7,
-		"skin": "skin_grey", "skin_tint": Color(0.95, 0.92, 0.85), "cloth": Color(0.16, 0.18, 0.22), "cloth_to": "foot", "shoes": true,
+		"skin": "skin_grey", "skin_tint": Color(0.95, 0.92, 0.85), "cloth": Color(0.16, 0.18, 0.22), "cloth_to": "foot", "hem": "shin", "shoes": true,
 		"face": "old", "eyes": Color(0.2, 0.2, 0.2), "hair": null,
 		"growths": [["neck", 4, 0.035, "coral"]]}
+
+## One of the infected (InfectedBody, ported): a person the building took, built from a genome,
+## with who they were written into it.
+func make_body() -> Node3D:
+	var g := InfectedGenome.generate(4)
+	var over := {"height": 1.6, "hunch": 0.85, "build": 0.55, "clothes": "coat", "skin": "pallid", "growth": "fungus", "growth_amount": 0.45, "quirk": "counting"}
+	for k in over: g[k] = over[k]
+	g.head.state = "whole" if g.head.state == "overgrown" else g.head.state
+	var b := CreatureBody.InfectedFlesh.new()
+	add_child(b)
+	b.build(g)
+	return b
 
 func after_setup() -> void:
 	seat = global_position; seat_yaw = rotation.y
 	set_state(S.SIT)
 
 func animate(delta: float) -> void:
-	var spd := Vector2(velocity.x, velocity.z).length()
-	var sitting := state in [S.SIT, S.CALM]
-	var t := Time.get_ticks_msec() / 1000.0
-	body.pose({"phase": _anim_phase, "stride": clampf(spd, 0.0, 1.0), "sit": 1.0 if sitting else 0.0,
-		"look": Vector2(sin(t * 0.3) * 0.3 if sitting else 0.0, -0.2), "reach": 1.0 if state == S.HUNT and dist_to_kurt() < 2.0 else 0.0,
-		"tilt": 0.6 if state == S.CALM else 0.0, "twitch": 0.3})
+	var ctx := pose_ctx(delta)
+	if state in [S.SIT, S.CALM]: ctx.mode = "idle"; ctx.look_at = null
+	body.pose(ctx)
 
 func think(delta: float) -> void:
 	_say_t -= delta

@@ -14,7 +14,7 @@ const S_NAMES := ["idle", "patrol", "investigate", "hunt", "search", "grab", "st
 var id := ""
 var level: Level
 var kurt: Kurt
-var body: Body
+var body: Node3D                 ## Body (new) or a CreatureBody (the old rigs, ported)
 var state := S.IDLE
 var state_t := 0.0
 var walk_speed := 1.0
@@ -59,9 +59,9 @@ func setup(p_id: String, p_level: Level, p_kurt: Kurt, at: Vector3) -> void:
 	cap.radius = radius; cap.height = maxf(height, radius * 2.0 + 0.1)
 	cs.shape = cap; cs.position.y = cap.height * 0.5
 	add_child(cs)
-	body = Body.new(); body.name = "Body"
-	add_child(body)
-	body.build(design())
+	body = make_body()
+	body.name = "Body"
+	if body.get_parent() == null: add_child(body)
 	_hit_head = _hitbox("head", Vector3(0.3, 0.32, 0.3))
 	_hit_body = _hitbox("body", Vector3(0.5, height * 0.6, 0.4))
 	body.set_meta("actor", self)
@@ -73,6 +73,22 @@ func setup(p_id: String, p_level: Level, p_kurt: Kurt, at: Vector3) -> void:
 
 func design() -> Dictionary:
 	return {}
+
+## The body: by default a new Body from design(); creatures with a model of their own override this.
+func make_body() -> Node3D:
+	var b := Body.new()
+	add_child(b)
+	b.build(design())
+	return b
+
+## What every body's pose() can use, this frame.
+func pose_ctx(delta: float) -> Dictionary:
+	var spd := Vector2(velocity.x, velocity.z).length()
+	var look = null
+	if state in [S.HUNT, S.TALK, S.GRAB] or sees:
+		look = kurt.cam.global_position
+	return {"dt": delta, "speed": spd, "mode": CreatureBody.mode_of(S_NAMES[state]), "look_at": look,
+		"phase": _anim_phase, "stride": clampf(spd / 1.5, 0.0, 1.0), "reach": 1.0 if state == S.HUNT and dist_to_kurt() < 2.5 else 0.0}
 
 func after_setup() -> void:
 	pass
@@ -112,7 +128,7 @@ func heard(_n: Dictionary, k: float) -> void:
 
 func can_see_kurt() -> bool:
 	if kurt.hiding_in != null: return false
-	var eye := body.head_pos if body.head_pos != Vector3.ZERO else global_position + Vector3(0, height * 0.9, 0)
+	var eye: Vector3 = body.head_pos if body.head_pos != Vector3.ZERO else global_position + Vector3(0, height * 0.9, 0)
 	var to := kurt.cam.global_position - eye
 	var d := to.length()
 	var agg := Progress.aggression()
@@ -222,16 +238,16 @@ func _physics_process(delta: float) -> void:
 	var z := level.zone_of(global_position + Vector3(0, 0.5, 0))
 	if z != zone:
 		zone = z; body.set_zone(z)
-	_hit_head.global_position = body.head_pos if body.head_pos != Vector3.ZERO else global_position + Vector3(0, height, 0)
+	var hp: Vector3 = body.head_pos
+	_hit_head.global_position = hp if hp != Vector3.ZERO else global_position + Vector3(0, height, 0)
 	_hit_body.global_position = global_position + Vector3(0, height * 0.5, 0)
 	animate(delta)
 
 func think(_delta: float) -> void:
 	pass
 
-func animate(_delta: float) -> void:
-	var spd := Vector2(velocity.x, velocity.z).length()
-	body.pose({"phase": _anim_phase, "stride": clampf(spd / 1.5, 0.0, 1.0), "reach": 1.0 if state == S.HUNT and dist_to_kurt() < 2.5 else 0.0})
+func animate(delta: float) -> void:
+	body.pose(pose_ctx(delta))
 
 ## Has hold of him.
 func grab() -> void:
