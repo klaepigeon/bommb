@@ -34,6 +34,9 @@ var held: Prop = null
 var pockets: Array = []            ## [{id, title, desc, key}]
 var gun_out := false
 var rounds := 0                    ## in the cylinder
+var weapon := "revolver"           ## or "shotgun" (Flat 48's safe)
+var barrels := 0                   ## shells in the shotgun
+var shells := 0
 var spare := 0                     ## loose rounds
 var aiming := false
 var hiding_in: Node = null
@@ -65,7 +68,7 @@ func build() -> void:
 	add_child(cs)
 	head = Node3D.new(); head.name = "Head"; head.position.y = EYE
 	add_child(head)
-	cam = Camera3D.new(); cam.name = "Camera"; cam.fov = 72.0; cam.near = 0.03; cam.far = 60.0
+	cam = Camera3D.new(); cam.name = "Camera"; cam.fov = 72.0; cam.near = 0.03; cam.far = 90.0
 	head.add_child(cam)
 	cam.current = true
 	hand_anchor = Node3D.new(); hand_anchor.position = Vector3(0.12, -0.18, -0.62)
@@ -319,7 +322,7 @@ func _labels() -> void:
 	Controls.show.alt = target_verbs.size() > 1
 	Controls.show.fire = gun_out
 	Controls.show.aim = gun_out
-	Controls.show.reload = gun_out and rounds < 7 and spare > 0
+	Controls.show.reload = gun_out and ((weapon == "revolver" and rounds < 7 and spare > 0) or (weapon == "shotgun" and barrels < 2 and shells > 0))
 	Controls.show.bag = pockets.size() > 0 or gun_out
 	Controls.show.socko = World.flag("socko_on")
 	Controls.show.skills = World.flag("socko_on")
@@ -492,8 +495,10 @@ func _body(delta: float) -> void:
 	gun_model.rotation = Vector3(_recoil * 0.4 + (0.5 if _reload_t > 0.0 else 0.0), 0.05 if not aiming else 0.0, 0.6 if _reload_t > 0.0 else 0.0)
 
 # -------------------------------------------------------------------------------- the revolver
-func draw_gun() -> void:
-	if not has_item("revolver"): return
+func draw_gun(which := "") -> void:
+	if which == "": which = "revolver" if has_item("revolver") else "shotgun"
+	if not has_item(which): return
+	weapon = which
 	if held: drop(false)
 	gun_out = true
 	World.emit_event("gun_out", {})
@@ -502,11 +507,19 @@ func holster() -> void:
 	gun_out = false; aiming = false
 
 func reload() -> void:
+	if gun_out and weapon == "shotgun":
+		if barrels < 2 and shells > 0 and _reload_t <= 0.0:
+			_reload_t = 0.9; Audio.play("reload", global_position, -6.0, 0.8)
+			await get_tree().create_timer(0.9, false).timeout
+			var n := mini(2 - barrels, shells); barrels += n; shells -= n
+		return
 	if gun_out and spare > 0 and rounds < 7 and _reload_t <= 0.0:
 		_reload_t = 0.5
 
 func fire() -> void:
 	if not gun_out or _fire_cd > 0.0 or _reload_t > 0.0: return
+	if weapon == "shotgun":
+		_fire_shotgun(); return
 	if rounds <= 0:
 		Audio.play("dryfire", global_position, -4.0); _fire_cd = 0.3; return
 	rounds -= 1
@@ -536,10 +549,41 @@ func fire() -> void:
 	else:
 		Audio.play("clink", hit.position, -4.0, 0.7)
 
+## Two barrels, nine pellets each: up close it's the end of most things; across a room, a spray.
+func _fire_shotgun() -> void:
+	if barrels <= 0:
+		Audio.play("dryfire", global_position, -4.0); _fire_cd = 0.3; return
+	barrels -= 1
+	_fire_cd = 0.35; _kick_cam = 0.16; _recoil = 1.4
+	Audio.play("gunshot", global_position, 5.0, 0.75)
+	Noises.make(global_position, 55.0, "gunshot", self)
+	var space := get_world_3d().direct_space_state
+	var hit_m := {}
+	for i in 9:
+		var dir := (-cam.global_transform.basis.z + Vector3(randf_range(-0.07, 0.07), randf_range(-0.05, 0.05), randf_range(-0.07, 0.07))).normalized()
+		var q := PhysicsRayQueryParameters3D.create(cam.global_position, cam.global_position + dir * 25.0, 1 | 2 | 4)
+		q.collide_with_areas = true; q.exclude = [get_rid()]
+		var hit := space.intersect_ray(q)
+		if hit.is_empty(): continue
+		var o = hit.collider
+		if o.has_meta("monster"):
+			var m = o.get_meta("monster")
+			var key := str(m.get_instance_id())
+			if not hit_m.has(key):
+				hit_m[key] = true
+				m.shot(String(o.get_meta("part")), self, hit.position)
+				if cam.global_position.distance_to(hit.position) < 3.0 and m.state != Monster.S.DEAD: m.shot("body", self, hit.position)
+		elif o is Prop:
+			(o as Prop).wake(); (o as Prop).apply_impulse(dir * 2.0, hit.position - (o as Prop).global_position)
+			if (o as Prop).breakable: (o as Prop).shatter()
+		elif o.has_meta("actor") and o.get_meta("actor").has_method("shot"):
+			o.get_meta("actor").shot(hit.position, self)
+	World.emit_event("shot", {"shotgun": true})
+
 # ---------------------------------------------------------------------------------- saving
 func _save() -> Dictionary:
-	return {"xf": global_transform, "yaw": yaw, "pitch": pitch, "hp": hp, "pockets": pockets, "rounds": rounds, "spare": spare, "gun": gun_out}
+	return {"xf": global_transform, "yaw": yaw, "pitch": pitch, "hp": hp, "pockets": pockets, "rounds": rounds, "spare": spare, "gun": gun_out, "weapon": weapon, "barrels": barrels, "shells": shells}
 
 func _load(d: Dictionary) -> void:
 	global_transform = d.xf; yaw = float(d.yaw); pitch = float(d.pitch); hp = float(d.hp)
-	pockets = d.get("pockets", []); rounds = int(d.get("rounds", 0)); spare = int(d.get("spare", 0)); gun_out = bool(d.get("gun", false))
+	pockets = d.get("pockets", []); rounds = int(d.get("rounds", 0)); spare = int(d.get("spare", 0)); gun_out = bool(d.get("gun", false)); weapon = String(d.get("weapon", "revolver")); barrels = int(d.get("barrels", 0)); shells = int(d.get("shells", 0))

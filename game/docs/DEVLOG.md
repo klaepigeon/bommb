@@ -42,3 +42,21 @@
 
 ### Known gaps
 See DESIGN.md §7. Not yet on a physical phone.
+
+## Session 1, continued: the monsters' old models; the building
+
+- Ported the previous build's models onto the new lighting: MartaModel (at her table; hunting,
+  with coral roots trailing), SuperRig, InfectedBody/InfectedGenome (the porter, the lamplighter).
+  One `CreatureBody` interface between the models and the AI. The new `Body` is kept for the
+  white figures. Bodies built facing +Z were walking backwards: they face -Z now.
+- Building 14: the stairwell (floors 1-5), the lobby, the street door's four bolts; Flats 48
+  (the draft, the notes, the red-note plan, the pointless door, the gun safe, MAMA/PAPA/CHILD),
+  51 (the echo, the grey, the prints), 44 (the corridor of cells, the child's cell). The game now
+  ends only at the street door.
+- Bugs found and fixed on the way: Scene A's exit trigger fired before the scene; the white
+  void's catch zone overlapped the stairwell's lower floors (Kurt fell through to the balcony);
+  the half-landing walls' colliders sat inside the stairwell; the basement door stood across the
+  first flight; the rubble above floor 5 took the headroom of the flight below; waypoints cut
+  across the flights instead of running along them; the flats were offset twice; the pointless
+  door was behind 48's hall cupboard; a multi-line lambda can't end inside a `match` (Godot).
+- Tests: 16 headless routes + the touch route on GLES 3 at 2340x1080; all pass. APK 1.1.

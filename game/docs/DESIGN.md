@@ -11,7 +11,7 @@ The third Godot build, written from scratch (`game/`). The previous one is kept,
 | The owner's Scene A, balcony, random conversations | `content/dialogue.json`, verbatim | Canon |
 | Socko's rig and clip library (Godot build 2) | `scripts/art/sock_rig.gd`, `scripts/socko/socko_clips.gd` (unchanged apart from his material) | The owner: "keep Socko as is or improve". His controller (`socko.gd`) and mind (`socko_mind.gd`) are new. |
 | Kurt's arm rig (build 2) | `scripts/art/arm_rig.gd` (material only) | Shared hand anatomy |
-| Monsters: Marta (hunter), The Super, the porter, the lamplighter, Flat 48's MAMA/PAPA/CHILD | New designs (`scripts/art/body.gd`) and new AI (`scripts/ai/`) with the same behaviour and lines | The owner: "keep all monsters … how they're supposed to behave … a new iteration and redo their code and AI" |
+| Monsters: Marta (hunter), The Super, the porter, the lamplighter, Flat 48's MAMA/PAPA/CHILD | **The old models ported** onto the new lighting and improved (`scripts/creatures/`: MartaModel at her table and, hunting, seated on nothing with coral roots trailing; SuperRig; InfectedBody for the porter and the lamplighter, from genomes with who they were written in), the white figures on the new `Body`; all with **new AI** (`scripts/ai/`) | The owner: "keep all monsters … how they're supposed to behave … a new iteration and redo their code and AI", then "port over and improve all the old monster models" |
 | The town behind the wardrobe | **Replaced** by the walls (the maze) | The owner: "instead of a massive town … an enclosed maze with Marta as a hunting npc". The town is also what crashed on the phone. |
 
 ## 2. What went wrong on the phone, and what's different
@@ -80,8 +80,8 @@ a flat. It breaks back into the flat through Sonya's room (a crawl) and the bath
 | The porter's lodge | The porter, "Room four. Room four.", the spare fuse in his key box, the room-four photo strip | sneak (he startles if you're in front of him); a noise elsewhere and he gets up to see; **Socko fetches it**; talk him down (Faces + the photo); kill him |
 | The west passages | The lamplighter, counting bulbs, "Thirteen..." | stay out of his light; pull M1 and he stands under the first dead bulb; talk him down (These Walls, lights on: he gives you rounds); kill him |
 | The flooded passage | Knee-deep, every step loud. A drain wheel (stiff). A cable over the water. | wade; drain it (three turns, or one with Coral Grip); drop the live cable in: anything in the water gets it (Marta is driven off; so is Kurt's health), until the breaker trips |
-| The white room | MAMA, PAPA, CHILD: they move only unseen | keep them in view; go round; shoot them (Socko approves; nothing gained) |
-| The service ring | **The Super**: unkillable, hears what the infection lets him hear, too big for the holes into the flat | evade; stagger him with shots; hide in the flat |
+| The white room | Bare draft plaster: a sketch of a room (48, across the landing, is the whole flat like this) | — |
+| The service ring | Concrete, dead bulbs on M2, and the service door at its north end | — |
 | The nursery | Sonya's door, СОНЯ; Marta's resting place | — |
 
 **Marta** hunts the walls (and follows into the flat). Evade her; lure her (a thrown thing, the TV,
@@ -91,9 +91,26 @@ she was: the drawing, the fridge note, the poster); or, with the infection's Hea
 The first time she sees Kurt with Socko on his hand she stops, and she and Socko have a whole
 conversation, snarls and cartoon gibberish, that Kurt is not part of.
 
-**Out**: the front door (the small key from the bath; the axe, three blows; two bullets in the
+**Out of 47**: the front door (the small key from the bath; the axe, three blows; two bullets in the
 padlock; a heavy thing, seven blows; Coral Grip) or the service door (fuse into M2 and press the
-release; or tear it open). The ending card says how.
+release, or tear it open: the service stair comes out on 47's landing).
+
+## 4b. The building (the rest of the game)
+
+The game doesn't end until every flat that's open has been explored and Kurt walks out of the
+street door. The street door has four bolts with a number scratched beside each (47, 48, 51, 44);
+each goes back by itself (a clunk, heard from anywhere) when Kurt reaches the heart of that flat.
+
+| Place | What's there | Its heart, and the ways to it |
+|---|---|---|
+| **The stairwell** (floors 1-5) | Green gloss paint, a bulb a landing (one dead), two doors a landing, most nailed shut since the evacuation (knock three times and something knocks back). Above 5 the stair has come down. The lobby: post boxes (47's stuffed with post dated after the 15th), the basement door (chained; knock, and three, then three), the street door. **The Super** walks it, bottom to top and back: unkillable, keener the more infected Kurt is, slower the more he remembers; he doesn't come into the flats. | — |
+| **47** | (above) | Out onto its landing, by either door |
+| **48** (floor 4, across the landing) | 47 as a pencil draft: white blocks with paper tags, the "what it is" wall of notes. A note on the right block makes it the thing (47's own furniture, copied in); peel it and it's a block again. GUN SAFE on the cold tall block in the box room: a sawn-off IZh-43 and ten shells. **MAMA, PAPA, CHILD**, who move only unseen; the CHILD's tag has a second note under it: CHILD'S CELL — 44. Six **red notes**, one in each room, and a pencil plan of the flat on the hall wall. | Put each red note in the box of the room it came from: the plan reads *"Sometimes it's easier to make the choice that makes no sense, when your back is against the wall"*, Kurt says it, and a seventh red note falls from behind the plan: **51**. (Put them anywhere else and he reads you what it says instead.) |
+| **The POINTLESS DOOR** (48's hall) | A door onto plaster, labelled POINTLESS DOOR. What a door is, is what's written on it: peel the label off and stick on another. | **51** opens into Flat 51's hall; **47**, 47's; **44**, 44; OUTSIDE, the white |
+| **51** (floor 5) | The same flat, never lived in, dust, one set of footprints going in. No north wall: the floor goes on into the grey, the prints go on with it, figures stand a long way off. | Follow the prints to their end: Kurt's in 47's hall, and the television has come on by itself (a noise Marta can come to). Ways in: the relabelled pointless door, or kick the landing door's chain (four kicks; loud), or snap it (Coral Grip) |
+| **44** (floor 3) | A hallway, then a corridor of identical cells longer than the building: a chair facing the wall in each. Past the eighth cell it hands you back to the second, and the chairs turn a little more toward the doors each time. | The child's cell: stick CHILD'S CELL on any cell door and that's what it is (a small chair, her drawing, СОНЯ in the paint); or keep walking, and the fourth time round the last door is a child's size |
+| **The street door** | Four bolts | All four back: **Go out**, into the white. The end card says what happened to Marta, what Kurt remembered, how far the infection got, and what Socko is to him now |
+
 
 ## 5. Progression
 

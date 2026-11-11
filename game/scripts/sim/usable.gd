@@ -39,3 +39,8 @@ func socko_verbs(kurt: Node) -> Array:
 
 func socko_act(id: String, kurt: Node, mind) -> void:
 	if socko_do.is_valid(): socko_do.call(id, kurt, mind)
+
+## What it offers to something held in Kurt's hand (set as meta "hold": func(kurt, held) -> Array).
+func hold_verbs(kurt: Node, held) -> Array:
+	if has_meta("hold") and enabled: return (get_meta("hold") as Callable).call(kurt, held)
+	return []

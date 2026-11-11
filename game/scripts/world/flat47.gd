@@ -13,7 +13,7 @@ const H := 2.75
 const KEEP := AABB(Vector3(-0.6, -0.8, -1.95), Vector3(14.6, 4.3, 10.45))
 const ROOMS := {"living": 1, "bedroom": 2, "kitchen": 3, "hall": 4, "storage": 5, "child": 6, "bath": 7}
 const BALCONY := 8
-const LANDING := 9
+const LANDING := 64            ## the stairwell's floor 4 (Building: 60 + floor)
 const MARTA_SEAT := Vector3(3.02, 0.0, 1.45)
 const TABLE := Vector3(2.4, 0.78, 1.35)
 const WARDROBE_AT := Vector3(1.95, 0.005, 4.84)
@@ -71,6 +71,7 @@ func build() -> void:
 # ------------------------------------------------------------------------------- where is what
 func zone_of(p: Vector3) -> int:
 	if p.z < -0.05 and p.x > 0.3 and p.x < 4.3 and p.z > -2.0: return BALCONY
+	if p.y > 2.9 or p.y < -1.2: return -1
 	if p.x > 10.3 and p.x < 14.5 and p.z > 3.3 and p.z < 8.3: return LANDING
 	for k in level.rooms:
 		var r: Dictionary = level.rooms[k]
@@ -308,8 +309,8 @@ func _outside() -> void:
 	# There's no outside. Just white, and a note.
 	var void_mat := Mats.flat(Color(0.93, 0.94, 0.95), -1, 1.0)
 	var k := Kit.new()
-	k.box(void_mat, Vector3(5, 2, -14), Vector3(60, 40, 0.2), Basis(), 16)
-	k.box(void_mat, Vector3(5, -8, -6), Vector3(60, 0.2, 20), Basis(), 4)
+	k.box(void_mat, Vector3(5, -2, -26), Vector3(60, 80, 0.2), Basis(), 16)
+	k.box(void_mat, Vector3(5, -40, -16), Vector3(60, 0.2, 20), Basis(), 4)
 	k.commit(self, "White")
 	_sticky_note(Vector3(3.0, 3.0, -13.7), 0.0, 7.5, -0.035, "“outside”")
 	# the balcony's ledge out over nothing
@@ -318,8 +319,8 @@ func _outside() -> void:
 	cs.position = Vector3(2.25, -0.22, -1.6); ledge.add_child(cs)
 	# fall out into the white and it hands you back
 	var catch := Area3D.new(); catch.collision_mask = 16; add_child(catch)
-	var cc := CollisionShape3D.new(); var cb := BoxShape3D.new(); cb.size = Vector3(60, 2, 30); cc.shape = cb
-	cc.position = Vector3(5, -5, -12); catch.add_child(cc)
+	var cc := CollisionShape3D.new(); var cb := BoxShape3D.new(); cb.size = Vector3(14, 2, 24); cc.shape = cb
+	cc.position = Vector3(2, -5, -14); catch.add_child(cc)          # under the balcony only (not the stairwell)
 	catch.body_entered.connect(func(body): if body is Kurt: World.emit_event("fell_into_white", {}))
 
 func _sticky_note(at: Vector3, yaw: float, size: float, tilt: float, word: String) -> void:

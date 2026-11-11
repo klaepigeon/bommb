@@ -1,6 +1,6 @@
 class_name Super
 extends Monster
-## The Super. Building 14's superintendent, gone the way the building's gone: the height of a
+## The Super. Building 14's superintendent, gone the way the building's gone. He walks the stairs: the height of a
 ## doorway, starved to the bone, the skin of a much heavier man hanging off him in flaps, naked,
 ## the top of his head gone. He walks the service ring that holds the building's fuses and its
 ## way out, and he does not stop. Nothing kills him: a shot staggers him (in what's left of his
@@ -34,14 +34,15 @@ func make_body() -> Node3D:
 	return b
 
 func after_setup() -> void:
-	for key in level.maze.cells:
-		if level.maze.cells[key] == "X": ring.append(level.maze.center(key.x, key.y))
-	ring.sort_custom(func(a, b): return atan2(a.z - 18.0, a.x - 18.0) < atan2(b.z - 18.0, b.x - 18.0))
+	# his round: the landings, the bottom of the building to the top and back
+	for f in [1, 2, 3, 4, 5, 4, 3, 2]:
+		ring.append(level.nav.pts[level.nav.tags["stair_%d" % f]])
 	allowed = func(i): return true
 	set_state(S.PATROL)
 
 func _door_cost(door) -> float:
 	if door is Flat47: return -1.0          # he doesn't fit
+	if door is Door and (door as Door).id == "dEntry": return -1.0     # nor in at 47's
 	return super(door)
 
 func animate(delta: float) -> void:
@@ -83,7 +84,7 @@ func think(delta: float) -> void:
 
 func _next_ring_point() -> void:
 	if ring.is_empty(): return
-	ring_i = (ring_i + 3) % ring.size()
+	ring_i = (ring_i + 1) % ring.size()
 	go_to(ring[ring_i])
 
 func heard(n: Dictionary, k: float) -> void:

@@ -678,5 +678,202 @@
    "text": "Shoes. You gave her shoes. Next time, we do it my way.",
    "socko_face": "irritation"
   }
+ },
+ "flat48": {
+  "f48_arrive": {
+   "speaker": "socko",
+   "text": "Huh. It's 47. Somebody drew it from memory and ran out of crayons.",
+   "socko_face": "confusion",
+   "socko_clip": "Looking_Around"
+  },
+  "f48_family": {
+   "speaker": "socko",
+   "text": "Well. That's a family.",
+   "socko_face": "unnatural_stillness"
+  },
+  "f48_close": {
+   "speaker": "socko",
+   "text": "I wouldn't get too close.",
+   "socko_face": "nervousness"
+  },
+  "f48_close2": {
+   "speaker": "socko",
+   "text": "Don't let them get close enough to surprise you.",
+   "socko_face": "nervousness",
+   "socko_talk": "Talking_Whispering"
+  },
+  "f48_looked": {
+   "speaker": "socko",
+   "text": "You don't know what they are.",
+   "socko_face": "irritation"
+  },
+  "f48_looked2": {
+   "speaker": "socko",
+   "text": "Mama. Papa. Child. That's supposed to make this better?",
+   "socko_face": "suspicion",
+   "socko_talk": "Talking_Sarcastic"
+  },
+  "f48_notes": {
+   "speaker": "socko",
+   "text": "Words. We're sticking words on furniture now.",
+   "socko_face": "disappointment",
+   "socko_clip": "Head_Shake"
+  },
+  "f48_notes2": {
+   "speaker": "socko",
+   "text": "I think you're giving this a little too much attention.",
+   "socko_face": "irritation"
+  },
+  "f48_real1": {
+   "speaker": "socko",
+   "text": "Could be someone wanted you to find all this.",
+   "socko_face": "suspicion"
+  },
+  "f48_real2": {
+   "speaker": "socko",
+   "text": "You're looking for reasons to trust them.",
+   "socko_face": "irritation"
+  },
+  "f48_safe": {
+   "speaker": "socko",
+   "text": "Ooh. Now that one I like.",
+   "socko_face": "excitement",
+   "socko_clip": "Head_Raise"
+  },
+  "f48_opened": {
+   "speaker": "socko",
+   "text": "Well, would you look at that. Somebody planned ahead.",
+   "socko_face": "smile"
+  },
+  "f48_gun": {
+   "speaker": "socko",
+   "text": "Two barrels. That's one each for two of them, and a quick reload.",
+   "socko_face": "wide_smile",
+   "socko_talk": "Talking_Excited"
+  },
+  "f48_gun2": {
+   "speaker": "socko",
+   "text": "I'm just counting. Somebody has to.",
+   "socko_face": "uncomfortable_smile",
+   "style": "quiet"
+  },
+  "f48_aim": {
+   "speaker": "socko",
+   "text": "There we are.",
+   "socko_face": "smile",
+   "style": "quiet"
+  },
+  "f48_shot1": {
+   "speaker": "socko",
+   "text": "There we are. Much simpler.",
+   "socko_face": "wide_smile"
+  },
+  "f48_shot2": {
+   "speaker": "socko",
+   "text": "I knew you'd figure it out.",
+   "socko_face": "wide_smile",
+   "socko_clip": "Head_Bob"
+  },
+  "f48_shot3": {
+   "speaker": "socko",
+   "text": "And that's the family. See? Quiet now.",
+   "socko_face": "unnatural_stillness",
+   "style": "quiet"
+  },
+  "f48_dress_mama": {
+   "speaker": "socko",
+   "text": "Huh. Look at that. She cleans up.",
+   "socko_face": "uncomfortable_smile"
+  },
+  "f48_dress_papa": {
+   "speaker": "socko",
+   "text": "...",
+   "socko_face": "unnatural_stillness",
+   "style": "quiet"
+  },
+  "f48_dress_papa2": {
+   "speaker": "socko",
+   "text": "That's not funny. Who's that supposed to be? Don't answer that.",
+   "socko_face": "anger",
+   "socko_talk": "Talking_Annoyed"
+  },
+  "f48_not_sonya": {
+   "speaker": "socko",
+   "text": "See? Nothing. Nobody's here. Let's go.",
+   "socko_face": "forced_happiness"
+  },
+  "f48_refuse1": {
+   "speaker": "socko",
+   "text": "You're making this harder than it needs to be.",
+   "socko_face": "irritation"
+  },
+  "f48_refuse2": {
+   "speaker": "socko",
+   "text": "I thought we were trying to get out of here. We have our own problems.",
+   "socko_face": "anger",
+   "socko_talk": "Talking_Annoyed"
+  },
+  "f48_refuse3": {
+   "speaker": "socko",
+   "text": "You can't save everybody, bud.",
+   "socko_face": "disappointment",
+   "socko_clip": "Head_Drop"
+  },
+  "f48_refuse4": {
+   "speaker": "socko",
+   "text": "What? I didn't say shoot them. When did I say shoot them? I said keep your distance.",
+   "socko_face": "forced_happiness",
+   "socko_talk": "Talking_Sarcastic"
+  }
+ },
+ "building": {
+  "stairs_1": {
+   "speaker": "socko",
+   "text": "Ooh, stairs! Up or down? Down's quicker. Down's always quicker.",
+   "socko_face": "excitement"
+  },
+  "bolt_heard": {
+   "speaker": "socko",
+   "text": "Did you hear that? Something let go, downstairs.",
+   "socko_face": "suspicion",
+   "style": "quiet"
+  },
+  "street_locked": {
+   "speaker": "socko",
+   "text": "Four bolts. You could shoot them. I'm just saying you could.",
+   "socko_face": "smile"
+  },
+  "f51_in": {
+   "speaker": "socko",
+   "text": "Somebody's been here before you. Somebody with your feet.",
+   "socko_face": "nervousness",
+   "style": "quiet"
+  },
+  "f51_void": {
+   "speaker": "socko",
+   "text": "There's no wall. Why is there no wall? I liked the wall.",
+   "socko_face": "panic"
+  },
+  "f44_in": {
+   "speaker": "socko",
+   "text": "A corridor. Of rooms. Of chairs. I love chairs.",
+   "socko_face": "forced_happiness"
+  },
+  "f44_loop": {
+   "speaker": "socko",
+   "text": "We've been here. Don't say we haven't been here.",
+   "socko_face": "irritation"
+  },
+  "plan_done": {
+   "speaker": "socko",
+   "text": "...That doesn't mean anything. Notes don't mean anything.",
+   "socko_face": "unnatural_stillness"
+  },
+  "end_street": {
+   "speaker": "socko",
+   "text": "Outside. Finally. Hold on to me, bud. Don't let go.",
+   "socko_face": "unnatural_stillness",
+   "style": "quiet"
+  }
  }
 }

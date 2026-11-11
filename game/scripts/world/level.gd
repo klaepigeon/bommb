@@ -6,6 +6,10 @@ extends Node3D
 var flat: Flat47
 var maze: Maze
 var nav := Nav.new()
+var building: Building
+var flat48: Flat48
+var flat51: Flat51
+var flat44: Flat44
 
 func build() -> void:
 	flat = Flat47.new(); flat.name = "Flat47"; add_child(flat)
@@ -13,13 +17,35 @@ func build() -> void:
 	maze = Maze.new(); maze.name = "Maze"; add_child(maze)
 	maze.build(nav)
 	_flat_nav()
+	building = Building.new(); building.name = "Building"; add_child(building)
+	building.build(self, nav)
+	flat48 = Flat48.new(); add_child(flat48); flat48.build(flat)
+	flat51 = Flat51.new(); add_child(flat51); flat51.build(flat)
+	flat44 = Flat44.new(); add_child(flat44); flat44.build()
 
 func zone_of(p: Vector3) -> int:
+	if p.x > 30.0:
+		if flat48 and flat48.contains(p): return Flat48.ZONE
+		if flat51 and flat51.contains(p): return flat51.zone_of(p)
+		if flat44 and flat44.contains(p): return Flat44.ZONE
+		return -1
+	if building and building.contains(p) and absf(p.y) > 1.0: return building.zone_of(p)
 	var z := flat.zone_of(p)
 	if z >= 0: return z
 	return maze.zone_of(p)
 
+## Which place he's in (for the story and Socko): "47", "maze", "stairs", "48", "51", "44".
+func place_of(p: Vector3) -> String:
+	if p.x > 30.0:
+		if flat48.contains(p): return "48"
+		if flat51.contains(p): return "51"
+		if flat44.contains(p): return "44"
+	if building.contains(p): return "stairs"
+	if maze.zone_of(p) >= 0: return "maze"
+	return "47"
+
 func surface_of(p: Vector3) -> String:
+	if p.x > 30.0 or (building and building.contains(p) and absf(p.y) > 1.0): return "step_tile"
 	if flat.zone_of(p) >= 0: return flat.surface_of(p)
 	return maze.surface_of(p)
 

@@ -226,10 +226,17 @@ func _pockets_menu() -> void:
 		_label("Nothing.")
 	for p in k.pockets:
 		var id := String(p.id)
+		if id in ["shells", "rounds"]: continue
+		if id == "shotgun":
+			_btn("Sawn-off (%d in it, %d shells) — %s" % [k.barrels, k.shells, "put it away" if k.gun_out and k.weapon == "shotgun" else "take it out"], func():
+				if k.gun_out and k.weapon == "shotgun": k.holster()
+				else: k.draw_gun("shotgun")
+				toggle_menu(""))
+			continue
 		if id == "revolver":
 			_btn("Revolver (%d loaded, %d loose) — %s" % [k.rounds, k.spare, "put it away" if k.gun_out else "take it out"], func():
-				if k.gun_out: k.holster()
-				else: k.draw_gun()
+				if k.gun_out and k.weapon == "revolver": k.holster()
+				else: k.draw_gun("revolver")
 				toggle_menu(""))
 			continue
 		_btn("%s — hold it" % p.title, func(): k.hold_from_pocket(id); toggle_menu(""))

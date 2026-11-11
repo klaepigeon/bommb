@@ -257,6 +257,24 @@ func _on_event(name: String, d: Dictionary) -> void:
 			if d.id.begins_with("figure") and d.state == "hunt": once("figures")
 		"marta_first_sight":
 			_marta_talk(d.m)
+		"entered_flat":
+			match String(d.flat):
+				"48": once("f48_arrive")
+				"51": once("f51_in")
+				"44": once("f44_in")
+		"looked":
+			if String(d.key).begins_with("figure_"): once("f48_family"); defy(0.1, "looked at them")
+			elif String(d.key) == "bolts": bark("street_locked", true)
+			elif String(d.key) == "pointless_out": once("f48_refuse1")
+		"f48_note": once("f48_notes")
+		"f48_real": once("f48_real1")
+		"f48_safe": once("f48_safe")
+		"f48_gun": once("f48_gun"); obey(1.0, "the shotgun")
+		"f48_plan": defy(1.0, "the plan"); once("plan_done")
+		"bolt": once("bolt_heard")
+		"loop44": if int(d.n) == 2: once("f44_loop")
+		"killed":
+			if String(d.id).begins_with("figure"): bark("f48_shot1", true)
 		"shot":
 			pass
 

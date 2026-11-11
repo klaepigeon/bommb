@@ -8,6 +8,7 @@ extends Monster
 var tag := "MAMA"
 var place := Vector3.ZERO
 var room := AABB()
+var look_text := ""
 
 func _init() -> void:
 	radius = 0.25; walk_speed = 2.4; hunt_speed = 2.4
@@ -63,4 +64,4 @@ func get_verbs(_k) -> Array:
 	return [{"id": "look", "label": "Look"}] if state != S.DEAD else []
 
 func act(_v: String, _k) -> void:
-	World.emit_event("looked", {"title": tag, "desc": "A tag hangs round its neck on string: %s." % tag, "key": "figure_" + tag})
+	World.emit_event("looked", {"title": tag, "desc": look_text if look_text != "" else "A tag hangs round its neck on string: %s." % tag, "key": "figure_" + tag})

@@ -30,6 +30,7 @@ static func _make(name: String) -> Image:
 			match name:
 				"plaster": c = Color("8d8775").lerp(Color("6c665a"), v * 0.8) * (0.92 + f * 0.12)
 				"plaster_dark": c = Color("5a5548").lerp(Color("3a3830"), v) * (0.9 + f * 0.15)
+				"paint_green": c = Color("3f5a48").lerp(Color("2f4638"), v * 0.6) * (0.95 + f * 0.1)
 				"draft": c = Color("d8d6cf").lerp(Color("c4c1b8"), v * 0.7)
 				"brick":
 					var row := y / 8

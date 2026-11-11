@@ -15,6 +15,8 @@ const ALL := {
 	"photo": ["Photograph", Color(0.9, 0.88, 0.8)],
 }
 static func colour(id: String) -> Color:
+	if id.begins_with("rednote:"): return Color(0.85, 0.12, 0.1)
+	if id.begins_with("note:"): return Color(0.95, 0.87, 0.4)
 	return ALL.get(id, ["", Color(0.6, 0.6, 0.6)])[1]
 static func title(id: String) -> String:
 	return ALL.get(id, [id, Color.WHITE])[0]
