@@ -14,6 +14,7 @@ var kurt: Kurt
 var hud: Hud
 var story: Story
 var args := {}
+var env: Environment
 
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
@@ -60,7 +61,7 @@ func _display() -> void:
 	container.add_child(view)
 	screen_mat = ShaderMaterial.new(); screen_mat.shader = load("res://shaders/screen.gdshader")
 	container.material = screen_mat
-	var env := Environment.new()
+	env = Environment.new()
 	env.background_mode = Environment.BG_COLOR
 	env.background_color = Color(0.93, 0.94, 0.95) if not args.has("bg") else Color(1, 0, 1)      # there's no outside: only white
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_DISABLED

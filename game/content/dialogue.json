@@ -670,6 +670,11 @@
    "speaker": "socko",
    "text": "Click! I'm a burglar now. Don't tell anyone.",
    "socko_face": "smile"
+  },
+  "cmd_fire": {
+   "speaker": "socko",
+   "text": "In THERE? I'm a SOCK. I'm wool! Do you know what fire does to wool?",
+   "socko_face": "fear"
   }
  },
  "end": {
@@ -850,7 +855,7 @@
   },
   "street_locked": {
    "speaker": "socko",
-   "text": "Four bolts. You could shoot them. I'm just saying you could.",
+   "text": "All those bolts. You could shoot them. I'm just saying you could.",
    "socko_face": "smile"
   },
   "f51_in": {
@@ -913,5 +918,39 @@
    "socko_face": "excitement"
   }
  },
- "_comment_ledge": "NEW (this build): the ledge outside 47's bedroom, and Socko's latch lines. For the owner to rewrite."
+ "_comment_ledge": "NEW (this build): the ledge outside 47's bedroom, and Socko's latch lines. For the owner to rewrite.",
+ "_comment_basement": "NEW (this build): the basement. For the owner to rewrite.",
+ "basement": {
+  "basement_in": {
+   "speaker": "kurt",
+   "text": "Warm. It's warm down here. Nothing else in this building is warm.",
+   "style": "quiet"
+  },
+  "basement_burn": {
+   "speaker": "kurt",
+   "text": "Agh — ! ...Got it. Got it.",
+   "style": "quiet"
+  },
+  "basement_drawing": {
+   "speaker": "kurt",
+   "text": "Three people and a balloon. She drew herself the smallest. He was burning them, one at a time, to keep the pipes going.",
+   "style": "quiet"
+  },
+  "basement_steam": {
+   "speaker": "socko",
+   "text": "LOUD. That was loud. Everyone in the building heard that. Everyone.",
+   "socko_face": "fear"
+  },
+  "basement_super": {
+   "speaker": "socko",
+   "text": "Big footsteps. On the stairs. Coming DOWN the stairs.",
+   "socko_face": "fear",
+   "style": "quiet"
+  },
+  "basement_locked": {
+   "speaker": "socko",
+   "text": "Padlock. He'd have a key. Supers always have a key. Supers have ALL the keys.",
+   "socko_face": "suspicion"
+  }
+ }
 }

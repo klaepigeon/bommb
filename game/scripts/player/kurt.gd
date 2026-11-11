@@ -76,6 +76,7 @@ func build() -> void:
 	cam = Camera3D.new(); cam.name = "Camera"; cam.fov = 72.0; cam.near = 0.03; cam.far = 90.0
 	head.add_child(cam)
 	cam.current = true
+	Lights.camera = cam
 	hand_anchor = Node3D.new(); hand_anchor.position = Vector3(0.12, -0.18, -0.62)
 	cam.add_child(hand_anchor)
 	Controls.pressed.connect(_on_pressed)

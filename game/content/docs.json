@@ -54,5 +54,14 @@
  },
  "prop_37_Magazine": {
   "desc": "Rabotnitsa, the women's monthly. A knitting pattern for a child's cardigan, the page corner turned down. Glossy, thin, wide."
+ },
+ "super_ledger": {
+  "title": "The Super's ledger",
+  "text": "BUILDING 14 — KOMENDANT — 1984-\n\nFlat by flat, in pencil, the columns ruled by hand: flat, family, number of persons, meter reading, remarks.\n\n41 Petrenko 3 — gone 15th.\n42 Voronin 2 — gone 15th.\n43 (empty)\n44 Lysenko 3 — the girl did not go down. Remark: kept in.\n47 Sokolova 2 — did not go down. Remark: the sister telephoned. Twice.\n48 Fedorov 3 — did not go down.\n51 (empty since spring. Somebody walks in it.)\n52 Klimuk 1 — gone 15th.\n\nAfter the 15th the writing changes. The last pages are only one word, over and over, pressed so hard the pencil has gone through: WARM. WARM. KEEP IT WARM.",
+  "memory": "super_ledger"
+ },
+ "super_calendar": {
+  "title": "Calendar",
+  "text": "October. A tractor in a field. The 15th ringed so many times the paper's worn through. Every day after it crossed off, right to the end of the month, and then November too, and December, in a hand that gets bigger and worse."
  }
 }

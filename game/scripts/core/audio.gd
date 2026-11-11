@@ -54,7 +54,7 @@ func loop(name: String, on: Node3D, db := 0.0, unit := 3.0) -> AudioStreamPlayer
 	return p
 
 func _blocked(at: Vector3) -> bool:
-	var cam := get_viewport().get_camera_3d()
+	var cam: Camera3D = Lights.camera if is_instance_valid(Lights.camera) else get_viewport().get_camera_3d()
 	if cam == null or not cam.is_inside_tree():
 		return false
 	var space := cam.get_world_3d().direct_space_state
@@ -256,6 +256,15 @@ func _make(name: String) -> AudioStream:
 			for i in a.size():
 				var t := float(i) / RATE
 				a[i] = sin(TAU * 425.0 * t) * 0.18 * (1.0 if fmod(t, 1.0) < 0.5 else 0.0)
+			return _wav(a, true)
+		"furnace":
+			# a boiler going: a low roar with the fire breathing in it
+			var a := _buf(4.0); var y := 0.0; var y2 := 0.0
+			for i in a.size():
+				var t := float(i) / RATE
+				y += (randf() * 2.0 - 1.0 - y) * 0.03
+				y2 += (y - y2) * 0.05
+				a[i] = y2 * 2.2 * (0.8 + 0.2 * sin(TAU * t * 0.75)) + sin(TAU * 38.0 * t) * 0.05
 			return _wav(a, true)
 		"ring":
 			# an old bell telephone: two bursts of a hammered bell

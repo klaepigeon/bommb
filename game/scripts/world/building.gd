@@ -81,6 +81,10 @@ func _floor(f: int) -> void:
 	# the landing slab (47's floor already carries floor 4's)
 	kit.box(floor_m, Vector3((X0 + X1) * 0.5, y - 0.1, (ZL + Z1) * 0.5), Vector3(X1 - X0, 0.2, Z1 - ZL), Basis(), 63)
 	_solid(body, Vector3((X0 + X1) * 0.5, y - 0.1, (ZL + Z1) * 0.5), Vector3(X1 - X0, 0.2, Z1 - ZL))
+	if f == FLOORS[0]:
+		# the bottom of the well: floor under the flights, where the basement door is
+		kit.box(floor_m, Vector3((X0 + X1) * 0.5, y - 0.1, ZL * 0.5), Vector3(X1 - X0, 0.2, ZL), Basis(), 63)
+		_solid(body, Vector3((X0 + X1) * 0.5, y - 0.1, ZL * 0.5), Vector3(X1 - X0, 0.2, ZL))
 	# walls: the landing's three sides and the half-landing's, paint below, whitewash above
 	var top := y + STOREY
 	for seg in [[Vector3(X0, y, ZL), Vector3(X0, y, Z1), "w"], [Vector3(X1, y, Z1), Vector3(X1, y, ZL), "e"], [Vector3(X0, y, Z1), Vector3(X1, y, Z1), "s"],
@@ -261,7 +265,7 @@ func _street_look() -> void:
 	var n: String = ["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"][mini(BOLTS.size(), 9)] if BOLTS.size() < 10 else str(BOLTS.size())
 	var t := n + " bolts, top to bottom, painted over so often they've grown into the frame. A number scratched beside each: "
 	var parts: Array = []
-	for b in BOLTS: parts.append("%s (%s)" % [b, "drawn back" if bolts[b] else "shot"])
+	for b in BOLTS: parts.append("%s (%s)" % [String(place_specs[b].get("bolt_mark", b)) if place_specs.has(b) else b, "drawn back" if bolts[b] else "shot"])
 	World.emit_event("looked", {"title": "Street door", "desc": t + ", ".join(parts) + ".", "key": "bolts"})
 
 func shot(_at: Vector3, _by) -> void:
@@ -278,14 +282,40 @@ func _lobby() -> void:
 	kit.commit(self, "Mailboxes")
 	var mb := Usable.make(self, Transform3D(Basis(), Vector3(11.9, y + 1.35, Z1 - 0.2)), Vector3(2.6, 0.7, 0.3), [{"id": "look", "label": "Look"}])
 	mb.title = "Post boxes"
-	mb.acted.connect(func(_v, _k): World.emit_event("looked", {"title": "Post boxes", "desc": "Twelve tin boxes. 47's is stuffed so full the flap won't shut: bills, a postcard from Kursk, all of it postmarked after the 15th.", "key": "post"}))
+	mb.acted.connect(func(v, k):
+		if v == "super_box":
+			World.set_flag("took_basement_key")
+			Audio.play("rattle", mb.global_position, -6.0)
+			k.give_item("basement_key", "Key on a wire loop", "A heavy iron key on a loop of wire, a cardboard tag: ПОДВАЛ. Basement. In the superintendent's box, under a stack of his own unopened post.")
+			return
+		World.emit_event("looked", {"title": "Post boxes", "desc": "Twelve tin boxes. 47's is stuffed so full the flap won't shut: bills, a postcard from Kursk, all of it postmarked after the 15th.", "key": "post"}))
 	# the basement door, under the first flight: chained, warm water under it
 	var bd := Usable.make(self, Transform3D(Basis(), Vector3(X0 + 0.06, y + 1.0, 2.4)), Vector3(0.1, 2.0, 0.8), [{"id": "knock", "label": "Knock"}, {"id": "look", "label": "Look"}], true)
 	var bk := Kit.new()
 	bk.box(Mats.tex(Tex.get_tex("metal"), 61, Color(0.5, 0.45, 0.4)), Vector3(X0 + 0.04, y + 1.0, 2.4), Vector3(0.05, 2.0, 0.8))
 	bk.commit(self, "BasementDoor")
 	bd.title = "Basement door"
+	var place_id := ""
+	for pid in place_specs:
+		if String(place_specs[pid].get("entrance", "")) == "basement": place_id = String(pid)
+	if place_id != "":
+		bd.offer = func(k):
+			var pl: Place = level.places.get(place_id)
+			return pl.entrance_verbs(k) if pl else []
+		bd.socko_offer = func(_k):
+			var pl: Place = level.places.get(place_id)
+			return [{"id": "pick", "label": "The padlock"}] if pl and not pl.is_open() else []
+		bd.socko_do = func(_id, _k, m): m.bark("basement_locked", true)
+		# his key: in his own post box
+		mb.offer = func(_k):
+			var v: Array = [{"id": "look", "label": "Look"}]
+			if not World.flag("took_basement_key"): v.append({"id": "super_box", "label": "Try the superintendent's box"})
+			return v
 	bd.acted.connect(func(v, k):
+		if v != "knock" and place_id != "":
+			var pl: Place = level.places.get(place_id)
+			if pl: pl.entrance_act(v, k, bd)
+			return
 		if v == "knock":
 			Audio.play("knock", bd.global_position, 0.0)
 			await get_tree().create_timer(1.5, false).timeout

@@ -1,33 +1,372 @@
 {
  "_comment": "What each place sounds like when nothing is happening (most of the time). bed: loops [sound, dB]. events: one-shots now and then: every [min, max] seconds, db, pitch [min, max], where: wall (a few metres off, in the walls), above / below (the flat over or under), far (down the stairwell, across the building), here (Kurt's own position), or at [x, y, z]; repeat: how many in a row, gap seconds between. Events wait while anyone's talking or something is hunting. The tension layer (heartbeat, pressure) rises with whatever's hunting him. Sounds are Audio's (scripts/core/audio.gd).",
  "profiles": {
-  "47": {"fog": ["#050506", 16], "bed": [["drone", -30], ["hum_low", -34]],
-         "events": [{"sound": "pipes", "every": [30, 70], "db": -14, "where": "wall"},
-                    {"sound": "steps_above", "every": [70, 150], "db": -20, "where": "above"},
-                    {"sound": "knock", "every": [90, 200], "db": -22, "where": "below", "repeat": 3, "gap": 0.4},
-                    {"sound": "drip", "every": [6, 14], "db": -20, "at": [7.4, 0.5, 7.6], "pitch": [0.8, 1.2]},
-                    {"sound": "floor_creak", "every": [40, 90], "db": -18, "where": "wall"},
-                    {"sound": "door_far", "every": [120, 240], "db": -22, "where": "far"}]},
-  "maze": {"fog": ["#030303", 13], "bed": [["drone", -26], ["hum_low", -30]],
-           "events": [{"sound": "pipes", "every": [20, 50], "db": -10, "where": "wall"},
-                      {"sound": "drip", "every": [4, 10], "db": -16, "where": "wall", "pitch": [0.7, 1.3]},
-                      {"sound": "whisper", "every": [80, 160], "db": -24, "where": "wall"},
-                      {"sound": "steps_above", "every": [60, 120], "db": -18, "where": "above"},
-                      {"sound": "child_count", "every": [150, 300], "db": -26, "where": "far", "needs": "counting"}]},
-  "stairs": {"fog": ["#050506", 18], "bed": [["drone", -28], ["wind", -32]],
-             "events": [{"sound": "door_far", "every": [40, 100], "db": -18, "where": "far"},
-                        {"sound": "knock", "every": [60, 140], "db": -20, "where": "wall", "repeat": 3, "gap": 0.35},
-                        {"sound": "steps_above", "every": [50, 110], "db": -18, "where": "above"},
-                        {"sound": "pipes", "every": [40, 90], "db": -16, "where": "wall"}]},
-  "draft": {"bed": [["fluoro_buzz", -30]],
-            "events": [{"sound": "floor_creak", "every": [30, 70], "db": -20, "where": "wall"},
-                       {"sound": "whisper", "every": [90, 180], "db": -28, "where": "wall"}]},
-  "echo": {"bed": [["wind", -24], ["hum_low", -36]],
-           "events": [{"sound": "floor_creak", "every": [20, 50], "db": -18, "where": "wall"},
-                      {"sound": "steps_above", "every": [60, 120], "db": -22, "where": "below"}]},
-  "cells": {"bed": [["fluoro_buzz", -24], ["hum_low", -30]],
-            "events": [{"sound": "door_far", "every": [30, 80], "db": -20, "where": "far"},
-                       {"sound": "knock", "every": [70, 150], "db": -18, "where": "wall", "repeat": 3, "gap": 0.35}]}
+  "47": {
+   "fog": [
+    "#050506",
+    16
+   ],
+   "bed": [
+    [
+     "drone",
+     -30
+    ],
+    [
+     "hum_low",
+     -34
+    ]
+   ],
+   "events": [
+    {
+     "sound": "pipes",
+     "every": [
+      30,
+      70
+     ],
+     "db": -14,
+     "where": "wall"
+    },
+    {
+     "sound": "steps_above",
+     "every": [
+      70,
+      150
+     ],
+     "db": -20,
+     "where": "above"
+    },
+    {
+     "sound": "knock",
+     "every": [
+      90,
+      200
+     ],
+     "db": -22,
+     "where": "below",
+     "repeat": 3,
+     "gap": 0.4
+    },
+    {
+     "sound": "drip",
+     "every": [
+      6,
+      14
+     ],
+     "db": -20,
+     "at": [
+      7.4,
+      0.5,
+      7.6
+     ],
+     "pitch": [
+      0.8,
+      1.2
+     ]
+    },
+    {
+     "sound": "floor_creak",
+     "every": [
+      40,
+      90
+     ],
+     "db": -18,
+     "where": "wall"
+    },
+    {
+     "sound": "door_far",
+     "every": [
+      120,
+      240
+     ],
+     "db": -22,
+     "where": "far"
+    }
+   ]
+  },
+  "maze": {
+   "fog": [
+    "#030303",
+    13
+   ],
+   "bed": [
+    [
+     "drone",
+     -26
+    ],
+    [
+     "hum_low",
+     -30
+    ]
+   ],
+   "events": [
+    {
+     "sound": "pipes",
+     "every": [
+      20,
+      50
+     ],
+     "db": -10,
+     "where": "wall"
+    },
+    {
+     "sound": "drip",
+     "every": [
+      4,
+      10
+     ],
+     "db": -16,
+     "where": "wall",
+     "pitch": [
+      0.7,
+      1.3
+     ]
+    },
+    {
+     "sound": "whisper",
+     "every": [
+      80,
+      160
+     ],
+     "db": -24,
+     "where": "wall"
+    },
+    {
+     "sound": "steps_above",
+     "every": [
+      60,
+      120
+     ],
+     "db": -18,
+     "where": "above"
+    },
+    {
+     "sound": "child_count",
+     "every": [
+      150,
+      300
+     ],
+     "db": -26,
+     "where": "far",
+     "needs": "counting"
+    }
+   ]
+  },
+  "stairs": {
+   "fog": [
+    "#050506",
+    18
+   ],
+   "bed": [
+    [
+     "drone",
+     -28
+    ],
+    [
+     "wind",
+     -32
+    ]
+   ],
+   "events": [
+    {
+     "sound": "door_far",
+     "every": [
+      40,
+      100
+     ],
+     "db": -18,
+     "where": "far"
+    },
+    {
+     "sound": "knock",
+     "every": [
+      60,
+      140
+     ],
+     "db": -20,
+     "where": "wall",
+     "repeat": 3,
+     "gap": 0.35
+    },
+    {
+     "sound": "steps_above",
+     "every": [
+      50,
+      110
+     ],
+     "db": -18,
+     "where": "above"
+    },
+    {
+     "sound": "pipes",
+     "every": [
+      40,
+      90
+     ],
+     "db": -16,
+     "where": "wall"
+    }
+   ]
+  },
+  "draft": {
+   "bed": [
+    [
+     "fluoro_buzz",
+     -30
+    ]
+   ],
+   "events": [
+    {
+     "sound": "floor_creak",
+     "every": [
+      30,
+      70
+     ],
+     "db": -20,
+     "where": "wall"
+    },
+    {
+     "sound": "whisper",
+     "every": [
+      90,
+      180
+     ],
+     "db": -28,
+     "where": "wall"
+    }
+   ]
+  },
+  "echo": {
+   "bed": [
+    [
+     "wind",
+     -24
+    ],
+    [
+     "hum_low",
+     -36
+    ]
+   ],
+   "events": [
+    {
+     "sound": "floor_creak",
+     "every": [
+      20,
+      50
+     ],
+     "db": -18,
+     "where": "wall"
+    },
+    {
+     "sound": "steps_above",
+     "every": [
+      60,
+      120
+     ],
+     "db": -22,
+     "where": "below"
+    }
+   ]
+  },
+  "cells": {
+   "bed": [
+    [
+     "fluoro_buzz",
+     -24
+    ],
+    [
+     "hum_low",
+     -30
+    ]
+   ],
+   "events": [
+    {
+     "sound": "door_far",
+     "every": [
+      30,
+      80
+     ],
+     "db": -20,
+     "where": "far"
+    },
+    {
+     "sound": "knock",
+     "every": [
+      70,
+      150
+     ],
+     "db": -18,
+     "where": "wall",
+     "repeat": 3,
+     "gap": 0.35
+    }
+   ]
+  },
+  "boiler": {
+   "bed": [
+    [
+     "hum_low",
+     -26
+    ],
+    [
+     "drone",
+     -34
+    ]
+   ],
+   "events": [
+    {
+     "sound": "pipes",
+     "every": [
+      12,
+      30
+     ],
+     "db": -8,
+     "where": "wall"
+    },
+    {
+     "sound": "drip",
+     "every": [
+      3,
+      8
+     ],
+     "db": -16,
+     "where": "wall",
+     "pitch": [
+      0.7,
+      1.1
+     ]
+    },
+    {
+     "sound": "steps_above",
+     "every": [
+      40,
+      90
+     ],
+     "db": -16,
+     "where": "above"
+    },
+    {
+     "sound": "knock",
+     "every": [
+      80,
+      160
+     ],
+     "db": -16,
+     "where": "above",
+     "repeat": 3,
+     "gap": 0.4
+    }
+   ]
+  }
  },
- "tension": {"heartbeat_db": [-40, -6], "pressure_db": [-40, -14], "reach": 14.0}
+ "tension": {
+  "heartbeat_db": [
+   -40,
+   -6
+  ],
+  "pressure_db": [
+   -40,
+   -14
+  ],
+  "reach": 14.0
+ }
 }

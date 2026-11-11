@@ -657,8 +657,10 @@ func r_building() -> void:
 	await _steps([C + Vector3(f44.cx(3), 0, 4.75), C + Vector3(0.9, 0, 4.75)])
 	await use(C + Vector3(0.05, 1.04, 4.75), "leave")
 	await until(func(): return level.place_of(k.global_position) == "stairs" and not k.frozen, 5.0, "out of 44")
+	# the basement's bolt (its own route plays it through: tools/test.sh basement)
+	(level.places["basement"] as Place).reached_heart()
 	await walk_to(b.door_pos(1, 0) + Vector3(0.8, 0, 0))
-	check(b.all_bolts(), "all four bolts back")
+	check(b.all_bolts(), "every bolt back")
 	await use(st, "out")
 	await until(func(): return World.flags.has("ended"), 20.0, "out of Building 14")
 
@@ -755,6 +757,7 @@ func r_ledge() -> void:
 	check(lw.state() == "broken" and k.hp < hp0, "broken, and it cut")
 	check(await use(Vector3(6.38, 1.4, -0.5), "in"), "in through the broken pane")
 	await until(func(): return not k.climbing, 4.0, "climbing in")
+	await _steps([Vector3(6.4, 0, 2.2), Vector3(6.95, 0, 3.3)])      # round the wardrobe, to the door
 	await walk_to(Flat47.POINTS.hall)
 	check(level.place_of(k.global_position) == "47" and k.global_position.x > 7.5 and k.global_position.z > 3.8, "out of the locked living room the long way round (%s)" % str(k.global_position))
 
@@ -781,3 +784,55 @@ func r_arm() -> void:
 	await until(func(): return not k.climbing, 4.0, "climbing over")
 	await wait(0.6); await look(k.global_position + Vector3(2, 1.4, 0)); await wait(0.3); await snap("arm_ledge")
 	check(k.arm.visible, "a hand on the wall on the ledge")
+
+## The basement: the Super's key from his post box, the padlock, down; the hose on the furnace
+## (and he comes down his steps); the drawing out with the poker, and with a bare hand; back up.
+func r_basement() -> void:
+	await _woken()
+	for f in story.figures: story._dormant(f, true)
+	story._dormant(story.super_, true)
+	var b: Building = level.building
+	var bm: Basement = level.places["basement"]
+	check(b.BOLTS.size() == 5 and b.BOLTS[-1] == "basement", "the street door has a bolt for the basement (%s)" % str(b.BOLTS))
+	k.global_position = Vector3(11.6, Building.Y(1), 3.2); await wait(0.4)
+	var door := Vector3(Building.X0 + 0.06, Building.Y(1) + 1.0, 2.4)
+	await look(door); k._aim()
+	check(not k.target_verbs.any(func(v): return v.id == "in"), "padlocked")
+	k.global_position = Vector3(11.9, Building.Y(1), 6.6); await wait(0.3)
+	check(await use(Vector3(11.9, Building.Y(1) + 1.35, Building.Z1 - 0.2), "super_box"), "his post box")
+	check(k.has_item("basement_key"), "his key")
+	k.global_position = Vector3(11.4, Building.Y(1), 2.4); await wait(0.3)
+	check(await use(door, "unlock"), "the padlock")
+	check(await use(door, "in"), "down")
+	await until(func(): return level.place_of(k.global_position) == "basement" and not k.frozen, 5.0, "into the basement")
+	await wait(0.5)
+	check(story.ambience.profile_id == "boiler", "it sounds like a boiler room (%s)" % story.ambience.profile_id)
+	# the hose: out like that, and loud
+	var ev := []
+	var on_ev := func(n, _d): if n == "super_down": ev.append(n)
+	World.event.connect(on_ev)
+	await walk_to(bm.L(Vector3(4.0, 0, 6.6)))
+	check(await use(bm.L(Basement.HOSE), "flood"), "the hose on the furnace")
+	check(bm.heat == 0.0, "the fire's out")
+	await until(func(): return ev.size() > 0, 6.0, "the Super coming down")
+	check(bm.contains(story.super_.global_position), "he's down here")
+	World.event.disconnect(on_ev)
+	story._dormant(story.super_, true)
+	story.super_.global_position = level.nav.pts[level.nav.tags["stair_1"]]
+	# the poker, while it's hot
+	bm.heat = 1.0
+	var poker: Prop = bm.get_node("Prop_basement_poker") if bm.has_node("Prop_basement_poker") else null
+	if poker == null:
+		for c in bm.get_children(): if c is Prop and (c as Prop).key == "basement_poker": poker = c
+	check(poker != null, "a poker")
+	k.global_position = poker.global_position + Vector3(0.5, -poker.global_position.y, -0.4); await wait(0.3)
+	k.lift(poker); await wait(0.3)
+	k.global_position = bm.L(Vector3(2.9, 0, 4.0)); await wait(0.4)
+	check(await use(bm.L(Basement.GRATE), "rake"), "rake it out")
+	await until(func(): return World.flag("heart_basement"), 6.0, "the drawing")
+	check(k.has_item("sonya_drawing") and World.flag("bolt_basement"), "her drawing, and a bolt goes back")
+	k.drop(false)
+	# and back up
+	k.global_position = bm.L(Vector3(10.4, 0, 6.4)); await wait(0.3)
+	check(await use(bm.L(Vector3(10.78, 0.8, 7.2)), "leave"), "the steps")
+	await until(func(): return level.place_of(k.global_position) == "stairs" and not k.frozen, 5.0, "back in the lobby")

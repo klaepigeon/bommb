@@ -98,18 +98,19 @@ release, or tear it open: the service stair comes out on 47's landing).
 ## 4b. The building (the rest of the game)
 
 The game doesn't end until every flat that's open has been explored and Kurt walks out of the
-street door. The street door has four bolts with a number scratched beside each (47, 48, 51, 44);
+street door. The street door has a bolt for every place with a heart, a mark scratched beside each (47, 48, 51, 44, and П for the basement: five);
 each goes back by itself (a clunk, heard from anywhere) when Kurt reaches the heart of that flat.
 
 | Place | What's there | Its heart, and the ways to it |
 |---|---|---|
-| **The stairwell** (floors 1-5) | Green gloss paint, a bulb a landing (one dead), two doors a landing, most nailed shut since the evacuation (knock three times and something knocks back). Above 5 the stair has come down. The lobby: post boxes (47's stuffed with post dated after the 15th), the basement door (chained; knock, and three, then three), the street door. **The Super** walks it, bottom to top and back: unkillable, keener the more infected Kurt is, slower the more he remembers; he doesn't come into the flats. | — |
+| **The stairwell** (floors 1-5) | Green gloss paint, a bulb a landing (one dead), two doors a landing, most nailed shut since the evacuation (knock three times and something knocks back). Above 5 the stair has come down. The lobby: post boxes (47's stuffed with post dated after the 15th), the basement door (padlocked; knock, and three, then three), the street door. **The Super** walks it, bottom to top and back: unkillable, keener the more infected Kurt is, slower the more he remembers; he doesn't come into the flats. | — |
 | **47** | (above) | Out onto its landing, by either door |
 | **48** (floor 4, across the landing) | 47 as a pencil draft: white blocks with paper tags, the "what it is" wall of notes. A note on the right block makes it the thing (47's own furniture, copied in); peel it and it's a block again. GUN SAFE on the cold tall block in the box room: a sawn-off IZh-43 and ten shells. **MAMA, PAPA, CHILD**, who move only unseen; the CHILD's tag has a second note under it: CHILD'S CELL — 44. Six **red notes**, one in each room, and a pencil plan of the flat on the hall wall. | Put each red note in the box of the room it came from: the plan reads *"Sometimes it's easier to make the choice that makes no sense, when your back is against the wall"*, Kurt says it, and a seventh red note falls from behind the plan: **51**. (Put them anywhere else and he reads you what it says instead.) |
 | **The POINTLESS DOOR** (48's hall) | A door onto plaster, labelled POINTLESS DOOR. What a door is, is what's written on it: peel the label off and stick on another. | **51** opens into Flat 51's hall; **47**, 47's; **44**, 44; OUTSIDE, the white |
 | **51** (floor 5) | The same flat, never lived in, dust, one set of footprints going in. No north wall: the floor goes on into the grey, the prints go on with it, figures stand a long way off. | Follow the prints to their end: Kurt's in 47's hall, and the television has come on by itself (a noise Marta can come to). Ways in: the relabelled pointless door, or kick the landing door's chain (four kicks; loud), or snap it (Coral Grip) |
 | **44** (floor 3) | A hallway, then a corridor of identical cells longer than the building: a chair facing the wall in each. Past the eighth cell it hands you back to the second, and the chairs turn a little more toward the doors each time. | The child's cell: stick CHILD'S CELL on any cell door and that's what it is (a small chair, her drawing, СОНЯ in the paint); or keep walking, and the fourth time round the last door is a child's size |
-| **The street door** | Four bolts | All four back: **Go out**, into the white. The end card says what happened to Marta, what Kurt remembered, how far the infection got, and what Socko is to him now |
+| **The basement** (under the first flight) | The Super's: a low concrete cellar, warm, tea-coloured water on the floor, the boiler going. His corner: cot, ledger (who didn't go down on the 15th; the last pages only WARM), calendar, a box of shells. Children's shoes in the coal. In: his key's in his own post box, or break the padlock (axe, three blows), shoot it, wrench the chain (Coral Grip). | Sonya's drawing, on the furnace grate: shut the gas and wait for it to die down, turn the hose on it (out at once; the steam brings the Super down his steps), rake it out with the poker while it's hot, or reach in and pay for it |
+| **The street door** | Five bolts | All back: **Go out**, into the white. The end card says what happened to Marta, what Kurt remembered, how far the infection got, and what Socko is to him now |
 
 
 ## 4c. Atmosphere
@@ -149,9 +150,17 @@ mouth, can be asked to do things (poke the key, fetch the fuse, feel around in t
 from stage 6 he may refuse), and now and then, once he's far enough gone, looks straight out of
 the screen.
 
-## 7. Not done yet (Phase 7, expansion)
+## 4e. The ledge, and Kurt's free arm
 
-The bedroom-window ledge route (the balcony ledge exists, and falling into the white hands you
-back); Dark Eyes and How She Moves are partial (the latter is the directional pressure sound);
-Kurt's visible right hand (the rig is in the project, not yet posed in play); Flat 48 and the
+Over the balcony's end rail and onto a ledge the width of a shoe, back to the wall, shuffling (the
+stick can only move him along it), the white below, a drainpipe going down into it. The bedroom
+window: from inside, open it; from the ledge, reach in through the fortochka for the latch, send
+Socko through it, smash it with what you're holding, or put an elbow through it. A way out of the
+locked living room. Kurt's free arm (ArmRig, two-bone IK in camera space, scripts/player/fp_arm.gd)
+comes up for what he does: reaches out to what he uses, holds what he carries, braces on the wall
+on the ledge, grips the sill when he climbs. It mirrors when Socko's on the right hand.
+
+## 7. Not done yet (expansion)
+
+Dark Eyes and How She Moves are partial (the latter is the directional pressure sound); the
 stairwell beyond the service door; recorded voices (text-to-speech for now); the APK on a real phone.

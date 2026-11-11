@@ -1,5 +1,5 @@
 {
- "_comment": "The places off the stairs. Each: the script that builds it (extends Place), the landing door (floor, side 0 west / 1 east), where it's built in the world (at: every place has its own space; doors are the way between), its bounds (relative to at), where you arrive (and other ways in, by name), its air (fog colour and distance; ambience profile from ambience.json), and whether the street door has a bolt for it (bolt_order). Adding one: docs/EXPANDING.md.",
+ "_comment": "The places off the stairs. Each: the script that builds it (extends Place), the landing door (floor, side 0 west / 1 east), where it's built in the world (at: every place has its own space; doors are the way between), its bounds (relative to at), where you arrive (and other ways in, by name), its air (fog colour and distance; ambience profile from ambience.json), and whether the street door has a bolt for it (bolt_order). Adding one: docs/EXPANDING.md. shell: false leaves out the dark box round a place that hides seams (for places that open onto a void). entrance: a door that isn't on a landing (basement: the lobby's basement door); exit: where you come out, world [x,y,z], yaw; locked: padlock (key: the item that opens it).",
  "places": {
   "48": {
    "script": "res://scripts/world/flat48.gd",
@@ -87,7 +87,8 @@
    "ambience": "echo",
    "bolt_order": 3,
    "locked": "chain",
-   "chain_look": "It opens a hand's width on a chain, from the inside. Dust on the floor in there, and one set of footprints going in."
+   "chain_look": "It opens a hand's width on a chain, from the inside. Dust on the floor in there, and one set of footprints going in.",
+   "shell": false
   },
   "44": {
    "script": "res://scripts/world/flat44.gd",
@@ -126,6 +127,57 @@
    ],
    "ambience": "cells",
    "bolt_order": 4
+  },
+  "basement": {
+   "script": "res://scripts/world/basement.gd",
+   "title": "Basement",
+   "floor": 1,
+   "side": 0,
+   "entrance": "basement",
+   "at": [
+    -60,
+    0,
+    0
+   ],
+   "bounds": [
+    [
+     -0.5,
+     -1,
+     -0.5
+    ],
+    [
+     12.5,
+     3,
+     8.5
+    ]
+   ],
+   "zone": 90,
+   "arrive": [
+    [
+     10.6,
+     0,
+     6.5
+    ],
+    1.5708
+   ],
+   "exit": [
+    [
+     11.2,
+     -9,
+     2.4
+    ],
+    -1.5708
+   ],
+   "fog": [
+    "#0a0705",
+    14
+   ],
+   "ambience": "boiler",
+   "bolt_order": 5,
+   "locked": "padlock",
+   "key": "basement_key",
+   "look": "Chained, and the chain padlocked. Warm water is seeping out under it, the colour of tea, and the door's warm to the touch.",
+   "bolt_mark": "\u041f, for \u043f\u043e\u0434\u0432\u0430\u043b, the basement"
   }
  },
  "landings": {

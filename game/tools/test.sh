@@ -5,7 +5,7 @@
 #   tools/test.sh touch         (needs a display: run under xvfb-run)
 cd "$(dirname "$0")/.."
 GODOT="${GODOT:-$HOME/godot/Godot_v4.7-stable_linux.x86_64}"
-ROUTES="${*:-scene_a poke kick maze shoes axe shoot service systems save monsters talk meet random building kick51 atmosphere ledge}"
+ROUTES="${*:-scene_a poke kick maze shoes axe shoot service systems save monsters talk meet random building kick51 atmosphere ledge basement}"
 FAIL=0
 for r in $ROUTES; do
 	LOG=${LOGDIR:-/tmp}/test_$r.log

@@ -11,6 +11,7 @@ var slots: Array = []                 ## Lamp or null
 var links := {}                       ## Vector2i(a, b) (a < b) -> true while a door between them is open
 var circuits := {}                    ## name -> bool (Power writes here)
 var cam_zone := -1
+var camera: Camera3D            ## the eye lamps are chosen for (the game's camera is in a SubViewport)
 var torch := {"on": false, "pos": Vector3.ZERO, "dir": Vector3.FORWARD, "cos": 0.86, "color": Color(1, 0.92, 0.75), "energy": 1.6, "reach": 9.0}
 var fog_color := Color(0.02, 0.02, 0.025)
 var fog_far := 16.0
@@ -71,7 +72,7 @@ func _score(l: Lamp, eye: Vector3, e: float) -> float:
 func _process(delta: float) -> void:
 	_t += delta
 	delta = minf(delta, 0.1)
-	var cam := get_viewport().get_camera_3d()
+	var cam := camera if is_instance_valid(camera) and camera.is_inside_tree() else get_viewport().get_camera_3d()
 	var eye := cam.global_position if cam else Vector3.ZERO
 	# brightness and score for every lamp
 	var cand: Array = []

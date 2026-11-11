@@ -1,9 +1,10 @@
 # HYSTERIA — Flat 47 (rebuild 3, Godot 4.7, Android first)
 
 A ground-up rebuild: Scene A as written, then the walls behind the wardrobe, an enclosed maze
-where Marta hunts, then Building 14: the stairwell, Flats 48, 51 and 44, and the street door that
-won't let you go until you've been everywhere it wants you to see. Design, reference inventory and what's different from the last build:
-[`docs/DESIGN.md`](docs/DESIGN.md). Development log: [`docs/DEVLOG.md`](docs/DEVLOG.md).
+where Marta hunts, then Building 14: the stairwell, Flats 48, 51 and 44, the Super's basement, and the street door
+that won't let you go until you've been everywhere it wants you to see. Design, reference inventory and what's different from the last build:
+[`docs/DESIGN.md`](docs/DESIGN.md). Development log: [`docs/DEVLOG.md`](docs/DEVLOG.md). Adding to it (a place, a creature, a line,
+a sound): [`docs/EXPANDING.md`](docs/EXPANDING.md).
 
 Install `../dist/Hysteria.apk` (arm64, Android 7+, signed with the repo's key, so it installs over
 earlier builds).
@@ -38,11 +39,13 @@ tools/test.sh                  # every route, headless: Scene A, each way out of
                                # the maze, the shoes, each way through the front door, the service
                                # door, the systems, save/load, the monsters, talking, Socko & Marta,
                                # the random conversations and the balcony, the whole building to
-                               # the street door, 51 the hard way
+                               # the street door, 51 the hard way, the atmosphere, the ledge
+                               # outside the bedroom, the basement
 godot --path . -- --gallery --shots=DIR   # every creature, rendered
 tools/test.sh poke kick        # some routes
 tools/phone.sh DIR             # the phone: GLES 3, 2340x1080, real multi-touch; screenshots in DIR
 tools/build_apk.sh             # ../dist/Hysteria.apk, signed, or it fails
 godot --path . -- --start=knock|wake|wardrobe|maze|gun    # start somewhere
+godot --path . -- --autotest --route=arm --shots=DIR      # Kurt's free arm (needs a display)
 godot --path . -- --views="x,y,z,yaw,pitch;..." --shots=DIR # render views
 ```

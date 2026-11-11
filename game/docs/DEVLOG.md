@@ -72,3 +72,21 @@ See DESIGN.md §7. Not yet on a physical phone.
   engaged, ring, wind, steps above, a far door, floor creaks, whispering, low hum, fluorescent
   buzz, a child counting.
 - docs/EXPANDING.md. New route `atmosphere`. 17 headless routes pass.
+
+## Session 1, continued: the gaps, polish, the basement
+
+- The ledge route (WindowLedge) and Kurt's free arm (FPArm over the ArmRig). Kurt.climb() for
+  scripted climbs; `rail_axis` holds him to a ledge.
+- **The lighting engine chose lamps for the wrong eye.** `Lights` asked the root viewport for its
+  camera, but the game renders in a SubViewport, so lamps were always chosen as if you stood at
+  the world origin (47's living room). Every place far from 47 (48, 51, 44) was getting only the
+  torch and the fog. `Lights.camera` is now Kurt's camera. The same mistake meant `Audio` never
+  muffled sounds through walls; fixed too.
+- Seams: the background followed nothing (pure white), so every hairline gap shone. It now takes
+  the place's air (white only where the outside's in view), and every Place has a shell in its own
+  colour round it (`"shell": false` for places that open onto a void, like 51).
+- The basement (the Super's): a padlocked entrance (`entrance`, `locked: padlock`, `exit` in
+  places.json, handled by Place), the furnace and four ways to the drawing, the Super coming down
+  for loud noises. A floor under the flights at the bottom of the stairwell (there was none).
+- Noise loudness is metres: the phone's ring had been set as if it were 0-1.
+- New routes: ledge, basement (and arm, for screenshots). 20 headless routes pass.

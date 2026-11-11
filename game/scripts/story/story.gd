@@ -521,6 +521,10 @@ func _on_event(name: String, d: Dictionary) -> void:
 				World.emit_event("out_of_47", {"via": d.via})
 		"escaped":
 			_end("street")
+		"entered_flat":
+			if d.flat == "basement" and _beat("basement_in"): Speech.say_id("basement_in")
+		"super_down":
+			if mind: mind.bark("basement_super", true)
 		"heart":
 			# any place's heart: the street door's bolt for it goes back
 			level.building.slide_bolt(String(d.place))
@@ -580,6 +584,9 @@ func _travel(flat: String, from_landing: bool, via: String) -> void:
 		to = arr[0]; yaw = arr[1]
 		World.set_flag("visited_" + flat)
 		World.emit_event("entered_flat", {"flat": flat})
+	elif not place.exit_point().is_empty():
+		var ex := place.exit_point()
+		to = ex[0]; yaw = ex[1]
 	else:
 		# out onto its landing, facing into the stairwell
 		var side := place.side()

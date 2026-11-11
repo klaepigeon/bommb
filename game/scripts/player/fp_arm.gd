@@ -24,10 +24,14 @@ func setup(k) -> void:
 	rig = ArmRig.new(); rig.name = "ArmRig"
 	add_child(rig)
 	rig.idle = true
-	if String(Settings.get_v("socko_side")) == "right": scale.x = -1.0
+	_side()
+	Settings.changed.connect(_side)
 	_light_it(rig)
 	k.reached.connect(_on_reach)
 	visible = false
+
+func _side() -> void:
+	scale.x = -1.0 if String(Settings.get_v("socko_side")) == "right" else 1.0
 
 ## Close to the eye: no vertex snap, and enough ambient to read in the dark, like the revolver.
 func _light_it(n: Node) -> void:

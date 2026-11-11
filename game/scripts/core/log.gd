@@ -32,7 +32,7 @@ func _process(delta: float) -> void:
 	_fps_t += delta
 	if _fps_t > 10.0:
 		_fps_t = 0.0
-		var cam := get_viewport().get_camera_3d()
+		var cam: Camera3D = Lights.camera if is_instance_valid(Lights.camera) else get_viewport().get_camera_3d()
 		mark("fps %d mem %.0fMB at %s" % [Engine.get_frames_per_second(), OS.get_static_memory_usage() / 1048576.0, str(cam.global_position.snapped(Vector3.ONE * 0.1)) if cam else "-"])
 
 func _notification(what: int) -> void:

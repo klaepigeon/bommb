@@ -51,6 +51,7 @@ func _process(delta: float) -> void:
 	# the air
 	Lights.fog_color = Lights.fog_color.lerp(_fog_want[0], minf(delta * 2.0, 1.0))
 	Lights.fog_far = lerpf(Lights.fog_far, _fog_want[1], minf(delta * 2.0, 1.0))
+	_background(kurt)
 	_tension(delta, kurt)
 	_tick_events(delta, kurt)
 	if _dust: _dust.global_position = kurt.global_position + Vector3(0, 1.3, 0)
@@ -88,6 +89,18 @@ func _fade_beds(delta: float) -> void:
 		p.volume_db = move_toward(p.volume_db, target, delta * 60.0 / FADE)
 		if b.want <= -80.0 and p.volume_db <= -79.0:
 			p.queue_free(); _beds.erase(b)
+
+## Behind everything: white where the outside can be seen (it's all there is out there), and the
+## place's own air everywhere else, so a hairline gap between two walls doesn't shine.
+func _background(kurt: Node3D) -> void:
+	var main = story.main
+	if main == null or main.env == null or main.args.has("bg"): return
+	var outside := false
+	if profile_id == "47":
+		var p := kurt.global_position
+		outside = p.z < 1.2 and p.x < 7.8         # on the balcony or the ledge, or near the windows
+	var want: Color = Color(0.93, 0.94, 0.95) if outside else Lights.fog_color
+	main.env.background_color = main.env.background_color.lerp(want, 1.0 if outside else minf(get_process_delta_time() * 3.0, 1.0))
 
 # ------------------------------------------------------------------------------------- one-shots
 func quiet() -> bool:

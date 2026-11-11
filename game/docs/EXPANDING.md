@@ -51,6 +51,12 @@ World state goes through `World` (flags, events, save/load); nothing else writes
      pointless door this way: `travel.call("51", false, "48door")`).
    - `bolt_order` adds a bolt to the street door, slid back when its heart is reached. Leave it
      out and the place is optional. The street door's text counts the bolts itself.
+   - A place whose door isn't on a landing: `"entrance": "basement"` (the lobby's basement door;
+     add another kind in `Building` the same way), `"exit": [[x,y,z], yaw]` for where you come out,
+     and `"locked": "padlock"` + `"key": "<item id>"` for a padlock (key, axe, gun, Coral Grip:
+     `Place.entrance_verbs`). `scripts/world/basement.gd` is the worked example.
+   - `"shell": false` if the place opens onto a void (otherwise a dark box round it hides seams).
+   - `"bolt_mark"`: what's scratched beside its bolt on the street door (default: its id).
 3. **Story.** Nothing to do unless it needs monsters or beats: the `heart` event
    (`World.event`, `{"place": id}`) already slides its bolt. Beats go in `Story._on_event`.
 
@@ -99,6 +105,10 @@ rings after you hang it up). Lights: `Lamp.make(...)` with `flicker`, and `circu
 the fuse box.
 
 ## Lighting rules (or it breaks on phones)
+
+- Lamps are chosen for `Lights.camera` (Kurt's). Anything else that needs "the camera" should use
+  that too: the game renders inside a SubViewport, so the root viewport has none.
+- Put Usables in front of colliders, not inside them: the look ray stops at the first solid.
 
 - No `Light3D`. Light is `Lamp` nodes; `Lights` feeds the nearest eight to every material.
 - Every material is `world.gdshader` (`Mats.flat`, `Mats.tex`, `Mats.convert` for imported ones).
