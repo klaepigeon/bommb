@@ -39,6 +39,7 @@ var sees := false
 var seen_t := 0.0                  ## how long it's had Kurt in sight
 var home := Vector3.ZERO
 var zone := -1
+var final_sit := true               ## SIT is 'calmed for good' (the porter just sits at his desk)
 var allowed := Callable()          ## func(point_index) -> bool: where it may go
 var _repath_t := 0.0
 var _anim_phase := 0.0
@@ -86,6 +87,7 @@ func _hitbox(part: String, size: Vector3) -> Area3D:
 
 func set_state(s: int) -> void:
 	if s == state: return
+	if state == S.DEAD or (state == S.SIT and final_sit and s in [S.HUNT, S.INVESTIGATE, S.SEARCH, S.PATROL]): return   # for good means for good
 	Log.mark("%s %s -> %s" % [id, S_NAMES[state], S_NAMES[s]])
 	state = s; state_t = 0.0
 	World.emit_event("monster_state", {"id": id, "state": S_NAMES[s], "m": self})
@@ -95,7 +97,7 @@ func dist_to_kurt() -> float:
 
 # ------------------------------------------------------------------------------- perception
 func _on_noise(n: Dictionary) -> void:
-	if state in [S.DEAD, S.CALM, S.SIT, S.AWAY, S.STUNNED] or not is_inside_tree(): return
+	if state in [S.DEAD, S.CALM, S.AWAY, S.STUNNED] or (state == S.SIT and final_sit) or not is_inside_tree(): return
 	if n.src == self: return
 	var k := Noises.heard_at(n, global_position + Vector3(0, 1, 0), get_world_3d().direct_space_state, hearing * Progress.aggression())
 	if k <= 0.0: return
@@ -162,12 +164,15 @@ func follow(speed: float, delta: float) -> bool:
 						dd.try_open(self)
 					return false
 		var flat := Vector2(target.x - global_position.x, target.z - global_position.z)
-		if flat.length() < 0.35:
+		# reached it (well inside the distance it would stop at), or it's behind on the way to the next
+		var behind := path_i == 0 and path.size() > 1 and level.nav.pts[path[1]].distance_to(global_position) < level.nav.pts[path[1]].distance_to(target)
+		if flat.length() < 0.5 or behind:
 			path_i += 1
 			return false
 	var to := target - global_position
 	to.y = 0
-	if to.length() < 0.4:
+	var last := path.is_empty() or path_i >= path.size()
+	if to.length() < (0.4 if last else 0.05):
 		velocity = Vector3.ZERO
 		return true
 	var dir := to.normalized()
@@ -180,8 +185,16 @@ func follow(speed: float, delta: float) -> bool:
 	# stuck: try again from wherever it's got to
 	_stuck_t = _stuck_t + delta if global_position.distance_to(_last_pos) < speed * delta * 0.2 else 0.0
 	_last_pos = global_position
-	if _stuck_t > 1.5:
-		_stuck_t = 0.0; go_to(goal)
+	if _stuck_t > 0.8:
+		_stuck_t = 0.0
+		# a door left half open in the way: shove it (doors are only furniture to something like this)
+		for d in level.flat.doors.values() + level.maze.doors.values():
+			var dd := d as Door
+			if not dd.locked() and dd.global_position.distance_to(global_position) < 1.6 and dd.angle > 0.05:
+				dd.swing(dd.max_angle if dd.angle < dd.max_angle * 0.5 else 0.0, 0.3)
+				Audio.play("thud", dd.handle_pos(), -2.0)
+				Noises.make(dd.handle_pos(), 8.0, "door", self)
+		go_to(goal)
 	return false
 
 func float_above_floor() -> bool:

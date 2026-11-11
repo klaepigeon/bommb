@@ -538,6 +538,11 @@ func _rim(a: Vector3, b: Vector3, seed_name: String) -> void:
 	kit.quad(brick, Vector3(x0, y0, z1), Vector3(x0, y0, z0), Vector3(x0, y1, z0), Vector3(x0, y1, z1))
 	kit.quad(brick, Vector3(x1, y0, z0), Vector3(x1, y0, z1), Vector3(x1, y1, z1), Vector3(x1, y1, z0))
 	kit.quad(brick, Vector3(x0, y1, z0), Vector3(x1, y1, z0), Vector3(x1, y1, z1), Vector3(x0, y1, z1))
+	kit.quad(plaster, Vector3(x0, 0.002, z1), Vector3(x1, 0.002, z1), Vector3(x1, 0.002, z0), Vector3(x0, 0.002, z0))
+	# and something to walk on through the thickness of the wall
+	var sb := StaticBody3D.new(); add_child(sb)
+	var cs := CollisionShape3D.new(); var bb := BoxShape3D.new(); bb.size = Vector3(x1 - x0 + 0.3, 0.4, z1 - z0 + 0.3); cs.shape = bb
+	cs.position = Vector3((x0 + x1) * 0.5, -0.2, (z0 + z1) * 0.5); sb.add_child(cs)
 	# broken plaster round the edge on the room side, sticking out
 	var n := int((x1 - x0) * 10.0 + (y1 - y0) * 10.0)
 	for i in n:

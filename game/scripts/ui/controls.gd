@@ -160,20 +160,27 @@ func _process(_delta: float) -> void:
 	var r := Vector2(Input.get_joy_axis(0, JOY_AXIS_RIGHT_X), Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y))
 	if r.length() > 0.15:
 		_look_acc += r * r.length() * 2.6 * get_process_delta_time()
-	look = _look_acc * float(Settings.get_v("look_sensitivity"))
-	if bool(Settings.get_v("invert_y")): look.y = -look.y
-	_look_acc = Vector2.ZERO
 	if touch_mode and _layer:
 		_layer.visible = true
+		var paused := get_tree().paused
 		for a in _buttons:
 			var b: Disc = _buttons[a]
-			b.visible = _visible_action(a)
+			b.visible = _visible_action(a) and (not paused or a == "pause")
 			var t := String(labels.get(a, "")) if a in ["use", "alt"] else String(NAMES.get(a, a))
 			if a == "use" and t == "": t = "USE"
 			if b.text != t: b.text = t; b.queue_redraw()
 			var down := held.has(a)
 			b.fill = Color(0.6, 0.55, 0.45, 0.45) if down else Color(0.05, 0.05, 0.06, 0.38)
 			b.queue_redraw()
+
+## The look input since the last physics step, used up (a 120 Hz screen gives two frames of input
+## per 60 Hz step: none of it may be dropped).
+func take_look() -> Vector2:
+	var l := _look_acc * float(Settings.get_v("look_sensitivity"))
+	if bool(Settings.get_v("invert_y")): l.y = -l.y
+	_look_acc = Vector2.ZERO
+	look = l
+	return l
 
 func is_down(a: String) -> bool:
 	return held.has(a) or (not touch_mode and InputMap.has_action(a) and Input.is_action_pressed(a))

@@ -19,6 +19,7 @@ func _init() -> void:
 	reach = 1.0
 	head_hp = 2.0; body_hp = 4.0
 	can_break_doors = false
+	final_sit = false
 
 func design() -> Dictionary:
 	return {"name": "porter", "height": 1.55, "neck": 0.28, "head": 0.095, "arm": 1.05, "girth": 0.95, "stoop": 0.7,
@@ -66,13 +67,13 @@ func think(delta: float) -> void:
 			if alarmed_t > 0.0 and fmod(state_t, 2.0) < delta:
 				Audio.play("snarl", global_position + Vector3(0, 1.5, 0), 4.0, 1.4)
 				Noises.make(global_position, 30.0, "shout", self)
-			go_to(kurt.global_position)
+			go_to(kurt.global_position if sees or dist_to_kurt() < 8.0 else heard_at)
 			follow(hunt_speed, delta)
 			if dist_to_kurt() < reach:
 				kurt.hurt(18.0, self)
 				kurt.velocity += (kurt.global_position - global_position).normalized() * 6.0
 				go_to(seat); set_state(S.PATROL)
-			elif state_t > 10.0 or dist_to_kurt() > 8.0:
+			elif alarmed_t <= 0.0 and (state_t > 10.0 or dist_to_kurt() > 8.0):
 				go_to(seat); set_state(S.PATROL)
 		S.STAGGER:
 			velocity = Vector3.ZERO

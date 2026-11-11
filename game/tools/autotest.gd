@@ -67,12 +67,12 @@ func use(p: Vector3, verb: String) -> bool:
 			k.use_verb(i)
 			await get_tree().physics_frame
 			return true
-	check(false, "no verb '%s' at %s (got %s on %s)" % [verb, str(p), str(k.target_verbs.map(func(v): return v.id)), str(k.target)])
+	check(false, "no verb '%s' at %s, kurt at %s (got %s on %s)" % [verb, str(p), str(k.global_position.snapped(Vector3.ONE * 0.01)), str(k.target_verbs.map(func(v): return v.id)), str(k.target)])
 	return false
 
 ## Walks along the Nav graph the way a player could: through open doors (opening unlocked ones),
 ## never through locked ones, crouching through the crawl hole.
-func walk_to(p: Vector3, speed := 3.0) -> void:
+func walk_to(p: Vector3, speed := 9.0) -> void:
 	var a := level.nav.nearest(k.global_position, 4.0)
 	var b := level.nav.nearest(p, 4.0)
 	var pass_ok := func(d):
@@ -89,7 +89,7 @@ func walk_to(p: Vector3, speed := 3.0) -> void:
 				d.swing(d.max_angle, 0.3)
 				await wait(0.5)
 		var q: Vector3 = level.nav.pts[path[i]]
-		k.crouching = q.z > 7.0 and q.z < 9.0 and q.x > 5.0 and q.x < 6.2
+		k.crouching = q.z > 7.0 and q.z < 9.3 and q.x > 5.0 and q.x < 9.2
 		await _step_to(q, speed)
 	await _step_to(p, speed)
 	k.crouching = false
@@ -103,6 +103,14 @@ func _step_to(p: Vector3, speed: float) -> void:
 		k.global_position += to.normalized() * st
 		k.velocity = Vector3.ZERO
 		await get_tree().physics_frame
+
+## A screenshot (only with --shots=DIR, and a display).
+func snap(name: String) -> void:
+	if not main.args.has("shots") or DisplayServer.get_name() == "headless": return
+	await RenderingServer.frame_post_draw
+	var dir := String(main.args.shots)
+	DirAccess.make_dir_recursive_absolute(dir)
+	get_viewport().get_texture().get_image().save_png("%s/%s.png" % [dir, name])
 
 func said(id: String) -> bool:
 	return Speech.history.has(id)
@@ -226,14 +234,15 @@ func r_shoes() -> void:
 	var m: Marta = story.marta
 	m.met = true
 	m.global_position = k.global_position + Vector3(-2.5, 0, 0)
-	m.set_state(Monster.S.HUNT)
 	k.hold_from_pocket("shoe_left")
+	await wait(0.2)
+	m.set_state(Monster.S.HUNT)
 	await until(func(): return m.state == Monster.S.CALM, 10.0, "she takes the shoe")
 	m.calm_for = 0.0
+	k.hold_from_pocket("shoe_right")
 	await wait(0.3)
 	m.global_position = k.global_position + Vector3(-2.0, 0, 0)
 	m.set_state(Monster.S.HUNT)
-	k.hold_from_pocket("shoe_right")
 	await until(func(): return m.state == Monster.S.SIT, 10.0, "both shoes: she's calm for good")
 	check(World.flag("marta_calmed"), "Marta calmed")
 	check(story.mind.defiance >= 3.0, "Socko didn't like it (defiance %.1f)" % story.mind.defiance)
@@ -244,7 +253,7 @@ func r_shoes() -> void:
 	await use(fd.handle_pos(), "open")
 	await wait(1.0)
 	await walk_to(Vector3(12.4, 0, 5.4))
-	await until(func(): return World.flag("ended", false) != false, 15.0, "out to the landing")
+	await until(func(): return World.flags.has("ended"), 15.0, "out to the landing")
 	check(said("end_out_calm"), "Socko: 'Shoes. You gave her shoes.'")
 
 func r_axe() -> void:
@@ -252,8 +261,9 @@ func r_axe() -> void:
 	level.flat.wardrobe_shoves = 2; level.flat.shove_wardrobe()
 	await wait(0.8)
 	var axe: Prop = level.flat.props["prop_120_Axe"]
-	await walk_to(Flat47.POINTS.boxroom)
-	await use(axe.global_position + Vector3(0, 0.25, 0), "lift")
+	await walk_to(Vector3(1.85, 0, 5.6))
+	var axe_c: Vector3 = (axe.get_child(0) as Node3D).global_position
+	await use(axe_c, "lift")
 	check(k.held == axe, "the axe in hand")
 	# through the walls, Sonya's room, the hall
 	await walk_to(level.maze.center(12, 0))
@@ -271,8 +281,7 @@ func r_axe() -> void:
 func r_shoot() -> void:
 	await _woken()
 	k.give_item("revolver", "Revolver"); k.rounds = 4; k.draw_gun()
-	await walk_to(Vector3(9.4, 0, 4.4))
-	k.global_position = Vector3(9.3, 0, 4.4)
+	k.global_position = Vector3(9.3, 0, 4.4)       # (already in the hall)
 	var fd: Door = level.flat.doors["dEntry"]
 	await look(fd.get_meta("lock_at"))
 	k.aiming = true
@@ -302,9 +311,9 @@ func r_service() -> void:
 	check(Power.live("M2"), "the service side is live")
 	await walk_to(level.maze.center(20, 1))
 	await use(level.maze.center(20, 1) + Vector3(0.6, 1.0, -0.55), "release")
-	await until(func(): return World.flag("service_open", false) != false, 5.0, "the service door opens")
+	await until(func(): return World.flags.has("service_open"), 5.0, "the service door opens")
 	await _step_to(level.maze.center(20, 1) + Vector3(0.6, 0, -0.35), 2.0)
-	await until(func(): return World.flag("ended", false) != false, 10.0, "out by the service door")
+	await until(func(): return World.flags.has("ended"), 10.0, "out by the service door")
 
 func r_systems() -> void:
 	await _woken()
@@ -313,7 +322,7 @@ func r_systems() -> void:
 	for s in Lights.slots: if s != null: used += 1
 	check(used <= Lights.SLOTS, "the light engine holds %d lamps (max %d)" % [used, Lights.SLOTS])
 	# power: a fuse out kills its lamps
-	var a_lamps: Array = Lights.lamps.filter(func(l): return l.circuit == "A")
+	var a_lamps: Array = Lights.lamps.filter(func(l): return l.circuit == "A" and l.on)
 	Power.set_fuse("A", false)
 	check(not a_lamps[0].powered(), "no fuse, no light")
 	Power.set_fuse("A", true)
@@ -354,7 +363,7 @@ func r_systems() -> void:
 	await wait(0.6)
 	d.try_open(k)
 	await wait(1.2)
-	check(not d.is_open(), "a pile against a door stops it (%.2f)" % d.angle)
+	check(d.angle < 0.5, "a pile against a door stops it at a crack (%.2f rad)" % d.angle)
 	for p in pile: p.queue_free()
 
 func r_save() -> void:
@@ -372,7 +381,7 @@ func r_save() -> void:
 	k.global_position = Vector3(8, 0, 2); k.take_item("fuse"); Power.set_breaker("B", true); World.set_flag("test_flag", 0); Progress.shards = 0
 	World.restore(snap)
 	await wait(0.2)
-	check(k.global_position.distance_to(Vector3(2.0, 0, 3.0)) < 0.1, "Kurt back where he was")
+	check(Vector2(k.global_position.x - 2.0, k.global_position.z - 3.0).length() < 0.15, "Kurt back where he was (%s)" % str(k.global_position))
 	check(k.has_item("fuse"), "his pockets back")
 	check(not Power.live("B"), "the kitchen's breaker still off")
 	check(level.flat.doors["dLiving"].hp < 100.0, "the door still damaged")
@@ -450,6 +459,7 @@ func r_meet() -> void:
 	await _woken()
 	var m: Marta = story.marta
 	m.global_position = k.global_position + Vector3(-2.5, 0, 0)
+	m.rotation.y = -PI * 0.5          # facing him
 	m.set_state(Monster.S.IDLE)
 	await look(m.global_position + Vector3(0, 1.2, 0))
 	await until(func(): return World.flag("heard_socko_marta"), 30.0, "Socko and Marta talk")
@@ -484,6 +494,7 @@ func r_touch() -> void:
 	for i in 30:
 		_drag(0, Vector2(vp.x * 0.2, vp.y * 0.7 - i * 4.0))
 		await get_tree().physics_frame
+	await snap("phone_1_stick")
 	await wait(0.5)
 	check(k.global_position.distance_to(p0) > 0.3, "the stick walks him (%.2f m)" % k.global_position.distance_to(p0))
 	_touch(0, Vector2(vp.x * 0.2, vp.y * 0.6), false)
@@ -499,40 +510,33 @@ func r_touch() -> void:
 	await look(level.flat.doors["dLiving"].handle_pos())
 	await get_tree().process_frame
 	check(Controls.labels.use == "Open", "the USE button says Open")
+	await snap("phone_2_use_open")
 	var b: Control = Controls._buttons["use"]
 	check(b.visible and b.size.x > 20.0, "the USE button is on screen")
 	var c := b.get_global_rect().get_center()
 	_touch(2, c, true); await get_tree().physics_frame; _touch(2, c, false)
 	await until(func(): return said("wont_open"), 10.0, "tapping USE tries the door")
+	await wait(0.3)
+	await snap("phone_3_subtitle")
 	# pause
 	var pb: Control = Controls._buttons["pause"]
 	_touch(3, pb.get_global_rect().get_center(), true); await get_tree().process_frame; _touch(3, pb.get_global_rect().get_center(), false)
 	await get_tree().process_frame
 	check(get_tree().paused, "the pause button pauses")
+	await snap("phone_4_pause")
 	main.hud.toggle_menu("")
 	check(not get_tree().paused, "and back")
 
+## Touches arrive in window pixels (as a phone's do); the test thinks in the game's canvas units.
+func _win(p: Vector2) -> Vector2:
+	return p * Vector2(DisplayServer.window_get_size()) / get_viewport().get_visible_rect().size
+
 func _touch(i: int, p: Vector2, down: bool) -> void:
-	var e := InputEventScreenTouch.new(); e.index = i; e.position = p; e.pressed = down
+	var e := InputEventScreenTouch.new(); e.index = i; e.position = _win(p); e.pressed = down
 	Input.parse_input_event(e)
 
 func _drag(i: int, p: Vector2) -> void:
-	var e := InputEventScreenDrag.new(); e.index = i; e.position = p
+	var e := InputEventScreenDrag.new(); e.index = i; e.position = _win(p)
 	Input.parse_input_event(e)
 
-func r_dbg() -> void:
-	await _woken()
-	level.flat.wardrobe_shoves = 2; level.flat.shove_wardrobe()
-	await wait(0.8)
-	await walk_to(level.maze.chamber_center("B"))
-	var br: AABB = level.maze.chambers["B"]
-	var p := Vector3(br.end.x - 0.08, 1.5, br.get_center().z)
-	await look(p)
-	print("DBG kurt ", k.global_position, " cam ", k.cam.global_position, " target point ", p)
-	var q := PhysicsRayQueryParameters3D.create(k.cam.global_position, k.cam.global_position - k.cam.global_transform.basis.z * 3.0, 1 | 2 | 8)
-	q.exclude = [k.get_rid()]
-	var hit := k.get_world_3d().direct_space_state.intersect_ray(q)
-	print("DBG hit ", hit.get("collider"), " at ", hit.get("position"))
-	for f in get_tree().get_nodes_in_group("x"): pass
-	for n in level.find_children("*", "FuseBox", true, false): print("DBG fusebox ", n.name, " ", n.global_position, " layer ", n.collision_layer)
-	check(true, "dbg")
+

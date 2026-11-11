@@ -60,6 +60,12 @@ func build(k: Kurt) -> void:
 		m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		for i in m.get_surface_override_material_count():
 			_tune(m.get_surface_override_material(i))
+		if m.material_override is BaseMaterial3D:
+			# the googly eyes are plain materials: put them on the game's lighting, bright (they're white)
+			var conv := (Mats.convert(m.material_override, -1) as ShaderMaterial).duplicate() as ShaderMaterial
+			conv.set_shader_parameter("snap", 0.0)
+			conv.set_shader_parameter("self_lit", 0.6)
+			m.material_override = conv
 		_tune(m.material_override)
 		if m.mesh:
 			for i in m.mesh.get_surface_count():

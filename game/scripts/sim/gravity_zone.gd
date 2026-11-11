@@ -38,9 +38,13 @@ func _refresh() -> void:
 	monitoring = true
 	gravity_space_override = Area3D.SPACE_OVERRIDE_REPLACE if active() else Area3D.SPACE_OVERRIDE_DISABLED
 	gravity_direction = vector; gravity = strength
-	if active():
-		for b in get_overlapping_bodies():
-			if b is Prop: (b as Prop).wake(); (b as RigidBody3D).sleeping = false
+	# whichever way it changed, everything in here has to notice
+	for b in get_overlapping_bodies():
+		if b is Prop: (b as Prop).wake()
+		if b is RigidBody3D: (b as RigidBody3D).sleeping = false
+	if not active():
+		World.emit_event("gravity_back", {"zone": self})
+		Noises.make(box.get_center(), 22.0, "crash", self)
 
 static func gravity_at(p: Vector3) -> Vector3:
 	for z in all:

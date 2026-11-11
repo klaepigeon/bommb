@@ -1,10 +1,14 @@
 # HYSTERIA
 
-**The game is now `game/`, an Android-first rebuild in Godot 4.7, starting with Scene A.** See
-[`game/README.md`](game/README.md). Install `dist/Hysteria.apk`.
+**The game is `game/`: rebuild 3, Godot 4.7, Android first.** Scene A as written, then the walls
+behind the wardrobe: an enclosed maze where Marta hunts, with the Super, the porter, the
+lamplighter and the white figures, and every way out of the flat there is. See
+[`game/README.md`](game/README.md) and [`game/docs/DESIGN.md`](game/docs/DESIGN.md). Install
+`dist/Hysteria.apk`.
 
-Older code kept for reference: `legacy/hysteria/` (the previous Godot project) and, below, the
-original browser build (`src/`, `dist/index.html`, `dist/Flat47.apk`).
+Older code kept for reference: `legacy/game_v2/` (rebuild 2: the town), `legacy/hysteria/` (the
+first Godot project) and, below, the original browser build (`src/`, `dist/index.html`,
+`dist/Flat47.apk`), whose painted flat the new game is built in.
 
 ---
 

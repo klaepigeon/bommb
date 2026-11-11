@@ -72,6 +72,30 @@ func build() -> void:
 	cam.add_child(hand_anchor)
 	Controls.pressed.connect(_on_pressed)
 	World.register("kurt", _save, _load)
+	_revolver()
+
+var gun_model: Node3D
+var _recoil := 0.0
+
+## The Nagant, low-poly, in his right hand: frame, cylinder, long barrel, a hand round the grip.
+func _revolver() -> void:
+	gun_model = Node3D.new(); gun_model.name = "Revolver"
+	cam.add_child(gun_model)
+	var k := Kit.new()
+	var steel := Mats.tex(Tex.get_tex("metal"), -1, Color(0.55, 0.55, 0.6))
+	var wood := Mats.tex(Tex.get_tex("floorboards"), -1, Color(0.9, 0.6, 0.45))
+	var skin := Mats.tex(Tex.get_tex("skin_pale"), -1, Color(0.95, 0.8, 0.72))
+	k.box(steel, Vector3(0, 0.02, -0.12), Vector3(0.022, 0.022, 0.2))        # barrel
+	k.box(steel, Vector3(0, 0.0, -0.01), Vector3(0.042, 0.042, 0.045))      # cylinder
+	k.box(steel, Vector3(0, 0.005, 0.025), Vector3(0.026, 0.05, 0.05))      # frame
+	k.box(wood, Vector3(0, -0.05, 0.05), Vector3(0.028, 0.08, 0.035), Basis(Vector3.RIGHT, 0.35))
+	k.box(skin, Vector3(0.006, -0.055, 0.06), Vector3(0.05, 0.075, 0.06), Basis(Vector3.RIGHT, 0.35))   # the hand
+	k.box(Mats.tex(Tex.get_tex("cloth"), -1, Color(0.35, 0.33, 0.3)), Vector3(0.02, -0.1, 0.2), Vector3(0.08, 0.08, 0.25), Basis(Vector3.RIGHT, 0.5))  # the sleeve
+	for mi in k.commit(gun_model, "Gun"):
+		var m := (mi.material_override as ShaderMaterial).duplicate() as ShaderMaterial
+		m.set_shader_parameter("snap", 0.0); m.set_shader_parameter("ambient", Vector3(0.28, 0.26, 0.25))
+		mi.material_override = m
+	gun_model.visible = false
 
 # ------------------------------------------------------------------------------------- moving
 func _physics_process(delta: float) -> void:
@@ -79,9 +103,10 @@ func _physics_process(delta: float) -> void:
 	if _mantle_t >= 0.0:
 		_mantle(delta); return
 	# look
+	var lk := Controls.take_look()
 	if not look_locked:
-		yaw -= Controls.look.x
-		pitch = clampf(pitch - Controls.look.y, -1.45, 1.4)
+		yaw -= lk.x
+		pitch = clampf(pitch - lk.y, -1.45, 1.4)
 	rotation.y = yaw
 	head.rotation.x = pitch + _kick_cam
 	_kick_cam = move_toward(_kick_cam, 0.0, delta * 1.6)
@@ -95,6 +120,7 @@ func _physics_process(delta: float) -> void:
 		wish = (global_transform.basis * Vector3(m.x, 0, -m.y))
 		wish.y = 0
 	var water := WaterBody.depth_anywhere(global_position + Vector3(0, 0.02, 0))
+	_auto_duck(wish)
 	var want_crouch := crouching
 	_eye = move_toward(_eye, EYE_CROUCH if want_crouch else EYE, delta * 3.2)
 	head.position.y = _eye
@@ -144,6 +170,24 @@ func _physics_process(delta: float) -> void:
 	_aim()
 	_carry(delta)
 	_body(delta)
+
+## He ducks into a low opening without being told (and stands again once there's room).
+var _ducked := false
+func _auto_duck(wish: Vector3) -> void:
+	var space := get_world_3d().direct_space_state
+	if wish.length() > 0.2:
+		var fwd := wish.normalized()
+		var hi := PhysicsRayQueryParameters3D.create(global_position + Vector3(0, 1.5, 0), global_position + Vector3(0, 1.5, 0) + fwd * 0.55, 1)
+		var lo := PhysicsRayQueryParameters3D.create(global_position + Vector3(0, 0.8, 0), global_position + Vector3(0, 0.8, 0) + fwd * 0.75, 1)
+		hi.exclude = [get_rid()]; lo.exclude = [get_rid()]
+		if not crouching and not space.intersect_ray(hi).is_empty() and space.intersect_ray(lo).is_empty():
+			crouching = true; _ducked = true
+			return
+	if _ducked and crouching:
+		var up := PhysicsRayQueryParameters3D.create(global_position + Vector3(0, 1.0, 0), global_position + Vector3(0, 1.9, 0), 1)
+		up.exclude = [get_rid()]
+		if space.intersect_ray(up).is_empty():
+			crouching = false; _ducked = false
 
 func _footstep(water: float) -> void:
 	var loud := 7.0 if running else (1.2 if crouching else 3.2)
@@ -258,9 +302,13 @@ func _aim() -> void:
 			target = h2.collider
 			target_verbs = [{"id": "_pull", "label": "Pull"}]
 	if held:
+		# with something in his hand: what it's for here first; else whatever he's looking at (one
+		# hand's enough for a door or a switch); else put it down / throw it
 		var hv: Array = [{"id": "_drop", "label": "Put down"}, {"id": "_throw", "label": "Throw"}]
 		if target_verbs.size() > 0 and target_verbs[0].get("held", false):
-			hv = [target_verbs[0], {"id": "_throw", "label": "Throw"}]
+			hv = [target_verbs[0], {"id": "_drop", "label": "Put down"}]
+		elif target_verbs.size() > 0 and not (target is Prop):
+			hv = [target_verbs[0], {"id": "_drop", "label": "Put down"}]
 		target_verbs = hv
 	_labels()
 
@@ -435,6 +483,13 @@ func _body(delta: float) -> void:
 			Audio.play("reload", global_position, -8.0)
 			if rounds < 7 and spare > 0: _reload_t = 0.55 if not Progress.has("quick_reload") else 0.28
 	cam.fov = lerpf(cam.fov, 50.0 if aiming else 72.0, minf(delta * 8.0, 1.0))
+	gun_model.visible = gun_out
+	_recoil = move_toward(_recoil, 0.0, delta * 4.0)
+	var bob := sin(_bob * 0.5) * 0.006
+	var rest := Vector3(0.02, -0.11, -0.3) if aiming else Vector3(0.16, -0.17 + bob, -0.36)
+	if _reload_t > 0.0: rest += Vector3(-0.06, -0.04, 0.05)
+	gun_model.position = gun_model.position.lerp(rest + Vector3(0, _recoil * 0.03, _recoil * 0.06), minf(delta * 14.0, 1.0))
+	gun_model.rotation = Vector3(_recoil * 0.4 + (0.5 if _reload_t > 0.0 else 0.0), 0.05 if not aiming else 0.0, 0.6 if _reload_t > 0.0 else 0.0)
 
 # -------------------------------------------------------------------------------- the revolver
 func draw_gun() -> void:
@@ -457,6 +512,7 @@ func fire() -> void:
 	rounds -= 1
 	_fire_cd = 0.45
 	_kick_cam = 0.09
+	_recoil = 1.0
 	Audio.play("gunshot", global_position, 2.0, randf_range(0.95, 1.05))
 	Noises.make(global_position, 45.0, "gunshot", self)
 	var from := cam.global_position
