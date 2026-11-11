@@ -8,6 +8,10 @@ extends CanvasLayer
 var main: Node
 var fade: ColorRect
 var dot: Control
+var _focus := 0.0              ## 0 nothing, 1 something to do (the dot opens into a ring)
+var _hit_t := 0.0              ## a hit marker, fading
+var _hit_head := false
+var _use_t := 0.0              ## the ring pulses when he does something
 var look_line: Label
 var reader: PanelContainer
 var reader_text: RichTextLabel
@@ -25,7 +29,7 @@ func setup(m: Node) -> void:
 	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(fade)
 	dot = Control.new(); dot.set_anchors_preset(Control.PRESET_CENTER); dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	dot.draw.connect(func(): dot.draw_circle(Vector2.ZERO, 2.0, Color(1, 1, 1, 0.55)))
+	dot.draw.connect(_draw_dot)
 	add_child(dot)
 	look_line = Label.new(); look_line.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	look_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; look_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -98,17 +102,43 @@ func fade_to(a: float, secs: float) -> void:
 	var tw := create_tween(); tw.tween_property(fade, "color:a", a, secs)
 	await tw.finished
 
+## The dot: opens into a ring when there's something to do (and pulses when he does it), a small
+## cross while the gun's up, and a hit marker when a shot lands (bigger for the head).
+func _draw_dot() -> void:
+	var k = main.kurt if main else null
+	var a := 0.6
+	if k and k.gun_out:
+		var g := 6.0 if k.aiming else 10.0
+		for d in [Vector2(1, 0), Vector2(-1, 0), Vector2(0, 1), Vector2(0, -1)]:
+			dot.draw_line(d * g * 0.45, d * g, Color(1, 1, 1, 0.7), 1.5)
+	else:
+		var r := lerpf(2.0, 7.0, _focus) + _use_t * 4.0
+		if _focus < 0.35: dot.draw_circle(Vector2.ZERO, 2.0, Color(1, 1, 1, a))
+		else: dot.draw_arc(Vector2.ZERO, r, 0.0, TAU, 24, Color(1, 0.95, 0.85, a * _focus), 1.6, true)
+	if _hit_t > 0.0:
+		var s := (9.0 if _hit_head else 6.0) + (1.0 - _hit_t) * 4.0
+		var c := Color(1, 0.35, 0.25, _hit_t) if _hit_head else Color(1, 1, 1, _hit_t)
+		for d in [Vector2(1, 1), Vector2(-1, 1), Vector2(1, -1), Vector2(-1, -1)]:
+			dot.draw_line(d.normalized() * s * 0.45, d.normalized() * s, c, 2.0)
+
 func _process(delta: float) -> void:
 	_look_t -= delta
 	look_line.modulate.a = clampf(_look_t, 0.0, 1.0) * 0.85
 	_notice_t -= delta
 	notice.modulate.a = clampf(_notice_t, 0.0, 1.0)
 	var k = main.kurt if main else null
-	dot.visible = k != null and (k.target_verbs.size() > 0 or k.gun_out) and not reader.visible
+	var want_focus := 1.0 if k != null and k.target_verbs.size() > 0 else 0.0
+	_focus = move_toward(_focus, want_focus, delta * 7.0)
+	_hit_t = maxf(_hit_t - delta * 3.0, 0.0)
+	_use_t = maxf(_use_t - delta * 4.0, 0.0)
+	dot.visible = k != null and not reader.visible and (_focus > 0.01 or k.gun_out or _hit_t > 0.0)
+	if dot.visible: dot.queue_redraw()
 	if k and k.target and String(Settings.get_v("prompts")) == "text" and k.target_verbs.size() > 0 and _look_t <= 0.0:
 		look_line.text = String(k.target_verbs[0].label); look_line.modulate.a = 0.6
 
 func _on_event(name: String, d: Dictionary) -> void:
+	if name == "used": _use_t = 1.0
+	if name == "hit_marker": _hit_t = 1.0; _hit_head = bool(d.get("head", false))
 	match name:
 		"read":
 			var doc: Dictionary = main.level.flat.docs.get(d.doc, {})
@@ -196,11 +226,11 @@ func _pause_menu() -> void:
 		["Brightness", "brightness", [0.8, 1.0, 1.2, 1.4, 1.6]],
 		["Subtitle size", "subtitle_size", [0.75, 1.0, 1.25, 1.5, 1.75]],
 		["Subtitles", "subtitles", [true, false]],
-		["Voices", "voices", [true, false]],
 		["Socko and the stick on the", "socko_side", ["left", "right"]],
 		["Prompts", "prompts", ["socko", "text"]],
 		["Buttons", "hud_opacity", [1.0, 0.6, 0.3]],
 		["Invert look", "invert_y", [false, true]],
+		["Screen shake", "screen_shake", [1.0, 0.5, 0.0]],
 		["Picture", "quality", ["auto", "low", "high"]],
 		["Volume", "master_volume", [1.0, 0.7, 0.4, 0.0]],
 	]

@@ -32,6 +32,7 @@ var level: Node                    ## the level: zone_of(), surface_of()
 var target: Object = null          ## what he's looking at (has get_verbs)
 var target_verbs: Array = []
 var aim_point := Vector3.ZERO      ## where the look ray hit
+var look_sway := Vector2.ZERO      ## how fast he's turning (the gun and the hand lag behind it)
 var arm: FPArm
 var held: Prop = null
 var pockets: Array = []            ## [{id, title, desc, key}]
@@ -117,11 +118,15 @@ func _physics_process(delta: float) -> void:
 	if climbing: return
 	# look
 	var lk := Controls.take_look()
+	look_sway = look_sway.lerp(Vector2(clampf(lk.x / maxf(delta, 0.001) * 0.004, -0.06, 0.06), clampf(lk.y / maxf(delta, 0.001) * 0.004, -0.05, 0.05)), minf(delta * 10.0, 1.0))
 	if not look_locked:
 		yaw -= lk.x
 		pitch = clampf(pitch - lk.y, -1.45, 1.4)
 	rotation.y = yaw
-	head.rotation.x = pitch + _kick_cam
+	var fo: Array = Feel.offset()
+	head.rotation.x = pitch + _kick_cam + fo[0].x
+	cam.rotation = Vector3(0, fo[0].y, fo[0].z)
+	cam.position = fo[1]
 	_kick_cam = move_toward(_kick_cam, 0.0, delta * 1.6)
 	# the body
 	var g := GravityZone.gravity_at(global_position + Vector3(0, 0.9, 0))
@@ -224,6 +229,7 @@ func _land(v: float) -> void:
 	Audio.play("thud", global_position, -8.0 + hard * 8.0)
 	Noises.make(global_position, 4.0 + hard * 10.0, "land", self)
 	_kick_cam = -0.05 - hard * 0.08
+	Feel.shake(0.1 + hard * 0.45)
 	if hard > 0.6: hurt(hard * 25.0, null)
 
 ## Kurt doesn't stop for clutter: light things he walks into are kicked clear (a noise); heavier
@@ -384,6 +390,7 @@ func use_verb(i: int) -> void:
 		_:
 			if target:
 				reached.emit(aim_point, id)
+				World.emit_event("used", {"verb": id})
 				target.act(id, self)
 
 func _on_pressed(a: String) -> void:
@@ -502,6 +509,8 @@ func hurt(amount: float, by) -> void:
 	hp = maxf(hp - amount, 0.0)
 	_regen_t = 6.0
 	_kick_cam = 0.06
+	Feel.shake(clampf(amount / 30.0, 0.15, 0.8))
+	Feel.fov_punch(-4.0)
 	Audio.play("hit", global_position, -4.0)
 	hurt_changed.emit(hp)
 	World.emit_event("hurt", {"amount": amount, "by": by, "hp": hp})
@@ -525,14 +534,17 @@ func _body(delta: float) -> void:
 			rounds += 1; spare -= 1
 			Audio.play("reload", global_position, -8.0)
 			if rounds < 7 and spare > 0: _reload_t = 0.55 if not Progress.has("quick_reload") else 0.28
-	cam.fov = lerpf(cam.fov, 50.0 if aiming else 72.0, minf(delta * 8.0, 1.0))
+	var base_fov := 50.0 if aiming else (77.0 if running and velocity.length() > 2.5 else 72.0)
+	cam.fov = lerpf(cam.fov, base_fov, minf(delta * 6.0, 1.0)) + Feel.fov_kick * minf(delta * 30.0, 1.0)
 	gun_model.visible = gun_out
 	_recoil = move_toward(_recoil, 0.0, delta * 4.0)
 	var bob := sin(_bob * 0.5) * 0.006
 	var rest := Vector3(0.02, -0.11, -0.3) if aiming else Vector3(0.16, -0.17 + bob, -0.36)
 	if _reload_t > 0.0: rest += Vector3(-0.06, -0.04, 0.05)
-	gun_model.position = gun_model.position.lerp(rest + Vector3(0, _recoil * 0.03, _recoil * 0.06), minf(delta * 14.0, 1.0))
-	gun_model.rotation = Vector3(_recoil * 0.4 + (0.5 if _reload_t > 0.0 else 0.0), 0.05 if not aiming else 0.0, 0.6 if _reload_t > 0.0 else 0.0)
+	var sway := Vector3(-look_sway.x, look_sway.y, 0.0) * (0.35 if aiming else 1.0)
+	var move_bob := Vector3(sin(_bob * 0.5) * 0.008, -absf(cos(_bob * 0.5)) * 0.006, 0.0) * (0.3 if aiming else 1.0)
+	gun_model.position = gun_model.position.lerp(rest + sway + move_bob + Vector3(0, _recoil * 0.03, _recoil * 0.06), minf(delta * 14.0, 1.0))
+	gun_model.rotation = Vector3(_recoil * 0.4 + (0.5 if _reload_t > 0.0 else 0.0) + look_sway.y * 1.5, (0.05 if not aiming else 0.0) + look_sway.x * 2.0, (0.6 if _reload_t > 0.0 else 0.0) + look_sway.x * 1.2)
 
 # -------------------------------------------------------------------------------- the revolver
 func draw_gun(which := "") -> void:
@@ -566,6 +578,7 @@ func fire() -> void:
 	_fire_cd = 0.45
 	_kick_cam = 0.09
 	_recoil = 1.0
+	Feel.shake(0.3); Feel.fov_punch(3.0)
 	Audio.play("gunshot", global_position, 2.0, randf_range(0.95, 1.05))
 	Noises.make(global_position, 45.0, "gunshot", self)
 	var from := cam.global_position
@@ -580,6 +593,8 @@ func fire() -> void:
 	var o = hit.collider
 	if o.has_meta("monster"):
 		o.get_meta("monster").shot(String(o.get_meta("part")), self, hit.position)
+		Feel.hitstop(0.06 if String(o.get_meta("part")) == "head" else 0.035)
+		World.emit_event("hit_marker", {"head": String(o.get_meta("part")) == "head"})
 	elif o is Prop:
 		(o as Prop).wake()
 		(o as Prop).apply_impulse(dir * 4.0, hit.position - (o as Prop).global_position)
@@ -595,6 +610,7 @@ func _fire_shotgun() -> void:
 		Audio.play("dryfire", global_position, -4.0); _fire_cd = 0.3; return
 	barrels -= 1
 	_fire_cd = 0.35; _kick_cam = 0.16; _recoil = 1.4
+	Feel.shake(0.5); Feel.fov_punch(5.0)
 	Audio.play("gunshot", global_position, 5.0, 0.75)
 	Noises.make(global_position, 55.0, "gunshot", self)
 	var space := get_world_3d().direct_space_state
@@ -613,6 +629,8 @@ func _fire_shotgun() -> void:
 				hit_m[key] = true
 				m.shot(String(o.get_meta("part")), self, hit.position)
 				if cam.global_position.distance_to(hit.position) < 3.0 and m.state != Monster.S.DEAD: m.shot("body", self, hit.position)
+				Feel.hitstop(0.07)
+				World.emit_event("hit_marker", {"head": String(o.get_meta("part")) == "head"})
 		elif o is Prop:
 			(o as Prop).wake(); (o as Prop).apply_impulse(dir * 2.0, hit.position - (o as Prop).global_position)
 			if (o as Prop).breakable: (o as Prop).shatter()

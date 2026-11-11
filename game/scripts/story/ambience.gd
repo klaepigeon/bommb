@@ -33,7 +33,7 @@ func setup(p_story) -> void:
 	_pressure = AudioStreamPlayer.new(); _pressure.stream = Audio.stream("pressure")
 	_pressure.volume_db = -80.0; _pressure.bus = "Master"
 	add_child(_pressure); _pressure.play()
-	_make_dust()
+	if not bool(Settings.get_v("safe_mode")): _make_dust()
 
 ## Which profile a place uses: a Place's own "ambience", else the place id itself (47, maze, stairs).
 func profile_for(place: String) -> String:

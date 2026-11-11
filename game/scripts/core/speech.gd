@@ -88,15 +88,17 @@ func _apply_size() -> void:
 	_label.custom_minimum_size.x = minf(vp.x * 0.72, size * 34.0)
 
 func _tts_available() -> bool:
+	if not bool(Settings.get_v("voices")) or bool(Settings.get_v("safe_mode")): return false   # don't even wake the TTS engine
 	if _tts_ok < 0:
 		_tts_ok = 0
+		Log.mark("tts init")
 		if OS.has_feature("mobile") or OS.get_name() in ["Windows", "macOS"]:
 			var v := DisplayServer.tts_get_voices()
 			_tts_ok = 1 if v.size() > 0 else 0
 			if _tts_ok == 1:
 				DisplayServer.tts_set_utterance_callback(DisplayServer.TTS_UTTERANCE_ENDED, func(_id): _tts_done = true)
 				DisplayServer.tts_set_utterance_callback(DisplayServer.TTS_UTTERANCE_CANCELED, func(_id): _tts_done = true)
-	return _tts_ok == 1 and bool(Settings.get_v("voices"))
+	return _tts_ok == 1 and bool(Settings.get_v("voices")) and not bool(Settings.get_v("safe_mode"))
 
 func has_line(id: String) -> bool:
 	return lines.has(id)
@@ -140,6 +142,7 @@ func say(speaker: String, text: String, opts := {}) -> void:
 		var voices := DisplayServer.tts_get_voices_for_language("en")
 		var v := voices[0] if voices.size() > 0 else ""
 		_tts_done = false
+		Log.mark("tts")
 		DisplayServer.tts_speak(text.replace("...", ", "), v, int(ch.get("volume", 90)) * (60 if style == "quiet" else 100) / 100, float(ch.get("pitch", 1.0)), float(ch.get("rate", 1.0)), gen, true)
 	line_started.emit(speaker, text)
 	while gen == _gen and (_elapsed < _duration or not _tts_done):

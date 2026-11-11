@@ -12,8 +12,10 @@ var values := {
 	"prompts": "socko",         ## "socko": Socko points, the USE button names the verb; "text": also a line of text
 	"hud_opacity": 1.0,         ## the touch buttons
 	"master_volume": 1.0,
-	"voices": true,             ## text-to-speech for spoken lines
+	"voices": false,            ## text-to-speech for spoken lines (placeholder voices; off by default)
 	"quality": "auto",          ## auto / low / high (render scale)
+	"screen_shake": 1.0,        ## camera shake, hit-stop, fov kicks (0 = none)
+	"safe_mode": false,         ## after a crash: no voices, low picture, no particles or dust
 }
 const PATH := "user://settings.cfg"
 
@@ -22,6 +24,8 @@ func _ready() -> void:
 	if cf.load(PATH) == OK:
 		for k in values:
 			values[k] = cf.get_value("s", k, values[k])
+		if int(cf.get_value("s", "_v", 1)) < 2:
+			values["voices"] = false           # 1.3.1: placeholder TTS off (a crash risk on some phones)
 	_apply()
 
 func get_v(k: String):
@@ -32,6 +36,7 @@ func set_v(k: String, v) -> void:
 	var cf := ConfigFile.new()
 	for key in values:
 		cf.set_value("s", key, values[key])
+	cf.set_value("s", "_v", 2)
 	cf.save(PATH)
 	_apply()
 	changed.emit()

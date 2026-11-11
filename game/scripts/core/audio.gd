@@ -29,6 +29,8 @@ func play(name: String, at = null, db := 0.0, pitch := 1.0) -> void:
 	if s == null:
 		return
 	if at is Vector3:
+		if Feel.SHAKERS.has(name):
+			Feel.at(at, Feel.SHAKERS[name] * clampf(1.0 + db / 18.0, 0.3, 1.6))
 		var p: AudioStreamPlayer3D = null
 		for c in _pool:
 			if not c.playing: p = c; break

@@ -96,7 +96,8 @@ func _process(delta: float) -> void:
 		b = b.slerp(hand(from_sh, Vector3(0.25, 1, 0.1)), out)
 		pose = "reach" if _reach_t < 0.45 else ("grip" if _reach_verb in ["lift", "pocket", "take", "pick"] else "flat")
 		if _reach_t >= 1.0: _reach_t = -1.0
-	_w = _w.lerp(want, minf(1.0, delta * 11.0))
+	var sw: Vector2 = kurt.look_sway
+	_w = _w.lerp(want + Vector3(-sw.x * 0.8, sw.y * 0.8, 0.0), minf(1.0, delta * 11.0))
 	visible = _w.distance_to(REST) > 0.04
 	if not visible: return
 	rig.pose_name = pose

@@ -571,6 +571,7 @@ var travel: Callable
 
 func _travel(flat: String, from_landing: bool, via: String) -> void:
 	if kurt.frozen: return
+	Log.mark("travel %s %s %s" % [flat, "in" if from_landing else "out", via])
 	kurt.frozen = true
 	Audio.play("creak", kurt.global_position, -6.0)
 	await hud.fade_to(1.0, 0.3)
