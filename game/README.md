@@ -6,7 +6,8 @@ that won't let you go until you've been everywhere it wants you to see. Design, 
 [`docs/DESIGN.md`](docs/DESIGN.md). Development log: [`docs/DEVLOG.md`](docs/DEVLOG.md). Adding to it (a place, a creature, a line,
 a sound): [`docs/EXPANDING.md`](docs/EXPANDING.md).
 
-Install `../dist/Hysteria.apk` (arm64, Android 7+, signed with the repo's key, so it installs over
+Install `../dist/Hysteria.apk` (OpenGL ES; or `../dist/Hysteria-vulkan.apk`, the same game on Vulkan,
+installed as a separate app, HYSTERIA VK, for phones whose OpenGL driver misbehaves) (arm64, Android 7+, signed with the repo's key, so it installs over
 earlier builds).
 
 ## Controls
@@ -45,6 +46,7 @@ godot --path . -- --gallery --shots=DIR   # every creature, rendered
 tools/test.sh poke kick        # some routes
 tools/phone.sh DIR             # the phone: GLES 3, 2340x1080, real multi-touch; screenshots in DIR
 tools/build_apk.sh             # ../dist/Hysteria.apk, signed, or it fails
+tools/build_apk_vulkan.sh      # ../dist/Hysteria-vulkan.apk (Vulkan Mobile renderer, separate app)
 godot --path . -- --start=knock|wake|wardrobe|maze|gun    # start somewhere
 godot --path . -- --autotest --route=arm --shots=DIR      # Kurt's free arm (needs a display)
 godot --path . -- --views="x,y,z,yaw,pitch;..." --shots=DIR # render views
