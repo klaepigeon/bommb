@@ -112,6 +112,23 @@ each goes back by itself (a clunk, heard from anywhere) when Kurt reaches the he
 | **The street door** | Four bolts | All four back: **Go out**, into the white. The end card says what happened to Marta, what Kurt remembered, how far the infection got, and what Socko is to him now |
 
 
+## 4c. Atmosphere
+
+`Ambience` (scripts/story/ambience.gd, data in content/ambience.json) owns the building's air:
+per-place looping beds crossfaded as Kurt moves (shared loops carry over), the fog of each place,
+and one-shot sounds around him on random timers: pipes in the walls, someone walking in the flat
+above, three knocks below, a door far down the stairwell, the drip in 47's bathroom, whispering in
+the maze walls. They hold off while anyone is speaking or anything is hunting; then the tension
+layer (heartbeat quickening, pressure) rises with the nearest hunter's distance and the beds dip.
+Dust hangs round Kurt and only shows where light falls on it. 47's hall telephone is off the hook
+(the engaged tone); hang it up and later it rings, loud enough to bring things. Wind on the balcony.
+
+## 4d. Room to grow
+
+Places are data (content/places.json) + a `Place` script; the street door's bolts, the landings,
+arrival points, fog and ambience all come from there. See docs/EXPANDING.md for places,
+creatures, lines, skills, sounds and the tests to add with them.
+
 ## 5. Progression
 
 Two currencies, two trees (`content/skills.json`). **Memories** come from understanding (reading

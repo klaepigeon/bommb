@@ -676,3 +676,40 @@ func r_kick51() -> void:
 	check(World.flags.has("51_open"), "four kicks and 51's chain gives")
 	await use(d, "in")
 	await until(func(): return level.place_of(k.global_position) == "51" and not k.frozen, 5.0, "into 51 the hard way")
+
+## The air: each place has its own bed and fog, events happen around Kurt, a hunter raises the
+## tension and hushes the rest, the phone in the hall can be hung up and rings.
+func r_atmosphere() -> void:
+	await _woken()
+	var amb: Ambience = story.ambience
+	for f in story.figures: story._dormant(f, true)
+	story._dormant(story.super_, true)
+	k.global_position = Vector3(8.6, 0, 4.5)
+	await wait(0.5)
+	check(amb.profile_id == "47", "47 sounds like 47 (%s)" % amb.profile_id)
+	k.global_position = level.point("stair_4")
+	await wait(3.0)
+	check(amb.profile_id == "stairs", "the stairwell sounds like the stairwell (%s)" % amb.profile_id)
+	var p48: Place = level.places["48"]
+	k.global_position = p48.arrive()[0]
+	await wait(3.0)
+	check(amb.profile_id == "draft", "48 has its own air (%s)" % amb.profile_id)
+	check(Lights.fog_color.r > 0.4, "48's fog is white (%.2f)" % Lights.fog_color.r)
+	var heard := []
+	var on_ev := func(n, d): if n == "ambience": heard.append(d.sound)
+	World.event.connect(on_ev)
+	amb.fire({"sound": "steps_above", "where": "above", "db": -20}, k.global_position)
+	check(heard.size() == 1 and amb.where({"where": "above"}, k.global_position).y > k.global_position.y + 3.0, "someone walking upstairs")
+	World.event.disconnect(on_ev)
+	# a hunter makes the building hold its breath
+	story._dormant(story.super_, false)
+	story.super_.global_position = k.global_position + Vector3(-3, 0, 0)
+	story.super_.set_state(Monster.S.HUNT)
+	await wait(1.0)
+	check(amb.tension > 0.3 and amb.quiet(), "being hunted: tension up, the building quiet (%.2f)" % amb.tension)
+	story._dormant(story.super_, true)
+	# the phone
+	k.global_position = Vector3(9.0, 0, 4.4)
+	await wait(0.3)
+	check(await use(Vector3(9.55, 1.0, 5.1), "hang"), "the receiver goes back on its hook")
+	check(World.flag("phone47_hung"), "hung up")

@@ -247,5 +247,71 @@ func _make(name: String) -> AudioStream:
 		"rumble": return _wav(_mix(_noise(1.6, 200, 0.2, 0.5, 1.4), _tone(1.6, 45, 30, 0.6, 0.6)))
 		"gasp": return _wav(_noise(0.5, 2600, 0.03, 0.15, 0.7))
 		"hit": return _wav(_mix(_noise(0.3, 800, 0.001, 0.05, 1.4), _tone(0.3, 110, 60, 0.07, 0.8)))
+		"drip":
+			var a := _tone(0.25, 1400, 700, 0.04, 0.35)
+			return _wav(_mix(a, _tone(0.3, 900, 500, 0.08, 0.12), 0.06))
+		"engaged":
+			# a telephone off the hook: the engaged tone, 425 Hz, on and off
+			var a := _buf(1.0)
+			for i in a.size():
+				var t := float(i) / RATE
+				a[i] = sin(TAU * 425.0 * t) * 0.18 * (1.0 if fmod(t, 1.0) < 0.5 else 0.0)
+			return _wav(a, true)
+		"ring":
+			# an old bell telephone: two bursts of a hammered bell
+			var a := _buf(2.2)
+			for i in a.size():
+				var t := float(i) / RATE
+				var on := 1.0 if (t < 0.4 or (t > 0.6 and t < 1.0)) else 0.0
+				var hammer: float = 0.5 + 0.5 * signf(sin(TAU * 20.0 * t))
+				a[i] = (sin(TAU * 1100.0 * t) * 0.5 + sin(TAU * 1340.0 * t) * 0.3) * 0.35 * on * hammer
+			return _wav(a)
+		"wind":
+			var a := _buf(6.0); var y := 0.0; var y2 := 0.0
+			for i in a.size():
+				var t := float(i) / RATE
+				y += (_rng.randf_range(-1, 1) - y) * 0.02
+				y2 += (y - y2) * 0.05
+				a[i] = y2 * 6.0 * (0.6 + 0.4 * sin(t * TAU / 6.0) * sin(t * 0.7))
+			return _wav(a, true)
+		"steps_above":
+			var a := _buf(3.2)
+			for j in 6:
+				a = _mix(a, _mix(_noise(0.25, 250, 0.004, 0.06, 1.0), _tone(0.25, 60, 45, 0.07, 0.7)), j * 0.52 + _rng.randf() * 0.05)
+			return _wav(a)
+		"door_far":
+			var a := _mix(_noise(1.2, 300, 0.003, 0.25, 1.2), _tone(1.2, 55, 40, 0.3, 0.8))
+			return _wav(_mix(a, _noise(0.4, 1500, 0.001, 0.05, 0.3), 0.02))
+		"floor_creak":
+			var a := _buf(0.7); var ph := 0.0
+			for i in a.size():
+				var t := float(i) / RATE
+				ph += TAU * (90.0 + 40.0 * sin(t * 5.0)) / RATE
+				a[i] = (fmod(ph, TAU) / TAU - 0.5) * 0.3 * sin(PI * t / 0.7)
+			return _wav(a)
+		"whisper":
+			var a := _buf(2.0); var y := 0.0
+			for i in a.size():
+				var t := float(i) / RATE
+				y += (_rng.randf_range(-1, 1) - y) * (0.35 + 0.3 * sin(t * 23.0))
+				a[i] = y * 0.4 * sin(PI * t / 2.0) * (0.5 + 0.5 * sin(t * 9.0 + sin(t * 3.0) * 3.0))
+			return _wav(a)
+		"hum_low":
+			var a := _buf(4.0)
+			for i in a.size():
+				var t := float(i) / RATE
+				a[i] = (sin(TAU * 31.0 * t) * 0.2 + sin(TAU * 62.3 * t) * 0.07) * (0.85 + 0.15 * sin(t * TAU / 4.0))
+			return _wav(a, true)
+		"fluoro_buzz":
+			var a := _buf(1.0)
+			for i in a.size():
+				var t := float(i) / RATE
+				a[i] = (sin(TAU * 100.0 * t) * 0.06 + sin(TAU * 200.0 * t) * 0.03 + _rng.randf_range(-1, 1) * 0.01)
+			return _wav(a, true)
+		"child_count":
+			var a := _buf(3.0)
+			for j in 5:
+				a = _mix(a, _tone(0.22, 520 + j * 15, 480 + j * 15, 0.08, 0.12, 0.6), j * 0.55)
+			return _wav(a)
 	push_warning("Audio: no sound named " + name)
 	return null

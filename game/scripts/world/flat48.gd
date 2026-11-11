@@ -1,5 +1,5 @@
 class_name Flat48
-extends Node3D
+extends Place
 ## Flat 48, across the landing: Flat 47 as reality only sketched it. The same rooms in pale draft
 ## plaster, the room names pencilled on the walls, every piece of furniture a white block with a paper
 ## tag that says what it was like. The rule here: what something is, is what's written on it.
@@ -27,9 +27,8 @@ const RED := {
 const PLAN_ORDER := ["living", "bedroom", "kitchen", "hall", "storage", "child"]
 const ROOM_NAME := {"living": "living room", "bedroom": "bedroom", "kitchen": "kitchen", "hall": "hall", "storage": "box room", "child": "Sonya's room"}
 
-var data: Dictionary
+var puzzle: Dictionary          ## content/flat48.json
 var flat47: Flat47
-var story
 var blocks := {}               ## collider index -> {node, word, tag, real, mesh}
 var wall_words: Array = []     ## the notes still on the "what it is" wall
 var wall_i := 0
@@ -42,10 +41,10 @@ var _wall_lbl: Label3D
 var _door_lbl: Label3D
 var _plan_lbls := {}
 
-func build(p_flat47: Flat47) -> void:
-	flat47 = p_flat47
+func build_content() -> void:
+	flat47 = level.flat
 	name = "Flat48"
-	data = JSON.parse_string(FileAccess.get_file_as_string("res://content/flat48.json"))
+	puzzle = JSON.parse_string(FileAccess.get_file_as_string("res://content/flat48.json"))
 	_draft = Mats.tex(Tex.get_tex("draft"), ZONE).duplicate() as ShaderMaterial
 	_draft.set_shader_parameter("ambient", Vector3(0.32, 0.32, 0.33))
 	_block = Mats.flat(Color(0.93, 0.93, 0.9), ZONE).duplicate() as ShaderMaterial
@@ -53,9 +52,9 @@ func build(p_flat47: Flat47) -> void:
 	_shell()
 	_collision()
 	_lamps()
-	for b in data.blocks: _make_block(int(b[0]), String(b[1]), String(b[2]))
+	for b in puzzle.blocks: _make_block(int(b[0]), String(b[1]), String(b[2]))
 	_safe_block()
-	wall_words = (data.words as Array).duplicate()
+	wall_words = (puzzle.words as Array).duplicate()
 	wall_words.append("OUTSIDE")
 	_note_wall()
 	_plan_board()
@@ -106,7 +105,7 @@ func _shell() -> void:
 		mi.material_override = Mats.flat(Color(1, 1, 0.97), -1, 1.0)
 		add_child(mi); mi.position = AT + (Vector3(w[0], w[1], 0.06))
 	# the room names in pencil, at eye height
-	var labels: Dictionary = data.room_labels
+	var labels: Dictionary = puzzle.room_labels
 	var rooms: Dictionary = flat47.level.rooms
 	for id in labels:
 		var r: Dictionary = rooms[id]
@@ -172,7 +171,7 @@ func _block_hold(b: Dictionary, held) -> Array:
 	return []
 
 func _block_act(b: Dictionary, v: String, k) -> void:
-	var cap: Dictionary = data.captions
+	var cap: Dictionary = puzzle.captions
 	match v:
 		"look":
 			var t: String
@@ -244,7 +243,7 @@ func _safe_block() -> void:
 	_safe.title = "A tall block"
 	_safe_mesh = MeshInstance3D.new(); var bm := BoxMesh.new(); bm.size = size; _safe_mesh.mesh = bm; _safe_mesh.material_override = _block
 	_safe.add_child(_safe_mesh)
-	var l := Label3D.new(); l.text = String(data.safe.tag); l.font_size = 22; l.pixel_size = 0.0012; l.modulate = Color(0.25, 0.25, 0.3)
+	var l := Label3D.new(); l.text = String(puzzle.safe.tag); l.font_size = 22; l.pixel_size = 0.0012; l.modulate = Color(0.25, 0.25, 0.3)
 	l.shaded = false; l.outline_size = 0; _safe.add_child(l); l.position = Vector3(0, 0.3, -size.z * 0.5 - 0.005); l.rotation.y = PI
 	_safe.offer = func(_k):
 		if not safe_real: return [{"id": "look", "label": "Look"}]
@@ -254,7 +253,7 @@ func _safe_block() -> void:
 	_safe.acted.connect(_safe_act)
 
 func _safe_act(v: String, k) -> void:
-	var cap: Dictionary = data.captions
+	var cap: Dictionary = puzzle.captions
 	match v:
 		"look": World.emit_event("looked", {"title": "", "desc": String(cap.safe_open if safe_open else (cap.safe_real if safe_real else cap.safe_block)), "key": "safe48"})
 		"stick":
@@ -283,7 +282,7 @@ func _note_wall() -> void:
 	var bg := MeshInstance3D.new(); var qm := QuadMesh.new(); qm.size = Vector2(1.7, 1.0); bg.mesh = qm
 	bg.material_override = Mats.tex(Tex.get_tex("sticky"), ZONE)
 	add_child(bg); bg.position = AT + (Vector3(5.5, 1.45, 3.885))
-	var head := Label3D.new(); head.text = String(data.wall_heading); head.font_size = 40; head.pixel_size = 0.0018
+	var head := Label3D.new(); head.text = String(puzzle.wall_heading); head.font_size = 40; head.pixel_size = 0.0018
 	head.modulate = Color(0.3, 0.3, 0.34); head.shaded = false; head.outline_size = 0
 	add_child(head); head.position = AT + (Vector3(5.5, 2.08, 3.884))
 	_wall_lbl = Label3D.new(); _wall_lbl.font_size = 34; _wall_lbl.pixel_size = 0.0016; _wall_lbl.modulate = Color(0.12, 0.13, 0.2)
@@ -390,6 +389,7 @@ func _read_plan(k) -> void:
 		mi.material_override = Mats.flat(Color(0.85, 0.12, 0.1), ZONE, 0.4); p.add_child(mi)
 		p.wake()
 		World.emit_event("f48_plan", {})
+		reached_heart()
 	else:
 		await Speech.say("kurt", sentence[0].to_upper() + sentence.substr(1) + "?", {"style": "quiet"})
 		await Speech.say("kurt", "No. That's not it.", {"style": "quiet"})

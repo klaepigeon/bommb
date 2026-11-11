@@ -1,5 +1,5 @@
 class_name Flat44
-extends Node3D
+extends Place
 ## Flat 44, downstairs: a flat's hallway, and then a corridor of identical cells going east, a long
 ## way further than the building does. In every cell a chair facing the back wall, a bulb, a door.
 ## Past the eighth cell it quietly hands you back to the second (and the chairs turn a little more
@@ -11,7 +11,6 @@ const AT := Vector3(40, 0, 40)
 const ZONE := 50
 const CELLS := 10
 const END := 64.0
-var story
 var entry: Usable
 var chairs: Array[Node3D] = []
 var loops := 0
@@ -22,7 +21,7 @@ var _labels: Array[Label3D] = []
 func cx(k: int) -> float:
 	return 5.0 + k * 6.0
 
-func build() -> void:
+func build_content() -> void:
 	name = "Flat44"
 	var wall := Mats.tex(Tex.get_tex("paint_green"), ZONE, Color(1.3, 1.25, 1.0))
 	var floor_m := Mats.tex(Tex.get_tex("tile"), ZONE, Color(0.75, 0.73, 0.65))
@@ -130,7 +129,13 @@ func _make_child_cell(c: int) -> void:
 	var a := Area3D.new(); a.collision_mask = 16; add_child(a)
 	var cs := CollisionShape3D.new(); var b := BoxShape3D.new(); b.size = Vector3(1.8, 2.0, 2.2); cs.shape = b
 	a.add_child(cs); a.global_position = AT + Vector3(cx(c), 1.0, 2.8)
-	a.body_entered.connect(func(bd): if bd is Kurt and story: story.flat44_child())
+	a.body_entered.connect(func(bd): if bd is Kurt and story: _in_child_cell())
+
+func _in_child_cell() -> void:
+	if done(): return
+	reached_heart()
+	await Speech.say("kurt", "She sat here. Facing the wall. Waiting for someone to say she could turn round.", {"style": "quiet"})
+	Progress.remember("child_cell", 1)
 
 ## The loop: past the eighth cell the corridor hands you back to the second.
 func _physics_process(_delta: float) -> void:

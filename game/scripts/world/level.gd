@@ -7,9 +7,14 @@ var flat: Flat47
 var maze: Maze
 var nav := Nav.new()
 var building: Building
-var flat48: Flat48
-var flat51: Flat51
-var flat44: Flat44
+var places := {}               ## id -> Place (content/places.json)
+var places_data := {}
+var flat48: Flat48:
+	get: return places.get("48")
+var flat51: Flat51:
+	get: return places.get("51")
+var flat44: Flat44:
+	get: return places.get("44")
 
 func build() -> void:
 	flat = Flat47.new(); flat.name = "Flat47"; add_child(flat)
@@ -17,18 +22,20 @@ func build() -> void:
 	maze = Maze.new(); maze.name = "Maze"; add_child(maze)
 	maze.build(nav)
 	_flat_nav()
+	places_data = JSON.parse_string(FileAccess.get_file_as_string("res://content/places.json"))
 	building = Building.new(); building.name = "Building"; add_child(building)
-	building.build(self, nav)
-	flat48 = Flat48.new(); add_child(flat48); flat48.build(flat)
-	flat51 = Flat51.new(); add_child(flat51); flat51.build(flat)
-	flat44 = Flat44.new(); add_child(flat44); flat44.build()
+	building.build(self, nav, places_data)
+	# every place off the stairs, from data: a new flat is a script and an entry (docs/EXPANDING.md)
+	for id in places_data.places:
+		var spec: Dictionary = places_data.places[id]
+		var p: Place = (load(String(spec.script)) as GDScript).new()
+		add_child(p)
+		p.build_place(self, String(id), spec)
+		places[String(id)] = p
 
 func zone_of(p: Vector3) -> int:
-	if p.x > 30.0:
-		if flat48 and flat48.contains(p): return Flat48.ZONE
-		if flat51 and flat51.contains(p): return flat51.zone_of(p)
-		if flat44 and flat44.contains(p): return Flat44.ZONE
-		return -1
+	var pl := place_at(p)
+	if pl: return pl.zone_of(p)
 	if building and building.contains(p) and absf(p.y) > 1.0: return building.zone_of(p)
 	var z := flat.zone_of(p)
 	if z >= 0: return z
@@ -36,16 +43,19 @@ func zone_of(p: Vector3) -> int:
 
 ## Which place he's in (for the story and Socko): "47", "maze", "stairs", "48", "51", "44".
 func place_of(p: Vector3) -> String:
-	if p.x > 30.0:
-		if flat48.contains(p): return "48"
-		if flat51.contains(p): return "51"
-		if flat44.contains(p): return "44"
+	var pl := place_at(p)
+	if pl: return pl.id
 	if building.contains(p): return "stairs"
 	if maze.zone_of(p) >= 0: return "maze"
 	return "47"
 
+func place_at(p: Vector3) -> Place:
+	for id in places:
+		if (places[id] as Place).contains(p): return places[id]
+	return null
+
 func surface_of(p: Vector3) -> String:
-	if p.x > 30.0 or (building and building.contains(p) and absf(p.y) > 1.0): return "step_tile"
+	if place_at(p) != null or (building and building.contains(p) and absf(p.y) > 1.0): return "step_tile"
 	if flat.zone_of(p) >= 0: return flat.surface_of(p)
 	return maze.surface_of(p)
 

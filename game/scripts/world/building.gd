@@ -19,8 +19,9 @@ const Z1 := 8.0
 const DOOR_Z := Vector2(4.145, 4.975)
 const FLOORS := [1, 2, 3, 4, 5]
 ## [west, east] on each floor: "" = nailed shut, "47" etc. = a flat that opens, "street" the way out
-const DOORS := {1: ["street", "mail"], 2: ["41", "42"], 3: ["43", "44"], 4: ["47", "48"], 5: ["51", "52"]}
-const BOLTS := ["47", "48", "51", "44"]
+var DOORS := {}               ## floor -> [west, east] (content/places.json "landings")
+var BOLTS: Array = ["47"]      ## 47, then every place with a bolt_order, in that order
+var place_specs := {}
 
 var level
 var nav: Nav
@@ -37,8 +38,14 @@ var _knocks := 0
 static func Y(f: int) -> float:
 	return (f - 4) * STOREY
 
-func build(p_level, p_nav: Nav) -> void:
+func build(p_level, p_nav: Nav, data: Dictionary) -> void:
 	level = p_level; nav = p_nav
+	place_specs = data.places
+	for f in data.landings:
+		if String(f).is_valid_int(): DOORS[int(f)] = data.landings[f]
+	var ordered: Array = place_specs.keys().filter(func(id): return place_specs[id].has("bolt_order"))
+	ordered.sort_custom(func(a, b): return int(place_specs[a].bolt_order) < int(place_specs[b].bolt_order))
+	BOLTS.append_array(ordered)
 	for b in BOLTS: bolts[b] = false
 	_kit_wall = Mats.tex(Tex.get_tex("plaster"), -1, Color(1.1, 1.08, 1.0))
 	_kit_paint = Mats.tex(Tex.get_tex("paint_green"), -1)
@@ -163,7 +170,7 @@ func _landing_door(f: int, side: int, what: String) -> void:
 	var p := door_pos(f, side)
 	var out := 1.0 if side == 0 else -1.0       # into the stairwell
 	var u := Usable.make(self, Transform3D(Basis(), p + Vector3(out * 0.04, 1.04, 0)), Vector3(0.1, 2.08, 0.84), [], true)
-	u.title = "Flat " + what if what.is_valid_int() else ("Street door" if what == "street" else "Post room")
+	u.title = String(place_specs[what].get("title", "Flat " + what)) if place_specs.has(what) else ("Flat " + what if what.is_valid_int() else ("Street door" if what == "street" else "Post room"))
 	var kit := Kit.new()
 	var leaf := Mats.tex(Tex.get_tex("cloth"), 60 + f, Color(0.55, 0.3, 0.28) if what != "street" else Color(0.5, 0.45, 0.38))
 	kit.box(leaf, p + Vector3(out * 0.03, 1.04, 0), Vector3(0.06, 2.06, 0.82))
@@ -174,11 +181,14 @@ func _landing_door(f: int, side: int, what: String) -> void:
 		plate.modulate = Color(0.85, 0.75, 0.45); plate.shaded = false
 		add_child(plate); plate.position = p + Vector3(out * 0.08, 1.75, 0); plate.rotation.y = PI * 0.5 * out
 	doors["%d:%d" % [f, side]] = u
-	match what:
-		"48", "44":
+	if place_specs.has(what):
+		if String(place_specs[what].get("locked", "")) == "chain":
+			u.offer = func(k): return _chained_verbs(what, k)
+		else:
 			u.offer = func(_k): return [{"id": "in", "label": "Go in"}, {"id": "knock", "label": "Knock"}]
-		"51":
-			u.offer = func(k): return _door51_verbs(k)
+		u.acted.connect(func(v, k): _door_act(what, v, k, u))
+		return
+	match what:
 		"street":
 			street = u
 			u.offer = func(_k): return _street_verbs()
@@ -186,8 +196,9 @@ func _landing_door(f: int, side: int, what: String) -> void:
 			u.offer = func(_k): return [{"id": "try", "label": "Try the door"}, {"id": "knock", "label": "Knock"}]
 	u.acted.connect(func(v, k): _door_act(what, v, k, u))
 
-func _door51_verbs(_k) -> Array:
-	if World.flag("51_open"): return [{"id": "in", "label": "Go in"}]
+## A place chained from the inside: in once it's open (from inside, or forced).
+func _chained_verbs(what: String, _k) -> Array:
+	if World.flag(what + "_open"): return [{"id": "in", "label": "Go in"}]
 	var v: Array = [{"id": "try", "label": "Try the door"}, {"id": "kick", "label": "Kick"}]
 	if Progress.has("coral_grip"): v.push_front({"id": "snap", "label": "Snap the chain"})
 	return v
@@ -207,9 +218,9 @@ func _door_act(what: String, v: String, k, u: Usable) -> void:
 		"try":
 			Audio.play("rattle", u.global_position, -2.0)
 			Noises.make(u.global_position, 5.0, "rattle", k)
-			if what == "51":
+			if place_specs.has(what):
 				Audio.play("chain", u.global_position, -4.0)
-				World.emit_event("looked", {"title": "Flat 51", "desc": "It opens a hand's width on a chain, from the inside. Dust on the floor in there, and one set of footprints going in.", "key": "door51"})
+				World.emit_event("looked", {"title": u.title, "desc": String(place_specs[what].get("chain_look", "It opens a hand's width on a chain, from the inside.")), "key": "door" + what})
 			elif what == "mail":
 				World.emit_event("looked", {"title": "Post room", "desc": "Locked. Through the grille: the boxes, and 47's stuffed full of post dated after the evacuation.", "key": "mail"})
 			else:
@@ -221,8 +232,8 @@ func _door_act(what: String, v: String, k, u: Usable) -> void:
 			Noises.make(u.global_position, 18.0, "bang", k)
 			if hp <= 0.0:
 				Audio.play("splinter", u.global_position, 2.0)
-				World.set_flag("51_open", "forced")
-				World.emit_event("door_broken", {"door": "51"})
+				World.set_flag(what + "_open", "forced")
+				World.emit_event("door_broken", {"door": what})
 		"bolts":
 			_street_look()
 		"out":
@@ -247,7 +258,8 @@ func _street_verbs() -> Array:
 	return [{"id": "bolts", "label": "Look at the bolts"}, {"id": "try", "label": "Try the door"}]
 
 func _street_look() -> void:
-	var t := "Four bolts, top to bottom, painted over so often they've grown into the frame. A number scratched beside each: "
+	var n: String = ["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"][mini(BOLTS.size(), 9)] if BOLTS.size() < 10 else str(BOLTS.size())
+	var t := n + " bolts, top to bottom, painted over so often they've grown into the frame. A number scratched beside each: "
 	var parts: Array = []
 	for b in BOLTS: parts.append("%s (%s)" % [b, "drawn back" if bolts[b] else "shot"])
 	World.emit_event("looked", {"title": "Street door", "desc": t + ", ".join(parts) + ".", "key": "bolts"})

@@ -361,6 +361,10 @@ func _systems() -> void:
 	radio.acted.connect(func(_v, _k): set_radio(not radio_on))
 	_radio_snd = Audio.loop("radio", radio, -80.0, 3.0)
 	Power.changed.connect(func(_c): _appliances())
+	# the telephone in the hall, off the hook; and the wind, out on the balcony
+	Telephone.place(self, "phone47", Vector3(9.55, 1.35, 5.17), Vector3(0, 0, -1), zone_of(Vector3(9.5, 1.0, 4.8)))
+	var gust := Node3D.new(); gust.name = "BalconyWind"; add_child(gust); gust.position = Vector3(2.2, 1.0, -1.6)
+	Audio.loop("wind", gust, -12.0, 1.5)
 	# the bath: full of black water. The key and her other shoe are down in it.
 	bath = WaterBody.new(); bath.name = "Bath"; add_child(bath)
 	bath.setup("bath", Rect2(6.62, 7.3, 1.5, 0.62), 0.12, 0.52, 0.36, 7)

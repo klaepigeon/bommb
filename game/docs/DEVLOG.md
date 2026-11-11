@@ -60,3 +60,15 @@ See DESIGN.md §7. Not yet on a physical phone.
   across the flights instead of running along them; the flats were offset twice; the pointless
   door was behind 48's hall cupboard; a multi-line lambda can't end inside a `match` (Godot).
 - Tests: 16 headless routes + the touch route on GLES 3 at 2340x1080; all pass. APK 1.1.
+
+## Session 1, continued: atmosphere, and room to grow
+
+- Places are data: content/places.json names each place's script, landing door, world position,
+  bounds, arrival points, fog, ambience and street-door bolt. Flats 48/51/44 extend `Place`;
+  reaching a place's heart (`reached_heart()`) slides its bolt. Travel, the landings, chained doors
+  and the bolt count read from the data; story no longer knows any flat by number but 47.
+- Ambience director: beds, fog, positioned one-shots, the tension layer, dust in the light. The
+  hall telephone (engaged tone; rings later if hung up). Balcony wind. New synth sounds: drip,
+  engaged, ring, wind, steps above, a far door, floor creaks, whispering, low hum, fluorescent
+  buzz, a child counting.
+- docs/EXPANDING.md. New route `atmosphere`. 17 headless routes pass.

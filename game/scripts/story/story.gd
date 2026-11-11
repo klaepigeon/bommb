@@ -21,6 +21,7 @@ var phase := "start"               ## knock, inside, examined, out, awake, ended
 var _beats := {}
 var _service: Usable
 var _last_place := ""
+var ambience: Ambience
 
 func setup(m) -> void:
 	main = m; kurt = m.kurt; level = m.level; hud = m.hud
@@ -82,7 +83,7 @@ func _monsters() -> void:
 	level.add_child(lamplighter)
 	lamplighter.setup("lamplighter", level, kurt, mz.center(1, 7))
 	# MAMA, PAPA and CHILD stand in Flat 48, where they always stood
-	var fdata: Dictionary = level.flat48.data.figures
+	var fdata: Dictionary = level.flat48.puzzle.figures
 	for key in ["mama", "papa", "child"]:
 		var f := Figure.new(); f.tag = String(fdata[key].tag); f.name = f.tag
 		f.room = AABB(Flat48.AT + Vector3(-0.2, 0, -0.2), Vector3(10.4, 3.0, 8.4))
@@ -94,9 +95,10 @@ func _monsters() -> void:
 	# the building's own: travel, and the flats' story
 	travel = func(flat: String, from_landing: bool, via := "") -> void: _travel(flat, from_landing, via)
 	level.building.travel = travel
-	level.flat48.story = self
-	level.flat51.story = self
-	level.flat44.story = self
+	for id in level.places: (level.places[id] as Place).story = self
+	ambience = Ambience.new(); ambience.name = "Ambience"
+	add_child(ambience)
+	ambience.setup(self)
 
 ## Things asleep don't think (Marta's at her table until she isn't; the Super starts when Kurt's
 ## in the walls).
@@ -361,11 +363,7 @@ func _process(_delta: float) -> void:
 			_beats["see_marta"] = true
 			if Speech.speaking != "": await Speech.line_finished
 			Speech.say_id("see_marta")
-	# each place has its own air: 48's white, 51's grey, everywhere else the dark
 	var place: String = level.place_of(kurt.global_position)
-	var fog_want: Array = {"48": [Color(0.82, 0.82, 0.8), 26.0], "51": [Color(0.33, 0.33, 0.35), 40.0]}.get(place, [Color(0.02, 0.02, 0.025), 16.0])
-	Lights.fog_color = Lights.fog_color.lerp(fog_want[0], minf(_delta * 2.0, 1.0))
-	Lights.fog_far = lerpf(Lights.fog_far, fog_want[1], minf(_delta * 2.0, 1.0))
 	if place != _last_place:
 		_last_place = place
 		World.emit_event("place", {"place": place})
@@ -523,8 +521,9 @@ func _on_event(name: String, d: Dictionary) -> void:
 				World.emit_event("out_of_47", {"via": d.via})
 		"escaped":
 			_end("street")
-		"f48_plan":
-			level.building.slide_bolt("48")
+		"heart":
+			# any place's heart: the street door's bolt for it goes back
+			level.building.slide_bolt(String(d.place))
 		"looked":
 			if String(d.key) == "figure_CHILD" and not World.flag("child_note"):
 				World.set_flag("child_note")
@@ -573,43 +572,25 @@ func _travel(flat: String, from_landing: bool, via: String) -> void:
 	await hud.fade_to(1.0, 0.3)
 	var b: Building = level.building
 	var to := Vector3.ZERO; var yaw := 0.0
-	if from_landing or via != "":
-		match flat:
-			"48": to = Flat48.AT + Vector3(9.5, 0, 4.56); yaw = PI * 0.5
-			"51": to = Flat51.AT + (Vector3(7.4, 0, 4.85) if via == "48door" else Vector3(9.5, 0, 4.56)); yaw = PI * 0.5
-			"44": to = Flat44.AT + Vector3(0.9, 0, 4.75); yaw = -PI * 0.5
-			"47": to = Vector3(8.6, 0, 4.5); yaw = PI * 0.5
+	var place: Place = level.places.get(flat)
+	if flat == "47":
+		to = Vector3(8.6, 0, 4.5); yaw = PI * 0.5        # (the pointless door, labelled 47)
+	elif from_landing or via != "":
+		var arr := place.arrive(via)
+		to = arr[0]; yaw = arr[1]
 		World.set_flag("visited_" + flat)
 		World.emit_event("entered_flat", {"flat": flat})
 	else:
-		match flat:
-			"48": to = b.door_pos(4, 1) + Vector3(-0.8, 0, 0); yaw = PI * 0.5
-			"51": to = b.door_pos(5, 0) + Vector3(0.8, 0, 0); yaw = -PI * 0.5; World.set_flag("51_open", "inside")
-			"44": to = b.door_pos(3, 1) + Vector3(-0.8, 0, 0); yaw = PI * 0.5
+		# out onto its landing, facing into the stairwell
+		var side := place.side()
+		to = b.door_pos(place.floor_index(), side) + Vector3(0.8 if side == 0 else -0.8, 0, 0)
+		yaw = -PI * 0.5 if side == 0 else PI * 0.5
+		if String(place.data.get("locked", "")) == "chain": World.set_flag(flat + "_open", "inside")
 	if kurt.held: kurt.held.global_position = to + Vector3(0, 1.0, 0)
 	kurt.global_position = to; kurt.yaw = yaw; kurt.velocity = Vector3.ZERO
 	await get_tree().physics_frame
 	await hud.fade_to(0.0, 0.5)
 	kurt.frozen = false
-
-## 51: the end of his footprints, a long way out. And then 47's hallway, and something has moved.
-func flat51_end() -> void:
-	if World.flag("bolt_51"): return
-	kurt.frozen = true
-	await hud.fade_to(1.0, 1.2)
-	kurt.global_position = Vector3(8.6, 0, 4.5); kurt.yaw = PI * 0.5; kurt.velocity = Vector3.ZERO
-	level.flat.set_tv(true)
-	level.building.slide_bolt("51")
-	await hud.fade_to(0.0, 1.5)
-	kurt.frozen = false
-	hud.say_look("47's hall. Your own boots, wet. In the living room the television has come on by itself.")
-
-## 44: the child's cell.
-func flat44_child() -> void:
-	if World.flag("bolt_44"): return
-	level.building.slide_bolt("44")
-	await Speech.say("kurt", "She sat here. Facing the wall. Waiting for someone to say she could turn round.", {"style": "quiet"})
-	Progress.remember("child_cell", 1)
 
 # ------------------------------------------------------------------------------ the end
 func _end(via: String) -> void:

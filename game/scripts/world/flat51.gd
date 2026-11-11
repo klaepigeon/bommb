@@ -1,5 +1,5 @@
 class_name Flat51
-extends Node3D
+extends Place
 ## Flat 51, upstairs: the flat from the note in the box room. The same flat, the same paper on the
 ## walls, never lived in: no furniture, the dust unbroken except for one set of footprints going in.
 ## Past the living room the building stops: no north wall, just the floor going on into the grey,
@@ -9,13 +9,12 @@ extends Node3D
 const AT := Vector3(80, 0, 0)
 const ROOMZ := 70                 ## zones: 47's room numbers + 70
 var flat47: Flat47
-var story
 var entry: Usable
 var _prints: MultiMeshInstance3D
 var _done := false
 
-func build(p_flat47: Flat47) -> void:
-	flat47 = p_flat47
+func build_content() -> void:
+	flat47 = level.flat
 	name = "Flat51"
 	var flat: Node3D = (load("res://assets/flat47/flat47.glb") as PackedScene).instantiate()
 	flat.name = "Rooms"
@@ -128,7 +127,16 @@ func _prints_path() -> void:
 	add_child(_prints)
 	_prints.global_transform = Transform3D.IDENTITY
 
+## The end of his prints, a long way out. And then 47's hallway, and something has moved.
 func _end_of_prints() -> void:
-	if not story: return
+	if not story or done(): return
 	_done = true
-	story.flat51_end()
+	var kurt: Kurt = story.kurt
+	kurt.frozen = true
+	await story.hud.fade_to(1.0, 1.2)
+	kurt.global_position = Vector3(8.6, 0, 4.5); kurt.yaw = PI * 0.5; kurt.velocity = Vector3.ZERO
+	level.flat.set_tv(true)
+	reached_heart()
+	await story.hud.fade_to(0.0, 1.5)
+	kurt.frozen = false
+	story.hud.say_look("47's hall. Your own boots, wet. In the living room the television has come on by itself.")
