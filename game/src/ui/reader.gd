@@ -49,6 +49,7 @@ func show_doc(id: String) -> void:
 	_paper.custom_minimum_size = Vector2(w, 0)
 	_text.custom_minimum_size = Vector2(w - 72, 0)
 	visible = true
+	fit()
 	await get_tree().process_frame
 	_paper.position = (vp - _paper.size) * 0.5
 	Story.record("clue.read:" + id)
@@ -63,3 +64,9 @@ func _gui_input(event: InputEvent) -> void:
 	if (event is InputEventMouseButton and event.pressed) or (event is InputEventScreenTouch and event.pressed):
 		hud.close_all()
 		accept_event()
+
+## overlays start hidden, and a hidden Control doesn't follow its parent's size: fit on open
+func fit() -> void:
+	var par := get_parent() as Control
+	position = Vector2.ZERO
+	size = par.size if par else get_viewport_rect().size

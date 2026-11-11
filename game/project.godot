@@ -1,5 +1,5 @@
 ; HYSTERIA — ground-zero rebuild. Godot 4.7, Android-first.
-; Renderer: Mobile (Vulkan) with automatic fallback to Compatibility (GLES3) on devices without Vulkan.
+; Renderer: Compatibility (GLES3) everywhere: widest Android support, and the path the tests render.
 config_version=5
 
 [application]
@@ -7,7 +7,7 @@ config_version=5
 config/name="HYSTERIA"
 config/description="Flat 47 → the Backrooms → Flat 48"
 run/main_scene="res://src/main.tscn"
-config/features=PackedStringArray("4.7", "Mobile")
+config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon/icon.png"
 config/version="1.0.0-ch1"
 config/quit_on_go_back=false
@@ -39,6 +39,11 @@ window/handheld/orientation=4
 window/energy_saving/keep_screen_on=true
 window/vsync/vsync_mode=1
 
+[debug]
+
+file_logging/enable_file_logging=true
+file_logging/enable_file_logging.pc=true
+
 [input_devices]
 
 pointing/emulate_mouse_from_touch=true
@@ -53,9 +58,8 @@ common/max_physics_steps_per_frame=4
 
 [rendering]
 
-renderer/rendering_method="mobile"
-renderer/rendering_method.mobile="mobile"
-rendering_device/fallback_to_opengl3=true
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
 textures/canvas_textures/default_texture_filter=0
 textures/vram_compression/import_etc2_astc=true
 anti_aliasing/quality/msaa_3d=0

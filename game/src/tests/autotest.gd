@@ -27,7 +27,10 @@ func begin(p_main: Node, which: String) -> void:
 		if has_method("t_" + s):
 			print("AUTOTEST begin ", s)
 			_completed = ""
+			var errs0 := ErrorLog.inst.count if ErrorLog.inst else 0
 			await call("t_" + s)
+			var errs := (ErrorLog.inst.count if ErrorLog.inst else 0) - errs0
+			ok(s + "_no_errors", errs == 0, "%d engine/script errors, last: %s" % [errs, ErrorLog.inst.last if ErrorLog.inst else ""])
 			# a script error inside a suite stops it silently: catch that here
 			ok(s + "_ran_to_end", _completed == s, "the suite stopped early (script error above?)")
 		else:
@@ -324,3 +327,154 @@ func t_systems() -> void:
 	ok("load_object_state", arm2.global_position.distance_to(arm_pos) < 0.2 and main.level.doors["front_door"].chain_on, "armchair %.2f off" % arm2.global_position.distance_to(arm_pos))
 	ok("load_power", main.level.power.room_lit("bathroom"), "bathroom dark after load")
 	_completed = "systems"
+
+# ---------------------------------------------------------------------------------- touch (Android)
+
+var _touch_idx := {}
+
+func touch(i: int, pos: Vector2, pressed: bool) -> void:
+	var e := InputEventScreenTouch.new()
+	e.index = i; e.position = pos; e.pressed = pressed
+	Input.parse_input_event(e)
+	_touch_idx[i] = pos
+
+func drag(i: int, pos: Vector2) -> void:
+	var e := InputEventScreenDrag.new()
+	e.index = i; e.position = pos
+	var last: Vector2 = _touch_idx.get(i, pos)
+	e.relative = pos - last
+	e.screen_relative = e.relative
+	Input.parse_input_event(e)
+	_touch_idx[i] = pos
+
+## drag in steps, a frame apart, like a real finger
+func swipe(i: int, from: Vector2, to: Vector2, steps := 10) -> void:
+	for k in range(1, steps + 1):
+		drag(i, from.lerp(to, float(k) / steps))
+		await get_tree().process_frame
+
+func tap(pos: Vector2, i := 0) -> void:
+	touch(i, pos, true)
+	await frames(2)
+	touch(i, pos, false)
+	await frames(3)
+
+## a real Button somewhere in the UI, found by its text, pressed with a touch
+func tap_button(text: String) -> bool:
+	for b in main.hud.root.find_children("*", "Button", true, false):
+		var bt := b as Button
+		if bt.is_visible_in_tree() and bt.text.strip_edges() == text:
+			await tap(bt.get_global_rect().get_center())
+			return true
+	print("AUTOTEST note: no visible button '%s'" % text)
+	return false
+
+func t_touch() -> void:
+	fresh()
+	await start("flat47")
+	await until(func(): return main.director.state == "explore", 30.0)
+	await skip_speech()
+	var hud = main.hud
+	var p: Player = main.player
+	var vp: Vector2 = hud.root.get_viewport_rect().size
+	await place(Vector3(6.5, 0, 8.6), Vector3(6.5, 1.5, 5.0))
+	# the first touch switches the HUD to touch mode
+	await tap(Vector2(vp.x * 0.7, vp.y * 0.3))
+	ok("touch_mode", hud.touch_mode, "HUD didn't switch to touch")
+	ok("touch_buttons_shown", hud._buttons["use"].shown and hud._buttons["crouch"].shown, "buttons not shown")
+	# stick: thumb down on the left, pushed up = walk forward
+	var start_pos := p.global_position
+	touch(0, Vector2(vp.x * 0.15, vp.y * 0.7), true)
+	await swipe(0, Vector2(vp.x * 0.15, vp.y * 0.7), Vector2(vp.x * 0.15, vp.y * 0.7 - 60))
+	ok("stick_input", p.move_input.y > 0.5, "move_input %s" % p.move_input)
+	await wait(1.0)
+	# and a second finger looking around at the same time
+	var yaw0 := p.rotation.y
+	touch(1, Vector2(vp.x * 0.7, vp.y * 0.5), true)
+	await swipe(1, Vector2(vp.x * 0.7, vp.y * 0.5), Vector2(vp.x * 0.7 + 120, vp.y * 0.5))
+	ok("look_with_second_finger", absf(wrapf(p.rotation.y - yaw0, -PI, PI)) > 0.1, "yaw moved %.3f" % (p.rotation.y - yaw0))
+	ok("stick_still_held", p.move_input.y > 0.5, "the look finger broke the stick")
+	touch(1, _touch_idx[1], false)
+	touch(0, _touch_idx[0], false)
+	await frames(3)
+	ok("stick_moves_kurt", p.global_position.distance_to(start_pos) > 0.6, "moved %.2f" % p.global_position.distance_to(start_pos))
+	ok("stick_release_stops", p.move_input == Vector2.ZERO, "still moving %s" % p.move_input)
+	# crouch button
+	var c0 := p.crouching
+	await tap(hud._buttons["crouch"].center)
+	ok("crouch_button", p.crouching != c0, "crouch didn't toggle")
+	await tap(hud._buttons["crouch"].center)
+	# Use button: the bathroom door
+	var bd := door("bath_door")
+	await place(door_from("bath_door", -1), bd.ifocus())
+	await frames(4)
+	await tap(hud._buttons["use"].center)
+	await wait(0.8)
+	ok("use_button", bd.open_k > 0.5, "door open_k %.2f; verbs %s" % [bd.open_k, p.verbs])
+	# tap on the view also uses what's under the crosshair
+	await place(door_from("bath_door", -1), bd.ifocus())
+	await frames(4)
+	await tap(Vector2(vp.x * 0.7, vp.y * 0.45))
+	await wait(0.8)
+	ok("tap_to_use", bd.is_closed(), "door open_k %.2f" % bd.open_k)
+	# chips: the front door from inside offers the chain as a second action
+	var fd := door("front_door")
+	fd.close()
+	await wait(0.6)
+	await place(door_from("front_door", -1), fd.ifocus())
+	await frames(6)
+	ok("chips_shown", hud._chips.size() >= 1, "no chips; verbs %s" % [p.verbs])
+	if hud._chips.size() >= 1:
+		var chain0 := fd.chain_on
+		await tap((hud._chips[0] as Control).get_global_rect().get_center())
+		await frames(4)
+		ok("chip_does_its_verb", fd.chain_on != chain0, "chain unchanged")
+	# pause menu, by touch; its Resume is an ordinary Button pressed by a touch
+	await tap(hud._buttons["pause"].center)
+	ok("pause_opens", hud.pause.visible and get_tree().paused, "pause not open")
+	await tap_button("Resume")
+	await frames(3)
+	ok("menu_by_touch", not hud.pause.visible and not get_tree().paused, "Resume didn't work by touch")
+	# a thumb resting on the stick (finger 0) while another finger works the menu
+	touch(0, Vector2(vp.x * 0.15, vp.y * 0.7), true)
+	await frames(2)
+	await tap(hud._buttons["pause"].center, 1)
+	ok("pause_with_thumb_down", hud.pause.visible, "pause didn't open")
+	for b in hud.root.find_children("*", "Button", true, false):
+		if (b as Button).is_visible_in_tree() and (b as Button).text.strip_edges() == "Resume":
+			await tap((b as Button).get_global_rect().get_center(), 2)
+	await frames(3)
+	ok("menu_with_second_finger", not hud.pause.visible, "Resume didn't work with a second finger")
+	touch(0, Vector2(vp.x * 0.15, vp.y * 0.7), false)
+	await frames(2)
+	# inventory
+	await tap(hud._buttons["inv"].center)
+	ok("inventory_opens", hud.inventory.visible, "no inventory")
+	await tap_button("Close")
+	await frames(3)
+	ok("inventory_closes", not hud.inventory.visible and not get_tree().paused, "still open")
+	# arranging the controls
+	hud.set_edit_layout(true)
+	var u0: Vector2 = hud._buttons["use"].center
+	touch(7, u0, true)
+	await swipe(7, u0, u0 - Vector2(150, 80))
+	touch(7, _touch_idx[7], false)
+	await frames(3)
+	ok("layout_edit_moves_button", (Settings.get_v("layout") as Dictionary).has("use") and hud._buttons["use"].center.distance_to(u0) > 50.0, "button didn't move")
+	hud.set_edit_layout(false)
+	Settings.reset_layout()
+	await frames(3)
+	ok("layout_reset", hud._buttons["use"].center.distance_to(u0) < 2.0, "reset didn't restore")
+	# phone shapes: a tall 20:9 phone and a 4:3 tablet; buttons stay on screen
+	for sz in [Vector2i(1600, 720), Vector2i(960, 720)]:
+		get_window().size = sz
+		await frames(6)
+		var r: Rect2 = hud.root.get_viewport_rect()
+		var inside := true
+		for id in hud._buttons:
+			var b: Dictionary = hud._buttons[id]
+			if not r.grow(1).has_point(b.center):
+				inside = false
+		ok("layout_fits_%dx%d" % [sz.x, sz.y], inside, "a button is off screen")
+	get_window().size = Vector2i(1280, 720)
+	_completed = "touch"

@@ -58,6 +58,7 @@ func _ready() -> void:
 func open(p: Player) -> void:
 	player = p
 	visible = true
+	fit()
 	_refresh()
 
 func _refresh() -> void:
@@ -123,3 +124,9 @@ func _select(id: String) -> void:
 			hud.close_all()
 			player.use_item(String(a[1])))
 		_actions.add_child(b)
+
+## overlays start hidden, and a hidden Control doesn't follow its parent's size: fit on open
+func fit() -> void:
+	var par := get_parent() as Control
+	position = Vector2.ZERO
+	size = par.size if par else get_viewport_rect().size

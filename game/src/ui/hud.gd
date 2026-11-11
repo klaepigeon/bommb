@@ -205,6 +205,8 @@ func _layout_buttons() -> void:
 		node.position = b.center - node.size * 0.5
 		(b.label as Label).add_theme_font_size_override("font_size", int(clampf(sz * 0.2, 14, 30)))
 	var vp := root.get_viewport_rect().size
+	for o in [reader, inventory, pause]:
+		if o and o.visible: o.fit()
 	_crosshair.position = vp * 0.5 - _crosshair.size * 0.5
 	_edit_bar.position = Vector2(vp.x * 0.5 - 300 * u, vp.y * 0.42)
 
@@ -346,8 +348,13 @@ func _input(event: InputEvent) -> void:
 			_on_verbs(player.focus if player else null, player.verbs if player else [])
 		if edit_layout:
 			_edit_touch(event)
+			if not (event is InputEventScreenTouch and (event as InputEventScreenTouch).index == 0) and not (event is InputEventScreenDrag and (event as InputEventScreenDrag).index == 0):
+				_forward_to_menus(event)
 			return
 		if menu_open() or not player:
+			# Godot turns only the first finger into mouse input for the menus; a thumb still
+			# resting on the glass would make every menu dead. Forward the other fingers too.
+			_forward_to_menus(event)
 			return
 		if event is InputEventScreenTouch:
 			_touch(event as InputEventScreenTouch)
@@ -360,6 +367,31 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and (event as InputEventMouseMotion).device == InputEvent.DEVICE_ID_EMULATION:
 		return
 	_desktop_input(event)
+
+func _forward_to_menus(event: InputEvent) -> void:
+	if event is InputEventScreenTouch:
+		var t := event as InputEventScreenTouch
+		if t.index == 0:
+			return                       # the engine already emulates the mouse for this one
+		var mb := InputEventMouseButton.new()
+		mb.button_index = MOUSE_BUTTON_LEFT
+		mb.pressed = t.pressed
+		mb.position = t.position
+		mb.global_position = t.position
+		mb.button_mask = MOUSE_BUTTON_MASK_LEFT if t.pressed else 0
+		get_viewport().set_input_as_handled()
+		get_viewport().push_input(mb)
+	elif event is InputEventScreenDrag:
+		var d := event as InputEventScreenDrag
+		if d.index == 0:
+			return
+		var mm := InputEventMouseMotion.new()
+		mm.position = d.position
+		mm.global_position = d.position
+		mm.relative = d.relative
+		mm.button_mask = MOUSE_BUTTON_MASK_LEFT
+		get_viewport().set_input_as_handled()
+		get_viewport().push_input(mm)
 
 func _hit_button(pos: Vector2) -> String:
 	for id in _buttons:

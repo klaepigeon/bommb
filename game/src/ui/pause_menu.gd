@@ -37,6 +37,7 @@ func _ready() -> void:
 
 func open() -> void:
 	visible = true
+	fit()
 	_note.text = ""
 	_show("Game")
 
@@ -144,3 +145,9 @@ func _gfx_page() -> Control:
 	v.add_child(_row("Film grain", _slider("grain", 0.0, 1.5, 0.05)))
 	v.add_child(_row("Performance overlay", _check("show_perf")))
 	return v
+
+## overlays start hidden, and a hidden Control doesn't follow its parent's size: fit on open
+func fit() -> void:
+	var par := get_parent() as Control
+	position = Vector2.ZERO
+	size = par.size if par else get_viewport_rect().size

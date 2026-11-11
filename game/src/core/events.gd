@@ -32,3 +32,7 @@ signal level_ready(name: String)
 
 ## Request a level change (from triggers inside levels); main.gd handles it.
 signal request_level(name: String, spawn: String)
+
+func _enter_tree() -> void:
+	ErrorLog.install()
+	beat.connect(func(b): if ErrorLog.inst: ErrorLog.inst.beat = b)
