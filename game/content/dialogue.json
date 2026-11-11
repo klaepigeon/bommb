@@ -660,6 +660,16 @@
    "speaker": "socko",
    "text": "Whoa! Up you go! Where'd you learn that?",
    "socko_face": "surprise"
+  },
+  "cmd_latch": {
+   "speaker": "socko",
+   "text": "A fortochka! I love a fortochka. Lift me up, I'll do the latch.",
+   "socko_face": "excitement"
+  },
+  "cmd_latch_ok": {
+   "speaker": "socko",
+   "text": "Click! I'm a burglar now. Don't tell anyone.",
+   "socko_face": "smile"
   }
  },
  "end": {
@@ -875,5 +885,33 @@
    "socko_face": "unnatural_stillness",
    "style": "quiet"
   }
- }
+ },
+ "ledge": {
+  "ledge_first": {
+   "speaker": "kurt",
+   "text": "Back to the wall. Small steps. There's nothing out there to fall onto, and that's worse.",
+   "style": "quiet"
+  },
+  "ledge_down": {
+   "speaker": "kurt",
+   "text": "No street. No ground. Just white, all the way down, and the drainpipe going into it.",
+   "style": "quiet"
+  },
+  "ledge_elbow": {
+   "speaker": "kurt",
+   "text": "Ah... Through the sleeve. It'll do.",
+   "style": "quiet"
+  },
+  "ledge_reach": {
+   "speaker": "kurt",
+   "text": "Arm in up to the shoulder... there. The latch.",
+   "style": "quiet"
+  },
+  "ledge_socko": {
+   "speaker": "socko",
+   "text": "Ooh, a ledge! Don't look down. I looked down. Don't.",
+   "socko_face": "excitement"
+  }
+ },
+ "_comment_ledge": "NEW (this build): the ledge outside 47's bedroom, and Socko's latch lines. For the owner to rewrite."
 }

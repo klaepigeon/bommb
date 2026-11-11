@@ -85,7 +85,7 @@ func walk_to(p: Vector3, speed := 9.0) -> void:
 	for i in path.size():
 		if i > 0:
 			var d = level.nav.door_between(path[i - 1], path[i])
-			if d is Door and not d.is_open() and not d.broken:
+			if d is Door and not d.broken and (not d.is_open() or (absf(d.angle) < d.max_angle * 0.7 and not d.chained)):
 				d.swing(d.max_angle, 0.3)
 				await wait(0.5)
 		var q: Vector3 = level.nav.pts[path[i]]
@@ -713,3 +713,71 @@ func r_atmosphere() -> void:
 	await wait(0.3)
 	check(await use(Vector3(9.55, 1.0, 5.1), "hang"), "the receiver goes back on its hook")
 	check(World.flag("phone47_hung"), "hung up")
+
+## Round the outside: over the balcony's end rail, along the ledge (really walking: the stick),
+## in at the bedroom window three ways (reach through the fortochka, Socko, the glass), and out.
+func r_ledge() -> void:
+	await _woken()
+	var lw: WindowLedge = level.flat.ledge_route
+	check(level.flat.doors["dLiving"].locked(), "the living room's locked from outside")
+	k.global_position = Vector3(3.2, -0.12, -1.0); await wait(0.3)
+	check(await use(Vector3(3.84, 0.95, -0.75), "over"), "over the end rail")
+	await until(func(): return not k.climbing, 4.0, "climbing over")
+	await wait(0.3)
+	check(k.rail_axis != Vector3.ZERO, "on the ledge, back to the wall")
+	# the stick: forward along it; then hard toward the white (he mustn't go)
+	Input.action_press("left"); await wait(1.0); Input.action_release("left")
+	check(k.global_position.z > -0.85 and k.global_position.y > -0.5, "pushing toward the edge doesn't put him off it (%s)" % str(k.global_position))
+	Input.action_press("forward")
+	await until(func(): return k.global_position.x > 6.1, 8.0, "shuffling along the ledge")
+	Input.action_release("forward")
+	await wait(0.3)
+	check(lw.state() == "shut", "the window's shut")
+	check(await use(Vector3(6.38, 1.4, -0.5), "reach"), "reach in through the fortochka")
+	await until(func(): return lw.state() == "open", 6.0, "the latch")
+	check(await use(Vector3(6.38, 1.4, -0.5), "in"), "climb in")
+	await until(func(): return not k.climbing, 4.0, "climbing in")
+	check(k.global_position.z > 0.3 and level.flat.zone_of(k.global_position + Vector3(0, 0.5, 0)) == level.flat.zone_of(Vector3(6, 0.5, 2)), "in the bedroom (%s)" % str(k.global_position))
+	# out again, and Socko does the latch
+	check(await use(Vector3(6.38, 1.4, 0.06), "out"), "out onto the ledge")
+	await until(func(): return not k.climbing, 4.0, "climbing out")
+	await wait(0.3)
+	lw.set_state("shut")
+	await look(Vector3(6.38, 1.4, -0.5)); k._aim()
+	var u: Usable = k.target as Usable
+	check(u != null and u.socko_verbs(k).size() > 0, "Socko offers the fortochka")
+	if u: await u.socko_act("latch", k, story.mind)
+	await until(func(): return lw.state() == "open", 6.0, "Socko's latch")
+	# and the loud way
+	lw.set_state("shut")
+	var hp0 := k.hp
+	check(await use(Vector3(6.38, 1.4, -0.5), "elbow"), "through the glass")
+	check(lw.state() == "broken" and k.hp < hp0, "broken, and it cut")
+	check(await use(Vector3(6.38, 1.4, -0.5), "in"), "in through the broken pane")
+	await until(func(): return not k.climbing, 4.0, "climbing in")
+	await walk_to(Flat47.POINTS.hall)
+	check(level.place_of(k.global_position) == "47" and k.global_position.x > 7.5 and k.global_position.z > 3.8, "out of the locked living room the long way round (%s)" % str(k.global_position))
+
+## Screenshots of the free arm (run with a display and --shots): reaching, carrying, on the ledge.
+func r_arm() -> void:
+	await _woken()
+	var d: Door = level.flat.doors["dLiving"]
+	k.global_position = Vector3(4.0, 0, 4.0); await wait(0.3)
+	await look(d.handle_pos())
+	k._aim()
+	k.reached.emit(d.handle_pos(), "open")
+	await wait(0.22); await snap("arm_reach")
+	check(k.arm.visible, "the arm comes up to the door")
+	await wait(0.6)
+	var mag: Prop = level.flat.props["prop_37_Magazine"]
+	k.global_position = mag.global_position + Vector3(0.6, 0, 0.6); await wait(0.2)
+	k.lift(mag); await wait(0.8); await snap("arm_hold")
+	check(k.arm.visible, "the arm holds what he carries")
+	k.drop(false); await wait(0.8)
+	check(not k.arm.visible, "and goes down again")
+	k.global_position = Vector3(3.2, -0.12, -1.0); await wait(0.3)
+	await use(Vector3(3.84, 0.95, -0.75), "over")
+	await wait(0.5); await snap("arm_climb")
+	await until(func(): return not k.climbing, 4.0, "climbing over")
+	await wait(0.6); await look(k.global_position + Vector3(2, 1.4, 0)); await wait(0.3); await snap("arm_ledge")
+	check(k.arm.visible, "a hand on the wall on the ledge")

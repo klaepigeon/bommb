@@ -212,6 +212,8 @@ func _toward_gun() -> Vector3:
 func _on_event(name: String, d: Dictionary) -> void:
 	if not World.flag("socko_on"): return
 	match name:
+		"ledge":
+			if d.on: once("ledge_socko")
 		"read":
 			if not said.has("read_once"): said["read_once"] = 1; bark("read_a" if band() == "a" else "read_c")
 			defy(0.3, "read")

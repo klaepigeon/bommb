@@ -7,6 +7,7 @@ extends CharacterBody3D
 
 signal caught(by)
 signal hurt_changed(hp: float)
+signal reached(at: Vector3, verb: String)   ## his free hand goes out to something (the arm shows it)
 
 const EYE := 1.62
 const EYE_CROUCH := 1.0
@@ -30,6 +31,8 @@ var zone := -1
 var level: Node                    ## the level: zone_of(), surface_of()
 var target: Object = null          ## what he's looking at (has get_verbs)
 var target_verbs: Array = []
+var aim_point := Vector3.ZERO      ## where the look ray hit
+var arm: FPArm
 var held: Prop = null
 var pockets: Array = []            ## [{id, title, desc, key}]
 var gun_out := false
@@ -40,6 +43,8 @@ var shells := 0
 var spare := 0                     ## loose rounds
 var aiming := false
 var hiding_in: Node = null
+var rail_axis := Vector3.ZERO     ## on a ledge: he can only shuffle along this (and slowly)
+var climbing := false             ## a scripted climb (over a rail, through a window) has him
 var _bob := 0.0
 var _step_d := 0.0
 var _eye := EYE
@@ -76,6 +81,9 @@ func build() -> void:
 	Controls.pressed.connect(_on_pressed)
 	World.register("kurt", _save, _load)
 	_revolver()
+	arm = FPArm.new(); arm.name = "Arm"
+	cam.add_child(arm)
+	arm.setup(self)
 
 var gun_model: Node3D
 var _recoil := 0.0
@@ -105,6 +113,7 @@ func _physics_process(delta: float) -> void:
 	delta = minf(delta, 0.05)
 	if _mantle_t >= 0.0:
 		_mantle(delta); return
+	if climbing: return
 	# look
 	var lk := Controls.take_look()
 	if not look_locked:
@@ -139,6 +148,10 @@ func _physics_process(delta: float) -> void:
 	speed *= lerpf(1.0, 0.45, clampf(water / 0.6, 0.0, 1.0))
 	if held and held.mass > 15.0: speed *= 0.6
 	if hiding_in: speed = 0.0
+	if rail_axis != Vector3.ZERO:
+		# back to the wall, shuffling: only along it, and not fast
+		wish = rail_axis * wish.dot(rail_axis)
+		speed = minf(speed, 0.7)
 	var hv := velocity - up_direction * velocity.dot(up_direction)
 	var target_v := wish.limit_length(1.0) * speed
 	var accel := 10.0 if is_on_floor() else 2.5
@@ -266,6 +279,29 @@ func _try_mantle() -> bool:
 		return true
 	return false
 
+## Over a rail, through a window: along `points` (world positions of his feet) in `dur` seconds,
+## crouched if `low`. Returns when he's there.
+func climb(points: Array, dur := 1.2, low := false) -> void:
+	if climbing: return
+	climbing = true
+	velocity = Vector3.ZERO
+	if held: drop(false)
+	if gun_out: holster()
+	var was := crouching
+	crouching = low
+	if low: _eye = EYE_CROUCH; head.position.y = _eye
+	var path: Array = [global_position] + points
+	var seg := dur / float(path.size() - 1)
+	for i in range(1, path.size()):
+		var t := create_tween()
+		t.tween_property(self, "global_position", path[i], seg).set_trans(Tween.TRANS_SINE)
+		Audio.play("step_soft", path[i], -10.0, randf_range(0.8, 1.1))
+		await t.finished
+	Noises.make(global_position, 2.0, "climb", self)
+	crouching = was and low
+	climbing = false
+	World.emit_event("climbed", {"to": global_position})
+
 func _mantle(delta: float) -> void:
 	_mantle_t += delta / 0.42
 	var t := clampf(_mantle_t, 0.0, 1.0)
@@ -289,6 +325,7 @@ func _aim() -> void:
 	q.collide_with_areas = true
 	var hit := space.intersect_ray(q)
 	if hit:
+		aim_point = hit.position
 		var o = hit.collider
 		var actor = o.get_meta("actor") if o.has_meta("actor") else o
 		if actor and actor.has_method("get_verbs"):
@@ -344,7 +381,9 @@ func use_verb(i: int) -> void:
 			hurt(3.0, "pull")
 			World.emit_event("pulled", {"prop": p})
 		_:
-			if target: target.act(id, self)
+			if target:
+				reached.emit(aim_point, id)
+				target.act(id, self)
 
 func _on_pressed(a: String) -> void:
 	if get_tree().paused: return

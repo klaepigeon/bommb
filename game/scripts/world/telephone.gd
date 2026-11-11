@@ -57,7 +57,7 @@ func _act(v: String, _k) -> void:
 		"hang":
 			World.set_flag(id + "_hung", true); _sync()
 			Audio.play("clink", global_position, -6.0)
-			Noises.make(global_position, 0.15, "phone", self)
+			Noises.make(global_position, 2.0, "phone", self)
 			_ring_t = randf_range(35.0, 70.0)
 		"lift":
 			World.set_flag(id + "_hung", false); _sync()
@@ -77,5 +77,5 @@ func _process(delta: float) -> void:
 		_ringing -= delta
 		if fmod(before, 3.0) < fmod(_ringing, 3.0) or before == 14.0:
 			Audio.play("ring", global_position, -4.0)
-			Noises.make(global_position, 0.6, "phone", self)     # loud enough to bring things
+			Noises.make(global_position, 14.0, "phone", self)    # loud enough to bring things
 		if _ringing <= 0.0: _ringing = 0.0

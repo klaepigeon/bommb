@@ -24,6 +24,11 @@ const HOLES := {
 	"child": [Vector3(5.25, -0.1, 7.9), Vector3(5.95, 1.22, 8.5)],
 	"bath": [Vector3(8.22, -0.1, 7.9), Vector3(8.92, 1.4, 8.5)],
 }
+## Gaps in the walls' colliders only (the model already has the opening): the bedroom window's
+## casement, which a WindowLedge fills or doesn't.
+const GAPS := {
+	"bed_window": [Vector3(6.02, 0.9, -0.5), Vector3(6.74, 2.3, 0.05)],
+}
 const POINTS := {
 	"landing": Vector3(11.4, 0, 4.55), "door_out": Vector3(10.06, 1.35, 4.55), "hall": Vector3(8.6, 0, 4.5),
 	"hall_west": Vector3(5.1, 0, 4.55), "living_in": Vector3(3.9, 0, 4.4), "near_marta": Vector3(3.55, 0, 1.9),
@@ -43,6 +48,7 @@ var wardrobe_shoves := 0
 var wardrobe_toppled := false
 var bath: WaterBody
 var marta_chair: Node3D
+var ledge_route: WindowLedge
 var tv_on := false
 var radio_on := false
 var _tv_lamp: Lamp
@@ -227,8 +233,9 @@ func _collision() -> void:
 		var box := AABB(Vector3(c.x - c.hx, c.y0, c.z - c.hz), Vector3(c.hx * 2.0, h, c.hz * 2.0))
 		var pieces: Array = [box]
 		if absf(float(c.rot)) < 0.01:
-			for hk in HOLES:
-				var hb := AABB(HOLES[hk][0], HOLES[hk][1] - HOLES[hk][0])
+			var cuts := HOLES.duplicate(); cuts.merge(GAPS)
+			for hk in cuts:
+				var hb := AABB(cuts[hk][0], cuts[hk][1] - cuts[hk][0])
 				var next: Array = []
 				for pc in pieces: next.append_array(_carve(pc, hb))
 				pieces = next
@@ -321,7 +328,12 @@ func _outside() -> void:
 	var catch := Area3D.new(); catch.collision_mask = 16; add_child(catch)
 	var cc := CollisionShape3D.new(); var cb := BoxShape3D.new(); cb.size = Vector3(14, 2, 24); cc.shape = cb
 	cc.position = Vector3(2, -5, -14); catch.add_child(cc)          # under the balcony only (not the stairwell)
+	var cc2 := CollisionShape3D.new(); var cb2 := BoxShape3D.new(); cb2.size = Vector3(4.2, 2, 2.6); cc2.shape = cb2
+	cc2.position = Vector3(5.7, -5, -1.3); catch.add_child(cc2)       # under the ledge
 	catch.body_entered.connect(func(body): if body is Kurt: World.emit_event("fell_into_white", {}))
+	# the ledge along the outside of the bedroom, and the bedroom window
+	ledge_route = WindowLedge.new(); ledge_route.name = "WindowLedge"; add_child(ledge_route)
+	ledge_route.build(self)
 
 func _sticky_note(at: Vector3, yaw: float, size: float, tilt: float, word: String) -> void:
 	var note := Node3D.new(); note.name = "Note"
