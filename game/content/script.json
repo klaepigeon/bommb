@@ -386,12 +386,6 @@
    "proposed": true,
    "style": "quiet"
   },
-  "k_48": {
-   "speaker": "kurt",
-   "text": "Forty-eight.",
-   "proposed": true,
-   "style": "quiet"
-  },
   "k_musicbox": {
    "speaker": "kurt",
    "text": "...She's listening.",
@@ -561,81 +555,6 @@
    "sfx": "marta_hum",
    "duration": 3.0
   },
-  "f48_open": {
-   "speaker": "kurt",
-   "text": "It's open.",
-   "proposed": true,
-   "style": "quiet"
-  },
-  "f48_killed_k": {
-   "speaker": "kurt",
-   "text": "She's not following any more.",
-   "proposed": true,
-   "style": "quiet"
-  },
-  "f48_killed_s": {
-   "speaker": "socko",
-   "text": "Nope! Thanks to you, buddy!",
-   "proposed": true,
-   "socko_face": "wide_smile",
-   "socko_clip": "Head_Bob"
-  },
-  "f48_wounded_s": {
-   "speaker": "socko",
-   "text": "She'll be sore. She'll be cross, too.",
-   "proposed": true,
-   "socko_face": "smile"
-  },
-  "f48_calm_k": {
-   "speaker": "kurt",
-   "text": "Sleep, Marta.",
-   "proposed": true,
-   "style": "quiet"
-  },
-  "f48_calm_s": {
-   "speaker": "socko",
-   "text": "...Sure. Sleep.",
-   "proposed": true,
-   "socko_face": "unnatural_stillness"
-  },
-  "f48_evaded_s": {
-   "speaker": "socko",
-   "text": "She's still out there, y'know.",
-   "proposed": true,
-   "socko_face": "suspicion"
-  },
-  "f48_clean_k": {
-   "speaker": "kurt",
-   "text": "Didn't fire a shot.",
-   "proposed": true,
-   "style": "quiet"
-  },
-  "f48_clean_s": {
-   "speaker": "socko",
-   "text": "Yeah. I noticed.",
-   "proposed": true,
-   "socko_face": "irritation"
-  },
-  "f48_infected_k": {
-   "speaker": "kurt",
-   "text": "My hands won't stop shaking.",
-   "proposed": true,
-   "style": "quiet"
-  },
-  "f48_infected_s": {
-   "speaker": "socko",
-   "text": "Shh. That's just the good part starting.",
-   "proposed": true,
-   "socko_face": "smile",
-   "socko_talk": "Talking_Whispering"
-  },
-  "f48_end_s": {
-   "speaker": "socko",
-   "text": "Well! What's in here, then?",
-   "proposed": true,
-   "socko_face": "excitement",
-   "socko_clip": "Peeking"
-  },
   "s_giggle": {
    "speaker": "socko",
    "text": "(giggles) Hee hee hee!",
@@ -656,6 +575,148 @@
    "proposed": true,
    "socko_face": "wide_smile",
    "socko_clip": "Looking_Around"
+  },
+  "s_13_spot": {
+   "speaker": "socko",
+   "text": "Ooh! Thirteen! Ground floor! I'll remember that one for ya, bud.",
+   "proposed": true,
+   "socko_face": "excitement",
+   "socko_clip": "Head_Bob",
+   "socko_talk": "Talking_Excited"
+  },
+  "s_13_remind": {
+   "speaker": "socko",
+   "text": "Thirteen, buddy. Down the hall. I remembered!",
+   "proposed": true,
+   "socko_face": "smile",
+   "socko_clip": "Head_Nod"
+  },
+  "s_13_here": {
+   "speaker": "socko",
+   "text": "There! Thirteen! Told ya.",
+   "proposed": true,
+   "socko_face": "wide_smile",
+   "socko_clip": "Head_Bob"
+  },
+  "gf_enter_k": {
+   "speaker": "kurt",
+   "text": "...The lobby. How did I...",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "gf_enter_s": {
+   "speaker": "socko",
+   "text": "Who cares! Thirteen's this floor!",
+   "proposed": true,
+   "socko_face": "excitement"
+  },
+  "super_k": {
+   "speaker": "kurt",
+   "text": "Is he... is he naked?",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "super_s": {
+   "speaker": "socko",
+   "text": "Yep! Don't stare. It's rude.",
+   "proposed": true,
+   "socko_face": "uncomfortable_smile",
+   "socko_talk": "Talking_Whispering"
+  },
+  "super_hint": {
+   "speaker": "socko",
+   "text": "Psst. He can't see too good. But he hears real good.",
+   "proposed": true,
+   "socko_face": "suspicion",
+   "socko_talk": "Talking_Whispering"
+  },
+  "s_bonk": {
+   "speaker": "socko",
+   "text": "Or, y'know. Bonk him.",
+   "proposed": true,
+   "socko_face": "smile",
+   "socko_talk": "Talking_Whispering"
+  },
+  "k_13": {
+   "speaker": "kurt",
+   "text": "Thirteen.",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "a13_open": {
+   "speaker": "kurt",
+   "text": "It's open.",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "a13_killed_k": {
+   "speaker": "kurt",
+   "text": "She's not following any more.",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "a13_killed_s": {
+   "speaker": "socko",
+   "text": "Nope! Thanks to you, buddy!",
+   "proposed": true,
+   "socko_face": "wide_smile",
+   "socko_clip": "Head_Bob"
+  },
+  "a13_wounded_s": {
+   "speaker": "socko",
+   "text": "She'll be sore. She'll be cross, too.",
+   "proposed": true,
+   "socko_face": "smile"
+  },
+  "a13_calm_k": {
+   "speaker": "kurt",
+   "text": "Sleep, Marta.",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "a13_calm_s": {
+   "speaker": "socko",
+   "text": "...Sure. Sleep.",
+   "proposed": true,
+   "socko_face": "unnatural_stillness"
+  },
+  "a13_evaded_s": {
+   "speaker": "socko",
+   "text": "She's still out there, y'know.",
+   "proposed": true,
+   "socko_face": "suspicion"
+  },
+  "a13_clean_k": {
+   "speaker": "kurt",
+   "text": "Didn't fire a shot.",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "a13_clean_s": {
+   "speaker": "socko",
+   "text": "Yeah. I noticed.",
+   "proposed": true,
+   "socko_face": "irritation"
+  },
+  "a13_infected_k": {
+   "speaker": "kurt",
+   "text": "My hands won't stop shaking.",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "a13_infected_s": {
+   "speaker": "socko",
+   "text": "Shh. That's just the good part starting.",
+   "proposed": true,
+   "socko_face": "smile",
+   "socko_talk": "Talking_Whispering"
+  },
+  "a13_end_s": {
+   "speaker": "socko",
+   "text": "Well! What's in here, then?",
+   "proposed": true,
+   "socko_face": "excitement",
+   "socko_clip": "Peeking"
   }
  }
 }

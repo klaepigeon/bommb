@@ -51,7 +51,7 @@
   },
   "sticky_48": {
    "title": "Sticky note (on the door of 48)",
-   "text": "IN HERE"
+   "text": "13 ↓"
   },
   "boxes_label": {
    "title": "Label on a box",
@@ -67,11 +67,28 @@
   },
   "backrooms_note2": {
    "title": "Note in pencil, on the wall",
-   "text": "KEY FOR 48 IS IN THE BOX ROOM\nBOX ROOM KEY IS IN THE KITCHEN THAT ISN'T\n(arrows, many of them, pointing in different directions)"
+   "text": "13. GROUND FLOOR.\nTHE CARETAKER CAN'T SEE. HE HEARS.\nKEY IN THE MAILBOX. OR ON HIS BOARD.\n(arrows, many of them, pointing down)"
   },
   "plank_note": {
    "title": "Chalk on the balcony",
    "text": "48's balcony is ONE plank away.\nDon't look down. There isn't a down."
+  },
+  "scrawl_13": {
+   "title": "On the wall",
+   "text": "13\n\nGROUND FLOOR\nGO DOWN\nSHE'S WAITING IN 13\n\n(the same number, over and over, smaller and smaller, down to the skirting board)",
+   "clue": "thirteen"
+  },
+  "building_notice": {
+   "title": "Notice (vestibule)",
+   "text": "BUILDING 14 — CARETAKER\nRing at the lodge for keys.\nDo not disturb the caretaker after 22:00.\nThe caretaker is always here."
+  },
+  "sticky_13": {
+   "title": "Sticky note",
+   "text": "13"
+  },
+  "sticky_wait": {
+   "title": "Sticky note",
+   "text": "WAIT HERE"
   }
  }
 }

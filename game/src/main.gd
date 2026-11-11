@@ -6,7 +6,7 @@ extends Node
 ## SubViewportContainer whose material is the post pass (dither, grain, infection). The UI renders
 ## above it at full resolution.
 ##
-## Command line (after `--`):  --autotest[=name]  --fast  --start=flat47|backrooms|flat48
+## Command line (after `--`):  --autotest[=name]  --fast  --start=flat47|backrooms|ground_floor
 ##                             --shots=DIR  --skip-intro
 
 const POST := preload("res://shaders/post.gdshader")
@@ -102,11 +102,14 @@ func load_level(name: String, spawn: String) -> void:
 		level.queue_free()
 		level = null
 		await get_tree().process_frame
+	if player:
+		player.global_position = Vector3(0, -200, 0)     # out of every trigger while the new level builds
+		player.velocity = Vector3.ZERO
 	var layout: Dictionary
 	match name:
 		"flat47": layout = Flat47Layout.layout()
 		"backrooms": layout = load("res://src/levels/backrooms.gd").layout()
-		"flat48": layout = load("res://src/levels/flat48.gd").layout()
+		"ground_floor": layout = GroundFloorLayout.layout()
 	level = Level.new()
 	level.name = "Level_" + name
 	world.add_child(level)
@@ -126,7 +129,7 @@ func load_level(name: String, spawn: String) -> void:
 		player.global_transform = level.spawns[sp]
 	Story.chapter = name
 	hud.bind(player, self)
-	var dpath: String = {"flat47": "res://src/story/scene_a.gd", "backrooms": "res://src/story/backrooms_chapter.gd", "flat48": "res://src/story/flat48_chapter.gd"}.get(name, "")
+	var dpath: String = {"flat47": "res://src/story/scene_a.gd", "backrooms": "res://src/story/backrooms_chapter.gd", "ground_floor": "res://src/story/ground_floor_chapter.gd"}.get(name, "")
 	if dpath != "" and ResourceLoader.exists(dpath):
 		director = load(dpath).new()
 		director.name = "Director"

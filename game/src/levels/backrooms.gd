@@ -2,6 +2,8 @@ class_name BackroomsLayout
 ## The Backrooms: Flat 47, again, wrong. Built from the same Kit pieces and the same textures as
 ## Flat 47; the difference is arrangement, proportion, light, damp and repetition.
 ##
+## Every way out leads down to the ground floor of Building 14 (ground_floor.gd) and Apartment 13.
+##
 ##   z=0  +----------+---------+---------+---------+
 ##        | ARRIVAL  | KITCHEN | KITCHEN | BEDROOM |      the corridor runs on past x=20
 ##        | (living) |    A    | B (wet) | (6 m)   |      and comes back round (a seam at 23)
@@ -193,7 +195,7 @@ static func layout() -> Dictionary:
 		{"t": "paper", "room": "crawl", "p": [3.45, 10.6], "r": 90, "h": 0.6, "doc": "backrooms_note2"},
 		{"t": "prop", "room": "crawl", "kind": "photo_cut", "p": [2.6, 10.8], "lift": 0.05},
 		# ---- the landing: 48, with a note on it
-		{"t": "sticky", "room": "landing", "p": [7.95, 11.2], "r": 90, "h": 1.6, "text": "IN HERE", "doc": "sticky_48"},
+		{"t": "sticky", "room": "landing", "p": [7.95, 11.2], "r": 90, "h": 1.6, "text": "13 ↓", "doc": "sticky_48"},
 		{"t": "stairs_down", "room": "landing", "p": [4.4, 12.4], "r": 90},
 	]
 	return {

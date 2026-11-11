@@ -41,6 +41,7 @@ func begin(p_main: Node, spawn: String) -> void:
 			_plank = p
 	_spawn_marta()
 	_ensure_music_box()
+	_scrawl_13()
 	Sfx.set_ambience("drone_wrong", -12.0)
 	if spawn == "restore":
 		return
@@ -54,6 +55,20 @@ func _spawn_marta() -> void:
 	marta.setup(level, player, Vector3(a[0], a[1], a[2]), level.data.patrol)
 	marta.rotation.y = PI * 0.5        # facing west, down the corridor
 	marta._yaw = marta.rotation.y
+
+## "13", over and over, on the arrival room's wall (readable; Socko reads it out anyway)
+func _scrawl_13() -> void:
+	Kit.place(level, {"t": "paper", "room": "arrival", "p": [1.2, 4.93], "r": 0, "h": 1.5, "doc": "scrawl_13"})
+	for i in 5:
+		var lb := Label3D.new()
+		lb.text = "13"
+		lb.font_size = 64 - i * 10
+		lb.pixel_size = 0.01
+		lb.modulate = Color(0.25, 0.05, 0.04)
+		lb.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		level.add_child(lb)
+		lb.global_position = Vector3(0.7 + i * 0.32, 1.95 - i * 0.28, 4.93)
+		lb.rotation.y = PI
 
 ## if Kurt left the music box in Flat 47, there's one here too (on the middle bed)
 func _ensure_music_box() -> void:
@@ -75,6 +90,12 @@ func _arrive() -> void:
 	if player.socko:
 		player.socko.set_pose("talk", 0.5)
 	await Speech.speak(["k_same_room", "s_after_crawl"])
+	# the wall says where to go, and Socko keeps it for him
+	if player.socko:
+		player.socko.point_at(Vector3(1.2, 1.8, 4.95))
+	await Speech.speak(["s_13_spot"])
+	Story.set_flag("knows_13", true)
+	Story.record("clue.found:thirteen")
 	if player.socko:
 		player.socko.point_at(Vector3(15.0, 1.0, 2.0))
 	if SockoDirector.inst:
@@ -210,7 +231,7 @@ func _leave(route: String) -> void:
 			if Story.has(k):
 				how = "door:" + k.trim_prefix("route.padlock_")
 	Story.record("route." + route)
-	Story.set_flag("route48", how)
+	Story.set_flag("route_out", how)
 	Story.set_flag("marta_state", _marta_state())
 	Story.set_flag("marta_hits", marta.hit_count)
 	Events.beat.emit("leaving")
@@ -219,7 +240,11 @@ func _leave(route: String) -> void:
 		Sfx.play("crawl", -2.0)
 	await main.set_blackout(1.0, 1.2)
 	player.locked = false
-	main.load_level("flat48", route)
+	# down the stairs, round and round, and out: the building's own front door
+	for i in 8:
+		Sfx.play("step_concrete", -8.0, 0.9)
+		await get_tree().create_timer(0.28 if not Speech.fast else 0.02).timeout
+	main.load_level("ground_floor", "entrance")
 
 func _marta_state() -> String:
 	if marta.state == "dead":
@@ -246,9 +271,15 @@ func _fell() -> void:
 
 # ---------------------------------------------------------------------------------- caught
 
+var _handling_catch := false
+
 func _on_caught(_by: Node) -> void:
-	if _leaving:
+	if _leaving or _handling_catch:
 		return
+	_handling_catch = true
+	# she's moved off him at once (the scene goes dark over it)
+	var far: Array = level.data.patrol[2]
+	marta.reset_to(Vector3(far[0], far[1], far[2]))
 	player.locked = true
 	player.look_locked = true
 	Sfx.play("grab", 2.0)
@@ -263,13 +294,12 @@ func _on_caught(_by: Node) -> void:
 	player.injure(1)
 	player.global_transform = level.spawns["caught"]
 	player._pitch = 0.0
-	# she goes somewhere else, for a while
-	var far: Array = level.data.patrol[2]
-	marta.reset_to(Vector3(far[0], far[1], far[2]))
 	await get_tree().create_timer(1.5 if not Speech.fast else 0.1).timeout
 	main.set_blackout(0.0, 1.5)
 	player.locked = false
 	player.look_locked = false
+	main.set_post("hurt", 0.0, 2.0)
+	_handling_catch = false
 	await Speech.speak(["k_caught_wake", "s_caught"])
 
 ## the third time: the boxes have him. Try again from the last checkpoint.

@@ -2,13 +2,13 @@ extends Node
 ## Builds each level headless and reports what it made (and any script errors on the way).
 func _ready() -> void:
 	await get_tree().process_frame
-	for lname in ["flat47", "backrooms", "flat48"]:
+	for lname in ["flat47", "backrooms", "ground_floor"]:
 		var root := Node3D.new()
 		get_tree().root.add_child(root)
 		var lvl := Level.new()
 		root.add_child(lvl)
 		var t := Time.get_ticks_msec()
-		var lay: Dictionary = {"flat47": Flat47Layout.layout(), "backrooms": BackroomsLayout.layout(), "flat48": Flat48Layout.layout()}[lname]
+		var lay: Dictionary = {"flat47": Flat47Layout.layout(), "backrooms": BackroomsLayout.layout(), "ground_floor": GroundFloorLayout.layout()}[lname]
 		lvl.build(lay, lname)
 		var ms := Time.get_ticks_msec() - t
 		var tris := 0

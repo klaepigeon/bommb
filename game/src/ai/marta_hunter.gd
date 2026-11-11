@@ -20,12 +20,20 @@ extends CharacterBody3D
 signal caught(by: MartaHunter)
 signal state_changed(s: String)
 
-const SPD := {"patrol": 0.85, "investigate": 1.35, "chase": 2.5, "search": 1.2, "retreat": 2.8, "pound": 0.0}
+## the brain is shared; a subclass changes the body and the temperament (see super_hunter.gd)
+var SPD := {"patrol": 0.85, "investigate": 1.35, "chase": 2.5, "search": 1.2, "retreat": 2.8, "pound": 0.0}
+var who := "marta"                ## the story ledger's name for her (violence.shot_<who> ...)
+var eye_height := 1.35
+var sight_dark := 3.5             ## how far she sees him in the dark .. in the light
+var sight_lit := 12.0
+var hearing := 1.0                ## multiplies every noise's reach
+var pacifiable := true            ## the lullaby works on her
+var hit_points := 100.0
 
 var level: Level
 var player: Player
 var nav: NavGrid
-var model: MartaModel
+var model: Node3D
 var state := "dormant"
 var hp := 100.0
 var aggression := 0
@@ -66,6 +74,7 @@ var _pacify_src: Node = null
 var _stun_left := 0.0
 var _retreat_left := 0.0
 var _sees := 0.0
+var _grace := 0.0                 # after a catch: she can't see or catch him for a while
 
 func setup(p_level: Level, p_player: Player, at: Vector3, route: Array) -> void:
 	level = p_level
@@ -79,14 +88,9 @@ func setup(p_level: Level, p_player: Player, at: Vector3, route: Array) -> void:
 	collision_mask = 1 | 2
 	var cs := CollisionShape3D.new(); var cap := CapsuleShape3D.new(); cap.radius = 0.3; cap.height = 1.6
 	cs.shape = cap; cs.position = Vector3(0, 0.9, 0); add_child(cs)
-	model = MartaModel.new()
-	add_child(model)
-	# seated in a chair that isn't there: the chair, the puddle, the roots stay behind
-	for c in model.get_children():
-		if c is MeshInstance3D:
-			(c as MeshInstance3D).visible = false
+	hp = hit_points
+	_build_body()
 	Player.set_layer(model, Level.CHAR_LAYER)
-	model.rotation.y = 0.0
 	global_position = at
 	_last_pos = at
 	_presence = Sfx.loop_at("hum", self, -12.0, 1.5)
@@ -98,6 +102,15 @@ func setup(p_level: Level, p_player: Player, at: Vector3, route: Array) -> void:
 	var hs := CollisionShape3D.new(); var bs := BoxShape3D.new(); bs.size = Vector3(0.7, 1.4, 0.7); hs.shape = bs
 	hb.add_child(hs); add_child(hb); hb.position = Vector3(0, 0.9, 0)
 	_hook = Hook.attach(hb, self, "Marta")
+
+## her body: Marta, seated in a chair that isn't there (the chair, the puddle, the roots stay behind)
+func _build_body() -> void:
+	var m := MartaModel.new()
+	model = m
+	add_child(m)
+	for c in m.get_children():
+		if c is MeshInstance3D:
+			(c as MeshInstance3D).visible = false
 
 func set_state(s: String) -> void:
 	if state == s:
@@ -114,16 +127,16 @@ func wake() -> void:
 # ---------------------------------------------------------------------------------- senses
 
 func eye() -> Vector3:
-	return global_position + Vector3(0, 1.35, 0)
+	return global_position + Vector3(0, eye_height, 0)
 
 func _visibility() -> float:
-	if not player or player.is_hidden():
+	if not player or player.is_hidden() or _grace > 0.0:
 		return 0.0
 	var target := player.global_position + Vector3(0, 1.0 if player.crouching else 1.45, 0)
 	var to := target - eye()
 	var d := to.length()
 	var bright := level.brightness_at(player.global_position)
-	var rng := lerpf(3.5, 12.0, bright)
+	var rng := lerpf(sight_dark, sight_lit, bright)
 	if player.torch_on:
 		rng = maxf(rng, 13.0)
 	if player.crouching:
@@ -165,7 +178,7 @@ func _sense_tick(dt: float) -> void:
 func _start_chase() -> void:
 	if state != "chase":
 		Sfx.stinger()
-		Story.record("marta.spotted")
+		Story.record(who + ".spotted")
 	set_state("chase")
 	suspicion = 1.0
 	last_known = player.global_position
@@ -185,12 +198,14 @@ func _heard(pos: Vector3, radius: float) -> float:
 				doors += 1
 		# a sound that has to go round is quieter than its straight line says
 		dist = maxf(dist, pos.distance_to(global_position))
-	var eff := radius * pow(0.55, doors)
+	# a closed door swallows a footstep; a gunshot goes through it
+	var eff := radius * pow(0.8 if radius >= 20.0 else 0.55, doors)
 	return clampf(1.0 - dist / maxf(eff, 0.01), 0.0, 1.0)
 
 func _on_noise(pos: Vector3, radius: float, kind: String, src: Node) -> void:
 	if state in ["dormant", "dead", "stunned"] or src == self:
 		return
+	radius *= hearing
 	if pos.distance_to(global_position) > radius * 1.2:
 		return
 	var s := _heard(pos, radius)
@@ -202,7 +217,7 @@ func _on_noise(pos: Vector3, radius: float, kind: String, src: Node) -> void:
 		return
 	match kind:
 		"lullaby":
-			if state != "chase" or s > 0.5:
+			if pacifiable and (state != "chase" or s > 0.5):
 				_pacify(src, pos)
 			return
 		"gunshot":
@@ -250,6 +265,8 @@ func _pacify(src: Node, pos: Vector3) -> void:
 
 func _go(target: Vector3, ignore_locks := false) -> bool:
 	_goal = target
+	if state != "pound":
+		_pound_door = null
 	_ids = nav.id_path(global_position, target) if not ignore_locks else PackedInt64Array()
 	if ignore_locks or _ids.size() < 2:
 		# the route's shut: where would she go if the doors gave?
@@ -363,6 +380,7 @@ func _physics_process(delta: float) -> void:
 	_t += delta
 	_st += delta
 	_threatened = maxf(0.0, _threatened - delta)
+	_grace = maxf(0.0, _grace - delta)
 	var far := global_position.distance_to(player.global_position) > 22.0 and state in ["patrol", "dormant"]
 	_sense -= delta
 	if _sense <= 0.0 and state not in ["dormant", "stunned"]:
@@ -370,6 +388,10 @@ func _physics_process(delta: float) -> void:
 		_sense = dt
 		_sense_tick(dt)
 		_threat_check()
+	# the way to him is a door she can't open: she goes at the door
+	if state in ["chase", "search"] and _pound_door and is_instance_valid(_pound_door) and level.ai_secured(_pound_door) \
+			and global_position.distance_to(_pound_door.global_position) < 1.6:
+		set_state("pound")
 	match state:
 		"dormant":
 			velocity = Vector3.ZERO
@@ -401,7 +423,7 @@ func _physics_process(delta: float) -> void:
 				_go(last_known if _sees <= 0.0 else player.global_position)
 			_follow(delta)
 			var d := global_position.distance_to(player.global_position)
-			if d < 1.0 and not player.is_hidden() and player.mode != "downed":
+			if d < 1.0 and not player.is_hidden() and player.mode != "downed" and _grace <= 0.0:
 				_catch()
 			elif _lost > 2.5 and global_position.distance_to(last_known) < 1.2 or _lost > 7.0:
 				var p_check := 0.55 + (0.35 if _seen_hide else 0.0) + 0.05 * aggression
@@ -411,9 +433,9 @@ func _physics_process(delta: float) -> void:
 			if _hide_target:
 				if _follow(delta):
 					velocity = Vector3.ZERO
-					var who: Node = _hide_target.search()
-					Story.record("marta.checked_hide")
-					if who == player:
+					var found: Node = _hide_target.search()
+					Story.record(who + ".checked_hide")
+					if found == player:
 						player.unhide()
 						_catch()
 						return
@@ -436,7 +458,7 @@ func _physics_process(delta: float) -> void:
 				if _pound_t <= 0.0:
 					_pound_t = 1.15 - 0.1 * aggression
 					if _pound_door.pound(13.0 + 3.0 * aggression):
-						Story.record("marta.broke_door")
+						Story.record(who + ".broke_door")
 				# she gives up on doors she's not sure about
 				if suspicion < 0.6 and _st > 6.0:
 					_pound_door = null
@@ -522,7 +544,7 @@ func _silence(n: Node) -> void:
 		else:
 			p.behaviour.silence()
 			Sfx.play_at("switch", p.global_position, -2.0, 0.7, 2.0)
-		Story.record("marta.silenced", {"what": p.display_name})
+		Story.record(who + ".silenced", {"what": p.display_name})
 
 func _retreat() -> void:
 	set_state("retreat")
@@ -554,6 +576,7 @@ func _threat_check() -> void:
 
 func _catch() -> void:
 	velocity = Vector3.ZERO
+	_grace = 8.0
 	Story.record("caught")
 	caught.emit(self)
 	Events.player_caught.emit(self)
@@ -569,17 +592,17 @@ func reset_to(pos: Vector3) -> void:
 
 # ---------------------------------------------------------------------------------- harm
 
-func shot(pos: Vector3, _dir: Vector3) -> void:
+func shot(pos: Vector3, _dir := Vector3.ZERO) -> void:
 	if state == "dead":
 		return
 	var head := pos.y > global_position.y + 1.2
 	var dmg := 45.0 if head else 25.0
 	hp -= dmg
 	hit_count += 1
-	Story.record("violence.shot_marta", {"head": head, "hp": hp})
-	Sfx.play_at("marta_clicks", eye(), 6.0, 1.6)
+	Story.record("violence.shot_" + who, {"head": head, "hp": hp})
+	_hurt_sound()
 	if hp <= 0.0:
-		_die("violence.killed_marta")
+		_die("violence.killed_" + who)
 		return
 	aggression += 1
 	_stun(2.2 if not head else 3.2)
@@ -588,7 +611,7 @@ func hit_by_object(prop: Node, speed: float) -> void:
 	var force := float(prop.mass) * speed
 	if force < 10.0 or state == "dead":
 		return
-	Story.record("violence.struck_marta")
+	Story.record("violence.struck_" + who)
 	_stun(minf(force / 20.0, 1.6))
 	suspicion = 1.0
 	last_known = player.global_position
@@ -597,14 +620,14 @@ func shock(_hz: Dictionary) -> void:
 	if state in ["stunned", "dead"]:
 		return
 	Sfx.play_at("buzz", eye(), 4.0, 0.8, 8.0, "shock", self)
-	Story.record("stealth.trapped_marta")
+	Story.record("stealth.trapped_" + who)
 	_stun(5.0)
 
 func _stun(sec: float) -> void:
 	_stun_left = sec
 	set_state("stunned")
 	velocity = Vector3.ZERO
-	if hp < 40.0 and Infection.stage >= 1:
+	if who == "marta" and hp < 40.0 and Infection.stage >= 1:
 		finish_offered = true
 		if SockoDirector.inst:
 			SockoDirector.inst.suggest("finish")
@@ -612,7 +635,7 @@ func _stun(sec: float) -> void:
 func _die(key: String) -> void:
 	set_state("dead")
 	Story.record(key)
-	Story.set_flag("marta_dead", true)
+	Story.set_flag(who + "_dead", true)
 	velocity = Vector3.ZERO
 	if _presence:
 		_presence.queue_free()
@@ -632,7 +655,7 @@ func iverb(id: String, _p: Node) -> void:
 		finish_offered = false
 		Sfx.play_at("impact_flesh", eye(), 4.0, 0.7)
 		player.shake(0.6)
-		_die("violence.finished_marta")
+		_die("violence.finished_" + who)
 
 func ifocus() -> Vector3:
 	return eye()
@@ -640,7 +663,8 @@ func ifocus() -> Vector3:
 # ---------------------------------------------------------------------------------- body & voice
 
 func _animate(delta: float) -> void:
-	if state == "dead":
+	var mm := model as MartaModel
+	if state == "dead" or not mm:
 		return
 	var hover := 0.14 + sin(_t * 1.3) * 0.04
 	if state == "pacified" and velocity.length() < 0.05:
@@ -648,14 +672,14 @@ func _animate(delta: float) -> void:
 	model.position.y = lerpf(model.position.y, hover, delta * 3.0)
 	var reach := 1.0 if state == "chase" else 0.0
 	for j in ["shR", "shL"]:
-		var n: Node3D = model.joints.get(j)
+		var n: Node3D = mm.joints.get(j)
 		if n:
 			n.rotation.x = lerp_angle(n.rotation.x, -1.3 * reach, delta * 3.0)
-	var head: Node3D = model.joints.get("head")
+	var head: Node3D = mm.joints.get("head")
 	if not head:
 		return
 	if state in ["chase", "stunned"] and player:
-		model.face(player.camera.global_position, MartaModel.JAW_OPEN * (1.0 if state == "chase" else 0.4))
+		mm.face(player.camera.global_position, MartaModel.JAW_OPEN * (1.0 if state == "chase" else 0.4))
 	elif state == "pacified":
 		head.rotation = head.rotation.lerp(Vector3(0.6, 0, 0.2), delta * 2.0)
 	else:
@@ -664,8 +688,16 @@ func _animate(delta: float) -> void:
 			head.rotation = MartaModel.HEAD_REST + Vector3(_rng.randf_range(-0.3, 0.3), _rng.randf_range(-0.8, 0.8), _rng.randf_range(-0.4, 0.4))
 		head.rotation = head.rotation.lerp(MartaModel.HEAD_REST, delta * 0.3)
 
+func _hurt_sound() -> void:
+	Sfx.play_at("marta_clicks", eye(), 6.0, 1.6)
+
 func _audio(delta: float) -> void:
 	var d := global_position.distance_to(player.global_position)
+	_voice(delta, d)
+	_tension_and_threat(delta, d)
+
+## her clicking: her audio signature, and (as the infection grows) almost words
+func _voice(delta: float, d: float) -> void:
 	_click_t -= delta
 	if _click_t <= 0.0 and state not in ["dormant", "pacified", "stunned"]:
 		_click_t = _rng.randf_range(2.5, 5.0) if state == "chase" else _rng.randf_range(6.0, 11.0)
@@ -677,6 +709,8 @@ func _audio(delta: float) -> void:
 			Speech.bark(line)
 	if _rng.randf() < delta * 0.15 and velocity.length() > 0.2:
 		Sfx.play_at("creak", global_position, -10.0, _rng.randf_range(0.8, 1.2))
+
+func _tension_and_threat(delta: float, d: float) -> void:
 	var tension := 0.0
 	match state:
 		"chase": tension = 1.0

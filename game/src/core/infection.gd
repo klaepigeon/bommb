@@ -19,6 +19,8 @@ const RULES := {
 	"violence.killed_marta": 0.25,
 	"violence.struck_marta": 0.04,
 	"violence.finished_marta": 0.3,
+	"violence.shot_super": 0.05,
+	"violence.killed_super": 0.2,
 	"resource.fired": 0.015,
 	"caught": 0.09,
 	"socko.obeyed": 0.035,

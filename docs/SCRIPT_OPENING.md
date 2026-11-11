@@ -170,3 +170,22 @@ These play at quiet moments: no threat nearby, no other line playing, and some t
 > Her clicking is also her audio signature for the rest of the hunt. Socko's "What?" is a
 > reaction to the clicks: he understands her and Kurt can't (brief §5). That reaction is the
 > mystery, and nothing explains it.
+
+## After the maze (owner's direction, this session)
+
+All the ways out of the Backrooms lead down to the **ground floor of Building 14**: Kurt walks in
+through the building's front door, into the lobby. **The Super** walks this floor (the preserved
+model: naked, the loose skin and the rest swinging with his stride), and getting past him is a
+stealth sequence. The destination is **Apartment 13** (it replaces Flat 48).
+
+**"13" is written on the wall** of the Backrooms' arrival room. Socko reads it out and remembers
+it, so the player doesn't have to. He reminds Kurt on the ground floor if Kurt wanders.
+
+> **PLAN (proposed lines, all marked `proposed` in `content/script.json`):**
+> Socko, at the scrawl: "Ooh! Thirteen! Ground floor! I'll remember that one for ya, bud."
+> Kurt, walking in: "...The lobby. How did I..." / Socko: "Who cares! Thirteen's this floor!"
+> First sight of The Super: Kurt: "Is he... is he naked?" / Socko: "Yep! Don't stare. It's
+> rude." / "Psst. He can't see too good. But he hears real good." (with the gun: "Or, y'know.
+> Bonk him.")
+> Reminders: "Thirteen, buddy. Down the hall. I remembered!" / at the door: "There! Thirteen!
+> Told ya."

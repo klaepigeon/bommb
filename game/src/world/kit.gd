@@ -657,6 +657,42 @@ func _hiding_closet(ctx: Ctx) -> Node:
 	ctx.def["h"] = 2.1
 	return _wardrobe(ctx)
 
+## the lobby's mailboxes: a grid of little steel doors on the wall; 13 opens, with a key inside
+func _mailboxes(ctx: Ctx) -> Node:
+	var cols := 6; var rows := 4; var bw := 0.22; var bh := 0.2; var y0 := 0.95
+	ctx.box("metal", Vector3(0, y0 + rows * bh * 0.5, 0.06), Vector3(cols * bw * 0.5, rows * bh * 0.5, 0.06))
+	var n := 1
+	for r in rows:
+		for c in cols:
+			var cx := -cols * bw * 0.5 + bw * 0.5 + c * bw
+			var cy := y0 + (rows - 1 - r) * bh
+			if n == 13:
+				var d := _cab_door(ctx, Vector3(cx, cy + 0.01, -0.005), bw - 0.02, bh - 0.02, "metal", "mailbox13", false, -1.0)
+				d.display_name = "Mailbox 13"
+				_contents_on(ctx, ["key_apt13"], Vector3(cx, cy + 0.02, 0.06), Vector3.ZERO)
+			else:
+				ctx.box("chrome", Vector3(cx, cy + bh * 0.5, -0.002), Vector3(bw * 0.45, bh * 0.45, 0.004), false)
+			var lb := Label3D.new(); lb.text = str(n); lb.font_size = 14; lb.pixel_size = 0.0018
+			lb.modulate = Color(0.1, 0.1, 0.1); lb.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+			ctx.node(lb, Transform3D(Basis(Vector3.UP, PI), Vector3(cx, cy + bh * 0.8, -0.012)))
+			n += 1
+	return null
+
+## the caretaker's key board: hooks, and on one of them the key you want
+func _keyboard(ctx: Ctx) -> Node:
+	ctx.box("wood_raw", Vector3(0, 1.5, 0.01), Vector3(0.3, 0.2, 0.01), false)
+	var keys: Array = ctx.def.get("keys", [])
+	for i in 6:
+		var x := -0.24 + i * 0.096
+		ctx.box("brass", Vector3(x, 1.6, -0.01), Vector3(0.005, 0.005, 0.02), false)
+		if i < keys.size():
+			var p := PropKit.item(String(keys[i]), ctx.light)
+			p.freeze = true
+			ctx.parent.add_child(p)
+			p.global_position = ctx.at(Vector3(x, 1.54, -0.03))
+			p.relight()
+	return null
+
 ## standing water on the floor (a hazard when its circuit's live)
 func _water(ctx: Ctx) -> Node:
 	var w := float(ctx.def.get("w", 2.0)); var l := float(ctx.def.get("l", 2.0))

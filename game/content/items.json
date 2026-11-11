@@ -224,6 +224,14 @@
     "doc"
    ],
    "doc": "letter_returned"
+  },
+  "key_apt13": {
+   "name": "Key, tagged 13",
+   "category": "key",
+   "desc": "A Yale key on a split ring. A cardboard tag: 13.",
+   "tags": [
+    "key:apt13"
+   ]
   }
  }
 }

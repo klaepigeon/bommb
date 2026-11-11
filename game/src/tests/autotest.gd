@@ -22,7 +22,7 @@ func begin(p_main: Node, which: String) -> void:
 	if shots_dir != "":
 		DirAccess.make_dir_recursive_absolute(shots_dir)
 	await get_tree().process_frame
-	var suites := ["systems", "touch", "scene_a", "routes", "ai", "soak"] if which == "all" else [which]
+	var suites := ["systems", "touch", "scene_a", "routes", "ai", "stealth", "soak"] if which == "all" else [which]
 	for s in suites:
 		if has_method("t_" + s):
 			print("AUTOTEST begin ", s)
@@ -140,6 +140,22 @@ func start(level: String, spawn := "") -> void:
 	await main.load_level(level, spawn)
 	await until(func(): return main.level != null and main.director != null, 10.0)
 	await frames(5)
+
+func t_shots_ground() -> void:
+	await ground(true)
+	var su: SuperHunter = main.director.super_
+	su.reset_to(Vector3(6.0, 0, 9.0)); su.set_state("patrol")
+	await wait(2.5)
+	main.set_blackout(0.0)
+	for t in [["lobby_super", Vector3(6.0, 0, 12.6)], ["super_close", su.global_position + Vector3(0.4, 0, 2.6)], ["corridor_13", Vector3(14.0, 0, 9.0)]]:
+		su.velocity = Vector3.ZERO
+		await place(t[1], su.eye() - Vector3(0, 0.9, 0) if t[0] != "corridor_13" else Vector3(26.5, 1.4, 8.0))
+		await wait(0.4)
+		await shot(t[0])
+	main.player.inv.add("torch"); main.player.toggle_torch()
+	await place(su.global_position + Vector3(0.0, 0, 2.2), su.eye() - Vector3(0, 0.9, 0))
+	await wait(0.3)
+	await shot("super_torch")
 
 func t_shots() -> void:
 	await start("flat47")
@@ -567,17 +583,13 @@ func open_container_of(item: String) -> bool:
 		return await use_on(best.ifocus(), "toggle", stand)
 	return true
 
-func to_48(spawn_check: String, route_flag: String) -> void:
-	ok("reach48_" + spawn_check, await until(func(): return main.level != null and main.level.level_name == "flat48" and main.director != null, 15.0), "level %s" % (main.level.level_name if main.level else "none"))
-	await wait(1.2)
-	await place(Vector3(2.5, 0, 2.8), Vector3(2.5, 1.2, 0.0))
-	ok("arrive48_" + spawn_check, await until(func(): return Story.has("arrived48"), 30.0), "no arrival")
-	ok("route_recorded_" + spawn_check, String(Story.flag("route48", "")).begins_with(route_flag), "route48 = %s" % Story.flag("route48", ""))
-	await until(func(): return get_tree().paused, 20.0)
-	get_tree().paused = false
-	for c in main.hud.root.get_children():
-		if c is Control and c != main.hud.reader and c != main.hud.inventory and c != main.hud.pause and c.get_child_count() > 0 and c.get_child(0) is ColorRect and not (c is PanelContainer):
-			c.queue_free()
+## every way out of the maze: down the stairs and in through the building's front door
+func to_ground(name: String, route_flag: String) -> void:
+	ok("out_" + name, await until(func(): return main.level != null and main.level.level_name == "ground_floor" and main.director != null, 20.0), "level %s" % (main.level.level_name if main.level else "none"))
+	ok("route_recorded_" + name, String(Story.flag("route_out", "")).begins_with(route_flag), "route_out = %s" % Story.flag("route_out", ""))
+	await until(func(): return not main.player.locked, 10.0)
+	ok("walked_in_" + name, main.level.room_at(main.player.global_position + Vector3(0, 1, 0)) == "vestibule", "at %s" % main.player.global_position)
+	await skip_speech()
 
 func t_routes() -> void:
 	var p: Player
@@ -609,7 +621,7 @@ func t_routes() -> void:
 	await use_on((lock as Node3D).global_position, "unlock", Vector3(7.2, 0, 11.6))
 	ok("route_key_unlocks", not lock.is_locked(), "padlock still locked")
 	await _into_48()
-	await to_48("door", "door:key")
+	await to_ground("door_key", "door:key")
 	# --- 2. the bolt cutters (quiet)
 	await backrooms()
 	p = main.player
@@ -622,7 +634,7 @@ func t_routes() -> void:
 	await use_on((lock as Node3D).global_position, "cut", Vector3(7.2, 0, 11.6))
 	ok("route_cut_padlock", not lock.is_locked(), "padlock still locked")
 	await _into_48()
-	await to_48("door_cut", "door:cut")
+	await to_ground("door_cut", "door:cut")
 	# --- 3. the gun (loud)
 	await backrooms()
 	p = main.player
@@ -645,7 +657,7 @@ func t_routes() -> void:
 	ok("route_gun_noise", not heard.is_empty() and heard[0] >= 25.0, "gunshot noise %s" % [heard])
 	ok("route_gun_ammo_spent", p.gun.loaded == 1, "loaded %d" % p.gun.loaded)
 	await _into_48()
-	await to_48("door_shot", "door:shot")
+	await to_ground("door_shot", "door:shot")
 	# --- 4. the vent (unscrew the panel, crawl)
 	await backrooms()
 	p = main.player
@@ -656,7 +668,7 @@ func t_routes() -> void:
 	await use_on((vent as Node3D).global_position, "unscrew", Vector3(9.6, 0, 9.2))
 	ok("route_vent_panel_off", vent.done, "panel still on")
 	await use_on((vent as Node3D).global_position, "crawl", Vector3(9.6, 0, 9.3))
-	await to_48("vent", "vent")
+	await to_ground("vent", "vent")
 	# --- 5. the plank across to 48's balcony
 	await backrooms()
 	p = main.player
@@ -675,8 +687,9 @@ func t_routes() -> void:
 	p.drop()
 	ok("route_plank_bridge", await until(func(): return main.director.bridged, 4.0), "plank at %s" % plank.global_position)
 	await wait(0.5)
-	ok("route_plank_walk", await walk_to(Vector3(15.5, 0, 14.5), 8.0), "couldn't cross; at %s" % p.global_position)
-	await to_48("balcony", "balcony")
+	await walk_to(Vector3(15.5, 0, 14.5), 8.0)
+	ok("route_plank_walk", main.level.level_name == "ground_floor" or Story.has("route.balcony"), "couldn't cross; at %s" % p.global_position)
+	await to_ground("balcony", "balcony")
 	_completed = "routes"
 
 func _through_front_door() -> void:
@@ -748,11 +761,13 @@ func t_ai() -> void:
 	await wait(0.5)
 	await use_on(ad.ifocus(), "bolt", door_from("b_arrival", -1))
 	ok("ai_bolt_on", ad.bolt_on, "no bolt")
+	door("b_side").close(); door("b_side").locked = true       # (or she just goes round through the kitchen)
+	door("b_side").state_changed.emit(door("b_side"))
 	m.reset_to(Vector3(2.5, 0, 6.0))
 	m._start_chase()
 	m.last_known = p.global_position
 	m._repath = 0.0
-	ok("ai_pounds_secured_door", await until(func(): return m.state == "pound", 6.0), "state %s" % m.state)
+	ok("ai_pounds_secured_door", await until(func(): return m.state == "pound", 6.0), "state %s at %s pound_door %s ids %d last_known %s grace %.1f door at %s secured %s" % [m.state, m.global_position, m._pound_door, m._ids.size(), m.last_known, m._grace, ad.global_position, main.level.ai_secured(ad)])
 	var hp0 := ad.hp
 	await wait(3.0)
 	ok("ai_pounding_damages", ad.hp < hp0, "door hp %.0f" % ad.hp)
@@ -802,7 +817,7 @@ func t_ai() -> void:
 ## random thumbs on the glass for a while in every level, Marta hunting: nothing may error
 func t_soak() -> void:
 	var rng := RandomNumberGenerator.new(); rng.seed = 47
-	for lv in ["flat47", "backrooms", "flat48"]:
+	for lv in ["flat47", "backrooms", "ground_floor"]:
 		fresh()
 		if lv == "backrooms":
 			await main.load_level("backrooms", "arrival")
@@ -810,8 +825,8 @@ func t_soak() -> void:
 			main.director.marta.wake()
 			main.director.give_gun(false)
 			main.player.inv.add("ammo", 3)
-		elif lv == "flat48":
-			await main.load_level("flat48", "door")
+		elif lv == "ground_floor":
+			await main.load_level("ground_floor", "entrance")
 		else:
 			await start("flat47")
 		var vp: Vector2 = main.hud.root.get_viewport_rect().size
@@ -839,3 +854,82 @@ func t_soak() -> void:
 			t += 0.12
 		ok("soak_" + lv, true)
 	_completed = "soak"
+
+# ---------------------------------------------------------------------------------- the ground floor (stealth)
+
+func ground(quiet := true) -> void:
+	fresh()
+	Story.set_flag("route_out", "test")
+	await main.load_level("ground_floor", "entrance")
+	await until(func(): return main.director != null and not main.player.locked, 10.0)
+	await skip_speech()
+	if quiet:
+		main.director.super_.set_state("dormant")
+		main.director.super_.velocity = Vector3.ZERO
+
+func t_stealth() -> void:
+	# --- walking in; Socko already knows it's 13; the Super is up and about
+	await ground(false)
+	var p: Player = main.player
+	var su: SuperHunter = main.director.super_
+	ok("gf_walk_in", main.level.room_at(p.global_position + Vector3(0, 1, 0)) == "vestibule", "at %s" % p.global_position)
+	ok("gf_street_door_shut", main.level.doors["street_door"].is_closed(), "street door open")
+	ok("gf_knows_13", Story.flag("knows_13", false), "Socko doesn't know 13")
+	ok("gf_super_awake", await until(func(): return su.state != "dormant", 5.0), "the Super never woke")
+	ok("gf_super_body", su.rig != null and su.rig.skel != null, "no rig")
+	# he moves (his skin, and the rest, swing with it)
+	var p0 := su.global_position
+	await wait(3.0)
+	ok("gf_super_patrols", su.global_position.distance_to(p0) > 0.5, "he hasn't moved")
+	# seeing him: Kurt's line
+	su.reset_to(Vector3(6.0, 0, 9.0)); su.set_state("dormant"); su.velocity = Vector3.ZERO
+	await place(Vector3(6.0, 0, 12.5), su.eye() - Vector3(0, 0.6, 0))
+	ok("gf_sees_super", await until(func(): return main.director.seen_super, 3.0), "no sighting")
+	await skip_speech()
+	# he hears better than he sees: a footstep across the lobby, in the dark, carries to him
+	su.set_state("patrol"); su.suspicion = 0.0; su._ids = PackedInt64Array()
+	main.level.power.set_live("A", false)
+	p.crouching = true
+	await place(Vector3(6.0, 0, 12.0), Vector3(6.0, 1.0, 13.0))   # facing away from him
+	await wait(0.3)
+	ok("gf_super_half_blind", su._visibility() == 0.0, "he saw a crouched man in the dark")
+	Events.noise.emit(p.global_position, 4.5, "footstep", p)
+	await frames(2)
+	ok("gf_super_hears", su.suspicion > 0.2 or su.state in ["investigate", "suspicious"], "suspicion %.2f" % su.suspicion)
+	main.level.power.set_live("A", true)
+	p.crouching = false
+	# caught by him: thrown back to the street door, hurt
+	var inj0 := p.injury
+	su.reset_to(p.global_position + Vector3(0, 0, -0.9))
+	su._start_chase()
+	ok("gf_super_catches", await until(func(): return Story.count("caught") >= 1, 5.0), "never caught")
+	ok("gf_caught_back_at_door", await until(func(): return not p.locked and p.injury > inj0, 10.0) and main.level.room_at(p.global_position + Vector3(0, 1, 0)) == "vestibule", "at %s injury %d" % [p.global_position, p.injury])
+	await skip_speech()
+	# --- the key from mailbox 13, then the door, then 13
+	await ground()
+	p = main.player
+	var mb: Door = main.level.find_child("Cab_mailbox13", true, false)
+	ok("gf_mailbox13", mb != null, "no mailbox 13")
+	await use_on(mb.ifocus(), "toggle", Vector3(1.1, 0, 9.4))
+	await wait(0.5)
+	ok("gf_mailbox_key", await take_item("key_apt13"), "couldn't take the key")
+	await use_on(door("apt13_door").ifocus(), "unlock", door_from("apt13_door", 1))
+	await wait(0.8)
+	ok("gf_13_open", not door("apt13_door").locked and door("apt13_door").open_k > 0.5, "13 locked %s open %.2f" % [door("apt13_door").locked, door("apt13_door").open_k])
+	await place(Vector3(26.5, 0, 6.2), Vector3(26.5, 1.2, 3.0))
+	ok("gf_arrive13", await until(func(): return Story.has("arrived13"), 30.0), "no arrival")
+	ok("gf_end_card", await until(func(): return get_tree().paused, 30.0), "no end card")
+	ok("gf_way_in_key", main.director._way_in() == "key", "way in %s" % main.director._way_in())
+	get_tree().paused = false
+	if main.director._card: main.director._card.queue_free()
+	# --- his key board instead (his own room)
+	await ground()
+	p = main.player
+	ok("gf_keyboard_key", await take_item("key_apt13") and p.inv.has("key_apt13"), "no key from the board")
+	# --- or pick 13's lock, quietly, with nothing but hairpins
+	await ground()
+	p = main.player
+	p.inv.add("hairpin")
+	await use_on(door("apt13_door").ifocus(), "pick", door_from("apt13_door", 1))
+	ok("gf_13_picked", not door("apt13_door").locked, "still locked")
+	_completed = "stealth"

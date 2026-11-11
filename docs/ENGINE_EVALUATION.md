@@ -127,9 +127,9 @@ Neither environment can test on an actual Android device, which the brief requir
 - **On engine merit alone, Unity 6 wins.** It has the best Android performance tooling, thermal management, lighting bakes and occlusion culling.
 - **Once the preserved assets and the means of production are counted, Godot 4.7 wins narrowly.** The assets the brief says to keep already exist in it, and everything can be built and tested here.
 
-**Recommendation: Godot 4.7, with the following mitigations for its weaknesses.**
+**Decision (owner, this session): Godot 4.7.** Mitigations for its weaknesses:
 
-1. **Renderer:** use the Mobile (Vulkan) renderer, with a fallback to Compatibility on GPUs without Vulkan. Benchmark both on real phones in Milestone A.
+1. **Renderer:** Compatibility (GLES3) on every platform: the widest Android support, no Vulkan driver crashes, and it is what the automated tests render. (Changed from Vulkan + fallback during Milestone A.)
 2. **Performance budget:** written down before production. See the targets below.
 3. **Thermal governor:** our own frame-time watchdog that steps render scale, lights and shadows down, and back up.
 4. **Lighting:** baked LightmapGI for both apartments, plus at most one real-time shadowed light (the torch) on the High preset only.

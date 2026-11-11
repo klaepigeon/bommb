@@ -38,6 +38,7 @@ const DEFS := {
 	"fuse":          {"name": "Fuse", "shape": "cyl", "size": Vector3(0.015, 0.04, 0), "style": "white", "mass": 0.05, "item": "fuse"},
 	"key_flat47":    {"name": "Keys", "shape": "box", "size": Vector3(0.05, 0.01, 0.08), "style": "brass", "mass": 0.05, "sound": "metal", "item": "key_flat47"},
 	"key_padlock":   {"name": "Small key", "shape": "box", "size": Vector3(0.025, 0.006, 0.05), "style": "brass", "mass": 0.02, "sound": "metal", "item": "key_padlock"},
+	"key_apt13":     {"name": "Key", "shape": "box", "size": Vector3(0.03, 0.008, 0.07), "style": "brass", "mass": 0.03, "sound": "metal", "item": "key_apt13"},
 	"key_storage":   {"name": "Key", "shape": "box", "size": Vector3(0.03, 0.008, 0.07), "style": "chrome", "mass": 0.03, "sound": "metal", "item": "key_storage"},
 	"revolver":      {"name": "Revolver", "shape": "gun", "size": Vector3(0.04, 0.12, 0.25), "style": "metal", "mass": 0.8, "sound": "metal", "item": "revolver"},
 	"ammo":          {"name": "Rounds", "shape": "box", "size": Vector3(0.04, 0.02, 0.04), "style": "brass", "mass": 0.05, "sound": "metal", "item": "ammo"},
