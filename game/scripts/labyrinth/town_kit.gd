@@ -177,29 +177,51 @@ func tri(mat: String, a: Vector3, b: Vector3, c: Vector3, normal: Vector3) -> vo
 
 ## Build it: one MeshInstance per chunk and material.
 func finish() -> int:
+	while not finish_some(1 << 30):
+		pass
+	return committed
+
+var committed := 0              ## meshes made so far
+var _pending: Array = []        ## [chunk key, material] still to commit (filled on the first call)
+var _listed := false
+
+## Commits up to `budget` of the chunk meshes; true once they're all in. Called a frame apart,
+## the town goes to the GPU a slice at a time instead of in one long frame.
+func finish_some(budget: int) -> bool:
+	if not _listed:
+		_listed = true
+		for key in tools:
+			# a phone doesn't get the fine detail at all
+			if (key as Vector4i).w == 1 and Game.is_phone():
+				continue
+			for mat in tools[key]:
+				_pending.append([key, mat])
 	var n := 0
-	for key in tools:
-		var d: Dictionary = tools[key]
-		# a phone doesn't get the fine detail at all (it's the geometry that starts drawing a few
-		# steps into the town, when the town crashed on Android)
-		if (key as Vector4i).w == 1 and Game.is_phone(): continue
-		for mat in d:
-			var st: SurfaceTool = d[mat]
-			st.index()               # shared corners stored once: about a third less vertex memory
-			st.generate_tangents()
-			var mi := MeshInstance3D.new()
-			mi.mesh = st.commit()
-			mi.material_override = material(mat)
-			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if not (mat in ["glass", "lamp_glass", "window_glow"] or mat.begins_with("shop")) else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-			if Game.is_phone():
-				mi.visibility_range_end = 45.0     # past the fog anyway; spares the far copies of the main street
-			if (key as Vector4i).w == 1:
-				mi.visibility_range_end = FINE_RANGE * (0.65 if Game.is_phone() else 1.0); mi.visibility_range_end_margin = 3.0
-				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-			parent.add_child(mi)
-			n += 1
-	tools.clear()
-	return n
+	while n < budget and not _pending.is_empty():
+		var job: Array = _pending.pop_back()
+		var key: Vector4i = job[0]
+		var mat: String = job[1]
+		var st: SurfaceTool = tools[key][mat]
+		st.index()               # shared corners stored once: about a third less vertex memory
+		st.generate_tangents()
+		var mi := MeshInstance3D.new()
+		mi.mesh = st.commit()
+		mi.material_override = material(mat)
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if not (mat in ["glass", "lamp_glass", "window_glow"] or mat.begins_with("shop")) else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		if Game.is_phone():
+			mi.visibility_range_end = 45.0     # past the fog anyway; spares the far copies of the main street
+		if key.w == 1:
+			mi.visibility_range_end = FINE_RANGE * (0.65 if Game.is_phone() else 1.0); mi.visibility_range_end_margin = 3.0
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		parent.add_child(mi)
+		tools[key].erase(mat)
+		n += 1
+		committed += 1
+	if _pending.is_empty():
+		tools.clear()
+		_listed = false          # the kit can be filled and finished again
+		return true
+	return false
 
 func material(mat: String) -> Material:
 	if _mat_cache.has(mat):

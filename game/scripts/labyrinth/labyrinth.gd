@@ -66,8 +66,9 @@ var _colliders: StaticBody3D
 var fight: FrozenFight
 var rooms := {}
 
-func _ready() -> void:
-	build()
+## This class only builds. Everything that runs while you're in the town (the lamps, the dome,
+## the people, the pickups) belongs to Town and TownChapter. Nothing builds itself on entering
+## the tree: the owner calls build() (all at once) or runs build_steps() a frame apart.
 
 # ---------------------------------------------------------------- the map
 func cell(c: int, r: int) -> String:
@@ -93,29 +94,52 @@ func _cols(r: int) -> Array:
 	return range(0, String(MAP[r]).length())
 
 # ---------------------------------------------------------------- build
+## The whole build at once.
 func build() -> void:
-	kit = TownKit.new(self)
-	_colliders = StaticBody3D.new(); _colliders.name = "Collision"; add_child(_colliders)
-	var floor_cs := CollisionShape3D.new(); var fb := BoxShape3D.new(); fb.size = Vector3(200, 1, 200)
-	floor_cs.shape = fb; floor_cs.position = Vector3(32, -0.5, 36); _colliders.add_child(floor_cs)
+	for step in build_steps():
+		while not (step as Callable).call():
+			pass
+
+## The build as small steps, each a Callable that returns true when it's done (a step that
+## returns false is called again: committing the meshes goes a slice at a time). A phone runs
+## one call a frame behind the black, so no single frame stalls for seconds.
+func build_steps() -> Array[Callable]:
+	var steps: Array[Callable] = []
+	steps.append(func():
+		kit = TownKit.new(self)
+		_colliders = StaticBody3D.new(); _colliders.name = "Collision"; add_child(_colliders)
+		var floor_cs := CollisionShape3D.new(); var fb := BoxShape3D.new(); fb.size = Vector3(200, 1, 200)
+		floor_cs.shape = fb; floor_cs.position = Vector3(32, -0.5, 36); _colliders.add_child(floor_cs)
+		return true)
 	for r in MAP.size():
-		for c in _cols(r):
-			if is_street(c, r):
-				_street_cell(c, r)
-	_lamps()
-	_dress()
+		steps.append(func():
+			for c in _cols(r):
+				if is_street(c, r):
+					_street_cell(c, r)
+			return true)
+	steps.append(func():
+		_lamps()
+		_dress()
+		return true)
 	# the square: the fight, stopped; and the revolver in it
-	fight = FrozenFight.new(); fight.name = "FrozenFight"; add_child(fight)
-	fight.build(kit, self)
+	steps.append(func():
+		fight = FrozenFight.new(); fight.name = "FrozenFight"; add_child(fight)
+		fight.build(kit, self)
+		return true)
 	# the rooms behind the three open doors
-	rooms = Interiors.build(kit, self, _colliders)
-	var n := kit.finish()
-	_environment()
-	_dome()
-	var e := center(6, 1)
-	arrive = Transform3D(Basis(Vector3.UP, PI), e + Vector3(0, 0, -0.6))
-	hole_at = e + Vector3(0, 0.9, -CELL * 0.5)
-	if OS.is_debug_build(): print("labyrinth: ", n, " meshes, ", lamps.size(), " lamps")
+	steps.append(func():
+		rooms = Interiors.build(kit, self, _colliders)
+		return true)
+	steps.append(func(): return kit.finish_some(60))
+	steps.append(func():
+		_environment()
+		_dome()
+		var e := center(6, 1)
+		arrive = Transform3D(Basis(Vector3.UP, PI), e + Vector3(0, 0, -0.6))
+		hole_at = e + Vector3(0, 0.9, -CELL * 0.5)
+		if OS.is_debug_build(): print("labyrinth: ", kit.committed, " meshes, ", lamps.size(), " lamps")
+		return true)
+	return steps
 
 const DIRS := {"n": Vector2i(0, -1), "s": Vector2i(0, 1), "e": Vector2i(1, 0), "w": Vector2i(-1, 0)}
 
@@ -275,6 +299,7 @@ func _lamps() -> void:
 			l.light_color = Color(1.0, 0.7, 0.4); l.light_energy = 2.4; l.light_specular = 0.6
 			l.omni_range = 10.0; l.omni_attenuation = 1.3; l.shadow_enabled = false
 			l.distance_fade_enabled = true; l.distance_fade_begin = 22.0; l.distance_fade_length = 6.0
+			l.visible = false            # Town lights the nearest few (TownLights)
 			add_child(l); l.position = at
 			l.set_meta("seed", randf() * 100.0)
 			lamps.append(l)
@@ -340,25 +365,6 @@ func _dome() -> void:
 		m.position = arm[0] + Vector3(0, -3.0, 0); dome.add_child(m)
 	for mi in dome.find_children("*", "MeshInstance3D", true, false):
 		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-
-# ---------------------------------------------------------------- per frame
-var _t := 0.0
-func _process(delta: float) -> void:
-	_t += delta
-	var cam := get_viewport().get_camera_3d()
-	if not cam or not visible:
-		return
-	var eye := cam.global_position
-	# the dome keeps its distance
-	if dome:
-		dome.global_position = Vector3(eye.x, global_position.y + 4.0, eye.z + 46.0)
-	# gas: a slow, soft breathing, never a flicker; lamps beyond the fog are off
-	for l in lamps:
-		var d := l.global_position.distance_to(eye)
-		l.visible = d < (22.0 if Game.is_phone() else 30.0)   # a phone lights fewer at once
-		if l.visible:
-			var sd: float = l.get_meta("seed")
-			l.light_energy = 2.4 * (0.93 + 0.05 * sin(_t * 1.3 + sd) + 0.02 * sin(_t * 3.1 + sd * 2.0))
 
 ## The main street goes on for ever: walk off either end and you are at the other. Call with a
 ## body's position (local space); returns where it really is.

@@ -110,15 +110,24 @@ func _build() -> void:
 	if Trail.last_crash != "" and not args.has("autotest") and not args.has("shots"):
 		hud.show_report(Trail.last_crash)
 
-## Through the hole: build the town (behind black), hide the flat, and hand over to the chapter.
+## Through the hole, behind the black: build the town a slice a frame (he waits in the flat
+## meanwhile), hide the flat, hand over to the chapter, let it draw the whole town once
+## (prewarm), and only then let the black lift.
 func go_to_town() -> void:
 	hud.fade.color.a = 1.0
+	player.can_move = false
+	player.can_look = false
 	Trail.mark("town: building")
 	await get_tree().process_frame
 	var t := Time.get_ticks_msec()
 	town = Town.new(); town.name = "Town"
 	town.position = Vector3(300, 0, 0)
-	world.add_child(town)        # it builds itself
+	world.add_child(town)
+	# nothing in 3D needs drawing while it's black and being built (the prewarm draws it after)
+	var update_mode := view.render_target_update_mode
+	view.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	await town.build_async()
+	view.render_target_update_mode = update_mode
 	print("[town] built in %d ms" % (Time.get_ticks_msec() - t))
 	Trail.mark("town: built in %d ms, %d MB" % [Time.get_ticks_msec() - t, OS.get_static_memory_usage() / 1048576])
 	flat.visible = false
@@ -136,6 +145,8 @@ func go_to_town() -> void:
 	add_child(chapter)
 	chapter.setup()
 	chapter.finished.connect(_the_end)
+	await chapter.prewarm()
+	print("[town] ready in %d ms" % (Time.get_ticks_msec() - t))
 	chapter.arrive()
 	Trail.mark("town: arrived")
 

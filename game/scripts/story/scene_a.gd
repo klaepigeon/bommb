@@ -129,7 +129,7 @@ func _process(_d: float) -> void:
 	# gutterspace nuggets in the room (they're only there after he wakes)
 	if player.socko.visible:
 		for n in flat.flat_nuggets:
-			n.visible = true
+			n.visible = not n.taken
 			if not n.taken and n.global_position.distance_to(player.global_position + Vector3(0, 0.6, 0)) < 0.9:
 				n.take()
 				Game.add_nuggets(1)

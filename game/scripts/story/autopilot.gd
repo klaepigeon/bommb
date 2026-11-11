@@ -217,6 +217,25 @@ func _town() -> void:
 	for m in [ch.porter, ch.lamplighter, ch.marta]:
 		m.process_mode = Node.PROCESS_MODE_INHERIT
 	print("AUTOTEST: town nuggets collected, have %d" % Game.nuggets)
+	# the lamps never go over their budget, wherever he's been
+	var lit := 0
+	for l in town.lamps:
+		if l.visible:
+			lit += 1
+	var budget := Town.LAMPS_PHONE if Game.is_phone() else Town.LAMPS_DESKTOP
+	if lit > budget:
+		_fail("%d lamps lit, the budget is %d" % [lit, budget])
+		return
+	# and every taken nugget stays gone
+	for n in town.nuggets:
+		if n.visible:
+			_fail("a nugget is still there after it was taken: " + n.name)
+			return
+	# the monsters' way-finding table: from any street cell to any other, the shortest way
+	var bad := _check_routes(town)
+	if bad != "":
+		_fail(bad)
+		return
 	match route:
 		"talk": await _route_talk(ch, town)
 		"kill": await _route_kill(ch, town)
@@ -237,6 +256,42 @@ func _town() -> void:
 		return
 	print("AUTOTEST: out of the town by '%s'" % route)
 	await _flat48()
+
+## Walks Town.next_step from every street cell to every other and checks it arrives in the
+## fewest steps there are (a plain breadth-first count). Empty if it all holds.
+func _check_routes(town: Town) -> String:
+	var cells: Array[Vector2i] = []
+	for y in Labyrinth.MAP.size():
+		for x in String(Labyrinth.MAP[y]).length():
+			if String(Labyrinth.MAP[y])[x] != "#":
+				cells.append(Vector2i(x, y))
+	var pairs := 0
+	for b in cells:
+		var dist := {b: 0}
+		var q: Array[Vector2i] = [b]
+		var h := 0
+		while h < q.size():
+			var c: Vector2i = q[h]
+			h += 1
+			for o in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+				var nb: Vector2i = c + o
+				if not dist.has(nb) and cells.has(nb):
+					dist[nb] = int(dist[c]) + 1
+					q.append(nb)
+		var to := town.center(b.x, b.y) + Vector3(0.1, 0, 0.1)
+		for a in cells:
+			if a == b:
+				continue
+			pairs += 1
+			var c := a
+			var steps := 0
+			while c != b and steps < 100:
+				c = town.cell_of(town.next_step(town.center(c.x, c.y), to))
+				steps += 1
+			if c != b or steps != int(dist[a]):
+				return "next_step from %s to %s: %d steps, shortest is %d" % [a, b, steps, int(dist[a])]
+	print("AUTOTEST: town routes shortest for all %d pairs of %d cells" % [pairs, cells.size()])
+	return ""
 
 func _route_talk(ch: TownChapter, town: Town) -> void:
 	for id in ["handwriting", "these_streets", "old_name"]:

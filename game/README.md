@@ -166,7 +166,34 @@ time Kurt looks at each thing. `content/characters.json`: speakers' colours and 
 | Broken animations | One controller per character, posing the first build's rigs by name, eased; tested through every beat. |
 | Door out of the waking room not locked | The living room door is shut and locked after the blackout; tested at the end of Scene A. |
 | Hands going into walls | Kurt's hand, what's in it, and Socko draw back from anything solid that's nearer than they reach. |
-| Crash through the gap on Android | The town is built behind the black once, the flat switched off while you're in it; lamps beyond 22 m are off on phones; no moon light on phones. Not yet tried on a phone. |
+| The town closing itself on Android, always at the same spot (a few steps in, at the first nugget, as Socko speaks) | The town code is rebuilt so nothing new happens on any one frame of play (see **How the town stays up** below). Tested here, not yet on a phone: if it still closes, the next launch shows the trail. |
+
+## How the town stays up
+
+The crash came at the same moment in both builds: the first nugget, 4 m in front of the hole,
+with Socko's *"Ooh, shiny"* starting in the same frame (the old build had already muted the voice
+there, and it still went). It didn't happen on a desktop. So the rebuild takes away every way the
+town can do something heavy, or something for the first time, while you're walking about:
+
+- **Built a slice a frame, behind the black** (`Town.build_async`): street rows, props, the
+  fight, the rooms, then the meshes 60 at a time. The 3D view isn't drawn while it builds.
+- **Drawn once before you see it** (`TownChapter.prewarm`): a camera stands at 17 views (every
+  street, the square, the plaza, the three rooms, the gate, the people) and looks four ways round,
+  with the lamps lit as they will be there. Every shader and light combination is compiled then.
+- **A lamp budget**: only the nearest 5 lamps are lit on a phone (12 on a desktop), chosen four
+  times a second; with Kurt's own light and the gate's, no mesh ever has more than 8.
+- **Inert pickups**: every nugget shares one mesh and material; taking one hides it, counts it,
+  plays one sound. Nothing is tweened, created or freed.
+- **One phase at a time** (`TownChapter.phase`: BLACK, ARRIVING, FREE, SCENE, LEAVING, DONE). Talks,
+  the lever and being caught are numbered scenes; an overtaken scene stops itself. The physics step
+  never waits.
+- **One queue for what's said**: lines start only when nobody is speaking, only while he's free,
+  never in the frame something was picked up. Replies first, then the story's beats, then passing
+  remarks (which lapse after 8 s).
+- **Way-finding worked out once**: a table of the first step from every street cell to every
+  other, checked by the autotest against the shortest path for all 6,642 pairs.
+- The trail (`user://trail.txt`) marks every step of this: build slices, prewarm views, the
+  phases, each pickup, each line. If the game ever dies, the next launch shows where.
 
 ## Build and test
 
