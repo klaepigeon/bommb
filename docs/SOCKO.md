@@ -25,8 +25,10 @@ tongue on the protagonist's **left** hand, there **only** after he wakes.
 
 - **The mouth is the hand.** Opening the mouth lifts the finger bones at the knuckles and drops
   the thumb from the web. The cloth of the head is weighted to those bones and splits along the
-  mouth line. The fabric between the jaws is a pocket that folds flat when shut and stretches
-  open (red felt) when open. Near the corners the cloth is weighted to both jaws, so a wide mouth
+  mouth line. Inside are two muted red felt mouth plates, a palate glued under
+  the upper jaw and a floor over the lower one (tongue on it), folded together at the hinge
+  between the corners. Each is skinned to its own jaw, so an open mouth shows a felt puppet mouth,
+  not a membrane sagging between the jaws into a black pit. Near the corners the cloth is weighted to both jaws, so a wide mouth
   pulls the cheeks in rather than hinging. There is no separate jaw object.
 - **Fist / extend** (`curl`) folds the head in or stretches it. **Squash** slumps or tenses the
   cloth. Both are driven by emotion and by jolts of the hand.

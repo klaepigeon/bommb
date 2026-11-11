@@ -40,7 +40,6 @@ const H_UP := 0.040          # height of the upper jaw above the mouth line (fin
 const H_DN := 0.030          # depth of the lower jaw (the thumb)
 const CUFF := -0.075         # where the sock's top ends on the forearm
 const SLEEVE_END := -0.095   # the coat cuff, over the sock top
-const MOUTH_DEPTH := 0.62    # how far the pocket folds in toward the throat
 
 var skel: Skeleton3D
 var sock: MeshInstance3D
@@ -351,21 +350,31 @@ func _build_sock() -> ArrayMesh:
 	sock_mat.set_shader_parameter("stain_tex", _stain_tex())
 	sock_mat.set_shader_parameter("stain_amount", 1.0)
 	sk.commit(mesh, sock_mat)
-	# ---- the inside of the mouth: a pocket from the upper lip, in toward the throat, out to the
-	# lower lip. Shut, it's folded flat out of sight; open, it's the dark you see between the jaws.
+	# ---- the inside of the mouth: a felt mouth plate glued under the upper jaw (the palate) and
+	# another over the lower jaw (the floor), folded together at the hinge between the corners, like
+	# a real sock puppet's. Each plate is skinned to its own jaw, so opening the mouth shows a felt
+	# mouth (palate, floor, tongue) and not a membrane sagging between the jaws into a pit. The
+	# palate arches up into the head a little and the floor cups down into the chin, both inside
+	# the shells. Shut, the two lie flat on each other out of sight.
 	var pk := ClothSkin.new()
-	const R := 6
+	const R := 8
+	const HALF := R / 2
 	var pg := []
 	for r in R + 1:
-		var k := float(r) / R
-		var d := MOUTH_DEPTH * sin(PI * k)
+		var k := float(r) / R                       # 0 upper lip .. 0.5 the hinge .. 1 lower lip
+		var upper := r <= HALF
+		var sgn := 1.0 if upper else -1.0
+		var s := float(r) / HALF if upper else float(R - r) / HALF   # 0 at the lip .. 1 at the hinge
 		var row := []
 		for ia in NA + 1:
 			var al := PI * (float(ia) / NA - 0.5)
 			var e := Vector3(A * sin(al), 0.0, ZC - HEAD_LEN * cos(al))
-			var p := Vector3(e.x * (1.0 - d), lerpf(0.0012, -0.0012, k), ZC + (e.z - ZC) * (1.0 - d))
-			var w := mix_w(weights(e + Vector3(0, 0.0005, 0), 1), weights(e - Vector3(0, 0.0005, 0), -1), smoothstep(0.15, 0.85, k))
-			row.append(pk.add(p, Vector2(float(ia) / NA, k), w, Vector3(0, 0.5 - k, 0) + (Vector3(0, 0, ZC) - p) * 4.0))
+			var h: float = H_UP if upper else H_DN
+			var arch := (0.2 if upper else 0.17) * h * cos(al) * sin(PI * 0.5 * s)
+			var p := Vector3(e.x, sgn * (0.0012 * (1.0 - s) + arch), ZC + (e.z - ZC) * (1.0 - s))
+			var w := weights(p, 1 if upper else -1)
+			var n := Vector3(0, -sgn, 0) + Vector3(0, 0, ZC - p.z) * 3.0
+			row.append(pk.add(p, Vector2(float(ia) / NA, k), w, n.normalized()))
 		pg.append(row)
 	for r in R:
 		for ia in NA:
@@ -433,15 +442,15 @@ func _cloth_mat() -> ShaderMaterial:
 	m.set_shader_parameter("fuzz", 0.16)
 	return m
 
-## The mouth's lining: muted red felt at the lips, darkening into the throat (v: upper lip 0 →
-## deepest 0.5 → lower lip 1), so an open mouth reads as a felt mouth, not a hole or a lamp.
+## The mouth's lining: muted red felt at the lips, deepening toward the hinge (v: upper lip 0 →
+## hinge 0.5 → lower lip 1), so an open mouth reads as a felt mouth, not a hole or a lamp.
 func _mouth_mat() -> ShaderMaterial:
 	var m := ShaderMaterial.new(); m.shader = CLOTH
 	var img := Image.create(8, 16, false, Image.FORMAT_RGB8)
 	var rng := RandomNumberGenerator.new(); rng.seed = 77
 	for y in 16:
 		var k := absf((y + 0.5) / 16.0 - 0.5) * 2.0          # 1 at the lips, 0 in the throat
-		var c := Color("2a080a").lerp(Color("8e2a26"), smoothstep(0.15, 0.95, k))
+		var c := Color("3a1214").lerp(Color("7a2a27"), smoothstep(0.0, 0.85, k))
 		for x in 8:
 			img.set_pixel(x, y, c * (0.9 + rng.randf() * 0.2))
 	m.set_shader_parameter("albedo_tex", ImageTexture.create_from_image(img))
