@@ -93,6 +93,23 @@ fails.
 - **What lies beyond Apartment 13 is deliberately not built** (brief §12). The chapter ends on
   arrival.
 
+## If the APK crashes on a phone
+
+- Start it again. If the last launch didn't get going, a panel says **where startup stopped**
+  (each step is recorded in `user://boot.txt`) and shows the end of the engine log from that
+  session. **Copy report** puts both on the clipboard; **Safe start** turns quality down and the
+  device voice off.
+- If it dies before even that panel can show: `adb logcat -s godot:* AndroidRuntime:* DEBUG:*`
+  with the phone plugged in (USB debugging on), then launch it.
+- Changes made after the first crash report (no device log was available):
+  - Text-to-speech is no longer queried at boot.
+  - The strict error logger runs only under the tests.
+  - Occlusion culling is off.
+  - Second-finger menu taps used doubly-scaled coordinates on every real phone screen;
+    that's fixed.
+  - The touch suite now injects touches in screen pixels at phone resolutions
+    (2400×1080, 1600×720, 1280×800), with the phone-only code paths forced on (`--mobile`).
+
 ## Known bugs
 
 - None open that the suites catch.

@@ -24,6 +24,26 @@ var _t := 0.0
 var _dur := 0.0
 var _tag := 0
 var _tts_ok := false
+var _tts_state := -1             ## -1 none, 0 not yet known, 1 ready
+var _tts_tries := 0
+
+func _tts_ready() -> bool:
+	if _tts_state == 1:
+		return true
+	if _tts_state == -1 or _tts_tries > 20 or Engine.get_process_frames() < 120:
+		return false
+	_tts_tries += 1
+	var ids := DisplayServer.tts_get_voices_for_language("en")
+	if not ids.is_empty():
+		_voices["_any"] = ids[0]
+	else:
+		var all := DisplayServer.tts_get_voices()
+		if all.is_empty():
+			return false
+		_voices["_any"] = String((all[0] as Dictionary).get("id", ""))
+	_tts_state = 1
+	_tts_ok = true
+	return true
 var _voices := {}
 var _syll := 0.0
 
@@ -31,14 +51,9 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	lines = _load(SCRIPT_PATH).get("lines", {})
 	characters = _load(CHAR_PATH)
-	_tts_ok = DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH) and not DisplayServer.get_name() == "headless"
-	if _tts_ok:
-		var v := DisplayServer.tts_get_voices_for_language("en")
-		if v.is_empty():
-			_tts_ok = false
-		else:
-			for c in characters:
-				_voices[c] = v[0]
+	# text-to-speech is asked about lazily (_tts_ready), never at boot: Android binds its speech
+	# engine asynchronously, and asking too early is not safe
+	_tts_state = 0 if DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH) and DisplayServer.get_name() != "headless" else -1
 
 static func _load(path: String) -> Dictionary:
 	var f := FileAccess.open(path, FileAccess.READ)
@@ -121,11 +136,11 @@ func _start_line(id: String) -> void:
 	subtitle.emit(sp, String(ch.get("name", sp.to_upper())), Color(String(ch.get("color", "#ffffff"))), text, style)
 	if l.has("sfx"):
 		Sfx.play(String(l.sfx), 0.0)
-	if _tts_ok and Settings.get_v("tts_voice") and not l.get("silent", false) and not fast:
+	if Settings.get_v("tts_voice") and not l.get("silent", false) and not fast and _tts_ready():
 		var vol := int(float(ch.get("volume", 90)) * float(Settings.get_v("vol_voice")) * float(Settings.get_v("vol_master")))
 		if style == "quiet":
 			vol = int(vol * 0.6)
-		DisplayServer.tts_speak(_spoken(text), _voices.get(sp, ""), vol, float(ch.get("pitch", 1.0)), float(ch.get("rate", 1.0)))
+		DisplayServer.tts_speak(_spoken(text), String(_voices.get("_any", "")), vol, float(ch.get("pitch", 1.0)), float(ch.get("rate", 1.0)))
 
 ## what the voice reads: stage directions and bracketed sounds are not read aloud
 static func _spoken(text: String) -> String:

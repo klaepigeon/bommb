@@ -81,7 +81,7 @@ func reset_layout() -> void:
 	set_v("stick_scale", 1.0)
 
 static func is_mobile() -> bool:
-	return OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("web_android")
+	return OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("web_android") or "--mobile" in OS.get_cmdline_user_args()
 
 ## The preset actually in effect ("auto" resolves to a guess from the platform; Perf may step it).
 func preset_name() -> String:

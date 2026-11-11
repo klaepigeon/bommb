@@ -339,7 +339,7 @@ func _wall(id: String, coord: float, axis: String, rmin: float, rmax: float, n: 
 		var cc := _pt(axis, mid, coord - (0.0 if beyond != "" else (thick - T)) * (n.z if axis == "x" else n.x), y0 + (ylo + yhi) * 0.5)
 		_col_box(r.body, cc, _half(axis, (sb - sa) * 0.5, (yhi - ylo) * 0.5, thick))
 		# occluder for big solid stretches
-		if sb - sa > 1.2 and ylo == 0.0 and yhi >= H - 0.01:
+		if ProjectSettings.get_setting("rendering/occlusion_culling/use_occlusion_culling", false) and sb - sa > 1.2 and ylo == 0.0 and yhi >= H - 0.01:
 			var oc := OccluderInstance3D.new()
 			var q := QuadOccluder3D.new(); q.size = Vector2(sb - sa, H)
 			oc.occluder = q

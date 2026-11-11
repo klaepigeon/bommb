@@ -352,17 +352,23 @@ func t_systems() -> void:
 
 var _touch_idx := {}
 
+## the HUD works in game (viewport) coordinates; Android delivers screen pixels, which the engine
+## scales. Inject what Android would send.
+func _to_screen(pos: Vector2) -> Vector2:
+	var vp := get_viewport().get_visible_rect().size
+	return pos * Vector2(get_window().size) / vp
+
 func touch(i: int, pos: Vector2, pressed: bool) -> void:
 	var e := InputEventScreenTouch.new()
-	e.index = i; e.position = pos; e.pressed = pressed
+	e.index = i; e.position = _to_screen(pos); e.pressed = pressed
 	Input.parse_input_event(e)
 	_touch_idx[i] = pos
 
 func drag(i: int, pos: Vector2) -> void:
 	var e := InputEventScreenDrag.new()
-	e.index = i; e.position = pos
+	e.index = i; e.position = _to_screen(pos)
 	var last: Vector2 = _touch_idx.get(i, pos)
-	e.relative = pos - last
+	e.relative = _to_screen(pos) - _to_screen(last)
 	e.screen_relative = e.relative
 	Input.parse_input_event(e)
 	_touch_idx[i] = pos

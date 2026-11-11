@@ -34,5 +34,9 @@ signal level_ready(name: String)
 signal request_level(name: String, spawn: String)
 
 func _enter_tree() -> void:
-	ErrorLog.install()
+	# the strict error counter is for the automated tests only; on a phone, Godot's own file log
+	# (user://logs) and the crash trail (boot.gd) are enough, and run no script on engine threads
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--autotest"):
+			ErrorLog.install()
 	beat.connect(func(b): if ErrorLog.inst: ErrorLog.inst.beat = b)

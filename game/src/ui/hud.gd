@@ -380,7 +380,7 @@ func _forward_to_menus(event: InputEvent) -> void:
 		mb.global_position = t.position
 		mb.button_mask = MOUSE_BUTTON_MASK_LEFT if t.pressed else 0
 		get_viewport().set_input_as_handled()
-		get_viewport().push_input(mb)
+		get_viewport().push_input(mb, true)     # already in viewport coordinates
 	elif event is InputEventScreenDrag:
 		var d := event as InputEventScreenDrag
 		if d.index == 0:
@@ -391,7 +391,7 @@ func _forward_to_menus(event: InputEvent) -> void:
 		mm.relative = d.relative
 		mm.button_mask = MOUSE_BUTTON_MASK_LEFT
 		get_viewport().set_input_as_handled()
-		get_viewport().push_input(mm)
+		get_viewport().push_input(mm, true)
 
 func _hit_button(pos: Vector2) -> String:
 	for id in _buttons:

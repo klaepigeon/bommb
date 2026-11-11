@@ -23,6 +23,7 @@ var args := {}
 var no_autostart := false
 
 func _ready() -> void:
+	Boot.mark("main: ready")
 	if not args.is_empty():
 		pass
 	for a in OS.get_cmdline_user_args():
@@ -31,11 +32,13 @@ func _ready() -> void:
 	if args.has("fast"):
 		Speech.fast = true
 	_pipeline()
+	Boot.mark("main: render pipeline")
 	Perf.quality_changed.connect(_apply_quality)
 	_apply_quality(Perf.current)
 	hud = load("res://src/ui/hud.gd").new()
 	hud.name = "HUD"
 	add_child(hud)
+	Boot.mark("main: HUD")
 	Events.request_level.connect(func(n, s): load_level(n, s))
 	var start := String(args.get("start", "flat47"))
 	if args.get("autotest", "") == "none":
@@ -50,6 +53,9 @@ func _ready() -> void:
 		t.name = "Autotest"
 		add_child(t)
 		t.begin(self, String(args.autotest) if args.autotest is String else "all")
+		return
+	if Boot.previous_stage != "":
+		_crash_panel(start)
 		return
 	if args.has("load") and SaveGame.exists():
 		SaveGame.load_game(self)
@@ -110,10 +116,12 @@ func load_level(name: String, spawn: String) -> void:
 		"flat47": layout = Flat47Layout.layout()
 		"backrooms": layout = load("res://src/levels/backrooms.gd").layout()
 		"ground_floor": layout = GroundFloorLayout.layout()
+	Boot.mark("level %s: building" % name)
 	level = Level.new()
 	level.name = "Level_" + name
 	world.add_child(level)
 	level.build(layout, name)
+	Boot.mark("level %s: built" % name)
 	Sfx.attach_world(level)
 	if not player:
 		player = Player.new()
@@ -137,6 +145,7 @@ func load_level(name: String, spawn: String) -> void:
 		director.begin(self, sp)
 	if had_gun and player.gun:
 		player.gun.set_state(gun_state)
+	Boot.mark("level %s: director started" % name)
 	Events.level_ready.emit(name)
 
 func set_blackout(k: float, sec := 0.0) -> void:
@@ -163,3 +172,38 @@ func _process(_delta: float) -> void:
 		post.set_shader_parameter("wrong", float(level.data.get("wrong_grade", 0.0)))
 	if player:
 		post.set_shader_parameter("hurt", clampf(player.injury / 3.0, 0.0, 1.0) * 0.6)
+
+
+## the last launch died: say where, show the engine's last words, offer a safe start
+func _crash_panel(start: String) -> void:
+	var c := Control.new()
+	c.set_anchors_preset(Control.PRESET_FULL_RECT)
+	c.add_child(UIKit.fullscreen_dim(0.95))
+	var m := MarginContainer.new(); m.set_anchors_preset(Control.PRESET_FULL_RECT)
+	for side in ["left", "right", "top", "bottom"]:
+		m.add_theme_constant_override("margin_" + side, 24)
+	c.add_child(m)
+	var vb := VBoxContainer.new(); vb.add_theme_constant_override("separation", 12)
+	m.add_child(vb)
+	vb.add_child(UIKit.label("The last launch stopped at: " + Boot.previous_stage, 24, Color(1, 0.8, 0.6)))
+	var report := "HYSTERIA %s, %s, %s\nstopped at: %s\n%s" % [ProjectSettings.get_setting("application/config/version"), OS.get_model_name(), RenderingServer.get_video_adapter_name(), Boot.previous_stage, Boot.previous_log]
+	var log := Label.new(); log.text = Boot.previous_log if Boot.previous_log != "" else "(no engine log from that session)"
+	log.add_theme_font_size_override("font_size", 14)
+	log.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var sc := ScrollContainer.new(); sc.size_flags_vertical = Control.SIZE_EXPAND_FILL; sc.add_child(log)
+	log.custom_minimum_size = Vector2(1100, 0)
+	vb.add_child(sc)
+	var hb := HBoxContainer.new(); hb.add_theme_constant_override("separation", 16)
+	var copy := UIKit.button("  Copy report  ")
+	copy.pressed.connect(func(): DisplayServer.clipboard_set(report); copy.text = "  Copied  ")
+	var safe := UIKit.button("  Safe start (low quality, no voice)  ")
+	safe.pressed.connect(func():
+		Settings.set_v("preset", "low"); Settings.set_v("tts_voice", false); Settings.set_v("fps_target", 30)
+		c.queue_free(); load_level(start, ""))
+	var go := UIKit.button("  Start normally  ")
+	go.pressed.connect(func(): c.queue_free(); load_level(start, ""))
+	hb.add_child(copy); hb.add_child(safe); hb.add_child(go)
+	vb.add_child(hb)
+	hud.root.add_child(c)
+	c.size = hud.root.size
+	print("BOOT previous launch stopped at: ", Boot.previous_stage)
