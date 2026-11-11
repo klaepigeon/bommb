@@ -2,3 +2,5 @@ node_modules/
 shots/
 android/build/
 dist/*.idsig
+game/.godot/
+*.tmp

@@ -1,0 +1,85 @@
+; HYSTERIA — ground-zero rebuild. Godot 4.7, Android-first.
+; Renderer: Mobile (Vulkan) with automatic fallback to Compatibility (GLES3) on devices without Vulkan.
+config_version=5
+
+[application]
+
+config/name="HYSTERIA"
+config/description="Flat 47 → the Backrooms → Flat 48"
+run/main_scene="res://src/main.tscn"
+config/features=PackedStringArray("4.7", "Mobile")
+config/icon="res://icon/icon.png"
+config/version="1.0.0-ch1"
+config/quit_on_go_back=false
+run/flush_stdout_on_print=true
+boot_splash/bg_color=Color(0, 0, 0, 1)
+boot_splash/show_image=false
+
+[autoload]
+
+Events="*res://src/core/events.gd"
+Settings="*res://src/core/settings.gd"
+Story="*res://src/core/story.gd"
+Infection="*res://src/core/infection.gd"
+Sfx="*res://src/audio/sfx.gd"
+Speech="*res://src/core/speech.gd"
+Perf="*res://src/core/perf.gd"
+
+[audio]
+
+general/text_to_speech=true
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=4
+window/energy_saving/keep_screen_on=true
+window/vsync/vsync_mode=1
+
+[input_devices]
+
+pointing/emulate_mouse_from_touch=false
+pointing/emulate_touch_from_mouse=false
+
+[physics]
+
+3d/physics_engine="Jolt Physics"
+common/physics_ticks_per_second=60
+common/max_physics_steps_per_frame=4
+3d/default_gravity=9.8
+
+[rendering]
+
+renderer/rendering_method="mobile"
+renderer/rendering_method.mobile="mobile"
+rendering_device/fallback_to_opengl3=true
+textures/canvas_textures/default_texture_filter=0
+textures/vram_compression/import_etc2_astc=true
+anti_aliasing/quality/msaa_3d=0
+lights_and_shadows/directional_shadow/size=1024
+lights_and_shadows/positional_shadow/atlas_size=1024
+limits/opengl/max_lights_per_object=8
+occlusion_culling/use_occlusion_culling=true
+shading/overrides/force_vertex_shading=false
+
+[shader_globals]
+
+hole_min={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+hole_max={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+infection={
+"type": "float",
+"value": 0.0
+}
+world_time={
+"type": "float",
+"value": 0.0
+}

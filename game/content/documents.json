@@ -1,0 +1,77 @@
+{
+ "_comment": "Readable documents. memory: recovering it gives Kurt a memory point. clue: recorded in the story ledger as clue.read:<id>. All text is proposed environmental storytelling.",
+ "docs": {
+  "telegram": {
+   "title": "Telegram",
+   "text": "KURSK 0931\nTO K FEDEROV KERZHANSK POSTE RESTANTE\n\nNO WORD FROM MARTA EIGHT DAYS STOP FLAT 47 BUILDING 14 GAGARINA STOP PLEASE CHECK ON HER STOP MONEY SENT STOP SHE WILL NOT WANT TO SEE YOU STOP GO ANYWAY"
+  },
+  "evacuation": {
+   "title": "Notice (on the hallway wall)",
+   "text": "CITY ADMINISTRATION OF KERZHANSK\n\nResidents of the Plant No. 3 district are to assemble in the school yard at 06:00 on 15 October with one bag per person. Buses will be provided.\n\nAs a precaution, tap water is not to be drunk. Do not go down to the basements.\n\nThis measure is temporary."
+  },
+  "fridge_note": {
+   "title": "Note on the fridge",
+   "text": "Milk. Bread. Candles (lots).\nPhone Galya about the boxes.\nDON'T LET HER IN THE BOX ROOM.\n\n— underneath, in different ink, pressed hard:\nthey are only boxes"
+  },
+  "calendar": {
+   "title": "Calendar",
+   "text": "October 1996. Every day is crossed through, firmly, up to the 14th. After that the crosses are lighter, and then they are not crosses but little squares. Inside each square, a smaller square."
+  },
+  "photo_cut": {
+   "title": "Photograph",
+   "text": "A woman in a good coat, laughing on a pier. Marta, younger. Beside her someone has been cut out of the photograph with nail scissors, very carefully, all the way round, so that only his hand is left on her shoulder.",
+   "memory": "hand",
+   "clue": "photo"
+  },
+  "clipping": {
+   "title": "Newspaper clipping",
+   "text": "Yellow, folded small, kept in a jewellery box.\n\n'...TRICKSHOT TURNS THE TABLES — the Champions' League marksman ended the three-day siege at the Palace of Culture without a single...'\n\nThe photograph has been torn away. Someone has written in the margin, in Marta's hand: you never could stay.",
+   "memory": "trickshot",
+   "clue": "trickshot"
+  },
+  "drawing": {
+   "title": "Child's drawing",
+   "text": "Crayon. A tall flat block with every window coloured in. In one window, a woman and a girl. Over the roof there's a big square with a smaller square inside it, and inside that, another. The girl has written her name in the corner but the paper's torn there.",
+   "clue": "boxes"
+  },
+  "diary_page": {
+   "title": "Torn page",
+   "text": "...they talk all night in the walls now, the clicking, I think it's a language. I am starting to understand it and I wish I wasn't. It says the boxes are doors. It says everyone gets a box. It says the little one has to go first because she's smallest...\n\n(the rest is scribbled through until the paper tore)",
+   "clue": "clicks"
+  },
+  "letter_returned": {
+   "title": "Returned letter",
+   "text": "An envelope addressed in Marta's handwriting to a post box number with no name. RETURN TO SENDER, stamped three times. Inside, one line: 'She asks about you. I tell her you were a magician.'",
+   "memory": "letters",
+   "clue": "letters"
+  },
+  "sticky_outside": {
+   "title": "Sticky note",
+   "text": "OUTSIDE"
+  },
+  "sticky_48": {
+   "title": "Sticky note (on the door of 48)",
+   "text": "IN HERE"
+  },
+  "boxes_label": {
+   "title": "Label on a box",
+   "text": "SONYA — WINTER\n(in a different hand:) inside"
+  },
+  "fuse_card": {
+   "title": "Card inside the fuse box",
+   "text": "A — HALL / KITCHEN\nB — ROOMS\nC — BATH\nspare fuses: kitchen drawer"
+  },
+  "backrooms_note": {
+   "title": "Note, pinned to a door",
+   "text": "It's the same flat. Don't believe it when it's not.\nShe can't see in the dark any better than you.\nShe hates the music box. No — she LOVES it. It makes her stop."
+  },
+  "backrooms_note2": {
+   "title": "Note in pencil, on the wall",
+   "text": "KEY FOR 48 IS IN THE BOX ROOM\nBOX ROOM KEY IS IN THE KITCHEN THAT ISN'T\n(arrows, many of them, pointing in different directions)"
+  },
+  "plank_note": {
+   "title": "Chalk on the balcony",
+   "text": "48's balcony is ONE plank away.\nDon't look down. There isn't a down."
+  }
+ }
+}

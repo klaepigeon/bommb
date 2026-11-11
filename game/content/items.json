@@ -1,0 +1,229 @@
+{
+ "_comment": "Items. tags are what an item can do; obstacles ask for tags. quality ranks tools for the same tag. All descriptions are proposed text.",
+ "items": {
+  "torch": {
+   "name": "Torch",
+   "category": "tool",
+   "desc": "A heavy rubber torch. The beam is yellow and it buzzes when you shake it.",
+   "tags": [
+    "light"
+   ],
+   "quality": {
+    "light": 1.0
+   }
+  },
+  "battery": {
+   "name": "Batteries",
+   "category": "consumable",
+   "desc": "Two fat batteries in a paper sleeve.",
+   "tags": [
+    "power"
+   ]
+  },
+  "lighter": {
+   "name": "Lighter",
+   "category": "tool",
+   "desc": "A brass petrol lighter, nearly dry.",
+   "tags": [
+    "light",
+    "ignite"
+   ],
+   "quality": {
+    "light": 0.3
+   }
+  },
+  "screwdriver": {
+   "name": "Screwdriver",
+   "category": "tool",
+   "desc": "Flat-head. The handle's been mended with tape.",
+   "tags": [
+    "unscrew",
+    "pry",
+    "pick"
+   ],
+   "quality": {
+    "pry": 0.35,
+    "pick": 0.5
+   }
+  },
+  "hairpin": {
+   "name": "Hairpins",
+   "category": "tool",
+   "desc": "Three black hairpins on a card.",
+   "tags": [
+    "pick"
+   ],
+   "quality": {
+    "pick": 1.0
+   }
+  },
+  "hammer": {
+   "name": "Claw hammer",
+   "category": "tool",
+   "desc": "Heavy in the head. Good for nails, or for the other thing.",
+   "tags": [
+    "strike",
+    "pry"
+   ],
+   "quality": {
+    "strike": 1.0,
+    "pry": 0.6
+   }
+  },
+  "crowbar": {
+   "name": "Crowbar",
+   "category": "tool",
+   "desc": "Forty centimetres of iron, flattened at both ends.",
+   "tags": [
+    "pry",
+    "strike"
+   ],
+   "quality": {
+    "pry": 1.0,
+    "strike": 0.8
+   }
+  },
+  "bolt_cutters": {
+   "name": "Bolt cutters",
+   "category": "tool",
+   "desc": "Long-handled. The jaws are nicked but they bite.",
+   "tags": [
+    "cut"
+   ]
+  },
+  "pills": {
+   "name": "Marta's pills",
+   "category": "consumable",
+   "desc": "A brown bottle. The label's been scratched off. They make everything quieter.",
+   "tags": [
+    "calm"
+   ]
+  },
+  "bandage": {
+   "name": "Bandage",
+   "category": "consumable",
+   "desc": "A clean roll of bandage, still in its paper.",
+   "tags": [
+    "heal"
+   ]
+  },
+  "fuse": {
+   "name": "Fuse",
+   "category": "misc",
+   "desc": "A ceramic screw-in fuse, 16 amp.",
+   "tags": [
+    "fuse"
+   ]
+  },
+  "key_flat47": {
+   "name": "Keys to 47",
+   "category": "key",
+   "desc": "Two keys on a ring with a plastic fish.",
+   "tags": [
+    "key:flat47"
+   ]
+  },
+  "key_padlock": {
+   "name": "Small brass key",
+   "category": "key",
+   "desc": "A small key with a cardboard tag: 48.",
+   "tags": [
+    "key:padlock48"
+   ]
+  },
+  "key_storage": {
+   "name": "Key with blue tape",
+   "category": "key",
+   "desc": "A long key, blue tape wrapped round the bow.",
+   "tags": [
+    "key:storage"
+   ]
+  },
+  "revolver": {
+   "name": "Revolver",
+   "category": "weapon",
+   "desc": "A Nagant revolver. Seven chambers, loaded one at a time through the gate.",
+   "tags": [
+    "gun"
+   ]
+  },
+  "ammo": {
+   "name": "Revolver rounds",
+   "category": "weapon",
+   "desc": "Loose 7.62 mm Nagant rounds, the bullet sunk inside the case.",
+   "tags": [
+    "ammo"
+   ]
+  },
+  "music_box": {
+   "name": "Music box",
+   "category": "misc",
+   "desc": "A tin music box with a crank. A little girl painted on the lid, half rubbed away.",
+   "tags": [
+    "lullaby"
+   ]
+  },
+  "alarm_clock": {
+   "name": "Alarm clock",
+   "category": "misc",
+   "desc": "Wind-up, two bells. It still keeps time. Wind it and set it down somewhere.",
+   "tags": [
+    "timer"
+   ]
+  },
+  "telegram": {
+   "name": "Telegram",
+   "category": "document",
+   "desc": "",
+   "tags": [
+    "doc"
+   ],
+   "doc": "telegram"
+  },
+  "photo_cut": {
+   "name": "Photograph",
+   "category": "document",
+   "desc": "",
+   "tags": [
+    "doc"
+   ],
+   "doc": "photo_cut"
+  },
+  "clipping": {
+   "name": "Newspaper clipping",
+   "category": "document",
+   "desc": "",
+   "tags": [
+    "doc"
+   ],
+   "doc": "clipping"
+  },
+  "drawing": {
+   "name": "Child's drawing",
+   "category": "document",
+   "desc": "",
+   "tags": [
+    "doc"
+   ],
+   "doc": "drawing"
+  },
+  "diary_page": {
+   "name": "Torn page",
+   "category": "document",
+   "desc": "",
+   "tags": [
+    "doc"
+   ],
+   "doc": "diary_page"
+  },
+  "letter_returned": {
+   "name": "Returned letter",
+   "category": "document",
+   "desc": "",
+   "tags": [
+    "doc"
+   ],
+   "doc": "letter_returned"
+  }
+ }
+}

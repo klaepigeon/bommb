@@ -1,0 +1,640 @@
+{
+ "_comment": "Lines by id. Lines without 'proposed' are the owner's script, verbatim (docs/SCRIPT_OPENING.md). 'proposed': true marks lines written for the rebuild; the owner may rewrite or cut them. socko_face / socko_clip / socko_talk / socko_idle drive the preserved Socko performance. style 'quiet' = said to himself.",
+ "lines": {
+  "door_1": {
+   "speaker": "kurt",
+   "text": "Ms. Sokolov? Your sister asked me to come check on you."
+  },
+  "door_2": {
+   "speaker": "kurt",
+   "text": "Marta? It's Kurt. I'm coming in."
+  },
+  "see_flat": {
+   "speaker": "kurt",
+   "text": "Christ..."
+  },
+  "see_marta": {
+   "speaker": "kurt",
+   "text": "Oh... oh no."
+  },
+  "examine": {
+   "speaker": "kurt",
+   "text": "What the hell is this?"
+  },
+  "boxes": {
+   "speaker": "marta",
+   "text": "Little boxes made of boxes with boxes inside of them... Have you seen them? The boxes, I mean. They're scary at first. But then you look at them for a moment"
+  },
+  "marta_q": {
+   "speaker": "kurt",
+   "text": "Marta?"
+  },
+  "little_bird": {
+   "speaker": "marta",
+   "text": "Look at the boxes, my little bird. Do you see them?"
+  },
+  "gasp": {
+   "speaker": "kurt",
+   "text": "[gasps]",
+   "silent": true,
+   "duration": 1.4
+  },
+  "smarts": {
+   "speaker": "kurt",
+   "text": "Oh, jeez, that smarts"
+  },
+  "hey_buddy": {
+   "speaker": "socko",
+   "text": "Heyyyy buddyyyy.... You should probably take it slow, a concussion is no joke!",
+   "socko_face": "smile",
+   "socko_clip": "Head_Tilt_Left",
+   "socko_talk": "Talking_Sympathetic"
+  },
+  "wtf": {
+   "speaker": "kurt",
+   "text": "What the fuck!?",
+   "socko_face": "surprise",
+   "socko_clip": "Sudden_Surprise"
+  },
+  "who_me": {
+   "speaker": "socko",
+   "text": "Who, me?",
+   "socko_face": "confusion",
+   "socko_clip": "Head_Tilt_Right"
+  },
+  "who_are_you": {
+   "speaker": "kurt",
+   "text": "Yeah, you. Who the fuck are you?",
+   "socko_face": "uncomfortable_smile"
+  },
+  "im_socko": {
+   "speaker": "socko",
+   "text": "I'm Socko! I'm a handy little pal! Who are you?",
+   "socko_face": "excitement",
+   "socko_clip": "Head_Bob",
+   "socko_talk": "Talking_Excited"
+  },
+  "kurt_sounds": {
+   "speaker": "kurt",
+   "text": "Uh... Kurt sounds right.",
+   "socko_face": "smile",
+   "socko_clip": "Head_Nod"
+  },
+  "dont_know": {
+   "speaker": "socko",
+   "text": "You don't know?",
+   "socko_face": "suspicion",
+   "socko_clip": "Head_Tilt_Left",
+   "socko_talk": "Talking_Sympathetic"
+  },
+  "got_nothing": {
+   "speaker": "kurt",
+   "text": "I... yeah I got nothing.",
+   "socko_face": "uncomfortable_smile"
+  },
+  "too_fast": {
+   "speaker": "socko",
+   "text": "Shouldn't have stood up so fast.",
+   "socko_face": "smile",
+   "socko_clip": "Head_Nod",
+   "socko_talk": "Talking_Sympathetic"
+  },
+  "wont_open": {
+   "speaker": "kurt",
+   "text": "It won't open.",
+   "socko_clip": "Head_Tilt_Forward"
+  },
+  "locked": {
+   "speaker": "socko",
+   "text": "Maybe it's locked?",
+   "socko_face": "confusion",
+   "socko_clip": "Head_Tilt_Left"
+  },
+  "thanks": {
+   "speaker": "kurt",
+   "text": "Wow, thanks. I never would have guessed.",
+   "socko_face": "smile"
+  },
+  "welcome": {
+   "speaker": "socko",
+   "text": "You're welcome!",
+   "socko_face": "wide_smile",
+   "socko_clip": "Head_Bob",
+   "socko_talk": "Talking_Excited"
+  },
+  "like_helping": {
+   "speaker": "socko",
+   "text": "I like helping.",
+   "style": "quiet",
+   "socko_face": "smile",
+   "socko_talk": "Talking_Whispering"
+  },
+  "what_is_that": {
+   "speaker": "kurt",
+   "text": "What the hell Is that?",
+   "socko_clip": "Peeking"
+  },
+  "dunno": {
+   "speaker": "socko",
+   "text": "I don't know.",
+   "socko_face": "confusion",
+   "socko_clip": "Head_Shake"
+  },
+  "know_anything": {
+   "speaker": "kurt",
+   "text": "Do you know anything?",
+   "socko_face": "uncomfortable_smile"
+  },
+  "can_do_this": {
+   "speaker": "socko",
+   "text": "I know that I can do this!",
+   "socko_face": "excitement",
+   "socko_clip": "Head_Raise",
+   "socko_talk": "Talking_Excited"
+  },
+  "smell": {
+   "speaker": "socko",
+   "text": "Ooh! Ooh! And I can smell important stuff! Go this way!",
+   "socko_face": "excitement",
+   "socko_clip": "Head_Bob",
+   "socko_talk": "Talking_Excited"
+  },
+  "balcony_1": {
+   "speaker": "kurt",
+   "text": "You seeing this?"
+  },
+  "balcony_2": {
+   "speaker": "socko",
+   "text": "Is something unusual?",
+   "socko_face": "confusion",
+   "socko_clip": "Head_Tilt_Right"
+  },
+  "balcony_3": {
+   "speaker": "kurt",
+   "text": "To my recollection, typically there's more to the world than a sticky note that says \"outside\""
+  },
+  "balcony_4": {
+   "speaker": "socko",
+   "text": "I wouldn't know, I'm more of an indoor person",
+   "socko_face": "smile",
+   "socko_clip": "Head_Bob"
+  },
+  "ra_1": {
+   "speaker": "kurt",
+   "text": "Hey, uh, Socko. I have a question."
+  },
+  "ra_2": {
+   "speaker": "socko",
+   "text": "What's up?",
+   "socko_clip": "Turn_To_Player"
+  },
+  "ra_3": {
+   "speaker": "kurt",
+   "text": "Where did you come from?"
+  },
+  "ra_4": {
+   "speaker": "socko",
+   "text": "Wow, what a great question, Kurt! When a mommy sock puppet and a daddy sock puppet love each other very much, they...",
+   "socko_face": "wide_smile",
+   "socko_talk": "Talking_Explaining"
+  },
+  "ra_5": {
+   "speaker": "kurt",
+   "text": "Forget I asked."
+  },
+  "rb_1": {
+   "speaker": "socko",
+   "text": "Hey, Kurt, can I ask you a question?",
+   "socko_clip": "Turn_To_Player"
+  },
+  "rb_2": {
+   "speaker": "kurt",
+   "text": "Sure, Socko."
+  },
+  "rb_3": {
+   "speaker": "socko",
+   "text": "Thanks, I really appreciate that.",
+   "socko_face": "smile",
+   "socko_clip": "Head_Nod"
+  },
+  "rb_4": {
+   "speaker": "kurt",
+   "text": "What?"
+  },
+  "rb_5": {
+   "speaker": "socko",
+   "text": "You're a tough crowd, Kurt.",
+   "socko_face": "disappointment"
+  },
+  "rc_1": {
+   "speaker": "socko",
+   "text": "Kurt, have you ever had a sandwich?",
+   "socko_clip": "Turn_To_Player"
+  },
+  "rc_2": {
+   "speaker": "kurt",
+   "text": "Uh, I think so"
+  },
+  "rc_2m": {
+   "speaker": "kurt",
+   "text": "Yeah."
+  },
+  "rc_3": {
+   "speaker": "socko",
+   "text": "What are they like?",
+   "socko_face": "excitement"
+  },
+  "rc_4": {
+   "speaker": "kurt",
+   "text": "It's... Impossible to describe"
+  },
+  "rc_4m": {
+   "speaker": "kurt",
+   "text": "There's lots of different kinds of sandwiches, buddy. I'm gonna need you to be more specific."
+  },
+  "rc_5": {
+   "speaker": "socko",
+   "text": "Oh...",
+   "socko_face": "disappointment",
+   "socko_clip": "Head_Drop"
+  },
+  "rc_6": {
+   "speaker": "socko",
+   "text": "Could I be a sandwich?",
+   "socko_face": "excitement",
+   "socko_clip": "Head_Raise"
+  },
+  "rc_7": {
+   "speaker": "kurt",
+   "text": "Probably not, buddy."
+  },
+  "maze_1": {
+   "speaker": "marta",
+   "text": "(clicks)",
+   "sfx": "marta_clicks",
+   "duration": 2.2
+  },
+  "maze_2": {
+   "speaker": "socko",
+   "text": "What?",
+   "socko_face": "surprise",
+   "socko_clip": "Head_Snap"
+  },
+  "maze_3": {
+   "speaker": "kurt",
+   "text": "Socko, buddy, what's happening?"
+  },
+  "maze_4": {
+   "speaker": "socko",
+   "text": "How does she know you, Kurt?",
+   "socko_face": "unnatural_stillness",
+   "socko_talk": "Talking_Whispering"
+  },
+  "k_still_wont": {
+   "speaker": "kurt",
+   "text": "Still won't budge.",
+   "proposed": true
+  },
+  "k_locked": {
+   "speaker": "kurt",
+   "text": "Locked.",
+   "proposed": true
+  },
+  "k_chain": {
+   "speaker": "kurt",
+   "text": "Chained. From this side.",
+   "proposed": true
+  },
+  "k_padlock": {
+   "speaker": "kurt",
+   "text": "Padlocked.",
+   "proposed": true
+  },
+  "k_blocked": {
+   "speaker": "kurt",
+   "text": "Something's against it.",
+   "proposed": true
+  },
+  "k_heavy": {
+   "speaker": "kurt",
+   "text": "Too heavy to carry. I could shove it.",
+   "proposed": true
+  },
+  "k_dark": {
+   "speaker": "kurt",
+   "text": "Can't see a damn thing.",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "k_power": {
+   "speaker": "kurt",
+   "text": "Power's back.",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "k_gun": {
+   "speaker": "kurt",
+   "text": "A Nagant. ...My hands know this.",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "k_ammo_low": {
+   "speaker": "kurt",
+   "text": "Not many left.",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "k_empty": {
+   "speaker": "kurt",
+   "text": "Empty.",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "k_no_ammo": {
+   "speaker": "kurt",
+   "text": "Nothing to load.",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "k_caught_wake": {
+   "speaker": "kurt",
+   "text": "...Still breathing.",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "k_trickshot": {
+   "speaker": "kurt",
+   "text": "Trickshot...? Why do I know that?",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "k_photo": {
+   "speaker": "kurt",
+   "text": "Somebody cut him out. Carefully.",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "k_same_room": {
+   "speaker": "kurt",
+   "text": "This is the same room.",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "k_wrong": {
+   "speaker": "kurt",
+   "text": "This isn't right. None of this is right.",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "k_48": {
+   "speaker": "kurt",
+   "text": "Forty-eight.",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "k_musicbox": {
+   "speaker": "kurt",
+   "text": "...She's listening.",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "k_hurt": {
+   "speaker": "kurt",
+   "text": "Ngh...",
+   "proposed": true,
+   "style": "quiet",
+   "duration": 1.0
+  },
+  "s_this_way": {
+   "speaker": "socko",
+   "text": "Psst! Wrong way, bud. Nose says that way!",
+   "proposed": true,
+   "socko_face": "smile",
+   "socko_clip": "Head_Bob"
+  },
+  "s_gun_found": {
+   "speaker": "socko",
+   "text": "Ooh, shiny! Now we're talking!",
+   "proposed": true,
+   "socko_face": "excitement",
+   "socko_clip": "Head_Raise",
+   "socko_talk": "Talking_Excited"
+  },
+  "s_shoot_her": {
+   "speaker": "socko",
+   "text": "Shoot her! Go on, shoot her!",
+   "proposed": true,
+   "socko_face": "excitement",
+   "socko_talk": "Talking_Excited"
+  },
+  "s_shoot_lock": {
+   "speaker": "socko",
+   "text": "Locks hate bullets, Kurt. Just saying.",
+   "proposed": true,
+   "socko_face": "smile",
+   "socko_clip": "Head_Tilt_Left"
+  },
+  "s_smash": {
+   "speaker": "socko",
+   "text": "Smash it! Smashing's the best!",
+   "proposed": true,
+   "socko_face": "wide_smile",
+   "socko_clip": "Head_Bob"
+  },
+  "s_hide": {
+   "speaker": "socko",
+   "text": "Hiding? Boooring.",
+   "proposed": true,
+   "socko_face": "disappointment"
+  },
+  "s_good": {
+   "speaker": "socko",
+   "text": "See? Teamwork!",
+   "proposed": true,
+   "socko_face": "wide_smile",
+   "socko_clip": "Head_Nod",
+   "socko_talk": "Talking_Excited"
+  },
+  "s_hit": {
+   "speaker": "socko",
+   "text": "Ha! Trickshot's still got it!",
+   "proposed": true,
+   "socko_face": "wide_smile",
+   "socko_clip": "Laughing",
+   "socko_talk": "Talking_Laughing"
+  },
+  "s_finish": {
+   "speaker": "socko",
+   "text": "She's down, Kurt. Finish it. Go on.",
+   "proposed": true,
+   "socko_face": "unnatural_stillness",
+   "socko_talk": "Talking_Whispering"
+  },
+  "s_frust_1": {
+   "speaker": "socko",
+   "text": "Okay. Sure. Do it your way.",
+   "proposed": true,
+   "socko_face": "forced_happiness"
+  },
+  "s_frust_2": {
+   "speaker": "socko",
+   "text": "You know, I'm only trying to help.",
+   "proposed": true,
+   "socko_face": "disappointment",
+   "socko_talk": "Talking_Sarcastic"
+  },
+  "s_frust_3": {
+   "speaker": "socko",
+   "text": "Why don't you ever listen to me, Kurt?",
+   "proposed": true,
+   "socko_face": "irritation",
+   "socko_talk": "Talking_Annoyed",
+   "socko_idle": "Idle_Impatient"
+  },
+  "s_frust_4": {
+   "speaker": "socko",
+   "text": "Fine. FINE.",
+   "proposed": true,
+   "socko_face": "anger",
+   "socko_clip": "Head_Snap",
+   "socko_talk": "Talking_Threatening",
+   "socko_idle": "Idle_Angry"
+  },
+  "s_caught": {
+   "speaker": "socko",
+   "text": "Up we get! Let's not do that again, okay?",
+   "proposed": true,
+   "socko_face": "forced_happiness"
+  },
+  "s_cozy": {
+   "speaker": "socko",
+   "text": "Ooh. Cozy.",
+   "proposed": true,
+   "socko_face": "smile",
+   "socko_clip": "Looking_Around"
+  },
+  "s_clicks": {
+   "speaker": "socko",
+   "text": "She's saying... nah. Nothing. Never mind.",
+   "proposed": true,
+   "socko_face": "nervousness",
+   "socko_talk": "Talking_Whispering"
+  },
+  "s_spared": {
+   "speaker": "socko",
+   "text": "...Huh. Well, that's no fun.",
+   "proposed": true,
+   "socko_face": "disappointment",
+   "socko_idle": "Idle_Disappointed"
+  },
+  "s_listen_noise": {
+   "speaker": "socko",
+   "text": "Ooh, what was that? Let's go look!",
+   "proposed": true,
+   "socko_face": "excitement"
+  },
+  "marta_clicks": {
+   "speaker": "marta",
+   "text": "(clicks)",
+   "proposed": true,
+   "sfx": "marta_clicks",
+   "duration": 1.8
+  },
+  "marta_clicks_2": {
+   "speaker": "marta",
+   "text": "(clicks) ...bird...",
+   "proposed": true,
+   "sfx": "marta_clicks",
+   "duration": 2.2
+  },
+  "marta_clicks_3": {
+   "speaker": "marta",
+   "text": "(clicks) ...where did you go, little bird...",
+   "proposed": true,
+   "sfx": "marta_clicks",
+   "duration": 2.8
+  },
+  "marta_hum": {
+   "speaker": "marta",
+   "text": "(hums a lullaby, very far away)",
+   "proposed": true,
+   "sfx": "marta_hum",
+   "duration": 3.0
+  },
+  "f48_open": {
+   "speaker": "kurt",
+   "text": "It's open.",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "f48_killed_k": {
+   "speaker": "kurt",
+   "text": "She's not following any more.",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "f48_killed_s": {
+   "speaker": "socko",
+   "text": "Nope! Thanks to you, buddy!",
+   "proposed": true,
+   "socko_face": "wide_smile",
+   "socko_clip": "Head_Bob"
+  },
+  "f48_wounded_s": {
+   "speaker": "socko",
+   "text": "She'll be sore. She'll be cross, too.",
+   "proposed": true,
+   "socko_face": "smile"
+  },
+  "f48_calm_k": {
+   "speaker": "kurt",
+   "text": "Sleep, Marta.",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "f48_calm_s": {
+   "speaker": "socko",
+   "text": "...Sure. Sleep.",
+   "proposed": true,
+   "socko_face": "unnatural_stillness"
+  },
+  "f48_evaded_s": {
+   "speaker": "socko",
+   "text": "She's still out there, y'know.",
+   "proposed": true,
+   "socko_face": "suspicion"
+  },
+  "f48_clean_k": {
+   "speaker": "kurt",
+   "text": "Didn't fire a shot.",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "f48_clean_s": {
+   "speaker": "socko",
+   "text": "Yeah. I noticed.",
+   "proposed": true,
+   "socko_face": "irritation"
+  },
+  "f48_infected_k": {
+   "speaker": "kurt",
+   "text": "My hands won't stop shaking.",
+   "proposed": true,
+   "style": "quiet"
+  },
+  "f48_infected_s": {
+   "speaker": "socko",
+   "text": "Shh. That's just the good part starting.",
+   "proposed": true,
+   "socko_face": "smile",
+   "socko_talk": "Talking_Whispering"
+  },
+  "f48_end_s": {
+   "speaker": "socko",
+   "text": "Well! What's in here, then?",
+   "proposed": true,
+   "socko_face": "excitement",
+   "socko_clip": "Peeking"
+  }
+ }
+}

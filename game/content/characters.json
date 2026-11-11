@@ -1,0 +1,23 @@
+{
+ "kurt": {
+  "name": "KURT",
+  "color": "#d9c7a3",
+  "pitch": 0.75,
+  "rate": 0.95,
+  "volume": 90
+ },
+ "socko": {
+  "name": "SOCKO",
+  "color": "#ff8a5c",
+  "pitch": 1.7,
+  "rate": 1.1,
+  "volume": 100
+ },
+ "marta": {
+  "name": "MARTA",
+  "color": "#9fb8a8",
+  "pitch": 0.85,
+  "rate": 0.75,
+  "volume": 70
+ }
+}
