@@ -171,7 +171,9 @@ func stop() -> void:
 	_tts_done = true
 
 func pause_voice(p: bool) -> void:
-	if not _tts_available():
+	# a phone's voice isn't paused and resumed (the platform does it by stopping and restarting
+	# the utterance, the least sure path it has): the line in progress is left to finish
+	if OS.has_feature("mobile") or not _tts_available():
 		return
 	if p:
 		DisplayServer.tts_pause()

@@ -74,8 +74,35 @@ func build() -> void:
 	set_pose("hidden", 0.0)
 	visible = false
 	Speech.line_cue.connect(_on_cue)
-	Speech.line_started.connect(func(sp, _t): if sp == "socko": _talk_t = 0.0)
+	Speech.line_started.connect(_on_line_started)
 	Speech.line_finished.connect(_relax)
+	Speech.line_finished.connect(_lower_after)
+
+## Out of a scene (walking the town), he's held low, out of the way. With this on, he comes up
+## into view to say his lines (so you see him say them) and goes back down after.
+var present_when_talking := false
+var _pose := "hidden"
+var _raised := false
+var _raise_n := 0
+
+func _on_line_started(sp: String, _text: String) -> void:
+	if sp != "socko":
+		return
+	_talk_t = 0.0
+	if present_when_talking and visible and (_pose == "low" or _raised):
+		_raise_n += 1
+		if not _raised:
+			_set_pose_internal("up", 0.35, Tween.TRANS_BACK)
+			_raised = true
+
+func _lower_after(sp: String) -> void:
+	if sp != "socko" or not _raised:
+		return
+	var n := _raise_n
+	await get_tree().create_timer(0.9, false).timeout
+	if n == _raise_n and _raised and Speech.speaking != "socko":
+		_raised = false
+		_set_pose_internal("low", 0.7)
 
 ## Plays one of SockoClips' clips on top of whatever he's doing (Head_Nod, Face_Surprise,
 ## Laughing, Peeking...). It ends by itself.
@@ -106,6 +133,14 @@ func _on_cue(_id: String, l: Dictionary) -> void:
 	_style = String(l.get("style", ""))
 
 func set_pose(name: String, seconds := 0.6, trans := Tween.TRANS_SINE) -> void:
+	_raised = false          # a scene placing him outright takes over from talking-raise
+	_set_pose_internal(name, seconds, trans)
+
+func _set_pose_internal(name: String, seconds: float, trans := Tween.TRANS_SINE) -> void:
+	if not POSES.has(name):
+		push_error("Socko: no pose " + name)
+		return
+	_pose = name
 	var p: Array = POSES[name]
 	_w_from = _w
 	_e_from = _e

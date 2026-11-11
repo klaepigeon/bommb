@@ -1,8 +1,8 @@
 # HYSTERIA: the Android-first rebuild (Godot 4.7)
 
-**Scene A**, **the town** behind the wardrobe, then **Flat 48** across the landing. New code throughout for everything that
+**Scene A**, **the maze** behind the wardrobe, then **Flat 48** across the landing. New code throughout for everything that
 broke in the first Godot build (lighting, sound, the scene's logic, doors, controls, the test),
-carrying that build's **art**: the textured flat, the old town's modelled streets, Socko's skinned
+carrying that build's **art**: the textured flat, Socko's skinned
 sock with his expression library, Kurt's anatomical arm and body, Marta, the infected. The old
 project is kept, untouched, in `legacy/hysteria/`.
 
@@ -26,41 +26,41 @@ to come check on you."* Knocks again. *"Marta? It's Kurt. I'm coming in."* He pu
 | Waking (on the floor beside her chair; muffled, ringing) | *"Oh, jeez, that smarts"* (rubbing his head). His left hand comes up with a sock on it, through *"Shouldn't have stood up so fast."* Her chair is empty, still grown through with coral. |
 | **Open** the living room door (shut while he was out: he can't leave the room he found her in) | It rattles. *"It won't open."* through *"You're welcome!"* and, to himself, *"I like helping."* |
 | **Push** the wardrobe (three shoves along the wall) | A ragged hole knocked through behind it, dark, with a glimmer of gaslight a long way off. *"What the hell is that?"* *"I don't know."* *"Do you know anything?"* *"I know that I can do this!"* (cross-eyed) *"Ooh! Ooh! And I can smell important stuff! Go this way!"* (pointing) |
-| **Crawl through** | The town. Socko points the way to the gun. |
+| **Crawl through** | The maze. Socko points the way to the gun. |
 
 Before the scene ends the flat is there to explore: doors and drawers open, and the notes,
 papers and things the first build wrote text for can be read.
 
-## The town
+## The maze (where the town was)
 
-The first build's labyrinth: Kerzhansk under the Romanovs, at night. The main street goes on for
-ever (walk off one end and you're at the other; the cathedral dome stays the same distance away);
-the square where a fight stopped in mid-air, with the revolver lying in it; the photographer's
-séance salon; the hotel room; the nursery izba with Sonya's door; the chapel plaza. Added for this
-chapter: **a gate south out of the plaza, the only way out**, with a lever beside it, and Marta
-sitting in front of it, floating, head down, still seated in a chair that isn't there.
+Through the hole is Flat 47 gone wrong: its rooms over and over (the faded mustard damask, the
+parquet, the plaster ceiling, fluorescent panels that hum), 13 × 14 of them, with doorways where
+there shouldn't be, walls missing, a big room where the walls have gone, and the wardrobe, the
+armchair and the radiator again and again. You come out into **a corridor of thirteen lights that
+comes round on itself**. The way out is **the flat's own front door, 47, at the far south**,
+bolted: the bolt on the wall beside it is loud. (The Romanov town it replaces kept closing itself
+on phones; see **Why it's a maze now** below.)
 
-**No NPCs to talk to.** The monsters were people (the infected generator: every one different),
-and Kurt can talk to them as himself once he knows who they were:
+**Marta hunts it.** She walks a round of the southern rooms from the start, listening, and sees
+Kurt if he gets close; once the revolver is taken (on a table in a room deep in the east) she's
+properly awake and comes for him. Caught, he comes to in the corridor where he came in.
 
-| Monster | Where | What it keeps saying | What Kurt needs |
+The people the maze took, and what Kurt needs to talk them down:
+
+| Who | Where | What it keeps saying | What Kurt needs |
 |---|---|---|---|
-| The porter | the hotel room, his back to the door | *"Room four. Room four."* | **Her Handwriting** + having looked at the photo strip in that room |
-| The lamplighter | walking the main street | *"Thirteen... thirteen..."* | **These Streets** + having walked round the seam |
-| Marta | the gate | *"...Have you seen..."* | **Old Name** + having looked at the TRICKSHOT poster in the square |
+| The porter | Room 4 (a "4" over the doorway), his back to the room | *"Room four. Room four."* | **Her Handwriting** + having looked at the photo strip in that room |
+| The lamplighter | walking the corridor of thirteen lights | *"Thirteen... thirteen..."* | **These Walls** + having walked round the loop |
+| Marta | everywhere | *"...Have you seen..."* | **Old Name** + having looked at the TRICKSHOT poster near the door |
 
 Known, they stop, say one human thing, and stay down (and give back a nugget). Unknown (the
 prompt says **Talk (?)**), Kurt gets as far as *"Hey. Hey, easy..."* and they come for him.
 
-**Three ways out:** the gun (the Nagant: seven rounds, loaded one at a time; taking it wakes
-Marta and she comes for him; four hits drive her off the gate for 25 s, or Headshot ends her);
-sneaking (everything hears: steps, shots, a thrown cobble where it lands, the lever, which is
-loud); talking. Caught, he comes to where he came in. Through the gate: white, and he's standing
-on the landing outside 47, its door shut behind him. Across the landing, 48's peephole lights and
-its door comes off the latch.
-
-Nuggets (14, plus one per monster talked down) buy skills from two trees in any order
-(`content/skills.json`); the talk route alone costs 8.
+**Three ways out:** the gun (four hits drive Marta off for 25 s, or Headshot ends her); sneaking
+(a loose brick thrown where she'll go to look, then the bolt); talking. Sonya's door is in the
+south-west corner room, low down, СОНЯ scratched on it; it doesn't open. Through the front door:
+white, and he's on the landing outside 47. Nuggets (12, plus one per person talked down) buy
+skills from two trees in any order (`content/skills.json`).
 
 ## Flat 48
 
@@ -134,7 +134,7 @@ talking styles). Each line can set them in content:
 
 `socko_face` is held until a couple of seconds after the line (then he relaxes);
 `socko_clip` plays once on top; `socko_talk` is how he moves while he says it. On Kurt's lines
-they're Socko's reaction. Every line of Scene A and the town has them.
+they're Socko's reaction. Every line of Scene A and the maze has them.
 
 ## Content
 
@@ -166,34 +166,37 @@ time Kurt looks at each thing. `content/characters.json`: speakers' colours and 
 | Broken animations | One controller per character, posing the first build's rigs by name, eased; tested through every beat. |
 | Door out of the waking room not locked | The living room door is shut and locked after the blackout; tested at the end of Scene A. |
 | Hands going into walls | Kurt's hand, what's in it, and Socko draw back from anything solid that's nearer than they reach. |
-| The town closing itself on Android, always at the same spot (a few steps in, at the first nugget, as Socko speaks) | The town code is rebuilt so nothing new happens on any one frame of play (see **How the town stays up** below). Tested here, not yet on a phone: if it still closes, the next launch shows the trail. |
+| The town closing itself on Android, always at the same spot (a few steps in, at the first nugget, as Socko spoke) | The town is gone: behind the wardrobe is now a maze of Flat 47's own rooms, built from the flat's simplest materials (see **Why it's a maze now**). Not yet tried on a phone: if it ever closes, the next launch shows the trail. |
 
-## How the town stays up
+## Why it's a maze now
 
-The crash came at the same moment in both builds: the first nugget, 4 m in front of the hole,
-with Socko's *"Ooh, shiny"* starting in the same frame (the old build had already muted the voice
-there, and it still went). It didn't happen on a desktop. So the rebuild takes away every way the
-town can do something heavy, or something for the first time, while you're walking about:
+The Romanov town closed itself on phones, always at the same moment: the first nugget a few steps
+from the hole, with Socko's first line there. It never did on a desktop and it couldn't be
+reproduced off a phone, so instead of a third fix the place is replaced with one that asks a
+phone for much less, and everything around it is built so no one frame does anything heavy:
 
-- **Built a slice a frame, behind the black** (`Town.build_async`): street rows, props, the
-  fight, the rooms, then the meshes 60 at a time. The 3D view isn't drawn while it builds.
-- **Drawn once before you see it** (`TownChapter.prewarm`): a camera stands at 17 views (every
-  street, the square, the plaza, the three rooms, the gate, the people) and looks four ways round,
-  with the lamps lit as they will be there. Every shader and light combination is compiled then.
-- **A lamp budget**: only the nearest 5 lamps are lit on a phone (12 on a desktop), chosen four
-  times a second; with Kurt's own light and the gate's, no mesh ever has more than 8.
-- **Inert pickups**: every nugget shares one mesh and material; taking one hides it, counts it,
-  plays one sound. Nothing is tweened, created or freed.
-- **One phase at a time** (`TownChapter.phase`: BLACK, ARRIVING, FREE, SCENE, LEAVING, DONE). Talks,
-  the lever and being caught are numbered scenes; an overtaken scene stops itself. The physics step
-  never waits.
-- **One queue for what's said**: lines start only when nobody is speaking, only while he's free,
-  never in the frame something was picked up. Replies first, then the story's beats, then passing
-  remarks (which lapse after 8 s).
-- **Way-finding worked out once**: a table of the first step from every street cell to every
-  other, checked by the autotest against the shortest path for all 6,642 pairs.
-- The trail (`user://trail.txt`) marks every step of this: build slices, prewarm views, the
-  phases, each pickup, each line. If the game ever dies, the next launch shows where.
+- **One simple shader** for every surface (the flat's `ps1.gdshader`: a texture and lambert light;
+  none of the town's normal maps, roughness maps or specular), six materials in all.
+- **145 meshes** (the town had 798): the maze in 16 m chunks, one mesh per material per chunk;
+  no shadows anywhere; fog, and nothing drawn past 40 m on a phone.
+- **A light budget**: every room has a glowing panel (emission, free), but only the nearest 4
+  carry a real light on a phone (9 on a desktop), chosen four times a second; steady, no flicker.
+- **Built a step a frame behind the black, then drawn once from 12 views** (`TownChapter.prewarm`)
+  so every shader and light combination is compiled before the black lifts.
+- **Inert pickups**: taking a nugget hides it, counts it, plays one sound. Nothing is created,
+  tweened or freed while he walks about.
+- **One phase at a time** in `TownChapter` (BLACK, ARRIVING, FREE, SCENE, LEAVING, DONE), and
+  **one queue for what's said**: a line starts only when nobody is speaking, only while he's free,
+  never in a pickup's frame.
+- **Socko comes up to say his lines** while Kurt walks about (before, he talked from just out of
+  view). `--sockocheck` plays every line, clip, face and pointing he has in the maze and checks
+  every bone and eye is a finite number every frame.
+- **The voice**: on a phone it's never paused and resumed (a line in progress just finishes). If a
+  run ever dies while a spoken line is being started, the next launch turns voices off by itself
+  (subtitles stay) and says so on the report screen.
+- **Way-finding** is a table worked out once; the autotest checks it gives the shortest way
+  through the doorways for all 32,942 pairs of rooms.
+- The trail (`user://trail.txt`) marks every build step, prewarm view, phase, pickup and line.
 
 ## Build and test
 
@@ -202,6 +205,8 @@ tools/test.sh                 # three full playthroughs from the first knock (ta
                               # each on through the landing and all of Flat 48
 tools/test.sh kill            # one
 tools/test.sh shots DIR talk  # rendered, a frame per line
+godot --path . -- --autotest --start=town --mazeviews --shots=DIR   # the maze from 8 spots
+godot --path . -- --autotest --start=town --sockocheck               # Socko: every line, clip, face
 tools/build_apk.sh            # → ../dist/Hysteria.apk, signed, or it fails
 tools/make_icon.sh            # re-render Socko and rebuild the launcher icons in icon/
 godot --path . -- --start=wake|door|wardrobe|town|landing|flat48

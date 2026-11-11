@@ -31,6 +31,10 @@ func _ready() -> void:
 		_spin()
 	elif main.args.has("townwalk"):
 		_townwalk()
+	elif main.args.has("sockocheck"):
+		_sockocheck()
+	elif main.args.has("mazeviews"):
+		_mazeviews()
 	elif main.args.has("superview"):
 		_superview()
 	elif main.args.has("super"):
@@ -208,14 +212,14 @@ func _town() -> void:
 	var town: Town = main.town
 	if shots != "":
 		await _shot("10_town_arrival")
-	# all the nuggets (the monsters hold still meanwhile: teleporting past them isn't the test)
-	for m in [ch.porter, ch.lamplighter, ch.marta]:
-		m.process_mode = Node.PROCESS_MODE_DISABLED
+	# all the nuggets (the people hold still meanwhile: teleporting past them isn't the test)
+	for m in ch.monsters():
+		_hold(m, true)
 	for n in town.nuggets:
 		await _tp(town.to_local(n.global_position) - Vector3(0, 0.6, 0))
 		await _idle(0.15)
-	for m in [ch.porter, ch.lamplighter, ch.marta]:
-		m.process_mode = Node.PROCESS_MODE_INHERIT
+	for m in ch.monsters():
+		_hold(m, false)
 	print("AUTOTEST: town nuggets collected, have %d" % Game.nuggets)
 	# the lamps never go over their budget, wherever he's been
 	var lit := 0
@@ -231,7 +235,7 @@ func _town() -> void:
 		if n.visible:
 			_fail("a nugget is still there after it was taken: " + n.name)
 			return
-	# the monsters' way-finding table: from any street cell to any other, the shortest way
+	# the way-finding table: from any room to any other, the shortest way
 	var bad := _check_routes(town)
 	if bad != "":
 		_fail(bad)
@@ -242,29 +246,32 @@ func _town() -> void:
 		"sneak": await _route_sneak(ch, town)
 	if not get_tree():
 		return
-	# out of the gate
-	if not await _until(func(): return town.gate_open, 10.0, "the gate to open"):
+	# out of the front door
+	if not await _until(func(): return town.gate_open, 10.0, "the door to open"):
 		return
-	await _tp(Vector3(42, 0, Town.GATE_Z + 0.8))
-	main.player.face(_g(Vector3(42, 1.6, 76)))
+	await _tp(Vector3(Town.EXIT_X, 0, Town.GATE_Z + 0.8))
+	main.player.face(_g(Vector3(Town.EXIT_X, 1.6, Town.GATE_Z + 6.0)))
 	main.hud.controls.autopilot_move = Vector2(0, -1)
-	if not await _until(func(): return ch.route != "", 20.0, "leaving by the gate"):
+	if not await _until(func(): return ch.route != "", 20.0, "leaving by the door"):
 		return
 	main.hud.controls.autopilot_move = Vector2.ZERO
 	if ch.route != route:
 		_fail("went out by '%s', expected '%s'" % [ch.route, route])
 		return
-	print("AUTOTEST: out of the town by '%s'" % route)
+	print("AUTOTEST: out of the maze by '%s'" % route)
 	await _flat48()
 
-## Walks Town.next_step from every street cell to every other and checks it arrives in the
-## fewest steps there are (a plain breadth-first count). Empty if it all holds.
+## Hold one of the people still (the test teleports; nobody could walk that fast), or let go.
+func _hold(m: Monster, on: bool) -> void:
+	m.process_mode = Node.PROCESS_MODE_DISABLED if on else Node.PROCESS_MODE_INHERIT
+
+## Walks Town.next_cell from every room to every other and checks it arrives in the fewest steps
+## there are (a plain breadth-first count through the doorways). Empty if it all holds.
 func _check_routes(town: Town) -> String:
 	var cells: Array[Vector2i] = []
-	for y in Labyrinth.MAP.size():
-		for x in String(Labyrinth.MAP[y]).length():
-			if String(Labyrinth.MAP[y])[x] != "#":
-				cells.append(Vector2i(x, y))
+	for y in Town.H:
+		for x in Town.W:
+			cells.append(Vector2i(x, y))
 	var pairs := 0
 	for b in cells:
 		var dist := {b: 0}
@@ -275,49 +282,59 @@ func _check_routes(town: Town) -> String:
 			h += 1
 			for o in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
 				var nb: Vector2i = c + o
-				if not dist.has(nb) and cells.has(nb):
+				if not dist.has(nb) and town.passable(c, nb):
 					dist[nb] = int(dist[c]) + 1
 					q.append(nb)
-		var to := town.center(b.x, b.y) + Vector3(0.1, 0, 0.1)
+		if dist.size() != cells.size():
+			return "only %d of %d rooms can be reached from %s" % [dist.size(), cells.size(), b]
 		for a in cells:
 			if a == b:
 				continue
 			pairs += 1
 			var c := a
 			var steps := 0
-			while c != b and steps < 100:
-				c = town.cell_of(town.next_step(town.center(c.x, c.y), to))
+			while c != b and steps < 400:
+				var nx := town.next_cell(c, b)
+				if nx == Vector2i(-1, -1) or not town.passable(c, nx):
+					return "next_cell from %s to %s goes through a wall at %s" % [a, b, c]
+				c = nx
 				steps += 1
 			if c != b or steps != int(dist[a]):
-				return "next_step from %s to %s: %d steps, shortest is %d" % [a, b, steps, int(dist[a])]
-	print("AUTOTEST: town routes shortest for all %d pairs of %d cells" % [pairs, cells.size()])
+				return "next_cell from %s to %s: %d steps, shortest is %d" % [a, b, steps, int(dist[a])]
+	print("AUTOTEST: maze routes shortest for all %d pairs of %d rooms" % [pairs, cells.size()])
 	return ""
+
+## The middle of the room a thing is in (local): where you'd stand to reach it.
+func _room_of(town: Town, world: Vector3) -> Vector3:
+	var c := town.cell_of(town.to_local(world))
+	return town.center(c.x, c.y)
 
 func _route_talk(ch: TownChapter, town: Town) -> void:
 	for id in ["handwriting", "these_streets", "old_name"]:
 		if not Game.buy(id):
 			_fail("couldn't buy " + id)
 			return
-	# the photo strip in the hotel room, then the porter (his back to the door): now Kurt knows
+	_hold(ch.marta, true)
+	# the photo strip in Room 4, then the porter (his back to the room): now Kurt knows
 	var strip := _thing("Photo strip")
-	if strip == null or not await _go_use(strip.global_position, Vector3(55.3, 0.45, 38.0), "Look", 1.0):
+	if strip == null or not await _go_use(strip.global_position, _room_of(town, strip.global_position), "Look", 1.0):
 		return
 	await _idle(0.3)
 	main.hud.reader.close()
 	await _idle(0.5)
 	var porter: Monster = ch.porter
-	await _tp(town.to_local(porter.global_position) + Vector3(-1.7, 0, 0))
+	await _tp(town.to_local(porter.global_position) + Vector3(0, 0, 1.7))
 	if not await _use(porter.head.global_position, "Talk"):
 		return
 	if not await _until(func(): return porter.state == Monster.S.CALM, 30.0, "the porter to calm"):
 		return
 	if shots != "":
 		await _shot("11_porter_calm")
-	# round the seam once, and the lamplighter
-	await _tp(Vector3(55.0, 0, 20.0))
-	main.player.face(_g(Vector3(70, 1.6, 20)))
+	# round the corridor once, and the lamplighter
+	await _tp(Vector3(Town.LOOP - 6.0, 0, 2.0))
+	main.player.face(_g(Vector3(Town.LOOP + 20.0, 1.6, 2.0)))
 	main.hud.controls.autopilot_move = Vector2(0, -1)
-	if not await _until(func(): return Game.flag("looped"), 30.0, "the street to come round"):
+	if not await _until(func(): return Game.flag("looped"), 30.0, "the corridor to come round"):
 		return
 	main.hud.controls.autopilot_move = Vector2.ZERO
 	await _idle(4.0)
@@ -331,13 +348,15 @@ func _route_talk(ch: TownChapter, town: Town) -> void:
 		return
 	# the poster: who he was
 	var poster := _thing("Poster")
-	if poster == null or not await _go_use(poster.global_position, Vector3(42, 0, 40), "Look", 1.3):
+	if poster == null or not await _go_use(poster.global_position, _room_of(town, poster.global_position), "Look", 1.3):
 		return
 	await _idle(0.3)
 	main.hud.reader.close()
 	await _idle(3.0)
-	# Marta, by the gate, head down. He tells her who he is.
+	# Marta, wherever she is on her round. He tells her who he is.
+	ch.marta.reset_to_home()
 	await _tp(town.marta_post + Vector3(0, 0, -1.8))
+	_hold(ch.marta, false)
 	if not await _use(ch.marta.head.global_position, "Talk"):
 		return
 	if not await _until(func(): return ch.marta.state == Monster.S.CALM, 30.0, "Marta to calm"):
@@ -351,12 +370,14 @@ func _route_kill(ch: TownChapter, town: Town) -> void:
 	if not Game.buy("headshot"):
 		_fail("couldn't buy headshot")
 		return
-	# rounds from the hotel room
+	_hold(ch.marta, true)
+	# rounds, then the revolver on its table
 	var ammo: Hotspot = town.pickups[0][0]
-	if not await _go_use(ammo.global_position, Vector3(54.4, 0.45, 35.4), "Take", 0.9):
+	if not await _go_use(ammo.global_position, _room_of(town, ammo.global_position), "Take", 0.9):
 		return
-	if not await _go_use(town.to_global(town.revolver_at + Vector3(0, 0.1, 0)), town.revolver_at + Vector3(1.0, 0, 0.3), "Take", 1.0):
+	if not await _go_use(town.to_global(town.revolver_at + Vector3(0, 0.1, 0)), town.revolver_at + Vector3(1.0, 0, 0.6), "Take", 1.0):
 		return
+	_hold(ch.marta, false)
 	await _idle(4.0)
 	if shots != "":
 		await _shot("11_gun")
@@ -364,13 +385,17 @@ func _route_kill(ch: TownChapter, town: Town) -> void:
 	if not m.awake:
 		_fail("taking the revolver didn't wake her")
 		return
-	# she's coming: wait until she's in sight, then take her
-	if not await _until(func(): return m.global_position.distance_to(main.player.global_position) < 12.0 and m.can_see_player(), 60.0, "Marta to come into sight"):
+	# into the big room where the walls have gone (a long way to see), and a shot to bring her
+	await _tp(town.center(4, 5) + Vector3(-1.0, 0, 0))
+	main.player.face(_g(town.center(7, 5) + Vector3(0, 1.4, 0)))
+	await _idle(0.3)
+	main.weapon.fire()
+	if not await _until(func(): return m.global_position.distance_to(main.player.global_position) < 12.0 and m.can_see_player(), 90.0, "Marta to come into sight"):
 		return
 	var shots_fired := 0
 	while m.state != Monster.S.DEAD:
 		await get_tree().physics_frame
-		if not main.player.can_move:
+		if not main.player.can_move or not m.can_see_player():
 			continue
 		if Game.ammo_loaded == 0:
 			main.weapon.reload()
@@ -390,21 +415,26 @@ func _route_kill(ch: TownChapter, town: Town) -> void:
 
 func _route_sneak(ch: TownChapter, town: Town) -> void:
 	var m: MartaHunter = ch.marta
-	var rock: Hotspot = town.pickups[7][0]       # the cobble in the middle of the plaza
-	if not await _go_use(rock.global_position, Vector3(39.0, 0, 59.6), "Take", 1.0):
+	# she's by the door; a loose brick from the room by it
+	m.reset_to_home()
+	_hold(m, true)
+	var rock: Hotspot = town.pickups[7][0]
+	if not await _go_use(rock.global_position, _room_of(town, rock.global_position), "Take", 1.0):
 		return
 	if main.weapon.held != "rock":
-		_fail("didn't pick the cobble up")
+		_fail("didn't pick the brick up")
 		return
-	# throw it up the lane toward the square, away from the gate
-	main.player.face(_g(Vector3(41.0, 3.0, 48.0)))
+	# throw it back up through the rooms, away from the door
+	await _tp(Vector3(Town.EXIT_X, 0, Town.GATE_Z - Town.CELL * 1.5))
+	main.player.face(_g(Vector3(Town.EXIT_X, 1.6, Town.GATE_Z - Town.CELL * 4.0)))
 	await _idle(0.2)
+	_hold(m, false)
 	main.weapon.fire()
 	await _idle(0.4)
-	await _tp(Vector3(31.0, 0, 64.5))          # out of her way: she comes up the lane to look
-	if not await _until(func(): return m.state == Monster.S.LISTEN, 6.0, "Marta to hear the cobble"):
+	await _tp(Vector3(Town.LOOP - 2.0, 0, Town.GATE_Z - 2.0))     # out of her way, in the far corner
+	if not await _until(func(): return m.state == Monster.S.LISTEN, 6.0, "Marta to hear the brick"):
 		return
-	if not await _until(func(): return m.global_position.distance_to(town.lever_spot.global_position) > 9.0, 25.0, "Marta to drift off"):
+	if not await _until(func(): return m.global_position.distance_to(town.lever_spot.global_position) > 9.0, 25.0, "Marta to go and look"):
 		return
 	await _go_use(town.lever_spot.global_position, town.lever.position + Vector3(0, -1.25, -1.2), "Pull", 1.0)
 
@@ -667,6 +697,104 @@ func _flat48() -> void:
 func _shot_later(name: String, delay: float) -> void:
 	await get_tree().create_timer(delay).timeout
 	await _shot(name)
+
+## Socko in the town, under the town's lights: every town line he has (with its cues), every clip
+## over every face, pointing and letting go. Every frame, everything that moves in him must be a
+## finite number (a NaN or INF bone or transform is the kind of thing a phone's GPU dies on).
+func _sockocheck() -> void:
+	if not await _until(func(): return main.place == "town" and main.chapter != null and not main.chapter.busy, 200.0, "the town"):
+		return
+	for m in main.chapter.monsters():
+		m.process_mode = Node.PROCESS_MODE_DISABLED
+	var sk: Socko = main.player.socko
+	var bad := [""]
+	var frames := [0]
+	var check := func(what: String):
+		frames[0] += 1
+		if bad[0] != "":
+			return
+		var e := _socko_nonfinite(sk)
+		if e != "":
+			bad[0] = "%s: %s" % [what, e]
+	var lines: Dictionary = main.chapter.data.get("lines", {})
+	var n := 0
+	for id in lines:
+		var l: Dictionary = lines[id]
+		if String(l.get("speaker", "")) != "socko" and not l.has("socko_face") and not l.has("socko_clip"):
+			continue
+		n += 1
+		var done := [false]
+		var said = func(): await Speech.say_id(id); done[0] = true
+		said.call()
+		var t := 0.0
+		while not done[0] and t < 30.0:
+			await get_tree().process_frame
+			t += get_process_delta_time()
+			check.call("line " + id)
+		if n == 1 and shots != "":
+			await _shot("socko_town_line")
+	print("AUTOTEST: socko said %d town lines" % n)
+	for face in SockoClips.EXPRESSIONS:
+		sk.expression = face
+		for clip in SockoClips.INFO:
+			sk.play(clip)
+			for f in 3:
+				await get_tree().process_frame
+				check.call("%s over %s" % [clip, face])
+		for f in 30:
+			await get_tree().process_frame
+			check.call("face " + face)
+	sk.expression = "neutral"
+	for target in [main.town.to_global(main.town.revolver_at + Vector3(0, 1, 0)), main.player.camera.global_position, main.player.global_position + Vector3(0, 0.0, 0.01), Vector3.INF]:
+		sk.point_at(target)
+		for f in 40:
+			await get_tree().process_frame
+			check.call("pointing at %s" % target)
+	if bad[0] != "":
+		_fail("Socko went non-finite: " + bad[0])
+		return
+	print("AUTOTEST PASS: socko in the town, %d frames, every bone and eye finite" % frames[0])
+	get_tree().quit(0)
+
+## Rendered frames from around the maze (with --shots=DIR), and the frame rate at each.
+func _mazeviews() -> void:
+	if not await _until(func(): return main.place == "town" and main.chapter != null and not main.chapter.busy, 200.0, "the town"):
+		return
+	var town: Town = main.town
+	for m in main.chapter.monsters():
+		_hold(m, true)
+	var spots := [[Vector2i(6, 0), Vector2(0, 1)], [Vector2i(2, 0), Vector2(1, 0)], [Vector2i(4, 5), Vector2(1, 0.2)],
+		[Town.REVOLVER_CELL + Vector2i(-1, 0), Vector2(1, 0)], [Town.PORTER_CELL, Vector2(0, -1)], [Town.NURSERY_CELL, Vector2(-1, 0.1)],
+		[Vector2i(Town.EXIT_COL, Town.H - 2), Vector2(0, 1)], [Vector2i(9, 9), Vector2(-1, 0.3)]]
+	var i := 0
+	for sp in spots:
+		var c: Vector2i = sp[0]
+		var d: Vector2 = sp[1]
+		main.player.global_position = town.to_global(town.center(c.x, c.y))
+		main.player.face(town.to_global(town.center(c.x, c.y) + Vector3(d.x, 0, d.y) * 6.0 + Vector3(0, 1.4, 0)))
+		await _idle(1.0)
+		i += 1
+		print("AUTOTEST: view %d at %s: %d fps" % [i, c, Engine.get_frames_per_second()])
+		if shots != "":
+			await _shot("maze_%02d" % i)
+	print("AUTOTEST PASS: maze views")
+	get_tree().quit(0)
+
+func _socko_nonfinite(sk: Socko) -> String:
+	if not sk.global_transform.is_finite():
+		return "his transform"
+	var rig: SockRig = sk.rig
+	for v in [rig.wrist, Vector3(rig.jaw, rig.smile_l, rig.smile_r)]:
+		if not (v as Vector3).is_finite():
+			return "rig channels %s" % v
+	var sk3: Skeleton3D = rig.skel
+	for b in sk3.get_bone_count():
+		if not sk3.get_bone_global_pose(b).is_finite():
+			return "bone %s" % sk3.get_bone_name(b)
+	for n in rig.find_children("*", "Node3D", true, false):
+		if not (n as Node3D).global_transform.is_finite():
+			return "node %s" % n.name
+	return ""
 
 func _shot(name: String) -> void:
 	if shots == "":

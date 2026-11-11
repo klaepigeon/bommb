@@ -68,13 +68,20 @@ func setup() -> void:
 	town.revolver_spot.used.connect(_take_revolver)
 	town.lever_spot.used.connect(_pull_lever)
 	var mons: Dictionary = data.get("monsters", {})
-	porter = _spawn(Monster, "porter", mons.get("porter", {}), town.porter_home, 4, Rect2(52.4, 34.7, 5.9, 6.6))
-	porter.rotation.y = -PI * 0.5      # facing the wall of the hotel room, his back to the door
-	lamplighter = _spawn(Monster, "lamplighter", mons.get("lamplighter", {}), town.lamplighter_path[0], 13, Rect2(4.5, 16.5, 51.0, 7.0))
+	porter = _spawn(Monster, "porter", mons.get("porter", {}), town.porter_home, 4, town.porter_bounds)
+	porter.rotation.y = 0.0            # facing the wall of Room 4, his back to the room
+	lamplighter = _spawn(Monster, "lamplighter", mons.get("lamplighter", {}), town.lamplighter_path[0], 13, town.lamplighter_bounds)
 	lamplighter.wanders = [town.to_global(town.lamplighter_path[0]), town.to_global(town.lamplighter_path[1])]
 	lamplighter.speed = 0.8
-	marta = _spawn(MartaHunter, "marta", mons.get("marta", {}), town.marta_post, 47, Rect2(28.5, 32.5, 27.0, 35.0)) as MartaHunter
+	# Marta hunts the maze: she walks a round of the southern rooms from the start, listening,
+	# and sees him if he's close; once the revolver's taken she's properly awake
+	marta = _spawn(MartaHunter, "marta", mons.get("marta", {}), town.marta_post, 47, town.maze_bounds) as MartaHunter
 	marta.away_point = town.to_global(town.marta_away)
+	var round: Array[Vector3] = []
+	for p in town.marta_patrol:
+		round.append(town.to_global(p))
+	marta.wanders = round
+	marta.prowl()
 	weapon.reloaded_first.connect(func(): line("reloaded"))
 	weapon.emptied.connect(func(): line("empty"))
 	Game.skill_bought.connect(_on_bought)
@@ -227,6 +234,7 @@ func arrive() -> void:
 	player.can_move = true
 	player.can_look = true
 	hud.set_crosshair(true)
+	sk.present_when_talking = true       # he comes up to say his lines while Kurt walks about
 	phase = Phase.FREE
 	Trail.mark("town: free")
 
@@ -250,7 +258,7 @@ func _physics_process(delta: float) -> void:
 	if phase == Phase.FREE:
 		_steer(delta)
 		_nursery(lp, delta)
-		if lp.z > 57.0 and lp.x > 28.0 and lp.x < 56.0:
+		if lp.z > Town.GATE_Z - Town.CELL * 1.5 and absf(lp.x - Town.EXIT_X) < Town.CELL * 1.5:
 			line("gate_seen")
 		if not town.gate_open and lp.z > Town.GATE_Z - 1.6 and lp.x > Town.GATE_X0 and lp.x < Town.GATE_X1:
 			line("gate_shut")
@@ -396,7 +404,7 @@ func _take_revolver() -> void:
 func _sonya_door() -> void:
 	if phase != Phase.FREE:
 		return
-	Sfx.play_at("rattle", town.to_global(Vector3(6.3, 1.4, 63.2)), -4.0, 1.1)
+	Sfx.play_at("rattle", town.to_global(town.nursery_center), -4.0, 1.1)
 	line("sonya_door")
 
 func _pull_lever() -> void:
@@ -524,6 +532,7 @@ func _caught(m: Monster) -> void:
 func _leave() -> void:
 	phase = Phase.LEAVING
 	_queue.clear()
+	player.socko.present_when_talking = false
 	player.can_move = false
 	if marta.state == Monster.S.DEAD:
 		route = "kill"

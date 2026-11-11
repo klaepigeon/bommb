@@ -59,8 +59,14 @@ func save() -> void:
 
 func _load() -> void:
 	var c := ConfigFile.new()
-	if c.load(PATH) != OK:
-		return
-	voices = c.get_value("game", "voices", voices)
-	look_sensitivity = c.get_value("game", "look_sensitivity", look_sensitivity)
-	subtitle_scale = c.get_value("game", "subtitle_scale", subtitle_scale)
+	if c.load(PATH) == OK:
+		voices = c.get_value("game", "voices", voices)
+		look_sensitivity = c.get_value("game", "look_sensitivity", look_sensitivity)
+		subtitle_scale = c.get_value("game", "subtitle_scale", subtitle_scale)
+	# if the last run died starting a voice line, the voices go off (subtitles stay) until turned
+	# back on in the pause menu: the same crash can't happen twice in a row
+	if voices and Trail.died_in_voice():
+		voices = false
+		save()
+		Trail.precaution = "It closed while starting a spoken line, so voices are now off (subtitles only). They can go back on in the pause menu."
+		Trail.mark("voices off: the last run died in the voice")

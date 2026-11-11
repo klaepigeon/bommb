@@ -6,6 +6,10 @@ extends Node
 
 const PATH := "user://trail.txt"
 var last_crash := ""
+## The last thing the crashed run marked (without its number and time), or "".
+var last_mark := ""
+## Set when the game took a precaution because of how the last run ended (shown with the report).
+var precaution := ""
 var _f: FileAccess
 var _n := 0
 
@@ -16,8 +20,14 @@ func _ready() -> void:
 		var lines := old.strip_edges().split("\n")
 		if lines.size() > 1 and not String(lines[lines.size() - 1]).contains("CLEAN"):
 			last_crash = "\n".join(lines.slice(maxi(0, lines.size() - 22)))
+			var parts := String(lines[lines.size() - 1]).split(" ", false, 2)
+			last_mark = parts[2] if parts.size() > 2 else ""
 	_f = FileAccess.open(PATH, FileAccess.WRITE)
 	mark("start %s %s | %s | %s" % [ProjectSettings.get_setting("application/config/version", "?"), OS.get_model_name(), RenderingServer.get_video_adapter_name(), RenderingServer.get_video_adapter_api_version()])
+
+## The last run died while the phone's voice was being started (it never got back from it).
+func died_in_voice() -> bool:
+	return last_mark == "tts speak"
 
 func mark(what: String) -> void:
 	if _f == null:

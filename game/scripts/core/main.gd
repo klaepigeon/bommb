@@ -108,7 +108,7 @@ func _build() -> void:
 		return
 	scene.start(args.get("start", ""))
 	if Trail.last_crash != "" and not args.has("autotest") and not args.has("shots"):
-		hud.show_report(Trail.last_crash)
+		hud.show_report((Trail.precaution + "\n\n" if Trail.precaution != "" else "") + Trail.last_crash)
 
 ## Through the hole, behind the black: build the town a slice a frame (he waits in the flat
 ## meanwhile), hide the flat, hand over to the chapter, let it draw the whole town once

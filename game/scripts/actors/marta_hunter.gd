@@ -10,7 +10,13 @@ var away_point := Vector3.ZERO
 var _light: OmniLight3D
 var _pressure: AudioStreamPlayer3D
 var _sensed := false
-var awake := false      ## until the revolver's taken she sits by the gate, head down, and only listens
+var awake := false      ## until the revolver's taken she only listens (or, prowling, sees him close to)
+var prowling := false   ## she walks her round (wanders) instead of sitting by the way out
+
+## She walks her round from the start, listening, and sees him if he comes close.
+func prowl() -> void:
+	prowling = true
+	sight = 4.5
 
 func wake() -> void:
 	awake = true
@@ -77,7 +83,7 @@ func _physics_process(delta: float) -> void:
 		_pressure.stop()
 
 func can_see_player() -> bool:
-	if not awake and state == S.IDLE:
+	if not awake and state == S.IDLE and not prowling:
 		return false
 	return super()
 

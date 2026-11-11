@@ -9,7 +9,7 @@
 		},
 		"steer_2": {
 			"speaker": "socko",
-			"text": "Keep going. Don't read the signs.",
+			"text": "Keep going. Don't read the papers.",
 			"socko_face": "forced_happiness"
 		},
 		"steer_3": {
@@ -136,7 +136,7 @@
 		},
 		"loop_socko": {
 			"speaker": "socko",
-			"text": "Streets are like that. Keep walking.",
+			"text": "Corridors are like that. Keep walking.",
 			"socko_face": "forced_happiness"
 		},
 		"senses": {
@@ -154,14 +154,14 @@
 		},
 		"gate_seen": {
 			"speaker": "socko",
-			"text": "Ooh, a gate! Gates go places.",
+			"text": "Ooh, a door! Your door! Doors go places.",
 			"_note": "NEW",
 			"socko_face": "excitement",
 			"socko_clip": "Head_Raise"
 		},
 		"gate_shut": {
 			"speaker": "socko",
-			"text": "Lever. On the post. Pull the lever, bud.",
+			"text": "Bolt. On the wall. Pull the bolt, bud.",
 			"_note": "NEW",
 			"socko_face": "smile",
 			"socko_talk": "Talking_Explaining"
@@ -206,7 +206,7 @@
 		},
 		"loop_kurt": {
 			"speaker": "kurt",
-			"text": "Same chalk circle. Same cobbles. This street goes on forever, and it's thirteen houses long.",
+			"text": "Same chalk circle. Same wallpaper. This corridor goes on forever, and it's thirteen lights long.",
 			"_note": "PROPOSED, reworded as Kurt's"
 		}
 	},
@@ -229,7 +229,7 @@
 				"skill": "these_streets",
 				"flag": "looped"
 			},
-			"hint": "He counts lamps. He'd need someone who knows how long this street really is.",
+			"hint": "He counts lights. He'd need someone who knows how long this corridor really is.",
 			"kurt": "It's thirteen. That's all of them. They're lit. You can stop now.",
 			"answer": "...Thirteen."
 		},

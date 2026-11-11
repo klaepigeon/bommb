@@ -2,7 +2,7 @@
 	"_comment": "The two trees. Anything can be bought in any order. Names and most effects are carried over from the earlier build (story bible 2c); 'Old Name' is PROPOSED for the gate conversation. Costs are tuned so there aren't enough nuggets for everything: the talk route takes three Memory skills.",
 	"memory": [
 		{ "id": "handwriting",   "name": "Her Handwriting", "cost": 3, "desc": "You know whose hand that is. Letters and notes tell you more." },
-		{ "id": "these_streets", "name": "These Streets",   "cost": 2, "desc": "You know this town. You notice when a street comes round on itself." },
+		{ "id": "these_streets", "name": "These Walls",     "cost": 2, "desc": "You know this flat. You notice when a corridor comes round on itself." },
 		{ "id": "old_name",      "name": "Old Name",        "cost": 3, "desc": "Somebody used to shout a name at you across rooftops, and you'd turn round. (PROPOSED)" },
 		{ "id": "how_she_moves", "name": "How She Moves",   "cost": 2, "desc": "You've known her a long time. You can feel where she is when she's close." },
 		{ "id": "the_bow",       "name": "The Bow",         "cost": 2, "desc": "Your shoulders remember drawing it. Things you throw go further, and land where you mean." },
