@@ -15,6 +15,8 @@ the rig uses (`scripts/core/meshkit.gd`). Everything else is new.
 
 Open the folder in Godot 4.7 and press Play, or: `godot --path put_a_sock_in_it`
 
+Android: install `dist/PutASockInIt.apk` (rebuild with `tools/build_apk.sh`).
+
 ## Controls
 
 | | Keyboard / mouse | Gamepad | Touch |

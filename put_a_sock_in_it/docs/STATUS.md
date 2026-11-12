@@ -8,6 +8,7 @@ What actually works, checked by the tools in `tools/` (run with
 | `parse_all.gd` | every script compiles | 0 bad |
 | `playthrough.gd` | the whole chapter beat by beat, with screenshots: knock, door, "Christ", seeing Marta, her lines, the throw, waking, Socko, the locked door, the wardrobe, cross-eyes, the pistol and firing it, the balcony, a random conversation, crawling in, the loading card, level 2's arrival, the encounter, the hunt, being caught and the restart, the exit and the card | 0 fails |
 | `hunt_test.gd` | Marta: hears and investigates, gives up, sees standing / not crouched at range, stunned by a bullet, hunts again more suspicious, searches and returns to patrol | 0 fails |
+| `build_apk.sh` | exports and verifies the signed APK | signed |
 | `touch_test.gd` | stick walks, right-half drag looks, both at once, USE presses interact | 0 fails |
 | `socko_view.gd`, `marta_view.gd` | render the characters for looking at | |
 
@@ -43,10 +44,13 @@ What actually works, checked by the tools in `tools/` (run with
 - **Hiding places**: none dedicated; crouching and breaking line of sight are the stealth.
 - Marta can't be killed (by design for now: the pistol buys time).
 
+## Android
+
+`dist/PutASockInIt.apk` (arm64 + armv7, OpenGL ES 3, signed; `tools/build_apk.sh`). Built and
+its signature verified here; **not yet run on a phone** (no device in this environment).
+
 ## Not built
 
-- Android APK (needs export templates and the Android SDK in this environment; see the commit
-  notes). The project is set up for it (Compatibility renderer, touch, landscape).
 - Flat 48 (the chapter ends on its card).
 
 ## Known issues
