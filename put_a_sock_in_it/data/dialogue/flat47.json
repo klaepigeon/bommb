@@ -272,7 +272,7 @@
  "socko_chair": [
   {
    "who": "socko",
-   "text": "Ooh. She got up! She must have been all done with sitting.",
+   "text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder",
    "socko": {
     "emotion": "curious",
     "look": "chair"
@@ -281,7 +281,7 @@
   {
    "pause": 0.6,
    "who": "socko",
-   "text": "She didn't look like that before, did she? When you came in?",
+   "text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder",
    "tone": "quiet",
    "socko": {
     "emotion": "uncanny",
@@ -291,12 +291,12 @@
   {
    "pause": 0.5,
    "who": "kurt",
-   "text": "She didn't look like that a week ago.",
+   "text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder",
    "tone": "quiet"
   },
   {
    "who": "socko",
-   "text": "People change so fast!",
+   "text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder",
    "socko": {
     "emotion": "happy",
     "gesture": "nod"

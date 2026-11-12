@@ -258,12 +258,15 @@ static func _rubbish(f: Node3D, tint: Color) -> void:
 
 ## Writing on the walls.
 static func _graffiti(f: Node3D, tint: Color) -> void:
+	# (the words themselves are to be written: placeholders until then)
+	const P := ExportedFlat.PLACEHOLDER
 	for g in [
-			["ЦОЙ ЖИВ", Vector3(12.4, 1.05, 3.456), 0.0, -0.06, Color("1c1a18"), 64],        # north wall, facing south
-			["ВИТЯ + ОЛЯ", Vector3(10.95, 1.35, 7.944), PI, 0.08, Color("d8d2c0"), 40],      # by 48, scratched
-			["НЕ СТУЧИ", Vector3(10.486, 1.55, 5.75), PI * 0.5, -0.1, Color("6a2a1e"), 52],   # by 47: don't knock
-			["2-47-13", Vector3(11.95, 1.4, 3.456), 0.0, 0.04, Color("4a4a50"), 26]]:       # a phone number, in pencil
+			[P, Vector3(12.4, 1.05, 3.456), 0.0, -0.06, Color("1c1a18"), 40],        # north wall, facing south
+			[P, Vector3(10.95, 1.35, 7.944), PI, 0.08, Color("d8d2c0"), 30],       # by 48, scratched
+			[P, Vector3(10.486, 1.55, 5.75), PI * 0.5, -0.1, Color("6a2a1e"), 36],   # by 47
+			[P, Vector3(10.486, 1.0, 7.0), PI * 0.5, 0.04, Color("4a4a50"), 22]]:      # in pencil
 		var lb := Label3D.new(); lb.text = g[0]; lb.font_size = g[5]; lb.pixel_size = 0.0022
+		lb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; lb.width = 380.0
 		lb.modulate = (g[4] as Color) * tint; lb.modulate.a = 0.85; lb.shaded = true; lb.outline_size = 0
 		lb.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 		f.add_child(lb); lb.position = g[1]; lb.rotation = Vector3(0, g[2], g[3])

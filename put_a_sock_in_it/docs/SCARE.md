@@ -55,7 +55,7 @@ Render it with `tools/scare_view.gd`; her stages with `tools/marta_stages.gd`.
 | Turn | "Marta?" Her head comes up, cracking; the hair falls aside; the grin. The head keeps tilting past where a head stops. Her eye finds him. "Look at the boxes, my little bird." | The creature reveal, spent once, late, slowly. |
 | Dead air | Everything stops: her breath, the flies, the flat's own hum. Kurt holds his breath. Her jaw drops, and drops. About three seconds. | Silence before the hit, held too long. |
 | The jump | The bulb pops. Dark. In the dark the chair goes over and her joints crack. The light comes back and she's out of the chair, over the table, at his face, arms out either side of his head, jaw off its hinge, screaming. | The broken rule: she was across the table and slow. One change from dark to light, not a strobe. |
-| Aftermath | She takes him and throws him. Blackout, ringing, his heart. He wakes on the floor. Her chair is empty, the coral still in it. Socko: "She got up!" | The release, and the first sign she's still changing. |
+| Aftermath | She takes him and throws him. Blackout, ringing, his heart. He wakes on the floor. Her chair is empty, the coral still in it. Socko comments (placeholder line). | The release, and the first sign she's still changing. |
 
 ## Photosensitivity
 

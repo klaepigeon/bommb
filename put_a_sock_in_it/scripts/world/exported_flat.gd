@@ -12,10 +12,11 @@ extends Node3D
 
 const H := 2.75
 const KEEP := AABB(Vector3(-0.6, -0.8, -1.95), Vector3(14.8, 4.3, 10.4))   # the flat, its balcony, the landing
+const PLACEHOLDER := "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder"
 const TEXT_PATCH := {
-	# lines from the JS version that named a husband who isn't in this story
-	"prop_0_Wedding_photograph": "Face down, the glass starred. The photograph itself has been cut out of the frame, carefully, with nail scissors.",
-	"pick_129_Bundle_of_letters": "Tied with darning wool. Her handwriting, every one, to a post-office box in Moscow with no name on it. Every one stamped RETURN TO SENDER.",
+	# the JS version's text named a husband who isn't in this story: to be rewritten
+	"prop_0_Wedding_photograph": PLACEHOLDER,
+	"pick_129_Bundle_of_letters": PLACEHOLDER,
 }
 const SURFACE := {"bath": "tile", "kitchen": "lino", "hall": "wood", "living": "wood", "bedroom": "wood", "child": "wood", "storage": "wood"}
 
