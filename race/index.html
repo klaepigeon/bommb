@@ -1,0 +1,646 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Four-Ball Derby</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: one race board (3:2 canvas) beside a timing tower; the tower stacks under the board on phones. */
+  :root {
+    --bg: #0e1119;
+    --panel: #161a26;
+    --line: #262c3f;
+    --fg: #e9ecf5;
+    --muted: #8a92ab;
+    --ink: #0e1119;
+    --red: #ff4d4d;
+    --blue: #3d8bff;
+    --yellow: #ffd23f;
+    --green: #34d27b;
+    --display: "Chakra Petch", "Arial Narrow", system-ui, sans-serif;
+    --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  html, body { background: var(--bg); color: var(--fg); }
+  body { font-family: var(--body); font-size: 14px; }
+  .app {
+    max-width: 1240px; margin: 0 auto;
+    padding-block: 20px 32px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: grid; gap: 16px;
+  }
+  header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+  .title { display: grid; gap: 4px; min-width: 0; }
+  h1 { margin: 0; font-family: var(--display); font-weight: 700; font-size: 30px; letter-spacing: .02em; text-transform: uppercase; line-height: 1; }
+  h1 .dots { display: inline-flex; gap: 5px; vertical-align: middle; margin-left: 10px; }
+  h1 .dots i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+  .course { color: var(--muted); font-size: 13px; }
+  .course b { color: var(--fg); font-weight: 600; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  button {
+    font: 600 14px/1 var(--body); color: var(--fg); background: var(--panel);
+    border: 1px solid var(--line); border-radius: 8px; padding: 11px 16px; cursor: pointer;
+  }
+  button:hover:not(:disabled) { border-color: var(--muted); }
+  button:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+  button:disabled { opacity: .4; cursor: default; }
+  #go { background: var(--fg); color: var(--ink); border-color: var(--fg); min-width: 112px;
+        font-family: var(--display); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+  .speed { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .speed button { border: 0; border-radius: 0; padding: 11px 12px; background: var(--panel); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .speed button[aria-pressed="true"] { background: var(--line); color: var(--fg); }
+
+  .stage { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+  @media (max-width: 880px) { .stage { grid-template-columns: minmax(0, 1fr); } }
+  .board { position: relative; width: 100%; max-width: 100%; aspect-ratio: 3 / 2; border-radius: 12px; overflow: hidden; background: #161a26; border: 1px solid var(--line); }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  .tower { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 14px; min-width: 0; }
+  .label { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .clock { display: grid; gap: 4px; }
+  #timer { font-family: var(--display); font-weight: 700; font-size: 44px; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+  #state { font-size: 13px; color: var(--muted); }
+  .ranks { list-style: none; margin: 0; padding: 0; position: relative; height: calc(4 * 58px); }
+  .row {
+    position: absolute; left: 0; right: 0; top: 0; height: 52px;
+    display: grid; grid-template-columns: 26px 14px minmax(0, 1fr) auto; align-items: center; gap: 10px;
+    padding: 0 12px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line);
+    transition: transform .35s cubic-bezier(.2,.8,.2,1);
+  }
+  .row.done { border-color: color-mix(in srgb, var(--c) 45%, var(--line)); }
+  .pos { font-family: var(--display); font-weight: 700; font-size: 20px; font-variant-numeric: tabular-nums; }
+  .chip { width: 14px; height: 14px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 25%, transparent); }
+  .who { display: grid; gap: 6px; min-width: 0; }
+  .name { font-weight: 600; }
+  .bar { height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0%; background: var(--c); }
+  .stat { text-align: right; display: grid; gap: 2px; font-variant-numeric: tabular-nums; }
+  .t { font-family: var(--display); font-weight: 700; font-size: 15px; }
+  .gap { font-size: 11px; color: var(--muted); }
+  .wins { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .tally { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .tally span { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .tally i { width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
+  .hint { color: var(--muted); font-size: 12px; line-height: 1.5; margin: 0; }
+  @media (prefers-reduced-motion: reduce) { .row { transition: none; } }
+</style>
+
+<div class="app">
+  <header>
+    <div class="title">
+      <h1>Four-Ball Derby<span class="dots" aria-hidden="true"><i style="background:var(--red)"></i><i style="background:var(--blue)"></i><i style="background:var(--yellow)"></i><i style="background:var(--green)"></i></span></h1>
+      <div class="course" id="course">Course: <b>—</b></div>
+    </div>
+    <div class="controls">
+      <button id="go" type="button">Start</button>
+      <button id="shuffle" type="button">New course</button>
+      <div class="speed" role="group" aria-label="Simulation speed">
+        <button type="button" data-speed="1" aria-pressed="true">1×</button>
+        <button type="button" data-speed="2" aria-pressed="false">2×</button>
+        <button type="button" data-speed="4" aria-pressed="false">4×</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="stage">
+    <div class="board"><canvas id="cv" aria-label="Race track"></canvas></div>
+    <aside class="tower">
+      <div class="clock">
+        <span class="label">Race time</span>
+        <span id="timer">0:00.00</span>
+        <span id="state">On the grid. Press Start.</span>
+      </div>
+      <div class="label">Standings</div>
+      <ol class="ranks" id="ranks"></ol>
+      <div class="wins">
+        <span class="label">Wins this session</span>
+        <div class="tally" id="tally"></div>
+      </div>
+      <p class="hint">Every ball runs at the same speed. Each bounce kicks it off at a random angle, and each race picks a random course with randomly placed bumpers, deflectors and spinners. Space bar starts and stops.</p>
+    </aside>
+  </div>
+</div>
+
+<script>
+// ---------- constants ----------
+const W = 900, H = 600, R = 11, M = 20;
+const X0 = M, Y0 = M, X1 = W - M, Y1 = H - M;
+const SPEED = 330;          // px per second, same for every ball
+const DRIFT = 650;          // gentle pull along the course so races end
+const JITTER = 0.75;        // max random deflection on a bounce (radians, ~43°)
+const TIME_CAP = 240;       // seconds before unfinished balls are DNF
+const RACERS = [
+  { id: 'red',    name: 'Red',    color: '#ff4d4d', dark: '#a8262b' },
+  { id: 'blue',   name: 'Blue',   color: '#3d8bff', dark: '#1d4fa8' },
+  { id: 'yellow', name: 'Yellow', color: '#ffd23f', dark: '#b08a12' },
+  { id: 'green',  name: 'Green',  color: '#34d27b', dark: '#16834a' },
+];
+const rand = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+// ---------- geometry ----------
+const seg = (x1, y1, x2, y2) => ({ x1, y1, x2, y2 });
+function poly(pts) { const o = []; for (let i = 0; i < pts.length - 1; i++) o.push(seg(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1])); return o; }
+function closest(px, py, s) {
+  const dx = s.x2 - s.x1, dy = s.y2 - s.y1, l2 = dx * dx + dy * dy;
+  const t = l2 ? clamp(((px - s.x1) * dx + (py - s.y1) * dy) / l2, 0, 1) : 0;
+  return { x: s.x1 + dx * t, y: s.y1 + dy * t };
+}
+function distSeg(px, py, s) { const c = closest(px, py, s); return Math.hypot(px - c.x, py - c.y); }
+
+// ---------- courses ----------
+function baseCourse(name, blurb) {
+  return { name, blurb, walls: poly([[X0, Y0], [X1, Y0], [X1, Y1], [X0, Y1], [X0, Y0]]), bumpers: [], deflectors: [], spinners: [], path: [], start: null, finish: null, used: [] };
+}
+function canPlace(c, x, y, r, clear) {
+  for (const w of c.walls) if (distSeg(x, y, w) < r + clear) return false;
+  for (const it of c.used) if (Math.hypot(x - it.x, y - it.y) < r + it.r + clear) return false;
+  for (const z of [c.start, c.finish]) {
+    if (x > z.x - r - clear && x < z.x + z.w + r + clear && y > z.y - r - clear && y < z.y + z.h + r + clear) return false;
+  }
+  return true;
+}
+// Drop random obstacles into a rectangle, keeping a ball-sized gap around each one.
+function scatter(c, reg, count, kinds, opt = {}) {
+  const clear = opt.clear ?? 34, rMin = opt.rMin ?? 12, rMax = opt.rMax ?? 22;
+  let placed = 0, tries = 0;
+  while (placed < count && tries++ < 600) {
+    const kind = kinds[Math.floor(Math.random() * kinds.length)];
+    const x = rand(reg.x, reg.x + reg.w), y = rand(reg.y, reg.y + reg.h);
+    if (kind === 'bumper') {
+      const r = rand(rMin, rMax);
+      if (!canPlace(c, x, y, r, clear)) continue;
+      c.bumpers.push({ x, y, r, flash: 0 }); c.used.push({ x, y, r });
+    } else if (kind === 'deflector') {
+      const len = rand(44, 72), a = rand(0, Math.PI), r = len / 2 + 4;
+      if (!canPlace(c, x, y, r, clear)) continue;
+      const dx = Math.cos(a) * len / 2, dy = Math.sin(a) * len / 2;
+      c.deflectors.push(seg(x - dx, y - dy, x + dx, y + dy)); c.used.push({ x, y, r });
+    } else {
+      const len = rand(70, 104), r = len / 2 + 4;
+      if (!canPlace(c, x, y, r, clear)) continue;
+      c.spinners.push({ x, y, len, a: rand(0, Math.PI), w: rand(1.3, 2.6) * (Math.random() < .5 ? -1 : 1) }); c.used.push({ x, y, r });
+    }
+    placed++;
+  }
+}
+
+function courseSwitchback() {
+  const c = baseCourse('Switchback', 'three straights and two hairpins');
+  const lh = (Y1 - Y0) / 3, gap = 100, yA = Y0 + lh, yB = Y0 + 2 * lh;
+  c.walls.push(seg(X0, yA, X1 - gap, yA), seg(X0 + gap, yB, X1, yB));
+  const c1 = Y0 + lh / 2, c2 = Y0 + 1.5 * lh, c3 = Y0 + 2.5 * lh;
+  c.path = [[X0 + 45, c1], [X1 - gap / 2, c1], [X1 - gap / 2, c2], [X0 + gap / 2, c2], [X0 + gap / 2, c3], [X1 - 35, c3]];
+  c.start = { x: X0, y: Y0, w: 90, h: lh };
+  c.finish = { x: X1 - 64, y: yB, w: 64, h: lh };
+  const k = ['bumper', 'bumper', 'deflector', 'deflector', 'spinner'];
+  scatter(c, { x: X0 + 120, y: Y0, w: X1 - gap - X0 - 140, h: lh }, 5, k);
+  scatter(c, { x: X0 + gap + 20, y: yA, w: X1 - X0 - 2 * gap - 40, h: lh }, 5, k);
+  scatter(c, { x: X0 + gap + 20, y: yB, w: X1 - X0 - 2 * gap - 120, h: lh }, 5, k);
+  return c;
+}
+
+function courseColumns() {
+  const c = baseCourse('The Columns', 'four lanes, down and up and down and up');
+  const cw = (X1 - X0) / 4, gap = 100;
+  const xs = [1, 2, 3].map(i => X0 + cw * i);
+  c.walls.push(seg(xs[0], Y0, xs[0], Y1 - gap), seg(xs[1], Y0 + gap, xs[1], Y1), seg(xs[2], Y0, xs[2], Y1 - gap));
+  const cx = i => X0 + cw * (i + .5);
+  c.path = [[cx(0), Y0 + 45], [cx(0), Y1 - gap / 2], [cx(1), Y1 - gap / 2], [cx(1), Y0 + gap / 2], [cx(2), Y0 + gap / 2], [cx(2), Y1 - gap / 2], [cx(3), Y1 - gap / 2], [cx(3), Y0 + 35]];
+  c.start = { x: X0, y: Y0, w: cw, h: 80 };
+  c.finish = { x: xs[2], y: Y0, w: cw, h: 60 };
+  const k = ['bumper', 'deflector', 'spinner', 'spinner'];
+  scatter(c, { x: X0, y: Y0 + 110, w: cw, h: Y1 - gap - Y0 - 130 }, 3, k);
+  scatter(c, { x: xs[0], y: Y0 + gap + 20, w: cw, h: Y1 - Y0 - 2 * gap - 40 }, 3, k);
+  scatter(c, { x: xs[1], y: Y0 + gap + 20, w: cw, h: Y1 - Y0 - 2 * gap - 40 }, 3, k);
+  scatter(c, { x: xs[2], y: Y0 + 90, w: cw, h: Y1 - gap - Y0 - 110 }, 3, k);
+  return c;
+}
+
+function courseSpiral() {
+  const c = baseCourse('The Snail', 'a spiral that winds into a pocket at the centre');
+  const g = 90;
+  c.walls.push(...poly([[X0, Y0 + g], [X1 - g, Y0 + g], [X1 - g, Y1 - g], [X0 + g, Y1 - g], [X0 + g, Y0 + 2 * g], [X1 - 2 * g, Y0 + 2 * g], [X1 - 2 * g, Y1 - 2 * g], [X0 + 2 * g, Y1 - 2 * g], [X0 + 2 * g, Y0 + 3 * g], [X1 - 3 * g, Y0 + 3 * g]]));
+  const h = g / 2;
+  c.path = [[X0 + 45, Y0 + h], [X1 - h, Y0 + h], [X1 - h, Y1 - h], [X0 + h, Y1 - h], [X0 + h, Y0 + g + h], [X1 - g - h, Y0 + g + h], [X1 - g - h, Y1 - g - h], [X0 + g + h, Y1 - g - h], [X0 + g + h, Y0 + 2 * g + h], [X1 - 2 * g - h, Y0 + 2 * g + h], [X1 - 2 * g - h, Y0 + 3 * g + 55], [X0 + 2 * g + 45, Y0 + 3 * g + 55]];
+  c.start = { x: X0, y: Y0, w: g, h: g };
+  c.finish = { x: X0 + 2 * g, y: Y0 + 3 * g, w: 80, h: Y1 - 2 * g - (Y0 + 3 * g) };
+  const o = { rMin: 7, rMax: 11, clear: 28 };
+  scatter(c, { x: X0 + 140, y: Y0, w: X1 - X0 - 280, h: g }, 3, ['bumper'], o);
+  scatter(c, { x: X1 - g, y: Y0 + 140, w: g, h: Y1 - Y0 - 280 }, 2, ['bumper'], o);
+  scatter(c, { x: X0 + 140, y: Y1 - g, w: X1 - X0 - 280, h: g }, 3, ['bumper'], o);
+  scatter(c, { x: X0 + g + 120, y: Y0 + g, w: X1 - X0 - 2 * g - 260, h: g }, 2, ['bumper'], o);
+  scatter(c, { x: X0 + 2 * g + 110, y: Y1 - 2 * g, w: X1 - X0 - 4 * g - 200, h: g }, 2, ['bumper'], o);
+  return c;
+}
+
+function coursePegboard() {
+  const c = baseCourse('Pinfield', 'an open field of pegs that funnels into a narrow gate');
+  const gy0 = 250, gy1 = 350, fx = X1 - 64;
+  c.walls.push(seg(fx - 110, Y0, fx, gy0), seg(fx - 110, Y1, fx, gy1), seg(fx, gy0, X1, gy0), seg(fx, gy1, X1, gy1));
+  c.path = [[X0 + 40, H / 2], [X1 - 30, H / 2]];
+  c.start = { x: X0, y: Y0 + 150, w: 70, h: Y1 - Y0 - 300 };
+  c.finish = { x: fx, y: gy0, w: X1 - fx, h: gy1 - gy0 };
+  scatter(c, { x: 160, y: Y0 + 40, w: 520, h: Y1 - Y0 - 80 }, 3, ['spinner']);
+  scatter(c, { x: 160, y: Y0 + 40, w: 520, h: Y1 - Y0 - 80 }, 3, ['deflector']);
+  const step = 64;
+  for (let row = 0, y = Y0 + 36; y < Y1 - 20; row++, y += step * .87) {
+    for (let x = 130 + (row % 2) * step / 2; x < fx - 40; x += step) {
+      if (Math.random() < .22) continue;
+      const px = x + rand(-9, 9), py = y + rand(-9, 9), r = rand(6, 10);
+      if (!canPlace(c, px, py, r, 26)) continue;
+      c.bumpers.push({ x: px, y: py, r, flash: 0 }); c.used.push({ x: px, y: py, r });
+    }
+  }
+  return c;
+}
+
+function courseChicanes() {
+  const c = baseCourse('Chicane Alley', 'four lanes of staggered baffles');
+  const lh = (Y1 - Y0) / 4, gap = 90;
+  const tops = [0, 1, 2, 3].map(i => Y0 + lh * i);
+  c.walls.push(seg(X0, tops[1], X1 - gap, tops[1]), seg(X0 + gap, tops[2], X1, tops[2]), seg(X0, tops[3], X1 - gap, tops[3]));
+  // baffles: short walls hanging from alternate sides of each lane
+  for (let i = 0; i < 4; i++) {
+    let fromTop = Math.random() < .5;
+    for (let x = X0 + gap + 60 + rand(0, 40); x < X1 - gap - 50; x += rand(150, 200)) {
+      const len = lh * rand(.34, .48), y = fromTop ? tops[i] : tops[i] + lh;
+      c.walls.push(seg(x, y, x, fromTop ? y + len : y - len));
+      fromTop = !fromTop;
+    }
+  }
+  const cy = i => Y0 + lh * (i + .5);
+  c.path = [[X0 + 40, cy(0)], [X1 - gap / 2, cy(0)], [X1 - gap / 2, cy(1)], [X0 + gap / 2, cy(1)], [X0 + gap / 2, cy(2)], [X1 - gap / 2, cy(2)], [X1 - gap / 2, cy(3)], [X0 + 35, cy(3)]];
+  c.start = { x: X0, y: Y0, w: 80, h: lh };
+  c.finish = { x: X0, y: tops[3], w: 64, h: lh };
+  return c;
+}
+
+const COURSES = [courseSwitchback, courseColumns, courseSpiral, coursePegboard, courseChicanes];
+
+function buildPath(c) {
+  const pts = c.path.map(p => ({ x: p[0], y: p[1] }));
+  c.segs = []; let acc = 0;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i], b = pts[i + 1], len = Math.hypot(b.x - a.x, b.y - a.y);
+    c.segs.push({ a, b, len, start: acc, dx: (b.x - a.x) / len, dy: (b.y - a.y) / len });
+    acc += len;
+  }
+  c.total = acc;
+}
+function pointAt(c, s) {
+  s = clamp(s, 0, c.total);
+  for (const g of c.segs) if (s <= g.start + g.len) { const t = s - g.start; return { x: g.a.x + g.dx * t, y: g.a.y + g.dy * t }; }
+  const g = c.segs[c.segs.length - 1]; return { x: g.b.x, y: g.b.y };
+}
+function track(c, b) {
+  let best = null;
+  for (let i = Math.max(0, b.si - 1); i <= Math.min(c.segs.length - 1, b.si + 1); i++) {
+    const g = c.segs[i];
+    const t = clamp((b.x - g.a.x) * g.dx + (b.y - g.a.y) * g.dy, 0, g.len);
+    const d = Math.hypot(b.x - (g.a.x + g.dx * t), b.y - (g.a.y + g.dy * t));
+    if (!best || d < best.d - .01) best = { i, t, d };
+  }
+  b.si = best.i; b.prog = c.segs[best.i].start + best.t;
+}
+
+// ---------- race state ----------
+let course = null, courseIdx = -1, balls = [], state = 'ready', elapsed = 0, countdown = 0, finishedCount = 0, speedMult = 1;
+const wins = { red: 0, blue: 0, yellow: 0, green: 0 };
+
+function newCourse() {
+  let i; do { i = Math.floor(Math.random() * COURSES.length); } while (i === courseIdx && COURSES.length > 1);
+  courseIdx = i; course = COURSES[i](); buildPath(course);
+  resetRace();
+}
+function resetRace() {
+  const z = course.start, cx = z.x + z.w / 2, cy = z.y + z.h / 2;
+  const order = RACERS.map((r, i) => i).sort(() => Math.random() - .5);
+  balls = RACERS.map((r, i) => {
+    const slot = order[i];
+    const x = cx + (slot % 2 ? 16 : -16), y = cy + (slot < 2 ? -16 : 16);
+    return { ...r, x, y, vx: 0, vy: 0, si: 0, prog: 0, done: false, time: 0, place: 0, trail: [], tag: 0 };
+  });
+  balls.forEach(b => track(course, b));
+  elapsed = 0; finishedCount = 0; state = 'ready';
+  for (const s of course.bumpers) s.flash = 0;
+}
+function launch() {
+  for (const b of balls) { const a = rand(0, Math.PI * 2); b.vx = Math.cos(a) * SPEED; b.vy = Math.sin(a) * SPEED; }
+  state = 'running';
+}
+
+// ---------- physics ----------
+function renorm(b) {
+  const s = Math.hypot(b.vx, b.vy);
+  if (s < 1) { const a = rand(0, Math.PI * 2); b.vx = Math.cos(a) * SPEED; b.vy = Math.sin(a) * SPEED; }
+  else { b.vx *= SPEED / s; b.vy *= SPEED / s; }
+}
+// Mirror off the surface, then kick the new heading by a random angle (kept pointing away from the surface).
+function bounce(b, nx, ny) {
+  const d = b.vx * nx + b.vy * ny;
+  if (d >= 0) return;
+  let rx = b.vx - 2 * d * nx, ry = b.vy - 2 * d * ny;
+  for (let k = 0; k < 8; k++) {
+    const th = rand(-JITTER, JITTER), co = Math.cos(th), si = Math.sin(th);
+    const vx = rx * co - ry * si, vy = rx * si + ry * co;
+    if ((vx * nx + vy * ny) / SPEED > .22) { rx = vx; ry = vy; break; }
+  }
+  b.vx = rx; b.vy = ry; renorm(b);
+}
+function hitSegment(b, s, thick) {
+  const c = closest(b.x, b.y, s), dx = b.x - c.x, dy = b.y - c.y, d = Math.hypot(dx, dy);
+  if (d >= R + thick) return false;
+  let nx, ny;
+  if (d > 1e-6) { nx = dx / d; ny = dy / d; }
+  else { const sx = s.x2 - s.x1, sy = s.y2 - s.y1, l = Math.hypot(sx, sy) || 1; nx = -sy / l; ny = sx / l; }
+  b.x = c.x + nx * (R + thick); b.y = c.y + ny * (R + thick);
+  bounce(b, nx, ny);
+  return true;
+}
+function spinnerSeg(s) { const dx = Math.cos(s.a) * s.len / 2, dy = Math.sin(s.a) * s.len / 2; return seg(s.x - dx, s.y - dy, s.x + dx, s.y + dy); }
+function inside(b, z) { return b.x > z.x && b.x < z.x + z.w && b.y > z.y && b.y < z.y + z.h; }
+
+function step(dt) {
+  for (const s of course.spinners) s.a += s.w * dt;
+  for (const p of course.bumpers) if (p.flash > 0) p.flash = Math.max(0, p.flash - dt * 3);
+  const spinSegs = course.spinners.map(spinnerSeg);
+  for (const b of balls) {
+    if (b.done) continue;
+    const la = pointAt(course, b.prog + 70);
+    let fx = la.x - b.x, fy = la.y - b.y; const fl = Math.hypot(fx, fy) || 1;
+    b.vx += fx / fl * DRIFT * dt; b.vy += fy / fl * DRIFT * dt; renorm(b);
+    b.x += b.vx * dt; b.y += b.vy * dt;
+    for (const w of course.walls) hitSegment(b, w, 3);
+    for (const w of course.deflectors) hitSegment(b, w, 3);
+    for (const w of spinSegs) hitSegment(b, w, 4);
+    for (const p of course.bumpers) {
+      const dx = b.x - p.x, dy = b.y - p.y, d = Math.hypot(dx, dy);
+      if (d < p.r + R && d > 1e-6) {
+        const nx = dx / d, ny = dy / d;
+        b.x = p.x + nx * (p.r + R); b.y = p.y + ny * (p.r + R);
+        bounce(b, nx, ny); p.flash = 1;
+      }
+    }
+  }
+  for (let i = 0; i < balls.length; i++) for (let j = i + 1; j < balls.length; j++) {
+    const a = balls[i], b = balls[j];
+    if (a.done || b.done) continue;
+    const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
+    if (d >= 2 * R || d < 1e-6) continue;
+    const nx = dx / d, ny = dy / d, push = (2 * R - d) / 2;
+    a.x -= nx * push; a.y -= ny * push; b.x += nx * push; b.y += ny * push;
+    const rel = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
+    if (rel > 0) {
+      a.vx -= rel * nx; a.vy -= rel * ny; b.vx += rel * nx; b.vy += rel * ny;
+      for (const o of [a, b]) { const th = rand(-.35, .35), co = Math.cos(th), si = Math.sin(th); const vx = o.vx * co - o.vy * si; o.vy = o.vx * si + o.vy * co; o.vx = vx; renorm(o); }
+    }
+  }
+  elapsed += dt;
+  for (const b of balls) {
+    if (b.done) continue;
+    track(course, b);
+    if (inside(b, course.finish)) {
+      b.done = true; b.time = elapsed; b.place = ++finishedCount; b.prog = course.total; b.tag = 2.2;
+      if (b.place === 1) wins[b.id]++;
+    }
+  }
+  if (finishedCount === balls.length || elapsed >= TIME_CAP) state = 'finished';
+}
+
+// ---------- drawing ----------
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+let scale = 1;
+function resize() {
+  const r = cv.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+  scale = cv.width / W;
+}
+new ResizeObserver(resize).observe(cv);
+
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const ordinal = n => n + (['th', 'st', 'nd', 'rd'][n] || 'th');
+
+function draw() {
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  ctx.fillStyle = '#161a26'; ctx.fillRect(0, 0, W, H);
+  // floor texture
+  ctx.fillStyle = 'rgba(255,255,255,0.035)';
+  for (let x = 15; x < W; x += 30) for (let y = 15; y < H; y += 30) ctx.fillRect(x - 1, y - 1, 2, 2);
+
+  // racing line + chevrons
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 2; ctx.setLineDash([6, 10]);
+  ctx.beginPath(); course.path.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke();
+  ctx.setLineDash([]); ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
+  for (let s = 90; s < course.total - 60; s += 130) {
+    const p = pointAt(course, s), q = pointAt(course, s + 1), a = Math.atan2(q.y - p.y, q.x - p.x);
+    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(a);
+    ctx.beginPath(); ctx.moveTo(-5, -7); ctx.lineTo(3, 0); ctx.lineTo(-5, 7); ctx.stroke(); ctx.restore();
+  }
+  ctx.restore();
+
+  // start zone
+  const z = course.start;
+  ctx.save(); ctx.beginPath(); ctx.rect(z.x, z.y, z.w, z.h); ctx.clip();
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 6;
+  for (let k = -z.h; k < z.w + z.h; k += 16) { ctx.beginPath(); ctx.moveTo(z.x + k, z.y); ctx.lineTo(z.x + k + z.h, z.y + z.h); ctx.stroke(); }
+  ctx.restore();
+  ctx.fillStyle = 'rgba(233,236,245,0.45)'; ctx.font = '700 11px "Chakra Petch", sans-serif'; ctx.textBaseline = 'top';
+  ctx.fillText('START', z.x + 8, z.y + 8);
+
+  // finish zone
+  const f = course.finish, sq = 10;
+  for (let x = 0; x < f.w; x += sq) for (let y = 0; y < f.h; y += sq) {
+    ctx.fillStyle = ((x + y) / sq) % 2 ? 'rgba(14,17,25,0.9)' : 'rgba(240,242,248,0.85)';
+    ctx.fillRect(f.x + x, f.y + y, Math.min(sq, f.w - x), Math.min(sq, f.h - y));
+  }
+
+  // walls
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 8;
+  ctx.beginPath(); for (const w of course.walls) { ctx.moveTo(w.x1 + 2, w.y1 + 3); ctx.lineTo(w.x2 + 2, w.y2 + 3); } ctx.stroke();
+  ctx.strokeStyle = '#d6dbe8'; ctx.lineWidth = 6;
+  ctx.beginPath(); for (const w of course.walls) { ctx.moveTo(w.x1, w.y1); ctx.lineTo(w.x2, w.y2); } ctx.stroke();
+
+  // deflectors
+  ctx.strokeStyle = '#9aa5cc'; ctx.lineWidth = 6;
+  ctx.beginPath(); for (const w of course.deflectors) { ctx.moveTo(w.x1, w.y1); ctx.lineTo(w.x2, w.y2); } ctx.stroke();
+
+  // bumpers
+  for (const p of course.bumpers) {
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = '#262c42'; ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = '#7f89b0'; ctx.stroke();
+    if (p.flash > 0) {
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 4 * p.flash, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(255,255,255,${0.8 * p.flash})`; ctx.lineWidth = 3; ctx.stroke();
+    }
+  }
+  // spinners
+  for (const s of course.spinners) {
+    const g = spinnerSeg(s);
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.len / 2, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = '#eef0f7'; ctx.lineWidth = 7;
+    ctx.beginPath(); ctx.moveTo(g.x1, g.y1); ctx.lineTo(g.x2, g.y2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(s.x, s.y, 6, 0, Math.PI * 2); ctx.fillStyle = '#161a26'; ctx.fill();
+    ctx.lineWidth = 2.5; ctx.strokeStyle = '#eef0f7'; ctx.stroke();
+  }
+
+  // trails
+  if (!reduceMotion) for (const b of balls) {
+    for (let i = 0; i < b.trail.length; i++) {
+      const t = b.trail[i], a = (i + 1) / b.trail.length;
+      ctx.globalAlpha = a * 0.28; ctx.fillStyle = b.color;
+      ctx.beginPath(); ctx.arc(t.x, t.y, R * (0.4 + 0.5 * a), 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  ctx.globalAlpha = 1;
+
+  // balls
+  for (const b of balls) {
+    ctx.beginPath(); ctx.arc(b.x + 2, b.y + 3, R, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
+    const gr = ctx.createRadialGradient(b.x - 4, b.y - 4, 1, b.x, b.y, R);
+    gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.25, b.color); gr.addColorStop(1, b.dark);
+    ctx.beginPath(); ctx.arc(b.x, b.y, R, 0, Math.PI * 2); ctx.fillStyle = gr; ctx.fill();
+    if (b.done) {
+      ctx.lineWidth = 2; ctx.strokeStyle = '#ffffff'; ctx.stroke();
+      if (b.tag > 0) {
+        ctx.globalAlpha = Math.min(1, b.tag);
+        const label = ordinal(b.place), ty = b.y - R - 22 - (2.2 - b.tag) * 6;
+        ctx.font = '700 13px "Chakra Petch", sans-serif'; const tw = ctx.measureText(label).width + 12;
+        ctx.fillStyle = b.color; ctx.fillRect(b.x - tw / 2, ty, tw, 18);
+        ctx.fillStyle = '#0e1119'; ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; ctx.fillText(label, b.x, ty + 9.5);
+        ctx.textAlign = 'left'; ctx.globalAlpha = 1;
+      }
+    }
+  }
+
+  // overlays
+  if (state === 'countdown') {
+    const n = Math.ceil(countdown);
+    ctx.fillStyle = 'rgba(14,17,25,0.45)'; ctx.fillRect(0, 0, W, H);
+    const frac = countdown - Math.floor(countdown);
+    ctx.font = `700 ${Math.round(110 + 30 * frac)}px "Chakra Petch", sans-serif`;
+    ctx.fillStyle = '#f2f4fa'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(String(n), W / 2, H / 2); ctx.textAlign = 'left';
+  }
+  if (state === 'finished') {
+    const win = balls.find(b => b.place === 1);
+    ctx.fillStyle = 'rgba(14,17,25,0.55)'; ctx.fillRect(0, 0, W, H);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    if (win) {
+      ctx.beginPath(); ctx.arc(W / 2, H / 2 - 70, 26, 0, Math.PI * 2); ctx.fillStyle = win.color; ctx.fill();
+      ctx.fillStyle = '#f2f4fa'; ctx.font = '700 56px "Chakra Petch", sans-serif';
+      ctx.fillText(`${win.name.toUpperCase()} WINS`, W / 2, H / 2 + 4);
+      ctx.font = '500 20px "Chakra Petch", sans-serif'; ctx.fillStyle = 'rgba(233,236,245,0.75)';
+      ctx.fillText(`${fmt(win.time)} on ${course.name}`, W / 2, H / 2 + 50);
+    } else {
+      ctx.fillStyle = '#f2f4fa'; ctx.font = '700 48px "Chakra Petch", sans-serif';
+      ctx.fillText('TIME CAP — NO FINISHERS', W / 2, H / 2);
+    }
+    ctx.textAlign = 'left';
+  }
+}
+
+// ---------- UI ----------
+const $ = id => document.getElementById(id);
+const goBtn = $('go'), shuffleBtn = $('shuffle'), timerEl = $('timer'), stateEl = $('state'), ranksEl = $('ranks');
+function fmt(t) { const m = Math.floor(t / 60), s = t - m * 60; return `${m}:${s.toFixed(2).padStart(5, '0')}`; }
+
+const rows = {};
+for (const r of RACERS) {
+  const li = document.createElement('li'); li.className = 'row'; li.style.setProperty('--c', `var(--${r.id})`);
+  li.innerHTML = `<span class="pos"></span><span class="chip"></span><div class="who"><span class="name">${r.name}</span><div class="bar"><i></i></div></div><div class="stat"><span class="t"></span><span class="gap"></span></div>`;
+  ranksEl.appendChild(li);
+  rows[r.id] = { li, pos: li.querySelector('.pos'), bar: li.querySelector('.bar i'), t: li.querySelector('.t'), gap: li.querySelector('.gap') };
+}
+$('tally').innerHTML = RACERS.map(r => `<span style="--c:var(--${r.id})"><i></i><b id="w-${r.id}">0</b></span>`).join('');
+
+function standings() {
+  return [...balls].sort((a, b) => (a.done && b.done) ? a.place - b.place : a.done ? -1 : b.done ? 1 : b.prog - a.prog);
+}
+function updateUI() {
+  timerEl.textContent = fmt(elapsed);
+  const list = standings(), winner = balls.find(b => b.place === 1);
+  list.forEach((b, i) => {
+    const row = rows[b.id];
+    row.li.style.transform = `translateY(${i * 58}px)`;
+    row.li.classList.toggle('done', b.done);
+    row.pos.textContent = i + 1;
+    row.bar.style.width = `${(b.prog / course.total * 100).toFixed(1)}%`;
+    if (b.done) {
+      row.t.textContent = fmt(b.time);
+      row.gap.textContent = b.place === 1 ? 'Winner' : `+${(b.time - winner.time).toFixed(2)}s`;
+    } else if (state === 'ready' || state === 'countdown') {
+      row.t.textContent = '—'; row.gap.textContent = 'on the grid';
+    } else if (state === 'finished') {
+      row.t.textContent = 'DNF'; row.gap.textContent = `${Math.floor(b.prog / course.total * 100)}% done`;
+    } else {
+      row.t.textContent = `${Math.floor(b.prog / course.total * 100)}%`; row.gap.textContent = 'racing';
+    }
+  });
+  for (const r of RACERS) $('w-' + r.id).textContent = wins[r.id];
+}
+function setControls() {
+  const label = { ready: 'Start', countdown: 'Stop', running: 'Stop', finished: 'New race' }[state];
+  goBtn.textContent = label;
+  shuffleBtn.disabled = state === 'countdown' || state === 'running';
+  stateEl.textContent = {
+    ready: 'On the grid. Press Start.',
+    countdown: 'Lights…',
+    running: `${finishedCount} of 4 across the line`,
+    finished: finishedCount === 4 ? 'Race complete.' : `Time cap reached. ${finishedCount} of 4 finished.`,
+  }[state];
+  $('course').innerHTML = `Course ${courseIdx + 1} of ${COURSES.length}: <b>${course.name}</b>, ${course.blurb}`;
+}
+
+goBtn.addEventListener('click', () => {
+  if (state === 'ready') { state = 'countdown'; countdown = 3; }
+  else if (state === 'countdown' || state === 'running') resetRace();
+  else newCourse();
+  setControls(); updateUI();
+});
+shuffleBtn.addEventListener('click', () => { if (state === 'ready' || state === 'finished') { newCourse(); setControls(); updateUI(); } });
+document.querySelectorAll('.speed button').forEach(btn => btn.addEventListener('click', () => {
+  speedMult = +btn.dataset.speed;
+  document.querySelectorAll('.speed button').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+}));
+window.addEventListener('keydown', e => {
+  if (e.code === 'Space' && !(e.target instanceof HTMLButtonElement)) { e.preventDefault(); goBtn.click(); }
+});
+
+// ---------- loop ----------
+let last = performance.now(), uiTimer = 0;
+function frame(now) {
+  const real = Math.min(0.05, (now - last) / 1000); last = now;
+  if (state === 'countdown') {
+    countdown -= real;
+    if (countdown <= 0) { launch(); setControls(); }
+  }
+  if (state === 'running') {
+    const dt = real * speedMult, n = Math.max(1, Math.ceil(SPEED * dt / 3));
+    const before = finishedCount;
+    for (let i = 0; i < n && state === 'running'; i++) step(dt / n);
+    for (const b of balls) {
+      if (!b.done) { b.trail.push({ x: b.x, y: b.y }); if (b.trail.length > 14) b.trail.shift(); }
+      else if (b.trail.length) b.trail.shift();
+    }
+    if (finishedCount !== before || state !== 'running') setControls();
+  } else {
+    for (const p of course.bumpers) if (p.flash > 0) p.flash = Math.max(0, p.flash - real * 3);
+  }
+  for (const b of balls) if (b.tag > 0) b.tag = Math.max(0, b.tag - real);
+  uiTimer -= real;
+  if (uiTimer <= 0 || state !== 'running') { updateUI(); uiTimer = 0.08; }
+  if (cv.width) draw();
+  requestAnimationFrame(frame);
+}
+
+newCourse(); resize(); setControls(); updateUI();
+requestAnimationFrame(frame);
+</script>
