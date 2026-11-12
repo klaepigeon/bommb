@@ -82,13 +82,13 @@ func _environment() -> void:
 ## The landing: the stairwell's green paint, the stair going down, the rail, 48 next door, the
 ## bulb on its way out.
 func _landing() -> void:
-	var sw := Tex.mat("stairwell", 0.5)
+	var sw := Tex.mat("stairwell", 0.25)
 	Build.box(world, Vector3(12.2, -0.05, 5.7), Vector3(4.2, 0.1, 4.6), Tex.mat("concrete", 1.5))
 	Build.box(world, Vector3(12.2, 2.82, 5.7), Vector3(4.2, 0.1, 4.6), Tex.mat("plaster", 0.7))
 	Build.wall(world, Vector2(10.15, 3.4), Vector2(14.3, 3.4), sw, [], 2.8, 0.1)
 	Build.wall(world, Vector2(14.3, 3.4), Vector2(14.3, 8.0), sw, [], 2.8, 0.1)
 	Build.wall(world, Vector2(10.15, 8.0), Vector2(14.3, 8.0), sw, [{"at": 2.4, "w": 0.95}], 2.8, 0.1)
-	Build.wall(world, Vector2(10.13, 3.4), Vector2(10.13, 8.0), sw, [{"at": FRONT.z - 3.4, "w": 0.95}], 2.8, 0.03)
+	flat.landing_face(sw, Tex.mat("plaster", 1.0))
 	# 48: padded, shut
 	var d48 := Door.new(); d48.material = Tex.mat("door_padded", 2.0); d48.width = 0.95; d48.locked = true
 	world.add_child(d48); d48.position = Vector3(12.55 - 0.475, 0, 7.96)

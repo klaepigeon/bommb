@@ -205,9 +205,10 @@ func _move_marta(k: String) -> void:
 ## The landing beyond C's front door: the stairwell, gone soft; 48 across it, open, lit.
 func _landing_48() -> void:
 	var f: ExportedFlat = flats.C
-	var sw := Tex.mat("stairwell", 0.5, {"tint": Color(0.7, 0.8, 1.0), "pulse": 0.006})
+	var sw := Tex.mat("stairwell", 0.25, {"tint": Color(0.7, 0.8, 1.0), "pulse": 0.006})
 	Build.box(f, Vector3(12.2, -0.05, 5.7), Vector3(4.2, 0.1, 4.6), Tex.mat("concrete", 1.5, {"tint": Color(0.7, 0.8, 1.0)}))
 	Build.box(f, Vector3(12.2, 2.82, 5.7), Vector3(4.2, 0.1, 4.6), Tex.mat("plaster", 0.7))
+	f.landing_face(sw, Tex.mat("plaster", 1.0, {"tint": Color(0.7, 0.8, 1.0)}))
 	Build.wall(f, Vector2(10.15, 3.4), Vector2(14.3, 3.4), sw, [], 2.8, 0.1)
 	Build.wall(f, Vector2(14.3, 3.4), Vector2(14.3, 8.0), sw, [], 2.8, 0.1)
 	Build.wall(f, Vector2(10.15, 8.0), Vector2(14.3, 8.0), sw, [{"at": 2.4, "w": 0.95}], 2.8, 0.1)

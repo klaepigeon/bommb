@@ -192,9 +192,12 @@ static func _stairwell() -> Image:
 	var r := _rng(14); var n := _noise(14, 0.1)
 	for y in S:
 		for x in S:
-			var h := 1.0 - float(y) / S  # 0 floor .. 1 at 2 m
-			var c := Color("3f6a55") if h < 0.6 else Color("b9b6a8")
-			if absf(h - 0.6) < 0.02: c = Color("2a3a30")
+			# walls sample this at 0.25 per metre from the floor up (Build: v = 0.999 - height): row
+			# v holds height (0.5 - v) * 2 for v <= 0.5, else 1 + (1 - v) * 2
+			var v := (float(y) + 0.5) / S
+			var hm := (0.25 - v) * 4.0 if v <= 0.25 else (1.25 - v) * 4.0     # sampled at 0.25 per metre: 4 m tall
+			var c := Color("3f6a55") if hm < 1.2 else Color("b9b6a8")
+			if absf(hm - 1.2) < 0.04: c = Color("2a3a30")
 			img.set_pixel(x, y, c.darkened(0.1 * n.get_noise_2d(x, y) + r.randf() * 0.05))
 	return img
 

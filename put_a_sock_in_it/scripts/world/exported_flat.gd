@@ -222,6 +222,18 @@ func _room_dist(k: String, p: Vector3) -> float:
 	var r: Dictionary = level.rooms[k]
 	return Vector2(maxf(maxf(r.x0 - p.x, p.x - r.x1), 0.0), maxf(maxf(r.z0 - p.z, p.z - r.z1), 0.0)).length()
 
+## The landing side of the front wall, built where the wall's collision really ends (x = 10.42:
+## the export's wall is 42 cm thick but only drawn on the flat's side), with the doorway as a
+## proper opening the size of the gap in the collision (z 4.12-5.0, 2.1 m high) and its depth
+## lined back to the door, like a doorway in a thick Soviet wall.
+func landing_face(face: Material, reveal: Material) -> void:
+	const X := 10.43; const Z0 := 4.12; const Z1 := 5.0; const TOP := 2.1; const H2 := 2.8
+	Build.wall(self, Vector2(X, 3.4), Vector2(X, 8.0), face, [{"at": (Z0 + Z1) * 0.5 - 3.4, "w": Z1 - Z0, "top": TOP}], H2, 0.02)
+	var depth := X - 10.1
+	for z in [Z0 - 0.01, Z1 + 0.01]:
+		Build.box(self, Vector3(10.1 + depth * 0.5, TOP * 0.5, z), Vector3(depth, TOP, 0.02), reveal, false)
+	Build.box(self, Vector3(10.1 + depth * 0.5, TOP + 0.01, (Z0 + Z1) * 0.5), Vector3(depth, 0.02, Z1 - Z0 + 0.04), reveal, false)
+
 ## The nearest drawer to a point (the level picks one to hide something in).
 func drawer_near(p: Vector3) -> ExportDrawer:
 	var best: ExportDrawer = null; var bd := INF
