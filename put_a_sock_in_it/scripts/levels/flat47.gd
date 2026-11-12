@@ -205,7 +205,7 @@ func _outside() -> void:
 	outside = Node3D.new(); world.add_child(outside)
 	outside.visible = false
 	var white := MeshInstance3D.new(); var bm := BoxMesh.new(); bm.size = Vector3(80, 40, 80); white.mesh = bm
-	var wm := StandardMaterial3D.new(); wm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED; wm.albedo_color = Color(1.5, 1.5, 1.48)
+	var wm := StandardMaterial3D.new(); wm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED; wm.albedo_color = Color(0.93, 0.93, 0.92)     # (under full white: clipped, the window frames broke into hard shards)
 	wm.cull_mode = BaseMaterial3D.CULL_FRONT; wm.disable_fog = true
 	white.material_override = wm; white.position = Vector3(5, 5, 4); outside.add_child(white)
 	_sticky_note(Vector3(3.0, 2.2, -12.0), 0.0, 7.0, -0.035)
@@ -666,7 +666,7 @@ func _blackout() -> void:
 	balcony_door.locked = false
 	if world.has_node("WardrobeSpot"): (world.get_node("WardrobeSpot") as Hotspot).prompt = "Push wardrobe"
 	outside.visible = true
-	env.environment.background_color = Color(1, 1, 1); env.environment.background_energy_multiplier = 1.6
+	env.environment.background_color = Color(0.93, 0.93, 0.92); env.environment.background_energy_multiplier = 1.0
 	# on the floor, on his back, looking at the ceiling
 	player.global_position = LAND
 	player.head_override = 0.28

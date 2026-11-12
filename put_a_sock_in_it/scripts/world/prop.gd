@@ -39,6 +39,7 @@ func _ready() -> void:
 func on_picked(_p = null) -> void:
 	if has_meta("memory_item") and not Game.flag("mem_" + String(get_meta("memory_item"))):
 		Game.set_flag("mem_" + String(get_meta("memory_item")))
+		Game.run.memories += 1
 		Skills.award("memory", 1)
 
 func get_prompt() -> String:

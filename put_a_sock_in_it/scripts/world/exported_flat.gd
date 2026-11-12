@@ -168,7 +168,7 @@ func _behaviours() -> void:
 	var nodes := model.find_children("*", "Node3D", true, false)
 	for n in nodes:
 		if TEXT_PATCH.has(String(n.name)) and n.has_meta("extras"):
-			var ex: Dictionary = n.get_meta("extras"); ex["desc"] = TEXT_PATCH[String(n.name)]; n.set_meta("extras", ex)
+			var ex: Dictionary = n.get_meta("extras"); ex["desc"] = "" if Game.hides_placeholders() else TEXT_PATCH[String(n.name)]; n.set_meta("extras", ex)
 	for n in nodes:
 		if n.is_queued_for_deletion(): continue
 		var ex := _extras(n)

@@ -24,6 +24,11 @@ var memories := 0               # Memory nodes unlocked (the dialogue's memory b
 var skills := {}                # unlocked skill ids (Skills)
 var memory_points := 0          # to spend in the Memory tree
 var skill_points := 0           # to spend in the Infection tree
+## This run, for the demo's end screen: seconds played, times she caught him, times he hid,
+## times he put her down (stunned), memories found. Not saved: a run is a sitting.
+var run := {"time": 0.0, "caught": 0, "hid": 0, "stuns": 0, "memories": 0}
+var demo_over := false          # the title shows the end-of-demo panel once, after the last card
+var demo := {}                  # data/demo.json
 var fear := 0.0                 # 0..1: Kurt's nerve (scripts/player/nerve.gd); not saved, he calms down between
 var torch_charge := 1.0         # 0..1: the torch's battery (saved)
 var strain := 0.0               # 0..1: what the powers have taken out of him (refills)
@@ -47,6 +52,8 @@ func _ready() -> void:
 	_load_settings()
 	_build_loading()
 	_setup_input()
+	var dj = JSON.parse_string(FileAccess.get_file_as_string("res://data/demo.json")) if FileAccess.file_exists("res://data/demo.json") else null
+	demo = dj if typeof(dj) == TYPE_DICTIONARY else {}
 	apply_wobble.call_deferred()     # the title scene, once it's in
 
 ## Kurt's numbers, as the skill trees have changed them (1.0: as he is). Read by melee and the
@@ -109,6 +116,7 @@ func uses_touch() -> bool:
 
 # ------------------------------------------------------------------ new game, continue, save
 func new_game() -> void:
+	run = {"time": 0.0, "caught": 0, "hid": 0, "stuns": 0, "memories": 0}
 	flags = {}; memories = 0; inventory = {}; pistol = {"have": false, "mag": 0, "drawn": true}
 	skills = {}; memory_points = 0; skill_points = 0; strain = 0.0; fear = 0.0; torch_charge = 1.0
 	Skills.apply()
@@ -312,3 +320,15 @@ func _load_settings() -> void:
 			# rev 2: the PS1 wobble made textures swim; it's off unless chosen again
 			if int(d.get("settings_rev", 1)) < 2: settings.wobble = 0.0; settings.settings_rev = 2
 	AudioServer.set_bus_volume_db(0, linear_to_db(maxf(0.001, float(settings.volume))))
+
+## data/demo.json "hide_placeholders": the demo can go out before the writing is in. Placeholder
+## lines are skipped and placeholder writing on walls isn't drawn (nothing is written in their place).
+func hides_placeholders() -> bool:
+	return bool(demo.get("hide_placeholders", false))
+
+static func is_placeholder(t: String) -> bool:
+	return t.contains("have to write this later")
+
+func _process(delta: float) -> void:
+	if level and is_instance_valid(level) and not get_tree().paused and not busy:
+		run.time += delta

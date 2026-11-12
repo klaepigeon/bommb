@@ -260,6 +260,7 @@ static func _rubbish(f: Node3D, tint: Color) -> void:
 static func _graffiti(f: Node3D, tint: Color) -> void:
 	# (the words themselves are to be written: placeholders until then)
 	const P := ExportedFlat.PLACEHOLDER
+	if Game.hides_placeholders(): return
 	for g in [
 			[P, Vector3(12.4, 1.05, 3.456), 0.0, -0.06, Color("1c1a18"), 40],        # north wall, facing south
 			[P, Vector3(10.95, 1.35, 7.944), PI, 0.08, Color("d8d2c0"), 30],       # by 48, scratched

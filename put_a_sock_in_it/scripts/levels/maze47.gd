@@ -527,6 +527,7 @@ func _marta() -> void:
 	marta.listening.connect(func(_sp):
 		hud.hint("She's at the doors. Hold your breath: hold BREATH." if Game.uses_touch() else "She's at the doors. Hold your breath: hold B.", 5.0))
 	marta.spotted_player.connect(_on_spotted)
+	marta.state_changed.connect(func(s): if s == "stunned": Game.run.stuns += 1)
 	marta.state_changed.connect(func(s): if s == "stunned" and not Game.flag("first_stun"): Game.set_flag("first_stun"); Skills.award("infection", 1, "you hurt her"))
 	marta.refuge = in_safe
 	marta.grid = nav_grid(); marta.cell = NAV; marta.origin = Vector3.ZERO
@@ -705,6 +706,7 @@ func on_event(n: String, _step: Dictionary) -> void:
 
 ## She has him. Back to the last safe room reached.
 func _on_caught() -> void:
+	Game.run.caught += 1
 	set_cutscene(true)
 	Dialogue.stop()
 	random_talk = false
@@ -733,4 +735,5 @@ func _finale() -> void:
 	await get_tree().create_timer(1.6).timeout
 	Game.set_flag("flat47_done")
 	Game.checkpoint()
+	Game.demo_over = bool(Game.demo.get("is_demo", false))
 	await Game.end_chapter("Flat 48", "")

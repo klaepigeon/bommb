@@ -82,6 +82,7 @@ func _run(steps: Array, g: int) -> void:
 			if g != _gen: return
 			if not pick.is_empty(): await _run(pick.get("steps", []), g)
 			continue
+		if Game.hides_placeholders() and Game.is_placeholder(String(step.get("text", ""))): continue
 		await _say(step, g)
 
 # ------------------------------------------------------------------ choices

@@ -67,6 +67,7 @@ func interact(p = null) -> void:
 		pl.hide_in(self, eye())
 		_doors()
 		_since = 0.0
+		Game.run.hid += 1
 		entered.emit(self)
 
 ## Where he stands when he gets out (in front, on the floor).

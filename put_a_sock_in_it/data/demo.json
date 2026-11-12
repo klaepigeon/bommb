@@ -1,0 +1,9 @@
+{
+	"_comment": "The demo's end screen (scripts/ui/title.gd) and build switches. Put the store / follow links here; an empty url hides its button. hide_placeholders: skip placeholder lines and don't draw placeholder graffiti (docs/DEMO.md).",
+	"is_demo": true,
+	"store_label": "Wishlist Put A Sock In It",
+	"store_url": "",
+	"follow_label": "Follow development",
+	"follow_url": "",
+	"hide_placeholders": false
+}
