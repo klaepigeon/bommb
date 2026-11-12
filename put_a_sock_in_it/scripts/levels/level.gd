@@ -12,6 +12,7 @@ var hands: Hands
 var skills_menu: SkillsMenu
 var powers: Powers
 var nerve: Nerve
+var shotgun: Shotgun
 var body: KurtBody
 var hud: Hud
 var touch: TouchControls
@@ -38,6 +39,7 @@ func _ready() -> void:
 	player = Player.new(); player.name = "Kurt"; add_child(player)
 	socko = Socko.new(); add_child(socko); socko.attach(player)
 	pistol = Pistol.new(); pistol.attach(player)
+	shotgun = Shotgun.new(); shotgun.attach(player)
 	hands = Hands.new(); hands.attach(player)
 	body = KurtBody.new(); body.attach(player)
 	skills_menu = SkillsMenu.new(); add_child(skills_menu)

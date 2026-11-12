@@ -13,7 +13,7 @@ signal left(s: HideSpot)
 var occupant: Player = null
 var _since := 0.0
 
-const GAP := 0.035      # between the doors: what he sees her through
+const GAP := 0.05      # between the doors: what he sees her through
 
 ## Not the plain wardrobe's solid block: a carcass of panels he can be inside (seen from both
 ## sides), and two doors with a gap between them.

@@ -15,6 +15,7 @@ signal noise(pos: Vector3, loudness: float)
 const LEVELS := {
 	"flat47": {"scene": "res://scenes/levels/flat47.tscn", "title": "Flat 47", "sub": "Kerzhansk, 1996"},
 	"flesh47": {"scene": "res://scenes/levels/maze47.tscn", "title": "Flat 47", "sub": "again"},
+	"flat48": {"scene": "res://scenes/levels/flat48.tscn", "title": "Flat 48", "sub": ""},
 }
 const SAVE_PATH := "user://save.json"
 const SETTINGS_PATH := "user://settings.json"
@@ -34,6 +35,9 @@ var torch_charge := 1.0         # 0..1: the torch's battery (saved)
 var strain := 0.0               # 0..1: what the powers have taken out of him (refills)
 var inventory := {}             # item id -> count
 var pistol := {"have": false, "mag": 0}
+## Papa's sawn-off (Flat 48): two barrels, loaded or not; shells are inventory "shells".
+## Only one gun is out at a time: pistol.drawn / shotgun.drawn, cycled by "holster".
+var shotgun := {"have": false, "loaded": 0, "drawn": false}
 var level_id := ""
 var level: Node = null
 var settings := {"sensitivity": 1.0, "invert_y": false, "touch_scale": 1.0, "touch_opacity": 0.55,
@@ -91,6 +95,23 @@ func _setup_input() -> void:
 	var mmb := InputEventMouseButton.new(); mmb.button_index = MOUSE_BUTTON_MIDDLE; InputMap.action_add_event("throw", mmb)
 
 # ------------------------------------------------------------------ flags and inventory
+## Which gun is out: "pistol", "shotgun" or "" (his fists).
+func gun_out() -> String:
+	if shotgun.get("have", false) and shotgun.get("drawn", false): return "shotgun"
+	if pistol.get("have", false) and pistol.get("drawn", true): return "pistol"
+	return ""
+
+## "holster": pistol, then the shotgun (if he has it), then his fists, round again.
+func cycle_gun() -> void:
+	var order := []
+	if pistol.get("have", false): order.append("pistol")
+	if shotgun.get("have", false): order.append("shotgun")
+	order.append("")
+	var i := order.find(gun_out())
+	var next: String = order[(i + 1) % order.size()]
+	pistol.drawn = next == "pistol"
+	shotgun.drawn = next == "shotgun"
+
 func flag(k: String) -> bool:
 	return flags.get(k, false)
 
@@ -117,7 +138,7 @@ func uses_touch() -> bool:
 # ------------------------------------------------------------------ new game, continue, save
 func new_game() -> void:
 	run = {"time": 0.0, "caught": 0, "hid": 0, "stuns": 0, "memories": 0}
-	flags = {}; memories = 0; inventory = {}; pistol = {"have": false, "mag": 0, "drawn": true}
+	flags = {}; memories = 0; inventory = {}; pistol = {"have": false, "mag": 0, "drawn": true}; shotgun = {"have": false, "loaded": 0, "drawn": false}
 	skills = {}; memory_points = 0; skill_points = 0; strain = 0.0; fear = 0.0; torch_charge = 1.0
 	Skills.apply()
 	change_level("flat47", {"fade": 1.5, "card": false})
@@ -138,7 +159,7 @@ func continue_game() -> void:
 func _snapshot() -> Dictionary:
 	return {"level": level_id, "flags": flags.duplicate(true), "memories": memories,
 		"skills": skills.keys(), "memory_points": memory_points, "skill_points": skill_points, "torch_charge": torch_charge,
-		"inventory": inventory.duplicate(true), "pistol": pistol.duplicate(true)}
+		"inventory": inventory.duplicate(true), "pistol": pistol.duplicate(true), "shotgun": shotgun.duplicate(true)}
 
 func _restore(d: Dictionary) -> void:
 	flags = d.get("flags", {}).duplicate(true)
@@ -150,7 +171,10 @@ func _restore(d: Dictionary) -> void:
 	inventory = {}
 	for k in d.get("inventory", {}): inventory[k] = int(d.inventory[k])
 	var p: Dictionary = d.get("pistol", {})
-	pistol = {"have": bool(p.get("have", false)), "mag": int(p.get("mag", 0))}
+	pistol = {"have": bool(p.get("have", false)), "mag": int(p.get("mag", 0)), "drawn": bool(p.get("drawn", true))}
+	var sg: Dictionary = d.get("shotgun", {})
+	shotgun = {"have": bool(sg.get("have", false)), "loaded": int(sg.get("loaded", 0)), "drawn": bool(sg.get("drawn", false))}
+	if shotgun.drawn: pistol.drawn = false
 
 var _checkpoint := {}
 ## Called by a level once its opening has played: what a restart returns to.

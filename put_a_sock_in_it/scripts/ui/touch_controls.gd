@@ -46,9 +46,9 @@ func _ready() -> void:
 func _visible_btn(name: String) -> bool:
 	match name:
 		"fire": return true
-		"reload": return Game.pistol.have and Game.pistol.get("drawn", true)
+		"reload": return Game.gun_out() != ""
 		"throw": return player != null and player.held != null
-		"holster": return Game.pistol.have
+		"holster": return Game.pistol.have or Game.shotgun.have
 		"power": return Skills.has("s_tk") or Skills.has("s_telepathy")
 		"look_at": return player != null and player.held != null
 		"skip": return Dialogue.busy
@@ -146,7 +146,7 @@ func _draw() -> void:
 		draw_arc(c, r, 0, TAU, 32, Color(1, 1, 1, a * (0.9 if editing else 0.6)), 2.0)
 		var fs := int(18 * s)
 		var label: String = layout[k][4]
-		if k == "fire" and (player == null or player.held or not (Game.pistol.have and Game.pistol.get("drawn", true))): label = "HIT"
+		if k == "fire" and (player == null or player.held or Game.gun_out() == ""): label = "HIT"
 		var tw := font.get_string_size(label, HORIZONTAL_ALIGNMENT_CENTER, -1, fs).x
 		draw_string(font, c + Vector2(-tw * 0.5, fs * 0.35), label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(1, 1, 1, a))
 	if editing:

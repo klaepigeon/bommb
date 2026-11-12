@@ -126,7 +126,9 @@ func _initialize() -> void:
 	await _wait(1.0)
 	await _shot("16_exit_48")
 	F2.player.global_position = Vector3(F2.maze.w * F2.CELL + 0.6, 0, F2.centre(ex).z)
-	await _until(func(): return current_scene != null and current_scene.name == "Title", 40.0, "finale returns to title")
+	await _until(func(): return game.level != null and game.level_id == "flat48" and not game.busy, 40.0, "the maze's end leads into Flat 48")
+	await _wait(2.0)
+	await _shot("18_flat48")
 	print("PLAYTHROUGH fails=%d shots=%d" % [fails, shots])
 	quit()
 

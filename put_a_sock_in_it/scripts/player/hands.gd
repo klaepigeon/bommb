@@ -60,12 +60,12 @@ func _pose(at: Vector3, dir: Vector3, roll := 0.0) -> Transform3D:
 	return Transform3D(b, at)
 
 func melee_mode() -> bool:
-	return player.held != null or not (Game.pistol.have and Game.pistol.get("drawn", true))
+	return player.held != null or Game.gun_out() == ""
 
 func _unhandled_input(e: InputEvent) -> void:
 	if not player or not player.controls: return
-	if e.is_action_pressed("holster") and Game.pistol.have:
-		Game.pistol.drawn = not Game.pistol.get("drawn", true)
+	if e.is_action_pressed("holster") and (Game.pistol.have or Game.shotgun.have):
+		Game.cycle_gun()
 		Sfx.play("pickup", -14.0, 0.7)
 	if e.is_action_pressed("throw") and player.held and state == "idle":
 		player.throw_held()
@@ -146,7 +146,7 @@ func _process(delta: float) -> void:
 			arm.pose_name = "hold" if player.held else ("fist" if _idle_t < 1.2 else "relaxed")
 	# seen when it's doing something, or holding something; otherwise it drops out of view
 	var want_shown := 1.0 if (state != "idle" or player.held or _idle_t < 1.2) and player.controls else 0.0
-	if Game.pistol.have and Game.pistol.get("drawn", true) and not player.held and state == "idle": want_shown = 0.0
+	if Game.gun_out() != "" and not player.held and state == "idle": want_shown = 0.0
 	_shown = move_toward(_shown, want_shown, dt * 4.0)
 	arm.visible = _shown > 0.01
 	var hidden := _pose(HIDDEN, Vector3(-0.1, 0.2, -1.0))

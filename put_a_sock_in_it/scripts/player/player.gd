@@ -330,6 +330,8 @@ func hide_in(spot: Node, eye: Transform3D) -> void:
 	hidden_in = spot
 	_hide_from = global_transform
 	_hide_eye = eye
+	var fill := cam.get_node_or_null("Fill") as OmniLight3D
+	if fill: fill.light_energy = 0.03          # (dark in a wardrobe: the gap is the only light)
 	controls = false
 	collision_layer = 0; collision_mask = 0
 	global_position = eye.origin - Vector3(0, _head_h, 0)
@@ -340,6 +342,8 @@ func hide_in(spot: Node, eye: Transform3D) -> void:
 func leave_hiding(to: Vector3, facing: Vector3) -> void:
 	if not hidden_in: return
 	hidden_in = null
+	var fill := cam.get_node_or_null("Fill") as OmniLight3D
+	if fill: fill.light_energy = 0.35
 	global_position = to
 	collision_layer = 2; collision_mask = 1 | 32
 	set_view(atan2(-facing.x, -facing.z), 0.0)
@@ -390,7 +394,8 @@ func _blocked_above() -> bool:
 # ------------------------------------------------------------------ interaction
 func _update_target() -> void:
 	var t: Node = null
-	if controls and not held:
+	# (holding a sticky note (Flat 48) he can still aim it at things: the note is what "use" puts there)
+	if controls and (not held or held.has_meta("word")):
 		ray.force_raycast_update()
 		if ray.is_colliding():
 			t = find_interactable(ray.get_collider())
@@ -406,6 +411,7 @@ static func find_interactable(n: Node) -> Node:
 
 func prompt() -> String:
 	if hidden_in: return hidden_in.get_prompt()
+	if held and held.has_meta("word") and target: return target.get_prompt()
 	if held:
 		if inspecting: return "Turn it over"
 		if Skills.has("m_observe"):
@@ -418,6 +424,8 @@ func prompt() -> String:
 
 func _interact() -> void:
 	if held:
+		if held.has_meta("word") and target and target.has_method("interact"):
+			target.interact(self); interacted.emit(target); return
 		_drop(); return
 	if target:
 		if target is RigidBody3D and target.get_prompt().begins_with("Pick up"):
@@ -429,6 +437,7 @@ func _interact() -> void:
 func _pick(b: RigidBody3D) -> void:
 	if b.has_method("wake"): b.wake()
 	held = b
+	ray.add_exception(b)
 	b.gravity_scale = 0.0; b.linear_damp = 8.0; b.angular_damp = 8.0
 	b.add_collision_exception_with(self)
 	Sfx.play("pickup", -10.0)
@@ -446,6 +455,7 @@ func _carry(delta: float) -> void:
 func _drop() -> void:
 	if not held: return
 	var b := held; held = null; inspecting = false
+	ray.remove_exception(b)
 	b.gravity_scale = 1.0; b.linear_damp = 0.1; b.angular_damp = 0.3
 	b.remove_collision_exception_with(self)
 

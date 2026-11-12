@@ -19,6 +19,9 @@ func interact(_p = null) -> void:
 		"pistol":
 			Game.pistol.have = true; Game.pistol.drawn = true
 			Game.pistol.mag = maxi(Game.pistol.mag, amount)
+		"shotgun":
+			Game.shotgun.have = true; Game.shotgun.loaded = maxi(int(Game.shotgun.loaded), amount)
+			Game.shotgun.drawn = true; Game.pistol.drawn = false
 		"battery":
 			Game.torch_charge = 1.0
 		_:

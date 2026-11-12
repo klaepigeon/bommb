@@ -96,7 +96,7 @@ func _initialize() -> void:
 	# ---- through 48's door
 	await _walk_dir(Vector3(L.maze.w * L.CELL + 0.9, 0, L.centre(L.maze.exit).z), 4.0)
 	await _shot("w11_exit")
-	await _until(func(): return current_scene != null and current_scene.name == "Title", 40.0, "through 48's door: the chapter ends")
+	await _until(func(): return game.level != null and game.level_id == "flat48" and not game.busy, 40.0, "through 48's door: Flat 48")
 	print("WALKTHROUGH fails=%d" % fails)
 	quit()
 

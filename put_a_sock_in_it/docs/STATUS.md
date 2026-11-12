@@ -136,9 +136,12 @@ What actually works, checked by the tools in `tools/` (run with
 `dist/PutASockInIt.apk` (arm64 + armv7, OpenGL ES 3, signed; `tools/build_apk.sh`). Built and
 its signature verified here; **not yet run on a phone** (no device in this environment).
 
-## Not built
+## Flat 48
 
-- Flat 48 (the chapter ends on its card).
+Built (docs/FLAT48.md): the maze's end leads into it. The draft flat, the blocks and the note wall,
+Papa's gun safe and the sawn-off, and the three figures and their mannequins. Every line and tag is
+a placeholder. It ends once every name has been tried; how 48 should really end is open.
+`tools/flat48_test.gd`: 0 fails.
 
 ## Known issues
 

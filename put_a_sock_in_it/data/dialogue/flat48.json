@@ -1,0 +1,150 @@
+{
+	"_about": "Flat 48 (scripts/levels/flat48.gd). Every line here is a placeholder for the writers: the beat it plays on is its name.",
+	"f48_enter": [
+		{
+			"who": "socko",
+			"text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder",
+			"socko": {
+				"emotion": "curious",
+				"look": "ahead"
+			},
+			"pause": 0.6
+		},
+		{
+			"who": "kurt",
+			"text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder"
+		}
+	],
+	"f48_wall": [
+		{
+			"who": "socko",
+			"text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder",
+			"socko": {
+				"emotion": "curious",
+				"look": "ahead"
+			}
+		}
+	],
+	"f48_first_real": [
+		{
+			"who": "socko",
+			"text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder",
+			"socko": {
+				"emotion": "happy",
+				"look": "ahead"
+			}
+		}
+	],
+	"f48_wrong": [
+		{
+			"who": "socko",
+			"text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder",
+			"socko": {
+				"emotion": "nervous",
+				"look": "ahead"
+			}
+		}
+	],
+	"f48_safe": [
+		{
+			"who": "socko",
+			"text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder",
+			"socko": {
+				"emotion": "happy",
+				"look": "ahead"
+			}
+		}
+	],
+	"f48_shotgun": [
+		{
+			"who": "socko",
+			"text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder",
+			"socko": {
+				"emotion": "happy",
+				"look": "ahead"
+			}
+		},
+		{
+			"who": "kurt",
+			"text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder"
+		}
+	],
+	"f48_figures": [
+		{
+			"who": "socko",
+			"text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder",
+			"socko": {
+				"emotion": "nervous",
+				"look": "ahead"
+			}
+		}
+	],
+	"f48_moved": [
+		{
+			"who": "socko",
+			"text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder",
+			"socko": {
+				"emotion": "uncanny",
+				"look": "ahead"
+			}
+		}
+	],
+	"f48_shot_figure": [
+		{
+			"who": "socko",
+			"text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder",
+			"socko": {
+				"emotion": "happy",
+				"look": "ahead"
+			}
+		}
+	],
+	"f48_mama": [
+		{
+			"who": "socko",
+			"text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder",
+			"socko": {
+				"emotion": "curious",
+				"look": "ahead"
+			}
+		}
+	],
+	"f48_papa": [
+		{
+			"who": "socko",
+			"text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder",
+			"socko": {
+				"emotion": "nervous",
+				"look": "ahead"
+			}
+		},
+		{
+			"who": "kurt",
+			"text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder"
+		}
+	],
+	"f48_sonya": [
+		{
+			"who": "socko",
+			"text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder",
+			"socko": {
+				"emotion": "nervous",
+				"look": "ahead"
+			}
+		}
+	],
+	"f48_end": [
+		{
+			"who": "socko",
+			"text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder",
+			"socko": {
+				"emotion": "curious",
+				"look": "ahead"
+			}
+		},
+		{
+			"who": "kurt",
+			"text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder"
+		}
+	]
+}

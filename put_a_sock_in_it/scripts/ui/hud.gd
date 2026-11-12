@@ -123,7 +123,9 @@ func _process(delta: float) -> void:
 			_ammo.text = "▮".repeat(lit) + "▯".repeat(pips - lit)
 		else:
 			_ammo.text = ""
-	elif Game.pistol.have and Game.pistol.get("drawn", true):
+	elif Game.gun_out() == "pistol":
 		_ammo.text = "%d  |  %d" % [Game.pistol.mag, Game.count("ammo")]
+	elif Game.gun_out() == "shotgun":
+		_ammo.text = "%s  |  %d" % ["●".repeat(int(Game.shotgun.loaded)) + "○".repeat(2 - int(Game.shotgun.loaded)), Game.count("shells")]
 	else:
 		_ammo.text = ""

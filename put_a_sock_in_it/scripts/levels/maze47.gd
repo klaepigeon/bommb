@@ -735,5 +735,5 @@ func _finale() -> void:
 	await get_tree().create_timer(1.6).timeout
 	Game.set_flag("flat47_done")
 	Game.checkpoint()
-	Game.demo_over = bool(Game.demo.get("is_demo", false))
-	await Game.end_chapter("Flat 48", "")
+	# across the landing: 48
+	Game.change_level("flat48")
