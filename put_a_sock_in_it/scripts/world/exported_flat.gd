@@ -74,9 +74,23 @@ func _lift_coplanar() -> void:
 			var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
 			var n = arr[Mesh.ARRAY_NORMAL]
 			if n == null or (n as PackedVector3Array).size() != v.size(): continue
-			for i in v.size(): v[i] += (n as PackedVector3Array)[i] * up
-			arr[Mesh.ARRAY_VERTEX] = v
-			am.add_surface_from_arrays(mi.mesh.surface_get_primitive_type(s), arr)
+			# each triangle along its own flat normal (stored normals are smoothed round corners,
+			# so pushing along them can land a face back in the plane it was meant to leave);
+			# the stored normals only say which side is the front. Unshared, so faces move apart.
+			var idx = arr[Mesh.ARRAY_INDEX]
+			var order: PackedInt32Array = idx if idx != null and (idx as PackedInt32Array).size() > 0 else PackedInt32Array(range(v.size()))
+			var st := SurfaceTool.new(); st.begin(Mesh.PRIMITIVE_TRIANGLES)
+			var uv = arr[Mesh.ARRAY_TEX_UV]
+			for t in range(0, order.size() - 2, 3):
+				var i0 := order[t]; var i1 := order[t + 1]; var i2 := order[t + 2]
+				var fn := (v[i1] - v[i0]).cross(v[i2] - v[i0]).normalized()
+				var avg: Vector3 = (n as PackedVector3Array)[i0] + (n as PackedVector3Array)[i1] + (n as PackedVector3Array)[i2]
+				if fn.dot(avg) < 0.0: fn = -fn
+				for i in [i0, i1, i2]:
+					st.set_normal((n as PackedVector3Array)[i])
+					if uv != null and (uv as PackedVector2Array).size() == v.size(): st.set_uv((uv as PackedVector2Array)[i])
+					st.add_vertex(v[i] + fn * up)
+			st.commit(am)
 			am.surface_set_material(am.get_surface_count() - 1, mi.mesh.surface_get_material(s))
 		if am.get_surface_count() == mi.mesh.get_surface_count(): mi.mesh = am
 

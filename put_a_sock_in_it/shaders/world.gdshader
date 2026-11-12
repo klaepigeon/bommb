@@ -73,7 +73,7 @@ void fragment() {
 		col = mix(col * mix(vec3(1.0), paint_tint, flesh), meat, k);
 		rough = mix(rough, 0.25, k);            // wet
 		spec = mix(spec, 0.8, k);
-		EMISSION = meat_glow * vein * k * (0.6 + 0.4 * sin(TIME * 1.4 + wp.x));
+		EMISSION = meat_glow * vein * k * (0.85 + 0.15 * sin(TIME * 0.7 + wp.x));     // (a slow glow: a fast deep pulse read as flicker)
 	}
 	ALBEDO = col;
 	float curve = length(fwidth(NORMAL));

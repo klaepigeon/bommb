@@ -95,7 +95,18 @@ for _ in range(10):
         if layer[top] <= layer[bot]:
             layer[top] = layer[bot] + 1; changed = True
     if not changed: break
-if len(sys.argv) > 2:
+if len(sys.argv) > 3 and sys.argv[3] == "--bump":
+    # measured on geometry already lifted by argv[2]: whatever still ties goes up past what it's on
+    have = json.load(open(sys.argv[2]))
+    short = lambda n: n.split("/")[-1]
+    bumped = 0
+    for top, bot in edges:
+        if "/Apartment/" not in top and "Wardrobe" not in top: continue
+        want = have.get(short(bot), 0) + 1
+        if have.get(short(top), 0) < want: have[short(top)] = want; bumped += 1
+    json.dump(have, open(sys.argv[2], "w"), indent=1, sort_keys=True)
+    print("BUMPED %d meshes -> %s" % (bumped, sys.argv[2]))
+elif len(sys.argv) > 2:
     out = {}
     for n, l in layer.items():
         if l > 0 and "/Apartment/" in n: out[n.split("/Apartment/")[-1].split("/")[-1]] = l

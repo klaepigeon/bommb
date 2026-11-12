@@ -100,5 +100,5 @@ func _flick(_delta: float) -> float:
 		"tv":
 			return 0.88 + 0.07 * _n(0.12, seed)
 		"pulse":
-			return 0.92 + 0.08 * (0.5 + 0.5 * sin(_t * TAU / 5.0))
+			return 0.96 + 0.04 * (0.5 + 0.5 * sin(_t * TAU / 5.0))
 	return 1.0
