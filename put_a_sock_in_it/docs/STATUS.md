@@ -11,6 +11,8 @@ What actually works, checked by the tools in `tools/` (run with
 | `hunt_test.gd` | Marta (in copy B): hears and investigates, gives up, sees standing / not crouched at range, stunned by a bullet, hunts again more suspicious, searches and returns to patrol | 0 fails |
 | `build_apk.sh` | exports and verifies the signed APK | signed |
 | `touch_test.gd` | stick walks, right-half drag looks, both at once, USE presses interact | 0 fails |
+| `melee_test.gd` | through the real inputs: a punch shoves a loose thing; blows cost stamina; hold for a heavy blow; a hammer wears a hit at a time; a jar breaks into a shard he keeps; a chair breaks into a leg; throw; pistol drawn shoots, holstered punches; blows take Marta's poise, she comes for him, a heavy axe blow stuns her | see below |
+| `skills_test.gd` | points and prerequisites; Memory nodes open the memory branches; Sinew, Lungs; telekinesis pulls a thing into his hand; the choice UI (greyed locked options, [Memory] / [Telepathy] tags, picking); telepathy; the skills screen; Breach through a cracked wall (not without it); the shove; Coup de Grace, and her coming back further along in the next copy | see below |
 | `flash_test.gd` | photosensitivity: renders the flickering scenes and counts brightness flashes per screen quadrant (WCAG general-flash rule, simplified) | 0 fails (≤ 1 flash/s) |
 | `socko_view.gd`, `marta_view.gd`, `marta_stages.gd`, `scare_view.gd`, `hunter_pose.gd`, `landing_view.gd`, `note_view.gd`, `beauty.gd`, `title_shot.gd` | render characters, Marta's poses, the stairwell and doors, Sonya's note and fixed views for judging the look | |
 | `bake_audio.gd` | synthesises every sound into `assets/audio/` | 78 sounds |
@@ -35,6 +37,16 @@ What actually works, checked by the tools in `tools/` (run with
   the export had glass); through the flat's material converter, so they flesh over in level 2.
 - Sonya's note, half under her bed in Flat 47 (`NoteReader` shows readable paper; sets
   `flags.read_pembis`).
+- Melee (docs/MELEE.md): Kurt's rigged right arm on screen (IK from the shoulder), jabs and
+  haymakers, swinging anything he can pick up; twelve weapon classes with damage, reach, speed,
+  shove, stamina cost, noise and durability; things break (glass into a shard, a chair into a leg);
+  durability on the HUD; holstering the pistol for fists; throw on its own button. Marta's poise:
+  flinches, and stuns when it's gone.
+- Kurt's body when he looks down (coat, legs, shoes), walking and crouching with him.
+- Two skill trees (docs/SKILLS.md): Memory (memory points from their things) and Infection (skill
+  points from the flesh); a skills screen; powers on one button (telekinesis, a shove, telepathy)
+  drawing on strain; Breach walls; Coup de Grace. Dialogue choices with [Memory] / [Telepathy]
+  options (an example conversation, placeholder text only).
 - The opening scare (docs/SCARE.md): murmuring before she's seen, silence when she is; dead
   still, head bowed under her hair; changes while Kurt isn't looking; her voice from under the
   hair; the head coming up and on too far, her good eye finding him; dead air while her jaw

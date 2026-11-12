@@ -28,6 +28,12 @@ func _ready() -> void:
 	continuous_cd = true
 	body_entered.connect(_hit)
 
+## (picked up: a thing that brings something back to him is a memory point, once)
+func on_picked(_p = null) -> void:
+	if has_meta("memory_item") and not Game.flag("mem_" + String(get_meta("memory_item"))):
+		Game.set_flag("mem_" + String(get_meta("memory_item")))
+		Skills.award("memory", 1)
+
 func get_prompt() -> String:
 	return ("Pick up " + label.to_lower()) if liftable else ""
 

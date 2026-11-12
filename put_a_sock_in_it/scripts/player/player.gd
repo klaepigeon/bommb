@@ -83,6 +83,10 @@ func _ready() -> void:
 	_yaw = rotation.y; rotation.y = 0.0
 	Sfx.loop("pant", "pant", -80.0)
 
+## (the Infection tree's Lungs raise it)
+func stamina_max() -> float:
+	return STAMINA_MAX * Game.stat("stamina_max")
+
 ## Point him somewhere: body yaw and head pitch (radians).
 func set_view(yaw: float, pitch: float) -> void:
 	_yaw = yaw; _pitch = pitch
@@ -125,7 +129,6 @@ func _unhandled_input(e: InputEvent) -> void:
 	if e.is_action_pressed("interact"): _interact()
 	if e.is_action_pressed("crouch"): crouching = not crouching
 	if e.is_action_pressed("torch") and has_torch: toggle_torch()
-	if e.is_action_pressed("fire") and held: _throw()
 	if e.is_action_pressed("inspect") and held: inspecting = true
 	if e.is_action_released("inspect"): inspecting = false
 
@@ -144,8 +147,8 @@ func _physics_process(delta: float) -> void:
 	if want_run and stamina > 0.0:
 		running = true; stamina -= delta
 	else:
-		running = false; stamina = minf(STAMINA_MAX, stamina + delta * (0.6 if want_run else 1.0))
-	var speed := CROUCH if crouching else (RUN if running else WALK)
+		running = false; stamina = minf(stamina_max(), stamina + delta * (0.6 if want_run else 1.0))
+	var speed := CROUCH * Game.stat("crouch_speed") if crouching else (RUN if running else WALK)
 	var dir := (Basis(Vector3.UP, _yaw) * Vector3(input.x, 0, input.y))
 	var hv := Vector3(velocity.x, 0, velocity.z)
 	hv = hv.lerp(dir * speed, 1.0 - exp(-(10.0 if dir.length() > 0.1 else 14.0) * delta))
@@ -187,7 +190,7 @@ func _physics_process(delta: float) -> void:
 			var loud := 0.06 if crouching else (0.55 if running else 0.18)
 			Sfx.play("step_" + _surface(), -20.0 if crouching else (-8.0 if running else -14.0), randf_range(0.9, 1.1))
 			if _surface() == "wood" and randf() < 0.12: Sfx.play("board_creak", -16.0, randf_range(0.8, 1.2))
-			Game.make_noise(global_position, loud * noise_mult)
+			Game.make_noise(global_position, loud * noise_mult * Game.stat("noise"))
 	var bob_amt := 0.0 if crouching else (0.035 if running else 0.018)
 	var bob := Vector3(cos(_bob * 0.5) * bob_amt * 0.6, absf(sin(_bob * 0.5)) * bob_amt, 0) * clampf(sp / 2.0, 0.0, 1.0)
 	var sh := Vector3.ZERO
@@ -197,7 +200,7 @@ func _physics_process(delta: float) -> void:
 	head.position = Vector3(0, _head_h, 0) + bob + sh
 	# an old man who's been running: you hear it
 	_pant = clampf(_pant + (delta * 0.5 if running else -delta * 0.15), 0.0, 1.0)
-	if stamina < STAMINA_MAX * 0.4 and running: _pant = maxf(_pant, 0.6)
+	if stamina < stamina_max() * 0.4 and running: _pant = maxf(_pant, 0.6)
 	Sfx.set_loop_volume("pant", linear_to_db(maxf(0.0001, _pant * 0.5)))
 	_torch_update(delta)
 	# what's in reach
@@ -256,7 +259,14 @@ static func find_interactable(n: Node) -> Node:
 	return null
 
 func prompt() -> String:
-	if held: return "Throw · Drop" if not inspecting else "Turn it over"
+	if held:
+		if inspecting: return "Turn it over"
+		if Skills.has("m_observe"):
+			var pr := Weapons.profile(held)
+			var lbl: String = String(held.get("label")) if held.get("label") != null else "it"
+			return "%s (%s · %d dmg · %d%%) · Hit · Throw · Drop" % [lbl, pr["class"], int(pr.dmg * Game.stat("strength")), int(Weapons.durability_frac(held) * 100.0)]
+		var d := Weapons.durability_frac(held)
+		return "%s · Hit · Throw · Drop" % [String(held.get("label")) if held.get("label") != null else "it"] if d >= 0.999 else "%s (%d%%) · Hit · Throw · Drop" % [String(held.get("label")), int(d * 100.0)]
 	return target.get_prompt() if target else ""
 
 func _interact() -> void:
@@ -278,6 +288,7 @@ func _pick(b: RigidBody3D) -> void:
 
 func _carry(delta: float) -> void:
 	if not is_instance_valid(held): held = null; return
+	if held.freeze: return          # mid-swing: the hands have it
 	var want := cam.global_position + (-cam.global_transform.basis.z) * (0.75 if not inspecting else 0.5) + Vector3(0, -0.1, 0)
 	var d := want - held.global_position
 	if d.length() > 1.6: _drop(); return
@@ -289,6 +300,11 @@ func _drop() -> void:
 	var b := held; held = null; inspecting = false
 	b.gravity_scale = 1.0; b.linear_damp = 0.1; b.angular_damp = 0.3
 	b.remove_collision_exception_with(self)
+
+## (for the hands: melee picks up what's left of a broken thing, throws, drops)
+func pick_up(b: RigidBody3D) -> void: _pick(b)
+func drop_held() -> void: _drop()
+func throw_held() -> void: if held: _throw()
 
 func _throw() -> void:
 	var b := held

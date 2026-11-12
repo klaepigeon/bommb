@@ -13,6 +13,10 @@ const DEFAULT := {
 	"crouch": ["crouch", 0.93, 0.85, 40.0, "DUCK"],
 	"run": ["sprint", 0.07, 0.42, 40.0, "RUN"],
 	"look_at": ["inspect", 0.8, 0.45, 36.0, "TURN"],
+	"throw": ["throw", 0.66, 0.6, 36.0, "THROW"],
+	"holster": ["holster", 0.93, 0.25, 32.0, "GUN"],
+	"skills": ["skills", 0.86, 0.07, 30.0, "SK"],
+	"power": ["power", 0.66, 0.8, 38.0, "PWR"],
 	"skip": ["skip", 0.5, 0.94, 30.0, "»"],
 	"pause": ["pause", 0.96, 0.07, 30.0, "II"],
 	"torch": ["torch", 0.07, 0.22, 34.0, "LIGHT"],
@@ -40,7 +44,11 @@ func _ready() -> void:
 
 func _visible_btn(name: String) -> bool:
 	match name:
-		"fire", "reload": return Game.pistol.have
+		"fire": return true
+		"reload": return Game.pistol.have and Game.pistol.get("drawn", true)
+		"throw": return player != null and player.held != null
+		"holster": return Game.pistol.have
+		"power": return Skills.has("s_tk") or Skills.has("s_telepathy")
 		"look_at": return player != null and player.held != null
 		"skip": return Dialogue.busy
 	return true
@@ -135,7 +143,9 @@ func _draw() -> void:
 		draw_circle(c, r, Color(0, 0, 0, a * (0.55 if down else 0.3)))
 		draw_arc(c, r, 0, TAU, 32, Color(1, 1, 1, a * (0.9 if editing else 0.6)), 2.0)
 		var fs := int(18 * s)
-		var tw := font.get_string_size(layout[k][4], HORIZONTAL_ALIGNMENT_CENTER, -1, fs).x
-		draw_string(font, c + Vector2(-tw * 0.5, fs * 0.35), layout[k][4], HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(1, 1, 1, a))
+		var label: String = layout[k][4]
+		if k == "fire" and (player == null or player.held or not (Game.pistol.have and Game.pistol.get("drawn", true))): label = "HIT"
+		var tw := font.get_string_size(label, HORIZONTAL_ALIGNMENT_CENTER, -1, fs).x
+		draw_string(font, c + Vector2(-tw * 0.5, fs * 0.35), label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(1, 1, 1, a))
 	if editing:
 		draw_string(font, Vector2(size.x * 0.5 - 220, 60), "Drag buttons to move them. Tap PAUSE when done.", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color.WHITE)

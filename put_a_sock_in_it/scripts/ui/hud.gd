@@ -10,6 +10,7 @@ var _objective: Label
 var _ammo: Label
 var _dot: ColorRect
 var _obj_t := 0.0
+var _strain: ProgressBar
 
 func _ready() -> void:
 	layer = 20
@@ -49,6 +50,22 @@ func hint(t: String, secs := 6.0) -> void:
 	add_child(l)
 	var tw := create_tween(); tw.tween_interval(secs); tw.tween_property(l, "modulate:a", 0.0, 1.5); tw.tween_callback(l.queue_free)
 
+## Observant: a mark at the edge of the screen, toward where she made a sound.
+func ping(world_pos: Vector3) -> void:
+	if not player: return
+	var cam := player.cam
+	var local := cam.global_transform.affine_inverse() * world_pos
+	var dir := Vector2(local.x, -local.y if local.z < 0.0 else local.y).normalized()
+	if local.z > 0.0 and absf(local.x) < 0.01: dir = Vector2(0, 1)
+	var vp := get_viewport().get_visible_rect().size
+	var c := vp * 0.5
+	var r := minf(vp.x, vp.y) * 0.42
+	var mark := Label.new(); mark.text = "◆"
+	mark.add_theme_font_size_override("font_size", 26); mark.add_theme_color_override("font_color", Color(0.9, 0.85, 0.7, 0.9))
+	mark.position = c + dir * r - Vector2(10, 16); mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(mark)
+	var tw := create_tween(); tw.tween_property(mark, "modulate:a", 0.0, 1.4); tw.tween_callback(mark.queue_free)
+
 func set_objective(t: String) -> void:
 	_objective.text = t
 	_obj_t = 9.0
@@ -61,9 +78,26 @@ func _process(delta: float) -> void:
 	var touch := Game.uses_touch()
 	if p != "" and not touch: _prompt.text = "[E]  " + p
 	_dot.visible = player.controls
+	if not _strain:
+		_strain = ProgressBar.new(); _strain.show_percentage = false; _strain.max_value = 1.0
+		_strain.custom_minimum_size = Vector2(160, 8); _strain.position = Vector2(28, 64); _strain.size = Vector2(160, 8)
+		_strain.modulate = Color(0.6, 0.85, 1.0, 0.8); _strain.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(_strain)
+	_strain.value = Game.strain
+	_strain.visible = Game.strain > 0.01
 	_obj_t -= delta
 	_objective.modulate.a = clampf(_obj_t, 0.25, 1.0)
-	if Game.pistol.have:
+	if player.held:
+		var d := Weapons.durability(player.held)
+		var cls: String = Weapons.profile(player.held)["class"]
+		if d >= 0:
+			var full: int = int(Weapons.CLASSES[cls].dur)
+			var pips := mini(full, 10)
+			var lit := int(ceil(float(d) / float(full) * pips))
+			_ammo.text = "▮".repeat(lit) + "▯".repeat(pips - lit)
+		else:
+			_ammo.text = ""
+	elif Game.pistol.have and Game.pistol.get("drawn", true):
 		_ammo.text = "%d  |  %d" % [Game.pistol.mag, Game.count("ammo")]
 	else:
 		_ammo.text = ""

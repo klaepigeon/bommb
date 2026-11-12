@@ -1,0 +1,62 @@
+{
+ "_example_choices": [
+  {
+   "who": "socko",
+   "text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder"
+  },
+  {
+   "choices": [
+    {
+     "text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder",
+     "steps": [
+      {
+       "who": "kurt",
+       "text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder"
+      },
+      {
+       "who": "socko",
+       "text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder"
+      }
+     ]
+    },
+    {
+     "tag": "memory",
+     "if": "memories >= 1",
+     "locked": true,
+     "text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder",
+     "steps": [
+      {
+       "who": "kurt",
+       "text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder"
+      },
+      {
+       "who": "socko",
+       "text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder"
+      }
+     ]
+    },
+    {
+     "tag": "telepathy",
+     "if": "skills.has('s_telepathy')",
+     "locked": true,
+     "text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder",
+     "steps": [
+      {
+       "who": "kurt",
+       "text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder",
+       "tone": "quiet"
+      }
+     ]
+    },
+    {
+     "text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder",
+     "steps": []
+    }
+   ]
+  },
+  {
+   "who": "socko",
+   "text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder"
+  }
+ ]
+}

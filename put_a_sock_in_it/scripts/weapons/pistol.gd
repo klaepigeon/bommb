@@ -51,11 +51,11 @@ func attach(p: Player) -> void:
 	p.hand_mount.add_child(self)
 
 func ready_to_fire() -> bool:
-	return Game.pistol.have and player and player.controls and not player.held and _reload_t <= 0.0 and _inspect < 0.5
+	return Game.pistol.have and Game.pistol.get("drawn", true) and player and player.controls and not player.held and _reload_t <= 0.0 and _inspect < 0.5
 
 func _unhandled_input(e: InputEvent) -> void:
 	if not player or not player.controls or not Game.pistol.have: return
-	if e.is_action_pressed("fire") and not player.held: fire()
+	if e.is_action_pressed("fire") and not player.held and Game.pistol.get("drawn", true): fire()
 	if e.is_action_pressed("reload"): reload()
 
 func fire() -> void:
@@ -118,7 +118,7 @@ func _process(delta: float) -> void:
 	_reload_t = maxf(0.0, _reload_t - delta)
 	var want_inspect := player.controls and Input.is_action_pressed("inspect") and not player.held
 	_inspect = move_toward(_inspect, 1.0 if want_inspect else 0.0, delta * 3.0)
-	var lowered := (not player.controls) or player.held != null or player.running
+	var lowered: bool = (not player.controls) or player.held != null or player.running or not Game.pistol.get("drawn", true)
 	_raise = move_toward(_raise, 0.0 if lowered else 1.0, delta * 4.0)
 	# ready: low right, pointing where Kurt looks; the kick snaps it up and back
 	var rest := Vector3(0.17, -0.17, -0.34).lerp(Vector3(0.22, -0.45, -0.25), 1.0 - _raise)

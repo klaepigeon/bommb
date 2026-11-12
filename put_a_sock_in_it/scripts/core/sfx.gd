@@ -430,6 +430,12 @@ func _define() -> void:
 				var saw := (1.0 - 2.0 * fposmod(a, 1.0)) * 0.6 + (1.0 - 2.0 * fposmod(b, 1.0)) * 0.5
 				d[i] = (saw + _nz() * 0.7 + sin(w * TAU) * 0.15) * minf(1.0, t * 12.0) * minf(1.0, (1.6 - t) * 2.5)
 			bp(d, 1300.0, 0.6); norm(d, 0.95)],
+		# something swung through the air: a short rush of noise, rising then falling
+		"whoosh": [0.32, func(d):
+			for i in d.size():
+				var t := float(i) / RATE
+				d[i] = _nz() * sin(PI * clampf(t / 0.3, 0.0, 1.0)) * (0.5 + 0.5 * sin(t * 30.0))
+			bp(d, 900.0, 0.8); norm(d, 0.7)],
 		# a joint going: dry, sharp, a crunch after
 		"bone_crack": [0.25, func(d):
 			for i in d.size():

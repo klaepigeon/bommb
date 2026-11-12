@@ -36,7 +36,7 @@ func _ready() -> void:
 	_button("Restart from checkpoint", func(): close(); Game.restart_level())
 	_button("Quit to title", func(): close(); Game.to_title())
 	var help := Label.new()
-	help.text = "Keyboard: WASD move · mouse look · E use · Shift run · C crouch · F torch · LMB fire / throw · RMB or Q turn over · R reload · Space hurry dialogue · Esc pause\nGamepad: sticks · A use · B crouch · X reload · Y hurry · RB torch · RT fire / throw · LT turn over · L3 run · Start pause"
+	help.text = "Keyboard: WASD move · mouse look · E use / drop · Shift run · C crouch · F torch · LMB hit / fire (hold: heavy) · G or MMB throw · H holster · T power · Tab skills · RMB or Q turn over · R reload · Space hurry dialogue · 1-4 choose · Esc pause\nGamepad: sticks · A use · B crouch · X reload · Y hurry · RB torch · RT hit / fire · LB throw · D-pad up holster · D-pad down power · Back skills · LT turn over · L3 run · Start pause"
 	help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	help.add_theme_font_size_override("font_size", 16); help.add_theme_color_override("font_color", Color("9a917e"))
 	_box.add_child(help)

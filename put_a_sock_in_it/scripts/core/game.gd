@@ -20,7 +20,11 @@ const SAVE_PATH := "user://save.json"
 const SETTINGS_PATH := "user://settings.json"
 
 var flags := {}
-var memories := 0               # memory points invested (the memory tree is a later system)
+var memories := 0               # Memory nodes unlocked (the dialogue's memory branches test this)
+var skills := {}                # unlocked skill ids (Skills)
+var memory_points := 0          # to spend in the Memory tree
+var skill_points := 0           # to spend in the Infection tree
+var strain := 0.0               # 0..1: what the powers have taken out of him (refills)
 var inventory := {}             # item id -> count
 var pistol := {"have": false, "mag": 0}
 var level_id := ""
@@ -43,6 +47,12 @@ func _ready() -> void:
 	_setup_input()
 	apply_wobble.call_deferred()     # the title scene, once it's in
 
+## Kurt's numbers, as the skill trees have changed them (1.0: as he is). Read by melee and the
+## rest; the trees set `stats`.
+var stats := {}
+func stat(k: String) -> float:
+	return float(stats.get(k, 1.0))
+
 func make_noise(pos: Vector3, loudness: float) -> void:
 	noise.emit(pos, loudness)
 
@@ -51,9 +61,10 @@ func _setup_input() -> void:
 	var keys := {
 		"move_forward": [KEY_W, KEY_UP], "move_back": [KEY_S, KEY_DOWN], "move_left": [KEY_A, KEY_LEFT], "move_right": [KEY_D, KEY_RIGHT],
 		"sprint": [KEY_SHIFT], "crouch": [KEY_C, KEY_CTRL], "interact": [KEY_E], "reload": [KEY_R],
-		"skip": [KEY_SPACE], "pause": [KEY_ESCAPE, KEY_P], "inspect": [KEY_Q], "torch": [KEY_F], "fire": [], "look_left": [], "look_right": [], "look_up": [], "look_down": []}
+		"skip": [KEY_SPACE], "pause": [KEY_ESCAPE, KEY_P], "inspect": [KEY_Q], "torch": [KEY_F], "fire": [], "throw": [KEY_G], "holster": [KEY_H], "skills": [KEY_TAB, KEY_K], "power": [KEY_T], "look_left": [], "look_right": [], "look_up": [], "look_down": []}
 	var pad := {"interact": JOY_BUTTON_A, "crouch": JOY_BUTTON_B, "reload": JOY_BUTTON_X, "skip": JOY_BUTTON_Y,
-		"pause": JOY_BUTTON_START, "sprint": JOY_BUTTON_LEFT_STICK, "torch": JOY_BUTTON_RIGHT_SHOULDER}
+		"pause": JOY_BUTTON_START, "sprint": JOY_BUTTON_LEFT_STICK, "torch": JOY_BUTTON_RIGHT_SHOULDER,
+		"throw": JOY_BUTTON_LEFT_SHOULDER, "holster": JOY_BUTTON_DPAD_UP, "skills": JOY_BUTTON_BACK, "power": JOY_BUTTON_DPAD_DOWN}
 	var axes := {"move_forward": [JOY_AXIS_LEFT_Y, -1.0], "move_back": [JOY_AXIS_LEFT_Y, 1.0], "move_left": [JOY_AXIS_LEFT_X, -1.0],
 		"move_right": [JOY_AXIS_LEFT_X, 1.0], "look_up": [JOY_AXIS_RIGHT_Y, -1.0], "look_down": [JOY_AXIS_RIGHT_Y, 1.0],
 		"look_left": [JOY_AXIS_RIGHT_X, -1.0], "look_right": [JOY_AXIS_RIGHT_X, 1.0], "fire": [JOY_AXIS_TRIGGER_RIGHT, 1.0], "inspect": [JOY_AXIS_TRIGGER_LEFT, 1.0]}
@@ -67,6 +78,7 @@ func _setup_input() -> void:
 			var ja := InputEventJoypadMotion.new(); ja.axis = axes[a][0]; ja.axis_value = axes[a][1]; InputMap.action_add_event(a, ja)
 	var lmb := InputEventMouseButton.new(); lmb.button_index = MOUSE_BUTTON_LEFT; InputMap.action_add_event("fire", lmb)
 	var rmb := InputEventMouseButton.new(); rmb.button_index = MOUSE_BUTTON_RIGHT; InputMap.action_add_event("inspect", rmb)
+	var mmb := InputEventMouseButton.new(); mmb.button_index = MOUSE_BUTTON_MIDDLE; InputMap.action_add_event("throw", mmb)
 
 # ------------------------------------------------------------------ flags and inventory
 func flag(k: String) -> bool:
@@ -94,7 +106,9 @@ func uses_touch() -> bool:
 
 # ------------------------------------------------------------------ new game, continue, save
 func new_game() -> void:
-	flags = {}; memories = 0; inventory = {}; pistol = {"have": false, "mag": 0}
+	flags = {}; memories = 0; inventory = {}; pistol = {"have": false, "mag": 0, "drawn": true}
+	skills = {}; memory_points = 0; skill_points = 0; strain = 0.0
+	Skills.apply()
 	change_level("flat47", {"fade": 1.5, "card": false})
 
 func has_save() -> bool:
@@ -112,11 +126,16 @@ func continue_game() -> void:
 
 func _snapshot() -> Dictionary:
 	return {"level": level_id, "flags": flags.duplicate(true), "memories": memories,
+		"skills": skills.keys(), "memory_points": memory_points, "skill_points": skill_points,
 		"inventory": inventory.duplicate(true), "pistol": pistol.duplicate(true)}
 
 func _restore(d: Dictionary) -> void:
 	flags = d.get("flags", {}).duplicate(true)
 	memories = int(d.get("memories", 0))
+	skills = {}
+	for k in d.get("skills", []): skills[String(k)] = true
+	memory_points = int(d.get("memory_points", 0)); skill_points = int(d.get("skill_points", 0))
+	Skills.apply()
 	inventory = {}
 	for k in d.get("inventory", {}): inventory[k] = int(d.inventory[k])
 	var p: Dictionary = d.get("pistol", {})

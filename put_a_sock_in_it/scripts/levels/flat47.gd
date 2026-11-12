@@ -72,6 +72,9 @@ func build() -> void:
 	_lights()
 	_atmosphere()
 	_sonya_note()
+	# things of hers and Sonya's that bring something back to him (a memory point each, once)
+	for k in ["pick_123_Photo_album", "pick_144_Drawing", "prop_0_Wedding_photograph"]:
+		if flat.props.has(k): (flat.props[k] as Node).set_meta("memory_item", k)
 	player.position = Vector3(11.9, 0, 4.56)
 	player.set_view(PI * 0.5, -0.04)
 	socko.points = {"chair": MARTA_POS + Vector3(0, 0.7, 0), "door": FRONT + Vector3(0, 1.2, 0), "hole": HOLE + Vector3(0, 0.8, 0), "gun": gun_drawer, "wardrobe": wardrobe}
@@ -254,6 +257,7 @@ func _sonya_note() -> void:
 	Hotspot.make(world, at + Vector3(0, 0.05, 0), Vector3(0.3, 0.12, 0.26), "Read the note", _read_sonya_note)
 
 func _read_sonya_note() -> void:
+	if not Game.flag("read_pembis"): Skills.award("memory", 1, "a child's story")
 	Game.flags["read_pembis"] = true
 	var r := NoteReader.open(self, SONYA_NOTE, {"ink": Color("4b3f78"), "font_size": 30, "tilt": 2.0})
 	await r.closed
@@ -611,6 +615,7 @@ func _wake() -> void:
 	set_cutscene(false)
 	random_talk = true
 	objective("Get out of the flat.")
+	if not Game.flag("award_woke"): Game.set_flag("award_woke"); Skills.award("infection", 1, "something in you")
 
 func _on_front_door_tried(_d) -> void:
 	if not _woke or Game.flag("door_tried"): return

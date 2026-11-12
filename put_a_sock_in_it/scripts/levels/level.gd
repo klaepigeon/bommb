@@ -8,6 +8,10 @@ extends Node3D
 var player: Player
 var socko: Socko
 var pistol: Pistol
+var hands: Hands
+var skills_menu: SkillsMenu
+var powers: Powers
+var body: KurtBody
 var hud: Hud
 var touch: TouchControls
 var pause: PauseMenu
@@ -33,6 +37,10 @@ func _ready() -> void:
 	player = Player.new(); player.name = "Kurt"; add_child(player)
 	socko = Socko.new(); add_child(socko); socko.attach(player)
 	pistol = Pistol.new(); pistol.attach(player)
+	hands = Hands.new(); hands.attach(player)
+	body = KurtBody.new(); body.attach(player)
+	skills_menu = SkillsMenu.new(); add_child(skills_menu)
+	powers = Powers.new(); powers.attach(player, self)
 	hud = Hud.new(); hud.player = player; add_child(hud)
 	var tl := CanvasLayer.new(); tl.layer = 30; add_child(tl)
 	touch = TouchControls.new(); touch.player = player; tl.add_child(touch)
@@ -72,15 +80,16 @@ func objective(t: String) -> void:
 
 func _process(delta: float) -> void:
 	touch.visible = Game.uses_touch() and not cutscene
-	if not Game.uses_touch() and not pause.visible and not Game.busy:
+	if not Game.uses_touch() and not pause.visible and not Game.busy and not Dialogue.choosing() and not (skills_menu and skills_menu.visible):
 		if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and DisplayServer.window_is_focused():
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	if Input.is_action_just_pressed("skip"): Dialogue.skip_line()
+	if Input.is_action_just_pressed("skills") and not cutscene and not pause.visible and not skills_menu.visible: skills_menu.open()
 	_tick_ambience(delta)
 	# idle conversations: after a long enough quiet stretch of free play, the next one not yet had
 	if random_talk and not cutscene and not Dialogue.busy and socko.visible:
 		_quiet_t += delta
-		if _quiet_t > 75.0:
+		if _quiet_t > 75.0 / Game.stat("talk_rate"):
 			_quiet_t = 0.0
 			for id in RANDOM:
 				if not Game.flag("talked_" + id):

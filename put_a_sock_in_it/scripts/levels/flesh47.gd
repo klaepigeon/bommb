@@ -26,6 +26,7 @@ var marta_head: Node3D
 var exit_door: ExportDoor
 var _encountered := false
 var _seen_in_c := false
+var _ping_t := 0.0
 var _ending := false
 var _near := 0.0
 var _tearing := false
@@ -59,6 +60,7 @@ func build() -> void:
 	_tear_zone("B", Vector3(2.3, 1.0, -1.0), Vector3(2.4, 2.0, 1.0), "C")
 	_arrival_hole()
 	_ammo()
+	_breach_walls()
 	_marta()
 	_landing_48()
 	Sfx.set_room(0.85, 0.38, 0.4)
@@ -130,6 +132,8 @@ func _tear(to: String) -> void:
 	await get_tree().create_timer(0.35).timeout
 	Game.fade(0.0, 0.6)
 	_tearing = false
+	if not Game.flag("tear_" + to):
+		Game.set_flag("tear_" + to); Skills.award("infection", 1, "the flesh")
 	if to == "B" and not Game.flag("flesh_B"):
 		Game.set_flag("flesh_B"); Game.flags["flesh_stage"] = "B"
 		Game.checkpoint()
@@ -173,6 +177,22 @@ func _arrival_hole() -> void:
 	Build.organic(flats.A, func(st): MeshKit.blob(st, Vector3(1.9, 0.0, 4.5), Vector3(0.8, 0.015, 0.6), {"bumps": 0.3, "freq": 3.0}), goo)
 	Build.lamp(flats.A, Vector3(1.82, 0.8, 4.6), Color("5a7aff"), 1.0, 3.0)
 
+## Breach: in B and C the bathroom doorway is walled up with cracked plaster; through it in B,
+## a box of rounds.
+func _breach_walls() -> void:
+	for k in ["B", "C"]:
+		var f: ExportedFlat = flats[k]
+		if f.doors.has("dBath"):
+			var d: Node3D = f.doors.dBath
+			d.visible = false
+			for c in d.find_children("*", "CollisionObject3D", true, false): (c as CollisionObject3D).collision_layer = 0
+		CrackedWall.make(f, Vector3(9.1, 1.04, 5.2), Vector3(0.72, 2.08, 0.1))
+	var a := Pickup.new(); a.item = "ammo"; a.amount = 4; a.label = "box of rounds"
+	flats.B.add_child(a); a.position = Vector3(9.3, 0.5, 7.4)
+	var mi := MeshInstance3D.new(); mi.mesh = Build.box_mesh(Vector3(0.14, 0.08, 0.1)); mi.material_override = Tex.mat("cardboard", 8.0, {"tint": Color(0.7, 0.8, 0.6)})
+	a.add_child(mi)
+	var cs := CollisionShape3D.new(); var sh := BoxShape3D.new(); sh.size = Vector3(0.3, 0.2, 0.3); cs.shape = sh; a.add_child(cs)
+
 func _ammo() -> void:
 	var a := Pickup.new(); a.item = "ammo"; a.amount = 6; a.label = "box of rounds"
 	flats.A.add_child(a); a.position = Vector3(8.3, 0.93, 0.35)
@@ -185,12 +205,14 @@ func _marta() -> void:
 	world.add_child(marta)
 	marta_head = Node3D.new(); marta.add_child(marta_head); marta_head.position.y = 1.7
 	marta.caught_player.connect(_on_caught)
+	marta.state_changed.connect(func(s): if s == "stunned" and not Game.flag("first_stun"): Game.set_flag("first_stun"); Skills.award("infection", 1, "you hurt her"))
 	marta.spotted_player.connect(_on_spotted)
 	_move_marta("B")
 
 func _move_marta(k: String) -> void:
 	var f: ExportedFlat = flats[k]
 	marta.evolve(2 if k == "C" else 1)       # she's further along every time he sees her
+	marta.revive()
 	if marta.get_parent() != f: marta.reparent(f, false)
 	marta.grid = f.nav_grid(CELL)
 	marta.cell = CELL; marta.origin = _p(k, Vector3(-0.5, 0, -2.0))
@@ -265,6 +287,12 @@ func _process(delta: float) -> void:
 	var here: bool = marta.get_parent() == flats[stage]
 	if not _encountered and here and not cutscene and (player_sees(marta_head.global_position, 9.0, 0.55) or marta.state == "chase"):
 		_encounter()
+	# Observant (the Memory tree): her sounds tell him where she is
+	if here and Skills.has("m_observe") and marta.state != "dead":
+		_ping_t -= delta
+		if _ping_t <= 0.0 and marta.global_position.distance_to(player.global_position) < 12.0 and not player_sees(marta_head.global_position, 12.0, 0.6):
+			_ping_t = 2.5
+			hud.ping(marta_head.global_position)
 	# the first sight of her in the last copy: bigger again
 	if _encountered and here and stage == "C" and not _seen_in_c and not cutscene and player_sees(marta_head.global_position, 10.0, 0.55):
 		_seen_in_c = true

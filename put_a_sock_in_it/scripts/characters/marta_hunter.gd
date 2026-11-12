@@ -14,6 +14,7 @@ extends CharacterBody3D
 signal caught_player
 signal spotted_player
 signal state_changed(s: String)
+signal died
 
 const SPEED := {"patrol": 1.0, "investigate": 1.7, "chase": 3.0, "search": 1.3, "stunned": 1.6}
 const SIGHT := 13.0
@@ -41,6 +42,12 @@ var _click_t := 1.0
 var _walk := 0.0
 var _twitch_t := 0.0
 var _stuck := 0.0
+## Melee doesn't hurt her the way it would hurt a person: it knocks her about. Each blow takes
+## poise; small blows make her flinch, and when her poise is gone she reels (the same stun a
+## bullet gives). It comes back quickly.
+const POISE_MAX := 40.0
+var poise := POISE_MAX
+var _shove := Vector3.ZERO
 
 func _ready() -> void:
 	collision_layer = 8; collision_mask = 1
@@ -142,7 +149,64 @@ func _on_noise(pos: Vector3, loud: float) -> void:
 		_click(true)
 
 ## The pistol: she reels, and backs away from him for a few seconds.
+func melee_hit(dmg: float, from: Vector3, knock: float, _by = null) -> void:
+	if state == "caught" or state == "dead": return
+	# Coup de Grace (the Infection tree): a heavy blow with an edge, while she's reeling, or from
+	# behind while she hasn't seen him
+	if _by is Hands and _by.heavy and Skills.has("s_reaper") and String(_by._prof.get("kind", "")) == "sharp":
+		var to_him: Vector3 = (from - global_position) * Vector3(1, 0, 1)
+		var behind: bool = to_him.normalized().dot(-global_basis.z) < -0.2
+		if state == "stunned" or (behind and state in ["patrol", "investigate", "search"]):
+			die(); return
+	var away := (global_position - from) * Vector3(1, 0, 1)
+	away = away.normalized() if away.length() > 0.01 else -global_basis.z
+	_shove += away * knock
+	Sfx.play_at("bone_crack", head(), -2.0, randf_range(0.8, 1.2))
+	poise -= dmg
+	suspicion = minf(2.0, suspicion + 0.1)
+	if poise <= 0.0:
+		poise = POISE_MAX
+		set_state("stunned")
+		Sfx.play_at("marta_scream", head(), 0.0, 1.2)
+		body.pose.chest = Vector3(0.4, 0, randf_range(-0.4, 0.4)); body.pose.head = Vector3(-0.8, 0, 0.4)
+		go_to(global_position + away * 3.0)
+	else:
+		# a flinch: the head snapped round, the chest knocked back
+		body.pose.head = Vector3(randf_range(-0.6, -0.2), randf_range(-0.8, 0.8), randf_range(-0.6, 0.6))
+		body.pose.chest = Vector3(0.25, 0, randf_range(-0.3, 0.3))
+		if state in ["patrol", "investigate", "search", "encounter"]:
+			_last_seen = player.global_position if player else from
+			set_state("chase"); go_to(_last_seen)
+
+## Down, for good (in this copy of the flat: what she is reforms ahead of him).
+func die() -> void:
+	set_state("dead")
+	active = false
+	collision_layer = 0
+	velocity = Vector3.ZERO
+	Sfx.play_at("marta_scream", head(), 2.0, 0.6)
+	for i in 4: get_tree().create_timer(0.15 * i).timeout.connect(func(): Sfx.play_at("bone_crack", head(), 0.0, randf_range(0.6, 0.9)))
+	body.snap = 6.0
+	body.pose.spine = Vector3(-0.9, 0, 0.3); body.pose.neck = Vector3(-0.6, 0, 0.4); body.pose.head = Vector3(-0.5, 0.4, 0.9)
+	body.pose.kn_l = Vector3(-1.6, 0, 0); body.pose.kn_r = Vector3(-1.4, 0, 0); body.pose.hip_l = Vector3(1.2, 0, 0.2); body.pose.hip_r = Vector3(1.0, 0, -0.2)
+	body.pose.sh_l = Vector3(-0.6, 0, 0.9); body.pose.sh_r = Vector3(-0.5, 0, -0.9); body.pose.jaw = Vector3(1.4, 0, 0)
+	var tw := create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_property(body, "position:y", -0.55, 1.1).set_delay(0.4)
+	tw.parallel().tween_property(body, "rotation:x", -0.5, 1.1).set_delay(0.4)
+	died.emit()
+
+## Back (she's re-formed ahead of him, in the next copy).
+func revive() -> void:
+	if state != "dead": return
+	collision_layer = 8
+	body.position = Vector3.ZERO; body.rotation = Vector3.ZERO
+	for k in body.pose: body.pose[k] = Vector3.ZERO
+	poise = POISE_MAX
+	active = true
+	set_state("patrol")
+
 func shot(point: Vector3, dir: Vector3) -> void:
+	if state == "dead": return
 	Sfx.play_at("bullet_flesh", point, 2.0)
 	Sfx.play_at("click", head(), 4.0, 0.5)
 	if state == "caught": return
@@ -156,6 +220,10 @@ func shot(point: Vector3, dir: Vector3) -> void:
 # ------------------------------------------------------------------ think and move
 func _physics_process(delta: float) -> void:
 	if not active or not player or not grid: return
+	poise = minf(POISE_MAX, poise + 6.0 * delta)
+	if _shove.length() > 0.05:
+		move_and_collide(_shove * delta)
+		_shove = _shove.lerp(Vector3.ZERO, 1.0 - exp(-7.0 * delta))
 	_state_t += delta
 	var sees := can_see_player()
 	match state:
