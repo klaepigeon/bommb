@@ -87,5 +87,85 @@
     "look": "marta"
    }
   }
+ ],
+ "enter_maze": [
+  {
+   "pause": 0.5,
+   "who": "kurt",
+   "text": "Ugh, gross."
+  },
+  {
+   "who": "socko",
+   "text": "Why, Kurt, I am taken aback! I am hurt!",
+   "socko": {
+    "emotion": "disappointed",
+    "gesture": "recoil",
+    "look": "kurt"
+   }
+  },
+  {
+   "who": "kurt",
+   "text": "Uh, what?"
+  },
+  {
+   "who": "socko",
+   "text": "What's your issue with blue? I happen to think this place is quite lovely.",
+   "socko": {
+    "emotion": "happy",
+    "look": "ahead"
+   }
+  },
+  {
+   "if": "memories >= 1",
+   "who": "kurt",
+   "text": "Socko, it's not that it's blue- blue is my favourite colour."
+  },
+  {
+   "if": "memories >= 1",
+   "who": "socko",
+   "text": "Really? Mine too! Then why do you think this place is icky?",
+   "socko": {
+    "emotion": "excited",
+    "gesture": "bounce",
+    "look": "kurt"
+   }
+  },
+  {
+   "if": "memories >= 1",
+   "who": "kurt",
+   "text": "Because it's-",
+   "hold": -0.8
+  },
+  {
+   "if": "memories >= 1",
+   "who": "socko",
+   "text": "All gooey?",
+   "socko": {
+    "emotion": "curious",
+    "gesture": "tilt",
+    "look": "kurt"
+   }
+  },
+  {
+   "if": "memories >= 1",
+   "who": "kurt",
+   "text": "Yeah, all gooey"
+  },
+  {
+   "if": "memories == 0",
+   "pause": 0.4,
+   "who": "kurt",
+   "text": "Wow, you've really opened my eyes, this place ain't so bad. Thanks, bud."
+  },
+  {
+   "if": "memories == 0",
+   "who": "socko",
+   "text": "Wow, I'm really helpful today.",
+   "socko": {
+    "emotion": "happy",
+    "gesture": "bounce",
+    "look": "kurt"
+   }
+  }
  ]
 }

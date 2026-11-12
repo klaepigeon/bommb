@@ -234,6 +234,7 @@ func begin() -> void:
 	random_talk = true
 	set_cutscene(false)
 	objective("Find the way out.")
+	if at == "A": Dialogue.play("enter_maze")
 	if not Game.flag("torch_hint"):
 		Game.set_flag("torch_hint")
 		hud.hint("LIGHT / F: torch. She'll see it too." if Game.uses_touch() else "F: torch. She'll see it too.")

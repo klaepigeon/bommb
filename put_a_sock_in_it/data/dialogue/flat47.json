@@ -260,12 +260,58 @@
  "pembis_socko": [
   {
    "pause": 0.3,
+   "who": "kurt",
+   "text": "(chuckles)",
+   "tone": "quiet"
+  },
+  {
+   "pause": 0.4,
    "who": "socko",
-   "text": "This is the absolute height of literature!",
+   "text": "This... this is the greatest story I've ever read in my whole life.",
+   "socko": {
+    "emotion": "excited",
+    "look": "kurt"
+   }
+  },
+  {
+   "who": "kurt",
+   "text": "How long have you been alive, Socko?"
+  },
+  {
+   "who": "socko",
+   "text": "I have existed since before the beginning of time, my dear Kurt.",
+   "socko": {
+    "emotion": "happy",
+    "gesture": "nod",
+    "look": "kurt"
+   }
+  },
+  {
+   "pause": 0.4,
+   "who": "kurt",
+   "text": "I somehow find that hard to believe."
+  },
+  {
+   "who": "socko",
+   "text": "No, no, it's true! I hung out with God (whose name is Todd by the way)... and Satan, and...",
    "socko": {
     "emotion": "excited",
     "gesture": "bounce",
     "look": "kurt"
+   }
+  },
+  {
+   "who": "kurt",
+   "text": "You can just say you don't know, man."
+  },
+  {
+   "pause": 0.8,
+   "who": "socko",
+   "text": "I have no idea how long I've been alive, Kurt.",
+   "tone": "quiet",
+   "socko": {
+    "emotion": "disappointed",
+    "look": "away"
    }
   }
  ],
