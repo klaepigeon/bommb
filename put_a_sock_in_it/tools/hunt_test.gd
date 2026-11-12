@@ -1,12 +1,12 @@
 extends SceneTree
-## Marta's hunting AI, checked in the flesh flat: hearing, investigating, sight (worse crouched),
+## Marta's hunting AI, checked in the maze: hearing, investigating, sight (worse crouched),
 ## the pistol's stun, losing him and searching, giving up and patrolling again.
 ##   xvfb-run godot --rendering-driver opengl3 --path . -s tools/hunt_test.gd
 var fails := 0
 func _initialize() -> void:
 	await process_frame
 	var game = root.get_node("Game")
-	game.flags["flesh_stage"] = "B"; game.flags["met_marta_maze"] = true
+	game.flags["maze_safe"] = 0; game.flags["met_marta_maze"] = true
 	game.change_level("flesh47", {"card": false, "checkpoint": true, "fade": 0.01})
 	await _wait(3.0)
 	var F = game.level
@@ -14,7 +14,7 @@ func _initialize() -> void:
 	var m = F.marta
 	_check(m.state == "patrol", "starts on patrol")
 	# park Kurt somewhere far away and out of sight: the start room
-	F.player.global_position = F._p("B", Vector3(8.5, 0, 6.8)); F.player.velocity = Vector3.ZERO
+	F.player.global_position = F.centre(F.maze.start); F.player.velocity = Vector3.ZERO
 	await _wait(0.5)
 	# a noise two cells from her: she goes to look
 	var near: Vector3 = m.global_position + Vector3(-2.0, 0, 0)
@@ -55,7 +55,7 @@ func _initialize() -> void:
 	m.set_state("chase")
 	m.shot(m.head(), Vector3(1, 0, 0))
 	_check(m.state == "stunned", "a bullet stuns her")
-	F.player.global_position = F._p("A", Vector3(8.5, 0, 6.8))     # well away: out of her copy
+	F.player.global_position = F.centre(F.maze.start)     # well away
 	await _wait(3.6)
 	_check(m.state in ["search", "chase"], "after the stun she hunts again (" + m.state + ")")
 	_check(m.suspicion > 0.0, "and she's more suspicious (%.2f)" % m.suspicion)

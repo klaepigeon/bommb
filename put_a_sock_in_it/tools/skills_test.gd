@@ -84,18 +84,19 @@ func _initialize() -> void:
 	L.skills_menu.close()
 	_check(not paused, "and closes")
 	# ---- the flesh flat: breach, shove, coup de grace
-	game.flags["flesh_stage"] = "B"; game.flags["met_marta_maze"] = true
+	game.flags["maze_safe"] = 0; game.flags["met_marta_maze"] = true
 	game.change_level("flesh47", {"card": false, "checkpoint": true, "fade": 0.01})
 	await _wait(3.0)
 	var F = game.level
 	game._black.visible = false; D.stop(); F.set_cutscene(false)
 	var FP = F.player
 	var wall = null
-	for c in F.flats.B.get_children():
+	for c in F.world.get_children():
 		if c.has_method("punched") and c.has_signal("breached"): wall = c     # (by duck type: naming the class here would compile it before the autoloads exist)
 	_check(wall != null, "a cracked wall in copy B")
-	F.marta.active = false; F.marta.global_position = F._p("B", Vector3(1.0, 0, 7.0))
-	await _face(F, FP, F._p("B", Vector3(9.1, 0, 4.6)), wall.global_position)
+	F.marta.active = false; F.marta.global_position = Vector3(-40, 0, -40)
+	var wn: Vector3 = wall.global_basis.z; wn.y = 0
+	await _face(F, FP, Vector3(wall.global_position.x, 0, wall.global_position.z) + wn.normalized() * 0.9, wall.global_position)
 	await _attack(F, 0.6)
 	_check(is_instance_valid(wall), "without Breach a heavy punch doesn't go through")
 	_check(S.unlock("s_breach"), "Breach")
@@ -106,26 +107,28 @@ func _initialize() -> void:
 	# shove
 	_check(S.unlock("s_sinew2") and S.unlock("s_shove"), "Sinew II, Telekinetic Shove")
 	var M = F.marta
-	M.global_position = F._p("B", Vector3(6.0, 0, 4.5)); M.set_state("patrol"); M.poise = M.POISE_MAX
-	await _face(F, FP, F._p("B", Vector3(8.4, 0, 4.5)), M.head())
+	var run: Array = F.straight(2)
+	var dir: Vector3 = (F.centre(run[1]) - F.centre(run[0])).normalized()
+	M.global_position = F.centre(run[0]); M.set_state("patrol"); M.poise = M.POISE_MAX
+	await _face(F, FP, F.centre(run[1]), M.head())
 	game.strain = 0.0
 	var p0: float = M.poise
 	_check(F.powers.use() == "shove" and M.poise < p0, "POWER at her shoves her (poise %.0f -> %.0f)" % [p0, M.poise])
 	# coup de grace: stunned, a heavy blow with a knife
 	_check(S.unlock("s_reaper"), "Coup de Grace")
-	M.global_position = F._p("B", Vector3(7.5, 0, 4.5))
-	await _face(F, FP, F._p("B", Vector3(8.4, 0, 4.5)), M.head() + Vector3(0, -0.4, 0))
+	M.global_position = F.centre(run[0])
+	await _face(F, FP, F.centre(run[0]) + dir * 0.9, M.head() + Vector3(0, -0.4, 0))
 	var knife = load("res://scripts/world/prop.gd").make(F.world, FP.global_position + Vector3(0, 1, 0), Vector3(0.03, 0.02, 0.25), load("res://scripts/core/tex.gd").mat("metal"), "Kitchen knife", 0.15, 0.3)
 	FP.pick_up(knife)
 	M.shot(M.head(), Vector3(1, 0, 0))
 	_check(M.state == "stunned", "shot, she reels")
-	M.global_position = F._p("B", Vector3(7.6, 0, 4.5)); M._path = PackedVector3Array()
+	M.global_position = F.centre(run[0]); M._path = PackedVector3Array()
 	FP.stamina = FP.stamina_max()
 	await _attack(F, 0.6)
 	_check(M.state == "dead", "a heavy knife blow while she reels kills her (%s)" % M.state)
 	root.get_viewport().get_texture().get_image().save_png(out.path_join("coup.png"))
-	F._move_marta("C")
-	_check(M.state == "patrol" and M.active and M.evolution == 2, "in the next copy she's back, further along")
+	F._enter_safe(1)
+	_check(M.state == "patrol" and M.active and M.evolution == 2, "at the next safe room she's back, further along")
 	print("SKILLS_TEST fails=%d" % fails)
 	quit()
 

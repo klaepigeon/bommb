@@ -92,53 +92,40 @@ func _initialize() -> void:
 	var F = game.level
 	await _until(func(): return F.player.controls, 30.0, "arrival cutscene ends")
 	await _shot("13_flesh_arrive")
-	_check(F.stage == "A", "arrives in copy A")
-	# through A's open front door: the tear into B
-	_tp(F, F._p("A", Vector3(9.9, 0, 4.15)), F._p("A", Vector3(11.0, 1.2, 4.15)))
-	await _wait(0.2)
-	F.player.global_position = F._p("A", Vector3(10.55, 0, 4.15))
-	await _until(func(): return F.stage == "B", 6.0, "the front door tears through into B")
-	await _wait(1.2)
-	await _shot("14_copy_b")
-	# meet her: stand where she can be seen
-	var mp: Vector3 = F.marta.global_position
-	var spot := mp; var best := -1.0
-	var mc: Vector2i = F.marta.to_cell(mp)
-	for dx in range(-14, 15, 2):
-		for dy in range(-14, 15, 2):
-			var c := mc + Vector2i(dx, dy)
-			if not F.marta.grid.is_in_boundsv(c) or F.marta.grid.is_point_solid(c): continue
-			var p: Vector3 = F.marta.cell_center(c)
-			var d := p.distance_to(mp)
-			if d < 2.5 or d > 6.0: continue
-			var q := PhysicsRayQueryParameters3D.create(p + Vector3(0, 1.6, 0), mp + Vector3(0, 1.6, 0), 1)
-			if F.get_world_3d().direct_space_state.intersect_ray(q).is_empty() and d > best: best = d; spot = p
-	_check(best > 0.0, "found a spot in sight of her")
-	_tp(F, spot, mp + Vector3(0, 1.6, 0))
+	_check(F.cell_of(F.player.global_position) == F.maze.start, "comes out of the hole at the start of the maze")
+	# the first safe room: a checkpoint, a point
+	var pts0: int = game.skill_points
+	var s0: Vector2i = F.maze.safe[0]
+	_tp(F, F.centre(s0), F.centre(s0, 1.2) + Vector3(1, 0, 0))
+	await _until(func(): return int(game.flags.get("maze_safe", -1)) == 0, 6.0, "the first safe room is a checkpoint")
+	_check(game.skill_points > pts0, "and the infection grows (a skill point)")
+	await _shot("14_safe_room")
+	# meet her: down a straight run of cells, her at one end
+	var run: Array = F.straight(3)
+	_check(run.size() == 3, "a straight run to meet her in")
+	F.marta.global_position = F.centre(run[0]); F.marta._path = PackedVector3Array()
+	_tp(F, F.centre(run[2]), F.centre(run[0], 1.6))
 	await _until(func(): return F._encountered, 6.0, "the encounter triggers")
 	await _until(func(): return dlg.speaking == "socko", 15.0, "'What?'")
-	await _shot("15_marta_b")
+	await _shot("15_marta_maze")
 	await _until(func(): return F.marta.state == "chase", 25.0, "she hunts after the encounter")
 	await _until(func(): return game.level != F or F.cutscene, 40.0, "she catches him (standing still)")
 	await _until(func(): return game.level != F and game.level != null and game.level_id == "flesh47", 20.0, "caught: back to checkpoint")
 	var F2 = game.level
 	await _until(func(): return F2.player.controls, 15.0, "control after restart")
-	_check(F2.stage == "B", "restarts in B (%s)" % F2.stage)
+	_check(F2.cell_of(F2.player.global_position) == F2.maze.safe[0], "restarts in the last safe room reached")
 	_check(game.pistol.have, "pistol kept through the restart")
-	# B's balcony: the tear into C
+	# a safe room she can't follow into
+	F2.marta.global_position = F2.centre(F2.maze.neighbours(F2.maze.safe[0])[0]); F2.marta.set_state("chase")
+	await _wait(1.0)
+	_check(F2.marta.state != "chase" or not F2.marta.can_see_player(), "she can't see him or follow him into the safe room")
+	# to 48's door
 	F2.marta.active = false
-	F2.player.global_position = F2._p("B", Vector3(2.3, 0, -1.0))
-	await _until(func(): return F2.stage == "C", 6.0, "the balcony tears through into C")
-	await _wait(1.2)
-	await _shot("16_copy_c")
-	F2.marta.active = false
-	_tp(F2, F2._p("C", Vector3(9.5, 0, 4.15)), F2._p("C", Vector3(10.06, 1.2, 4.15)))
-	F2.exit_door.interact(F2.player)
-	await _wait(1.5)
-	_check(F2.exit_door.is_open, "the real front door opens")
-	_tp(F2, F2._p("C", Vector3(12.0, 0, 5.5)), F2._p("C", Vector3(12.55, 1.4, 8.5)))
-	await _wait(2.0)
-	await _shot("17_landing_48")
+	var ex: Vector2i = F2.maze.exit
+	_tp(F2, F2.centre(ex), Vector3(F2.maze.w * F2.CELL + 1.5, 1.2, F2.centre(ex).z))
+	await _wait(1.0)
+	await _shot("16_exit_48")
+	F2.player.global_position = Vector3(F2.maze.w * F2.CELL + 0.6, 0, F2.centre(ex).z)
 	await _until(func(): return current_scene != null and current_scene.name == "Title", 40.0, "finale returns to title")
 	print("PLAYTHROUGH fails=%d shots=%d" % [fails, shots])
 	quit()

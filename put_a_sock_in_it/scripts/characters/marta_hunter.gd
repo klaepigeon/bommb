@@ -30,6 +30,8 @@ var state := "patrol"
 var awareness := 0.0            # 0..1: how sure she is she's seen him
 var suspicion := 0.0            # rises each time she loses him: she searches longer, hears further
 var active := true
+## Places she won't go and can't see into (the maze's safe rooms): a Callable(point) -> bool.
+var refuge: Callable
 
 var _path: PackedVector3Array = []
 var _pi := 0
@@ -123,8 +125,12 @@ func set_state(s: String) -> void:
 func head() -> Vector3:
 	return global_position + Vector3(0, 1.7, 0)
 
+func in_refuge(p: Vector3) -> bool:
+	return refuge.is_valid() and bool(refuge.call(p))
+
 func can_see_player() -> bool:
 	if not player: return false
+	if in_refuge(player.global_position): return false
 	var eye := head()
 	var target := player.cam.global_position
 	var d := target - eye
@@ -139,6 +145,7 @@ func can_see_player() -> bool:
 
 func _on_noise(pos: Vector3, loud: float) -> void:
 	if not active or state in ["chase", "encounter", "caught", "stunned"]: return
+	if in_refuge(pos): return
 	var dist := pos.distance_to(global_position)
 	var q := PhysicsRayQueryParameters3D.create(head(), pos + Vector3(0, 0.5, 0), 1, [get_rid()])
 	var through_walls := not get_world_3d().direct_space_state.intersect_ray(q).is_empty()
@@ -256,7 +263,10 @@ func _physics_process(delta: float) -> void:
 			elif _state_t > 0.6:
 				set_state("search"); go_to(_last_seen); suspicion = minf(2.0, suspicion + 0.25)
 			_follow(delta, SPEED.chase)
-			if global_position.distance_to(player.global_position) < 1.15:
+			if in_refuge(player.global_position):
+				# he's got into somewhere she won't go: she stands off, then goes looking elsewhere
+				set_state("search"); _last_seen = global_position; go_to(global_position)
+			elif global_position.distance_to(player.global_position) < 1.15:
 				_catch()
 		"search":
 			if _follow(delta, SPEED.search):

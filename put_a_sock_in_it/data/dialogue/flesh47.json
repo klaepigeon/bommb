@@ -167,5 +167,75 @@
     "look": "kurt"
    }
   }
+ ],
+ "safe_first": [
+  {
+   "pause": 0.4,
+   "who": "socko",
+   "text": "Ooh. It's all normal in here.",
+   "socko": {
+    "emotion": "curious",
+    "look": "ahead"
+   }
+  },
+  {
+   "pause": 0.4,
+   "who": "kurt",
+   "text": "She's not coming in after us?",
+   "tone": "quiet"
+  },
+  {
+   "who": "socko",
+   "text": "Nope! She doesn't like normal. Normal is very rude to her.",
+   "socko": {
+    "emotion": "happy",
+    "gesture": "nod",
+    "look": "kurt"
+   }
+  },
+  {
+   "pause": 0.3,
+   "who": "kurt",
+   "text": "Good. Then this is where we catch our breath."
+  }
+ ],
+ "safe_escape": [
+  {
+   "who": "socko",
+   "text": "Too slow!",
+   "socko": {
+    "emotion": "excited",
+    "gesture": "bounce",
+    "look": "marta"
+   }
+  },
+  {
+   "pause": 0.3,
+   "who": "kurt",
+   "text": "Don't wave at her.",
+   "tone": "quiet"
+  }
+ ],
+ "maze_hint_1": [
+  {
+   "who": "socko",
+   "text": "Kurt! Kurt. I can smell the way out. It's this way!",
+   "socko": {
+    "emotion": "excited",
+    "gesture": "point",
+    "look": "next"
+   }
+  }
+ ],
+ "maze_hint_2": [
+  {
+   "who": "socko",
+   "text": "Psst. This way smells less gooey.",
+   "socko": {
+    "emotion": "curious",
+    "gesture": "point",
+    "look": "next"
+   }
+  }
  ]
 }

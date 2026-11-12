@@ -14,7 +14,7 @@ signal noise(pos: Vector3, loudness: float)
 
 const LEVELS := {
 	"flat47": {"scene": "res://scenes/levels/flat47.tscn", "title": "Flat 47", "sub": "Kerzhansk, 1996"},
-	"flesh47": {"scene": "res://scenes/levels/flesh47.tscn", "title": "Flat 47", "sub": "again"},
+	"flesh47": {"scene": "res://scenes/levels/maze47.tscn", "title": "Flat 47", "sub": "again"},
 }
 const SAVE_PATH := "user://save.json"
 const SETTINGS_PATH := "user://settings.json"

@@ -7,16 +7,16 @@ func _initialize() -> void:
 	for a in OS.get_cmdline_user_args(): if a.begins_with("out="): out = a.substr(4)
 	DirAccess.make_dir_recursive_absolute(out)
 	var game = root.get_node("Game")
-	game.flags["flesh_stage"] = "B"; game.flags["met_marta_maze"] = true
+	game.flags["maze_safe"] = 0; game.flags["met_marta_maze"] = true
 	game.change_level("flesh47", {"card": false, "checkpoint": true, "fade": 0.01})
 	await _wait(3.0)
 	var F = game.level
 	game._black.visible = false; root.get_node("Dialogue").stop(); F.set_cutscene(false)
 	var m = F.marta
 	m.active = false
-	var at: Vector3 = F._p("B", Vector3(6.0, 0, 4.5))
-	var eye: Vector3 = F._p("B", Vector3(8.6, 0, 4.5))
-	at = F._p("B", Vector3(6.6, 0, 4.5))
+	var run: Array = F.straight(2)
+	var at: Vector3 = F.centre(run[0])
+	var eye: Vector3 = F.centre(run[1])
 	F.player.global_position = eye; F.player.torch_on = true
 	var d: Vector3 = at + Vector3(0, 1.0, 0) - (eye + Vector3(0, 1.62, 0))
 	F.player.set_view(atan2(-d.x, -d.z), atan2(d.y, Vector2(d.x, d.z).length()))

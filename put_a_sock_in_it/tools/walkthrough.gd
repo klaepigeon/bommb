@@ -84,29 +84,19 @@ func _initialize() -> void:
 	await _until(func(): return L.player.controls, 40.0, "out of the hole into copy A")
 	await _shot("w08_copy_a")
 	L.marta.active = false; L._encountered = true     # (her hunting is tested on its own: tools/hunt_test.gd)
-	# ---- A: out of the front door, into B
-	_use_grid(L.flats.A, L.COPY.A)
-	await _walk_to(L._p("A", Vector3(9.6, 0, 4.56)), "A: to the open front door")
-	await _walk_dir(L._p("A", Vector3(11.0, 0, 4.56)), 3.0)
-	await _until(func(): return L.stage == "B", 6.0, "A's front door tears into B")
-	await _wait(1.2)
-	await _shot("w09_copy_b")
-	# ---- B: to the balcony, into C
-	_use_grid(L.flats.B, L.COPY.B)
-	await _walk_to(L._p("B", Vector3(3.2, 0, 0.45)), "B: to the balcony door")
-	await _walk_to(L._p("B", Vector3(3.17, 0, -0.45)), "B: through the balcony doorway", false, true)
-	await _walk_dir(L._p("B", Vector3(2.4, 0, -1.2)), 3.0)
-	await _until(func(): return L.stage == "C", 6.0, "B's balcony tears into C")
-	await _wait(1.2)
-	await _shot("w10_copy_c")
-	# ---- C: the real front door, the landing, 48
-	_use_grid(L.flats.C, L.COPY.C)
-	await _walk_to(L._p("C", Vector3(9.4, 0, 4.56)), "C: to the front door")
-	if not L.exit_door.is_open: await _use(L._p("C", Vector3(10.06, 1.1, 4.56)), "Open door", "open C's front door")
-	_check(L.exit_door.is_open, "C's front door is open")
-	await _walk_dir(L._p("C", Vector3(12.2, 0, 5.4)), 4.0)
-	await _shot("w11_landing")
-	await _until(func(): return current_scene != null and current_scene.name == "Title", 40.0, "through to 48: the chapter ends")
+	L.marta.global_position = Vector3(-40, 0, -40)
+	# ---- the maze: the way through, cell to cell, through its doorways
+	var route: Array = L.maze.path
+	for i in range(1, route.size()):
+		var c: Vector2i = route[i]
+		if L.maze.cracked.any(func(pr): return (pr[0] == route[i - 1] and pr[1] == c) or (pr[1] == route[i - 1] and pr[0] == c)): continue
+		await _walk_line(L.centre(c), "maze: cell %d of %d %s" % [i, route.size() - 1, c], i % 6 == 0 or i == route.size() - 1)
+		if L.maze.safe.has(c): pass
+	await _shot("w09_maze_end")
+	# ---- through 48's door
+	await _walk_dir(Vector3(L.maze.w * L.CELL + 0.9, 0, L.centre(L.maze.exit).z), 4.0)
+	await _shot("w11_exit")
+	await _until(func(): return current_scene != null and current_scene.name == "Title", 40.0, "through 48's door: the chapter ends")
 	print("WALKTHROUGH fails=%d" % fails)
 	quit()
 
@@ -189,6 +179,25 @@ func _walk_to(target: Vector3, what: String, direct := false, straight := false)
 	_check(true, "%s (%.1f s)" % [what, (Time.get_ticks_msec() - t_start) / 1000.0])
 
 ## Walk straight at a point for a while (through a doorway into the dark).
+## Straight there, the move key held, checking he gets there (the maze's doorways line up with
+## the cell centres; its furniture stands against the walls).
+func _walk_line(target: Vector3, what: String, report := true) -> void:
+	var p = L.player
+	var t0 := Time.get_ticks_msec(); var last: Vector3 = p.global_position; var stuck := 0.0
+	while Time.get_ticks_msec() - t0 < 12000 and p.controls:
+		var d: Vector3 = target - p.global_position; d.y = 0
+		if d.length() < 0.35: break
+		p.set_view(atan2(-d.x, -d.z), -0.1)
+		Input.action_press("move_forward")
+		await physics_frame
+		if p.global_position.distance_to(last) < 0.004: stuck += 1.0 / 60.0
+		else: stuck = 0.0
+		last = p.global_position
+		if stuck > 1.5: break
+	Input.action_release("move_forward")
+	var ok: bool = Vector2(target.x - p.global_position.x, target.z - p.global_position.z).length() < 0.5
+	if report or not ok: _check(ok, what + ("" if ok else " (stuck at %s)" % _v(p.global_position)))
+
 func _walk_dir(target: Vector3, secs: float) -> void:
 	var p = L.player
 	var t0 := Time.get_ticks_msec()

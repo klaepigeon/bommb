@@ -82,7 +82,7 @@ func _initialize() -> void:
 	_check(int(game.pistol.mag) == 3, "holstered, fire punches (no shot)")
 	_press("holster", true); await _wait(0.05); _press("holster", false)
 	# ---- Marta: blows take her poise; enough of them stun her
-	game.flags["flesh_stage"] = "B"; game.flags["met_marta_maze"] = true
+	game.flags["maze_safe"] = 0; game.flags["met_marta_maze"] = true
 	game.change_level("flesh47", {"card": false, "checkpoint": true, "fade": 0.01})
 	await _wait(3.0)
 	var F = game.level
@@ -90,8 +90,10 @@ func _initialize() -> void:
 	var M = F.marta
 	M.active = false          # (held still: her hunting is tools/hunt_test.gd; this is what a blow does)
 	M.set_state("patrol"); M._path = PackedVector3Array()
-	M.global_position = F._p("B", Vector3(6.0, 0, 4.5))
-	await _face(F.player, F._p("B", Vector3(6.85, 0, 4.5)), M.head() + Vector3(0, -0.5, 0))
+	var run: Array = F.straight(2)
+	var dir: Vector3 = (F.centre(run[1]) - F.centre(run[0])).normalized()
+	M.global_position = F.centre(run[0])
+	await _face(F.player, F.centre(run[0]) + dir * 0.85, M.head() + Vector3(0, -0.5, 0))
 	var axe = load("res://scripts/world/prop.gd").make(F.world, F.player.global_position + Vector3(0, 1, 0), Vector3(0.15, 0.73, 0.03), load("res://scripts/core/tex.gd").mat("wood"), "Axe", 1.5, 0.5)
 	F.player.pick_up(axe)
 	F.player.stamina = F.player.STAMINA_MAX
@@ -100,7 +102,7 @@ func _initialize() -> void:
 	_check(M.poise < p0, "a blow takes her poise (%.0f -> %.0f)" % [p0, M.poise])
 	_check(M.state == "chase", "and she comes for him (%s)" % M.state)
 	F.player.stamina = F.player.STAMINA_MAX
-	M.global_position = F._p("B", Vector3(6.0, 0, 4.5)); M._path = PackedVector3Array()
+	M.global_position = F.centre(run[0]); M._path = PackedVector3Array()
 	await _attack(F.hands, 0.5, "marta_heavy")
 	_check(M.state == "stunned", "a heavy axe blow on top leaves her reeling (%s)" % M.state)
 	print("MELEE_TEST fails=%d" % fails)

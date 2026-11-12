@@ -32,14 +32,24 @@ var skip_props: Array = [] # node names the level handles itself (the wardrobe)
 ## The meat's colours (the world shader's meat_* uniforms); empty keeps the shader's red.
 var meat := {}
 
-func _init(flesh_amount := 0.0, skip: Array = []) -> void:
-	flesh = flesh_amount; skip_props = skip
+## Kit mode (the maze): the flat isn't built; its model is loaded (hidden), its materials
+## converted, and it hands out copies of its pieces (piece()) and its rooms' surfaces
+## (surface_material(), surface_uv()).
+var kit := false
+
+func _init(flesh_amount := 0.0, skip: Array = [], as_kit := false) -> void:
+	flesh = flesh_amount; skip_props = skip; kit = as_kit
 
 func _ready() -> void:
 	level = JSON.parse_string(FileAccess.get_file_as_string("res://assets/flat47/level.json"))
 	model = (load("res://assets/flat47/flat47.glb") as PackedScene).instantiate()
 	model.name = "Apartment"
 	add_child(model)
+	if kit:
+		model.visible = false
+		_lift_coplanar()
+		_materials()
+		return
 	_strip_outside()
 	_lift_coplanar()
 	_materials()
@@ -290,6 +300,63 @@ func landing_face(face: Material, _reveal: Material) -> void:
 	const X := 10.447; const Z0 := 4.12; const Z1 := 5.0; const TOP := 2.1; const H2 := 2.8     # (3 mm proud of the export's door surround, at 10.44)
 	Build.wall(self, Vector2(X, 3.4), Vector2(X, 8.0), face, [{"at": (Z0 + Z1) * 0.5 - 3.4, "w": Z1 - Z0, "top": TOP}], H2, 0.02)
 	# (the reveals through the wall are the export's own: doubling them made them flicker)
+
+# ------------------------------------------------------------------ kit mode
+## A copy of a named piece of the flat (a cupboard, the bath, a chair), its materials converted,
+## placed so its floor-centre is the returned node's origin. meta "size": its bounding size.
+func piece(node_name: String) -> Node3D:
+	var n := model.find_child(node_name, true, false) as Node3D
+	if not n: return null
+	var ab := AABB(); var first := true
+	var meshes: Array = n.find_children("*", "MeshInstance3D", true, false)
+	if n is MeshInstance3D: meshes.append(n)
+	var inv := model.global_transform.affine_inverse()
+	for mi in meshes:
+		var m := mi as MeshInstance3D
+		if not m.mesh: continue
+		var a: AABB = (inv * m.global_transform) * m.get_aabb()
+		ab = a if first else ab.merge(a); first = false
+	var dup := n.duplicate() as Node3D
+	dup.transform = inv * n.global_transform
+	dup.visible = true
+	for c in dup.find_children("*", "Node3D", true, false): (c as Node3D).visible = true
+	var holder := Node3D.new(); holder.name = node_name
+	holder.add_child(dup)
+	dup.position -= Vector3(ab.get_center().x, ab.position.y, ab.get_center().z)
+	holder.set_meta("size", ab.size)
+	return holder
+
+## The converted material on one of the room surfaces ("living-n", "bath-floor", ...).
+func surface_material(mesh_name: String) -> Material:
+	var mi := model.find_child(mesh_name, true, false) as MeshInstance3D
+	if not mi: return null
+	return mi.get_surface_override_material(0) if mi.get_surface_override_material(0) else mi.get_active_material(0)
+
+## How that surface's texture is laid on: UV per metre along it (x) and up it / across it (y),
+## fitted to its vertices; walls: (along the wall, up), floors: (x, z). z, w: the UV at 0.
+func surface_uv(mesh_name: String) -> Vector4:
+	var mi := model.find_child(mesh_name, true, false) as MeshInstance3D
+	if not mi or not mi.mesh: return Vector4(1, 1, 0, 0)
+	var arr := mi.mesh.surface_get_arrays(0)
+	var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+	var uv = arr[Mesh.ARRAY_TEX_UV]
+	if uv == null or v.size() < 3: return Vector4(1, 1, 0, 0)
+	var ab := AABB(v[0], Vector3.ZERO)
+	for p in v: ab = ab.expand(p)
+	var floor := ab.size.y < 0.01
+	var h_axis := 0 if ab.size.x >= ab.size.z else 2
+	var a_axis := 2 if floor else 1
+	return Vector4(_slope(v, uv, h_axis, 0), _slope(v, uv, a_axis, 1), _slope(v, uv, h_axis, 0, true), _slope(v, uv, a_axis, 1, true))
+
+static func _slope(v: PackedVector3Array, uv: PackedVector2Array, axis: int, comp: int, intercept := false) -> float:
+	# least squares: uv[comp] against position[axis]
+	var n := float(v.size()); var sx := 0.0; var sy := 0.0; var sxx := 0.0; var sxy := 0.0
+	for i in v.size():
+		var x: float = v[i][axis]; var y: float = uv[i][comp]
+		sx += x; sy += y; sxx += x * x; sxy += x * y
+	var den := n * sxx - sx * sx
+	var slope := 1.0 if absf(den) < 1e-9 else (n * sxy - sx * sy) / den
+	return (sy - slope * sx) / n if intercept else slope
 
 ## The nearest drawer to a point (the level picks one to hide something in).
 func drawer_near(p: Vector3) -> ExportDrawer:

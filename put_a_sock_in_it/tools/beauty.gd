@@ -42,14 +42,13 @@ func _initialize() -> void:
 	var F = game.level
 	F.marta.active = false
 	game._black.visible = false
-	await _view(F, "i_copy_a", F._p("A", Vector3(1.9, 0, 4.2)), F._p("A", Vector3(3.0, 1.0, 1.4)))
-	F._place("B"); F.marta.active = false
-	await _view(F, "j_copy_b_hall", F._p("B", Vector3(9.3, 0, 4.5)), F._p("B", Vector3(5.0, 1.2, 4.5)))
-	F.player.torch_on = true
-	F.marta.global_position = F._p("B", Vector3(2.2, 0, 3.3))
-	await _view(F, "k_marta_torch", F._p("B", Vector3(4.0, 0, 4.4)), F.marta_head.global_position + Vector3(0, -0.2, 0))
-	F._place("C"); F.marta.active = false; F.player.torch_on = false
-	await _view(F, "l_copy_c", F._p("C", Vector3(6.5, 0, 4.4)), F._p("C", Vector3(9.9, 1.2, 4.2)))
+	var r: Array = F.maze.path
+	await _view(F, "i_maze_start", F.centre(r[0]) + Vector3(-0.6, 0, 0), F.centre(r[1], 1.2))
+	await _view(F, "j_maze_mid", F.centre(r[int(r.size() * 0.5)]), F.centre(r[int(r.size() * 0.5) + 2], 1.2))
+	var run: Array = F.straight(3)
+	F.marta.global_position = F.centre(run[0])
+	await _view(F, "k_marta_torch", F.centre(run[2]), F.marta_head.global_position + Vector3(0, -0.2, 0))
+	await _view(F, "l_maze_exit", F.centre(F.maze.exit) + Vector3(-1.2, 0, 0), Vector3(F.maze.w * F.CELL + 1.5, 1.2, F.centre(F.maze.exit).z))
 	print("BEAUTY done")
 	quit()
 func _blocked(L, a: Vector3, b: Vector3) -> bool:

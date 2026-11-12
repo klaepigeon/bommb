@@ -24,13 +24,15 @@ func _initialize() -> void:
 			["Sonya's room", Vector3(5.6, 0, 6.0), Vector3(3.4, 0.6, 7.4)]]:
 		if OS.get_cmdline_user_args().has("flesh_only"): break
 		await _hold(L, v[0], v[1], v[2])
-	game.flags["flesh_stage"] = "B"; game.flags["met_marta_maze"] = true
+	game.flags["maze_safe"] = 0; game.flags["met_marta_maze"] = true
 	game.change_level("flesh47", {"card": false, "checkpoint": true, "fade": 0.01})
 	await _wait(3.0)
 	var F = game.level
 	game._black.visible = false; root.get_node("Dialogue").stop(); F.set_cutscene(false)
-	F.marta.active = false; F.marta.global_position = F._p("B", Vector3(1.0, 0, 7.5))
-	for v in [["flesh hall", F._p("B", Vector3(9.5, 0, 4.5)), F._p("B", Vector3(5.0, 1.2, 4.5))], ["flesh living room", F._p("B", Vector3(4.1, 0, 4.4)), F._p("B", Vector3(2.0, 1.0, 1.5))]]:
+	F.marta.active = false; F.marta.global_position = Vector3(-40, 0, -40)
+	var r: Array = F.maze.path
+	var s0: Vector2i = F.maze.safe[0]
+	for v in [["flesh: the maze", F.centre(r[2]), F.centre(r[4], 1.2)], ["flesh: deep in", F.centre(r[r.size() - 4]), F.centre(r[r.size() - 2], 1.2)], ["safe room", F.centre(s0), F.centre(s0, 0.6) + Vector3(1, 0, 0)]]:
 		await _hold(F, v[0], v[1], v[2])
 	print("STABILITY_TEST fails=%d" % fails)
 	quit()

@@ -42,10 +42,14 @@ func _label(size: int, c: Color) -> Label:
 	return l
 
 ## A quiet one-off hint about a control (shown once, fades).
+var _hints: Array = []
 func hint(t: String, secs := 6.0) -> void:
+	_hints = _hints.filter(func(x): return is_instance_valid(x))
 	var l := _label(18, Color("a89f8a")); l.text = t
 	l.anchor_left = 0.5; l.anchor_right = 0.5; l.anchor_top = 1.0; l.anchor_bottom = 1.0
-	l.offset_left = -300; l.offset_right = 300; l.offset_top = -200; l.offset_bottom = -170
+	var up := 32.0 * _hints.size()          # (stacked above any still showing)
+	l.offset_left = -300; l.offset_right = 300; l.offset_top = -200 - up; l.offset_bottom = -170 - up
+	_hints.append(l)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(l)
 	var tw := create_tween(); tw.tween_interval(secs); tw.tween_property(l, "modulate:a", 0.0, 1.5); tw.tween_callback(l.queue_free)

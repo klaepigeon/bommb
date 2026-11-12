@@ -23,16 +23,17 @@ func _initialize() -> void:
 	for f in L.flat.fittings:
 		if f.kind == "fluoro": f._startup = 2.0
 	await _scene(L, "kitchen tube restarting", Vector3(8.2, 0, 3.4), Vector3(9.0, 1.4, 1.0))
-	game.flags["flesh_stage"] = "B"; game.flags["met_marta_maze"] = true
+	game.flags["maze_safe"] = 0; game.flags["met_marta_maze"] = true
 	game.change_level("flesh47", {"card": false, "checkpoint": true, "fade": 0.01})
 	await _wait(3.0)
 	var F = game.level
 	game._black.visible = false
 	F.player.torch_on = true
 	F.marta.active = false
-	F.marta.global_position = F._p("B", Vector3(6.0, 0, 4.5))
+	var run: Array = F.straight(3)
+	F.marta.global_position = F.centre(run[0])
 	F.marta.set_state("chase")
-	await _scene(F, "flesh flat, Marta chasing, torch failing", F._p("B", Vector3(8.4, 0, 4.5)), F._p("B", Vector3(6.0, 1.4, 4.5)))
+	await _scene(F, "the maze, Marta chasing, torch failing", F.centre(run[2]), F.centre(run[0], 1.4))
 	print("FLASH_TEST fails=%d" % fails)
 	quit()
 
