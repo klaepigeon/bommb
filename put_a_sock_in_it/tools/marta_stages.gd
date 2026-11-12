@@ -25,7 +25,7 @@ func _initialize() -> void:
 		b.pose.sh_l = Vector3(0.1, 0.2, 0.2); b.pose.sh_r = Vector3(0.1, -0.2, -0.2); b.pose.spine = Vector3(-0.12, 0, 0)
 	var hp: Vector3 = seated.head_pos()
 	var fwd: Vector3 = -seated.global_basis.z
-	for v in [["seated_head_front", hp + fwd * 0.55 + Vector3(0, 0.05, 0), hp], ["seated_head_side", hp + seated.global_basis.x * 0.6, hp], ["seated_head_high", hp + fwd * 0.45 + Vector3(0, 0.45, 0), hp]]:
+	for v in [["seated_head_front", hp + fwd * 0.55 + Vector3(0, 0.05, 0), hp], ["seated_head_side", hp + seated.global_basis.x * 0.6, hp], ["seated_head_high", hp + fwd * 0.9 + Vector3(0, 0.4, 0), hp], ["revealed_head", revealed.head_pos() - revealed.global_basis.z * 0.6 + Vector3(0, 0.05, 0), revealed.head_pos()], ["standing_back", s0.head_pos() + s0.global_basis.z * 0.8 + Vector3(0.3, 0.1, 0), s0.head_pos() - Vector3(0, 0.1, 0)]]:
 		cam.position = v[1]; cam.look_at(v[2])
 		var t1 := Time.get_ticks_msec(); while Time.get_ticks_msec() - t1 < 500: await process_frame
 		root.get_viewport().get_texture().get_image().save_png(out.path_join(v[0] + ".png"))

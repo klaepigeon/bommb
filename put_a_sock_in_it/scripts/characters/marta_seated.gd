@@ -153,7 +153,7 @@ func _hang_veil() -> void:
 		var s := -1.0 if side == "L" else 1.0
 		# hanging straight down from the front of her forehead, whatever her head does
 		var down := Quaternion(head.global_basis.orthonormalized().inverse() * Basis(Vector3.UP, global_rotation.y))
-		var aside := Quaternion(Basis.from_euler(Vector3(-0.15, s * 1.55, s * 0.25)))     # swung back along the cheeks
+		var aside := Quaternion(Basis.from_euler(Vector3(0.0, -s * 1.15, s * 0.3)))       # parted, fallen back along her cheeks
 		v.quaternion = down.slerp(aside, veil_k)
 
 ## The jaw dropping, past where a jaw stops, over `secs`.
@@ -242,6 +242,57 @@ func mat(tex: String, rough := 0.85, spec := 0.5, glow := 0.0) -> ShaderMaterial
 		m.set_shader_parameter("emission", Vector3(0.75, 0.78, 0.7) * glow)
 	_mats[key] = m
 	return m
+
+# ---------------------------------------------------------------- hair
+static var _hair: StandardMaterial3D
+## Strands: a strip of hair texture, grey and near-black, wet-glossy, cut out at uneven lengths
+## and with gaps between strands. Double-sided.
+static func _hair_mat() -> StandardMaterial3D:
+	if _hair: return _hair
+	var W := 32; var Hh := 64
+	var img := Image.create(W, Hh, false, Image.FORMAT_RGBA8)
+	var r := RandomNumberGenerator.new(); r.seed = 88
+	for x in W:
+		var grey := r.randf() < 0.22
+		var c := Color(0.36, 0.34, 0.31) if grey else Color(0.075, 0.065, 0.058)
+		c = c.darkened(r.randf() * 0.35)
+		# strands run out at all lengths, fewer toward the edges of the lock: the end tapers to
+		# a ragged point, not a square cut
+		var edge := absf(float(x) - W * 0.5) / (W * 0.5)
+		var reach := r.randf_range(0.35, 1.0) * (1.0 - edge * 0.55)
+		var gap := r.randf() < 0.25
+		for y in Hh:
+			var v := float(y) / Hh
+			var a := 1.0 if v < reach and not (gap and v > 0.15 + r.randf() * 0.002) else 0.0
+			var shade := c.lightened(0.15 * maxf(0.0, sin(v * 9.0 + x)))      # wet sheen along the strand
+			img.set_pixel(x, y, Color(shade.r, shade.g, shade.b, a))
+	img.generate_mipmaps()
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = ImageTexture.create_from_image(img)
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR; m.alpha_scissor_threshold = 0.5
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
+	m.roughness = 0.3; m.metallic_specular = 0.6
+	_hair = m
+	return m
+
+## A flat sheet of hair from `top`, hanging straight down `length`, `width` across (along
+## `across`), lying out along `out` a little; it narrows, waves, and clumps toward the ends.
+func _ribbon(st: SurfaceTool, top: Vector3, out: Vector3, across: Vector3, length: float, width: float, r: RandomNumberGenerator) -> void:
+	const N := 6
+	var ph := r.randf() * TAU
+	var rows := []
+	for j in N + 1:
+		var v := float(j) / N
+		var w := width * (1.0 - 0.6 * v)
+		var c := top + Vector3(0, -length * v, 0) + out * (0.006 + 0.012 * v) + across * sin(v * 5.0 + ph) * 0.008
+		rows.append([c - across * w * 0.5, c + across * w * 0.5, v])
+	for j in N:
+		var a0: Vector3 = rows[j][0]; var a1: Vector3 = rows[j][1]; var b0: Vector3 = rows[j + 1][0]; var b1: Vector3 = rows[j + 1][1]
+		var v0: float = rows[j][2]; var v1: float = rows[j + 1][2]
+		var n := (a1 - a0).cross(b0 - a0).normalized()
+		for p in [[a0, Vector2(0, v0)], [a1, Vector2(1, v0)], [b1, Vector2(1, v1)], [a0, Vector2(0, v0)], [b1, Vector2(1, v1)], [b0, Vector2(0, v1)]]:
+			st.set_normal(n); st.set_uv(p[1]); st.add_vertex(p[0])
 
 # ---------------------------------------------------------------- what she's becoming
 func _evolve() -> void:
@@ -500,27 +551,25 @@ func _upper(hips: Node3D, flesh: Material, flesh_dry: Material, coralm: Material
 		MeshKit.blob(hd.st(black), H + Vector3(s * 0.008, -0.022, -0.1), Vector3(0.008, 0.013, 0.006), {"rings": 4, "segs": 6})
 	# the grin: no lips, the cheeks split back toward the ears, every tooth showing
 	_grin(hd, true, H)
-	# hair, what's left: wet clumps down to her shoulders
-	for i in 12:
-		var a := rng.randf_range(-1.35, 1.35)       # back and sides only: rigid strands over the face read as bars
-		var root := H + Vector3(sin(a) * 0.08, 0.06 + rng.randf_range(-0.02, 0.02), cos(a) * 0.085)
-		var hang := rng.randf_range(0.14, 0.28)
-		MeshKit.tube(hd.st(hair), [root, root + Vector3(sin(a) * 0.03, -hang * 0.4, cos(a) * 0.02), root + Vector3(sin(a) * 0.04, -hang, cos(a) * 0.03)], [0.012, 0.008, 0.003], {"sides": 4})
-	# over her face: wet hair in two curtains from the front of the hairline, hanging straight
-	# down (see _hang_veil) past her chin; they part when she lifts her head (reveal)
+	# hair, what's left: thin, grey and dark, wet; flat sheets of strands lying on the scalp and
+	# hanging to her shoulders, ragged at the ends (ribbons with a strand texture, not tubes)
+	var strands := _hair_mat()
+	for i in 9:
+		var a := -1.75 + i * 0.44 + rng.randf_range(-0.12, 0.12)     # round the sides and back
+		var out := Vector3(sin(a), 0, cos(a))
+		var root := H + out * 0.083 + Vector3(0, 0.055 + rng.randf_range(-0.015, 0.01), 0)
+		_ribbon(hd.st(strands), root, out, Vector3(cos(a), 0, -sin(a)), rng.randf_range(0.2, 0.32), 0.075, rng)
+	# over her face: two curtains from the front of the hairline, hanging straight down (see
+	# _hang_veil) past her chin; they part when she lifts her head (reveal)
 	for side in [-1.0, 1.0]:
 		var root: Vector3 = H + Vector3(side * 0.028, 0.06, -0.1)
 		var vj := Node3D.new(); vj.name = "veil" + ("L" if side < 0.0 else "R"); head.add_child(vj)
 		vj.position = root - J.head; joints[vj.name] = vj
 		var vp := Part.new(self)
-		for k in 6:
-			var x: float = side * (-0.02 + k * 0.02)
-			var hl := 0.27 + rng.randf_range(-0.02, 0.04) - absf(k - 2.5) * 0.012
-			# down over the brow, the eyes, the grin, the chin: following the face's curve, just off it
-			var top: Vector3 = root + Vector3(x, 0.0, -0.005 + absf(x) * 0.2)
-			var mid: Vector3 = root + Vector3(x * 1.1, -hl * 0.55, -0.01 + absf(x) * 0.25)
-			var bot: Vector3 = root + Vector3(x * 1.2, -hl * 1.2, -0.01 + absf(x) * 0.25)
-			MeshKit.tube(vp.st(hair), [top, mid, bot], [Vector3(0.018, 0.017, 0.012).x, 0.016, 0.008], {"sides": 5, "bumps": 0.4, "seed": 140 + k + side * 10})
+		for k in 5:
+			var x: float = side * (-0.005 + k * 0.02 + rng.randf_range(-0.004, 0.004))
+			var across := Vector3(1, rng.randf_range(-0.15, 0.15), side * -0.3).normalized()
+			_ribbon(vp.st(strands), root + Vector3(x, rng.randf_range(-0.01, 0.01), absf(x) * 0.25 - k * 0.0015), Vector3(0, 0, -1), across, rng.randf_range(0.24, 0.36), rng.randf_range(0.035, 0.05), rng)
 		_attach(vp, vj, root)
 	# her good eye's pupil: the one thing in the face that's still her
 	_pupil = MeshInstance3D.new(); _pupil.name = "Pupil"
