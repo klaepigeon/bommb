@@ -1,0 +1,105 @@
+class_name Level
+extends Node3D
+## What every level has: the player (Kurt), his HUD, the touch overlay, pause, the pistol, Socko
+## on his left hand (hidden until he's there), the environment, trigger zones, and the
+## between-the-beats conversations. A level subclass builds its geometry in build() and runs its
+## story from begin() (Game calls it once the loading card is gone; the screen is black).
+
+var player: Player
+var socko: Socko
+var pistol: Pistol
+var hud: Hud
+var touch: TouchControls
+var pause: PauseMenu
+var env: WorldEnvironment
+var world: Node3D               # geometry goes here
+var cutscene := false
+var random_talk := false        # Socko and Kurt pass the time when nothing else is happening
+var _quiet_t := 0.0
+const RANDOM := ["random_a", "random_b", "random_c"]
+
+func _ready() -> void:
+	world = Node3D.new(); world.name = "World"; add_child(world)
+	env = WorldEnvironment.new(); env.environment = Environment.new()
+	var e := env.environment
+	e.background_mode = Environment.BG_COLOR; e.background_color = Color.BLACK
+	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR; e.ambient_light_color = Color("3a322b"); e.ambient_light_energy = 1.0
+	e.fog_enabled = true; e.fog_light_color = Color("100c0a"); e.fog_density = 0.06
+	e.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	add_child(env)
+	player = Player.new(); player.name = "Kurt"; add_child(player)
+	socko = Socko.new(); add_child(socko); socko.attach(player)
+	pistol = Pistol.new(); pistol.attach(player)
+	hud = Hud.new(); hud.player = player; add_child(hud)
+	var tl := CanvasLayer.new(); tl.layer = 30; add_child(tl)
+	touch = TouchControls.new(); touch.player = player; tl.add_child(touch)
+	pause = PauseMenu.new(); pause.touch = touch; add_child(pause)
+	Dialogue.event.connect(_on_event)
+	build()
+	set_cutscene(true)     # nothing moves until begin() says so
+
+func _exit_tree() -> void:
+	if Dialogue.event.is_connected(_on_event): Dialogue.event.disconnect(_on_event)
+
+## Subclasses: make the place.
+func build() -> void:
+	pass
+
+## Subclasses: the story starts (the screen is black).
+func begin() -> void:
+	set_cutscene(false)
+	await Game.fade(0.0, 1.0)
+
+## Subclasses: a stage direction from a conversation.
+func on_event(_name: String, _step: Dictionary) -> void:
+	pass
+
+func _on_event(n: String, step: Dictionary) -> void:
+	on_event(n, step)
+
+func set_cutscene(on: bool) -> void:
+	cutscene = on
+	player.controls = not on
+	player.look_enabled = not on
+	if on: player.velocity = Vector3.ZERO
+
+func objective(t: String) -> void:
+	hud.set_objective(t)
+
+func _process(delta: float) -> void:
+	touch.visible = Game.uses_touch() and not cutscene
+	if not Game.uses_touch() and not pause.visible and not Game.busy:
+		if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and DisplayServer.window_is_focused():
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	if Input.is_action_just_pressed("skip"): Dialogue.skip_line()
+	# idle conversations: after a long enough quiet stretch of free play, the next one not yet had
+	if random_talk and not cutscene and not Dialogue.busy and socko.visible:
+		_quiet_t += delta
+		if _quiet_t > 75.0:
+			_quiet_t = 0.0
+			for id in RANDOM:
+				if not Game.flag("talked_" + id):
+					Game.set_flag("talked_" + id); Dialogue.play(id); break
+	else:
+		_quiet_t = minf(_quiet_t, 40.0) if Dialogue.busy else _quiet_t
+
+## A box of space that calls `cb` the first time Kurt walks into it.
+func zone(pos: Vector3, size: Vector3, cb: Callable, once := true) -> Area3D:
+	var a := Area3D.new(); a.collision_layer = 0; a.collision_mask = 2
+	var cs := CollisionShape3D.new(); var sh := BoxShape3D.new(); sh.size = size; cs.shape = sh
+	a.add_child(cs); world.add_child(a); a.global_position = pos
+	a.body_entered.connect(func(b):
+		if b == player and a.get_meta("armed", true):
+			if once: a.set_meta("armed", false)
+			cb.call())
+	return a
+
+## Can Kurt see this point right now (in front of him, nothing in the way)?
+func player_sees(p: Vector3, max_dist := 8.0, cone := 0.6) -> bool:
+	var c := player.cam.global_position
+	var d := p - c
+	if d.length() > max_dist: return false
+	if (-player.cam.global_transform.basis.z).dot(d.normalized()) < cone: return false
+	var q := PhysicsRayQueryParameters3D.create(c, p, 1, [player.get_rid()])
+	var hit := get_world_3d().direct_space_state.intersect_ray(q)
+	return hit.is_empty() or hit.position.distance_to(p) < 0.35

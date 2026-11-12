@@ -1,0 +1,60 @@
+class_name Hud
+extends CanvasLayer
+## What's on screen in play, kept small: a dot to aim with, what you can do with what you're
+## looking at, the current objective (top left, fading after a while), and the pistol's rounds
+## when he has it. No health bar, no minimap.
+
+var player: Player
+var _prompt: Label
+var _objective: Label
+var _ammo: Label
+var _dot: ColorRect
+var _obj_t := 0.0
+
+func _ready() -> void:
+	layer = 20
+	_dot = ColorRect.new(); _dot.color = Color(1, 1, 1, 0.5); _dot.size = Vector2(4, 4)
+	_dot.set_anchors_preset(Control.PRESET_CENTER); _dot.position -= Vector2(2, 2)
+	_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_dot)
+	_prompt = _label(22, Color("e8e0cc"))
+	_prompt.anchor_left = 0.5; _prompt.anchor_right = 0.5; _prompt.anchor_top = 0.5; _prompt.anchor_bottom = 0.5
+	_prompt.offset_left = -300; _prompt.offset_right = 300; _prompt.offset_top = 40; _prompt.offset_bottom = 80
+	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	add_child(_prompt)
+	_objective = _label(20, Color("cfc6ae"))
+	_objective.position = Vector2(28, 22); _objective.size = Vector2(600, 40)
+	add_child(_objective)
+	_ammo = _label(26, Color("e8e0cc"))
+	_ammo.anchor_left = 1; _ammo.anchor_right = 1; _ammo.anchor_top = 1; _ammo.anchor_bottom = 1
+	_ammo.offset_left = -220; _ammo.offset_right = -30; _ammo.offset_top = -64; _ammo.offset_bottom = -24
+	_ammo.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	add_child(_ammo)
+
+func _label(size: int, c: Color) -> Label:
+	var l := Label.new()
+	l.add_theme_font_size_override("font_size", size)
+	l.add_theme_color_override("font_color", c)
+	l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))
+	l.add_theme_constant_override("shadow_offset_x", 2); l.add_theme_constant_override("shadow_offset_y", 2)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return l
+
+func set_objective(t: String) -> void:
+	_objective.text = t
+	_obj_t = 9.0
+	_objective.modulate.a = 1.0
+
+func _process(delta: float) -> void:
+	if not player: return
+	var p := player.prompt() if player.controls else ""
+	_prompt.text = p
+	var touch := Game.uses_touch()
+	if p != "" and not touch: _prompt.text = "[E]  " + p
+	_dot.visible = player.controls
+	_obj_t -= delta
+	_objective.modulate.a = clampf(_obj_t, 0.25, 1.0)
+	if Game.pistol.have:
+		_ammo.text = "%d  |  %d" % [Game.pistol.mag, Game.count("ammo")]
+	else:
+		_ammo.text = ""

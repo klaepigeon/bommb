@@ -1,0 +1,9 @@
+{
+	"marta_maze": [
+		{"event": "marta_clicks", "wait": 1.4},
+		{"who": "marta", "text": "(clicks)", "tone": "quiet"},
+		{"who": "socko", "text": "What?", "socko": {"emotion": "nervous", "look": "marta"}},
+		{"who": "kurt", "text": "Socko, buddy, what's happening?", "tone": "quiet"},
+		{"pause": 0.5, "who": "socko", "text": "How does she know you, Kurt?", "socko": {"emotion": "uncanny", "look": "kurt"}}
+	]
+}

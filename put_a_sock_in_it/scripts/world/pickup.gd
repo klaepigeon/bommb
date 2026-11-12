@@ -1,0 +1,26 @@
+class_name Pickup
+extends StaticBody3D
+## An item that goes into Kurt's pockets: the pistol, a box of rounds, a key. Its look is built
+## by the level (children); this handles taking it.
+
+signal taken(p: Pickup)
+var item := ""
+var amount := 1
+var label := ""
+
+func _ready() -> void:
+	collision_layer = 4; collision_mask = 0
+
+func get_prompt() -> String:
+	return "Take " + label
+
+func interact(_p = null) -> void:
+	match item:
+		"pistol":
+			Game.pistol.have = true
+			Game.pistol.mag = maxi(Game.pistol.mag, amount)
+		_:
+			Game.add_item(item, amount)
+	Sfx.play("pickup", -4.0)
+	taken.emit(self)
+	queue_free()

@@ -1,0 +1,286 @@
+extends Level
+## Level 2: Flat 47 again, as something that has grown it. The same rooms (her wallpaper, her
+## armchair, her wardrobe, her front door), in the wrong order and the wrong number, with the
+## walls gone to meat and breathing. Marta is in here, on her feet, and she hunts.
+##
+## Kurt comes out of the throat he crawled into, onto the floor of a room that is nearly the
+## bedroom. Somewhere in the maze is the flat's front door, the real one, the one that opens.
+##
+## The map is a grid of CELL-metre squares: # wall, . floor, + doorway, S start, E the way out
+## (its door is in the wall south of it), M Marta, p her patrol, A a box of rounds, b a bottle,
+## c armchair, k kitchen counter, T table, w wardrobe, d one of her front doors (it doesn't open).
+
+const CELL := 1.4
+const H := 2.7
+const MAP := """##########################
+#S...#.......#......d#...#
+#.c..#..k....#..b....#.p.#
+#....+..k....+.......+...#
+###+####..####...w..###+##
+#......p.....#.......#...#
+#.w..#.......##+######.c.#
+#....#...b...#.......#...#
+#.####.#######..p....+...#
+#......#.....#.......###+#
+#.k..p.#..c..##+#####....#
+#.k....+.............+.A.#
+####+###########..#..#...#
+#..........b...#..#..##+##
+#.T..p.....##..+..p......#
+#....M.....##..#.........#
+#..d.......#E..#....w....#
+##########################"""
+
+var rows: PackedStringArray
+var marta: MartaHunter
+var marta_head: Node3D
+var exit_door: Door
+var _encountered := false
+var _ending := false
+
+func cell_pos(x: int, y: int, h := 0.0) -> Vector3:
+	return Vector3((x + 0.5) * CELL, h, (y + 0.5) * CELL)
+
+func build() -> void:
+	rows = MAP.split("\n")
+	var e := env.environment
+	e.ambient_light_color = Color("4a2224"); e.fog_light_color = Color("1a0608"); e.fog_density = 0.09
+	var W := rows[0].length(); var Hh := rows.size()
+	var wall := Tex.mat("wallpaper_flesh", 0.8, {"pulse": 0.006})
+	var floor_m := Tex.mat("flesh_dark", 0.7, {"pulse": 0.004})
+	var ceil_m := Tex.mat("flesh", 0.5, {"pulse": 0.01})
+	Build.box(world, Vector3(W * CELL * 0.5, -0.05, Hh * CELL * 0.5), Vector3(W * CELL, 0.1, Hh * CELL), floor_m)
+	Build.box(world, Vector3(W * CELL * 0.5, H + 0.05, Hh * CELL * 0.5), Vector3(W * CELL, 0.1, Hh * CELL), ceil_m)
+	# walls: runs of # along each row become one box each
+	for y in Hh:
+		var x := 0
+		while x < W:
+			if rows[y][x] == "#" and not (rows[y][x] == "#" and y == Hh - 1 and _is_exit_wall(x)):
+				var x0 := x
+				while x < W and rows[y][x] == "#" and not (y == Hh - 1 and _is_exit_wall(x)): x += 1
+				Build.box(world, Vector3((x0 + x) * 0.5 * CELL, H * 0.5, (y + 0.5) * CELL), Vector3((x - x0) * CELL, H, CELL), wall)
+			else:
+				x += 1
+	# grid for Marta's path-finding: walls and big furniture are solid
+	var grid := AStarGrid2D.new()
+	grid.region = Rect2i(0, 0, W, Hh); grid.cell_size = Vector2(CELL, CELL)
+	grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
+	grid.update()
+	var patrol := []
+	var lights := 0
+	for y in Hh:
+		for x in W:
+			var c: String = rows[y][x]
+			if c in "#wkTcd": grid.set_point_solid(Vector2i(x, y), true)
+			var p := cell_pos(x, y)
+			match c:
+				"S": _arrival(x, y)
+				"E": _exit(x, y)
+				"M": _spawn_marta(p)
+				"p": patrol.append(p); lights += 1; _light(p, lights)
+				"A": _ammo(p)
+				"b": Prop.make(world, p + Vector3(0.2, 0.15, -0.1), Vector3(0.08, 0.2, 0.08), Tex.mat("glass", 1.0, {"tint": Color(0.4, 0.6, 0.4)}), "bottle", 0.4, 0.9)
+				"c": _armchair(p, x, y)
+				"k": Build.box(world, p + Vector3(0, 0.45, 0), Vector3(CELL * 0.9, 0.9, CELL * 0.6), Tex.mat("wood_light", 2.0, {"tint": Color(1.0, 0.7, 0.7)}))
+				"T": Build.box(world, p + Vector3(0, 0.38, 0), Vector3(CELL * 0.9, 0.06, CELL * 0.7), Tex.mat("cloth_red", 4.0))
+				"w": _wardrobe(p, x, y)
+				"d": _fake_door(x, y)
+	marta.grid = grid; marta.cell = CELL; marta.origin = Vector3.ZERO
+	# patrol in a sensible loop: nearest-neighbour from her start
+	var tour := []; var left := patrol.duplicate(); var at: Vector3 = marta.global_position
+	while not left.is_empty():
+		var bi := 0
+		for i in left.size(): if (left[i] as Vector3).distance_to(at) < (left[bi] as Vector3).distance_to(at): bi = i
+		at = left[bi]; tour.append(at); left.remove_at(bi)
+	marta.patrol = tour
+	marta.go_to(tour[0])
+	# the meat between the rooms: lumps and coral on the walls, here and there
+	var r := RandomNumberGenerator.new(); r.seed = 48
+	Build.organic(world, func(st):
+		for i in 70:
+			var x := r.randi_range(1, W - 2); var y := r.randi_range(1, Hh - 2)
+			if rows[y][x] != ".": continue
+			var p := cell_pos(x, y)
+			MeshKit.lump(st, p + Vector3(r.randf_range(-0.6, 0.6), r.randf_range(0.0, 2.4) if r.randf() < 0.5 else 0.0, r.randf_range(-0.6, 0.6)), r.randf_range(0.05, 0.14), r), Tex.mat("coral", 4.0, {"pulse": 0.004}))
+	socko.points = {"marta": marta_head}
+
+func _is_exit_wall(x: int) -> bool:
+	return rows[rows.size() - 2][x] == "E"
+
+func _light(p: Vector3, i: int) -> void:
+	var c: Color = [Color("ff6a5a"), Color("c05aff"), Color("ff8a6a"), Color("5a8aff")][i % 4]
+	Build.lamp(world, p + Vector3(0, 2.3, 0), c, 1.2, 7.0)
+	Build.organic(world, func(st): MeshKit.blob(st, p + Vector3(0, H - 0.1, 0), Vector3(0.12, 0.1, 0.12), {"bumps": 0.3}), Tex.mat("flesh", 2.0, {"emission": Vector3(c.r, c.g, c.b) * 2.0}))
+
+func _arrival(x: int, y: int) -> void:
+	var p := cell_pos(x, y)
+	player.position = p + Vector3(0, 0, 0.1)
+	# the throat he came out of, in the north wall, still dribbling goo
+	var flesh := Tex.mat("flesh", 3.0, {"pulse": 0.012, "double": true})
+	var hole := Vector3(p.x, 0, y * CELL)
+	Build.organic(world, func(st):
+		for i in 18:
+			var a := TAU * i / 18.0
+			MeshKit.blob(st, hole + Vector3(cos(a) * 0.5, 0.5 + sin(a) * 0.45, 0.05), Vector3(0.13, 0.13, 0.1), {"bumps": 0.3, "seed": float(i)}), flesh)
+	Build.organic(world, func(st): MeshKit.blob(st, hole + Vector3(0, 0.0, 0.7), Vector3(0.7, 0.015, 0.6), {"bumps": 0.3, "freq": 3.0}), _goo())
+	Build.box(world, hole + Vector3(0, 0.5, -0.02), Vector3(0.8, 0.8, 0.02), Tex.mat("black"), false)
+	Build.lamp(world, p + Vector3(0, 1.0, 0.0), Color("3a6aff"), 0.7, 4.0)
+
+func _goo() -> ShaderMaterial:
+	var m := ShaderMaterial.new(); m.shader = preload("res://shaders/goo.gdshader"); return m
+
+func _armchair(p: Vector3, _x: int, _y: int) -> void:
+	# her armchair, empty: the coral she tore out of is still in it
+	var cm := Tex.mat("fabric", 3.0, {"tint": Color(1.0, 0.75, 0.75)})
+	Build.box(world, p + Vector3(0, 0.22, 0), Vector3(0.8, 0.44, 0.7), cm)
+	Build.box(world, p + Vector3(0, 0.7, 0.3), Vector3(0.8, 0.9, 0.16), cm)
+	var r := RandomNumberGenerator.new(); r.seed = int(p.x * 10 + p.z)
+	Build.organic(world, func(st):
+		for i in 5: MeshKit.coral(st, p + Vector3(r.randf_range(-0.3, 0.3), 0.45, r.randf_range(-0.2, 0.2)), Vector3(r.randf_range(-0.5, 0.5), 1.0, r.randf_range(-0.5, 0.5)), 0.3, 0.03, r, 1), Tex.mat("coral", 4.0))
+
+func _wardrobe(p: Vector3, _x: int, _y: int) -> void:
+	var w := Wardrobe.new(); w.size = Vector3(1.2, 2.1, 0.6); world.add_child(w); w.position = p
+
+func _fake_door(x: int, y: int) -> void:
+	# her front door, set into the wall, again: padded, numbered, locked
+	var p := cell_pos(x, y)
+	var d := Door.new(); d.material = Tex.mat("door_padded", 2.0); d.width = 0.95; d.locked = true
+	world.add_child(d); d.position = p + Vector3(-0.475, 0, CELL * 0.5 - 0.02)
+	var num := Label3D.new(); num.text = "47"; num.font_size = 48; num.pixel_size = 0.002; num.modulate = Color("c8b878")
+	d.panel.add_child(num); num.position = Vector3(0.47, 1.62, 0.035)
+
+func _ammo(p: Vector3) -> void:
+	var a := Pickup.new(); a.item = "ammo"; a.amount = 6; a.label = "box of rounds"
+	world.add_child(a); a.position = p + Vector3(0, 0.05, 0)
+	var mi := MeshInstance3D.new(); mi.mesh = Build.box_mesh(Vector3(0.14, 0.08, 0.1)); mi.material_override = Tex.mat("cardboard", 8.0, {"tint": Color(0.7, 0.8, 0.6)})
+	a.add_child(mi)
+	var cs := CollisionShape3D.new(); var sh := BoxShape3D.new(); sh.size = Vector3(0.3, 0.2, 0.3); cs.shape = sh; a.add_child(cs)
+
+func _spawn_marta(p: Vector3) -> void:
+	marta = MartaHunter.new(); marta.player = player
+	world.add_child(marta); marta.global_position = p
+	marta_head = Node3D.new(); marta.add_child(marta_head); marta_head.position.y = 1.7
+	marta.caught_player.connect(_on_caught)
+	marta.spotted_player.connect(_on_spotted)
+
+## The way out: the flat's own front door, in the south wall. Beyond it, the landing.
+func _exit(x: int, y: int) -> void:
+	var p := cell_pos(x, y)
+	var z := (y + 1) * CELL
+	exit_door = Door.new(); exit_door.material = Tex.mat("door_padded", 2.0); exit_door.width = 0.95; exit_door.open_angle = -1.6
+	world.add_child(exit_door); exit_door.position = Vector3(p.x - 0.475, 0, z + CELL * 0.5)
+	var num := Label3D.new(); num.text = "47"; num.font_size = 48; num.pixel_size = 0.002; num.modulate = Color("c8b878")
+	exit_door.panel.add_child(num); num.position = Vector3(0.47, 1.62, -0.035); num.rotation.y = PI
+	# the wall cell either side of the door
+	Build.box(world, Vector3(p.x - 0.475 - (CELL * 0.5 - 0.475) * 0.5 - 0.0, H * 0.5, z + CELL * 0.5), Vector3(CELL * 0.5 - 0.475, H, CELL), Tex.mat("wallpaper_flesh", 0.8))
+	Build.box(world, Vector3(p.x + 0.475 + (CELL * 0.5 - 0.475) * 0.5, H * 0.5, z + CELL * 0.5), Vector3(CELL * 0.5 - 0.475, H, CELL), Tex.mat("wallpaper_flesh", 0.8))
+	Build.box(world, Vector3(p.x, 2.05 + (H - 2.05) * 0.5, z + CELL * 0.5), Vector3(0.95, H - 2.05, CELL), Tex.mat("wallpaper_flesh", 0.8))
+	# the landing beyond: the stairwell, gone soft. Across it, 48, open, with light inside
+	var lz := z + CELL
+	var sw := Tex.mat("stairwell", 0.5, {"tint": Color(1.0, 0.7, 0.7), "pulse": 0.006})
+	Build.room(world, p.x - 3.0, lz, p.x + 3.0, lz + 3.0, Tex.mat("concrete", 1.5, {"tint": Color(1, 0.7, 0.7)}), Tex.mat("plaster", 0.7), 2.9)
+	Build.wall(world, Vector2(p.x - 3.0, lz), Vector2(p.x - 3.0, lz + 3.0), sw, [], 2.9)
+	Build.wall(world, Vector2(p.x + 3.0, lz), Vector2(p.x + 3.0, lz + 3.0), sw, [], 2.9)
+	Build.wall(world, Vector2(p.x - 3.0, lz + 3.0), Vector2(p.x + 3.0, lz + 3.0), sw, [{"at": 3.0, "w": 0.95}], 2.9)
+	var d48 := Door.new(); d48.material = Tex.mat("door_padded", 2.0); d48.width = 0.95; d48.open_angle = 1.2; d48.is_open = true; d48.locked = true
+	world.add_child(d48); d48.position = Vector3(p.x - 0.475, 0, lz + 3.0)
+	var n48 := Label3D.new(); n48.text = "48"; n48.font_size = 48; n48.pixel_size = 0.002; n48.modulate = Color("c8b878")
+	d48.panel.add_child(n48); n48.position = Vector3(0.47, 1.62, -0.035); n48.rotation.y = PI
+	Build.box(world, Vector3(p.x, 1.2, lz + 4.0), Vector3(1.6, 2.4, 0.1), Tex.mat("plaster", 1.0, {"emission": Vector3(2.0, 1.7, 1.2)}), false)
+	Build.lamp(world, Vector3(p.x, 1.4, lz + 3.3), Color("ffe0b0"), 1.6, 5.0)
+	zone(Vector3(p.x, 1.0, lz + 1.2), Vector3(5.0, 2.0, 1.2), _finale)
+
+# ------------------------------------------------------------------ the story
+func begin() -> void:
+	Sfx.loop("drone", "flesh_drone", -10.0)
+	if not get_meta("from_checkpoint", false):
+		await _come_out()
+	else:
+		player.set_view(PI, 0.0)
+		Game.fade(0.0, 1.0)
+	Game.checkpoint()
+	random_talk = true
+	set_cutscene(false)
+	objective("Find the way out.")
+
+## He slides out of the wall onto the floor, in goo, and gets up.
+func _come_out() -> void:
+	set_cutscene(true)
+	socko.visible = true; socko.hold = "low"; socko.emotion = "nervous"
+	var end := player.position
+	player.position = end + Vector3(0, 0.1, -1.2)
+	player.head_override = 0.35
+	player.set_view(PI, -0.3)
+	Sfx.play("squelch", 2.0, 0.7)
+	Game.fade(0.0, 2.5)
+	var tw := create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(player, "position", end, 1.3)
+	await tw.finished
+	Sfx.play("thud", -6.0)
+	player.shake(0.02, 0.3)
+	await get_tree().create_timer(1.0).timeout
+	player.head_override = -1.0
+	await player.look_toward(cell_pos(3, 3, 1.4), 1.6)
+	socko.hold = "out"; socko.emotion = "neutral"
+
+func _process(delta: float) -> void:
+	super(delta)
+	if not marta: return
+	if not _encountered and not cutscene and (player_sees(marta_head.global_position, 10.0, 0.55) or marta.state == "chase"):
+		_encounter()
+	# Socko follows her, and is afraid of her
+	if _encountered and not Dialogue.busy:
+		if marta.state == "chase": socko.emotion = "nervous"; socko.look = "marta"
+		elif socko.look == "marta" and marta.state == "patrol": socko.look = "ahead"; socko.emotion = "neutral"
+	random_talk = marta.state == "patrol" and not _ending
+
+func _on_spotted() -> void:
+	if not _encountered: _encounter()
+
+## The first time they see each other she stops, and looks at him, and clicks.
+func _encounter() -> void:
+	_encountered = true
+	Game.set_flag("met_marta_maze")
+	marta.set_state("encounter")
+	await Dialogue.play("marta_maze")
+	if marta.state == "encounter":
+		marta._last_seen = player.global_position
+		marta.set_state("chase")
+		marta.go_to(player.global_position)
+
+func on_event(n: String, _step: Dictionary) -> void:
+	if n == "marta_clicks":
+		for i in 6:
+			Sfx.play_at("click", marta.head(), 4.0, randf_range(0.55, 0.8))
+			await get_tree().create_timer(randf_range(0.08, 0.2)).timeout
+
+## She has him. Back to the start of this place.
+func _on_caught() -> void:
+	set_cutscene(true)
+	Dialogue.stop()
+	random_talk = false
+	socko.emotion = "nervous"; socko.gesture("recoil")
+	await player.look_toward(marta.head(), 0.25)
+	Sfx.play("gasp", 2.0, 0.9)
+	player.shake(0.05, 0.6)
+	var tw := create_tween(); tw.tween_property(player, "global_position", marta.global_position, 0.5)
+	await get_tree().create_timer(0.45).timeout
+	Sfx.play("thud", 4.0, 0.7)
+	await Game.fade(1.0, 0.1)
+	await get_tree().create_timer(1.2).timeout
+	Game.restart_level()
+
+## Through her front door, onto the landing. 48 is open.
+func _finale() -> void:
+	if _ending: return
+	_ending = true
+	marta.active = false
+	set_cutscene(true)
+	Dialogue.stop()
+	socko.look = "ahead"; socko.emotion = "curious"
+	await player.look_toward(Vector3(exit_door.global_position.x + 0.475, 1.5, exit_door.global_position.z + CELL + 3.5), 1.5)
+	var tw := create_tween(); tw.tween_property(player, "global_position", player.global_position + Vector3(0, 0, 1.2), 2.5)
+	await get_tree().create_timer(2.0).timeout
+	Game.set_flag("flat47_done")
+	Game.checkpoint()
+	await Game.end_chapter("Flat 48", "")

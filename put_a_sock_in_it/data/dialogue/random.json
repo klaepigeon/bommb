@@ -1,0 +1,27 @@
+{
+	"random_a": [
+		{"who": "kurt", "text": "Hey, uh, Socko. I have a question."},
+		{"who": "socko", "text": "What's up?", "socko": {"emotion": "happy", "look": "kurt"}},
+		{"who": "kurt", "text": "Where did you come from?"},
+		{"who": "socko", "text": "Wow, what a great question, Kurt! When a mommy sock puppet and a daddy sock puppet love each other very much, they...", "socko": {"emotion": "excited", "gesture": "bounce", "look": "kurt"}},
+		{"who": "kurt", "text": "Forget I asked."}
+	],
+	"random_b": [
+		{"who": "socko", "text": "Hey, Kurt, can I ask you a question?", "socko": {"emotion": "happy", "look": "kurt"}},
+		{"who": "kurt", "text": "Sure, Socko."},
+		{"who": "socko", "text": "Thanks, I really appreciate that.", "socko": {"emotion": "happy", "gesture": "nod"}},
+		{"pause": 0.8, "who": "kurt", "text": "What?"},
+		{"pause": 0.6, "who": "socko", "text": "You're a tough crowd, Kurt.", "socko": {"emotion": "disappointed", "look": "away"}}
+	],
+	"random_c": [
+		{"who": "socko", "text": "Kurt, have you ever had a sandwich?", "socko": {"emotion": "curious", "look": "kurt"}},
+		{"if": "memories == 0", "who": "kurt", "text": "Uh, I think so"},
+		{"if": "memories >= 1", "who": "kurt", "text": "Yeah."},
+		{"who": "socko", "text": "What are they like?", "socko": {"emotion": "curious", "gesture": "tilt"}},
+		{"if": "memories == 0", "pause": 0.6, "who": "kurt", "text": "It's... Impossible to describe"},
+		{"if": "memories >= 1", "who": "kurt", "text": "There's lots of different kinds of sandwiches, buddy. I'm gonna need you to be more specific."},
+		{"pause": 0.4, "who": "socko", "text": "Oh...", "socko": {"emotion": "disappointed"}},
+		{"pause": 0.8, "who": "socko", "text": "Could I be a sandwich?", "socko": {"emotion": "curious", "look": "kurt"}},
+		{"pause": 0.3, "who": "kurt", "text": "Probably not, buddy."}
+	]
+}
