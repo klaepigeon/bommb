@@ -25,6 +25,7 @@ var marta: MartaHunter
 var marta_head: Node3D
 var exit_door: ExportDoor
 var _encountered := false
+var _seen_in_c := false
 var _ending := false
 var _near := 0.0
 var _tearing := false
@@ -189,6 +190,7 @@ func _marta() -> void:
 
 func _move_marta(k: String) -> void:
 	var f: ExportedFlat = flats[k]
+	marta.evolve(2 if k == "C" else 1)       # she's further along every time he sees her
 	if marta.get_parent() != f: marta.reparent(f, false)
 	marta.grid = f.nav_grid(CELL)
 	marta.cell = CELL; marta.origin = _p(k, Vector3(-0.5, 0, -2.0))
@@ -262,6 +264,10 @@ func _process(delta: float) -> void:
 	var here: bool = marta.get_parent() == flats[stage]
 	if not _encountered and here and not cutscene and (player_sees(marta_head.global_position, 9.0, 0.55) or marta.state == "chase"):
 		_encounter()
+	# the first sight of her in the last copy: bigger again
+	if _encountered and here and stage == "C" and not _seen_in_c and not cutscene and player_sees(marta_head.global_position, 10.0, 0.55):
+		_seen_in_c = true
+		Dialogue.play("marta_evolved_c")
 	if _encountered and not Dialogue.busy:
 		if marta.state == "chase": socko.emotion = "nervous"; socko.look = "marta"
 		elif socko.look == "marta" and marta.state == "patrol": socko.look = "ahead"; socko.emotion = "neutral"
@@ -294,6 +300,8 @@ func _encounter() -> void:
 		marta._last_seen = player.global_position
 		marta.set_state("chase")
 		marta.go_to(player.global_position)
+	# Socko's noticed what's happened to her since the table
+	if not Dialogue.busy: Dialogue.play("marta_evolved_b")
 
 func on_event(n: String, _step: Dictionary) -> void:
 	if n == "marta_clicks":

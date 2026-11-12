@@ -7,7 +7,10 @@ extends Node3D
 ## so she grins, very wide, at her plate.
 ##
 ## She doesn't move. Not breathing, not twitching; only the flies. That's the point: when she
-## moves (see the encounter in marta_encounter.gd) it should be the last thing the player expects.
+## moves it should be the last thing the player expects. Her head is bowed and her hair hangs
+## over her face, so what Kurt finds first is a dead old woman at her dinner, not a monster; the
+## grin is held back until she lifts her head (`reveal`). One eye is still hers: wet, a real
+## pupil, and it finds him (`gaze`). Her jaw opens further than a jaw opens (`unhinge`).
 ##
 ## Built procedurally (MeshKit, RotTextures), segmented on a joint hierarchy the way PS1
 ## characters were, so the corpse can be posed and then move. Local frame: she faces -Z, the
@@ -25,7 +28,7 @@ const J := {
 	"shL": Vector3(-0.19, 1.03, -0.02), "elL": Vector3(-0.25, 0.80, -0.22), "wrL": Vector3(-0.16, 0.785, -0.46),
 }
 # the rest pose: head hanging toward the plate, lolled to her left
-const HEAD_REST := Vector3(-0.55, 0.12, 0.28)
+const HEAD_REST := Vector3(-0.8, 0.1, 0.2)      # bowed over her plate, chin on her chest
 const JAW_REST := 0.1      # hanging slack
 const JAW_OPEN := 0.38     # when she looks at you
 
@@ -45,8 +48,15 @@ const STAND_LIFT := 0.42
 const POSE_MAP := {"hip_l": "hipL", "hip_r": "hipR", "kn_l": "knL", "kn_r": "knR", "sh_l": "shL", "sh_r": "shR",
 	"el_l": "elL", "el_r": "elR", "neck": "neck", "head": "head"}
 
-func _init(stand := false) -> void:
-	standing = stand
+## How far the coral has got (she changes between sightings): 0 at the table; 1 on her feet in
+## the first copy (antlers out of the skull, a ridge down the spine, the forearms and hands drawn
+## out long); 2 in the last (taller, coral blooming out of her back like a split coat, the jaw
+## hanging off its hinge for good, the head carried at a broken angle).
+var stage := 0
+var jaw_extra := 0.0
+
+func _init(stand := false, evolution := 0) -> void:
+	standing = stand; stage = evolution
 
 func _ready() -> void:
 	rng.seed = 47
@@ -57,6 +67,8 @@ func _ready() -> void:
 			pose[k] = Vector3.ZERO
 		_rest = {}
 		for k in POSE_MAP: _rest[k] = (joints[POSE_MAP[k]] as Node3D).rotation
+		for side in ["L", "R"]: (joints["veil" + side] as Node3D).visible = false    # up and moving, the hair's fallen off her face
+		if stage >= 1: _evolve()
 		return
 	joints.head.rotation = HEAD_REST
 	joints.jaw.rotation.x = -JAW_REST     # negative opens: the chin swings down and forward
@@ -74,7 +86,11 @@ var _rest := {}
 var base := {}
 var life := {}
 var agitation := 0.0
-var seated_alive := true
+var seated_alive := false     # dead still until she stirs
+## A world point her good eye looks at (null: it stares ahead).
+var gaze = null
+var _pupil: MeshInstance3D
+var _pupil_home := Vector3.ZERO
 var _st := 0.0
 var _tic := 3.0
 var _tap := 6.0
@@ -122,6 +138,30 @@ func _seated_life(delta: float) -> void:
 
 ## The grab: she draws back, then comes up out of the chair across the table, arms out, the jaw
 ## dropping, screaming. `at`: where his face is.
+## The hair over her face parting (k 0: hanging over it, 1: fallen aside), over `secs`.
+## Until then the hair lies over her face, wet, in hanks from the hairline to below the chin.
+var veil_k := 0.0
+func reveal(k: float, secs := 1.6) -> void:
+	if secs <= 0.02: veil_k = k; return
+	create_tween().set_trans(Tween.TRANS_SINE).tween_property(self, "veil_k", k, secs)
+
+func _hang_veil() -> void:
+	var head: Node3D = joints.head
+	for side in ["L", "R"]:
+		var v: Node3D = joints.get("veil" + side)
+		if not v or not v.visible: continue
+		var s := -1.0 if side == "L" else 1.0
+		# hanging straight down from the front of her forehead, whatever her head does
+		var down := Quaternion(head.global_basis.orthonormalized().inverse() * Basis(Vector3.UP, global_rotation.y))
+		var aside := Quaternion(Basis.from_euler(Vector3(-0.15, s * 1.55, s * 0.25)))     # swung back along the cheeks
+		v.quaternion = down.slerp(aside, veil_k)
+
+## The jaw dropping, past where a jaw stops, over `secs`.
+func unhinge(amount: float, secs: float) -> void:
+	if not base.is_empty(): base.jaw = Vector3(-amount, 0, 0)
+	var tw := create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_property(joints.jaw, "rotation:x", -amount, secs)
+
 func lunge(at: Vector3) -> void:
 	seated_alive = false
 	Sfx.play_at("marta_scream", (joints.head as Node3D).global_position, 4.0, 0.95)
@@ -142,6 +182,8 @@ func lunge(at: Vector3) -> void:
 	tw.chain().tween_callback(func(): face(at, 0.7))
 
 func _process(delta: float) -> void:
+	_look(delta)
+	if not standing: _hang_veil()
 	if not standing:
 		if seated_alive: _seated_life(delta)
 		return
@@ -152,7 +194,20 @@ func _process(delta: float) -> void:
 	var hips: Node3D = joints.hips
 	hips.rotation = hips.rotation.lerp(pose.spine + pose.chest, k)
 	var jaw: Node3D = joints.jaw
-	jaw.rotation.x = lerpf(jaw.rotation.x, -(JAW_REST + pose.jaw.x * 0.6), k)
+	jaw.rotation.x = lerpf(jaw.rotation.x, -(JAW_REST + jaw_extra + pose.jaw.x * 0.6), k)
+
+## The good eye: the pupil slides across the eyeball toward `gaze`.
+func _look(delta: float) -> void:
+	if not _pupil: return
+	var want := _pupil_home
+	if gaze is Vector3:
+		var head: Node3D = joints.head
+		var eye_c: Vector3 = _pupil_home - Vector3(0, 0, -0.0105)
+		var d: Vector3 = head.global_transform.affine_inverse() * (gaze as Vector3) - eye_c
+		d = d.normalized()
+		if d.z > -0.2: d = Vector3(d.x, d.y, -0.2).normalized()     # the eye only turns so far
+		want = eye_c + d * 0.0105
+	_pupil.position = _pupil.position.lerp(want, 1.0 - exp(-10.0 * delta))
 
 ## Where her head is (for sight, sounds, the torch).
 func head_pos() -> Vector3:
@@ -187,6 +242,38 @@ func mat(tex: String, rough := 0.85, spec := 0.5, glow := 0.0) -> ShaderMaterial
 		m.set_shader_parameter("emission", Vector3(0.75, 0.78, 0.7) * glow)
 	_mats[key] = m
 	return m
+
+# ---------------------------------------------------------------- what she's becoming
+func _evolve() -> void:
+	var coralm := mat("coral", 0.75)
+	var flesh := mat("flesh", 0.38, 0.45)
+	var H := Vector3(0, 1.28, -0.09)
+	# antlers: out of the crown and back, branching
+	var crown := Part.new(self)
+	for i in 5:
+		var a := -0.9 + i * 0.45
+		MeshKit.coral(crown.st(coralm), H + Vector3(sin(a) * 0.05, 0.085, 0.02), Vector3(sin(a) * 0.8, 1.0, 0.45), rng.randf_range(0.12, 0.22) * (1.0 + stage * 0.3), 0.022, rng, 2)
+	_attach(crown, joints.head, J.head)
+	# a ridge down her spine, spines pointing back
+	var ridge := Part.new(self)
+	for i in 9:
+		var y := 0.7 + i * 0.045
+		MeshKit.lump(ridge.st(coralm), Vector3(0, y, 0.15), 0.03, rng)
+		MeshKit.coral(ridge.st(coralm), Vector3(0, y, 0.16), Vector3(rng.randf_range(-0.3, 0.3), 0.3, 1.0), rng.randf_range(0.06, 0.12), 0.016, rng, 1)
+	# the bloom: out of the shoulder blades, wide, like a coat split open down the back
+	if stage >= 2:
+		for s in [-1.0, 1.0]:
+			for i in 4:
+				MeshKit.coral(ridge.st(coralm), Vector3(s * 0.09, 0.98 - i * 0.05, 0.12), Vector3(s * 1.0, 0.6 - i * 0.25, 0.8), rng.randf_range(0.25, 0.38), 0.03, rng, 2)
+			MeshKit.blob(ridge.st(flesh), Vector3(s * 0.1, 0.95, 0.12), Vector3(0.06, 0.1, 0.04), {"sag": 0.8, "bumps": 0.5, "seed": 170 + s})
+	_attach(ridge, joints.hips, J.hips)
+	# the forearms and hands drawn out
+	for side in ["L", "R"]:
+		(joints["el" + side] as Node3D).scale = Vector3.ONE * (1.3 if stage == 1 else 1.45)
+	if stage >= 2:
+		scale = Vector3.ONE * 1.12
+		jaw_extra = 0.9
+		_rest["head"] = _rest["head"] + Vector3(0.1, 0, 0.45)
 
 # ---------------------------------------------------------------- parts
 ## A part is a set of SurfaceTools (one per material) that becomes one mesh on one joint.
@@ -419,6 +506,32 @@ func _upper(hips: Node3D, flesh: Material, flesh_dry: Material, coralm: Material
 		var root := H + Vector3(sin(a) * 0.08, 0.06 + rng.randf_range(-0.02, 0.02), cos(a) * 0.085)
 		var hang := rng.randf_range(0.14, 0.28)
 		MeshKit.tube(hd.st(hair), [root, root + Vector3(sin(a) * 0.03, -hang * 0.4, cos(a) * 0.02), root + Vector3(sin(a) * 0.04, -hang, cos(a) * 0.03)], [0.012, 0.008, 0.003], {"sides": 4})
+	# over her face: wet hair in two curtains from the front of the hairline, hanging straight
+	# down (see _hang_veil) past her chin; they part when she lifts her head (reveal)
+	for side in [-1.0, 1.0]:
+		var root: Vector3 = H + Vector3(side * 0.028, 0.06, -0.1)
+		var vj := Node3D.new(); vj.name = "veil" + ("L" if side < 0.0 else "R"); head.add_child(vj)
+		vj.position = root - J.head; joints[vj.name] = vj
+		var vp := Part.new(self)
+		for k in 6:
+			var x: float = side * (-0.02 + k * 0.02)
+			var hl := 0.27 + rng.randf_range(-0.02, 0.04) - absf(k - 2.5) * 0.012
+			# down over the brow, the eyes, the grin, the chin: following the face's curve, just off it
+			var top: Vector3 = root + Vector3(x, 0.0, -0.005 + absf(x) * 0.2)
+			var mid: Vector3 = root + Vector3(x * 1.1, -hl * 0.55, -0.01 + absf(x) * 0.25)
+			var bot: Vector3 = root + Vector3(x * 1.2, -hl * 1.2, -0.01 + absf(x) * 0.25)
+			MeshKit.tube(vp.st(hair), [top, mid, bot], [Vector3(0.018, 0.017, 0.012).x, 0.016, 0.008], {"sides": 5, "bumps": 0.4, "seed": 140 + k + side * 10})
+		_attach(vp, vj, root)
+	# her good eye's pupil: the one thing in the face that's still her
+	_pupil = MeshInstance3D.new(); _pupil.name = "Pupil"
+	var pst := SurfaceTool.new(); pst.begin(Mesh.PRIMITIVE_TRIANGLES)
+	MeshKit.blob(pst, Vector3.ZERO, Vector3(0.0055, 0.0055, 0.002), {"rings": 4, "segs": 8})
+	pst.generate_normals(); _pupil.mesh = pst.commit()
+	var pm := StandardMaterial3D.new(); pm.albedo_color = Color(0.03, 0.02, 0.02); pm.roughness = 0.05; pm.metallic_specular = 1.0
+	_pupil.material_override = pm
+	head.add_child(_pupil)
+	_pupil_home = eyes[0] - J.head + Vector3(0, 0, -0.0105)
+	_pupil.position = _pupil_home
 	# coral: out of her left cheek, and up out of the crown
 	MeshKit.coral(hd.st(coralm), H + Vector3(-0.075, -0.02, -0.03), Vector3(-1, 0.4, -0.3), 0.06, 0.018, rng, 1)
 	for i in 3:

@@ -1,58 +1,306 @@
 {
-	"knock": [
-		{"event": "knock", "wait": 1.4},
-		{"who": "kurt", "text": "Ms. Sokolov? Your sister asked me to come check on you."},
-		{"pause": 1.6, "event": "knock_again", "wait": 1.6},
-		{"who": "kurt", "text": "Marta? It's Kurt. I'm coming in."}
-	],
-	"see_flat": [
-		{"who": "kurt", "text": "Christ...", "tone": "quiet", "hold": 0.6}
-	],
-	"see_marta": [
-		{"who": "kurt", "text": "Oh... oh no.", "tone": "quiet", "hold": 0.8}
-	],
-	"investigate_marta": [
-		{"who": "kurt", "text": "What the hell is this?"},
-		{"pause": 1.4, "event": "marta_stirs", "wait": 1.6},
-		{"who": "marta", "text": "Little boxes made of boxes with boxes inside of them... Have you seen them? The boxes, I mean. They're scary at first. But then you look at them for a moment", "tone": "quiet", "hold": 0.4},
-		{"pause": 0.8, "who": "kurt", "text": "Marta?", "tone": "quiet"},
-		{"pause": 1.2, "event": "marta_turns", "wait": 1.4},
-		{"who": "marta", "text": "Look at the boxes, my little bird. Do you see them?", "tone": "quiet", "hold": 0.2},
-		{"pause": 0.5, "event": "grab"}
-	],
-	"wake": [
-		{"event": "rub_head", "wait": 1.2},
-		{"who": "kurt", "text": "Oh, jeez, that smarts", "tone": "quiet"},
-		{"pause": 0.6, "event": "socko_reveal", "wait": 1.6},
-		{"who": "socko", "text": "Heyyyy buddyyyy.... You should probably take it slow, a concussion is no joke!", "socko": {"emotion": "happy", "look": "kurt"}},
-		{"who": "kurt", "text": "What the fuck!?", "tone": "shout", "socko": {"gesture": "recoil"}},
-		{"pause": 0.3, "who": "socko", "text": "Who, me?", "socko": {"emotion": "curious", "gesture": "tilt"}},
-		{"who": "kurt", "text": "Yeah, you. Who the fuck are you?"},
-		{"who": "socko", "text": "I'm Socko! I'm a handy little pal! Who are you?", "socko": {"emotion": "happy", "gesture": "bounce"}},
-		{"pause": 1.2, "who": "kurt", "text": "Uh... Kurt sounds right."},
-		{"who": "socko", "text": "You don't know?", "socko": {"emotion": "curious", "gesture": "tilt"}},
-		{"pause": 0.6, "who": "kurt", "text": "I... yeah I got nothing."},
-		{"pause": 0.4, "who": "socko", "text": "Shouldn't have stood up so fast.", "socko": {"emotion": "neutral", "gesture": "nod"}}
-	],
-	"door_locked": [
-		{"who": "kurt", "text": "It won't open."},
-		{"who": "socko", "text": "Maybe it's locked?", "socko": {"emotion": "curious", "look": "door"}},
-		{"pause": 0.5, "who": "kurt", "text": "Wow, thanks. I never would have guessed."},
-		{"who": "socko", "text": "You're welcome!", "socko": {"emotion": "happy", "gesture": "bounce", "look": "kurt"}},
-		{"pause": 0.3, "who": "socko", "text": "I like helping.", "tone": "aside", "socko": {"emotion": "happy", "look": "away"}}
-	],
-	"wardrobe_hole": [
-		{"pause": 0.6, "who": "kurt", "text": "What the hell Is that?"},
-		{"who": "socko", "text": "I don't know.", "socko": {"emotion": "neutral", "look": "hole"}},
-		{"who": "kurt", "text": "Do you know anything?"},
-		{"who": "socko", "text": "I know that I can do this!", "socko": {"emotion": "happy", "look": "kurt"}},
-		{"event": "cross_eyed", "wait": 1.8},
-		{"who": "socko", "text": "Ooh! Ooh! And I can smell important stuff! Go this way!", "socko": {"emotion": "excited", "gesture": "point", "look": "gun"}}
-	],
-	"balcony": [
-		{"who": "kurt", "text": "You seeing this?"},
-		{"who": "socko", "text": "Is something unusual?", "socko": {"emotion": "curious", "look": "kurt"}},
-		{"pause": 0.4, "who": "kurt", "text": "To my recollection, typically there's more to the world than a sticky note that says \"outside\""},
-		{"who": "socko", "text": "I wouldn't know, I'm more of an indoor person", "socko": {"emotion": "happy", "gesture": "tilt"}}
-	]
+ "knock": [
+  {
+   "event": "knock",
+   "wait": 1.4
+  },
+  {
+   "who": "kurt",
+   "text": "Ms. Sokolov? Your sister asked me to come check on you."
+  },
+  {
+   "pause": 1.6,
+   "event": "knock_again",
+   "wait": 1.6
+  },
+  {
+   "who": "kurt",
+   "text": "Marta? It's Kurt. I'm coming in."
+  }
+ ],
+ "see_flat": [
+  {
+   "who": "kurt",
+   "text": "Christ...",
+   "tone": "quiet",
+   "hold": 0.6
+  }
+ ],
+ "see_marta": [
+  {
+   "who": "kurt",
+   "text": "Oh... oh no.",
+   "tone": "quiet",
+   "hold": 0.8
+  }
+ ],
+ "investigate_marta": [
+  {
+   "who": "kurt",
+   "text": "What the hell is this?"
+  },
+  {
+   "pause": 1.4,
+   "event": "marta_stirs",
+   "wait": 1.6
+  },
+  {
+   "who": "marta",
+   "text": "Little boxes made of boxes with boxes inside of them... Have you seen them? The boxes, I mean. They're scary at first. But then you look at them for a moment",
+   "tone": "quiet",
+   "hold": 0.4
+  },
+  {
+   "pause": 0.8,
+   "who": "kurt",
+   "text": "Marta?",
+   "tone": "quiet"
+  },
+  {
+   "pause": 1.2,
+   "event": "marta_turns",
+   "wait": 1.4
+  },
+  {
+   "who": "marta",
+   "text": "Look at the boxes, my little bird. Do you see them?",
+   "tone": "quiet",
+   "hold": 0.2
+  },
+  {
+   "pause": 0.5,
+   "event": "grab"
+  }
+ ],
+ "wake": [
+  {
+   "event": "rub_head",
+   "wait": 1.2
+  },
+  {
+   "who": "kurt",
+   "text": "Oh, jeez, that smarts",
+   "tone": "quiet"
+  },
+  {
+   "pause": 0.6,
+   "event": "socko_reveal",
+   "wait": 1.6
+  },
+  {
+   "who": "socko",
+   "text": "Heyyyy buddyyyy.... You should probably take it slow, a concussion is no joke!",
+   "socko": {
+    "emotion": "happy",
+    "look": "kurt"
+   }
+  },
+  {
+   "who": "kurt",
+   "text": "What the fuck!?",
+   "tone": "shout",
+   "socko": {
+    "gesture": "recoil"
+   }
+  },
+  {
+   "pause": 0.3,
+   "who": "socko",
+   "text": "Who, me?",
+   "socko": {
+    "emotion": "curious",
+    "gesture": "tilt"
+   }
+  },
+  {
+   "who": "kurt",
+   "text": "Yeah, you. Who the fuck are you?"
+  },
+  {
+   "who": "socko",
+   "text": "I'm Socko! I'm a handy little pal! Who are you?",
+   "socko": {
+    "emotion": "happy",
+    "gesture": "bounce"
+   }
+  },
+  {
+   "pause": 1.2,
+   "who": "kurt",
+   "text": "Uh... Kurt sounds right."
+  },
+  {
+   "who": "socko",
+   "text": "You don't know?",
+   "socko": {
+    "emotion": "curious",
+    "gesture": "tilt"
+   }
+  },
+  {
+   "pause": 0.6,
+   "who": "kurt",
+   "text": "I... yeah I got nothing."
+  },
+  {
+   "pause": 0.4,
+   "who": "socko",
+   "text": "Shouldn't have stood up so fast.",
+   "socko": {
+    "emotion": "neutral",
+    "gesture": "nod"
+   }
+  }
+ ],
+ "door_locked": [
+  {
+   "who": "kurt",
+   "text": "It won't open."
+  },
+  {
+   "who": "socko",
+   "text": "Maybe it's locked?",
+   "socko": {
+    "emotion": "curious",
+    "look": "door"
+   }
+  },
+  {
+   "pause": 0.5,
+   "who": "kurt",
+   "text": "Wow, thanks. I never would have guessed."
+  },
+  {
+   "who": "socko",
+   "text": "You're welcome!",
+   "socko": {
+    "emotion": "happy",
+    "gesture": "bounce",
+    "look": "kurt"
+   }
+  },
+  {
+   "pause": 0.3,
+   "who": "socko",
+   "text": "I like helping.",
+   "tone": "aside",
+   "socko": {
+    "emotion": "happy",
+    "look": "away"
+   }
+  }
+ ],
+ "wardrobe_hole": [
+  {
+   "pause": 0.6,
+   "who": "kurt",
+   "text": "What the hell Is that?"
+  },
+  {
+   "who": "socko",
+   "text": "I don't know.",
+   "socko": {
+    "emotion": "neutral",
+    "look": "hole"
+   }
+  },
+  {
+   "who": "kurt",
+   "text": "Do you know anything?"
+  },
+  {
+   "who": "socko",
+   "text": "I know that I can do this!",
+   "socko": {
+    "emotion": "happy",
+    "look": "kurt"
+   }
+  },
+  {
+   "event": "cross_eyed",
+   "wait": 1.8
+  },
+  {
+   "who": "socko",
+   "text": "Ooh! Ooh! And I can smell important stuff! Go this way!",
+   "socko": {
+    "emotion": "excited",
+    "gesture": "point",
+    "look": "gun"
+   }
+  }
+ ],
+ "balcony": [
+  {
+   "who": "kurt",
+   "text": "You seeing this?"
+  },
+  {
+   "who": "socko",
+   "text": "Is something unusual?",
+   "socko": {
+    "emotion": "curious",
+    "look": "kurt"
+   }
+  },
+  {
+   "pause": 0.4,
+   "who": "kurt",
+   "text": "To my recollection, typically there's more to the world than a sticky note that says \"outside\""
+  },
+  {
+   "who": "socko",
+   "text": "I wouldn't know, I'm more of an indoor person",
+   "socko": {
+    "emotion": "happy",
+    "gesture": "tilt"
+   }
+  }
+ ],
+ "pembis_socko": [
+  {
+   "pause": 0.3,
+   "who": "socko",
+   "text": "This is the absolute height of literature!",
+   "socko": {
+    "emotion": "excited",
+    "gesture": "bounce",
+    "look": "kurt"
+   }
+  }
+ ],
+ "socko_chair": [
+  {
+   "who": "socko",
+   "text": "Ooh. She got up! She must have been all done with sitting.",
+   "socko": {
+    "emotion": "curious",
+    "look": "chair"
+   }
+  },
+  {
+   "pause": 0.6,
+   "who": "socko",
+   "text": "She didn't look like that before, did she? When you came in?",
+   "tone": "quiet",
+   "socko": {
+    "emotion": "uncanny",
+    "look": "kurt"
+   }
+  },
+  {
+   "pause": 0.5,
+   "who": "kurt",
+   "text": "She didn't look like that a week ago.",
+   "tone": "quiet"
+  },
+  {
+   "who": "socko",
+   "text": "People change so fast!",
+   "socko": {
+    "emotion": "happy",
+    "gesture": "nod"
+   }
+  }
+ ]
 }

@@ -44,7 +44,7 @@ func _initialize() -> void:
 	await _wait(0.8)
 	await _shot("05_socko_hello")
 	await _until(func(): return L._woke, 60.0, "wake conversation finishes")
-	_check(not L.marta.visible, "Marta is gone from the chair")
+	_check(L.marta.visible and not L.marta.joints.hips.visible and not L.jumper.visible, "Marta is gone from the chair (the chair and the coral stay)")
 	await _shot("06_awake")
 	_tp(L, Vector3(9.4, 0, 4.15), Vector3(10.06, 1.2, 4.15))
 	L.front_door.interact(L.player)

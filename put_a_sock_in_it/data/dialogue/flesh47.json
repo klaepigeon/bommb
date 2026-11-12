@@ -1,9 +1,91 @@
 {
-	"marta_maze": [
-		{"event": "marta_clicks", "wait": 1.4},
-		{"who": "marta", "text": "(clicks)", "tone": "quiet"},
-		{"who": "socko", "text": "What?", "socko": {"emotion": "nervous", "look": "marta"}},
-		{"who": "kurt", "text": "Socko, buddy, what's happening?", "tone": "quiet"},
-		{"pause": 0.5, "who": "socko", "text": "How does she know you, Kurt?", "socko": {"emotion": "uncanny", "look": "kurt"}}
-	]
+ "marta_maze": [
+  {
+   "event": "marta_clicks",
+   "wait": 1.4
+  },
+  {
+   "who": "marta",
+   "text": "(clicks)",
+   "tone": "quiet"
+  },
+  {
+   "who": "socko",
+   "text": "What?",
+   "socko": {
+    "emotion": "nervous",
+    "look": "marta"
+   }
+  },
+  {
+   "who": "kurt",
+   "text": "Socko, buddy, what's happening?",
+   "tone": "quiet"
+  },
+  {
+   "pause": 0.5,
+   "who": "socko",
+   "text": "How does she know you, Kurt?",
+   "socko": {
+    "emotion": "uncanny",
+    "look": "kurt"
+   }
+  }
+ ],
+ "marta_evolved_b": [
+  {
+   "pause": 0.4,
+   "who": "socko",
+   "text": "She was sitting down before! Now she's all legs!",
+   "socko": {
+    "emotion": "nervous",
+    "look": "marta"
+   }
+  },
+  {
+   "who": "socko",
+   "text": "And antlers. She didn't have antlers.",
+   "tone": "aside",
+   "socko": {
+    "emotion": "uncanny",
+    "look": "marta"
+   }
+  }
+ ],
+ "marta_evolved_c": [
+  {
+   "who": "socko",
+   "text": "Kurt? She's bigger again.",
+   "tone": "quiet",
+   "socko": {
+    "emotion": "nervous",
+    "look": "marta"
+   }
+  },
+  {
+   "pause": 0.4,
+   "who": "socko",
+   "text": "Every time we see her, there's more of her.",
+   "tone": "quiet",
+   "socko": {
+    "emotion": "uncanny",
+    "look": "kurt"
+   }
+  },
+  {
+   "pause": 0.5,
+   "who": "kurt",
+   "text": "Yeah. I noticed.",
+   "tone": "quiet"
+  },
+  {
+   "who": "socko",
+   "text": "Do you think she stops?",
+   "socko": {
+    "emotion": "curious",
+    "gesture": "tilt",
+    "look": "marta"
+   }
+  }
+ ]
 }

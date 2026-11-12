@@ -46,13 +46,26 @@ func _ready() -> void:
 	collision_layer = 8; collision_mask = 1
 	var cs := CollisionShape3D.new(); var cap := CapsuleShape3D.new(); cap.radius = 0.3; cap.height = 1.8
 	cs.shape = cap; cs.position.y = 0.9; add_child(cs)
-	body = MartaSeated.new(true); add_child(body)
+	body = MartaSeated.new(true, evolution); add_child(body)
 	var breath := AudioStreamPlayer3D.new(); breath.stream = Sfx.streams.get("marta_rattle"); breath.volume_db = -6.0
 	breath.unit_size = 2.0; breath.max_distance = 14.0; breath.bus = "World"; breath.autoplay = true; add_child(breath); breath.position.y = 1.6   # the same woman as at the table, on her feet
 	body.snap = 18.0
 	# the coral on her gives off a little sick light: you can see her coming, just
 	var glow := OmniLight3D.new(); glow.light_color = Color("9adfb0"); glow.light_energy = 0.55; glow.omni_range = 2.6
 	glow.shadow_enabled = false; glow.position = Vector3(0, 1.5, 0.25); add_child(glow)
+
+## How far along she is (MartaSeated.stage); set before she's added, or use evolve().
+var evolution := 1
+
+## She's changed since he last saw her: a new body at the next stage, posed as the old one was.
+func evolve(to: int) -> void:
+	if to == evolution or not body: return
+	evolution = to
+	var old := body
+	body = MartaSeated.new(true, to); body.snap = old.snap
+	add_child(body)
+	for k in old.pose: body.pose[k] = old.pose[k]
+	old.queue_free()
 
 func _enter_tree() -> void:
 	# (she's moved between copies of the flat: reconnect each time she's put somewhere)

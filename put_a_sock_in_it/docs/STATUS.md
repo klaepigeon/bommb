@@ -12,7 +12,7 @@ What actually works, checked by the tools in `tools/` (run with
 | `build_apk.sh` | exports and verifies the signed APK | signed |
 | `touch_test.gd` | stick walks, right-half drag looks, both at once, USE presses interact | 0 fails |
 | `flash_test.gd` | photosensitivity: renders the flickering scenes and counts brightness flashes per screen quadrant (WCAG general-flash rule, simplified) | 0 fails (≤ 1 flash/s) |
-| `socko_view.gd`, `marta_view.gd`, `hunter_pose.gd`, `landing_view.gd`, `note_view.gd`, `beauty.gd`, `title_shot.gd` | render characters, Marta's poses, the stairwell and doors, Sonya's note and fixed views for judging the look | |
+| `socko_view.gd`, `marta_view.gd`, `marta_stages.gd`, `scare_view.gd`, `hunter_pose.gd`, `landing_view.gd`, `note_view.gd`, `beauty.gd`, `title_shot.gd` | render characters, Marta's poses, the stairwell and doors, Sonya's note and fixed views for judging the look | |
 | `bake_audio.gd` | synthesises every sound into `assets/audio/` | 78 sounds |
 
 ## Implemented
@@ -35,6 +35,13 @@ What actually works, checked by the tools in `tools/` (run with
   the export had glass); through the flat's material converter, so they flesh over in level 2.
 - Sonya's note, half under her bed in Flat 47 (`NoteReader` shows readable paper; sets
   `flags.read_pembis`).
+- The opening scare (docs/SCARE.md): murmuring before she's seen, silence when she is; dead
+  still, head bowed under her hair; changes while Kurt isn't looking; her voice from under the
+  hair; the head coming up and on too far, her good eye finding him; dead air while her jaw
+  unhinges; the bulb popping and her at his face when the light comes back.
+- Marta changes between sightings (`MartaSeated.stage` 0/1/2: the table, copy B, copy C) and
+  Socko remarks on it each time; her empty chair after the blackout gets a comment too.
+- Socko on Sonya's story: "This is the absolute height of literature!"
 - Marta's voice (creaking fry, scream, cracks, sniffing, rattling breath) and animation: seated
   life and lunge; on her feet a dragging walk, scuttling chase, sniff and over-rotated head,
   listening crouch, slow tilt on meeting Kurt, reeling when shot.

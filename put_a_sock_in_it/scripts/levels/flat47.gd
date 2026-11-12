@@ -41,6 +41,13 @@ var _seen_marta := false
 var _woke := false
 var _wardrobe_moved := false
 var _marta_t := 0.0
+# the scare (docs/SCARE.md)
+var jumper: MartaSeated          # her on her feet, for the moment the light comes back
+var _murmur_t := 2.0
+var _unseen_t := 0.0
+var _tells := 0
+var _world_db := 0.0
+var _chair_line := false
 
 # ------------------------------------------------------------------ the place
 func build() -> void:
@@ -67,7 +74,7 @@ func build() -> void:
 	_sonya_note()
 	player.position = Vector3(11.9, 0, 4.56)
 	player.set_view(PI * 0.5, -0.04)
-	socko.points = {"door": FRONT + Vector3(0, 1.2, 0), "hole": HOLE + Vector3(0, 0.8, 0), "gun": gun_drawer, "wardrobe": wardrobe}
+	socko.points = {"chair": MARTA_POS + Vector3(0, 0.7, 0), "door": FRONT + Vector3(0, 1.2, 0), "hole": HOLE + Vector3(0, 0.8, 0), "gun": gun_drawer, "wardrobe": wardrobe}
 
 ## The JS version's evening: a dusk the colour of slate through the courtyard windows, almost no
 ## light of its own; what light there is comes from her fittings.
@@ -94,6 +101,8 @@ func _marta() -> void:
 	marta.position = MARTA_POS; marta.rotation.y = PI / 2
 	marta_spot = Hotspot.make(world, MARTA_POS + Vector3(0.0, 1.0, 0.0), Vector3(0.6, 1.0, 0.6), "", _investigate)
 	marta_spot.enabled = false
+	jumper = MartaSeated.new(true, 0); jumper.name = "MartaRisen"; jumper.visible = false; jumper.snap = 60.0
+	world.add_child(jumper)
 
 ## The wardrobe she pushed across the box-room door. It can be pushed back along the wall.
 func _wardrobe() -> void:
@@ -248,6 +257,9 @@ func _read_sonya_note() -> void:
 	Game.flags["read_pembis"] = true
 	var r := NoteReader.open(self, SONYA_NOTE, {"ink": Color("4b3f78"), "font_size": 30, "tilt": 2.0})
 	await r.closed
+	if _woke and socko.visible and not Game.flag("socko_read_pembis"):
+		Game.set_flag("socko_read_pembis")
+		Dialogue.play("pembis_socko")
 
 ## The key light: the shade over the table, on her, throwing her coral up the wall.
 func _lights() -> void:
@@ -279,7 +291,6 @@ func _atmosphere() -> void:
 	Sfx.loop("tv", "tv_static", -24.0, Vector3(3.38, 1.03, 2.06))
 	Sfx.loop("fridge", "hum", -20.0, Vector3(9.6, 1.0, 3.2))
 	Sfx.loop("flies", "flies", -14.0, MARTA_POS + Vector3(0, 1.2, 0))
-	Sfx.loop("marta", "marta_rattle", -14.0, MARTA_POS + Vector3(0, 1.2, 0))
 	Sfx.loop("wind", "wind", -26.0, Vector3(2.0, 1.5, -0.3))
 	ambient([1.5, 4.0], func(): Sfx.play_at("drip", Vector3(8.0, 0.5, 6.8), -10.0, randf_range(0.9, 1.15)))
 	ambient([6.0, 11.0], func(): Sfx.play_at("drip", Vector3(9.2, 0.9, 0.4), -14.0, randf_range(1.2, 1.4)))
@@ -326,23 +337,28 @@ func on_event(n: String, _step: Dictionary) -> void:
 				Sfx.play_at("knock", FRONT + Vector3(0.1, 1.3, 0), 3.0, randf_range(0.9, 1.0)); player.shake(0.006, 0.08)
 				await get_tree().create_timer(0.3).timeout
 		"marta_stirs":
-			marta.agitation = 0.6
-			Sfx.play_at("bone_crack", _face(), -2.0, 0.8)
-			Sfx.play_at("marta_breath", _face(), -2.0)
-			Sfx.set_loop_volume("marta", -10.0)
-			if table_lamp: table_lamp.kind = "dying"
-			Fx.kick("fringe", 0.6, 2.0)
+			# the first movement, and it's small: a finger on the cloth. Then the breath, rattling,
+			# as if it had never stopped. The voice will come from under the hair.
+			marta.seated_alive = true; marta.agitation = 0.0
+			marta._tap = 0.0
+			Sfx.loop("marta", "marta_rattle", -16.0, MARTA_POS + Vector3(0, 1.2, 0))
+			Sfx.play_at("bone_crack", _face(), -8.0, 0.7)
+			Fx.kick("fringe", 0.4, 2.0)
 			_reach(0.55)
 		"marta_turns":
-			marta.agitation = 1.0
-			# she turns her face up to him: slowly, the neck cracking on the way
+			marta.agitation = 0.4
+			# her head comes up: slowly, the neck cracking on the way, the hair falling off her face;
+			# then on past where a head stops. Her good eye finds him.
 			var from: Vector3 = marta.base.head
 			marta.face(player.cam.global_position, 0.25)
 			var to: Vector3 = marta.base.head
 			marta.base.head = from
-			var tw := create_tween(); tw.tween_method(func(k): marta.base.head = from.lerp(to, k), 0.0, 1.0, 2.2).set_trans(Tween.TRANS_SINE)
-			for i in 3: get_tree().create_timer(0.4 + i * 0.6).timeout.connect(func(): Sfx.play_at("bone_crack", _face(), -4.0, randf_range(0.7, 1.0)))
-			Sfx.play_at("click", _face(), -6.0, 0.7)
+			marta.reveal(1.0, 2.0)
+			var tw := create_tween()
+			tw.tween_method(func(k): marta.base.head = from.lerp(to, k), 0.0, 1.0, 2.2).set_trans(Tween.TRANS_SINE)
+			tw.tween_method(func(k): marta.base.head = to + Vector3(0, 0, 0.55 * k), 0.0, 1.0, 1.4).set_trans(Tween.TRANS_QUAD)
+			for i in 4: get_tree().create_timer(0.4 + i * 0.7).timeout.connect(func(): Sfx.play_at("bone_crack", _face(), -4.0, randf_range(0.7, 1.0)))
+			get_tree().create_timer(1.6).timeout.connect(_eye_on_him)
 			Sfx.set_loop_volume("flies", -30.0)
 			Fx.set_k("pulse", 0.35); Fx.set_k("fringe", 0.35)
 			_reach(0.85)
@@ -397,6 +413,12 @@ func _process(delta: float) -> void:
 		Sfx.play("heartbeat", -12.0)
 		Dialogue.play("see_marta")
 		marta_spot.prompt = "Look at her"; marta_spot.enabled = true
+	_murmur(delta)
+	_tells_unseen(delta)
+	# after: Socko sees the empty chair
+	if _woke and not _chair_line and not cutscene and not Dialogue.busy and player_sees(MARTA_POS + Vector3(0, 0.7, 0), 5.0, 0.8):
+		_chair_line = true
+		Dialogue.play("socko_chair")
 	if _woke and socko.visible and not cutscene and not Dialogue.busy and socko.look != "ahead" and socko.look != "gun":
 		socko.look = "ahead"
 	if hole_parts.visible and not cutscene:
@@ -413,23 +435,20 @@ func _investigate() -> void:
 	var tw := create_tween().set_trans(Tween.TRANS_SINE)
 	tw.tween_property(player, "global_position", stand, 1.4)
 	player.look_toward(_face() + Vector3(0, -0.03, 0), 1.4)
-	player.crouching = true
+	player.crouching = false       # standing, leaning over the table: looking down at the crown of her head
 	await tw.finished
 	await player.look_toward(_face(), 0.6)
 	await Dialogue.play("investigate_marta")
 	await _grab()
 
+func _eye_on_him() -> void:
+	marta.gaze = player.cam.global_position
+	Sfx.play_at("click", _face(), -10.0, 1.4)
+
 func _grab() -> void:
-	Sfx.stop_loop("marta"); Sfx.stop_loop("flies")
-	Sfx.play("sting", 2.0)
-	Fx.kick("tear", 1.0, 1.4); Fx.kick("fringe", 2.5, 1.5); Fx.set_k("pulse", 0.6)
-	Engine.time_scale = 0.4
-	get_tree().create_timer(0.35, true, false, true).timeout.connect(func(): Engine.time_scale = 1.0)
-	# she comes up out of the chair at him: the arms, the face, all at once
-	marta.lunge(player.cam.global_position)
+	await _dead_air()
+	await _the_jump()
 	if hand: hand.visible = false
-	Sfx.play("gasp", 0.0, 1.05)
-	Sfx.play_at("click", _face(), 2.0, 0.6)
 	var toward := (MARTA_POS - player.global_position) * Vector3(1, 0, 1)
 	var tw := create_tween()
 	tw.tween_property(player, "global_position", player.global_position + toward.normalized() * 0.3, 0.12)
@@ -453,6 +472,97 @@ func _grab() -> void:
 	await Game.fade(1.0, 0.06)
 	await _blackout()
 
+# ------------------------------------------------------------------ the scare
+## Before he's seen her: murmuring, under her breath, from the living room. It stops the moment
+## he sees her (she's heard him).
+func _murmur(delta: float) -> void:
+	if _seen_marta or _woke: return
+	_murmur_t -= delta
+	if _murmur_t > 0.0: return
+	_murmur_t = randf_range(1.8, 3.6)
+	if player.global_position.x < 10.2:
+		Sfx.play_at("whisper", _face(), -13.0, randf_range(0.72, 0.86))
+
+## While he's in the room with her and not looking, she changes. Never on camera; twice at most:
+## her head has come round toward him; her hand has moved, and a nail ticks on the plate.
+func _tells_unseen(delta: float) -> void:
+	if not _seen_marta or _woke or cutscene or _tells >= 2: return
+	if player.global_position.distance_to(MARTA_POS) > 6.5: _unseen_t = 0.0; return
+	if player_sees(_face(), 8.0, 0.7): _unseen_t = minf(_unseen_t, 0.0); return
+	_unseen_t += delta
+	if _unseen_t < 1.4: return
+	_unseen_t = -2.5
+	_tells += 1
+	var head: Node3D = marta.joints.head
+	if _tells == 1:
+		var r: Vector3 = head.rotation
+		marta.face(player.cam.global_position, MartaSeated.JAW_REST)
+		head.rotation = Vector3(r.x, lerpf(r.y, head.rotation.y, 0.7), r.z * 0.4)
+		marta.base.head = head.rotation
+		(marta.joints.jaw as Node3D).rotation = Vector3(-MartaSeated.JAW_REST, 0, 0); marta.base.jaw = (marta.joints.jaw as Node3D).rotation
+	else:
+		var w: Node3D = marta.joints.wrR; var e: Node3D = marta.joints.elR
+		w.rotation += Vector3(0.35, -0.2, 0.0); e.rotation += Vector3(0.12, -0.1, 0.0)
+		marta.base.wrR = w.rotation; marta.base.elR = e.rotation
+		Sfx.play_at("click", _face() + Vector3(0, -0.45, 0), -15.0, 0.55)
+
+## Dead air. Everything she's been doing stops; the flat's own sounds fall away; she's still,
+## the eye on him. Then the jaw: down, and down, past where a jaw stops.
+func _dead_air() -> void:
+	marta.seated_alive = false
+	for l in ["marta", "flies", "heart", "drone", "tv", "busy", "fridge", "wind"]: Sfx.stop_loop(l)
+	var wb := AudioServer.get_bus_index("World")
+	_world_db = AudioServer.get_bus_volume_db(wb)
+	create_tween().tween_method(func(v): AudioServer.set_bus_volume_db(wb, v), _world_db, _world_db - 18.0, 0.6)
+	Fx.set_k("pulse", 0.0)
+	Sfx.play("breath", -16.0, 0.75)          # his, held
+	await get_tree().create_timer(0.9).timeout
+	Sfx.play("creak", -12.0, 0.5)
+	marta.unhinge(1.15, 1.6)
+	await get_tree().create_timer(1.9).timeout
+
+## The bulb goes. In the dark, the chair going over, her joints. When the light comes back she's
+## at his face. (One change from dark to light: inside the photosensitivity rule.)
+func _the_jump() -> void:
+	var wb := AudioServer.get_bus_index("World")
+	Sfx.play("glass", -2.0, 1.7); Sfx.play("switch", 0.0, 0.6)
+	if table_lamp: table_lamp.on = false
+	Game.fade(0.95, 0.05)
+	await get_tree().create_timer(0.25).timeout
+	Sfx.play("scrape", -2.0, 0.7)
+	for i in 2:
+		Sfx.play("bone_crack", -4.0, randf_range(0.6, 0.9)); await get_tree().create_timer(0.12).timeout
+	(marta.joints.hips as Node3D).visible = false
+	_place_jumper()
+	await get_tree().create_timer(0.35).timeout
+	if table_lamp: table_lamp.on = true
+	Game.fade(0.0, 0.04)
+	AudioServer.set_bus_volume_db(wb, _world_db)
+	Sfx.play("marta_scream", 6.0, 0.92)
+	Sfx.play("gasp", 2.0, 1.1)
+	player.shake(0.05, 0.9)
+	Fx.kick("fringe", 2.5, 1.5); Fx.kick("tear", 1.0, 1.2); Fx.set_k("pulse", 0.6)
+	Engine.time_scale = 0.4
+	get_tree().create_timer(0.45, true, false, true).timeout.connect(func(): Engine.time_scale = 1.0)
+	await get_tree().create_timer(0.5).timeout
+
+## Her, up out of the chair and over the table, bent down into his face: arms out either side of
+## his head, the jaw off its hinge, the eye on him.
+func _place_jumper() -> void:
+	var c: Transform3D = player.cam.global_transform
+	var fwd := -c.basis.z; fwd.y = 0.0; fwd = fwd.normalized()
+	var at := c.origin + fwd * 0.62
+	jumper.global_position = Vector3(at.x, 0.0, at.z)
+	var d := c.origin - jumper.global_position
+	jumper.rotation.y = atan2(-d.x, -d.z)
+	jumper.pose.spine = Vector3(-0.55, 0, 0.1); jumper.pose.neck = Vector3(0.35, 0, 0.15)
+	jumper.pose.head = Vector3(0.2, 0, 0.55); jumper.pose.jaw = Vector3(1.6, 0, 0)
+	jumper.pose.sh_l = Vector3(0.6, 0.6, 0.7); jumper.pose.sh_r = Vector3(0.6, -0.6, -0.7)
+	jumper.pose.el_l = Vector3(-0.4, 0, 0); jumper.pose.el_r = Vector3(-0.4, 0, 0)
+	jumper.pose.kn_l = Vector3(-0.3, 0, 0); jumper.pose.kn_r = Vector3(-0.3, 0, 0)
+	jumper.gaze = c.origin
+	jumper.visible = true
+
 ## Dark. Ringing. His heart. Somewhere, the front door slams. When he comes to, she isn't there.
 func _blackout() -> void:
 	Sfx.stop_loop("drone"); Sfx.stop_loop("heart"); Sfx.stop_loop("tv"); Sfx.stop_loop("busy")
@@ -465,7 +575,8 @@ func _blackout() -> void:
 	for i in 2:
 		Sfx.play("heartbeat", -12.0); await get_tree().create_timer(1.3).timeout
 	# she's gone; where she was, the chair and the coral, broken where she tore loose
-	marta.visible = false
+	(marta.joints.hips as Node3D).visible = false
+	jumper.visible = false
 	if table_lamp: table_lamp.kind = "bulb"
 	if hand: hand.queue_free(); hand = null
 	balcony_door.locked = false
