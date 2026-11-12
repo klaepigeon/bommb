@@ -11,6 +11,7 @@ func _initialize() -> void:
 	await process_frame
 	game = root.get_node("Game")
 	game.settings.post_fx = false
+	game.settings.sway = false        # (the camera breathing isn't flicker: hold it still to look for flicker)
 	game.change_level("flat47", {"card": false, "fade": 0.01})
 	await _wait(5.0)          # (the level fades in from black over its first 3 s)
 	var L = game.level

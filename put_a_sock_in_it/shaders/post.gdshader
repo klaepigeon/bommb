@@ -22,6 +22,7 @@ uniform bool safe = true;          // reduce flashing: no jumping bands, slow wa
 uniform float double_k = 0.0;
 uniform float pulse = 0.0;
 uniform vec4 tint = vec4(0.0);
+uniform float fear = 0.0;          // Kurt's nerve: the edges close in and the colour goes (steady: never pulses)
 uniform vec2 res = vec2(640.0, 360.0);
 
 float h(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
@@ -54,7 +55,7 @@ void fragment() {
 		c = mix(c, c2, 0.42 * double_k);
 	}
 	float lu = dot(c, vec3(0.299, 0.587, 0.114));
-	c = mix(c, vec3(lu), drain);
+	c = mix(c, vec3(lu), clamp(drain + fear * 0.3, 0.0, 1.0));
 	c = mix(c, c * tint.rgb * 1.6 + tint.rgb * 0.05, tint.a);
 	// grain, heavier in the dark
 	float gt = safe ? floor(time_k * 4.0) : time_k * 60.0;     // (slow: fast grain over a dark frame reads as the picture flickering)
@@ -62,7 +63,7 @@ void fragment() {
 	c += n * grain * (1.25 - lu) * (safe ? 0.5 : 1.0);
 	// vignette, and the heartbeat at the edges
 	float r = length(d * vec2(1.0, 0.82));
-	float v = smoothstep(0.85, 0.2, r * (1.0 + vignette));
+	float v = smoothstep(0.85, 0.2, r * (1.0 + vignette + fear * 0.55));
 	c *= mix(1.0, v, 0.85);
 	c *= 1.0 - pulse * smoothstep(0.25, 0.75, r) * 0.8;
 	// 15-bit colour with ordered dither, at the 3D picture's resolution

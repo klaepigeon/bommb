@@ -93,12 +93,19 @@ func build() -> void:
 	_arrival_hole()
 	_exit()
 	_ammo()
+	_hiding()
+	_batteries()
 	_marta()
 	Sfx.set_room(0.85, 0.38, 0.4)
 	ambient([2.0, 5.0], func(): Sfx.play_at("drip", player.global_position + Vector3(randf_range(-3, 3), 2.3, randf_range(-3, 3)), -8.0, randf_range(0.6, 0.8)))
 	ambient([12.0, 25.0], func(): Sfx.play_at("whisper", _behind_a_wall(), -4.0, randf_range(0.7, 1.0)), 8.0)
 	ambient([20.0, 40.0], func(): Sfx.play_at("groan", _behind_a_wall(), -2.0, randf_range(0.6, 0.9)), 15.0)
 	ambient([7.0, 15.0], func(): Sfx.play_at("squelch", _behind_a_wall(), -8.0, randf_range(0.5, 0.8)))
+
+func ao_area() -> Array:
+	return [Rect2(-1.0, -1.0, maze.w * CELL + 2.0, maze.h * CELL + 2.0), 0.0, H]
+
+func ao_name() -> String: return "maze47"
 
 func centre(c: Vector2i, y := 0.0) -> Vector3:
 	return Vector3((c.x + 0.5) * CELL, y, (c.y + 0.5) * CELL)
@@ -436,6 +443,65 @@ func _ammo() -> void:
 		a.add_child(mi)
 		var cs := CollisionShape3D.new(); var sh := BoxShape3D.new(); sh.size = Vector3(0.3, 0.2, 0.3); cs.shape = sh; a.add_child(cs)
 
+## Wardrobes to hide in (HideSpot), along corridors and in dead ends away from the safe rooms:
+## one or two in each part of the maze, never in the cell next to a safe room (no point).
+var hide_spots: Array = []
+func _hiding() -> void:
+	var rng := RandomNumberGenerator.new(); rng.seed = SEED + 5
+	var cand := []
+	for y in maze.h:
+		for x in maze.w:
+			var c := Vector2i(x, y)
+			if maze.safe.has(c) or c == maze.start or c == maze.exit or maze.exits_of(c) > 2: continue
+			var by_safe := false
+			for d in Maze.DIRS: if maze.safe.has(c + d): by_safe = true
+			if by_safe: continue
+			cand.append(c)
+	for i in range(cand.size() - 1, 0, -1):          # (shuffled, but the same every time: the AO map is baked)
+		var j := rng.randi_range(0, i); var tmp = cand[i]; cand[i] = cand[j]; cand[j] = tmp
+	var used := []
+	for c in cand:
+		if used.size() >= 5: break
+		var close := false
+		for u in used: if Vector2(u - c).length() < 2.5: close = true
+		if close: continue
+		# against a wall, with nothing already on it
+		var walls := []
+		for d in Maze.DIRS:
+			var n: Vector2i = c + d
+			if not maze.inside(n) or _edge_kind(c, n) == "wall": walls.append(d)
+		if walls.is_empty(): continue
+		var d: Vector2i = walls[rng.randi() % walls.size()]
+		var at := centre(c) + Vector3(d.x, 0, d.y) * (CELL * 0.5 - T * 0.5 - 0.3 - 0.04)
+		var clear := true
+		for r in _solids: if (r as Rect2).grow(0.1).has_point(Vector2(at.x, at.z)): clear = false
+		if not clear: continue
+		var w := HideSpot.new()
+		world.add_child(w)
+		w.position = at; w.rotation.y = atan2(-float(d.x), -float(d.y))
+		var ext := Vector3(1.3, 2.1, 0.6) if d.y != 0 else Vector3(0.6, 2.1, 1.3)
+		# (her grid keeps off it; the wardrobe is its own collider, so the hand can find it)
+		_solids.append(Rect2(at.x - ext.x * 0.5, at.z - ext.z * 0.5, ext.x, ext.z))
+		hide_spots.append(w); used.append(c)
+
+## Torch batteries, in dead ends: the light is worth going out of your way for.
+func _batteries() -> void:
+	var rng := RandomNumberGenerator.new(); rng.seed = SEED + 6
+	var dead := []
+	for y in maze.h:
+		for x in maze.w:
+			var c := Vector2i(x, y)
+			if maze.exits_of(c) == 1 and not maze.safe.has(c) and c != maze.start and c != maze.exit: dead.append(c)
+	for i in mini(3, dead.size()):
+		var c: Vector2i = dead[rng.randi() % dead.size()]
+		dead.erase(c)
+		var a := Pickup.new(); a.item = "battery"; a.amount = 1; a.label = "torch battery"
+		world.add_child(a); a.position = centre(c, 0.05) + Vector3(0.45, 0, -0.35)
+		var mi := MeshInstance3D.new(); var cy := CylinderMesh.new(); cy.top_radius = 0.017; cy.bottom_radius = 0.017; cy.height = 0.06
+		mi.mesh = cy; mi.material_override = Tex.mat("metal", 1.0, {"tint": Color(0.75, 0.45, 0.2)}); mi.rotation.z = PI * 0.5; mi.position.y = 0.017
+		a.add_child(mi)
+		var cs := CollisionShape3D.new(); var sh := BoxShape3D.new(); sh.size = Vector3(0.3, 0.2, 0.3); cs.shape = sh; a.add_child(cs)
+
 # ------------------------------------------------------------------ her
 func nav_grid() -> AStarGrid2D:
 	var g := AStarGrid2D.new()
@@ -458,6 +524,8 @@ func _marta() -> void:
 	world.add_child(marta)
 	marta_head = Node3D.new(); marta.add_child(marta_head); marta_head.position.y = 1.7
 	marta.caught_player.connect(_on_caught)
+	marta.listening.connect(func(_sp):
+		hud.hint("She's at the doors. Hold your breath: hold BREATH." if Game.uses_touch() else "She's at the doors. Hold your breath: hold B.", 5.0))
 	marta.spotted_player.connect(_on_spotted)
 	marta.state_changed.connect(func(s): if s == "stunned" and not Game.flag("first_stun"): Game.set_flag("first_stun"); Skills.award("infection", 1, "you hurt her"))
 	marta.refuge = in_safe
@@ -480,6 +548,7 @@ func _place_marta() -> void:
 	if player and player.global_position.distance_to(centre(far)) < CELL * 3.0: far = maze.path[maze.path.size() - 2]
 	marta.global_position = centre(far)
 	marta.revive()
+	marta.active = true
 	marta.set_state("patrol"); marta.go_to(marta.patrol[0])
 
 func _behind_a_wall() -> Vector3:
@@ -619,7 +688,7 @@ func _encounter() -> void:
 	Game.set_flag("met_marta_maze")
 	marta.active = true
 	marta.set_state("encounter")
-	Sfx.play("sting", -4.0, 0.9)
+	Sfx.play("sting", -4.0, 0.9); nerve.spike(0.5)
 	Fx.kick("tear", 0.8, 1.2); Fx.kick("drain", 0.5, 2.0)
 	await Dialogue.play("marta_maze")
 	if marta.state == "encounter":

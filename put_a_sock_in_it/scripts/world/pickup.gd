@@ -19,6 +19,8 @@ func interact(_p = null) -> void:
 		"pistol":
 			Game.pistol.have = true; Game.pistol.drawn = true
 			Game.pistol.mag = maxi(Game.pistol.mag, amount)
+		"battery":
+			Game.torch_charge = 1.0
 		_:
 			var extra := 1 if item == "ammo" and Skills.has("m_resource") and randf() < 0.5 else 0
 			Game.add_item(item, amount + extra)

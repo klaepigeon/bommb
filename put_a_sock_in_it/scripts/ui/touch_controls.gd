@@ -20,6 +20,7 @@ const DEFAULT := {
 	"skip": ["skip", 0.5, 0.94, 30.0, "»"],
 	"pause": ["pause", 0.96, 0.07, 30.0, "II"],
 	"torch": ["torch", 0.07, 0.22, 34.0, "LIGHT"],
+	"breath": ["hold_breath", 0.07, 0.62, 36.0, "BREATH"],
 }
 
 var player: Player
@@ -51,6 +52,7 @@ func _visible_btn(name: String) -> bool:
 		"power": return Skills.has("s_tk") or Skills.has("s_telepathy")
 		"look_at": return player != null and player.held != null
 		"skip": return Dialogue.busy
+		"breath": return player != null and (player.hidden_in != null or Game.fear > 0.25)
 	return true
 
 func _btn_at(p: Vector2) -> String:

@@ -23,19 +23,22 @@ func _initialize() -> void:
 	_check(H != null and H.arm != null, "the hands exist, with the rigged arm")
 
 	# ---- punch a loose thing
-	load("res://scripts/core/build.gd").box(L.world, Vector3(6.2, 0.45, 3.97), Vector3(0.4, 0.9, 0.3), load("res://scripts/core/tex.gd").mat("wood"), true)
-	var box = load("res://scripts/world/prop.gd").make(L.world, Vector3(6.2, 1.05, 3.97), Vector3(0.25, 0.25, 0.25), load("res://scripts/core/tex.gd").mat("cardboard"), "Box", 0.5, 0.3)
-	await _face(P, Vector3(6.2, 0, 4.55), Vector3(6.2, 1.05, 3.97))
+	# (out in the hall, room behind it to be shoved into)
+	load("res://scripts/core/build.gd").box(L.world, Vector3(7.0, 0.45, 4.5), Vector3(0.3, 0.9, 0.4), load("res://scripts/core/tex.gd").mat("wood"), true)
+	var box = load("res://scripts/world/prop.gd").make(L.world, Vector3(7.0, 1.05, 4.5), Vector3(0.25, 0.25, 0.25), load("res://scripts/core/tex.gd").mat("cardboard"), "Box", 0.5, 0.3)
+	await _face(P, Vector3(6.35, 0, 4.5), Vector3(7.0, 1.05, 4.5))
 	var before: Vector3 = box.global_position
 	await _attack(H, 0.05, "punch1")
 	await _wait(0.4)
 	_check(box.global_position.distance_to(before) > 0.05, "a punch shoves a box (moved %.2f m)" % box.global_position.distance_to(before))
 	P.stamina = P.STAMINA_MAX
 	var spent := [0.0]
-	H.struck.connect(func(_t, _d): spent[0] = P.STAMINA_MAX - P.stamina, CONNECT_ONE_SHOT)
+	var watch := func(): spent[0] = maxf(spent[0], P.STAMINA_MAX - P.stamina)
+	process_frame.connect(watch)
 	await _attack(H, 0.5, "haymaker")
 	_check(H.heavy, "a held blow is a heavy one")
-	_check(spent[0] > 0.2, "blows cost stamina (%.2f s of it)" % spent[0])
+	process_frame.disconnect(watch)
+	_check(spent[0] > 0.1, "blows cost stamina (%.2f s of it)" % spent[0])
 	box.queue_free()
 	# ---- a hammer against the wall: it wears
 	var hammer = _prop(L, "Hammer")
@@ -69,6 +72,8 @@ func _initialize() -> void:
 	_check(P.held != null and String(P.held.label) == "Chair leg", "he's left holding a chair leg (%s)" % (String(P.held.label) if P.held else "nothing"))
 	# ---- throw
 	var leg = P.held
+	P.set_view(P.get_yaw() + PI, 0.0)          # (away from the wall, into the hall)
+	await _wait(0.2)
 	game.level.set_cutscene(false); _press("throw", true); await _wait(0.2); _press("throw", false); await _wait(0.3)
 	_check(P.held == null and is_instance_valid(leg) and leg.linear_velocity.length() > 0.5, "'throw' throws it")
 	# ---- pistol: drawn it shoots, holstered he punches

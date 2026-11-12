@@ -11,6 +11,7 @@ var pistol: Pistol
 var hands: Hands
 var skills_menu: SkillsMenu
 var powers: Powers
+var nerve: Nerve
 var body: KurtBody
 var hud: Hud
 var touch: TouchControls
@@ -41,6 +42,8 @@ func _ready() -> void:
 	body = KurtBody.new(); body.attach(player)
 	skills_menu = SkillsMenu.new(); add_child(skills_menu)
 	powers = Powers.new(); powers.attach(player, self)
+	nerve = Nerve.new(); nerve.attach(player, self)
+	Game.fear = 0.0
 	hud = Hud.new(); hud.player = player; add_child(hud)
 	var tl := CanvasLayer.new(); tl.layer = 30; add_child(tl)
 	touch = TouchControls.new(); touch.player = player; tl.add_child(touch)
@@ -49,6 +52,22 @@ func _ready() -> void:
 	Fx.reset()
 	build()
 	set_cutscene(true)     # nothing moves until begin() says so
+	_ao.call_deferred()
+
+## Subclasses: where the ambient-occlusion map covers, [Rect2 (XZ), floor y, ceiling y], or []
+## for none (scripts/world/ao_map.gd).
+func ao_area() -> Array:
+	return []
+
+func ao_name() -> String:
+	return String(name).to_snake_case()
+
+func _ao() -> void:
+	var a := ao_area()
+	if a.is_empty(): AoMap.clear(world); return
+	await get_tree().physics_frame; await get_tree().physics_frame      # (the walls into the physics world)
+	if not is_inside_tree(): return
+	AoMap.apply(world, ao_name(), a[0], a[1], a[2])
 
 func _exit_tree() -> void:
 	if Dialogue.event.is_connected(_on_event): Dialogue.event.disconnect(_on_event)

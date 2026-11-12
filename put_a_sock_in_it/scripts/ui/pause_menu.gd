@@ -26,6 +26,8 @@ func _ready() -> void:
 	_check("Invert look", "invert_y")
 	_check("Touch controls", "force_touch")
 	_check("Reduce flashing (recommended)", "reduce_flashing")
+	_check("Camera sway (breathing, landing)", "sway")
+	_check("Hit-stop", "hitstop")
 	_slider("PS1 wobble", 0.0, 1.0, "wobble")
 	_check("Film effects (grain, dither)", "post_fx")
 	_check("Shadows", "shadows")
@@ -36,7 +38,7 @@ func _ready() -> void:
 	_button("Restart from checkpoint", func(): close(); Game.restart_level())
 	_button("Quit to title", func(): close(); Game.to_title())
 	var help := Label.new()
-	help.text = "Keyboard: WASD move · mouse look · E use / drop · Shift run · C crouch · F torch · LMB hit / fire (hold: heavy) · G or MMB throw · H holster · T power · Tab skills · RMB or Q turn over · R reload · Space hurry dialogue · 1-4 choose · Esc pause\nGamepad: sticks · A use · B crouch · X reload · Y hurry · RB torch · RT hit / fire · LB throw · D-pad up holster · D-pad down power · Back skills · LT turn over · L3 run · Start pause"
+	help.text = "Keyboard: WASD move · mouse look · E use / drop · Shift run · C crouch · F torch · LMB hit / fire (hold: heavy) · G or MMB throw · H holster · T power · Tab skills · RMB or Q turn over · Z / X lean · B hold breath · R reload · Space hurry dialogue · 1-4 choose · Esc pause\nGamepad: sticks · A use · B crouch · X reload · Y hurry · RB torch · RT hit / fire · LB throw · D-pad up holster · D-pad down power · Back skills · LT turn over · L3 run · R3 hold breath · D-pad left / right lean · Start pause"
 	help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	help.add_theme_font_size_override("font_size", 16); help.add_theme_color_override("font_color", Color("9a917e"))
 	_box.add_child(help)

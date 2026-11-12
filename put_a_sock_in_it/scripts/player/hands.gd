@@ -157,7 +157,7 @@ func _process(delta: float) -> void:
 	if arm.skeleton:
 		arm.solve_arm(SHOULDER, Transform3D(KurtArm.frame(-_hand.basis.z, _hand.basis.y), _hand.origin), POLE)
 	if _swinging and is_instance_valid(_swinging):
-		_swinging.global_transform = player.cam.global_transform * _hand * _grip
+		_swinging.global_transform = global_transform * _hand * _grip
 
 func _ease(k: float) -> float:
 	return k * k * (3.0 - 2.0 * k)
@@ -204,20 +204,29 @@ func _resolve() -> void:
 		Sfx.play_at("bullet_flesh" if kind != "sharp" else "squelch", p, -2.0 if heavy else -5.0, randf_range(0.8, 1.0))
 		player.shake(0.02 if heavy else 0.012, 0.15)
 		Fx.kick("fringe", 0.6, 0.3)
+		Fx.burst("flesh", p, (best.get("normal", -fwd) as Vector3))
+		Fx.hitstop(0.09 if heavy else 0.05)
+		player.fov_kick = 3.0 if heavy else 1.5
 		wear = 1
 		struck.emit(target, dmg)
 	elif c is RigidBody3D:
 		var rb := c as RigidBody3D
 		if rb.has_method("wake"): rb.wake()
 		# what it's knocked to: a light thing flies, a heavy one shifts
-		rb.apply_impulse(fwd * knock * 3.0 * clampf(rb.mass, 0.2, 4.0) + Vector3(0, knock * 0.6 * minf(rb.mass, 2.0), 0), p - rb.global_position)
+		# (a blow from above would only press it into the table it's on: send it along and a little up)
+		var dir := Vector3(fwd.x, maxf(fwd.y, 0.2), fwd.z).normalized()
+		rb.apply_impulse(dir * knock * 3.0 * clampf(rb.mass, 0.2, 4.0) + Vector3(0, knock * 0.6 * minf(rb.mass, 2.0), 0), (p - rb.global_position) * 0.5)
 		Sfx.play_at(_hit_sound(kind), p, -6.0, randf_range(0.9, 1.1))
+		Fx.burst("glass" if kind == "glass" else "wood", p, (best.get("normal", -fwd) as Vector3))
+		Fx.hitstop(0.03)
 		wear = 1 if rb.mass > 2.0 else 0
 		struck.emit(rb, dmg)
 	else:
 		# a wall, a door: it jars up his arm
 		Sfx.play_at(_hit_sound(kind), p, -4.0, randf_range(0.75, 0.9))
 		player.shake(0.015, 0.12)
+		Fx.burst("dust", p, (best.get("normal", -fwd) as Vector3))
+		Fx.hitstop(0.06 if heavy else 0.035)
 		wear = 1
 		if c and c.has_method("punched"): c.punched(dmg, from, self)
 		struck.emit(c, dmg)

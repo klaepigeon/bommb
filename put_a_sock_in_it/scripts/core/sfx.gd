@@ -16,6 +16,10 @@ var _rng := RandomNumberGenerator.new()
 var _occ_t := 0.0
 var world_bus := 0
 var reverb: AudioEffectReverb
+var amb_bus := 0
+var _lowpass: Array[AudioEffectLowPassFilter] = []
+var _duck := 0.0        # dB the world is down by, now
+var _stress := 0.0      # 0..1, how close she is: the world goes thick around him
 
 ## Every sound, by name: [seconds, generator, looped]
 var GEN := {}
@@ -44,6 +48,14 @@ func _buses() -> void:
 		AudioServer.add_bus_effect(world_bus, reverb)
 		var comp := AudioEffectCompressor.new(); comp.threshold = -14.0; comp.ratio = 4.0
 		AudioServer.add_bus_effect(0, comp)
+	# the beds (room tone, wind, the maze's breathing): dry, ducked with the world
+	amb_bus = AudioServer.get_bus_index("Amb")
+	if amb_bus < 0:
+		AudioServer.add_bus(); amb_bus = AudioServer.bus_count - 1
+		AudioServer.set_bus_name(amb_bus, "Amb"); AudioServer.set_bus_send(amb_bus, "Master")
+	for b in [world_bus, amb_bus]:
+		var lp := AudioEffectLowPassFilter.new(); lp.cutoff_hz = 20000.0; lp.resonance = 0.5
+		AudioServer.add_bus_effect(b, lp); _lowpass.append(lp)
 
 ## The room: small and hard (the flat), or big and wet (the flesh).
 func set_room(size: float, wet: float, damping := 0.7) -> void:
@@ -52,7 +64,10 @@ func set_room(size: float, wet: float, damping := 0.7) -> void:
 # ------------------------------------------------------------------ playing
 func _pick(name: String) -> AudioStream:
 	# variants: step_wood -> step_wood0..2
-	if not GEN.has(name) and GEN.has(name + "0"): name = name + str(_rng.randi_range(0, 2))
+	if not GEN.has(name) and GEN.has(name + "0"):
+		var nv := 0
+		while GEN.has(name + str(nv)): nv += 1
+		name = name + str(_rng.randi_range(0, nv - 1))
 	if not streams.has(name) and GEN.has(name): streams[name] = synth(name)   # not baked: make it now
 	return streams.get(name)
 
@@ -93,7 +108,7 @@ func loop(key: String, name: String, vol_db := 0.0, pos = null, parent: Node = n
 	var s := _pick(name)
 	if not s: return
 	if pos == null:
-		var a := AudioStreamPlayer.new(); a.stream = s; a.volume_db = vol_db
+		var a := AudioStreamPlayer.new(); a.stream = s; a.volume_db = vol_db; a.bus = "Amb"
 		add_child(a); a.play(); _loops[key] = a
 	else:
 		var a := AudioStreamPlayer3D.new(); a.stream = s; a.volume_db = vol_db; a.unit_size = 2.5; a.max_distance = 16.0; a.bus = "World"
@@ -108,6 +123,9 @@ func loop(key: String, name: String, vol_db := 0.0, pos = null, parent: Node = n
 func set_loop_volume(key: String, db: float) -> void:
 	if _loops.has(key) and is_instance_valid(_loops[key]):
 		_loops[key].volume_db = db; _loops[key].set_meta("db", db)
+
+func set_loop_pitch(key: String, p: float) -> void:
+	if _loops.has(key) and is_instance_valid(_loops[key]): _loops[key].pitch_scale = p
 
 func stop_loop(key: String) -> void:
 	if _loops.has(key) and is_instance_valid(_loops[key]): _loops[key].queue_free()
@@ -133,7 +151,25 @@ func _occlude(p: AudioStreamPlayer3D) -> void:
 	var db: float = p.get_meta("db", p.volume_db)
 	if p.has_meta("db"): p.volume_db = db - (5.0 if blocked else 0.0)
 
+## The mix: the world steps back while someone talks (6 dB, eased), and closes in around him
+## as she gets near (a low-pass sliding from open to 1.5 kHz inside 10 m of her).
+func _mix(delta: float) -> void:
+	var dlg = get_node_or_null("/root/Dialogue")
+	var want_duck := -6.0 if dlg and dlg.get("busy") else 0.0
+	_duck = move_toward(_duck, want_duck, delta * (24.0 if want_duck < _duck else 8.0))
+	var want_stress := 0.0
+	var g = get_node_or_null("/root/Game")
+	var cam := get_viewport().get_camera_3d()
+	if g and g.level and is_instance_valid(g.level) and cam:
+		var m = g.level.get("marta")
+		if m and is_instance_valid(m) and m is Node3D and m.is_inside_tree() and m.get("active") != false:
+			want_stress = clampf(1.0 - cam.global_position.distance_to(m.global_position) / 10.0, 0.0, 1.0)
+	_stress = move_toward(_stress, want_stress, delta * 0.8)
+	for b in [world_bus, amb_bus]: AudioServer.set_bus_volume_db(b, _duck)
+	for lp in _lowpass: lp.cutoff_hz = lerpf(20000.0, 1500.0, pow(_stress, 0.7))
+
 func _process(delta: float) -> void:
+	_mix(delta)
 	_occ_t -= delta
 	if _occ_t <= 0.0:
 		_occ_t = 0.25
@@ -143,18 +179,36 @@ func _process(delta: float) -> void:
 # ------------------------------------------------------------------ synthesis
 func synth(name: String) -> AudioStreamWAV:
 	var spec: Array = GEN[name]
-	var n := int(float(spec[0]) * RATE)
-	var d := PackedFloat32Array(); d.resize(n)
-	(spec[1] as Callable).call(d)
 	var looped: bool = spec.size() > 2 and spec[2]
+	var rate := RATE
+	var d: PackedFloat32Array
+	if spec.size() > 3:
+		# SoundLib: the generator makes its own buffer at its own rate
+		rate = int(spec[3]); d = (spec[1] as Callable).call()
+	else:
+		d = PackedFloat32Array(); d.resize(int(float(spec[0]) * RATE))
+		(spec[1] as Callable).call(d)
+	var n := d.size()
+	var fade := int(0.05 * rate)
+	if looped and spec.size() > 3:
+		# seamless: the tail cross-fades (equal power) into the head, then is cut off
+		var xf := mini(int(0.6 * rate), n / 3)
+		for i in xf:
+			var k := float(i) / xf
+			d[i] = d[i] * sqrt(k) + d[n - xf + i] * sqrt(1.0 - k)
+		n -= xf; d.resize(n)
+	elif spec.size() > 3:
+		# a one-shot ends at silence (no click) and under full scale
+		var tail := mini(int(0.02 * rate), n)
+		for i in tail: d[n - 1 - i] *= float(i) / tail
+		for i in n: d[i] *= 0.97
 	var data := PackedByteArray(); data.resize(n * 2)
-	var fade := int(0.05 * RATE)
 	for i in n:
 		var v := clampf(d[i], -1.0, 1.0)
-		if looped: v *= minf(1.0, float(mini(i, n - 1 - i)) / fade)
+		if looped and spec.size() <= 3: v *= minf(1.0, float(mini(i, n - 1 - i)) / fade)
 		data.encode_s16(i * 2, int(v * 32000.0))
 	var s := AudioStreamWAV.new()
-	s.format = AudioStreamWAV.FORMAT_16_BITS; s.mix_rate = RATE; s.stereo = false; s.data = data
+	s.format = AudioStreamWAV.FORMAT_16_BITS; s.mix_rate = rate; s.stereo = false; s.data = data
 	if looped:
 		s.loop_mode = AudioStreamWAV.LOOP_FORWARD; s.loop_begin = 0; s.loop_end = n
 	return s
@@ -498,6 +552,31 @@ func _define() -> void:
 		"step_flesh0": [0.32, _step(60.0, 0.02, 0.0, 0.8, 0.6)], "step_flesh1": [0.32, _step(56.0, 0.02, 0.0, 0.9, 0.6)], "step_flesh2": [0.32, _step(64.0, 0.02, 0.0, 0.7, 0.6)],
 		"board_creak0": [0.5, _board()], "board_creak1": [0.5, _board()],
 	}
+	# Everything but the voices and Marta's own sounds comes from SoundLib (docs/SOUND.md)
+	var L: int = SoundLib.SR
+	var lib := {
+		"knock": SoundLib.knock, "door_rattle": SoundLib.door_rattle, "door_creak": SoundLib.door_creak,
+		"door_slam": SoundLib.door_slam, "door_shut": SoundLib.door_shut, "switch": SoundLib.switch_click,
+		"thud": SoundLib.thud.bind(false), "thud_far": SoundLib.thud.bind(true), "scrape": SoundLib.scrape,
+		"squelch": SoundLib.squelch, "gunshot": SoundLib.gunshot, "dry_fire": SoundLib.dry_fire,
+		"reload": SoundLib.reload, "pickup": SoundLib.pickup, "drawer": SoundLib.drawer,
+		"metal": SoundLib.metal_hit, "glass": SoundLib.glass_break, "bullet_hit": SoundLib.bullet_hit,
+		"bullet_flesh": SoundLib.bullet_flesh, "pipe_knock": SoundLib.pipe_knock, "drip": SoundLib.drip,
+		"groan": SoundLib.groan, "creak": SoundLib.creak, "step_above": SoundLib.step_above,
+		"siren": SoundLib.siren, "paper": SoundLib.paper, "sting": SoundLib.sting,
+		"heartbeat": SoundLib.heartbeat, "whoosh": SoundLib.whoosh, "bone_crack": SoundLib.bone_crack,
+		"crawl": SoundLib.crawl, "tinnitus": SoundLib.tinnitus,
+	}
+	var lib_loops := {
+		"goo_loop": SoundLib.goo, "wind": SoundLib.wind, "buzz": SoundLib.tube_buzz, "hum": SoundLib.fridge,
+		"tv_static": SoundLib.tv_static, "busy_tone": SoundLib.busy_tone, "flies": SoundLib.flies,
+		"heart_loop": SoundLib.heart_loop, "flesh_drone": SoundLib.flesh_bed, "drone": SoundLib.room_tone,
+	}
+	for k in lib: GEN[k] = [0.0, lib[k], false, L]
+	for k in lib_loops: GEN[k] = [0.0, lib_loops[k], true, L]
+	for surf in ["wood", "lino", "tile", "concrete", "soft", "flesh"]:
+		for v in 4: GEN["step_%s%d" % [surf, v]] = [0.0, SoundLib.step.bind(surf, v), false, L]
+	for v in 3: GEN["board_creak%d" % v] = [0.0, SoundLib.board_creak.bind(v), false, L]
 	for i in 4:
 		var f0 := 300.0 + i * 37.0
 		GEN["v_socko%d" % i] = [0.09, _voice(f0, 0.09, 0.55, 0.35, 1.3)]

@@ -24,13 +24,15 @@ var memories := 0               # Memory nodes unlocked (the dialogue's memory b
 var skills := {}                # unlocked skill ids (Skills)
 var memory_points := 0          # to spend in the Memory tree
 var skill_points := 0           # to spend in the Infection tree
+var fear := 0.0                 # 0..1: Kurt's nerve (scripts/player/nerve.gd); not saved, he calms down between
+var torch_charge := 1.0         # 0..1: the torch's battery (saved)
 var strain := 0.0               # 0..1: what the powers have taken out of him (refills)
 var inventory := {}             # item id -> count
 var pistol := {"have": false, "mag": 0}
 var level_id := ""
 var level: Node = null
 var settings := {"sensitivity": 1.0, "invert_y": false, "touch_scale": 1.0, "touch_opacity": 0.55,
-	"force_touch": false, "volume": 0.8, "post_fx": true, "shadows": true, "reduce_flashing": true, "wobble": 0.0, "settings_rev": 2}
+	"force_touch": false, "volume": 0.8, "post_fx": true, "shadows": true, "reduce_flashing": true, "wobble": 0.0, "sway": true, "hitstop": true, "settings_rev": 2}
 var busy := false               # a level change is under way
 
 var _loading: CanvasLayer
@@ -61,10 +63,11 @@ func _setup_input() -> void:
 	var keys := {
 		"move_forward": [KEY_W, KEY_UP], "move_back": [KEY_S, KEY_DOWN], "move_left": [KEY_A, KEY_LEFT], "move_right": [KEY_D, KEY_RIGHT],
 		"sprint": [KEY_SHIFT], "crouch": [KEY_C, KEY_CTRL], "interact": [KEY_E], "reload": [KEY_R],
-		"skip": [KEY_SPACE], "pause": [KEY_ESCAPE, KEY_P], "inspect": [KEY_Q], "torch": [KEY_F], "fire": [], "throw": [KEY_G], "holster": [KEY_H], "skills": [KEY_TAB, KEY_K], "power": [KEY_T], "look_left": [], "look_right": [], "look_up": [], "look_down": []}
+		"skip": [KEY_SPACE], "pause": [KEY_ESCAPE, KEY_P], "inspect": [KEY_Q], "torch": [KEY_F], "fire": [], "throw": [KEY_G], "holster": [KEY_H], "skills": [KEY_TAB, KEY_K], "power": [KEY_T], "lean_left": [KEY_Z], "lean_right": [KEY_X], "hold_breath": [KEY_B], "look_left": [], "look_right": [], "look_up": [], "look_down": []}
 	var pad := {"interact": JOY_BUTTON_A, "crouch": JOY_BUTTON_B, "reload": JOY_BUTTON_X, "skip": JOY_BUTTON_Y,
 		"pause": JOY_BUTTON_START, "sprint": JOY_BUTTON_LEFT_STICK, "torch": JOY_BUTTON_RIGHT_SHOULDER,
-		"throw": JOY_BUTTON_LEFT_SHOULDER, "holster": JOY_BUTTON_DPAD_UP, "skills": JOY_BUTTON_BACK, "power": JOY_BUTTON_DPAD_DOWN}
+		"throw": JOY_BUTTON_LEFT_SHOULDER, "holster": JOY_BUTTON_DPAD_UP, "skills": JOY_BUTTON_BACK, "power": JOY_BUTTON_DPAD_DOWN,
+		"hold_breath": JOY_BUTTON_RIGHT_STICK, "lean_left": JOY_BUTTON_DPAD_LEFT, "lean_right": JOY_BUTTON_DPAD_RIGHT}
 	var axes := {"move_forward": [JOY_AXIS_LEFT_Y, -1.0], "move_back": [JOY_AXIS_LEFT_Y, 1.0], "move_left": [JOY_AXIS_LEFT_X, -1.0],
 		"move_right": [JOY_AXIS_LEFT_X, 1.0], "look_up": [JOY_AXIS_RIGHT_Y, -1.0], "look_down": [JOY_AXIS_RIGHT_Y, 1.0],
 		"look_left": [JOY_AXIS_RIGHT_X, -1.0], "look_right": [JOY_AXIS_RIGHT_X, 1.0], "fire": [JOY_AXIS_TRIGGER_RIGHT, 1.0], "inspect": [JOY_AXIS_TRIGGER_LEFT, 1.0]}
@@ -107,7 +110,7 @@ func uses_touch() -> bool:
 # ------------------------------------------------------------------ new game, continue, save
 func new_game() -> void:
 	flags = {}; memories = 0; inventory = {}; pistol = {"have": false, "mag": 0, "drawn": true}
-	skills = {}; memory_points = 0; skill_points = 0; strain = 0.0
+	skills = {}; memory_points = 0; skill_points = 0; strain = 0.0; fear = 0.0; torch_charge = 1.0
 	Skills.apply()
 	change_level("flat47", {"fade": 1.5, "card": false})
 
@@ -126,7 +129,7 @@ func continue_game() -> void:
 
 func _snapshot() -> Dictionary:
 	return {"level": level_id, "flags": flags.duplicate(true), "memories": memories,
-		"skills": skills.keys(), "memory_points": memory_points, "skill_points": skill_points,
+		"skills": skills.keys(), "memory_points": memory_points, "skill_points": skill_points, "torch_charge": torch_charge,
 		"inventory": inventory.duplicate(true), "pistol": pistol.duplicate(true)}
 
 func _restore(d: Dictionary) -> void:
@@ -134,7 +137,7 @@ func _restore(d: Dictionary) -> void:
 	memories = int(d.get("memories", 0))
 	skills = {}
 	for k in d.get("skills", []): skills[String(k)] = true
-	memory_points = int(d.get("memory_points", 0)); skill_points = int(d.get("skill_points", 0))
+	memory_points = int(d.get("memory_points", 0)); skill_points = int(d.get("skill_points", 0)); torch_charge = float(d.get("torch_charge", 1.0)); fear = 0.0
 	Skills.apply()
 	inventory = {}
 	for k in d.get("inventory", {}): inventory[k] = int(d.inventory[k])

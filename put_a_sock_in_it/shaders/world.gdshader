@@ -22,6 +22,12 @@ uniform bool use_emission_tex = false;
 uniform bool use_alpha_cut = false;
 uniform vec2 ps1_snap = vec2(0.0);   // the PS1 wobble (Game.apply_wobble sets it on every material); 0 = off
 uniform float flesh = 0.0;
+// AoMap: where things meet the floor and ceiling, from above (scripts/world/ao_map.gd)
+uniform bool ao_on = false;
+uniform sampler2D ao_map : filter_linear, repeat_disable, hint_default_white;
+uniform vec4 ao_rect = vec4(0.0, 0.0, 1.0, 1.0);
+uniform float ao_floor = 0.0;
+uniform float ao_ceil = 2.7;
 uniform float flesh_seed = 0.0;
 // the meat's colours: dark, light, the veins, and the glow in them (level 2: the blue of the hole)
 uniform vec3 meat_dark : source_color = vec3(0.42, 0.09, 0.1);
@@ -74,6 +80,18 @@ void fragment() {
 		rough = mix(rough, 0.25, k);            // wet
 		spec = mix(spec, 0.8, k);
 		EMISSION = meat_glow * vein * k * (0.85 + 0.15 * sin(TIME * 0.7 + wp.x));     // (a slow glow: a fast deep pulse read as flicker)
+	}
+	if (ao_on) {
+		vec2 auv = (wp.xz - ao_rect.xy) / ao_rect.zw;
+		if (auv.x > 0.0 && auv.y > 0.0 && auv.x < 1.0 && auv.y < 1.0) {
+			vec2 a = texture(ao_map, auv).rg;
+			float hh = wp.y - ao_floor;
+			float lowk = (1.0 - smoothstep(0.0, 0.75, hh)) * step(-0.15, hh);
+			float highk = smoothstep(ao_ceil - ao_floor - 0.5, ao_ceil - ao_floor, hh);
+			float occ = mix(1.0, a.r, lowk) * mix(1.0, a.g, highk);
+			col *= occ;
+			spec *= occ;
+		}
 	}
 	ALBEDO = col;
 	float curve = length(fwidth(NORMAL));

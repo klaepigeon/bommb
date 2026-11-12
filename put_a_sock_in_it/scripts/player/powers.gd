@@ -80,12 +80,27 @@ func _marta_in_sights():
 
 func _thing_in_sights() -> RigidBody3D:
 	var from := player.cam.global_position
-	var q := PhysicsRayQueryParameters3D.create(from, from - player.cam.global_transform.basis.z * RANGE, 1 | 16 | 32, [player.get_rid()])
-	var hit := player.get_world_3d().direct_space_state.intersect_ray(q)
-	if hit.is_empty(): return null
-	var rb := hit.collider as RigidBody3D
-	if rb and rb.get("liftable") and rb.mass <= 6.0 and rb != player.held: return rb
-	return null
+	var space := player.get_world_3d().direct_space_state
+	# loose things only (a book in a bookcase sits inside the case's solid box: look past it)
+	# (look through furniture that won't come: the case the book is in, the table the cup is on)
+	var ex: Array[RID] = [player.get_rid()]
+	var hit := {}
+	var rb: RigidBody3D = null
+	for tries in 5:
+		var q := PhysicsRayQueryParameters3D.create(from, from - player.cam.global_transform.basis.z * RANGE, 16 | 32, ex)
+		hit = space.intersect_ray(q)
+		if hit.is_empty(): return null
+		rb = hit.collider as RigidBody3D
+		if rb and rb.get("liftable") and rb.mass <= 6.0 and rb != player.held: break
+		rb = null
+		ex.append((hit.collider as CollisionObject3D).get_rid())
+	if not rb: return null
+	# and nothing solid between him and it, bar what it's sitting in
+	var p: Vector3 = hit.position
+	var q2 := PhysicsRayQueryParameters3D.create(from, p, 1, [player.get_rid()])
+	var wall := space.intersect_ray(q2)
+	if not wall.is_empty() and (wall.position as Vector3).distance_to(p) > 0.45: return null
+	return rb
 
 func _process(delta: float) -> void:
 	Game.strain = maxf(0.0, Game.strain - REFILL * delta)

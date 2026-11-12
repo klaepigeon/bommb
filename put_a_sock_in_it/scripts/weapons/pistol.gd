@@ -73,6 +73,9 @@ func fire() -> void:
 	get_tree().create_timer(0.05).timeout.connect(func(): _flash.light_energy = 0.0; _flash_mesh.visible = false)
 	var cam := player.cam
 	var from := cam.global_position; var dir := -cam.global_transform.basis.z
+	# a frightened man's aim: up to about 2 degrees off, past half his nerve
+	var sh := maxf(0.0, player.tremor - 0.4) * 0.06
+	if sh > 0.0: dir = (dir + cam.global_transform.basis.x * randf_range(-sh, sh) + cam.global_transform.basis.y * randf_range(-sh, sh)).normalized()
 	var q := PhysicsRayQueryParameters3D.create(from, from + dir * RANGE, 1 | 8 | 16 | 32, [player.get_rid()])
 	var hit := player.get_world_3d().direct_space_state.intersect_ray(q)
 	if hit.is_empty(): return
@@ -81,14 +84,19 @@ func fire() -> void:
 	for i in 4:
 		if target == null or target.has_method("shot"): break
 		target = target.get_parent()
+	var n: Vector3 = hit.get("normal", -dir)
 	if target and target.has_method("shot"):
 		target.shot(hit.position, dir)
+		Fx.burst("flesh", hit.position, n)
+		Fx.hitstop(0.05)
 	elif c is RigidBody3D:
 		if c.has_method("wake"): c.wake()
 		(c as RigidBody3D).apply_impulse(dir * 4.0, hit.position - c.global_position)
 		Sfx.play_at("bullet_hit", hit.position, -2.0)
+		Fx.burst("wood", hit.position, n)
 	else:
 		Sfx.play_at("bullet_hit", hit.position, -2.0)
+		Fx.burst("dust", hit.position, n); Fx.burst("spark", hit.position, n)
 		_mark(hit.position, hit.normal)
 
 func _mark(p: Vector3, n: Vector3) -> void:

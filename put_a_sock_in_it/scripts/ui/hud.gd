@@ -11,6 +11,8 @@ var _ammo: Label
 var _dot: ColorRect
 var _obj_t := 0.0
 var _strain: ProgressBar
+var _breath: ProgressBar
+var _batt: ProgressBar
 
 func _ready() -> void:
 	layer = 20
@@ -31,6 +33,13 @@ func _ready() -> void:
 	_ammo.offset_left = -220; _ammo.offset_right = -30; _ammo.offset_top = -64; _ammo.offset_bottom = -24
 	_ammo.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	add_child(_ammo)
+
+func _bar(at: Vector2, c: Color) -> ProgressBar:
+	var b := ProgressBar.new(); b.show_percentage = false; b.max_value = 1.0
+	b.custom_minimum_size = Vector2(160, 6); b.position = at; b.size = Vector2(160, 6)
+	b.modulate = c; b.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(b)
+	return b
 
 func _label(size: int, c: Color) -> Label:
 	var l := Label.new()
@@ -77,7 +86,7 @@ func set_objective(t: String) -> void:
 
 func _process(delta: float) -> void:
 	if not player: return
-	var p := player.prompt() if player.controls else ""
+	var p := player.prompt() if player.controls or player.hidden_in else ""
 	_prompt.text = p
 	var touch := Game.uses_touch()
 	if p != "" and not touch: _prompt.text = "[E]  " + p
@@ -89,6 +98,19 @@ func _process(delta: float) -> void:
 		add_child(_strain)
 	_strain.value = Game.strain
 	_strain.visible = Game.strain > 0.01
+	# his held breath (white, while it's held or coming back), and the torch's battery (amber,
+	# while it's on, and red under a quarter)
+	if not _breath:
+		_breath = _bar(Vector2(28, 76), Color(0.95, 0.95, 0.95, 0.8))
+		_batt = _bar(Vector2(28, 88), Color(1.0, 0.75, 0.35, 0.7))
+	var nv = player.get_parent().get("nerve")
+	if nv:
+		_breath.value = nv.air
+		_breath.visible = nv.holding or nv.air < 0.99
+		_breath.modulate = Color(1.0, 0.45, 0.4, 0.9) if nv.air < 0.3 else Color(0.95, 0.95, 0.95, 0.8)
+	_batt.value = Game.torch_charge
+	_batt.visible = player.torch_on or Game.torch_charge < 0.25
+	_batt.modulate = Color(1.0, 0.35, 0.25, 0.8) if Game.torch_charge < 0.25 else Color(1.0, 0.75, 0.35, 0.7)
 	_obj_t -= delta
 	_objective.modulate.a = clampf(_obj_t, 0.25, 1.0)
 	if player.held:

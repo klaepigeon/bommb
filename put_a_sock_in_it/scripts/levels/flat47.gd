@@ -79,6 +79,11 @@ func build() -> void:
 	player.set_view(PI * 0.5, -0.04)
 	socko.points = {"chair": MARTA_POS + Vector3(0, 0.7, 0), "door": FRONT + Vector3(0, 1.2, 0), "hole": HOLE + Vector3(0, 0.8, 0), "gun": gun_drawer, "wardrobe": wardrobe}
 
+func ao_area() -> Array:
+	return [Rect2(-0.6, -1.95, 14.8, 10.4), 0.0, ExportedFlat.H]
+
+func ao_name() -> String: return "flat47"
+
 ## The JS version's evening: a dusk the colour of slate through the courtyard windows, almost no
 ## light of its own; what light there is comes from her fittings.
 func _environment() -> void:
@@ -597,7 +602,7 @@ func _the_jump() -> void:
 	glow.light_energy = 0.0
 	AudioServer.set_bus_volume_db(wb, _world_db)
 	Sfx.play("switch", -4.0, 1.2)
-	Sfx.play("marta_scream", 6.0, 0.92)
+	Sfx.play("marta_scream", 6.0, 0.92); nerve.spike(0.8)
 	Sfx.play("gasp", 2.0, 1.1)
 	player.shake(0.05, 0.9)
 	player.set_view(player.get_yaw(), player.get_pitch() + 0.12)     # he flinches back
@@ -704,7 +709,7 @@ func _on_wardrobe_pushed() -> void:
 	(flat.doors.dStore as Node3D).visible = false
 	hole_parts.visible = true
 	socko.interest = null
-	Sfx.play("sting", -10.0, 0.8)
+	Sfx.play("sting", -10.0, 0.8); nerve.spike(0.4)
 	Fx.kick("tear", 0.5, 0.8)
 	Sfx.stop_loop("goo"); Sfx.loop("goo", "goo_loop", -2.0, HOLE + Vector3(0, 0.5, 0))
 	_spurts()

@@ -8,6 +8,9 @@ extends CharacterBody3D
 ##   stunned      shot: she reels back and away, then comes on harder (more suspicious)
 ##   encounter    the first time they see each other: she stops and clicks at him (scripted)
 ##   caught       she has him
+##   fetch        she saw him get into a wardrobe: straight to it, and him out of it
+##   listen       hunting, she's stopped at a wardrobe he's in: her head to the doors. Holding his
+##                breath and keeping his nerve, he lives (docs/SYSTEMS.md)
 ## She sees in a cone, worse in the dark of a crouch; she hears every noise Game.noise reports,
 ## less through walls. She can't be killed: bullets hurt her and buy time, not safety.
 
@@ -16,7 +19,9 @@ signal spotted_player
 signal state_changed(s: String)
 signal died
 
-const SPEED := {"patrol": 1.0, "investigate": 1.7, "chase": 3.0, "search": 1.3, "stunned": 1.6}
+const SPEED := {"patrol": 1.0, "investigate": 1.7, "chase": 3.0, "search": 1.3, "stunned": 1.6, "fetch": 2.6}
+const LISTEN_RANGE := 3.2       # a wardrobe this near where she stops, she listens at
+const LISTEN_SECS := 4.5
 const SIGHT := 13.0
 const FOV_COS := 0.45
 
@@ -44,6 +49,11 @@ var _click_t := 1.0
 var _walk := 0.0
 var _twitch_t := 0.0
 var _stuck := 0.0
+var _seen_ago := 99.0           # seconds since she last had him in sight
+var _spot: Node = null          # the wardrobe she's fetching him from / listening at
+var _heard := 0.0               # listening: 0..1, how sure she is he's in there
+var _listened := {}             # wardrobes she's listened at lately: spot -> time left before she'd bother again
+signal listening(spot: Node)
 ## Melee doesn't hurt her the way it would hurt a person: it knocks her about. Each blow takes
 ## poise; small blows make her flinch, and when her poise is gone she reels (the same stun a
 ## bullet gives). It comes back quickly.
@@ -79,6 +89,16 @@ func evolve(to: int) -> void:
 func _enter_tree() -> void:
 	# (she's moved between copies of the flat: reconnect each time she's put somewhere)
 	if not Game.noise.is_connected(_on_noise): Game.noise.connect(_on_noise)
+	for sp in get_tree().get_nodes_in_group("hide_spot"):
+		if not sp.entered.is_connected(_on_hid): sp.entered.connect(_on_hid)
+
+## He's got into a wardrobe. If she was watching (or only just lost sight of him), she knows.
+func _on_hid(sp: Node) -> void:
+	if not active or state in ["caught", "dead", "stunned"]: return
+	var near: bool = sp.global_position.distance_to(global_position) < SIGHT
+	if _seen_ago < 1.2 and near or (state == "chase" and _seen_ago < 2.5):
+		_spot = sp
+		set_state("fetch"); go_to(sp.front())
 
 func _exit_tree() -> void:
 	if Game.noise.is_connected(_on_noise): Game.noise.disconnect(_on_noise)
@@ -130,6 +150,7 @@ func in_refuge(p: Vector3) -> bool:
 
 func can_see_player() -> bool:
 	if not player: return false
+	if player.hidden_in: return false
 	if in_refuge(player.global_position): return false
 	var eye := head()
 	var target := player.cam.global_position
@@ -144,7 +165,11 @@ func can_see_player() -> bool:
 	return get_world_3d().direct_space_state.intersect_ray(q).is_empty()
 
 func _on_noise(pos: Vector3, loud: float) -> void:
-	if not active or state in ["chase", "encounter", "caught", "stunned"]: return
+	if not active or state in ["chase", "encounter", "caught", "stunned", "fetch"]: return
+	if state == "listen":
+		# a sound from in there, with her ear to it
+		if is_instance_valid(_spot) and pos.distance_to(_spot.global_position) < 2.5 and loud > 0.08: _heard = 1.0
+		return
 	if in_refuge(pos): return
 	var dist := pos.distance_to(global_position)
 	var q := PhysicsRayQueryParameters3D.create(head(), pos + Vector3(0, 0.5, 0), 1, [get_rid()])
@@ -233,6 +258,10 @@ func _physics_process(delta: float) -> void:
 		_shove = _shove.lerp(Vector3.ZERO, 1.0 - exp(-7.0 * delta))
 	_state_t += delta
 	var sees := can_see_player()
+	_seen_ago = 0.0 if sees else _seen_ago + delta
+	for k in _listened.keys():
+		_listened[k] -= delta
+		if _listened[k] <= 0.0: _listened.erase(k)
 	match state:
 		"patrol", "investigate", "search":
 			if sees:
@@ -286,8 +315,40 @@ func _physics_process(delta: float) -> void:
 		"encounter":
 			_stand(delta)
 			_face(player.global_position, delta * 3.0)
+		"fetch":
+			if not is_instance_valid(_spot) or not _spot.occupant:
+				set_state("search"); _last_seen = global_position; go_to(global_position)
+			elif _follow(delta, SPEED.fetch) or global_position.distance_to(_spot.front()) < 0.9:
+				_face(_spot.global_position, 1.0)
+				_spot.drag_out()
+				_catch()
+		"listen":
+			_stand(delta)
+			if not is_instance_valid(_spot) or not _spot.occupant:
+				_resume_patrol()
+			else:
+				_face(_spot.global_position, delta * 4.0)
+				# what she hears: breathing (unless he's holding it), and it gets louder with his fear
+				var held: bool = player.get("breath_held") == true
+				_heard += delta * (0.0 if held else 0.08 + 0.35 * Game.fear)
+				if _heard >= 1.0:
+					Sfx.play_at("marta_scream", head(), 2.0, 1.1)
+					set_state("fetch"); go_to(_spot.front())
+				elif _state_t > LISTEN_SECS:
+					_listened[_spot] = 25.0
+					_resume_patrol()
 		"caught":
 			pass
+	# hunting and stopped near a wardrobe he's in: she listens at it
+	if state in ["investigate", "search"] and _pi >= _path.size():
+		for sp in get_tree().get_nodes_in_group("hide_spot"):
+			if sp.occupant and not _listened.has(sp) and sp.global_position.distance_to(global_position) < LISTEN_RANGE:
+				_spot = sp; _heard = 0.0
+				set_state("listen"); go_to(sp.front())
+				_path = PackedVector3Array(); _pi = 0
+				Sfx.play_at("sniff", head(), 0.0, 0.8)
+				listening.emit(sp)
+				break
 	_animate(delta)
 	_click_t -= delta
 	if _click_t <= 0.0: _click(false)
@@ -398,6 +459,16 @@ func _animate(delta: float) -> void:
 			P.neck = Vector3(0, 0, clampf(_state_t * 0.2, 0.0, 0.4))
 			P.jaw = Vector3(0.25 + sin(t * 60.0) * 0.06, 0, 0)
 			P.sh_l = Vector3(0.1, 0, 0.1); P.sh_r = Vector3(0.1, 0, -0.1)
+		"listen":
+			body.snap = 6.0
+			# bent to the doors, the head turned to put an ear to them, utterly still but the jaw
+			for k in ["hip_l", "hip_r"]: P[k] = Vector3.ZERO
+			P.kn_l = Vector3(-0.3, 0, 0); P.kn_r = Vector3(-0.3, 0, 0)
+			P.spine = Vector3(-0.55, 0, 0); P.neck = Vector3(0.3, 0, 0)
+			P.head = Vector3(0.0, 0.0, 1.1)
+			P.sh_l = Vector3(0.9, 0, 0.1); P.sh_r = Vector3(0.9, 0, -0.1)       # hands flat to the doors
+			P.el_l = Vector3(-0.3, 0, 0); P.el_r = Vector3(-0.3, 0, 0)
+			P.jaw = Vector3(0.1 + sin(t * 40.0) * 0.03, 0, 0)
 		"caught":
 			pass
 		_:

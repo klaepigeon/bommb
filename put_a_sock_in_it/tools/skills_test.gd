@@ -18,7 +18,7 @@ func _initialize() -> void:
 	var D = root.get_node("Dialogue")
 	game.skills = {}; game.memory_points = 0; game.skill_points = 0; game.memories = 0; S.apply()
 	_check(not S.can_unlock("m_1"), "nothing without points")
-	game.memory_points = 3; game.skill_points = 12
+	game.memory_points = 3; game.skill_points = 20
 	_check(not S.can_unlock("m_talk"), "a node needs the one before it")
 	_check(S.unlock("m_1") and game.memories == 1 and game.memory_points == 2, "Memory I: a memory (memories 1, 2 points left)")
 	_check(D.test("memories >= 1"), "the dialogue's memory branches open")
@@ -36,10 +36,26 @@ func _initialize() -> void:
 	var P = L.player
 	_check(is_equal_approx(P.stamina_max(), P.STAMINA_MAX * 1.5), "Lungs shows in his stamina (%.2f)" % P.stamina_max())
 	# telekinesis: a book across the room flies to his hand
+	# (any loose thing he can see from 2.5 m off: stand there)
+	var space = P.get_world_3d().direct_space_state
 	var book = null
+	var spot := Vector3.ZERO
 	for k in L.flat.props:
-		if String(k).contains("Book"): book = L.flat.props[k]; break
-	await _face(L, P, book.global_position + Vector3(2.5, 0, 0) * Vector3(1, 0, 0) + Vector3(0, 0, 0), book.global_position)
+		var b = L.flat.props[k]
+		if not (b is RigidBody3D) or not b.get("liftable") or b.mass > 6.0: continue
+		for j in 16:
+			var a := j * TAU / 16.0
+			var at: Vector3 = b.global_position + Vector3(cos(a), 0, sin(a)) * 2.5
+			at.y = 0.0
+			var eye := at + Vector3(0, 1.62, 0)
+			var q := PhysicsRayQueryParameters3D.create(eye, b.global_position + Vector3(0, 0.05, 0), 1 | 32, [b.get_rid()])
+			var h: Dictionary = space.intersect_ray(q)
+			if h.is_empty() and space.intersect_point(_pt(at + Vector3(0, 0.9, 0))).is_empty() \
+				and space.intersect_point(_pt(at + Vector3(0, 0.3, 0))).is_empty() and not space.intersect_ray(PhysicsRayQueryParameters3D.create(at + Vector3(0, 0.5, 0), at + Vector3(0, -0.2, 0), 1)).is_empty():
+				book = b; spot = at; break
+		if book: break
+	printerr("  (pulling ", book.name if book else "nothing", " from ", spot, ")")
+	await _face(L, P, spot, book.global_position)
 	var did: String = L.powers.use()
 	await _wait(1.8)
 	_check(did == "pull" and P.held == book, "telekinesis pulls a book %.1f m into his hand (%s)" % [2.5, did])
@@ -96,7 +112,7 @@ func _initialize() -> void:
 	_check(wall != null, "a cracked wall in copy B")
 	F.marta.active = false; F.marta.global_position = Vector3(-40, 0, -40)
 	var wn: Vector3 = wall.global_basis.z; wn.y = 0
-	await _face(F, FP, Vector3(wall.global_position.x, 0, wall.global_position.z) + wn.normalized() * 0.9, wall.global_position)
+	await _face(F, FP, Vector3(wall.global_position.x, 0, wall.global_position.z) + wn.normalized() * 0.6, wall.global_position + Vector3(0, 0.45, 0))
 	await _attack(F, 0.6)
 	_check(is_instance_valid(wall), "without Breach a heavy punch doesn't go through")
 	_check(S.unlock("s_breach"), "Breach")
@@ -154,6 +170,10 @@ func _face(lv, P, at: Vector3, look: Vector3) -> void:
 func _until(f: Callable, secs: float) -> void:
 	var t0 := Time.get_ticks_msec()
 	while not f.call() and Time.get_ticks_msec() - t0 < secs * 1000.0: await process_frame
+
+func _pt(p: Vector3) -> PhysicsPointQueryParameters3D:
+	var q := PhysicsPointQueryParameters3D.new(); q.position = p; q.collision_mask = 1 | 32
+	return q
 
 func _check(ok: bool, what: String) -> void:
 	printerr(("  ok   " if ok else "  FAIL ") + what)
