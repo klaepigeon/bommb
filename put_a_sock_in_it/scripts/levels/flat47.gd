@@ -278,8 +278,10 @@ func _lights() -> void:
 		Tex.mat("cloth_red", 4.0, {"tint": Color(1.0, 0.75, 0.5), "emission": Vector3(0.9, 0.5, 0.25), "double": true}))
 	var lamp := Fitting.make(world, over + Vector3(0, -0.06, 0), Color("ffc27a"), 2.2, 4.0, "bulb", true)
 	lamp.add_glow(shade, Vector3(0.9, 0.5, 0.25))
+	shade.name = "LampShade"
 	lamp.light.shadow_bias = 0.04
 	var cone := Air.beam(lamp, 1.6, 0.9, Color("ffc27a"), 0.025); cone.rotation.x = -PI * 0.5
+	cone.name = "LampCone"
 	if table_lamp: table_lamp.base *= 0.6
 	table_lamp = lamp
 	# a cold fill through the window behind her, so she reads against the glass
@@ -525,47 +527,119 @@ func _dead_air() -> void:
 	marta.unhinge(1.15, 1.6)
 	await get_tree().create_timer(1.9).timeout
 
-## The bulb goes. In the dark, the chair going over, her joints. When the light comes back she's
-## at his face. (One change from dark to light: inside the photosensitivity rule.)
+## The bulb goes, and it's dark: really dark, not a fade. All that's left of her is the faint sick
+## light of the coral. In the dark she gets up: the wet tearing as she comes loose of the chair,
+## then up in three jerks, each with a crack. She stands across the table, the head tilting. Then
+## she comes over the table at him. His torch snaps on in his hand and she's there, her face in his,
+## her hands either side of his head. (One change from dark to light: inside the photosensitivity
+## rule.)
 func _the_jump() -> void:
 	var wb := AudioServer.get_bus_index("World")
+	# the bulb, and with it every light in the room: dark
 	Sfx.play("glass", -2.0, 1.7); Sfx.play("switch", 0.0, 0.6)
-	if table_lamp: table_lamp.on = false
-	Game.fade(0.95, 0.05)
-	await get_tree().create_timer(0.25).timeout
-	Sfx.play("scrape", -2.0, 0.7)
-	for i in 2:
-		Sfx.play("bone_crack", -4.0, randf_range(0.6, 0.9)); await get_tree().create_timer(0.12).timeout
+	_room_dark(true)
+	player.torch_on = false; player.torch.light_energy = 0.0
+	if hand: hand.visible = false          # he snatches it back
+	# her, on her feet, in place of her at the table: still folded into the chair's shape
 	(marta.joints.hips as Node3D).visible = false
-	_place_jumper()
-	await get_tree().create_timer(0.35).timeout
-	if table_lamp: table_lamp.on = true
-	Game.fade(0.0, 0.04)
+	jumper.global_position = MARTA_POS; jumper.rotation.y = marta.rotation.y
+	jumper.position.y = -0.42
+	_pose_jumper({"hip_l": Vector3(1.45, 0, 0.08), "hip_r": Vector3(1.4, 0, -0.08), "kn_l": Vector3(-1.5, 0, 0), "kn_r": Vector3(-1.45, 0, 0),
+		"spine": Vector3(-0.35, 0, 0), "neck": Vector3(-0.3, 0, 0), "head": Vector3(-0.5, 0.2, 0.3), "jaw": Vector3(1.6, 0, 0),
+		"sh_l": Vector3(0.2, 0, 0.1), "sh_r": Vector3(0.2, 0, -0.1), "el_l": Vector3(-0.3, 0, 0), "el_r": Vector3(-0.3, 0, 0)})
+	jumper.snap = 60.0
+	jumper.gaze = player.cam.global_position
+	jumper.visible = true
+	var glow := OmniLight3D.new(); glow.name = "CoralGlow"; glow.light_color = Color("9adfb0"); glow.light_energy = 0.4; glow.omni_range = 1.8
+	glow.shadow_enabled = false; jumper.add_child(glow); glow.position = Vector3(0, 1.25, -0.15)
+	Sfx.play("breath", -10.0, 0.7)                         # his
+	await get_tree().create_timer(0.7).timeout
+	# coming loose of the chair
+	Sfx.play_at("squelch", MARTA_POS + Vector3(0, 0.6, 0), 0.0, 0.6)
+	Sfx.play_at("scrape", MARTA_POS + Vector3(0, 0.3, 0), -4.0, 0.6)
+	await get_tree().create_timer(0.5).timeout
+	# up, in three jerks
+	jumper.snap = 22.0
+	for i in 3:
+		var k := float(i + 1) / 3.0
+		Sfx.play_at("bone_crack", MARTA_POS + Vector3(0, 1.0, 0), -2.0, randf_range(0.6, 0.9))
+		var tw := create_tween().set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+		tw.tween_property(jumper, "position:y", lerpf(-0.42, 0.0, k), 0.12)
+		_pose_jumper({"hip_l": Vector3(1.45 * (1.0 - k), 0, 0.08), "hip_r": Vector3(1.4 * (1.0 - k), 0, -0.08),
+			"kn_l": Vector3(-1.5 * (1.0 - k), 0, 0), "kn_r": Vector3(-1.45 * (1.0 - k), 0, 0),
+			"spine": Vector3(-0.35 + 0.3 * k, 0, 0.1 * k), "head": Vector3(-0.5 + 0.55 * k, 0.2, 0.3 + 0.2 * k)})
+		await get_tree().create_timer(0.45).timeout
+	# still, standing across the table: the head going over
+	jumper.snap = 3.0
+	_pose_jumper({"head": Vector3(0.15, 0, 0.95), "neck": Vector3(0.1, 0, 0.3)})
+	Sfx.play_at("click", MARTA_POS + Vector3(0, 1.5, 0), -6.0, 0.6)
+	await get_tree().create_timer(0.9).timeout
+	# over the table at him
+	var c: Transform3D = player.cam.global_transform
+	var fwd := -c.basis.z; fwd.y = 0.0; fwd = fwd.normalized()
+	var to := c.origin + fwd * 0.75
+	var land := Vector3(to.x, 0.0, to.z)
+	var from := jumper.global_position
+	jumper.snap = 40.0
+	_pose_jumper({"spine": Vector3(-0.6, 0, 0.1), "neck": Vector3(0.45, 0, 0.1), "head": Vector3(0.25, 0, 0.5), "jaw": Vector3(1.8, 0, 0),
+		"sh_l": Vector3(1.25, 0.35, 0.3), "sh_r": Vector3(1.25, -0.35, -0.3), "el_l": Vector3(-0.35, 0, 0), "el_r": Vector3(-0.35, 0, 0),
+		"hip_l": Vector3(-0.5, 0, 0.1), "hip_r": Vector3(-0.3, 0, -0.1), "kn_l": Vector3(-0.9, 0, 0), "kn_r": Vector3(-0.6, 0, 0)})
+	Sfx.play_at("whoosh", MARTA_POS + Vector3(0, 1.2, 0), 0.0, 0.6)
+	var lunge := create_tween()
+	lunge.tween_method(func(k):
+		jumper.global_position = from.lerp(land, k) + Vector3(0, sin(k * PI) * 0.45, 0), 0.0, 1.0, 0.28).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	await lunge.finished
+	# her face at his: settle her so her eyes are level with his
+	var dy: float = (c.origin.y + 0.02) - jumper.head_pos().y
+	jumper.global_position.y += dy
+	# the torch, in his hand, on: her (not at full: at this range it would blow her out white)
+	player.torch_on = true; player.torch.light_energy = 1.6
+	glow.light_energy = 0.0
 	AudioServer.set_bus_volume_db(wb, _world_db)
+	Sfx.play("switch", -4.0, 1.2)
 	Sfx.play("marta_scream", 6.0, 0.92)
 	Sfx.play("gasp", 2.0, 1.1)
 	player.shake(0.05, 0.9)
+	player.set_view(player.get_yaw(), player.get_pitch() + 0.12)     # he flinches back
 	Fx.kick("fringe", 2.5, 1.5); Fx.kick("tear", 1.0, 1.2); Fx.set_k("pulse", 0.6)
 	Engine.time_scale = 0.4
 	get_tree().create_timer(0.45, true, false, true).timeout.connect(func(): Engine.time_scale = 1.0)
 	await get_tree().create_timer(0.5).timeout
+	player.torch_on = false
 
-## Her, up out of the chair and over the table, bent down into his face: arms out either side of
-## his head, the jaw off its hinge, the eye on him.
-func _place_jumper() -> void:
-	var c: Transform3D = player.cam.global_transform
-	var fwd := -c.basis.z; fwd.y = 0.0; fwd = fwd.normalized()
-	var at := c.origin + fwd * 0.62
-	jumper.global_position = Vector3(at.x, 0.0, at.z)
-	var d := c.origin - jumper.global_position
-	jumper.rotation.y = atan2(-d.x, -d.z)
-	jumper.pose.spine = Vector3(-0.55, 0, 0.1); jumper.pose.neck = Vector3(0.35, 0, 0.15)
-	jumper.pose.head = Vector3(0.2, 0, 0.55); jumper.pose.jaw = Vector3(1.6, 0, 0)
-	jumper.pose.sh_l = Vector3(0.6, 0.6, 0.7); jumper.pose.sh_r = Vector3(0.6, -0.6, -0.7)
-	jumper.pose.el_l = Vector3(-0.4, 0, 0); jumper.pose.el_r = Vector3(-0.4, 0, 0)
-	jumper.pose.kn_l = Vector3(-0.3, 0, 0); jumper.pose.kn_r = Vector3(-0.3, 0, 0)
-	jumper.gaze = c.origin
-	jumper.visible = true
+## Every light within six metres of her out (the bulb took the circuit with it), remembered so the
+## blackout can put them back.
+var _darkened: Array = []
+var _shade_glow = Vector3.ZERO
+func _room_dark(dark: bool) -> void:
+	if dark:
+		_darkened = []
+		var fits: Array = flat.fittings.duplicate()
+		if table_lamp and not fits.has(table_lamp): fits.append(table_lamp)
+		for fi in fits:
+			if is_instance_valid(fi) and (fi as Node3D).global_position.distance_to(MARTA_POS) < 6.0 and fi.on:
+				_darkened.append(fi); fi.on = false
+		for l in world.find_children("*", "Light3D", true, false):
+			var lt := l as Light3D
+			if lt.visible and lt.global_position.distance_to(MARTA_POS) < 6.0 and not player.is_ancestor_of(lt) and not (lt.get_parent() is Fitting) and not jumper.is_ancestor_of(lt):
+				_darkened.append(lt); lt.visible = false
+		var cone := world.find_child("LampCone", true, false)
+		if cone: _darkened.append(cone); (cone as Node3D).visible = false
+		var shade := world.find_child("LampShade", true, false) as MeshInstance3D
+		if shade and shade.material_override is ShaderMaterial:
+			_shade_glow = (shade.material_override as ShaderMaterial).get_shader_parameter("emission")
+			(shade.material_override as ShaderMaterial).set_shader_parameter("emission", Vector3.ZERO)
+			set_meta("shade_off", true)
+	else:
+		set_meta("shade_off", false)
+		for x in _darkened:
+			if not is_instance_valid(x): continue
+			if x is Fitting: x.on = true
+			else: (x as Node3D).visible = true
+		_darkened = []
+
+func _pose_jumper(p: Dictionary) -> void:
+	for k in p: jumper.pose[k] = p[k]
 
 ## Dark. Ringing. His heart. Somewhere, the front door slams. When he comes to, she isn't there.
 func _blackout() -> void:
@@ -581,6 +655,7 @@ func _blackout() -> void:
 	# she's gone; where she was, the chair and the coral, broken where she tore loose
 	(marta.joints.hips as Node3D).visible = false
 	jumper.visible = false
+	_room_dark(false)
 	if table_lamp: table_lamp.kind = "bulb"
 	if hand: hand.queue_free(); hand = null
 	balcony_door.locked = false
