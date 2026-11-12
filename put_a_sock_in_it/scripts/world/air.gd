@@ -6,7 +6,7 @@ class_name Air
 static func dust(parent: Node, centre: Vector3, extent: Vector3, count: int, color := Color(1, 0.95, 0.85)) -> MultiMeshInstance3D:
 	var q := QuadMesh.new(); q.size = Vector2(1, 1)
 	var mm := MultiMesh.new(); mm.transform_format = MultiMesh.TRANSFORM_3D; mm.mesh = q
-	var n := count
+	var n := count / 2
 	if OS.has_feature("mobile"): n = count / 2
 	mm.instance_count = n
 	var r := RandomNumberGenerator.new(); r.seed = int(centre.x * 100 + centre.z * 7)

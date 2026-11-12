@@ -2,7 +2,7 @@
 // the glow of the hole). Additive, lit only by real lights, so dark rooms stay dark.
 shader_type spatial;
 render_mode blend_add, cull_disabled, depth_draw_never, specular_disabled, shadows_disabled, ambient_light_disabled;
-uniform float size = 0.006;
+uniform float size = 0.004;
 uniform vec3 color : source_color = vec3(1.0, 0.95, 0.85);
 void vertex() {
 	float s = float(INSTANCE_ID) * 0.6180339;
@@ -25,5 +25,5 @@ void fragment() {
 }
 void light() {
 	float r = length(UV - 0.5) * 2.0;
-	DIFFUSE_LIGHT += ATTENUATION * LIGHT_COLOR * smoothstep(1.0, 0.0, r) * 0.22;
+	DIFFUSE_LIGHT += ATTENUATION * LIGHT_COLOR * smoothstep(1.0, 0.0, r) * 0.12;
 }

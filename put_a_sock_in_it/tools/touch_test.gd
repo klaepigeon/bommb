@@ -8,8 +8,11 @@ func _initialize() -> void:
 	var game = root.get_node("Game")
 	game.settings.force_touch = true
 	game.change_level("flesh47", {"card": false, "checkpoint": true, "fade": 0.01})
-	await _wait(3.0)
+	await _wait(1.0)
 	var F = game.level
+	var t0 := Time.get_ticks_msec()
+	while not F.player.controls and Time.get_ticks_msec() - t0 < 20000: await process_frame
+	await _wait(0.2)
 	F.marta.active = false
 	var p = F.player
 	var t = F.touch

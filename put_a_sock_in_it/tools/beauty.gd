@@ -13,31 +13,43 @@ func _initialize() -> void:
 	var L = game.level
 	root.get_node("Dialogue").stop()
 	L.set_cutscene(false); game._black.visible = false
-	await _view(L, "a_landing", Vector3(1.0, 0, 10.2), Vector3(1.96, 1.4, 8.0))
-	L.front_door.set_open(true, 0.01)
-	await _view(L, "b_hall", Vector3(1.9, 0, 7.6), Vector3(1.0, 1.2, 5.0))
-	await _view(L, "c_living_marta", Vector3(4.0, 0, 6.8), Vector3(8.6, 0.9, 4.3))
-	await _view(L, "d_marta_close", Vector3(7.6, 0, 4.4), Vector3(8.7, 1.0, 4.25), 1.0)
-	await _view(L, "e_kitchen", Vector3(2.6, 0, 3.6), Vector3(1.0, 1.0, 0.5))
+	await _view(L, "a_landing", Vector3(12.6, 0, 5.2), Vector3(10.06, 1.3, 4.15))
+	L.front_door.set_open(true)
+	await _view(L, "b_hall", Vector3(9.5, 0, 4.5), Vector3(5.0, 1.2, 4.5))
+	await _view(L, "c_living_marta", Vector3(4.1, 0, 4.4), L._face() + Vector3(0, -0.3, 0))
+	await _view(L, "d_marta_close", L.marta.to_global(Vector3(0.0, 0, -1.25)), L._face(), 1.0)
+	L.marta.face(L.player.cam.global_position, 0.38)
+	L._reach(0.85)
+	await _wait(2.4)
+	root.get_viewport().get_texture().get_image().save_png(out.path_join("d2_marta_reach.png"))
+	if L.hand: L.hand.visible = false
+	await _view(L, "e_kitchen", Vector3(8.2, 0, 3.4), Vector3(9.5, 0.9, 0.6))
 	L.player.torch_on = true
-	await _view(L, "f_bathroom_torch", Vector3(1.2, 0, 4.6), Vector3(0.4, 0.8, 3.2))
-	await _view(L, "g_boxroom_torch", Vector3(4.6, 0, 3.8), Vector3(4.2, 1.0, 1.0))
+	await _view(L, "f_bath_torch", Vector3(8.6, 0, 5.6), Vector3(8.0, 0.6, 7.6))
 	L.player.torch_on = false
-	L.socko.visible = true; L.socko.hold = "out"
-	L.wardrobe.position.x -= 1.4; L._on_wardrobe_pushed(null)
+	L.socko.visible = true; L.socko.hold = "out"; L._woke = true
+	L.wardrobe.position.x += 1.35; L._wardrobe_moved = true
+	L.player.global_position = Vector3(2.3, 0, 3.4)
+	L._on_wardrobe_pushed()
+	await _wait(1.2)
 	root.get_node("Dialogue").stop(); L.set_cutscene(false)
-	await _view(L, "h_hole", Vector3(8.0, 0, 2.4), Vector3(8.4, 0.5, 0.0))
+	await _view(L, "g_hole", Vector3(2.3, 0, 3.4), L.HOLE + Vector3(0, 0.9, 0))
+	L.outside.visible = true; L.env.environment.background_color = Color(1, 1, 1); L.env.environment.background_energy_multiplier = 1.6
+	L.balcony_door.locked = false; L.balcony_door.set_open(true)
+	await _view(L, "h_balcony", Vector3(2.3, 0, -0.6), L.sticky_at)
 	game.change_level("flesh47", {"card": false, "checkpoint": true, "fade": 0.01})
 	await _wait(3.0)
 	var F = game.level
 	F.marta.active = false
 	game._black.visible = false
-	await _view(F, "i_flesh", F.cell_pos(2, 3), F.cell_pos(8, 3, 1.2))
+	await _view(F, "i_copy_a", F._p("A", Vector3(1.9, 0, 4.2)), F._p("A", Vector3(3.0, 1.0, 1.4)))
+	F._place("B"); F.marta.active = false
+	await _view(F, "j_copy_b_hall", F._p("B", Vector3(9.3, 0, 4.5)), F._p("B", Vector3(5.0, 1.2, 4.5)))
 	F.player.torch_on = true
-	await _view(F, "j_flesh_torch", F.cell_pos(9, 5), F.cell_pos(9, 9, 1.0))
-	var mp: Vector3 = F.marta.global_position
-	F.marta.body.pose.head = Vector3(0.3, 0.2, 0.4)
-	await _view(F, "k_marta_torch", mp + Vector3(0.3, 0, -3.0) if not _blocked(F, mp + Vector3(0.3, 0, -3.0), mp) else mp + Vector3(3.0, 0, 0), mp + Vector3(0, 1.3, 0))
+	F.marta.global_position = F._p("B", Vector3(2.2, 0, 3.3))
+	await _view(F, "k_marta_torch", F._p("B", Vector3(4.0, 0, 4.4)), F.marta_head.global_position + Vector3(0, -0.2, 0))
+	F._place("C"); F.marta.active = false; F.player.torch_on = false
+	await _view(F, "l_copy_c", F._p("C", Vector3(6.5, 0, 4.4)), F._p("C", Vector3(9.9, 1.2, 4.2)))
 	print("BEAUTY done")
 	quit()
 func _blocked(L, a: Vector3, b: Vector3) -> bool:

@@ -53,7 +53,7 @@ var _roll := 0.0
 
 func _ready() -> void:
 	add_to_group("player")
-	collision_layer = 2; collision_mask = 1
+	collision_layer = 2; collision_mask = 1 | 32
 	var cs := CollisionShape3D.new(); var cap := CapsuleShape3D.new()
 	cap.radius = 0.28; cap.height = 1.75
 	cs.shape = cap; cs.position.y = 0.875; cs.name = "Body"
@@ -65,6 +65,10 @@ func _ready() -> void:
 	head.add_child(cam)
 	arm_mount = Node3D.new(); arm_mount.name = "ArmMount"; cam.add_child(arm_mount)
 	hand_mount = Node3D.new(); hand_mount.name = "HandMount"; cam.add_child(hand_mount)
+	# a faint light at the eye, a metre's reach: Socko and the hands always read, even in the dark
+	var fill := OmniLight3D.new(); fill.name = "Fill"; fill.light_color = Color("ffe6c8"); fill.light_energy = 0.35
+	fill.omni_range = 0.9; fill.omni_attenuation = 1.5; fill.shadow_enabled = false; fill.light_specular = 0.1
+	cam.add_child(fill); fill.position = Vector3(0, 0.05, 0.05)
 	torch = SpotLight3D.new(); torch.name = "Torch"
 	torch.position = Vector3(0.18, -0.12, -0.05)
 	torch.light_color = Color("ffe2b8"); torch.spot_range = 15.0; torch.spot_angle = 26.0; torch.spot_angle_attenuation = 0.7
@@ -73,7 +77,7 @@ func _ready() -> void:
 	cam.add_child(torch)
 	torch_beam = Air.beam(torch, 7.0, 2.8, Color("ffe2b8"), 0.03)
 	torch_beam.visible = false
-	ray = RayCast3D.new(); ray.target_position = Vector3(0, 0, -REACH); ray.collision_mask = 1 | 4
+	ray = RayCast3D.new(); ray.target_position = Vector3(0, 0, -REACH); ray.collision_mask = 1 | 4 | 16 | 32
 	ray.add_exception(self)
 	cam.add_child(ray)
 	_yaw = rotation.y; rotation.y = 0.0
@@ -213,7 +217,7 @@ func _apply_view() -> void:
 	head.rotation = Vector3(_pitch, 0, _roll)
 
 func _blocked_above() -> bool:
-	var q := PhysicsRayQueryParameters3D.create(global_position + Vector3(0, 1.0, 0), global_position + Vector3(0, 1.85, 0), 1, [get_rid()])
+	var q := PhysicsRayQueryParameters3D.create(global_position + Vector3(0, 1.0, 0), global_position + Vector3(0, 1.85, 0), 1 | 32, [get_rid()])
 	return not get_world_3d().direct_space_state.intersect_ray(q).is_empty()
 
 # ------------------------------------------------------------------ interaction

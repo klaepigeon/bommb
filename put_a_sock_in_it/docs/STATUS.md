@@ -7,7 +7,7 @@ What actually works, checked by the tools in `tools/` (run with
 |---|---|---|
 | `parse_all.gd` | every script compiles | 0 bad |
 | `playthrough.gd` | the whole chapter beat by beat, with screenshots: knock, door, "Christ", seeing Marta, her lines, the throw, waking, Socko, the locked door, the wardrobe, cross-eyes, the pistol and firing it, the balcony, a random conversation, crawling in, the loading card, level 2's arrival, the encounter, the hunt, being caught and the restart, the exit and the card | 0 fails |
-| `hunt_test.gd` | Marta: hears and investigates, gives up, sees standing / not crouched at range, stunned by a bullet, hunts again more suspicious, searches and returns to patrol | 0 fails |
+| `hunt_test.gd` | Marta (in copy B): hears and investigates, gives up, sees standing / not crouched at range, stunned by a bullet, hunts again more suspicious, searches and returns to patrol | 0 fails |
 | `build_apk.sh` | exports and verifies the signed APK | signed |
 | `touch_test.gd` | stick walks, right-half drag looks, both at once, USE presses interact | 0 fails |
 | `socko_view.gd`, `marta_view.gd`, `beauty.gd`, `title_shot.gd` | render characters and fixed views for judging the look | |
@@ -32,6 +32,20 @@ What actually works, checked by the tools in `tools/` (run with
 - Touch controls (multi-touch, resizable, fade-able, movable, saved), gamepad, keyboard and mouse
   through one input map. Pause menu with settings. Title with Continue / New game.
 - Saving: a checkpoint at the start of each level (flags, inventory, pistol, memories).
+
+## Look (third pass)
+
+- **The flat** is the JS version's apartment (`ExportedFlat`): its textures, painted relief and
+  roughness through `shaders/world.gdshader` (unfiltered, vertex-snapped, specular calmed so it
+  doesn't sparkle on a phone); collision and footstep surfaces from its room plan; its lights as
+  Fittings, switched on only near Kurt (the phone renderer lights a mesh with at most 8); its
+  doors, drawers and 145 loose things given behaviours (their descriptions kept).
+- **Marta** is the old model: the grin, the teeth, the slid eye, the mould, the coral through her
+  and the chair. The hunter is the same model standing (`MartaSeated.new(true)`).
+- **Kurt's hand** (the old arm) reaches for her face across the table.
+- **Level 2** is the same flat with `flesh` turned up in the shader: paint and paper with meat
+  coming through, veins, wet, breathing; plus strands, lumps, coral, goo and pulsing glands.
+- Every procedural box used to be inside out (wound the wrong way for Godot): fixed.
 
 ## Atmosphere (proof of concept / tech)
 

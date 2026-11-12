@@ -5,6 +5,8 @@ extends RigidBody3D
 ## this, physics and ears.
 
 var label := "thing"
+var desc := ""               # what you notice turning it over (the exported flat's writing)
+var liftable := true
 var loud := 0.5             # how much noise a hard landing makes
 var _last_hit := 0.0
 
@@ -18,13 +20,39 @@ static func make(parent: Node, pos: Vector3, size: Vector3, mat: Material, label
 	return p
 
 func _ready() -> void:
-	collision_layer = 1; collision_mask = 1 | 2
+	# little things (16) don't stop a man walking; furniture (32) stops him but not her: she knows
+	# her own flat in the dark, and her path goes round it
+	collision_layer = 16 if get_meta("debris", false) else 32
+	collision_mask = 1 | 2 | 16 | 32
 	contact_monitor = true; max_contacts_reported = 2
 	continuous_cd = true
 	body_entered.connect(_hit)
 
 func get_prompt() -> String:
-	return "Pick up " + label
+	return ("Pick up " + label.to_lower()) if liftable else ""
+
+## A prop from the exported flat: its meshes go into a rigid body sized from the export.
+static func from_export(n: Node3D, ex: Dictionary) -> Prop:
+	var parent := n.get_parent()
+	var p := Prop.new(); p.name = String(n.name) + "_body"
+	parent.add_child(p)
+	p.global_transform = n.global_transform
+	n.reparent(p, true)
+	var size: Array = ex.get("size", [0.2, 0.2, 0.2]); var centre: Array = ex.get("centre", [0, 0, 0])
+	var cs := CollisionShape3D.new(); var b := BoxShape3D.new()
+	b.size = Vector3(maxf(float(size[0]), 0.03), maxf(float(size[1]), 0.03), maxf(float(size[2]), 0.03)); cs.shape = b
+	cs.position = Vector3(centre[0], centre[1], centre[2])
+	p.add_child(cs)
+	p.mass = maxf(0.05, float(ex.get("mass", 1.0)))
+	p.label = ex.get("name", "thing"); p.desc = ex.get("desc", "")
+	p.liftable = p.mass <= 12.0
+	p.loud = clampf(0.3 + p.mass * 0.1, 0.3, 1.0) if String(ex.get("sound", "")) != "soft" else 0.15
+	var pm := PhysicsMaterial.new(); pm.friction = 0.4; pm.bounce = 0.05
+	p.physics_material_override = pm
+	p.can_sleep = true; p.sleeping = true
+	# little things don't stop a man walking: he steps over them (layer 16)
+	p.set_meta("debris", p.mass < 4.0)
+	return p
 
 func _hit(_b: Node) -> void:
 	var sp := linear_velocity.length()

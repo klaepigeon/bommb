@@ -7,9 +7,11 @@ Kurt is asked by Marta Sokolov's sister to look in on her in Flat 47. He finds h
 armchair by coral, alive, asking about boxes. She throws him across the room. He wakes without
 his name, and his left hand is a sock puppet called Socko, who is very helpful.
 
-This folder is a fresh start. The only thing carried over from the old HYSTERIA project is Socko
-himself: his model and rig (`scripts/socko/sock_rig.gd`), his cloth shader, and the mesh helpers
-the rig uses (`scripts/core/meshkit.gd`). Everything else is new.
+This folder is a fresh start. Carried over from the old HYSTERIA project as assets: Socko (his
+rig `scripts/socko/sock_rig.gd` and cloth shader), Marta's model and the textures painted for her
+(`scripts/characters/marta_seated.gd`, `rot_textures.gd`; it now also stands, for the hunt), Kurt's
+right arm (`scripts/kurt/`), and the apartment built for the JS version
+(`assets/flat47/flat47.glb` + `level.json`). The code that makes them a game is new.
 
 ## Run it
 
@@ -34,10 +36,13 @@ Android: install `dist/PutASockInIt.apk` (rebuild with `tools/build_apk.sh`).
 
 ## The chapter
 
-1. **Flat 47.** The knock, the flat, Marta, the grab, the blackout. Socko. The door that won't
-   open, the wardrobe, the hole, the pistol in the kitchen drawer, the balcony. Into the hole.
-2. **Flat 47, again.** The flat grown out of meat, in the wrong order. Marta hunts you through it.
-   Find the real front door.
+1. **Flat 47.** The knock on the landing, the flat, Marta at her dinner table under the lamp, the
+   grab, the blackout. Socko. The front door that won't open, the wardrobe across the box-room
+   door and the hole behind it, the pistol in the kitchen drawer, the balcony and its sticky note.
+   Into the hole.
+2. **Flat 47, again.** Three copies of the flat, each further gone to meat, joined by tears in the
+   picture: out of the hole into the first; its front door into the bathroom of the second, where
+   Marta hunts on her feet; its balcony into the bedroom of the third, whose front door is real.
 
 Levels are separate scenes with a loading card between them; the cutscene at the end of a level
 (crawling into the hole) runs into the black the next level loads behind.

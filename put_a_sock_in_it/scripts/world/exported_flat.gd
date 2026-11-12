@@ -1,0 +1,270 @@
+class_name ExportedFlat
+extends Node3D
+## Flat 47 as built for the JS version (assets/flat47/flat47.glb + level.json), as an art asset:
+## the rooms, the furniture, everything the Sokolovs owned, with its painted relief. This makes it
+## a place you can be in: every surface through shaders/world.gdshader, collision and footstep
+## surfaces from the room plan, the lights given characters (Fitting), the labelled doors,
+## drawers and loose things given behaviours. `flesh` (0..1) turns every surface to meat in place
+## (level 2 is this flat, grown).
+##
+## Coordinates: x east 0..10, z south 0..8, the courtyard windows along z = 0, the balcony north
+## of them, the front door in the hall's east wall at x = 10, the landing east of it.
+
+const H := 2.75
+const KEEP := AABB(Vector3(-0.6, -0.8, -1.95), Vector3(14.8, 4.3, 10.4))   # the flat, its balcony, the landing
+const TEXT_PATCH := {
+	# lines from the JS version that named a husband who isn't in this story
+	"prop_0_Wedding_photograph": "Face down, the glass starred. The photograph itself has been cut out of the frame, carefully, with nail scissors.",
+	"pick_129_Bundle_of_letters": "Tied with darning wool. Her handwriting, every one, to a post-office box in Moscow with no name on it. Every one stamped RETURN TO SENDER.",
+}
+const SURFACE := {"bath": "tile", "kitchen": "lino", "hall": "wood", "living": "wood", "bedroom": "wood", "child": "wood", "storage": "wood"}
+
+var level: Dictionary
+var flesh := 0.0
+var doors := {}            # id -> ExportDoor
+var drawers: Array = []    # ExportDrawer
+var props := {}            # node name -> Prop
+var fittings: Array = []   # Fitting
+var model: Node3D
+var _mats := {}
+var skip_props: Array = [] # node names the level handles itself (the wardrobe)
+
+func _init(flesh_amount := 0.0, skip: Array = []) -> void:
+	flesh = flesh_amount; skip_props = skip
+
+func _ready() -> void:
+	level = JSON.parse_string(FileAccess.get_file_as_string("res://assets/flat47/level.json"))
+	model = (load("res://assets/flat47/flat47.glb") as PackedScene).instantiate()
+	model.name = "Apartment"
+	add_child(model)
+	_strip_outside()
+	_materials()
+	_behaviours()
+	_collision()
+	_lights()
+
+func room_of(p: Vector3) -> String:
+	for k in level.rooms:
+		var r: Dictionary = level.rooms[k]
+		if p.x >= r.x0 and p.x < r.x1 and p.z >= r.z0 and p.z < r.z1: return k
+	if p.x >= 10.0 and p.z > 3.4: return "landing"
+	if p.z < 0.0: return "balcony"
+	return ""
+
+func _strip_outside() -> void:
+	for mi in model.find_children("*", "MeshInstance3D", true, false):
+		var m: MeshInstance3D = mi
+		var a: AABB = (global_transform.affine_inverse() * m.global_transform) * m.get_aabb()
+		var c := a.get_center()
+		if not KEEP.has_point(c) or a.size.length() > 30.0 or (c.x > 10.4 and c.z < 3.3):
+			m.queue_free()
+
+## Every opaque surface through the world shader (painted relief, roughness, emission, flesh);
+## glass keeps a standard material, sampled unfiltered.
+func _materials() -> void:
+	for mi in model.find_children("*", "MeshInstance3D", true, false):
+		var m: MeshInstance3D = mi
+		if m.is_queued_for_deletion(): continue
+		var all_clear := true
+		for i in m.mesh.get_surface_count():
+			var src := m.get_active_material(i)
+			var clear: bool = src is BaseMaterial3D and (src as BaseMaterial3D).transparency != BaseMaterial3D.TRANSPARENCY_DISABLED
+			all_clear = all_clear and clear
+			if not (src is StandardMaterial3D): continue
+			if not _mats.has(src): _mats[src] = _convert(src)
+			m.set_surface_override_material(i, _mats[src])
+		m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if all_clear else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+
+func _convert(std: StandardMaterial3D) -> Material:
+	if std.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED:
+		var t := std.duplicate() as StandardMaterial3D
+		t.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
+		if flesh > 0.0: t.albedo_color = t.albedo_color * Color(1.0, 0.5, 0.5, 1.0)
+		return t
+	var sm := ShaderMaterial.new(); sm.shader = preload("res://shaders/world.gdshader")
+	sm.set_shader_parameter("albedo_color", std.albedo_color)
+	sm.set_shader_parameter("albedo_tex", std.albedo_texture if std.albedo_texture else _white())
+	sm.set_shader_parameter("roughness", std.roughness)
+	if std.roughness_texture:
+		sm.set_shader_parameter("roughness_tex", std.roughness_texture); sm.set_shader_parameter("use_roughness_tex", true)
+	if std.normal_enabled and std.normal_texture:
+		sm.set_shader_parameter("normal_tex", std.normal_texture); sm.set_shader_parameter("use_normal_tex", true)
+		sm.set_shader_parameter("normal_depth", std.normal_scale * 0.1)
+	if std.emission_enabled:
+		sm.set_shader_parameter("emission", Vector3(std.emission.r, std.emission.g, std.emission.b) * std.emission_energy_multiplier)
+		if std.emission_texture:
+			sm.set_shader_parameter("emission_tex", std.emission_texture); sm.set_shader_parameter("use_emission_tex", true)
+	if std.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR: sm.set_shader_parameter("use_alpha_cut", true)
+	sm.set_shader_parameter("flesh", flesh)
+	sm.set_shader_parameter("flesh_seed", randf() * 10.0)
+	return sm
+
+static var _white_tex: Texture2D
+static func _white() -> Texture2D:
+	if not _white_tex:
+		var img := Image.create(2, 2, false, Image.FORMAT_RGB8); img.fill(Color.WHITE)
+		_white_tex = ImageTexture.create_from_image(img)
+	return _white_tex
+
+func _extras(n: Node) -> Dictionary:
+	return n.get_meta("extras") if n.has_meta("extras") else {}
+
+func _behaviours() -> void:
+	var nodes := model.find_children("*", "Node3D", true, false)
+	for n in nodes:
+		if TEXT_PATCH.has(String(n.name)) and n.has_meta("extras"):
+			var ex: Dictionary = n.get_meta("extras"); ex["desc"] = TEXT_PATCH[String(n.name)]; n.set_meta("extras", ex)
+	for n in nodes:
+		if n.is_queued_for_deletion(): continue
+		var ex := _extras(n)
+		match ex.get("kind", ""):
+			"door":
+				n.set_script(ExportDoor); n.call("setup", ex)
+				doors[ex.get("id", String(n.name))] = n
+			"drawer":
+				n.set_script(ExportDrawer); n.call("setup", ex)
+				drawers.append(n)
+	for n in nodes:
+		if n.is_queued_for_deletion() or not is_instance_valid(n): continue
+		var ex := _extras(n)
+		var k: String = ex.get("kind", "")
+		if (k == "prop" or k == "pick") and not skip_props.has(String(n.name)):
+			props[String(n.name)] = Prop.from_export(n, ex)
+
+## Collision from the room plan: wall boxes, floors (each with what it sounds like underfoot),
+## a ceiling.
+func _collision() -> void:
+	var walls := StaticBody3D.new(); walls.name = "Walls"; add_child(walls)
+	walls.set_meta("surface", "wood")
+	for c in level.colliders:
+		var sh := CollisionShape3D.new(); var b := BoxShape3D.new()
+		var h: float = c.y1 - c.y0
+		b.size = Vector3(c.hx * 2.0, h, c.hz * 2.0); sh.shape = b
+		sh.transform = Transform3D(Basis(Vector3.UP, c.rot), Vector3(c.x, c.y0 + h * 0.5, c.z))
+		walls.add_child(sh)
+	# floors: one body per room so a footstep can ask what it's on
+	for k in level.rooms:
+		var r: Dictionary = level.rooms[k]
+		_floor(r.x0, r.x1, r.z0, r.z1, 0.0, SURFACE.get(k, "wood"))
+	for f in level.floors:
+		if f.x0 > 13.9: continue
+		_floor(f.x0, f.x1, f.z0, f.z1, f.y, "concrete" if (f.x0 > 10.0 or f.z1 < 0.1) else "wood")
+	var ceil := StaticBody3D.new(); add_child(ceil)
+	var cs := CollisionShape3D.new(); var cb := BoxShape3D.new(); cb.size = Vector3(15, 0.4, 9); cs.shape = cb
+	cs.position = Vector3(7, H + 0.2, 4); ceil.add_child(cs)
+
+func _floor(x0: float, x1: float, z0: float, z1: float, y: float, surface: String) -> void:
+	var sb := StaticBody3D.new(); sb.set_meta("surface", surface); add_child(sb)
+	var sh := CollisionShape3D.new(); var b := BoxShape3D.new()
+	b.size = Vector3(x1 - x0, 0.4, z1 - z0); sh.shape = b
+	sh.position = Vector3((x0 + x1) * 0.5, y - 0.2, (z0 + z1) * 0.5)
+	sb.add_child(sh)
+
+## The JS version's lights (physical units converted: energy = candela / pi), each a Fitting with
+## the character the JS version gave it. Courtyard and street lights shining in from outside are
+## left out: outside isn't there any more.
+func _lights() -> void:
+	for L in level.lights:
+		if L.get("broken", false): continue
+		var pos := Vector3(L.pos[0], L.pos[1], L.pos[2])
+		if not KEEP.has_point(pos) or (pos.y > 3.0 and String(L.type) != "SpotLight"): continue
+		if String(L.type) == "SpotLight": continue        # the street lamp: no street
+		var l: Light3D
+		match String(L.type):
+			"PointLight":
+				var o := OmniLight3D.new()
+				o.omni_range = float(L.range) if float(L.range) > 0.0 else 8.0
+				o.omni_attenuation = float(L.get("decay", 2.0))
+				l = o
+			"RectAreaLight":
+				# window light (no area lights on phones): a broad soft spot just inside the glass
+				var sp := SpotLight3D.new()
+				sp.spot_range = 7.0; sp.spot_attenuation = 2.0; sp.spot_angle = 80.0; sp.spot_angle_attenuation = 1.6
+				sp.light_specular = 0.2
+				L.intensity = float(L.intensity) * float(L.w) * float(L.h)
+				pos += Vector3(L.dir[0], 0, L.dir[2]) * 0.15
+				l = sp
+		l.light_color = Color(L.color)
+		l.light_energy = float(L.intensity) / PI
+		l.shadow_enabled = false
+		add_child(l); l.position = pos
+		if l is SpotLight3D: l.look_at(pos + Vector3(L.dir[0], L.dir[1] - 0.15, L.dir[2]))
+		var fl = L.get("flicker")
+		var kind: String = fl if fl is String else "steady"
+		if kind == "emergency": kind = "pulse"
+		var f := Fitting.wrap(l, kind, L.get("circuit") is String)
+		f.on = bool(L.on) and (not (L.get("circuit") is String) or bool(level.circuits.get(L.circuit, true)))
+		f.room = room_of(pos + ((-l.global_basis.z) * 1.2 if l is SpotLight3D else Vector3.ZERO))
+		f.set_meta("window", String(L.type) == "RectAreaLight")
+		fittings.append(f)
+
+## Lights on only near where Kurt is (each mesh can take at most 8 on the phone renderer).
+func _process(delta: float) -> void:
+	var cam := get_viewport().get_camera_3d()
+	if not cam: return
+	var eye := to_local(cam.global_position)
+	for f in fittings:
+		var want := 1.0 if _room_dist(f.room, eye) < 3.0 else 0.0
+		f.near = move_toward(f.near, want, delta / 0.6)
+
+func _room_dist(k: String, p: Vector3) -> float:
+	if k == "" or not level.rooms.has(k):
+		return 0.0 if k == "" else (0.0 if room_of(p) == k else 2.0)
+	var r: Dictionary = level.rooms[k]
+	return Vector2(maxf(maxf(r.x0 - p.x, p.x - r.x1), 0.0), maxf(maxf(r.z0 - p.z, p.z - r.z1), 0.0)).length()
+
+## The nearest drawer to a point (the level picks one to hide something in).
+func drawer_near(p: Vector3) -> ExportDrawer:
+	var best: ExportDrawer = null; var bd := INF
+	for d in drawers:
+		var dd: float = (d as Node3D).global_position.distance_to(p)
+		if dd < bd: bd = dd; best = d
+	return best
+
+## A labelled node by name (the wardrobe, for instance), wherever it is in the model.
+func node(name: String) -> Node3D:
+	return model.find_child(name, true, false) as Node3D
+
+## Hide exported meshes near a point (where something built here replaces the JS version's).
+func hide_near(p: Vector3, radius: float, max_size: float) -> void:
+	for mi in model.find_children("*", "MeshInstance3D", true, false):
+		var m: MeshInstance3D = mi
+		if not m.is_inside_tree(): continue
+		var a: AABB = m.global_transform * m.get_aabb()
+		if a.size.length() > max_size: continue
+		var c := a.get_center()
+		if Vector2(c.x - p.x, c.z - p.z).length() < radius: m.visible = false
+
+## A path-finding grid over the flat's floor (for the infected): cells `cell` metres, solid where
+## a wall is (grown by `margin`). Grid cell (0,0) is at the flat's local (-0.5, -2.0).
+func _prop_box(pr: Node) -> AABB:
+	for c in pr.get_children():
+		if c is CollisionShape3D and c.shape is BoxShape3D:
+			return AABB(c.position - c.shape.size * 0.5, c.shape.size)
+	return AABB()
+
+func nav_grid(cell: float, margin := 0.18) -> AStarGrid2D:
+	var g := AStarGrid2D.new()
+	var w := int(ceil(11.0 / cell)); var h := int(ceil(10.5 / cell))
+	g.region = Rect2i(0, 0, w, h); g.cell_size = Vector2(cell, cell)
+	g.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
+	g.update()
+	for y in h:
+		for x in w:
+			var p := Vector2(-0.5 + (x + 0.5) * cell, -2.0 + (y + 0.5) * cell)
+			var solid := true
+			for f in level.floors:
+				if p.x >= f.x0 and p.x <= f.x1 and p.y >= f.z0 and p.y <= f.z1 and f.x0 < 13.9: solid = false
+			if not solid:
+				for pr in props.values():
+					if not is_instance_valid(pr) or pr.get_meta("debris", false): continue
+					var ab: AABB = (global_transform.affine_inverse() * (pr as Node3D).global_transform) * _prop_box(pr)
+					if p.x > ab.position.x - 0.12 and p.x < ab.end.x + 0.12 and p.y > ab.position.z - 0.12 and p.y < ab.end.z + 0.12 and ab.end.y > 0.35:
+						solid = true; break
+			if not solid:
+				for c in level.colliders:
+					var d := (p - Vector2(c.x, c.z)).rotated(float(c.rot))
+					var m2: float = margin if c.y1 - c.y0 > 2.2 else 0.1        # walls; furniture tighter
+					if c.y1 > 0.35 and absf(d.x) <= c.hx + m2 and absf(d.y) <= c.hz + m2: solid = true; break
+			g.set_point_solid(Vector2i(x, y), solid)
+	return g

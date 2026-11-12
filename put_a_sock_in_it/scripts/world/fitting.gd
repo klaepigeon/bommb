@@ -22,6 +22,17 @@ var _hold := 0.0
 var _state := 1.0
 var _startup := 0.0
 var _k := 1.0
+var near := 1.0               # 0..1: faded out when Kurt is far from its room (light budget)
+var room := ""
+
+## Wrap a light that already exists (the exported flat's), giving it a character.
+static func wrap(l: Light3D, kind_name: String, on_mains: bool) -> Fitting:
+	var f := Fitting.new(); f.kind = kind_name; f.mains = on_mains
+	var parent := l.get_parent(); var xf := l.global_transform
+	parent.add_child(f); f.global_transform = Transform3D(Basis(), xf.origin)
+	l.reparent(f, true)
+	f.light = l; f.base = l.light_energy
+	return f
 
 ## A point light with a glowing fixture. `shadow` only if the quality setting allows it.
 static func make(parent: Node, pos: Vector3, color: Color, energy: float, range_m: float, kind_name := "steady", shadow := false) -> Fitting:
@@ -59,7 +70,8 @@ func _process(delta: float) -> void:
 	var k := _flick(delta) if on else 0.0
 	if on and mains: k *= Fitting._brown
 	_k = k
-	light.light_energy = base * k
+	light.light_energy = base * k * smoothstep(0.0, 1.0, near)
+	light.visible = near > 0.001 and k > 0.0
 	for g in glow:
 		(g[0] as ShaderMaterial).set_shader_parameter("emission", g[1] * k)
 	if buzz_key != "":

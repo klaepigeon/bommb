@@ -73,7 +73,7 @@ func fire() -> void:
 	get_tree().create_timer(0.05).timeout.connect(func(): _flash.light_energy = 0.0; _flash_mesh.visible = false)
 	var cam := player.cam
 	var from := cam.global_position; var dir := -cam.global_transform.basis.z
-	var q := PhysicsRayQueryParameters3D.create(from, from + dir * RANGE, 1 | 8, [player.get_rid()])
+	var q := PhysicsRayQueryParameters3D.create(from, from + dir * RANGE, 1 | 8 | 16 | 32, [player.get_rid()])
 	var hit := player.get_world_3d().direct_space_state.intersect_ray(q)
 	if hit.is_empty(): return
 	var c: Node = hit.collider

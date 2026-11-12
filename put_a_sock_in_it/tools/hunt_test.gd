@@ -6,6 +6,7 @@ var fails := 0
 func _initialize() -> void:
 	await process_frame
 	var game = root.get_node("Game")
+	game.flags["flesh_stage"] = "B"; game.flags["met_marta_maze"] = true
 	game.change_level("flesh47", {"card": false, "checkpoint": true, "fade": 0.01})
 	await _wait(3.0)
 	var F = game.level
@@ -13,10 +14,10 @@ func _initialize() -> void:
 	var m = F.marta
 	_check(m.state == "patrol", "starts on patrol")
 	# park Kurt somewhere far away and out of sight: the start room
-	F.player.global_position = F.cell_pos(1, 1); F.player.velocity = Vector3.ZERO
+	F.player.global_position = F._p("B", Vector3(8.5, 0, 6.8)); F.player.velocity = Vector3.ZERO
 	await _wait(0.5)
 	# a noise two cells from her: she goes to look
-	var near: Vector3 = m.global_position + Vector3(2.8, 0, 0)
+	var near: Vector3 = m.global_position + Vector3(-2.0, 0, 0)
 	game.make_noise(near, 0.6)
 	await _wait(0.2)
 	_check(m.state == "investigate", "hears a noise and investigates (" + m.state + ")")
@@ -25,13 +26,16 @@ func _initialize() -> void:
 	# sight: standing in front of her at 8 m she sees him; crouched she doesn't
 	var mc: Vector2i = m.to_cell(m.global_position)
 	var spot := Vector3.ZERO
-	for d in range(5, 8):
-		for dir in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-			var c: Vector2i = mc + dir * d
+	for dx in range(-22, 23):
+		for dy in range(-22, 23):
+			var c: Vector2i = mc + Vector2i(dx, dy)
 			if not m.grid.is_in_boundsv(c) or m.grid.is_point_solid(c): continue
 			var p: Vector3 = m.cell_center(c)
-			var q := PhysicsRayQueryParameters3D.create(p + Vector3(0, 1.6, 0), m.global_position + Vector3(0, 1.6, 0), 1)
-			if F.get_world_3d().direct_space_state.intersect_ray(q).is_empty(): spot = p
+			var dd := p.distance_to(m.global_position)
+			if dd < 3.0 or dd > 7.0: continue
+			var q := PhysicsRayQueryParameters3D.create(p + Vector3(0, 1.62, 0), m.head(), 1 | 32)
+			var q3 := PhysicsRayQueryParameters3D.create(m.head(), p + Vector3(0, 1.62, 0), 1 | 32, [m.get_rid()])
+			if F.get_world_3d().direct_space_state.intersect_ray(q).is_empty() and F.get_world_3d().direct_space_state.intersect_ray(q3).is_empty(): spot = p
 	if spot != Vector3.ZERO:
 		m.active = false
 		m.look_at(Vector3(spot.x, m.global_position.y, spot.z), Vector3.UP)
@@ -51,7 +55,7 @@ func _initialize() -> void:
 	m.set_state("chase")
 	m.shot(m.head(), Vector3(1, 0, 0))
 	_check(m.state == "stunned", "a bullet stuns her")
-	F.player.global_position = F.cell_pos(1, 1)
+	F.player.global_position = F._p("B", Vector3(8.5, 0, 6.8))
 	await _wait(3.6)
 	_check(m.state in ["search", "chase"], "after the stun she hunts again (" + m.state + ")")
 	_check(m.suspicion > 0.0, "and she's more suspicious (%.2f)" % m.suspicion)

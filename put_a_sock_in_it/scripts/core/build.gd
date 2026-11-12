@@ -21,7 +21,8 @@ static func box_mesh(size: Vector3, y_world := 0.0) -> ArrayMesh:
 			# vertical faces: v runs from the top down in metres, so wallpaper's floor end is at the
 			# bottom of the wall; floors use world x/z
 			uvs.append(Vector2(p.dot(u), 0.999 - (p.y + y_world) if absf(n.y) < 0.5 else p.dot(v)))
-		for idx in [0, 1, 2, 0, 2, 3]:
+		# Godot's front faces wind clockwise seen from outside
+		for idx in [0, 2, 1, 0, 3, 2]:
 			st.set_normal(n); st.set_uv(uvs[idx]); st.add_vertex(corners[idx])
 	return st.commit()
 

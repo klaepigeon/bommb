@@ -24,7 +24,7 @@ var cell := 1.4
 var origin := Vector3.ZERO      # world position of cell (0,0)'s corner
 var patrol: Array = []          # world points
 var player: Player
-var body: MartaBody
+var body: MartaSeated
 var state := "patrol"
 var awareness := 0.0            # 0..1: how sure she is she's seen him
 var suspicion := 0.0            # rises each time she loses him: she searches longer, hears further
@@ -40,17 +40,21 @@ var _state_t := 0.0
 var _click_t := 1.0
 var _walk := 0.0
 var _twitch_t := 0.0
+var _stuck := 0.0
 
 func _ready() -> void:
 	collision_layer = 8; collision_mask = 1
 	var cs := CollisionShape3D.new(); var cap := CapsuleShape3D.new(); cap.radius = 0.3; cap.height = 1.8
 	cs.shape = cap; cs.position.y = 0.9; add_child(cs)
-	body = MartaBody.new("hunter"); add_child(body)
+	body = MartaSeated.new(true); add_child(body)   # the same woman as at the table, on her feet
 	body.snap = 18.0
 	# the coral on her gives off a little sick light: you can see her coming, just
 	var glow := OmniLight3D.new(); glow.light_color = Color("9adfb0"); glow.light_energy = 0.55; glow.omni_range = 2.6
 	glow.shadow_enabled = false; glow.position = Vector3(0, 1.5, 0.25); add_child(glow)
-	Game.noise.connect(_on_noise)
+
+func _enter_tree() -> void:
+	# (she's moved between copies of the flat: reconnect each time she's put somewhere)
+	if not Game.noise.is_connected(_on_noise): Game.noise.connect(_on_noise)
 
 func _exit_tree() -> void:
 	if Game.noise.is_connected(_on_noise): Game.noise.disconnect(_on_noise)
@@ -65,6 +69,7 @@ func cell_center(c: Vector2i) -> Vector3:
 func go_to(p: Vector3) -> void:
 	_goal = p
 	var a := to_cell(global_position); var b := to_cell(p)
+	if not grid.is_in_boundsv(a) or grid.is_point_solid(a): a = _nearest_free(a)     # she's up against furniture
 	if not grid.is_in_boundsv(b) or grid.is_point_solid(b):
 		b = _nearest_free(b)
 	var ids := grid.get_id_path(a, b, true)
@@ -80,7 +85,7 @@ func _nearest_free(c: Vector2i) -> Vector2i:
 			for dy in range(-r, r + 1):
 				var n := c + Vector2i(dx, dy)
 				if grid.is_in_boundsv(n) and not grid.is_point_solid(n): return n
-	return to_cell(global_position)
+	return c
 
 func set_state(s: String) -> void:
 	if s == state: return
@@ -210,7 +215,15 @@ func _follow(delta: float, speed: float) -> bool:
 	var surge := 0.75 + 0.5 * absf(sin(_walk * 0.5))
 	velocity = d.normalized() * speed * surge
 	velocity.y = -2.0
+	var before := global_position
 	move_and_slide()
+	# caught on something the grid doesn't know (a chair someone moved): after a moment, give up
+	# on this point and make for the next one
+	if global_position.distance_to(before) < speed * delta * 0.2:
+		_stuck += delta
+		if _stuck > 0.5: _stuck = 0.0; _pi += 1
+	else:
+		_stuck = 0.0
 	_face(global_position + d, delta * 6.0)
 	_walk += delta * speed * 4.0
 	return false
@@ -231,7 +244,7 @@ func _catch() -> void:
 	set_state("caught")
 	velocity = Vector3.ZERO
 	body.snap = 40.0
-	body.pose.sh_r = Vector3(PI * 0.5 + 0.4, 0, -0.1); body.pose.sh_l = Vector3(PI * 0.5 + 0.3, 0, 0.1)
+	body.pose.sh_r = Vector3(0.7, 0, -0.1); body.pose.sh_l = Vector3(0.6, 0, 0.1)
 	body.pose.el_r = Vector3.ZERO; body.pose.el_l = Vector3.ZERO; body.pose.jaw = Vector3(0.7, 0, 0)
 	caught_player.emit()
 

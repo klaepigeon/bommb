@@ -3,7 +3,7 @@ extends SceneTree
 func _initialize() -> void:
 	await process_frame
 	var bad := 0
-	for d in ["res://scripts/core", "res://scripts/player", "res://scripts/ui", "res://scripts/dialogue", "res://scripts/socko", "res://scripts/world", "res://scripts/characters", "res://scripts/weapons", "res://scripts/levels"]:
+	for d in ["res://scripts/core", "res://scripts/player", "res://scripts/ui", "res://scripts/dialogue", "res://scripts/socko", "res://scripts/world", "res://scripts/characters", "res://scripts/weapons", "res://scripts/levels", "res://scripts/kurt"]:
 		for f in DirAccess.get_files_at(d):
 			if f.ends_with(".gd"):
 				var s = load(d + "/" + f)
