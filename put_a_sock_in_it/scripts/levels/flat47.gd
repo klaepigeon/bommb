@@ -19,8 +19,8 @@ extends Level
 
 const MARTA_POS := Vector3(3.0, 0, 1.42)
 const HOLE := Vector3(1.82, 0, 5.2)          # the box-room doorway
-const FRONT := Vector3(10.06, 0, 4.15)
-const LAND := Vector3(1.0, 0, 3.4)           # where she throws him: back across the room onto the rug
+const FRONT := Vector3(10.06, 0, 4.56)        # the middle of the front doorway (the hinge is at z 4.145)
+const LAND := Vector3(2.9, 0, 3.0)           # where she throws him: across the room, onto the open floor by the wall unit
 
 var flat: ExportedFlat
 var marta: MartaSeated
@@ -64,7 +64,7 @@ func build() -> void:
 	_outside()
 	_lights()
 	_atmosphere()
-	player.position = Vector3(12.5, 0, 4.15)
+	player.position = Vector3(11.9, 0, 4.56)
 	player.set_view(PI * 0.5, -0.04)
 	socko.points = {"door": FRONT + Vector3(0, 1.2, 0), "hole": HOLE + Vector3(0, 0.8, 0), "gun": gun_drawer, "wardrobe": wardrobe}
 
@@ -88,7 +88,7 @@ func _landing() -> void:
 	Build.wall(world, Vector2(10.15, 3.4), Vector2(14.3, 3.4), sw, [], 2.8, 0.1)
 	Build.wall(world, Vector2(14.3, 3.4), Vector2(14.3, 8.0), sw, [], 2.8, 0.1)
 	Build.wall(world, Vector2(10.15, 8.0), Vector2(14.3, 8.0), sw, [{"at": 2.4, "w": 0.95}], 2.8, 0.1)
-	Build.wall(world, Vector2(10.13, 3.4), Vector2(10.13, 8.0), sw, [{"at": 0.75, "w": 0.9}], 2.8, 0.03)
+	Build.wall(world, Vector2(10.13, 3.4), Vector2(10.13, 8.0), sw, [{"at": FRONT.z - 3.4, "w": 0.95}], 2.8, 0.03)
 	# 48: padded, shut
 	var d48 := Door.new(); d48.material = Tex.mat("door_padded", 2.0); d48.width = 0.95; d48.locked = true
 	world.add_child(d48); d48.position = Vector3(12.55 - 0.475, 0, 7.96)
@@ -122,6 +122,7 @@ func _wardrobe() -> void:
 	world.add_child(wardrobe)
 	wardrobe.global_transform = n.global_transform
 	n.reparent(wardrobe, true)
+	wardrobe.add_to_group("nav_block")
 	var ex: Dictionary = n.get_meta("extras", {})
 	var size: Array = ex.get("size", [1.2, 2.0, 0.6]); var centre: Array = ex.get("centre", [0, 1.0, 0])
 	var cs := CollisionShape3D.new(); var b := BoxShape3D.new(); b.size = Vector3(size[0], size[1], size[2]); cs.shape = b
@@ -136,13 +137,14 @@ func _push_wardrobe() -> void:
 	_wardrobe_moved = true
 	var spot := world.get_node("WardrobeSpot") as Hotspot
 	spot.enabled = false
+	spot.queue_free()
 	set_cutscene(true)
 	player.shake(0.01, 1.6)
 	for i in 3:
 		Sfx.play_at("scrape", wardrobe.global_position + Vector3(0, 0.3, 0), 2.0, randf_range(0.85, 1.0))
 		Game.make_noise(wardrobe.global_position, 0.6)
 		var tw := create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-		tw.tween_property(wardrobe, "position", wardrobe.position + Vector3(0.45, 0, 0), 0.55)
+		tw.tween_property(wardrobe, "position", wardrobe.position + Vector3(-0.35, 0, 0), 0.55)   # west, into the corner: the way to the hall stays clear
 		await tw.finished
 		await get_tree().create_timer(0.25).timeout
 	await _on_wardrobe_pushed()
@@ -459,7 +461,7 @@ func _blackout() -> void:
 	if table_lamp: table_lamp.kind = "bulb"
 	if hand: hand.queue_free(); hand = null
 	balcony_door.locked = false
-	(world.get_node("WardrobeSpot") as Hotspot).prompt = "Push wardrobe"
+	if world.has_node("WardrobeSpot"): (world.get_node("WardrobeSpot") as Hotspot).prompt = "Push wardrobe"
 	outside.visible = true
 	env.environment.background_color = Color(1, 1, 1); env.environment.background_energy_multiplier = 1.6
 	# on the floor, on his back, looking at the ceiling

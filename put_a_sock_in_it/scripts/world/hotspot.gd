@@ -6,7 +6,11 @@ extends StaticBody3D
 signal used(h: Hotspot)
 var prompt := ""
 var action: Callable
-var enabled := true
+## Disabled, it stops catching the crosshair too (it would hide whatever is behind it).
+var enabled := true:
+	set(v):
+		enabled = v
+		collision_layer = 4 if v else 0
 
 static func make(parent: Node, pos: Vector3, size: Vector3, prompt_text: String, act: Callable) -> Hotspot:
 	var h := Hotspot.new()

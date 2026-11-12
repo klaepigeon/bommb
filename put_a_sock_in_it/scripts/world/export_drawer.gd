@@ -10,6 +10,8 @@ var max_out := 0.3
 var is_open := false
 
 func setup(ex: Dictionary) -> void:
+	# the script is put on a node already in the scene: _ready won't run, so switch the swing on
+	set_physics_process(true)
 	max_out = ex.get("max", 0.3)
 	base_z = position.z
 	var aabb := AABB(); var first := true

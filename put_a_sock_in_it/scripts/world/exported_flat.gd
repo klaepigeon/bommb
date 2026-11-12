@@ -28,6 +28,8 @@ var fittings: Array = []   # Fitting
 var model: Node3D
 var _mats := {}
 var skip_props: Array = [] # node names the level handles itself (the wardrobe)
+## The meat's colours (the world shader's meat_* uniforms); empty keeps the shader's red.
+var meat := {}
 
 func _init(flesh_amount := 0.0, skip: Array = []) -> void:
 	flesh = flesh_amount; skip_props = skip
@@ -79,7 +81,7 @@ func _convert(std: StandardMaterial3D) -> Material:
 	if std.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED:
 		var t := std.duplicate() as StandardMaterial3D
 		t.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
-		if flesh > 0.0: t.albedo_color = t.albedo_color * Color(1.0, 0.5, 0.5, 1.0)
+		if flesh > 0.0: t.albedo_color = t.albedo_color * meat.get("glass", Color(1.0, 0.5, 0.5, 1.0))
 		return t
 	var sm := ShaderMaterial.new(); sm.shader = preload("res://shaders/world.gdshader")
 	sm.set_shader_parameter("albedo_color", std.albedo_color)
@@ -97,6 +99,8 @@ func _convert(std: StandardMaterial3D) -> Material:
 	if std.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR: sm.set_shader_parameter("use_alpha_cut", true)
 	sm.set_shader_parameter("flesh", flesh)
 	sm.set_shader_parameter("flesh_seed", randf() * 10.0)
+	for k in meat:
+		if k != "glass": sm.set_shader_parameter(k, meat[k])
 	return sm
 
 static var _white_tex: Texture2D
@@ -120,6 +124,9 @@ func _behaviours() -> void:
 		match ex.get("kind", ""):
 			"door":
 				n.set_script(ExportDoor); n.call("setup", ex)
+				# a door left half open stands across the hall: open it all the way to the wall
+				var dd := n as ExportDoor
+				if dd.angle > 0.15: dd.angle = dd.max_angle; dd.target = dd.max_angle; dd.is_open = true; dd._apply()
 				doors[ex.get("id", String(n.name))] = n
 			"drawer":
 				n.set_script(ExportDrawer); n.call("setup", ex)
@@ -137,6 +144,8 @@ func _collision() -> void:
 	var walls := StaticBody3D.new(); walls.name = "Walls"; add_child(walls)
 	walls.set_meta("surface", "wood")
 	for c in level.colliders:
+		# rubble under 30 cm he steps over; things overhead (the fallen ceiling) don't stop feet
+		if c.y1 <= 0.3 or c.y0 > 1.8: continue
 		var sh := CollisionShape3D.new(); var b := BoxShape3D.new()
 		var h: float = c.y1 - c.y0
 		b.size = Vector3(c.hx * 2.0, h, c.hz * 2.0); sh.shape = b
@@ -243,11 +252,11 @@ func _prop_box(pr: Node) -> AABB:
 			return AABB(c.position - c.shape.size * 0.5, c.shape.size)
 	return AABB()
 
-func nav_grid(cell: float, margin := 0.18) -> AStarGrid2D:
+func nav_grid(cell: float, margin := 0.18, fmargin := 0.1, loose_corners := false) -> AStarGrid2D:
 	var g := AStarGrid2D.new()
 	var w := int(ceil(11.0 / cell)); var h := int(ceil(10.5 / cell))
 	g.region = Rect2i(0, 0, w, h); g.cell_size = Vector2(cell, cell)
-	g.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
+	g.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ALWAYS if loose_corners else AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
 	g.update()
 	for y in h:
 		for x in w:
@@ -259,12 +268,17 @@ func nav_grid(cell: float, margin := 0.18) -> AStarGrid2D:
 				for pr in props.values():
 					if not is_instance_valid(pr) or pr.get_meta("debris", false): continue
 					var ab: AABB = (global_transform.affine_inverse() * (pr as Node3D).global_transform) * _prop_box(pr)
-					if p.x > ab.position.x - 0.12 and p.x < ab.end.x + 0.12 and p.y > ab.position.z - 0.12 and p.y < ab.end.z + 0.12 and ab.end.y > 0.35:
+					if p.x > ab.position.x - fmargin and p.x < ab.end.x + fmargin and p.y > ab.position.z - fmargin and p.y < ab.end.z + fmargin and ab.end.y > 0.35:
+						solid = true; break
+			if not solid:
+				for nb in get_tree().get_nodes_in_group("nav_block"):
+					var ab2: AABB = (global_transform.affine_inverse() * (nb as Node3D).global_transform) * _prop_box(nb)
+					if p.x > ab2.position.x - fmargin and p.x < ab2.end.x + fmargin and p.y > ab2.position.z - fmargin and p.y < ab2.end.z + fmargin:
 						solid = true; break
 			if not solid:
 				for c in level.colliders:
 					var d := (p - Vector2(c.x, c.z)).rotated(float(c.rot))
-					var m2: float = margin if c.y1 - c.y0 > 2.2 else 0.1        # walls; furniture tighter
-					if c.y1 > 0.35 and absf(d.x) <= c.hx + m2 and absf(d.y) <= c.hz + m2: solid = true; break
+					var m2: float = margin if c.y1 - c.y0 > 2.2 else fmargin        # walls; furniture tighter
+					if c.y1 > 0.3 and c.y0 < 1.8 and absf(d.x) <= c.hx + m2 and absf(d.y) <= c.hz + m2: solid = true; break
 			g.set_point_solid(Vector2i(x, y), solid)
 	return g

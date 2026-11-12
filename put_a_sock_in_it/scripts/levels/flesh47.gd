@@ -15,6 +15,9 @@ extends Level
 const COPY := {"A": Vector3(0, 0, 0), "B": Vector3(40, 0, 0), "C": Vector3(80, 0, 0)}
 const FLESH := {"A": 0.45, "B": 0.75, "C": 1.0}
 const CELL := 0.35
+## The flat gone to meat the colour of the hole: deep blue, veins darker still, glowing.
+const BLUE := {"meat_dark": Color(0.05, 0.08, 0.26), "meat_light": Color(0.24, 0.42, 0.86), "meat_vein": Color(0.04, 0.02, 0.2),
+	"meat_glow": Vector3(0.05, 0.12, 0.45), "paint_tint": Vector3(0.62, 0.72, 1.0), "glass": Color(0.5, 0.6, 1.0, 1.0)}
 
 var flats := {}
 var stage := "A"
@@ -28,13 +31,14 @@ var _tearing := false
 
 func build() -> void:
 	var e := env.environment
-	e.background_mode = Environment.BG_COLOR; e.background_color = Color("1a0507")
+	e.background_mode = Environment.BG_COLOR; e.background_color = Color("03061a")
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	e.ambient_light_color = Color("6a3436"); e.ambient_light_energy = 0.35
-	e.fog_enabled = true; e.fog_light_color = Color("2a0a0c"); e.fog_density = 0.03
+	e.ambient_light_color = Color("34406e"); e.ambient_light_energy = 0.4
+	e.fog_enabled = true; e.fog_light_color = Color("0a1030"); e.fog_density = 0.03
 	e.tonemap_mode = Environment.TONE_MAPPER_ACES; e.tonemap_exposure = 1.25
 	for k in COPY:
 		var f := ExportedFlat.new(FLESH[k])
+		f.meat = BLUE
 		f.position = COPY[k]
 		world.add_child(f)
 		flats[k] = f
@@ -44,13 +48,13 @@ func build() -> void:
 		_grow(k)
 		# the wardrobe stands where he pushed it, in every copy: it remembers that much
 		var wr = f.props.get("prop_34_Wardrobe")
-		if wr: (wr as Node3D).position.x += 1.35
+		if wr: (wr as Node3D).position.x -= 1.05
 	# A: the front door open onto black; B: the balcony door open; C: the front door shut, real
 	(flats.A.doors.dEntry as ExportDoor).set_open(true)
 	(flats.A.doors.dStore as Node3D).visible = false
 	(flats.C.doors.dEntry as ExportDoor).set_open(false)
 	exit_door = flats.C.doors.dEntry
-	_tear_zone("A", Vector3(10.55, 1.0, 4.15), Vector3(0.6, 2.0, 1.0), "B")
+	_tear_zone("A", Vector3(10.55, 1.0, 4.56), Vector3(0.6, 2.0, 1.2), "B")
 	_tear_zone("B", Vector3(2.3, 1.0, -1.0), Vector3(2.4, 2.0, 1.0), "C")
 	_arrival_hole()
 	_ammo()
@@ -76,9 +80,10 @@ func _grow(k: String) -> void:
 	var goo := ShaderMaterial.new(); goo.shader = preload("res://shaders/goo.gdshader")
 	var meat := ShaderMaterial.new(); meat.shader = preload("res://shaders/ps1_double.gdshader")
 	meat.set_shader_parameter("albedo_tex", RotTextures.get_tex("gums")); meat.set_shader_parameter("uv_scale", Vector2(3, 3))
-	meat.set_shader_parameter("pulse", 0.01); meat.set_shader_parameter("roughness", 0.25); meat.set_shader_parameter("emission", Vector3(0.3, 0.06, 0.08))
+	meat.set_shader_parameter("pulse", 0.01); meat.set_shader_parameter("roughness", 0.25); meat.set_shader_parameter("emission", Vector3(0.06, 0.12, 0.4))
+	meat.set_shader_parameter("albedo_color", Color(0.45, 0.6, 1.5))
 	var coral := ShaderMaterial.new(); coral.shader = preload("res://shaders/world.gdshader")
-	coral.set_shader_parameter("albedo_tex", RotTextures.get_tex("coral")); coral.set_shader_parameter("albedo_color", Color(0.72, 0.72, 0.72))
+	coral.set_shader_parameter("albedo_tex", RotTextures.get_tex("coral")); coral.set_shader_parameter("albedo_color", Color(0.55, 0.65, 0.95))
 	var spots := []
 	for room in f.level.rooms.values():
 		for i in int(6 * amount):
@@ -101,12 +106,12 @@ func _grow(k: String) -> void:
 	# the glands: the copy's own light, pulsing, a few to a room
 	for room in f.level.rooms.values():
 		var c := Vector3((room.x0 + room.x1) * 0.5, 2.55, (room.z0 + room.z1) * 0.5)
-		var col := Color("ff5a4a").lerp(Color("b04aff"), r.randf() * 0.5)
+		var col := Color("3a6aff").lerp(Color("6a4aff"), r.randf() * 0.5)
 		var fit := Fitting.make(f, c, col, 1.2 + amount, 5.5, "pulse", false)
 		fit.mains = false
 		var gland := Build.organic(f, func(st): MeshKit.blob(st, c + Vector3(0, 0.12, 0), Vector3(0.16, 0.12, 0.16), {"bumps": 0.3}), meat)
 		fit.add_glow(gland, Vector3(col.r, col.g, col.b) * 1.6)
-	Air.dust(f, Vector3(5, 1.3, 4), Vector3(5, 1.2, 4), 1200, Color(1.0, 0.8, 0.8))
+	Air.dust(f, Vector3(5, 1.3, 4), Vector3(5, 1.2, 4), 1200, Color(0.75, 0.85, 1.0))
 
 ## The tear: walking into it, the picture rips and he's somewhere else.
 func _tear_zone(from: String, local: Vector3, size: Vector3, to: String) -> void:
@@ -157,7 +162,8 @@ func _arrival_hole() -> void:
 	var hole := _p("A", Vector3(1.82, 0, 5.2))
 	var m := ShaderMaterial.new(); m.shader = preload("res://shaders/ps1_double.gdshader")
 	m.set_shader_parameter("albedo_tex", RotTextures.get_tex("gums")); m.set_shader_parameter("uv_scale", Vector2(3, 3))
-	m.set_shader_parameter("pulse", 0.012); m.set_shader_parameter("emission", Vector3(0.9, 0.25, 0.28))
+	m.set_shader_parameter("pulse", 0.012); m.set_shader_parameter("emission", Vector3(0.2, 0.35, 1.0))
+	m.set_shader_parameter("albedo_color", Color(0.5, 0.6, 1.4))
 	Build.organic(flats.A, func(st):
 		for i in 26:
 			var a := TAU * i / 26.0
@@ -199,8 +205,8 @@ func _move_marta(k: String) -> void:
 ## The landing beyond C's front door: the stairwell, gone soft; 48 across it, open, lit.
 func _landing_48() -> void:
 	var f: ExportedFlat = flats.C
-	var sw := Tex.mat("stairwell", 0.5, {"tint": Color(1.0, 0.7, 0.7), "pulse": 0.006})
-	Build.box(f, Vector3(12.2, -0.05, 5.7), Vector3(4.2, 0.1, 4.6), Tex.mat("concrete", 1.5, {"tint": Color(1, 0.7, 0.7)}))
+	var sw := Tex.mat("stairwell", 0.5, {"tint": Color(0.7, 0.8, 1.0), "pulse": 0.006})
+	Build.box(f, Vector3(12.2, -0.05, 5.7), Vector3(4.2, 0.1, 4.6), Tex.mat("concrete", 1.5, {"tint": Color(0.7, 0.8, 1.0)}))
 	Build.box(f, Vector3(12.2, 2.82, 5.7), Vector3(4.2, 0.1, 4.6), Tex.mat("plaster", 0.7))
 	Build.wall(f, Vector2(10.15, 3.4), Vector2(14.3, 3.4), sw, [], 2.8, 0.1)
 	Build.wall(f, Vector2(14.3, 3.4), Vector2(14.3, 8.0), sw, [], 2.8, 0.1)
@@ -221,6 +227,7 @@ func begin() -> void:
 	Sfx.loop("drone", "flesh_drone", -10.0)
 	Sfx.loop("heart", "heart_loop", -26.0)
 	Fx.reset({"grain": 0.08, "vignette": 0.62, "fringe": 0.2, "drain": 0.08})
+	Fx.tint(Color(0.55, 0.7, 1.0, 0.25), 0.01)
 	var at: String = Game.flags.get("flesh_stage", "A") if get_meta("from_checkpoint", false) else "A"
 	if at == "A":
 		Game.flags.erase("flesh_stage")

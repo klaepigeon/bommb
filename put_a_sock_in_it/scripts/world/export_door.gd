@@ -20,7 +20,9 @@ var is_open := false
 var _busy := false
 
 func setup(ex: Dictionary) -> void:
-	psi0 = ex.get("psi0", 0.0); sign_ = ex.get("sign", 1.0); max_angle = maxf(1.2, ex.get("max", 1.5))
+	# the script is put on a node already in the scene: _ready won't run, so switch the swing on
+	set_physics_process(true)
+	psi0 = ex.get("psi0", 0.0); sign_ = ex.get("sign", 1.0); max_angle = maxf(1.55, ex.get("max", 1.5))   # all the way back to the wall (the export chained the front door)
 	angle = ex.get("open", 0.0); target = angle; leaf_w = ex.get("w", 0.8)
 	is_open = angle > 0.15
 	var body := AnimatableBody3D.new(); body.sync_to_physics = false

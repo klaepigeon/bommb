@@ -153,6 +153,22 @@ func _physics_process(delta: float) -> void:
 	velocity.y = 0.0 if is_on_floor() else velocity.y - 9.8 * delta
 	if controls or velocity.length() > 0.01:
 		move_and_slide()
+		# a step up (a sill, the balcony's drop, a bit of rubble): up to 30 cm, he steps up onto it
+		if is_on_floor() and is_on_wall() and Vector2(hv.x, hv.z).length() > 0.2:
+			var fwd := Vector3(hv.x, 0, hv.z).normalized() * 0.15
+			for step in [0.14, 0.3]:
+				var raised := global_transform.translated(Vector3(0, step, 0))
+				if not test_move(global_transform, Vector3(0, step, 0)) and not test_move(raised, fwd):
+					global_position += Vector3(0, step, 0) + fwd
+					move_and_collide(Vector3(0, -step - 0.05, 0))
+					break
+		# walking into a loose chair or a box shoves it; the heavy furniture barely moves
+		for i in get_slide_collision_count():
+			var col := get_slide_collision(i)
+			var rb := col.get_collider() as RigidBody3D
+			if rb and rb != held and absf(col.get_normal().y) < 0.5:
+				var push := -col.get_normal() * Vector3(1, 0, 1)
+				rb.apply_central_impulse(push * clampf(8.0 / rb.mass, 0.1, 1.0) * 0.35)
 	# crouch: a trained, controlled drop, not a pop
 	var want_h := HEAD_CROUCH if crouching else HEAD_STAND
 	if not crouching and _blocked_above(): want_h = HEAD_CROUCH; crouching = true

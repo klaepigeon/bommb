@@ -23,6 +23,12 @@ uniform bool use_alpha_cut = false;
 uniform vec2 snap_res = vec2(320.0, 180.0);
 uniform float flesh = 0.0;
 uniform float flesh_seed = 0.0;
+// the meat's colours: dark, light, the veins, and the glow in them (level 2: the blue of the hole)
+uniform vec3 meat_dark : source_color = vec3(0.42, 0.09, 0.1);
+uniform vec3 meat_light : source_color = vec3(0.78, 0.36, 0.33);
+uniform vec3 meat_vein : source_color = vec3(0.2, 0.04, 0.16);
+uniform vec3 meat_glow = vec3(0.25, 0.02, 0.12);
+uniform vec3 paint_tint = vec3(1.0, 0.7, 0.68);
 varying vec3 wp;
 varying vec3 wn;
 
@@ -59,15 +65,15 @@ void fragment() {
 		vec3 q = wp * 1.7 + flesh_seed;
 		float patch = smoothstep(0.35, 0.65, fbm(q) + flesh * 0.45 - 0.25);
 		float n = fbm(wp * 6.0 + flesh_seed);
-		vec3 meat = mix(vec3(0.42, 0.09, 0.1), vec3(0.78, 0.36, 0.33), n);
+		vec3 meat = mix(meat_dark, meat_light, n);
 		float v1 = abs(fbm(wp * vec3(2.2, 0.9, 2.2) + 7.0) - 0.5);
 		float vein = 1.0 - smoothstep(0.0, 0.03, v1);
-		meat = mix(meat, vec3(0.2, 0.04, 0.16), vein * 0.85);
+		meat = mix(meat, meat_vein, vein * 0.85);
 		float k = clamp(patch * flesh * 1.2, 0.0, 1.0);
-		col = mix(col * mix(vec3(1.0), vec3(1.0, 0.7, 0.68), flesh), meat, k);
+		col = mix(col * mix(vec3(1.0), paint_tint, flesh), meat, k);
 		rough = mix(rough, 0.25, k);            // wet
 		spec = mix(spec, 0.8, k);
-		EMISSION = vec3(0.25, 0.02, 0.12) * vein * k * (0.6 + 0.4 * sin(TIME * 1.4 + wp.x));
+		EMISSION = meat_glow * vein * k * (0.6 + 0.4 * sin(TIME * 1.4 + wp.x));
 	}
 	ALBEDO = col;
 	float curve = length(fwidth(NORMAL));

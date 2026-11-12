@@ -6,6 +6,7 @@ What actually works, checked by the tools in `tools/` (run with
 | Tool | Checks | Last result |
 |---|---|---|
 | `parse_all.gd` | every script compiles | 0 bad |
+| `walkthrough.gd` | **plays the chapter like a person**: walks with the move key along routes planned on the flat's grid, turns to face things, presses interact only when the prompt is right, opens doors it walks into; reports where it gets stuck and what it's touching. Front door → Marta → waking → the jammed door → the wardrobe → the drawer and pistol → the balcony and back → the hole → copies A, B, C → 48 | 0 fails |
 | `playthrough.gd` | the whole chapter beat by beat, with screenshots: knock, door, "Christ", seeing Marta, her lines, the throw, waking, Socko, the locked door, the wardrobe, cross-eyes, the pistol and firing it, the balcony, a random conversation, crawling in, the loading card, level 2's arrival, the encounter, the hunt, being caught and the restart, the exit and the card | 0 fails |
 | `hunt_test.gd` | Marta (in copy B): hears and investigates, gives up, sees standing / not crouched at range, stunned by a bullet, hunts again more suspicious, searches and returns to patrol | 0 fails |
 | `build_apk.sh` | exports and verifies the signed APK | signed |
@@ -33,6 +34,19 @@ What actually works, checked by the tools in `tools/` (run with
   through one input map. Pause menu with settings. Title with Continue / New game.
 - Saving: a checkpoint at the start of each level (flags, inventory, pistol, memories).
 
+## Fixed by the walkthrough (things teleporting tests never saw)
+
+- The exported doors and drawers swung on screen but their collision never moved (their physics
+  update was never switched on): the front door blocked the doorway open or shut.
+- The landing wall's opening was centred on the door's hinge, not the doorway.
+- Small loose things were put on the furniture layer (stopping Kurt) instead of underfoot.
+- Doors left half open stood across the hall; they now open fully to the wall.
+- Where Marta threw him was a pocket boxed in by furniture; he now lands on open floor.
+- The pushed wardrobe slid into the only way out of the living room; it now goes into the corner.
+- A disabled interaction box (the wardrobe's) still caught the crosshair, hiding "Crawl in".
+- He couldn't step up anything (the balcony is 12 cm below the flat): he now steps up 30 cm.
+- 25 cm rubble and overhead debris no longer block; he shoves loose chairs he walks into.
+
 ## Look (third pass)
 
 - **The flat** is the JS version's apartment (`ExportedFlat`): its textures, painted relief and
@@ -43,7 +57,7 @@ What actually works, checked by the tools in `tools/` (run with
 - **Marta** is the old model: the grin, the teeth, the slid eye, the mould, the coral through her
   and the chair. The hunter is the same model standing (`MartaSeated.new(true)`).
 - **Kurt's hand** (the old arm) reaches for her face across the table.
-- **Level 2** is the same flat with `flesh` turned up in the shader: paint and paper with meat
+- **Level 2** is the same flat, blue like the hole, with `flesh` turned up in the shader: paint and paper with meat
   coming through, veins, wet, breathing; plus strands, lumps, coral, goo and pulsing glands.
 - Every procedural box used to be inside out (wound the wrong way for Godot): fixed.
 

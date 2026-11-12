@@ -55,7 +55,7 @@ func _initialize() -> void:
 	m.set_state("chase")
 	m.shot(m.head(), Vector3(1, 0, 0))
 	_check(m.state == "stunned", "a bullet stuns her")
-	F.player.global_position = F._p("B", Vector3(8.5, 0, 6.8))
+	F.player.global_position = F._p("A", Vector3(8.5, 0, 6.8))     # well away: out of her copy
 	await _wait(3.6)
 	_check(m.state in ["search", "chase"], "after the stun she hunts again (" + m.state + ")")
 	_check(m.suspicion > 0.0, "and she's more suspicious (%.2f)" % m.suspicion)

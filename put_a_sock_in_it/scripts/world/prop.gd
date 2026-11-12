@@ -35,6 +35,9 @@ func get_prompt() -> String:
 static func from_export(n: Node3D, ex: Dictionary) -> Prop:
 	var parent := n.get_parent()
 	var p := Prop.new(); p.name = String(n.name) + "_body"
+	# (decide what it is before it enters the scene: _ready picks its collision layer from this)
+	var mass_kg := maxf(0.05, float(ex.get("mass", 1.0)))
+	p.set_meta("debris", mass_kg < 4.0)
 	parent.add_child(p)
 	p.global_transform = n.global_transform
 	n.reparent(p, true)
@@ -50,8 +53,6 @@ static func from_export(n: Node3D, ex: Dictionary) -> Prop:
 	var pm := PhysicsMaterial.new(); pm.friction = 0.4; pm.bounce = 0.05
 	p.physics_material_override = pm
 	p.can_sleep = true; p.sleeping = true
-	# little things don't stop a man walking: he steps over them (layer 16)
-	p.set_meta("debris", p.mass < 4.0)
 	return p
 
 func _hit(_b: Node) -> void:
