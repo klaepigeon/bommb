@@ -367,6 +367,7 @@ func _torch_update(delta: float) -> void:
 		var f := torch.global_position; var to := f - torch.global_transform.basis.z * 15.0
 		var hit := get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(f, to, 1 | 8 | 32, [get_rid()]))
 		if not hit.is_empty(): reach = f.distance_to(hit.position)
+		if hidden_in: reach = 0.15          # (inside a wardrobe: the doors are right there)
 	_torch_near = lerpf(_torch_near, clampf(reach / 2.2, 0.0, 1.0), 1.0 - exp(-6.0 * delta))
 	var near_k := lerpf(0.22, 1.0, smoothstep(0.0, 1.0, _torch_near))
 	torch.spot_angle = lerpf(34.0, 26.0, _torch_near)
