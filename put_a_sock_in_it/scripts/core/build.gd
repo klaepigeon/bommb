@@ -60,6 +60,35 @@ static func wall(parent: Node, a: Vector2, b: Vector2, mat: Material, openings :
 		s = o1
 	seg.call(s, L, 0.0, h)
 
+## Merge the plain meshes among `nodes` (direct children of `parent`) into one MeshInstance per
+## material and vertex format: dozens of boxes become a handful of draw calls. Their collision
+## bodies stay, moved up to `parent`. `skip`: meshes something else still holds on to.
+static func merge(parent: Node3D, nodes: Array, skip: Array = []) -> int:
+	var groups := {}
+	for n in nodes:
+		if not (n is MeshInstance3D) or skip.has(n): continue
+		var mi: MeshInstance3D = n
+		if mi.get_parent() != parent or mi.material_override == null or not (mi.mesh is ArrayMesh) or mi.mesh.get_surface_count() != 1: continue
+		var key := [mi.material_override, (mi.mesh as ArrayMesh).surface_get_format(0), mi.cast_shadow]
+		if not groups.has(key): groups[key] = []
+		groups[key].append(mi)
+	var merged := 0
+	for key in groups:
+		var list: Array = groups[key]
+		if list.size() < 2: continue
+		var st := SurfaceTool.new()
+		for mi in list:
+			st.append_from(mi.mesh, 0, mi.transform)
+			for c in mi.get_children():
+				if c is Node3D:
+					var xf: Transform3D = mi.transform * (c as Node3D).transform
+					mi.remove_child(c); parent.add_child(c); (c as Node3D).transform = xf
+			parent.remove_child(mi); mi.queue_free()
+			merged += 1
+		var out := MeshInstance3D.new(); out.mesh = st.commit(); out.material_override = key[0]; out.cast_shadow = key[2]
+		parent.add_child(out)
+	return merged
+
 ## Floor and ceiling over a rectangle.
 static func room(parent: Node, x0: float, z0: float, x1: float, z1: float, floor_mat: Material, ceil_mat: Material, h := 2.7, y0 := 0.0) -> void:
 	box(parent, Vector3((x0 + x1) * 0.5, y0 - 0.05, (z0 + z1) * 0.5), Vector3(x1 - x0, 0.1, z1 - z0), floor_mat)

@@ -205,17 +205,7 @@ func _move_marta(k: String) -> void:
 ## The landing beyond C's front door: the stairwell, gone soft; 48 across it, open, lit.
 func _landing_48() -> void:
 	var f: ExportedFlat = flats.C
-	var sw := Tex.mat("stairwell", 0.25, {"tint": Color(0.7, 0.8, 1.0), "pulse": 0.006})
-	Build.box(f, Vector3(12.2, -0.05, 5.7), Vector3(4.2, 0.1, 4.6), Tex.mat("concrete", 1.5, {"tint": Color(0.7, 0.8, 1.0)}))
-	Build.box(f, Vector3(12.2, 2.82, 5.7), Vector3(4.2, 0.1, 4.6), Tex.mat("plaster", 0.7))
-	f.landing_face(sw, Tex.mat("plaster", 1.0, {"tint": Color(0.7, 0.8, 1.0)}))
-	Build.wall(f, Vector2(10.15, 3.4), Vector2(14.3, 3.4), sw, [], 2.8, 0.1)
-	Build.wall(f, Vector2(14.3, 3.4), Vector2(14.3, 8.0), sw, [], 2.8, 0.1)
-	Build.wall(f, Vector2(10.15, 8.0), Vector2(14.3, 8.0), sw, [{"at": 2.4, "w": 0.95}], 2.8, 0.1)
-	var d48 := Door.new(); d48.material = Tex.mat("door_padded", 2.0); d48.width = 0.95; d48.open_angle = 1.2; d48.is_open = true; d48.locked = true
-	f.add_child(d48); d48.position = Vector3(12.55 - 0.475, 0, 7.96)
-	var n48 := Label3D.new(); n48.text = "48"; n48.font_size = 48; n48.pixel_size = 0.002; n48.modulate = Color("c8b878")
-	d48.panel.add_child(n48); n48.position = Vector3(0.47, 1.62, -0.035); n48.rotation.y = PI
+	Stairwell.build(f, {"tint": Color(0.7, 0.8, 1.0), "pulse": 0.006, "bulb": false, "open48": true})
 	Build.box(f, Vector3(12.55, 1.2, 8.6), Vector3(1.6, 2.4, 0.1), Tex.mat("plaster", 1.0, {"emission": Vector3(2.0, 1.7, 1.2)}), false)
 	Build.lamp(f, Vector3(12.55, 1.4, 7.8), Color("ffe0b0"), 1.8, 5.0)
 	var z := Area3D.new(); z.collision_layer = 0; z.collision_mask = 2

@@ -67,6 +67,13 @@ static func tex(name: String) -> Texture2D:
 		"sticky": img = _flat(Color("f2dc5a"))
 		"glass": img = _flat(Color("8aa0a8"))
 		"rug": img = _rug()
+		"vinyl": img = _vinyl()
+		"metlakh": img = _metlakh()
+		"paint_door": img = _paint_door()
+		"brass": img = _plaster(Color("b08e48"), 31)
+		"glass_reeded": img = _reeded()
+		"grime": img = _grime()
+		"peel": img = _peel()
 		_: img = _flat(Color.MAGENTA)
 	img.generate_mipmaps()
 	var t := ImageTexture.create_from_image(img)
@@ -74,6 +81,90 @@ static func tex(name: String) -> Texture2D:
 	return t
 
 # ------------------------------------------------------------------ painters
+## Stairwell floor tiles (metlakh): small square ceramic tiles, terracotta with a beige
+## border pattern, grout gone black, worn pale where the feet go (1 m of floor).
+static func _metlakh() -> Image:
+	var S := 64
+	var img := Image.create(S, S, false, Image.FORMAT_RGB8)
+	var r := _rng(66); var n := _noise(66, 0.05)
+	for y in S:
+		for x in S:
+			var tx := x / 8; var ty := y / 8
+			var c := Color("8a4a32")
+			if (tx + ty) % 4 == 0 or (tx == 3 and ty % 2 == 0): c = Color("b8a68a")
+			c = c.darkened(r.randf() * 0.08 + ((tx * 7 + ty * 13) % 5) * 0.02)
+			c = c.lerp(Color("7a7368"), clampf(n.get_noise_2d(x, y) * 0.8 + 0.2, 0.0, 0.6))   # worn
+			if x % 8 == 0 or y % 8 == 0: c = Color("2a2420")
+			img.set_pixel(x, y, c)
+	return img
+
+## Leatherette: near-white so the material's colour sets it; a fine crackle and sheen.
+static func _vinyl() -> Image:
+	var S := 32
+	var img := Image.create(S, S, false, Image.FORMAT_RGB8)
+	var r := _rng(61); var n := _noise(61, 0.25)
+	for y in S:
+		for x in S:
+			var v := 0.82 + 0.08 * n.get_noise_2d(x, y) + r.randf() * 0.04
+			if r.randf() < 0.04: v -= 0.25        # cracks in the plastic
+			img.set_pixel(x, y, Color(v, v, v))
+	return img
+
+## Gloss paint gone yellow: brush streaks running down, chips showing the old green and the wood.
+static func _paint_door() -> Image:
+	var S := 64
+	var img := Image.create(S, S, false, Image.FORMAT_RGB8)
+	var r := _rng(62); var n := _noise(62, 0.06); var streak := _noise(63, 0.5)
+	for y in S:
+		for x in S:
+			var v := 0.93 + 0.04 * streak.get_noise_2d(x * 0.15, y * 3.0) - 0.05 * absf(n.get_noise_2d(x, y))
+			var c := Color(v, v * 0.98, v * 0.92)
+			var chip := n.get_noise_2d(x * 3.0 + 50.0, y * 3.0)
+			if chip > 0.64: c = Color("5f7a5a")             # the colour it was before
+			if chip > 0.74: c = Color("6a4a30")             # down to the wood
+			img.set_pixel(x, y, c)
+	return img
+
+## Reeded glass: vertical ribs, milky.
+static func _reeded() -> Image:
+	var S := 32
+	var img := Image.create(S, S, false, Image.FORMAT_RGB8)
+	for y in S:
+		for x in S:
+			var v := 0.62 + 0.18 * sin(float(x) * PI / 2.0)
+			img.set_pixel(x, y, Color(v * 0.85, v * 0.92, v * 0.95))
+	return img
+
+## Grime for decals: dark at the bottom of the texture, fading up in drips.
+static func _grime() -> Image:
+	var S := 32
+	var img := Image.create(S, S, false, Image.FORMAT_RGBA8)
+	var n := _noise(64, 0.08); var fine := _noise(67, 0.3)
+	for y in S:
+		for x in S:
+			var up := 1.0 - (float(y) + 0.5) / S            # 0 at the bottom row
+			var reach := 0.35 + 0.3 * n.get_noise_2d(x * 1.5, 0.0)    # how far up it's crept here
+			var a := clampf((reach - up) * 2.5 + fine.get_noise_2d(x, y) * 0.35, 0.0, 1.0)
+			# dither the edge, so the cut-out reads as a stain and not a bar
+			var keep := a > 0.25 + 0.5 * fposmod(float(x * 7 + y * 13) * 0.1618, 1.0)
+			img.set_pixel(x, y, Color(0.16, 0.13, 0.09, 1.0 if keep else 0.0))
+	return img
+
+## Peeling paint for decals: curling flakes, white edges, the plaster underneath.
+static func _peel() -> Image:
+	var S := 32
+	var img := Image.create(S, S, false, Image.FORMAT_RGBA8)
+	var n := _noise(65, 0.12); var r := _rng(65)
+	for y in S:
+		for x in S:
+			var d := Vector2(x - S * 0.5, y - S * 0.5).length() / (S * 0.5)
+			var v := n.get_noise_2d(x, y) + 0.45 - d * 0.7
+			var c := Color(0, 0, 0, 0)
+			if v > 0.0: c = Color("8f8a7c").darkened(r.randf() * 0.1)       # bare plaster
+			if v > 0.0 and v < 0.06: c = Color("e8e4d6")                      # the lifted edge
+			img.set_pixel(x, y, c)
+	return img
+
 static func _rng(seed: int) -> RandomNumberGenerator:
 	var r := RandomNumberGenerator.new(); r.seed = seed; return r
 

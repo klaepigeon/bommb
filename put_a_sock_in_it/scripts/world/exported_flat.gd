@@ -131,12 +131,36 @@ func _behaviours() -> void:
 			"drawer":
 				n.set_script(ExportDrawer); n.call("setup", ex)
 				drawers.append(n)
+	_dress_doors()
 	for n in nodes:
 		if n.is_queued_for_deletion() or not is_instance_valid(n): continue
 		var ex := _extras(n)
 		var k: String = ex.get("kind", "")
 		if (k == "prop" or k == "pick") and not skip_props.has(String(n.name)):
 			props[String(n.name)] = Prop.from_export(n, ex)
+
+## The doors rebuilt as geometry (DoorLeaf): the front door padded and quilted, the rest
+## panelled and painted, the living room's glazed. The balcony door keeps its exported glass.
+const DOOR_STYLE := {"dEntry": ["padded", {"number": 47}], "dLiving": ["panel", {"glazed": true}], "dKitchen": ["panel", {"glazed": true}]}
+func _dress_doors() -> void:
+	for id in doors:
+		if String(id).begins_with("bal"): continue
+		var d: ExportDoor = doors[id]
+		var spec: Array = DOOR_STYLE.get(id, ["panel", {}])
+		for mi in d.find_children("*", "MeshInstance3D", true, false): (mi as MeshInstance3D).visible = false
+		var o: Dictionary = (spec[1] as Dictionary).duplicate()
+		if spec[0] == "padded":
+			# the number goes on the side facing the landing (+x)
+			var z_closed: Vector3 = d.get_parent().global_basis * Basis(Vector3.UP, d.psi0) * Vector3(0, 0, 1)
+			o["outside"] = 1.0 if z_closed.x > 0.0 else -1.0
+		DoorLeaf.build(d, d.leaf_w, float(_extras(d).get("h", 2.02)), spec[0], conv, o)
+
+var _conv_cache := {}
+## A StandardMaterial3D through the world shader (and the flesh), shared when asked twice.
+func conv(std: StandardMaterial3D) -> Material:
+	var key := "%d|%s|%.2f|%d" % [std.albedo_texture.get_rid().get_id() if std.albedo_texture else 0, std.albedo_color, std.roughness, std.transparency]
+	if not _conv_cache.has(key): _conv_cache[key] = _convert(std)
+	return _conv_cache[key]
 
 ## Collision from the room plan: wall boxes, floors (each with what it sounds like underfoot),
 ## a ceiling.
@@ -178,6 +202,7 @@ func _lights() -> void:
 		var pos := Vector3(L.pos[0], L.pos[1], L.pos[2])
 		if not KEEP.has_point(pos) or (pos.y > 3.0 and String(L.type) != "SpotLight"): continue
 		if String(L.type) == "SpotLight": continue        # the street lamp: no street
+		if String(L.get("name", "")).begins_with("stair"): continue    # the level lights its own stairwell
 		var l: Light3D
 		match String(L.type):
 			"PointLight":

@@ -11,7 +11,8 @@ What actually works, checked by the tools in `tools/` (run with
 | `hunt_test.gd` | Marta (in copy B): hears and investigates, gives up, sees standing / not crouched at range, stunned by a bullet, hunts again more suspicious, searches and returns to patrol | 0 fails |
 | `build_apk.sh` | exports and verifies the signed APK | signed |
 | `touch_test.gd` | stick walks, right-half drag looks, both at once, USE presses interact | 0 fails |
-| `socko_view.gd`, `marta_view.gd`, `beauty.gd`, `title_shot.gd` | render characters and fixed views for judging the look | |
+| `flash_test.gd` | photosensitivity: renders the flickering scenes and counts brightness flashes per screen quadrant (WCAG general-flash rule, simplified) | 0 fails (≤ 1 flash/s) |
+| `socko_view.gd`, `marta_view.gd`, `hunter_pose.gd`, `landing_view.gd`, `note_view.gd`, `beauty.gd`, `title_shot.gd` | render characters, Marta's poses, the stairwell and doors, Sonya's note and fixed views for judging the look | |
 | `bake_audio.gd` | synthesises every sound into `assets/audio/` | 78 sounds |
 
 ## Implemented
@@ -26,6 +27,17 @@ What actually works, checked by the tools in `tools/` (run with
   cross-eyed, idle eye wandering, the divided-attention glance at something he wants noticed.
 - Marta seated (Flat 47) and hunting (level 2): patrol, investigate noise, chase on sight, search,
   stun when shot, catch -> restart from checkpoint.
+- The stairwell (`Stairwell`): tiled floor, green dado and whitewash with grime and peeling,
+  graffiti, the meter cabinet and its wires to a caged dying bulb, an iron rail over the well, the
+  stair down jammed with furniture, a night window on the half-landing below; shared by both levels.
+- Doors built as geometry (`DoorLeaf`): quilted leatherette front doors (47, 48) with studs,
+  piping, peephole, locks and number plates; panelled painted interior doors (glazed where
+  the export had glass); through the flat's material converter, so they flesh over in level 2.
+- Sonya's note, half under her bed in Flat 47 (`NoteReader` shows readable paper; sets
+  `flags.read_pembis`).
+- Marta's voice (creaking fry, scream, cracks, sniffing, rattling breath) and animation: seated
+  life and lunge; on her feet a dragging walk, scuttling chase, sniff and over-rotated head,
+  listening crouch, slow tilt on meeting Kurt, reeling when shot.
 - Pistol: 8-round magazine, 4 to start, 6 more in level 2; recoil, flash, hit marks, reload,
   inspection, every shot is a noise she hears.
 - Doors (open, locked, blocked from outside), drawers, a pushable wardrobe, pickups, physics props

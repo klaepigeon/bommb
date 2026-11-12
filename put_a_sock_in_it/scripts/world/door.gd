@@ -16,20 +16,28 @@ var blocked := false
 var is_open := false
 var name_text := "door"
 var panel: AnimatableBody3D
+## Built as geometry when set (DoorLeaf: "padded" or "panel"), with `leaf_opts` and materials
+## through `conv` (the flat's converter); otherwise a plain slab of `material`.
+var style := ""
+var leaf_opts := {}
+var conv: Callable
 var _busy := false
 
 func _ready() -> void:
 	panel = AnimatableBody3D.new(); panel.sync_to_physics = false
 	add_child(panel)
-	var mi := MeshInstance3D.new(); mi.mesh = Build.box_mesh(Vector3(width, height, 0.05))
-	mi.material_override = material if material else Tex.mat("wood")
-	mi.position = Vector3(width * 0.5, height * 0.5, 0)
-	panel.add_child(mi)
 	var cs := CollisionShape3D.new(); var sh := BoxShape3D.new(); sh.size = Vector3(width, height, 0.05)
-	cs.shape = sh; cs.position = mi.position; panel.add_child(cs)
-	var knob := MeshInstance3D.new(); knob.mesh = Build.box_mesh(Vector3(0.05, 0.05, 0.14))
-	knob.material_override = Tex.mat("metal"); knob.position = Vector3(width - 0.09, 1.0, 0)
-	panel.add_child(knob)
+	cs.shape = sh; cs.position = Vector3(width * 0.5, height * 0.5, 0); panel.add_child(cs)
+	if style != "":
+		DoorLeaf.build(panel, width, height, style, conv, leaf_opts)
+	else:
+		var mi := MeshInstance3D.new(); mi.mesh = Build.box_mesh(Vector3(width, height, 0.05))
+		mi.material_override = material if material else Tex.mat("wood")
+		mi.position = cs.position
+		panel.add_child(mi)
+		var knob := MeshInstance3D.new(); knob.mesh = Build.box_mesh(Vector3(0.05, 0.05, 0.14))
+		knob.material_override = Tex.mat("metal"); knob.position = Vector3(width - 0.09, 1.0, 0)
+		panel.add_child(knob)
 	if is_open: panel.rotation.y = open_angle
 
 func get_prompt() -> String:

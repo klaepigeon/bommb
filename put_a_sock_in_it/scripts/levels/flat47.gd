@@ -64,6 +64,7 @@ func build() -> void:
 	_outside()
 	_lights()
 	_atmosphere()
+	_sonya_note()
 	player.position = Vector3(11.9, 0, 4.56)
 	player.set_view(PI * 0.5, -0.04)
 	socko.points = {"door": FRONT + Vector3(0, 1.2, 0), "hole": HOLE + Vector3(0, 0.8, 0), "gun": gun_drawer, "wardrobe": wardrobe}
@@ -82,29 +83,8 @@ func _environment() -> void:
 ## The landing: the stairwell's green paint, the stair going down, the rail, 48 next door, the
 ## bulb on its way out.
 func _landing() -> void:
-	var sw := Tex.mat("stairwell", 0.25)
-	Build.box(world, Vector3(12.2, -0.05, 5.7), Vector3(4.2, 0.1, 4.6), Tex.mat("concrete", 1.5))
-	Build.box(world, Vector3(12.2, 2.82, 5.7), Vector3(4.2, 0.1, 4.6), Tex.mat("plaster", 0.7))
-	Build.wall(world, Vector2(10.15, 3.4), Vector2(14.3, 3.4), sw, [], 2.8, 0.1)
-	Build.wall(world, Vector2(14.3, 3.4), Vector2(14.3, 8.0), sw, [], 2.8, 0.1)
-	Build.wall(world, Vector2(10.15, 8.0), Vector2(14.3, 8.0), sw, [{"at": 2.4, "w": 0.95}], 2.8, 0.1)
-	flat.landing_face(sw, Tex.mat("plaster", 1.0))
-	# 48: padded, shut
-	var d48 := Door.new(); d48.material = Tex.mat("door_padded", 2.0); d48.width = 0.95; d48.locked = true
-	world.add_child(d48); d48.position = Vector3(12.55 - 0.475, 0, 7.96)
-	var n48 := Label3D.new(); n48.text = "48"; n48.font_size = 48; n48.pixel_size = 0.002; n48.modulate = Color("c8b878")
-	d48.panel.add_child(n48); n48.position = Vector3(0.47, 1.62, -0.035); n48.rotation.y = PI
-	# the stair down, behind its rail, the stairwell dropping into the dark
-	for i in 6:
-		Build.box(world, Vector3(13.6, -0.17 - i * 0.17, 4.6 + i * 0.28), Vector3(1.1, 0.06, 0.28), Tex.mat("concrete", 2.0), false)
-	Build.box(world, Vector3(13.6, -0.6, 6.0), Vector3(1.2, 0.05, 2.0), Tex.mat("black"), false)
-	Build.box(world, Vector3(13.05, 0.5, 5.4), Vector3(0.04, 1.0, 2.0), Tex.mat("metal"))
-	Build.box(world, Vector3(13.05, 1.0, 5.4), Vector3(0.08, 0.05, 2.0), Tex.mat("wood", 3.0), false)
-	landing_bulb = Fitting.make(world, Vector3(12.2, 2.55, 5.0), Color("ffd890"), 3.2, 7.5, "dying", true)
-	var b := Build.box(world, Vector3(12.2, 2.55, 5.0), Vector3(0.05, 0.07, 0.05), Tex.mat("enamel", 1.0, {"emission": Vector3(1.4, 1.2, 0.8)}), false)
-	landing_bulb.add_glow(b, Vector3(1.4, 1.2, 0.8))
-	Build.box(world, Vector3(12.2, 2.7, 5.0), Vector3(0.01, 0.25, 0.01), Tex.mat("black"), false)
-	Air.dust(world, Vector3(12.2, 1.4, 5.6), Vector3(2.0, 1.3, 2.2), 300)
+	var sw := Stairwell.build(flat)
+	landing_bulb = sw.bulb
 
 ## Marta, in her chair at the table, the light over the table on her.
 func _marta() -> void:
@@ -246,6 +226,28 @@ func _sticky_note(at: Vector3, yaw: float, size: float, tilt: float) -> void:
 	word.position = Vector3(0, -size * 0.03, size * 0.004)
 	note.add_child(word)
 var sticky_at := Vector3(3.0, 2.2, -12.0)
+
+## Sonya's story, folded, half under her bed: you have to look down to see it.
+const SONYA_NOTE := "Pembis\n\nA story by pee pee\n\nPembis went to poop town.\n\n- Sonya age 10"
+func _sonya_note() -> void:
+	var at := Vector3(4.1, 0.003, 7.25)
+	var note := Node3D.new(); note.name = "SonyaNote"; world.add_child(note)
+	note.position = at; note.rotation.y = 0.45
+	var pm := StandardMaterial3D.new(); pm.albedo_color = Color("e9e2cc"); pm.roughness = 0.95
+	var sheet := MeshInstance3D.new(); sheet.mesh = Build.box_mesh(Vector3(0.21, 0.004, 0.15)); sheet.material_override = pm
+	note.add_child(sheet)
+	# folded once: the top half lifting off the bottom
+	var flap := MeshInstance3D.new(); flap.mesh = Build.box_mesh(Vector3(0.21, 0.003, 0.075)); flap.material_override = pm
+	note.add_child(flap); flap.position = Vector3(0, 0.012, 0.035); flap.rotation.x = -0.18
+	var scrawl := Label3D.new(); scrawl.text = "PEMBIS"; scrawl.font_size = 40; scrawl.pixel_size = 0.0011
+	scrawl.modulate = Color("5a4c8a"); scrawl.shaded = true; scrawl.outline_size = 0
+	flap.add_child(scrawl); scrawl.position = Vector3(0.0, 0.003, 0.0); scrawl.rotation = Vector3(-PI * 0.5, 0, 0.12)
+	Hotspot.make(world, at + Vector3(0, 0.05, 0), Vector3(0.3, 0.12, 0.26), "Read the note", _read_sonya_note)
+
+func _read_sonya_note() -> void:
+	Game.flags["read_pembis"] = true
+	var r := NoteReader.open(self, SONYA_NOTE, {"ink": Color("4b3f78"), "font_size": 30, "tilt": 2.0})
+	await r.closed
 
 ## The key light: the shade over the table, on her, throwing her coral up the wall.
 func _lights() -> void:
