@@ -41,7 +41,7 @@ func _ready() -> void:
 	_load_settings()
 	_build_loading()
 	_setup_input()
-	apply_wobble()
+	apply_wobble.call_deferred()     # the title scene, once it's in
 
 func make_noise(pos: Vector3, loudness: float) -> void:
 	noise.emit(pos, loudness)
@@ -194,6 +194,7 @@ func change_level(id: String, opts := {}) -> void:
 	level = packed.instantiate()
 	level.set_meta("from_checkpoint", opts.get("checkpoint", false))
 	get_tree().root.add_child(level)
+	apply_wobble()
 	get_tree().current_scene = level
 	# levels build their geometry in _ready; give it a few frames to settle (and the card time
 	# to be read) before the curtain lifts
@@ -256,7 +257,22 @@ func _label(size: int, c: Color) -> Label:
 ## The PS1 vertex wobble, for every shader (0 none .. 1 full): a global the shaders read.
 func apply_wobble() -> void:
 	var w: float = float(settings.get("wobble", 0.5))
-	RenderingServer.global_shader_parameter_set("ps1_snap", Vector2(320, 180) / maxf(0.05, w) if w > 0.01 else Vector2.ZERO)
+	# not a global shader uniform: those live in one big uniform buffer that phone GPU drivers
+	# have choked on. Every material carries its own copy; set it on whatever's in the scene
+	# (materials are shared, so this touches each once). New levels get it on load.
+	var snap := Vector2(320, 180) / maxf(0.05, w) if w > 0.01 else Vector2.ZERO
+	var seen := {}
+	for n in get_tree().root.find_children("*", "GeometryInstance3D", true, false):
+		var g := n as GeometryInstance3D
+		var mats: Array = [g.material_override]
+		if g is MeshInstance3D:
+			var mi := g as MeshInstance3D
+			for i in mi.get_surface_override_material_count(): mats.append(mi.get_surface_override_material(i))
+			if mi.mesh: for i in mi.mesh.get_surface_count(): mats.append(mi.mesh.surface_get_material(i))
+		for m in mats:
+			if m is ShaderMaterial and not seen.has(m):
+				seen[m] = true
+				(m as ShaderMaterial).set_shader_parameter("ps1_snap", snap)
 
 func save_settings() -> void:
 	apply_wobble()
