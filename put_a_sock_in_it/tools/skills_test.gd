@@ -92,7 +92,7 @@ func _initialize() -> void:
 	var FP = F.player
 	var wall = null
 	for c in F.flats.B.get_children():
-		if c is CrackedWall: wall = c
+		if c.has_method("punched") and c.has_signal("breached"): wall = c     # (by duck type: naming the class here would compile it before the autoloads exist)
 	_check(wall != null, "a cracked wall in copy B")
 	F.marta.active = false; F.marta.global_position = F._p("B", Vector3(1.0, 0, 7.0))
 	await _face(F, FP, F._p("B", Vector3(9.1, 0, 4.6)), wall.global_position)

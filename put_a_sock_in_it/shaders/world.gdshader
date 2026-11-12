@@ -20,7 +20,7 @@ uniform vec3 emission = vec3(0.0);
 uniform sampler2D emission_tex : source_color, filter_nearest;
 uniform bool use_emission_tex = false;
 uniform bool use_alpha_cut = false;
-uniform vec2 ps1_snap = vec2(640.0, 360.0);   // the PS1 wobble (Game.apply_wobble sets it on every material); 0 = off
+uniform vec2 ps1_snap = vec2(0.0);   // the PS1 wobble (Game.apply_wobble sets it on every material); 0 = off
 uniform float flesh = 0.0;
 uniform float flesh_seed = 0.0;
 // the meat's colours: dark, light, the veins, and the glow in them (level 2: the blue of the hole)

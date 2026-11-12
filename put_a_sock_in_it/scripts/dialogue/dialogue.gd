@@ -93,7 +93,7 @@ var _options: Array = []
 func _choose(choices: Array, g: int) -> Dictionary:
 	_panel.visible = false
 	_options = []
-	for c in _choice_box.get_children(): c.queue_free()
+	for c in _choice_box.get_children(): _choice_box.remove_child(c); c.queue_free()
 	for c in choices:
 		var ok: bool = not c.has("if") or test(c["if"])
 		if not ok and not c.get("locked", false): continue

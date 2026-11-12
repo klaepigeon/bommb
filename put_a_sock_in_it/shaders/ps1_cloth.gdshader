@@ -8,7 +8,7 @@ render_mode cull_disabled, diffuse_lambert, specular_disabled;
 uniform sampler2D albedo_tex : source_color, filter_nearest_mipmap, repeat_enable;
 uniform vec4 albedo_color : source_color = vec4(1.0);
 uniform float fuzz = 0.2;
-uniform vec2 ps1_snap = vec2(640.0, 360.0);   // the PS1 wobble (Game.apply_wobble sets it on every material); 0 = off
+uniform vec2 ps1_snap = vec2(0.0);   // the PS1 wobble (Game.apply_wobble sets it on every material); 0 = off
 uniform vec3 glow = vec3(0.0);   // light from inside (the torch in his mouth)
 // Socko's contamination (see SockRig._stain_tex): r old blood, g mould, b urine, a speckle, in
 // UV2 (wrapped round the arm). Vertex COLOR carries the hints: r faces down, g near a seam/fold.

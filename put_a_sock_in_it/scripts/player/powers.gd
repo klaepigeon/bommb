@@ -47,6 +47,7 @@ func use() -> String:
 	var thing := _thing_in_sights()
 	if thing and Skills.has("s_tk") and not player.held:
 		if not _spend("pull"): return "tired"
+		if thing.has_method("wake"): thing.wake()
 		_pulling = thing; _pull_t = 0.0
 		thing.gravity_scale = 0.0; thing.sleeping = false
 		thing.set_meta("tk_mask", thing.collision_mask); thing.collision_mask = 0     # out of the shelf, through the clutter

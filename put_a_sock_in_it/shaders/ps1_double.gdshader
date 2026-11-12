@@ -6,7 +6,7 @@ render_mode cull_disabled, diffuse_lambert, specular_disabled;
 uniform sampler2D albedo_tex : source_color, filter_nearest_mipmap, repeat_enable;
 uniform vec4 albedo_color : source_color = vec4(1.0);
 uniform vec2 uv_scale = vec2(1.0);
-uniform vec2 ps1_snap = vec2(640.0, 360.0);   // the PS1 wobble (Game.apply_wobble sets it on every material); 0 = off
+uniform vec2 ps1_snap = vec2(0.0);   // the PS1 wobble (Game.apply_wobble sets it on every material); 0 = off
 uniform float roughness = 0.95;
 uniform vec3 emission = vec3(0.0);
 uniform float pulse = 0.0;        // flesh: vertices breathe along their normals

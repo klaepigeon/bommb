@@ -41,6 +41,7 @@ func _ready() -> void:
 	model.name = "Apartment"
 	add_child(model)
 	_strip_outside()
+	_lift_coplanar()
 	_materials()
 	_behaviours()
 	_collision()
@@ -53,6 +54,31 @@ func room_of(p: Vector3) -> String:
 	if p.x >= 10.0 and p.z > 3.4: return "landing"
 	if p.z < 0.0: return "balcony"
 	return ""
+
+## Faces the export laid exactly on other faces (skirting on walls, tiles on walls, trims and
+## reveals doubled on the wall shell, rugs on floors) fight for the pixel, and flicker as the view
+## moves. tools/geo_check.py finds them; zfix.json lists the smaller of each pair, and here they're
+## lifted 2.5 mm a layer off what they lie on (a trim on a tile on a wall: two layers), along their
+## own normals, so they always win.
+const LIFT := 0.0025
+func _lift_coplanar() -> void:
+	if not FileAccess.file_exists("res://assets/flat47/zfix.json"): return
+	var layers = JSON.parse_string(FileAccess.get_file_as_string("res://assets/flat47/zfix.json"))
+	for p in layers:
+		var mi := model.find_child(String(p), true, false) as MeshInstance3D
+		var up: float = LIFT * float(layers[p])
+		if not mi or not mi.mesh: continue
+		var am := ArrayMesh.new()
+		for s in mi.mesh.get_surface_count():
+			var arr := mi.mesh.surface_get_arrays(s)
+			var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+			var n = arr[Mesh.ARRAY_NORMAL]
+			if n == null or (n as PackedVector3Array).size() != v.size(): continue
+			for i in v.size(): v[i] += (n as PackedVector3Array)[i] * up
+			arr[Mesh.ARRAY_VERTEX] = v
+			am.add_surface_from_arrays(mi.mesh.surface_get_primitive_type(s), arr)
+			am.surface_set_material(am.get_surface_count() - 1, mi.mesh.surface_get_material(s))
+		if am.get_surface_count() == mi.mesh.get_surface_count(): mi.mesh = am
 
 func _strip_outside() -> void:
 	for mi in model.find_children("*", "MeshInstance3D", true, false):
@@ -233,18 +259,8 @@ func _lights() -> void:
 		f.set_meta("window", String(L.type) == "RectAreaLight")
 		fittings.append(f)
 
-## Lights on only near where Kurt is (each mesh can take at most 8 on the phone renderer).
-func _process(delta: float) -> void:
-	var cam := get_viewport().get_camera_3d()
-	if not cam: return
-	var eye := to_local(cam.global_position)
-	for f in fittings:
-		# on within 4 m of its room, off beyond 5.5 (no flickering at the boundary), fading over 1.5 s
-		var d := _room_dist(f.room, eye)
-		var want: float = f.near
-		if d < 4.0: want = 1.0
-		elif d > 5.5: want = 0.0
-		f.near = move_toward(f.near, want, delta / 1.5)
+## (Lights used to switch on and off with distance to stay inside the phone renderer's 8 a mesh;
+## that read as flicker. They stay on: each copy of the flat is shown on its own.)
 
 func _room_dist(k: String, p: Vector3) -> float:
 	if k == "" or not level.rooms.has(k):
@@ -256,13 +272,10 @@ func _room_dist(k: String, p: Vector3) -> float:
 ## the export's wall is 42 cm thick but only drawn on the flat's side), with the doorway as a
 ## proper opening the size of the gap in the collision (z 4.12-5.0, 2.1 m high) and its depth
 ## lined back to the door, like a doorway in a thick Soviet wall.
-func landing_face(face: Material, reveal: Material) -> void:
-	const X := 10.43; const Z0 := 4.12; const Z1 := 5.0; const TOP := 2.1; const H2 := 2.8
+func landing_face(face: Material, _reveal: Material) -> void:
+	const X := 10.447; const Z0 := 4.12; const Z1 := 5.0; const TOP := 2.1; const H2 := 2.8     # (3 mm proud of the export's door surround, at 10.44)
 	Build.wall(self, Vector2(X, 3.4), Vector2(X, 8.0), face, [{"at": (Z0 + Z1) * 0.5 - 3.4, "w": Z1 - Z0, "top": TOP}], H2, 0.02)
-	var depth := X - 10.1
-	for z in [Z0 - 0.01, Z1 + 0.01]:
-		Build.box(self, Vector3(10.1 + depth * 0.5, TOP * 0.5, z), Vector3(depth, TOP, 0.02), reveal, false)
-	Build.box(self, Vector3(10.1 + depth * 0.5, TOP + 0.01, (Z0 + Z1) * 0.5), Vector3(depth, 0.02, Z1 - Z0 + 0.04), reveal, false)
+	# (the reveals through the wall are the export's own: doubling them made them flicker)
 
 ## The nearest drawer to a point (the level picks one to hide something in).
 func drawer_near(p: Vector3) -> ExportDrawer:

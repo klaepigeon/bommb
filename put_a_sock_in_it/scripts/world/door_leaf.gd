@@ -162,8 +162,9 @@ static func _padded(sts: Dictionary, w: float, h: float, opts: Dictionary) -> vo
 			_box(brass, Vector3(w * 0.5, 1.68, z0 + s * 0.045), Vector3(0.1, 0.07, 0.006))
 	# the edge: a thin wooden lip round the leaf
 	var trim: SurfaceTool = sts.trim
-	for e in [[Vector3(0.008, h * 0.5, 0), Vector3(0.016, h, T + 0.012)], [Vector3(w - 0.008, h * 0.5, 0), Vector3(0.016, h, T + 0.012)],
-			[Vector3(w * 0.5, h - 0.008, 0), Vector3(w, 0.016, T + 0.012)], [Vector3(w * 0.5, 0.008, 0), Vector3(w, 0.016, T + 0.012)]]:
+	# (2 mm proud of the leaf all round, so the lip's faces never lie on the leaf's)
+	for e in [[Vector3(0.006, h * 0.5, 0), Vector3(0.016, h + 0.004, T + 0.012)], [Vector3(w - 0.006, h * 0.5, 0), Vector3(0.016, h + 0.004, T + 0.012)],
+			[Vector3(w * 0.5, h - 0.006, 0), Vector3(w + 0.004, 0.016, T + 0.012)], [Vector3(w * 0.5, 0.006, 0), Vector3(w + 0.004, 0.016, T + 0.012)]]:
 		_box(trim, e[0], e[1])
 
 ## Lever, plate, lock cylinders, peephole (the padded door's sit proud of the quilt).

@@ -30,10 +30,10 @@ static func build(f: ExportedFlat, opts := {}) -> Dictionary:
 	var keep := []
 
 	# -------------------------------------------------- floor, ceiling, walls
-	Build.box(f, Vector3(11.575, -0.05, 5.7), Vector3(2.95, 0.1, 4.6), tiles)                # the landing
+	Build.box(f, Vector3(11.74, -0.05, 5.7), Vector3(2.62, 0.1, 4.6), tiles)                 # the landing (from the threshold out)
 	Build.box(f, Vector3(13.675, -0.05, 3.8), Vector3(1.25, 0.1, 0.8), tiles)                # the top of the flight
 	Build.box(f, Vector3(13.675, -0.05, 7.55), Vector3(1.25, 0.1, 0.9), tiles)               # the corner by 48
-	Build.box(f, Vector3(RAIL_X - 0.01, -0.16, 5.65), Vector3(0.04, 0.3, 2.9), conc, false)  # the slab's edge over the well
+	Build.box(f, Vector3(RAIL_X + 0.02, -0.155, 5.65), Vector3(0.03, 0.3, 2.9), conc, false)  # the slab's edge over the well
 	Build.box(f, Vector3(11.575, 2.87, 5.7), Vector3(2.95, 0.1, 4.6), plaster)
 	Build.box(f, Vector3(13.675, 2.87, 7.55), Vector3(1.25, 0.1, 0.9), plaster)
 	Build.box(f, Vector3(13.675, 2.87, 3.8), Vector3(1.25, 0.1, 0.8), plaster)
@@ -86,7 +86,7 @@ static func build(f: ExportedFlat, opts := {}) -> Dictionary:
 	out["bulb"] = null
 	if opts.get("bulb", true):
 		var at := Vector3(11.7, 2.48, 5.7)
-		var b := Fitting.make(f, at, Color("ffcf8a"), 1.7, 6.5, "dying", true)
+		var b := Fitting.make(f, at, Color("ffcf8a"), 1.7, 6.5, "steady", false)
 		var g := Build.box(f, at, Vector3(0.05, 0.075, 0.05), Tex.mat("enamel", 1.0, {"emission": Vector3(1.4, 1.15, 0.75)}), false)
 		b.add_glow(g, Vector3(1.4, 1.15, 0.75)); keep.append(g)
 		_cage(f, at, tint)
@@ -161,7 +161,7 @@ static func _window(f: Node3D, tint: Color) -> void:
 	var c := Vector3(14.3, -0.75, 5.7)
 	var frame := Tex.mat("paint_door", 2.0, {"tint": tint * Color(0.75, 0.75, 0.7)})
 	var glass := Tex.mat("glass", 1.0, {"tint": tint * Color(0.25, 0.32, 0.5), "emission": Vector3(0.05, 0.08, 0.16) * Vector3(tint.r, tint.g, tint.b)})
-	Build.box(f, c + Vector3(0.02, 0, 0), Vector3(0.02, 1.15, 0.95), glass, false)
+	Build.box(f, c + Vector3(0.045, 0, 0), Vector3(0.012, 1.15, 0.95), glass, false)       # (behind the bars)
 	for d in [[Vector3(0, 0.56, 0), Vector3(0.08, 0.05, 0.97)], [Vector3(0, -0.56, 0), Vector3(0.14, 0.05, 1.05)], [Vector3(0, 0, 0.46), Vector3(0.08, 1.15, 0.05)],
 			[Vector3(0, 0, -0.46), Vector3(0.08, 1.15, 0.05)], [Vector3(0, 0.1, 0), Vector3(0.06, 0.04, 0.95)], [Vector3(0, 0, 0), Vector3(0.06, 1.15, 0.04)]]:
 		Build.box(f, c + d[0], d[1], frame, false)
@@ -199,7 +199,7 @@ static func _cabinet(f: Node3D, tint: Color) -> void:
 	var k := Tex.mat("black")
 	var face := Tex.mat("enamel", 4.0, {"tint": tint})
 	var c := Vector3(11.4, 1.75, 3.54)
-	Build.box(f, c + Vector3(0, 0, -0.06), Vector3(0.7, 0.9, 0.02), k, false)
+	Build.box(f, c + Vector3(0, 0, -0.06), Vector3(0.66, 0.86, 0.02), k, false)
 	for d in [[Vector3(-0.34, 0, 0), Vector3(0.02, 0.9, 0.16)], [Vector3(0.34, 0, 0), Vector3(0.02, 0.9, 0.16)],
 			[Vector3(0, 0.44, 0), Vector3(0.7, 0.02, 0.16)], [Vector3(0, -0.44, 0), Vector3(0.7, 0.02, 0.16)]]:
 		Build.box(f, c + d[0], d[1], grey, false)
@@ -283,7 +283,6 @@ static func _decals(f: Node3D, tint: Color) -> void:
 		[grime, Vector3(11.3, 0.3, 7.94), Vector2(1.4, 0.6), Vector3.FORWARD],
 		[grime, Vector3(10.49, 0.35, 6.6), Vector2(1.8, 0.7), Vector3.RIGHT],
 		[grime, Vector3(10.49, 0.3, 3.8), Vector2(0.6, 0.6), Vector3.RIGHT],
-		[grime, Vector3(13.08, 1.0, 5.6), Vector2(2.6, 0.4), Vector3.RIGHT],
 		[peel, Vector3(12.9, 2.1, 3.46), Vector2(0.6, 0.45), Vector3.BACK],
 		[peel, Vector3(10.49, 2.35, 6.1), Vector2(0.8, 0.5), Vector3.RIGHT],
 		[peel, Vector3(10.49, 1.9, 7.2), Vector2(0.35, 0.3), Vector3.RIGHT],

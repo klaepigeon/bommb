@@ -57,9 +57,9 @@ void fragment() {
 	c = mix(c, vec3(lu), drain);
 	c = mix(c, c * tint.rgb * 1.6 + tint.rgb * 0.05, tint.a);
 	// grain, heavier in the dark
-	float gt = safe ? floor(time_k * 12.0) : time_k * 60.0;
+	float gt = safe ? floor(time_k * 4.0) : time_k * 60.0;     // (slow: fast grain over a dark frame reads as the picture flickering)
 	float n = h(uv * vec2(1280.0, 720.0) + fract(gt * 0.713) * 97.0) - 0.5;
-	c += n * grain * (1.25 - lu);
+	c += n * grain * (1.25 - lu) * (safe ? 0.5 : 1.0);
 	// vignette, and the heartbeat at the edges
 	float r = length(d * vec2(1.0, 0.82));
 	float v = smoothstep(0.85, 0.2, r * (1.0 + vignette));

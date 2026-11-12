@@ -84,6 +84,7 @@ func fire() -> void:
 	if target and target.has_method("shot"):
 		target.shot(hit.position, dir)
 	elif c is RigidBody3D:
+		if c.has_method("wake"): c.wake()
 		(c as RigidBody3D).apply_impulse(dir * 4.0, hit.position - c.global_position)
 		Sfx.play_at("bullet_hit", hit.position, -2.0)
 	else:

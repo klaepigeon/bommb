@@ -30,7 +30,7 @@ var pistol := {"have": false, "mag": 0}
 var level_id := ""
 var level: Node = null
 var settings := {"sensitivity": 1.0, "invert_y": false, "touch_scale": 1.0, "touch_opacity": 0.55,
-	"force_touch": false, "volume": 0.8, "post_fx": true, "shadows": true, "reduce_flashing": true, "wobble": 0.5}
+	"force_touch": false, "volume": 0.8, "post_fx": true, "shadows": true, "reduce_flashing": true, "wobble": 0.0, "settings_rev": 2}
 var busy := false               # a level change is under way
 
 var _loading: CanvasLayer
@@ -306,4 +306,6 @@ func _load_settings() -> void:
 		var d = JSON.parse_string(f.get_as_text())
 		if typeof(d) == TYPE_DICTIONARY:
 			for k in d: if settings.has(k): settings[k] = d[k]
+			# rev 2: the PS1 wobble made textures swim; it's off unless chosen again
+			if int(d.get("settings_rev", 1)) < 2: settings.wobble = 0.0; settings.settings_rev = 2
 	AudioServer.set_bus_volume_db(0, linear_to_db(maxf(0.001, float(settings.volume))))

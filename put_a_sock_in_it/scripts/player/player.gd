@@ -60,7 +60,7 @@ func _ready() -> void:
 	add_child(cs)
 	head = Node3D.new(); head.name = "Head"; head.position.y = HEAD_STAND
 	add_child(head)
-	cam = Camera3D.new(); cam.name = "Camera"; cam.fov = 72.0; cam.near = 0.02; cam.far = 80.0
+	cam = Camera3D.new(); cam.name = "Camera"; cam.fov = 72.0; cam.near = 0.05; cam.far = 80.0      # (near at 5 cm: 2.5x the depth precision; phones z-fought at 2)
 	cam.current = true
 	head.add_child(cam)
 	arm_mount = Node3D.new(); arm_mount.name = "ArmMount"; cam.add_child(arm_mount)
@@ -73,7 +73,7 @@ func _ready() -> void:
 	torch.position = Vector3(0.18, -0.12, -0.05)
 	torch.light_color = Color("ffe2b8"); torch.spot_range = 15.0; torch.spot_angle = 26.0; torch.spot_angle_attenuation = 0.7
 	torch.spot_attenuation = 1.2; torch.light_energy = 0.0
-	torch.shadow_enabled = bool(Game.settings.get("shadows", true)); torch.shadow_bias = 0.05
+	torch.shadow_enabled = bool(Game.settings.get("shadows", true)); torch.shadow_bias = 0.12; torch.shadow_normal_bias = 2.0
 	cam.add_child(torch)
 	torch_beam = Air.beam(torch, 7.0, 2.8, Color("ffe2b8"), 0.03)
 	torch_beam.visible = false
@@ -169,7 +169,8 @@ func _physics_process(delta: float) -> void:
 		for i in get_slide_collision_count():
 			var col := get_slide_collision(i)
 			var rb := col.get_collider() as RigidBody3D
-			if rb and rb != held and absf(col.get_normal().y) < 0.5:
+			if rb and rb != held and absf(col.get_normal().y) < 0.5 and rb.mass >= 2.0:
+				if rb.has_method("wake"): rb.wake()      # (furniture he walks into; not the little things on shelves)
 				var push := -col.get_normal() * Vector3(1, 0, 1)
 				rb.apply_central_impulse(push * clampf(8.0 / rb.mass, 0.1, 1.0) * 0.35)
 	# crouch: a trained, controlled drop, not a pop
@@ -280,6 +281,7 @@ func _interact() -> void:
 		interacted.emit(target)
 
 func _pick(b: RigidBody3D) -> void:
+	if b.has_method("wake"): b.wake()
 	held = b
 	b.gravity_scale = 0.0; b.linear_damp = 8.0; b.angular_damp = 8.0
 	b.add_collision_exception_with(self)

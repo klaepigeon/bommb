@@ -208,6 +208,7 @@ func _resolve() -> void:
 		struck.emit(target, dmg)
 	elif c is RigidBody3D:
 		var rb := c as RigidBody3D
+		if rb.has_method("wake"): rb.wake()
 		# what it's knocked to: a light thing flies, a heavy one shifts
 		rb.apply_impulse(fwd * knock * 3.0 * clampf(rb.mass, 0.2, 4.0) + Vector3(0, knock * 0.6 * minf(rb.mass, 2.0), 0), p - rb.global_position)
 		Sfx.play_at(_hit_sound(kind), p, -6.0, randf_range(0.9, 1.1))

@@ -19,6 +19,13 @@ static func make(parent: Node, pos: Vector3, size: Vector3, mat: Material, label
 	parent.add_child(p); p.global_position = pos
 	return p
 
+## Things from the flat start frozen exactly where it put them (books in a bookcase sit inside
+## the case's solid box: left to physics they'd be flung out of it, jitter and sink into each
+## other). wake() lets physics have it: picking it up, hitting it, shooting it, pulling it.
+func wake() -> void:
+	if freeze: freeze = false
+	sleeping = false
+
 func _ready() -> void:
 	# little things (16) don't stop a man walking; furniture (32) stops him but not her: she knows
 	# her own flat in the dark, and her path goes round it
@@ -47,7 +54,17 @@ static func from_export(n: Node3D, ex: Dictionary) -> Prop:
 	parent.add_child(p)
 	p.global_transform = n.global_transform
 	n.reparent(p, true)
-	var size: Array = ex.get("size", [0.2, 0.2, 0.2]); var centre: Array = ex.get("centre", [0, 0, 0])
+	var size: Array = ex.get("size", []); var centre: Array = ex.get("centre", [0, 0, 0])
+	if size.is_empty():
+		# no size in the export (the small things): fit the box to the mesh itself, not a 20 cm guess
+		var ab := AABB(); var first := true
+		for mi in n.find_children("*", "MeshInstance3D", true, false):
+			var m := mi as MeshInstance3D
+			if not m.mesh: continue
+			var a: AABB = (p.global_transform.affine_inverse() * m.global_transform) * m.get_aabb()
+			ab = a if first else ab.merge(a); first = false
+		if first: ab = AABB(Vector3(-0.1, -0.1, -0.1), Vector3(0.2, 0.2, 0.2))
+		size = [ab.size.x, ab.size.y, ab.size.z]; centre = [ab.get_center().x, ab.get_center().y, ab.get_center().z]
 	var cs := CollisionShape3D.new(); var b := BoxShape3D.new()
 	b.size = Vector3(maxf(float(size[0]), 0.03), maxf(float(size[1]), 0.03), maxf(float(size[2]), 0.03)); cs.shape = b
 	cs.position = Vector3(centre[0], centre[1], centre[2])
@@ -58,7 +75,8 @@ static func from_export(n: Node3D, ex: Dictionary) -> Prop:
 	p.loud = clampf(0.3 + p.mass * 0.1, 0.3, 1.0) if String(ex.get("sound", "")) != "soft" else 0.15
 	var pm := PhysicsMaterial.new(); pm.friction = 0.4; pm.bounce = 0.05
 	p.physics_material_override = pm
-	p.can_sleep = true; p.sleeping = true
+	p.can_sleep = true
+	p.freeze_mode = RigidBody3D.FREEZE_MODE_STATIC; p.freeze = true
 	return p
 
 func _hit(_b: Node) -> void:
