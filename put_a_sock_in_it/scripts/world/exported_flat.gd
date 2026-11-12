@@ -213,8 +213,12 @@ func _process(delta: float) -> void:
 	if not cam: return
 	var eye := to_local(cam.global_position)
 	for f in fittings:
-		var want := 1.0 if _room_dist(f.room, eye) < 3.0 else 0.0
-		f.near = move_toward(f.near, want, delta / 0.6)
+		# on within 4 m of its room, off beyond 5.5 (no flickering at the boundary), fading over 1.5 s
+		var d := _room_dist(f.room, eye)
+		var want: float = f.near
+		if d < 4.0: want = 1.0
+		elif d > 5.5: want = 0.0
+		f.near = move_toward(f.near, want, delta / 1.5)
 
 func _room_dist(k: String, p: Vector3) -> float:
 	if k == "" or not level.rooms.has(k):

@@ -60,10 +60,91 @@ func _ready() -> void:
 		return
 	joints.head.rotation = HEAD_REST
 	joints.jaw.rotation.x = -JAW_REST     # negative opens: the chin swings down and forward
+	for k in ["hips", "neck", "head", "jaw", "shR", "shL", "elR", "elL", "wrR", "wrL"]:
+		base[k] = (joints[k] as Node3D).rotation
+		life[k] = Vector3.ZERO
 
 var _rest := {}
+
+# ---------------------------------------------------------------- seated: alive, wrongly
+## At the table she isn't still. She breathes, rattling; her head drifts, then snaps to a new
+## angle with a crack; her fingers tap on the cloth; her teeth chatter; a shoulder hitches. After
+## she stirs (`agitation` up) all of it comes faster and bigger. `base` is the pose (face() sets
+## it); `life` is what she does on top of it.
+var base := {}
+var life := {}
+var agitation := 0.0
+var seated_alive := true
+var _st := 0.0
+var _tic := 3.0
+var _tap := 6.0
+var _chatter := 8.0
+var _hitch := 5.0
+var _tic_off := Vector3.ZERO
+var _lunge := -1.0
+
+func _seated_life(delta: float) -> void:
+	_st += delta
+	var a := 1.0 + agitation * 2.0
+	# breathing: a slow rise and a catch, the whole upper body
+	var br := sin(_st * TAU / 3.2)
+	life.hips = Vector3(br * 0.018 * a, 0, sin(_st * 0.4) * 0.01)
+	# the head: drifts, then a tic: snap to a new angle, crack, settle slowly back
+	_tic -= delta * a
+	if _tic <= 0.0:
+		_tic = randf_range(3.0, 8.0)
+		_tic_off = Vector3(randf_range(-0.25, 0.3), randf_range(-0.45, 0.45), randf_range(-0.5, 0.5)) * (0.6 + agitation * 0.6)
+		Sfx.play_at("bone_crack", (joints.head as Node3D).global_position, -6.0, randf_range(0.8, 1.2))
+	_tic_off = _tic_off.lerp(Vector3.ZERO, 1.0 - exp(-0.6 * delta))
+	life.head = _tic_off + Vector3(sin(_st * 0.7) * 0.03, sin(_st * 0.43) * 0.05, 0)
+	life.neck = Vector3(0, 0, sin(_st * 0.31) * 0.03)
+	# fingers on the cloth: three or four taps, the wrist lifting
+	_tap -= delta * a
+	var tapping := _tap < 0.0 and _tap > -0.6
+	if _tap < -0.6: _tap = randf_range(4.0, 9.0)
+	life.wrR = Vector3((0.12 * maxf(0.0, sin(_st * 30.0)) if tapping else 0.0), 0, 0)
+	life.wrL = Vector3((0.06 * maxf(0.0, sin(_st * 23.0 + 1.0)) if agitation > 0.3 else 0.0), 0, 0)
+	# teeth chattering
+	_chatter -= delta * a
+	var chat := _chatter < 0.0 and _chatter > -0.7
+	if _chatter < -0.7:
+		_chatter = randf_range(5.0, 12.0)
+		Sfx.play_at("click", (joints.jaw as Node3D).global_position, -8.0, 1.3)
+	life.jaw = Vector3((0.05 * sin(_st * 70.0)) if chat else 0.0, 0, 0)
+	# a shoulder hitching up and dropping
+	_hitch -= delta * a
+	var hk := clampf(-_hitch / 0.4, 0.0, 1.0) * clampf((0.8 + _hitch) / 0.4, 0.0, 1.0) if _hitch < 0.0 else 0.0
+	if _hitch < -0.8: _hitch = randf_range(4.0, 10.0)
+	life.shL = Vector3(0, 0, hk * 0.18); life.shR = Vector3(0, 0, -hk * 0.05)
+	life.elR = Vector3.ZERO; life.elL = Vector3.ZERO
+	for k in base:
+		(joints[k] as Node3D).rotation = (joints[k] as Node3D).rotation.lerp(base[k] + life.get(k, Vector3.ZERO), 1.0 - exp(-14.0 * delta))
+
+## The grab: she draws back, then comes up out of the chair across the table, arms out, the jaw
+## dropping, screaming. `at`: where his face is.
+func lunge(at: Vector3) -> void:
+	seated_alive = false
+	Sfx.play_at("marta_scream", (joints.head as Node3D).global_position, 4.0, 0.95)
+	var tw := create_tween().set_parallel(true).set_trans(Tween.TRANS_BACK)
+	# wind up
+	tw.tween_property(joints.hips, "rotation", base.hips + Vector3(-0.18, 0, 0), 0.18)
+	tw.tween_property(joints.head, "rotation", Vector3(-0.35, 0, 0.2), 0.18)
+	tw.tween_property(joints.shR, "rotation", Vector3(-0.3, 0.2, -0.2), 0.18)
+	tw.tween_property(joints.shL, "rotation", Vector3(-0.3, -0.2, 0.2), 0.18)
+	tw.chain().set_parallel(true).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+	# and at him
+	tw.tween_property(joints.hips, "rotation", base.hips + Vector3(0.55, 0, 0), 0.16)
+	tw.tween_property(joints.shR, "rotation", Vector3(0.75, 0.25, -0.1), 0.14)
+	tw.tween_property(joints.shL, "rotation", Vector3(0.75, -0.25, 0.1), 0.14)
+	tw.tween_property(joints.elR, "rotation", Vector3(0.25, 0, 0), 0.14)
+	tw.tween_property(joints.elL, "rotation", Vector3(0.25, 0, 0), 0.14)
+	tw.tween_property(joints.jaw, "rotation", Vector3(-0.7, 0, 0), 0.12)
+	tw.chain().tween_callback(func(): face(at, 0.7))
+
 func _process(delta: float) -> void:
-	if not standing: return
+	if not standing:
+		if seated_alive: _seated_life(delta)
+		return
 	var k := 1.0 - exp(-snap * delta)
 	for name in POSE_MAP:
 		var j: Node3D = joints[POSE_MAP[name]]
@@ -86,6 +167,8 @@ func face(world_point: Vector3, jaw_open := JAW_OPEN) -> void:
 	var pitch := clampf(atan2(local.y, Vector2(local.x, local.z).length()), -0.9, 0.7)
 	joints.head.rotation = Vector3(pitch, yaw, -yaw * 0.15)
 	joints.jaw.rotation.x = -jaw_open
+	if not base.is_empty():
+		base.head = joints.head.rotation; base.jaw = joints.jaw.rotation
 
 # ---------------------------------------------------------------- materials
 const TONE := {"flesh": 0.62, "coral": 0.72, "slime": 0.6, "cloth": 0.8, "bone": 0.75, "teeth": 0.8}

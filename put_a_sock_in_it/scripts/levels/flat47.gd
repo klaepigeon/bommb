@@ -277,7 +277,7 @@ func _atmosphere() -> void:
 	Sfx.loop("tv", "tv_static", -24.0, Vector3(3.38, 1.03, 2.06))
 	Sfx.loop("fridge", "hum", -20.0, Vector3(9.6, 1.0, 3.2))
 	Sfx.loop("flies", "flies", -14.0, MARTA_POS + Vector3(0, 1.2, 0))
-	Sfx.loop("marta", "marta_breath", -18.0, MARTA_POS + Vector3(0, 1.2, 0))
+	Sfx.loop("marta", "marta_rattle", -14.0, MARTA_POS + Vector3(0, 1.2, 0))
 	Sfx.loop("wind", "wind", -26.0, Vector3(2.0, 1.5, -0.3))
 	ambient([1.5, 4.0], func(): Sfx.play_at("drip", Vector3(8.0, 0.5, 6.8), -10.0, randf_range(0.9, 1.15)))
 	ambient([6.0, 11.0], func(): Sfx.play_at("drip", Vector3(9.2, 0.9, 0.4), -14.0, randf_range(1.2, 1.4)))
@@ -324,13 +324,22 @@ func on_event(n: String, _step: Dictionary) -> void:
 				Sfx.play_at("knock", FRONT + Vector3(0.1, 1.3, 0), 3.0, randf_range(0.9, 1.0)); player.shake(0.006, 0.08)
 				await get_tree().create_timer(0.3).timeout
 		"marta_stirs":
+			marta.agitation = 0.6
+			Sfx.play_at("bone_crack", _face(), -2.0, 0.8)
 			Sfx.play_at("marta_breath", _face(), -2.0)
 			Sfx.set_loop_volume("marta", -10.0)
 			if table_lamp: table_lamp.kind = "dying"
 			Fx.kick("fringe", 0.6, 2.0)
 			_reach(0.55)
 		"marta_turns":
+			marta.agitation = 1.0
+			# she turns her face up to him: slowly, the neck cracking on the way
+			var from: Vector3 = marta.base.head
 			marta.face(player.cam.global_position, 0.25)
+			var to: Vector3 = marta.base.head
+			marta.base.head = from
+			var tw := create_tween(); tw.tween_method(func(k): marta.base.head = from.lerp(to, k), 0.0, 1.0, 2.2).set_trans(Tween.TRANS_SINE)
+			for i in 3: get_tree().create_timer(0.4 + i * 0.6).timeout.connect(func(): Sfx.play_at("bone_crack", _face(), -4.0, randf_range(0.7, 1.0)))
 			Sfx.play_at("click", _face(), -6.0, 0.7)
 			Sfx.set_loop_volume("flies", -30.0)
 			Fx.set_k("pulse", 0.35); Fx.set_k("fringe", 0.35)
@@ -415,10 +424,7 @@ func _grab() -> void:
 	Engine.time_scale = 0.4
 	get_tree().create_timer(0.35, true, false, true).timeout.connect(func(): Engine.time_scale = 1.0)
 	# she comes up out of the chair at him: the arms, the face, all at once
-	marta.face(player.cam.global_position, 0.38)
-	for s in ["R", "L"]:
-		var sh: Node3D = marta.joints["sh" + s]
-		var tw0 := create_tween(); tw0.tween_property(sh, "rotation", Vector3(1.1, (0.3 if s == "R" else -0.3), 0), 0.12)
+	marta.lunge(player.cam.global_position)
 	if hand: hand.visible = false
 	Sfx.play("gasp", 0.0, 1.05)
 	Sfx.play_at("click", _face(), 2.0, 0.6)

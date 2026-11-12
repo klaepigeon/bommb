@@ -2,12 +2,12 @@
 shader_type spatial;
 render_mode cull_disabled, diffuse_lambert, specular_schlick_ggx;
 uniform vec3 color : source_color = vec3(0.12, 0.42, 0.95);
-uniform vec2 snap_res = vec2(320.0, 180.0);
+global uniform vec2 ps1_snap;   // the PS1 wobble (Game.apply_wobble); 0 = off
 void vertex() {
 	vec3 wp = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	VERTEX += NORMAL * 0.012 * sin(TIME * 2.3 + wp.x * 9.0 + wp.z * 7.0);
 	vec4 clip = PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(VERTEX, 1.0);
-	clip.xy = floor(clip.xy / clip.w * snap_res * 0.5 + 0.5) / (snap_res * 0.5) * clip.w;
+	if (ps1_snap.x > 0.0) clip.xy = floor(clip.xy / clip.w * ps1_snap * 0.5 + 0.5) / (ps1_snap * 0.5) * clip.w;
 	POSITION = clip;
 }
 void fragment() {

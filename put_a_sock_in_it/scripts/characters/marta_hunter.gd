@@ -46,7 +46,9 @@ func _ready() -> void:
 	collision_layer = 8; collision_mask = 1
 	var cs := CollisionShape3D.new(); var cap := CapsuleShape3D.new(); cap.radius = 0.3; cap.height = 1.8
 	cs.shape = cap; cs.position.y = 0.9; add_child(cs)
-	body = MartaSeated.new(true); add_child(body)   # the same woman as at the table, on her feet
+	body = MartaSeated.new(true); add_child(body)
+	var breath := AudioStreamPlayer3D.new(); breath.stream = Sfx.streams.get("marta_rattle"); breath.volume_db = -6.0
+	breath.unit_size = 2.0; breath.max_distance = 14.0; breath.bus = "World"; breath.autoplay = true; add_child(breath); breath.position.y = 1.6   # the same woman as at the table, on her feet
 	body.snap = 18.0
 	# the coral on her gives off a little sick light: you can see her coming, just
 	var glow := OmniLight3D.new(); glow.light_color = Color("9adfb0"); glow.light_energy = 0.55; glow.omni_range = 2.6
@@ -72,14 +74,19 @@ func go_to(p: Vector3) -> void:
 	if not grid.is_in_boundsv(a) or grid.is_point_solid(a): a = _nearest_free(a)     # she's up against furniture
 	if not grid.is_in_boundsv(b) or grid.is_point_solid(b):
 		b = _nearest_free(b)
+	if not grid.is_in_boundsv(a) or not grid.is_in_boundsv(b):
+		_path = PackedVector3Array(); _pi = 0; return     # somewhere not in her flat
 	var ids := grid.get_id_path(a, b, true)
 	_path = PackedVector3Array()
 	for c in ids: _path.append(cell_center(c))
-	if _path.size() > 0: _path[_path.size() - 1] = Vector3(p.x, 0, p.z) if not grid.is_point_solid(to_cell(p)) else _path[_path.size() - 1]
+	if _path.size() > 0: _path[_path.size() - 1] = Vector3(p.x, 0, p.z) if grid.is_in_boundsv(to_cell(p)) and not grid.is_point_solid(to_cell(p)) else _path[_path.size() - 1]
 	# the first point is the middle of the cell she's already in: don't walk back to it
 	_pi = 1 if _path.size() > 1 else 0
 
 func _nearest_free(c: Vector2i) -> Vector2i:
+	var r0 := grid.region
+	c = Vector2i(clampi(c.x, r0.position.x, r0.end.x - 1), clampi(c.y, r0.position.y, r0.end.y - 1))
+	if not grid.is_point_solid(c): return c
 	for r in range(1, 4):
 		for dx in range(-r, r + 1):
 			for dy in range(-r, r + 1):
@@ -127,7 +134,8 @@ func shot(point: Vector3, dir: Vector3) -> void:
 	Sfx.play_at("click", head(), 4.0, 0.5)
 	if state == "caught": return
 	set_state("stunned")
-	body.pose.chest = Vector3(-0.5, 0, randf_range(-0.4, 0.4)); body.pose.head = Vector3(-0.8, 0, 0.4)
+	Sfx.play_at("marta_scream", head(), 0.0, 1.15)
+	body.pose.chest = Vector3(0.4, 0, randf_range(-0.4, 0.4)); body.pose.head = Vector3(-0.8, 0, 0.4)
 	var away := global_position + Vector3(dir.x, 0, dir.z).normalized() * 3.5
 	go_to(away)
 	suspicion = minf(2.0, suspicion + 0.4)
@@ -245,7 +253,9 @@ func _catch() -> void:
 	velocity = Vector3.ZERO
 	body.snap = 40.0
 	body.pose.sh_r = Vector3(0.7, 0, -0.1); body.pose.sh_l = Vector3(0.6, 0, 0.1)
-	body.pose.el_r = Vector3.ZERO; body.pose.el_l = Vector3.ZERO; body.pose.jaw = Vector3(0.7, 0, 0)
+	body.pose.el_r = Vector3.ZERO; body.pose.el_l = Vector3.ZERO; body.pose.jaw = Vector3(0.8, 0, 0)
+	body.pose.spine = Vector3(-0.3, 0, 0); body.pose.head = Vector3(0.2, 0, 0)
+	Sfx.play_at("marta_scream", head(), 6.0, 0.9)
 	caught_player.emit()
 
 func _click(loud: bool) -> void:
@@ -255,23 +265,80 @@ func _click(loud: bool) -> void:
 		await get_tree().create_timer(randf_range(0.06, 0.14)).timeout
 
 ## The body: a broken, hurrying walk, the head lolling and snapping, arms hanging.
+## Her body, by what she's doing. All procedural, on the chair model's joints (MartaSeated
+## standing): a dragging, broken walk with the right leg stiff; a scuttle when she chases, bent
+## double, arms clawing ahead; when she stops, a sniff and the head going round further than a
+## neck goes; a cocked, listening crouch; the long slow tilt when she first sees him; the reel when
+## she's shot; and through all of it the tics: stillness, then a snap, and the crack of it.
+var _anim_t := 0.0
+var _sniff_t := 2.0
+var _swivel := 0.0
 func _animate(delta: float) -> void:
+	_anim_t += delta
+	var t := _anim_t
 	var moving := velocity.length() > 0.1
 	var w := _walk
-	var stride := 0.55 if state == "chase" else 0.35
-	if moving:
-		body.pose.hip_l = Vector3(sin(w) * stride, 0, 0.05); body.pose.hip_r = Vector3(-sin(w) * stride, 0, -0.05)
-		body.pose.kn_l = Vector3(-maxf(0.0, -cos(w)) * 0.8, 0, 0); body.pose.kn_r = Vector3(-maxf(0.0, cos(w)) * 0.8, 0, 0)
-		body.pose.sh_l = Vector3(-sin(w) * 0.3 + (0.9 if state == "chase" else 0.1), 0, 0.15); body.pose.sh_r = Vector3(sin(w) * 0.3 + (0.9 if state == "chase" else 0.1), 0, -0.1)
-	else:
-		for k in ["hip_l", "hip_r", "kn_l", "kn_r"]: body.pose[k] = Vector3.ZERO
-		body.pose.sh_l = Vector3(0.05, 0, 0.12); body.pose.sh_r = Vector3(0.0, 0, -0.08)
-	if state != "stunned" and state != "caught":
-		body.pose.spine = Vector3(0.35 if state == "chase" else 0.2, 0, 0)
+	var P: Dictionary = body.pose
+	match state:
+		"chase":
+			body.snap = 22.0
+			# a scuttle: short fast steps, body pitched forward, arms reaching and clawing in turn
+			P.hip_l = Vector3(sin(w) * 0.7, 0, 0.12); P.hip_r = Vector3(-sin(w) * 0.55, 0, -0.1)
+			P.kn_l = Vector3(-0.35 - maxf(0.0, -cos(w)) * 0.9, 0, 0); P.kn_r = Vector3(-0.35 - maxf(0.0, cos(w)) * 0.6, 0, 0)
+			P.spine = Vector3(-0.45 - sin(w * 2.0) * 0.05, sin(w) * 0.12, sin(w) * 0.1)
+			P.sh_l = Vector3(0.1 + maxf(0.0, sin(w * 1.3)) * 0.35, 0.2, 0.2); P.sh_r = Vector3(0.1 + maxf(0.0, -sin(w * 1.3)) * 0.35, -0.2, -0.2)
+			P.el_l = Vector3(-0.2 - maxf(0.0, -sin(w * 1.3)) * 0.6, 0, 0); P.el_r = Vector3(-0.2 - maxf(0.0, sin(w * 1.3)) * 0.6, 0, 0)
+			P.jaw = Vector3(0.55 + sin(t * 9.0) * 0.1, 0, 0)
+			P.neck = Vector3(0.45, 0, sin(t * 3.0) * 0.15)      # the head held up, looking at him, as the body goes down
+		"stunned":
+			body.snap = 16.0
+			P.spine = Vector3(0.3, sin(t * 7.0) * 0.3, sin(t * 5.0) * 0.35)
+			P.sh_l = Vector3(-0.4 + sin(t * 11.0) * 0.6, 0, 0.8); P.sh_r = Vector3(-0.4 + cos(t * 9.0) * 0.6, 0, -0.8)
+			P.el_l = Vector3(-0.8, 0, 0); P.el_r = Vector3(-0.9, 0, 0)
+			P.head = Vector3(-0.7, sin(t * 6.0) * 0.4, 0.5); P.jaw = Vector3(0.8, 0, 0)
+			P.hip_l = Vector3(sin(w) * 0.4, 0, 0.1); P.hip_r = Vector3(-sin(w) * 0.4, 0, -0.1)
+			P.kn_l = Vector3(-maxf(0.0, -cos(w)) * 0.8, 0, 0); P.kn_r = Vector3(-maxf(0.0, cos(w)) * 0.8, 0, 0)
+		"encounter":
+			body.snap = 3.0
+			# she stops dead; the head tilts over, slowly, too far; the teeth chatter
+			P.hip_l = Vector3.ZERO; P.hip_r = Vector3.ZERO; P.kn_l = Vector3.ZERO; P.kn_r = Vector3.ZERO
+			P.spine = Vector3(-0.1, 0, 0)
+			P.head = Vector3(0.1, 0, clampf(_state_t * 0.5, 0.0, 1.35))
+			P.neck = Vector3(0, 0, clampf(_state_t * 0.2, 0.0, 0.4))
+			P.jaw = Vector3(0.25 + sin(t * 60.0) * 0.06, 0, 0)
+			P.sh_l = Vector3(0.1, 0, 0.1); P.sh_r = Vector3(0.1, 0, -0.1)
+		"caught":
+			pass
+		_:
+			body.snap = 12.0
+			if moving:
+				# the walk: the left leg swings, the right drags stiff, the body rolls over it
+				P.hip_l = Vector3(sin(w) * 0.45, 0, 0.06); P.hip_r = Vector3(-sin(w) * 0.2, 0, -0.04)
+				P.kn_l = Vector3(-maxf(0.0, -cos(w)) * 0.9, 0, 0); P.kn_r = Vector3(-0.08, 0, 0)
+				P.spine = Vector3(-0.2, sin(w) * 0.08, sin(w) * 0.16)
+				P.sh_l = Vector3(0.35 - sin(w) * 0.15, 0, 0.12); P.sh_r = Vector3(0.25 + sin(w) * 0.1, 0, -0.08)
+				P.el_l = Vector3(-0.2, 0, 0); P.el_r = Vector3(-0.35, 0, 0)
+				if state == "investigate":
+					P.spine = Vector3(-0.32, 0, 0.1)        # bent, listening
+					P.head = Vector3(0.0, 0.0, 0.6)
+			else:
+				for k in ["hip_l", "hip_r", "kn_l", "kn_r"]: P[k] = Vector3.ZERO
+				P.spine = Vector3(-0.15 - sin(t * TAU / 3.2) * 0.03, 0, 0)
+				P.sh_l = Vector3(0.3, 0, 0.12); P.sh_r = Vector3(0.2, 0, -0.08)
+				# standing: sniffing the air, then the head goes round, too far
+				_sniff_t -= delta
+				if _sniff_t <= 0.0:
+					_sniff_t = randf_range(3.0, 6.0)
+					Sfx.play_at("sniff", head(), -6.0, randf_range(0.8, 1.0))
+					_swivel = randf_range(-1.6, 1.6)
+				P.neck = Vector3(0.2 + sin(t * 9.0) * 0.04 * float(_sniff_t > 2.5), _swivel * 0.45, 0)
+				P.head = Vector3(-0.15, _swivel * 0.6, _swivel * 0.15)
+				_swivel = lerpf(_swivel, 0.0, 1.0 - exp(-0.25 * delta))
+	# tics, any time she isn't reeling or holding still for him: still, then a snap, and a crack
+	if state in ["patrol", "investigate", "search", "chase"]:
 		_twitch_t -= delta
 		if _twitch_t <= 0.0:
-			# the head: still, still, then a snap to a new angle
-			_twitch_t = randf_range(0.3, 2.2) if state != "chase" else randf_range(0.15, 0.6)
-			body.pose.head = Vector3(randf_range(-0.3, 0.4), randf_range(-0.5, 0.5), randf_range(-0.6, 0.6))
-			body.pose.neck = Vector3(randf_range(-0.2, 0.3), 0, randf_range(-0.3, 0.3))
-			body.pose.jaw = Vector3(randf_range(0.0, 0.5), 0, 0)
+			_twitch_t = randf_range(0.8, 2.6) if state != "chase" else randf_range(0.3, 0.9)
+			P.head = Vector3(randf_range(-0.3, 0.4), randf_range(-0.6, 0.6), randf_range(-0.8, 0.8))
+			if state != "chase": P.jaw = Vector3(randf_range(0.0, 0.45), 0, 0)
+			if randf() < 0.5: Sfx.play_at("bone_crack", head(), -10.0, randf_range(0.8, 1.3))

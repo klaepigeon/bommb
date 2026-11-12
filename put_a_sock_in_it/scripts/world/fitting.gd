@@ -22,6 +22,7 @@ var _hold := 0.0
 var _state := 1.0
 var _startup := 0.0
 var _k := 1.0
+var _dip := 1.0
 var near := 1.0               # 0..1: faded out when Kurt is far from its room (light budget)
 var room := ""
 
@@ -56,7 +57,7 @@ func add_glow(mesh: MeshInstance3D, emission: Vector3) -> void:
 func toggle(v = null) -> void:
 	var was := on
 	on = (not on) if v == null else bool(v)
-	if on and not was and kind == "fluoro": _startup = 1.4
+	if on and not was and kind == "fluoro": _startup = 2.0
 
 func _process(delta: float) -> void:
 	_t += delta
@@ -84,27 +85,44 @@ static func _sag() -> void:
 	await Engine.get_main_loop().create_timer(randf_range(1.0, 2.5)).timeout
 	Fitting._brown = 1.0
 
+## How bright the fitting is this frame (0..1). Everything here changes smoothly and slowly:
+## nothing flashes more than about twice a second (photosensitivity guidance is under 3), and
+## with "Reduce flashing" on (the default) dips are shallower and never reach black.
+static var _noise: FastNoiseLite
+func _n(f: float, seed: float) -> float:
+	if not Fitting._noise:
+		Fitting._noise = FastNoiseLite.new(); Fitting._noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH; Fitting._noise.frequency = 1.0
+	return Fitting._noise.get_noise_2d(_t * f, seed)          # -1..1, smooth
+
 func _flick(delta: float) -> float:
+	var safe: bool = Game.settings.get("reduce_flashing", true)
+	var seed := float(get_instance_id() % 997)
+	# a dip: chosen now and then, eased in and out over at least 0.4 s
+	if _hold > 0.0: _hold -= delta
 	match kind:
 		"bulb":
-			return 0.94 + sin(_t * 7.1) * 0.02 + sin(_t * 23.3) * 0.015 + (-0.4 if randf() < delta * 0.4 else 0.0)
+			return 0.95 + 0.04 * _n(0.3, seed)
 		"dying":
-			if _hold > 0.0: _hold -= delta; return _state
-			if randf() < delta * 1.5: _hold = randf_range(0.03, 0.33); _state = randf() * 0.4; return _state
-			return 0.8 + sin(_t * 11.0) * 0.08
+			if _hold <= 0.0 and randf() < delta * (0.25 if safe else 0.5):
+				_hold = randf_range(0.5, 1.4); _state = randf_range(0.55, 0.75) if safe else randf_range(0.2, 0.5)
+			_dip = move_toward(_dip, (_state if _hold > 0.0 else 1.0), delta * 1.5)
+			return _dip * (0.85 + 0.08 * _n(0.7, seed))
 		"fluoro":
+			# a tired tube: now and then it sags and comes back; a restart is a slow, uneven climb
 			if _startup > 0.0:
 				_startup -= delta
-				return 1.0 if randf() < 0.35 else (0.25 if randf() < 0.4 else 0.0)
-			if _hold > 0.0: _hold -= delta; return _state
-			if randf() < delta * 0.35: _hold = randf_range(0.04, 0.29); _state = 0.0 if randf() < 0.6 else 0.4; return _state
-			if randf() < delta * 0.03: _startup = randf_range(0.8, 2.3)
-			return 0.96 + sin(_t * 314.0) * 0.03
+				return clampf(1.0 - _startup / 2.0, 0.0, 1.0) * (0.75 + 0.25 * absf(sin(_t * PI * 1.2))) if not safe else clampf(1.0 - _startup / 2.0, 0.3, 1.0)
+			if _hold <= 0.0 and randf() < delta * 0.08:
+				_hold = randf_range(0.5, 1.2); _state = 0.65 if safe else 0.35
+			_dip = move_toward(_dip, (_state if _hold > 0.0 else 1.0), delta * 1.2)
+			return _dip * (0.96 + 0.02 * _n(0.5, seed))
 		"candle":
-			return 0.82 + sin(_t * 9.7) * 0.06 + sin(_t * 23.1 + 1.0) * 0.05 + randf_range(-0.06, 0.06)
+			return 0.85 + 0.08 * _n(1.2, seed)
 		"tv":
-			return 0.55 + randf() * 0.35 + sin(_t * 2.2) * 0.1
+			return 0.65 + (0.12 if safe else 0.25) * _n(1.4, seed)
 		"pulse":
+			# a heartbeat, slow (48 a minute), never dark
 			var b := fposmod(_t, 1.25)
-			return 0.55 + 0.45 * (exp(-b * 9.0) + 0.6 * exp(-maxf(0.0, b - 0.28) * 9.0) * float(b > 0.28))
+			var beat := exp(-b * 5.0) + 0.6 * exp(-maxf(0.0, b - 0.3) * 5.0) * float(b > 0.3)
+			return 0.7 + 0.3 * clampf(beat, 0.0, 1.0)
 	return 1.0

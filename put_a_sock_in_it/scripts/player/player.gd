@@ -219,9 +219,11 @@ func toggle_torch(v = null) -> void:
 func _torch_update(delta: float) -> void:
 	if not torch: return
 	var k := 1.0
-	if torch_flicker > 0.0 and randf() < torch_flicker * delta * 8.0: k = randf_range(0.0, 0.5)
+	if torch_flicker > 0.0:
+		# near her the torch sags and comes back, slowly (never strobes)
+		k = 1.0 - torch_flicker * (0.45 + 0.25 * sin(Time.get_ticks_msec() * 0.0021))
 	var want := (4.5 if torch_on else 0.0) * k
-	torch.light_energy = lerpf(torch.light_energy, want, 1.0 - exp(-30.0 * delta))
+	torch.light_energy = lerpf(torch.light_energy, want, 1.0 - exp(-8.0 * delta))
 	torch.visible = torch.light_energy > 0.02
 	torch_beam.visible = torch.visible
 	(torch_beam.material_override as ShaderMaterial).set_shader_parameter("flicker", torch.light_energy / 4.5)

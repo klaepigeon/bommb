@@ -31,6 +31,13 @@ window/handheld/orientation=4
 pointing/emulate_touch_from_mouse=false
 pointing/emulate_mouse_from_touch=false
 
+[shader_globals]
+
+ps1_snap={
+"type": "vec2",
+"value": Vector2(640, 360)
+}
+
 [physics]
 
 common/physics_ticks_per_second=60
@@ -43,6 +50,7 @@ textures/canvas_textures/default_texture_filter=0
 scaling_3d/mode=0
 scaling_3d/scale=0.5
 anti_aliasing/quality/msaa_3d=0
+limits/opengl/max_lights_per_object=12
 lights_and_shadows/directional_shadow/size=1024
 lights_and_shadows/positional_shadow/atlas_size=1024
 environment/defaults/default_clear_color=Color(0, 0, 0, 1)

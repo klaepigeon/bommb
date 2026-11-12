@@ -20,7 +20,7 @@ uniform vec3 emission = vec3(0.0);
 uniform sampler2D emission_tex : source_color, filter_nearest;
 uniform bool use_emission_tex = false;
 uniform bool use_alpha_cut = false;
-uniform vec2 snap_res = vec2(320.0, 180.0);
+global uniform vec2 ps1_snap;   // the PS1 wobble (Game.apply_wobble); 0 = off
 uniform float flesh = 0.0;
 uniform float flesh_seed = 0.0;
 // the meat's colours: dark, light, the veins, and the glow in them (level 2: the blue of the hole)
@@ -48,7 +48,7 @@ void vertex() {
 		VERTEX += NORMAL * flesh * (0.006 + 0.01 * b) * fbm(wp * 3.0 + flesh_seed);
 	}
 	vec4 clip = PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(VERTEX, 1.0);
-	clip.xy = floor(clip.xy / clip.w * snap_res * 0.5 + 0.5) / (snap_res * 0.5) * clip.w;
+	if (ps1_snap.x > 0.0) clip.xy = floor(clip.xy / clip.w * ps1_snap * 0.5 + 0.5) / (ps1_snap * 0.5) * clip.w;
 	POSITION = clip;
 }
 

@@ -120,7 +120,7 @@ func stop_loops() -> void:
 func syllable(who: String) -> void:
 	var key := "v_%s%d" % [who, _rng.randi_range(0, 3)]
 	if GEN.has(key):
-		play(key, -6.0 if who == "socko" else -9.0, _rng.randf_range(0.9, 1.12))
+		play(key, -6.0 if who == "socko" else (-4.0 if who == "marta" else -9.0), _rng.randf_range(0.9, 1.12) if who != "marta" else _rng.randf_range(0.8, 0.95))
 
 ## Walls between Kurt and a sound: the more solid the way, the duller and quieter.
 func _occlude(p: AudioStreamPlayer3D) -> void:
@@ -420,6 +420,36 @@ func _define() -> void:
 				var t := float(i) / RATE
 				d[i] = _nz() * pow(maxf(0.0, sin(t * TAU / 0.7)), 2.0) * (1.0 if fposmod(t, 0.7) < 0.35 else 0.6)
 			bp(d, 800.0, 0.7); norm(d, 0.4), true],
+		# a scream: torn, two voices a semitone apart, a whistle in the throat, sliding down
+		"marta_scream": [1.6, func(d):
+			var a := 0.0; var b := 0.0; var w := 0.0
+			for i in d.size():
+				var t := float(i) / RATE
+				var f := 520.0 - t * 160.0 + sin(t * 31.0) * 25.0 + _nz() * 30.0
+				a += f / RATE; b += f * 1.06 / RATE; w += (2400.0 - t * 600.0) / RATE
+				var saw := (1.0 - 2.0 * fposmod(a, 1.0)) * 0.6 + (1.0 - 2.0 * fposmod(b, 1.0)) * 0.5
+				d[i] = (saw + _nz() * 0.7 + sin(w * TAU) * 0.15) * minf(1.0, t * 12.0) * minf(1.0, (1.6 - t) * 2.5)
+			bp(d, 1300.0, 0.6); norm(d, 0.95)],
+		# a joint going: dry, sharp, a crunch after
+		"bone_crack": [0.25, func(d):
+			for i in d.size():
+				var t := float(i) / RATE
+				d[i] = _nz() * exp(-t * 90.0) + (_nz() * 0.5 * exp(-(t - 0.04) * 60.0) if t > 0.04 else 0.0) + sin(TAU * 900.0 * t) * exp(-t * 120.0) * 0.4
+			hp(d, 0.6); norm(d, 0.8)],
+		"sniff": [0.6, func(d):
+			for i in d.size():
+				var t := float(i) / RATE
+				d[i] = _nz() * (exp(-fposmod(t, 0.18) * 25.0) if t < 0.5 else 0.0)
+			bp(d, 3000.0, 1.2); norm(d, 0.5)],
+		# her breath: wet, rattling in a throat full of something, a catch on the way in
+		"marta_rattle": [3.2, func(d):
+			for i in d.size():
+				var t := float(i) / RATE
+				var ph := fposmod(t, 3.2) / 3.2
+				var env := pow(sin(PI * clampf(ph / 0.45, 0.0, 1.0)), 2.0) + 0.7 * pow(sin(PI * clampf((ph - 0.5) / 0.4, 0.0, 1.0)), 2.0) * float(ph > 0.5)
+				var rattle: float = 0.5 + 0.5 * sign(sin(TAU * (22.0 + sin(t * 3.0) * 6.0) * t))
+				d[i] = _nz() * env * (0.4 + 0.6 * rattle)
+			bp(d, 380.0, 1.3); norm(d, 0.65), true],
 		"marta_breath": [2.4, func(d):
 			for i in d.size():
 				var t := float(i) / RATE
@@ -466,7 +496,7 @@ func _define() -> void:
 		var f0 := 300.0 + i * 37.0
 		GEN["v_socko%d" % i] = [0.09, _voice(f0, 0.09, 0.55, 0.35, 1.3)]
 		GEN["v_kurt%d" % i] = [0.12, _voice(105.0 + i * 9.0, 0.12, 0.25, 0.6, 1.0)]
-		GEN["v_marta%d" % i] = [0.16, _voice(180.0 + i * 13.0, 0.16, 0.15, 0.85, 0.85)]
+		GEN["v_marta%d" % i] = [0.24, _marta_voice(i)]
 
 func _board() -> Callable:
 	return func(d):
@@ -476,6 +506,32 @@ func _board() -> Callable:
 			f += _nz() * 2.0; ph += f / RATE
 			d[i] = sin(ph * TAU) * _env(t, 0.06, 0.15) * (1.0 if sin(t * TAU * 45.0) > 0.0 else 0.3)
 		bp(d, 500.0, 1.0); norm(d, 0.25)
+
+## Marta's voice: a creaking vocal fry far too low for her, the pitch catching and slipping, a
+## whisper of the same syllable under it, and a ring-modulated overtone that makes it wrong.
+func _marta_voice(i: int) -> Callable:
+	return func(d):
+		var dur := 0.24
+		var ph := 0.0
+		var fry := PackedFloat32Array(); fry.resize(d.size())
+		var wh := PackedFloat32Array(); wh.resize(d.size())
+		var jitter := 0.0
+		for k in d.size():
+			var t := float(k) / RATE
+			if k % 200 == 0: jitter = _rng.randf_range(-0.35, 0.35)
+			ph += (48.0 + i * 6.0) * (1.0 + jitter) / RATE
+			var pulse := exp(-fposmod(ph, 1.0) * 14.0)          # creak: separate glottal clicks
+			fry[k] = pulse * (1.0 if _rng.randf() > 0.08 else 0.0)
+			wh[k] = _nz()
+		var f1 := fry.duplicate(); bp(f1, 600.0 + i * 70.0, 2.5)
+		var f2 := fry.duplicate(); bp(f2, 1500.0 + i * 120.0, 3.0)
+		bp(wh, 2200.0 + i * 150.0, 1.5)
+		for k in d.size():
+			var t := float(k) / RATE
+			var env := sin(PI * clampf(t / dur, 0.0, 1.0))
+			var ring := sin(TAU * (173.0 + i * 11.0) * t)
+			d[k] = ((f1[k] + f2[k] * 0.7) * (0.75 + 0.25 * ring) + wh[k] * 0.35) * env
+		norm(d, 0.85)
 
 ## A voiced syllable: a buzzy pulse through two formants, with breath.
 func _voice(f0: float, dur: float, buzz: float, breath: float, bright: float) -> Callable:

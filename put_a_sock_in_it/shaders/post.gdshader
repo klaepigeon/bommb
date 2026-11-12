@@ -18,6 +18,7 @@ uniform float dither = 1.0;
 uniform float fringe = 0.0;
 uniform float drain = 0.0;
 uniform float tear = 0.0;
+uniform bool safe = true;          // reduce flashing: no jumping bands, slow warps only
 uniform float double_k = 0.0;
 uniform float pulse = 0.0;
 uniform vec4 tint = vec4(0.0);
@@ -31,9 +32,14 @@ void fragment() {
 	vec2 uv = SCREEN_UV;
 	// tearing: a band (or two) of the picture pushed sideways
 	if (tear > 0.01) {
-		float b1 = step(abs(uv.y - fract(time_k * 0.37 + h(vec2(floor(time_k * 9.0))) )), 0.015 + tear * 0.05);
-		float b2 = step(abs(uv.y - fract(time_k * 0.71 + 0.5)), 0.006 + tear * 0.02);
-		uv.x += (b1 * (h(vec2(floor(time_k * 13.0), 1.0)) - 0.5) * 0.12 + b2 * 0.03) * tear;
+		if (safe) {
+			// reality slipping, gently: a slow sideways wave through the picture
+			uv.x += sin(uv.y * 9.0 + time_k * 1.3) * 0.004 * tear + sin(uv.y * 23.0 - time_k * 0.7) * 0.002 * tear;
+		} else {
+			float b1 = step(abs(uv.y - fract(time_k * 0.37 + h(vec2(floor(time_k * 3.0))) )), 0.015 + tear * 0.05);
+			float b2 = step(abs(uv.y - fract(time_k * 0.71 + 0.5)), 0.006 + tear * 0.02);
+			uv.x += (b1 * (h(vec2(floor(time_k * 3.0), 1.0)) - 0.5) * 0.12 + b2 * 0.03) * tear;
+		}
 	}
 	// concussion: the picture drifts apart into two
 	vec2 dbl = vec2(sin(time_k * 0.7), cos(time_k * 0.53)) * 0.012 * double_k;
@@ -51,7 +57,8 @@ void fragment() {
 	c = mix(c, vec3(lu), drain);
 	c = mix(c, c * tint.rgb * 1.6 + tint.rgb * 0.05, tint.a);
 	// grain, heavier in the dark
-	float n = h(uv * vec2(1280.0, 720.0) + fract(time_k * 7.13) * 97.0) - 0.5;
+	float gt = safe ? floor(time_k * 12.0) : time_k * 60.0;
+	float n = h(uv * vec2(1280.0, 720.0) + fract(gt * 0.713) * 97.0) - 0.5;
 	c += n * grain * (1.25 - lu);
 	// vignette, and the heartbeat at the edges
 	float r = length(d * vec2(1.0, 0.82));

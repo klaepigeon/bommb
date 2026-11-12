@@ -25,6 +25,8 @@ func _ready() -> void:
 	_slider("Volume", 0.0, 1.0, "volume")
 	_check("Invert look", "invert_y")
 	_check("Touch controls", "force_touch")
+	_check("Reduce flashing (recommended)", "reduce_flashing")
+	_slider("PS1 wobble", 0.0, 1.0, "wobble")
 	_check("Film effects (grain, dither)", "post_fx")
 	_check("Shadows", "shadows")
 	_slider("Button size", 0.6, 1.8, "touch_scale")

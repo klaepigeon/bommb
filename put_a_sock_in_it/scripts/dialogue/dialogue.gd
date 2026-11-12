@@ -112,7 +112,7 @@ func _say(step: Dictionary, g: int) -> void:
 			shown += 1
 			if t >= next_syl and ch not in " .,!?…-'\"":
 				Sfx.syllable(who); syllable.emit(who)
-				next_syl = t + (0.075 if who == "socko" else 0.1)
+				next_syl = t + (0.075 if who == "socko" else (0.2 if who == "marta" else 0.1))
 			if ch in ".!?…" and shown < n and text[shown] == " ":
 				t += 0.18   # a beat at the end of a sentence
 		_text.visible_characters = shown

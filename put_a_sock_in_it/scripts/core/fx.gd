@@ -52,3 +52,4 @@ func _process(delta: float) -> void:
 			_kick[k].v = maxf(0.0, _kick[k].v - _kick[k].rate * delta)
 		mat.set_shader_parameter(k, v)
 	mat.set_shader_parameter("tint", _tint)
+	mat.set_shader_parameter("safe", bool(Game.settings.get("reduce_flashing", true)))

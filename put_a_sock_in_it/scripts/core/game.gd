@@ -26,7 +26,7 @@ var pistol := {"have": false, "mag": 0}
 var level_id := ""
 var level: Node = null
 var settings := {"sensitivity": 1.0, "invert_y": false, "touch_scale": 1.0, "touch_opacity": 0.55,
-	"force_touch": false, "volume": 0.8, "post_fx": true, "shadows": true}
+	"force_touch": false, "volume": 0.8, "post_fx": true, "shadows": true, "reduce_flashing": true, "wobble": 0.5}
 var busy := false               # a level change is under way
 
 var _loading: CanvasLayer
@@ -41,6 +41,7 @@ func _ready() -> void:
 	_load_settings()
 	_build_loading()
 	_setup_input()
+	apply_wobble()
 
 func make_noise(pos: Vector3, loudness: float) -> void:
 	noise.emit(pos, loudness)
@@ -252,7 +253,13 @@ func _label(size: int, c: Color) -> Label:
 	return l
 
 # ------------------------------------------------------------------ settings
+## The PS1 vertex wobble, for every shader (0 none .. 1 full): a global the shaders read.
+func apply_wobble() -> void:
+	var w: float = float(settings.get("wobble", 0.5))
+	RenderingServer.global_shader_parameter_set("ps1_snap", Vector2(320, 180) / maxf(0.05, w) if w > 0.01 else Vector2.ZERO)
+
 func save_settings() -> void:
+	apply_wobble()
 	var f := FileAccess.open(SETTINGS_PATH, FileAccess.WRITE)
 	if f: f.store_string(JSON.stringify(settings))
 	AudioServer.set_bus_volume_db(0, linear_to_db(maxf(0.001, settings.volume)))
