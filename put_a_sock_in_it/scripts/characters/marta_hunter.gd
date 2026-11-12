@@ -98,6 +98,7 @@ func can_see_player() -> bool:
 	var d := target - eye
 	var dist := d.length()
 	var reach := SIGHT * (0.55 if player.crouching else 1.0)
+	if player.torch_on: reach *= 1.6     # a torch in the dark is a lighthouse
 	if dist > reach: return false
 	var fwd := -global_transform.basis.z
 	if dist > 1.6 and fwd.dot(Vector3(d.x, 0, d.z).normalized()) < FOV_COS: return false

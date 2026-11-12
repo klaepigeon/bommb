@@ -10,7 +10,8 @@ What actually works, checked by the tools in `tools/` (run with
 | `hunt_test.gd` | Marta: hears and investigates, gives up, sees standing / not crouched at range, stunned by a bullet, hunts again more suspicious, searches and returns to patrol | 0 fails |
 | `build_apk.sh` | exports and verifies the signed APK | signed |
 | `touch_test.gd` | stick walks, right-half drag looks, both at once, USE presses interact | 0 fails |
-| `socko_view.gd`, `marta_view.gd` | render the characters for looking at | |
+| `socko_view.gd`, `marta_view.gd`, `beauty.gd`, `title_shot.gd` | render characters and fixed views for judging the look | |
+| `bake_audio.gd` | synthesises every sound into `assets/audio/` | 78 sounds |
 
 ## Implemented
 
@@ -32,9 +33,36 @@ What actually works, checked by the tools in `tools/` (run with
   through one input map. Pause menu with settings. Title with Continue / New game.
 - Saving: a checkpoint at the start of each level (flags, inventory, pistol, memories).
 
+## Atmosphere (proof of concept / tech)
+
+- **Screen** (`shaders/post.gdshader`, `Fx`): grain heavier in the shadows, vignette, 15-bit
+  colour with ordered dither, colour fringing, colour drain, picture tearing, a concussed double
+  image, a heartbeat at the edges, a colour wash. Driven by the story (the grab tears the picture
+  and slows time; waking is doubled and drained, clearing over 16 s; the hole goes blue) and by
+  Marta's distance in the flesh flat. Off in Pause > Film effects.
+- **Light** (`Fitting`): each fitting has a character (old bulb, dying, fluorescent strike and
+  stutter with its buzz, candle, TV, the flesh's shared heartbeat); the building's supply sags
+  now and then and every mains light dims together; fixtures glow with their light; wall
+  switches; shadows from her lamp (the coral up the wall), the landing bulb, the torch.
+- **Torch** (F / RB / LIGHT): shadowed, its beam visible in the dust, swinging a little behind
+  the view; it fails as Marta gets close, and she can see it from further away.
+- **Air** (`Air`): dust that only shows where light falls; visible light cones.
+- **Sound** (`Sfx`, baked by `tools/bake_audio.gd` into `assets/audio/`): a reverb bus sized per
+  level, walls muffle what's behind them, footsteps per floor (wood with creaking boards, lino,
+  tile, concrete, rug, flesh), Kurt panting after a run, and an ambience director: drips, the
+  fridge, the fluorescent buzz, the receiver off the hook, the TV hiss, flies round Marta,
+  someone walking about upstairs, the pipes (knock on the radiator: something answers), the
+  building groaning, a siren far off, wind in her papers moving the curtains. In the flesh:
+  a heartbeat that rises as she nears, whispers and groans behind the walls, knocking at her
+  front doors (try one: something knocks back), goo dripping from the glands.
+- **Dressing**: curtains, radiator, telephone, a clock stopped at 4:17, photographs (one frame
+  empty), TV snow, the icon's red lamp; in the flesh, her wallpaper giving way to meat the
+  deeper you go, ribs over the corridors, veins up the walls, strands from the ceiling, goo.
+- **Title**: a live scene: Socko on a hand under a dying bulb, looking about, and at you.
+
 ## Partially implemented / placeholder
 
-- **Voices** are synthesised babble under subtitles, not recordings. Every sound is synthesised.
+- **Voices** are synthesised babble under subtitles, not recordings. Every sound is synthesised (and baked).
 - **Kurt's body**: no visible body or left/right hand animation beyond Socko's arm and the hand on
   the pistol. No contextual hand animations for doors and drawers.
 - **Infection** system: not started (flags only).

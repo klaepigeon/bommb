@@ -26,7 +26,7 @@ var pistol := {"have": false, "mag": 0}
 var level_id := ""
 var level: Node = null
 var settings := {"sensitivity": 1.0, "invert_y": false, "touch_scale": 1.0, "touch_opacity": 0.55,
-	"force_touch": false, "volume": 0.8}
+	"force_touch": false, "volume": 0.8, "post_fx": true, "shadows": true}
 var busy := false               # a level change is under way
 
 var _loading: CanvasLayer
@@ -50,9 +50,9 @@ func _setup_input() -> void:
 	var keys := {
 		"move_forward": [KEY_W, KEY_UP], "move_back": [KEY_S, KEY_DOWN], "move_left": [KEY_A, KEY_LEFT], "move_right": [KEY_D, KEY_RIGHT],
 		"sprint": [KEY_SHIFT], "crouch": [KEY_C, KEY_CTRL], "interact": [KEY_E], "reload": [KEY_R],
-		"skip": [KEY_SPACE], "pause": [KEY_ESCAPE, KEY_P], "inspect": [KEY_Q], "fire": [], "look_left": [], "look_right": [], "look_up": [], "look_down": []}
+		"skip": [KEY_SPACE], "pause": [KEY_ESCAPE, KEY_P], "inspect": [KEY_Q], "torch": [KEY_F], "fire": [], "look_left": [], "look_right": [], "look_up": [], "look_down": []}
 	var pad := {"interact": JOY_BUTTON_A, "crouch": JOY_BUTTON_B, "reload": JOY_BUTTON_X, "skip": JOY_BUTTON_Y,
-		"pause": JOY_BUTTON_START, "sprint": JOY_BUTTON_LEFT_STICK}
+		"pause": JOY_BUTTON_START, "sprint": JOY_BUTTON_LEFT_STICK, "torch": JOY_BUTTON_RIGHT_SHOULDER}
 	var axes := {"move_forward": [JOY_AXIS_LEFT_Y, -1.0], "move_back": [JOY_AXIS_LEFT_Y, 1.0], "move_left": [JOY_AXIS_LEFT_X, -1.0],
 		"move_right": [JOY_AXIS_LEFT_X, 1.0], "look_up": [JOY_AXIS_RIGHT_Y, -1.0], "look_down": [JOY_AXIS_RIGHT_Y, 1.0],
 		"look_left": [JOY_AXIS_RIGHT_X, -1.0], "look_right": [JOY_AXIS_RIGHT_X, 1.0], "fire": [JOY_AXIS_TRIGGER_RIGHT, 1.0], "inspect": [JOY_AXIS_TRIGGER_LEFT, 1.0]}
@@ -258,6 +258,7 @@ func save_settings() -> void:
 	AudioServer.set_bus_volume_db(0, linear_to_db(maxf(0.001, settings.volume)))
 
 func _load_settings() -> void:
+	if OS.has_feature("mobile"): settings.shadows = false     # phones: on in Pause if the phone can take it
 	var f := FileAccess.open(SETTINGS_PATH, FileAccess.READ)
 	if f:
 		var d = JSON.parse_string(f.get_as_text())

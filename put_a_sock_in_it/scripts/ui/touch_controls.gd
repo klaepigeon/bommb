@@ -15,6 +15,7 @@ const DEFAULT := {
 	"look_at": ["inspect", 0.8, 0.45, 36.0, "TURN"],
 	"skip": ["skip", 0.5, 0.94, 30.0, "»"],
 	"pause": ["pause", 0.96, 0.07, 30.0, "II"],
+	"torch": ["torch", 0.07, 0.22, 34.0, "LIGHT"],
 }
 
 var player: Player

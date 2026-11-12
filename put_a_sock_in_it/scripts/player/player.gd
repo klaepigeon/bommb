@@ -27,6 +27,13 @@ var target: Node = null       # what the interaction ray is on (has get_prompt /
 var held: RigidBody3D = null
 var inspecting := false
 var noise_mult := 1.0
+var torch: SpotLight3D
+var torch_beam: MeshInstance3D
+var torch_on := false
+var has_torch := true
+var torch_flicker := 0.0     # 0 steady .. 1 failing (Marta near)
+var _look_lag := Vector2.ZERO
+var _pant := 0.0
 var head_override := -1.0     # cutscenes: hold the eyes at this height (lying on the floor, crawling)
 
 var head: Node3D
@@ -58,10 +65,19 @@ func _ready() -> void:
 	head.add_child(cam)
 	arm_mount = Node3D.new(); arm_mount.name = "ArmMount"; cam.add_child(arm_mount)
 	hand_mount = Node3D.new(); hand_mount.name = "HandMount"; cam.add_child(hand_mount)
+	torch = SpotLight3D.new(); torch.name = "Torch"
+	torch.position = Vector3(0.18, -0.12, -0.05)
+	torch.light_color = Color("ffe2b8"); torch.spot_range = 15.0; torch.spot_angle = 26.0; torch.spot_angle_attenuation = 0.7
+	torch.spot_attenuation = 1.2; torch.light_energy = 0.0
+	torch.shadow_enabled = bool(Game.settings.get("shadows", true)); torch.shadow_bias = 0.05
+	cam.add_child(torch)
+	torch_beam = Air.beam(torch, 7.0, 2.8, Color("ffe2b8"), 0.03)
+	torch_beam.visible = false
 	ray = RayCast3D.new(); ray.target_position = Vector3(0, 0, -REACH); ray.collision_mask = 1 | 4
 	ray.add_exception(self)
 	cam.add_child(ray)
 	_yaw = rotation.y; rotation.y = 0.0
+	Sfx.loop("pant", "pant", -80.0)
 
 ## Point him somewhere: body yaw and head pitch (radians).
 func set_view(yaw: float, pitch: float) -> void:
@@ -104,6 +120,7 @@ func _unhandled_input(e: InputEvent) -> void:
 	if not controls: return
 	if e.is_action_pressed("interact"): _interact()
 	if e.is_action_pressed("crouch"): crouching = not crouching
+	if e.is_action_pressed("torch") and has_torch: toggle_torch()
 	if e.is_action_pressed("fire") and held: _throw()
 	if e.is_action_pressed("inspect") and held: inspecting = true
 	if e.is_action_released("inspect"): inspecting = false
@@ -113,6 +130,7 @@ func _physics_process(delta: float) -> void:
 	var stick := Input.get_vector("look_left", "look_right", "look_up", "look_down")
 	if stick.length() > 0.0:
 		add_look(Vector2(-stick.x, -stick.y * (-1.0 if Game.settings.invert_y else 1.0)) * 2.6 * delta * float(Game.settings.sensitivity))
+	_look_lag = _look_lag.lerp(_look * 6.0, 1.0 - exp(-10.0 * delta))
 	if _look != Vector2.ZERO:
 		_yaw += _look.x; _pitch = clampf(_pitch + _look.y, -1.45, 1.45); _look = Vector2.ZERO
 	_apply_view()
@@ -147,7 +165,8 @@ func _physics_process(delta: float) -> void:
 		if _step_d > stride:
 			_step_d = 0.0
 			var loud := 0.06 if crouching else (0.55 if running else 0.18)
-			Sfx.play(footstep, -20.0 if crouching else (-8.0 if running else -14.0), randf_range(0.9, 1.1))
+			Sfx.play("step_" + _surface(), -20.0 if crouching else (-8.0 if running else -14.0), randf_range(0.9, 1.1))
+			if _surface() == "wood" and randf() < 0.12: Sfx.play("board_creak", -16.0, randf_range(0.8, 1.2))
 			Game.make_noise(global_position, loud * noise_mult)
 	var bob_amt := 0.0 if crouching else (0.035 if running else 0.018)
 	var bob := Vector3(cos(_bob * 0.5) * bob_amt * 0.6, absf(sin(_bob * 0.5)) * bob_amt, 0) * clampf(sp / 2.0, 0.0, 1.0)
@@ -156,9 +175,38 @@ func _physics_process(delta: float) -> void:
 		_shake_t -= delta
 		sh = Vector3(randf_range(-1, 1), randf_range(-1, 1), 0) * _shake * clampf(_shake_t * 2.0, 0.0, 1.0)
 	head.position = Vector3(0, _head_h, 0) + bob + sh
+	# an old man who's been running: you hear it
+	_pant = clampf(_pant + (delta * 0.5 if running else -delta * 0.15), 0.0, 1.0)
+	if stamina < STAMINA_MAX * 0.4 and running: _pant = maxf(_pant, 0.6)
+	Sfx.set_loop_volume("pant", linear_to_db(maxf(0.0001, _pant * 0.5)))
+	_torch_update(delta)
 	# what's in reach
 	_update_target()
 	if held: _carry(delta)
+
+func _surface() -> String:
+	var q := PhysicsRayQueryParameters3D.create(global_position + Vector3(0, 0.3, 0), global_position + Vector3(0, -0.4, 0), 1, [get_rid()])
+	var hit := get_world_3d().direct_space_state.intersect_ray(q)
+	if hit.is_empty(): return footstep.trim_prefix("step_")
+	return hit.collider.get_meta("surface", footstep.trim_prefix("step_"))
+
+## The torch: a hand torch, warm, a little weak. Its beam shows in the dust.
+func toggle_torch(v = null) -> void:
+	if not torch: return
+	torch_on = (not torch_on) if v == null else bool(v)
+	Sfx.play("switch", -8.0)
+
+func _torch_update(delta: float) -> void:
+	if not torch: return
+	var k := 1.0
+	if torch_flicker > 0.0 and randf() < torch_flicker * delta * 8.0: k = randf_range(0.0, 0.5)
+	var want := (4.5 if torch_on else 0.0) * k
+	torch.light_energy = lerpf(torch.light_energy, want, 1.0 - exp(-30.0 * delta))
+	torch.visible = torch.light_energy > 0.02
+	torch_beam.visible = torch.visible
+	(torch_beam.material_override as ShaderMaterial).set_shader_parameter("flicker", torch.light_energy / 4.5)
+	# the beam swings a little behind where he looks
+	torch.rotation = torch.rotation.lerp(Vector3(-_look_lag.y * 0.6, -_look_lag.x * 0.6, 0), 1.0 - exp(-12.0 * delta))
 
 func _apply_view() -> void:
 	rotation = Vector3(0, _yaw, 0)

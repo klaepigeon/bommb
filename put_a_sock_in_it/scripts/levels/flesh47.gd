@@ -36,6 +36,9 @@ var marta: MartaHunter
 var marta_head: Node3D
 var exit_door: Door
 var _encountered := false
+var _near := 0.0
+var drips: Array = []
+var fake_doors: Array = []
 var _ending := false
 
 func cell_pos(x: int, y: int, h := 0.0) -> Vector3:
@@ -44,10 +47,10 @@ func cell_pos(x: int, y: int, h := 0.0) -> Vector3:
 func build() -> void:
 	rows = MAP.split("\n")
 	var e := env.environment
-	e.ambient_light_color = Color("4a2224"); e.fog_light_color = Color("1a0608"); e.fog_density = 0.09
+	e.ambient_light_color = Color("6a3436"); e.ambient_light_energy = 1.8; e.fog_light_color = Color("2a0c0e"); e.fog_density = 0.035
 	var W := rows[0].length(); var Hh := rows.size()
-	var wall := Tex.mat("wallpaper_flesh", 0.8, {"pulse": 0.006})
-	var floor_m := Tex.mat("flesh_dark", 0.7, {"pulse": 0.004})
+	var floor_m := Tex.mat("flesh", 0.6, {"pulse": 0.004, "tint": Color(0.75, 0.6, 0.6)})
+	var walls := [Tex.mat("wallpaper", 1.0, {"tint": Color(0.85, 0.75, 0.72)}), Tex.mat("wallpaper_flesh", 0.8, {"pulse": 0.006}), Tex.mat("flesh", 0.6, {"pulse": 0.012})]
 	var ceil_m := Tex.mat("flesh", 0.5, {"pulse": 0.01})
 	Build.box(world, Vector3(W * CELL * 0.5, -0.05, Hh * CELL * 0.5), Vector3(W * CELL, 0.1, Hh * CELL), floor_m)
 	Build.box(world, Vector3(W * CELL * 0.5, H + 0.05, Hh * CELL * 0.5), Vector3(W * CELL, 0.1, Hh * CELL), ceil_m)
@@ -58,7 +61,9 @@ func build() -> void:
 			if rows[y][x] == "#" and not (rows[y][x] == "#" and y == Hh - 1 and _is_exit_wall(x)):
 				var x0 := x
 				while x < W and rows[y][x] == "#" and not (y == Hh - 1 and _is_exit_wall(x)): x += 1
-				Build.box(world, Vector3((x0 + x) * 0.5 * CELL, H * 0.5, (y + 0.5) * CELL), Vector3((x - x0) * CELL, H, CELL), wall)
+				# her wallpaper near where he came in; further on, it's gone to meat
+				var k := clampf((x0 + y * 0.8) / 30.0 + randf_range(-0.25, 0.25), 0.0, 0.999)
+				Build.box(world, Vector3((x0 + x) * 0.5 * CELL, H * 0.5, (y + 0.5) * CELL), Vector3((x - x0) * CELL, H, CELL), walls[int(k * 3.0)])
 			else:
 				x += 1
 	# grid for Marta's path-finding: walls and big furniture are solid
@@ -103,14 +108,31 @@ func build() -> void:
 			var p := cell_pos(x, y)
 			MeshKit.lump(st, p + Vector3(r.randf_range(-0.6, 0.6), r.randf_range(0.0, 2.4) if r.randf() < 0.5 else 0.0, r.randf_range(-0.6, 0.6)), r.randf_range(0.05, 0.14), r), Tex.mat("coral", 4.0, {"pulse": 0.004}))
 	socko.points = {"marta": marta_head}
+	_growth()
+	Air.dust(world, Vector3(W * CELL * 0.5, 1.3, Hh * CELL * 0.5), Vector3(W * CELL * 0.5, 1.2, Hh * CELL * 0.5), 3000, Color(1.0, 0.8, 0.8))
+	Sfx.set_room(0.85, 0.38, 0.4)
+	ambient([2.0, 5.0], func(): Sfx.play_at("drip", (drips.pick_random() as Vector3) + Vector3(0, 0.1, 0), -8.0, randf_range(0.6, 0.8)))
+	ambient([12.0, 25.0], func(): Sfx.play_at("whisper", _behind_a_wall(), -4.0, randf_range(0.7, 1.0)), 8.0)
+	ambient([20.0, 40.0], func(): Sfx.play_at("groan", _behind_a_wall(), -2.0, randf_range(0.6, 0.9)), 15.0)
+	ambient([7.0, 15.0], func(): Sfx.play_at("squelch", _behind_a_wall(), -8.0, randf_range(0.5, 0.8)))
+	ambient([30.0, 60.0], func(): _knocking((fake_doors.pick_random() as Vector3) if not fake_doors.is_empty() else _behind_a_wall()), 20.0)
 
 func _is_exit_wall(x: int) -> bool:
 	return rows[rows.size() - 2][x] == "E"
 
+## A light in the meat: a swollen gland in the ceiling, glowing, beating with all the others.
 func _light(p: Vector3, i: int) -> void:
 	var c: Color = [Color("ff6a5a"), Color("c05aff"), Color("ff8a6a"), Color("5a8aff")][i % 4]
-	Build.lamp(world, p + Vector3(0, 2.3, 0), c, 1.2, 7.0)
-	Build.organic(world, func(st): MeshKit.blob(st, p + Vector3(0, H - 0.1, 0), Vector3(0.12, 0.1, 0.12), {"bumps": 0.3}), Tex.mat("flesh", 2.0, {"emission": Vector3(c.r, c.g, c.b) * 2.0}))
+	var f := Fitting.make(world, p + Vector3(0, 2.3, 0), c, 2.4, 8.0, "pulse", i % 3 == 0)
+	f.mains = false
+	var gland := Build.organic(world, func(st): MeshKit.blob(st, p + Vector3(0, H - 0.1, 0), Vector3(0.14, 0.11, 0.14), {"bumps": 0.3}), Tex.mat("flesh", 2.0, {"emission": Vector3(c.r, c.g, c.b) * 2.0}))
+	f.add_glow(gland, Vector3(c.r, c.g, c.b) * 2.5)
+	var cone := Air.beam(f, 2.3, 1.1, c, 0.015); cone.rotation.x = -PI * 0.5
+	# goo dripping from it
+	var drip := CPUParticles3D.new(); world.add_child(drip); drip.position = p + Vector3(0.05, H - 0.15, 0)
+	drip.amount = 3; drip.lifetime = 1.2; drip.gravity = Vector3(0, -9.8, 0); drip.initial_velocity_max = 0.0
+	var dm := SphereMesh.new(); dm.radius = 0.012; dm.height = 0.03; dm.radial_segments = 5; dm.rings = 3; dm.material = _goo(); drip.mesh = dm
+	drips.append(p)
 
 func _arrival(x: int, y: int) -> void:
 	var p := cell_pos(x, y)
@@ -142,9 +164,14 @@ func _wardrobe(p: Vector3, _x: int, _y: int) -> void:
 	var w := Wardrobe.new(); w.size = Vector3(1.2, 2.1, 0.6); world.add_child(w); w.position = p
 
 func _fake_door(x: int, y: int) -> void:
-	# her front door, set into the wall, again: padded, numbered, locked
+	# her front door, set into the wall, again: padded, numbered, locked. Try it, and something on
+	# the other side knocks.
 	var p := cell_pos(x, y)
 	var d := Door.new(); d.material = Tex.mat("door_padded", 2.0); d.width = 0.95; d.locked = true
+	fake_doors.append(p + Vector3(0, 1.3, CELL * 0.5))
+	d.tried.connect(func(_dd):
+		await get_tree().create_timer(randf_range(1.2, 2.2)).timeout
+		_knocking(p + Vector3(0, 1.3, CELL * 0.5 + 0.3)))
 	world.add_child(d); d.position = p + Vector3(-0.475, 0, CELL * 0.5 - 0.02)
 	var num := Label3D.new(); num.text = "47"; num.font_size = 48; num.pixel_size = 0.002; num.modulate = Color("c8b878")
 	d.panel.add_child(num); num.position = Vector3(0.47, 1.62, 0.035)
@@ -191,8 +218,70 @@ func _exit(x: int, y: int) -> void:
 	zone(Vector3(p.x, 1.0, lz + 1.2), Vector3(5.0, 2.0, 1.2), _finale)
 
 # ------------------------------------------------------------------ the story
+## What the flat has grown: ribs arching over the corridors, veins climbing the walls, strands
+## hanging from the ceiling, goo pooled on the floor. Batched into a few meshes.
+func _growth() -> void:
+	var W := rows[0].length(); var Hh := rows.size()
+	var r := RandomNumberGenerator.new(); r.seed = 471
+	var solid := func(x: int, y: int) -> bool: return x < 0 or y < 0 or x >= W or y >= Hh or rows[y][x] == "#"
+	var ribs := []; var veins := []; var strands := []; var pools := []
+	for y in Hh:
+		for x in W:
+			if rows[y][x] == "#": continue
+			var p := cell_pos(x, y)
+			var ns: bool = solid.call(x, y - 1) and solid.call(x, y + 1)
+			var ew: bool = solid.call(x - 1, y) and solid.call(x + 1, y)
+			if (ns or ew) and r.randf() < 0.55: ribs.append([p, ns])
+			for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+				if solid.call(x + d.x, y + d.y) and r.randf() < 0.3: veins.append([p, d])
+			if r.randf() < 0.25: strands.append(p)
+			if r.randf() < 0.07 and rows[y][x] == ".": pools.append(p)
+	Build.organic(world, func(st):
+		for rb in ribs:
+			var p: Vector3 = rb[0]; var across: Vector3 = Vector3(0, 0, 1) if rb[1] else Vector3(1, 0, 0)
+			var pts := []; var rs := []
+			for i in 9:
+				var a := PI * i / 8.0
+				pts.append(p + across * cos(a) * CELL * 0.5 + Vector3(0, H - 0.05 - sin(a) * 0.35 - (1.0 - sin(a)) * 0.9, 0) + Vector3(r.randf_range(-0.03, 0.03), 0, r.randf_range(-0.03, 0.03)))
+				rs.append(0.07 - sin(a) * 0.025)
+			MeshKit.tube(st, pts, rs, {"sides": 6, "bumps": 0.3, "seed": r.randf() * 50.0}), Tex.mat("coral", 3.0, {"tint": Color(1.0, 0.75, 0.7)}))
+	Build.organic(world, func(st):
+		for v in veins:
+			var p: Vector3 = v[0]; var d: Vector2i = v[1]
+			var wall := p + Vector3(d.x, 0, d.y) * (CELL * 0.5 - 0.03)
+			var side := Vector3(-d.y, 0, d.x)
+			var pts := []; var rs := []; var o := r.randf_range(-0.5, 0.5)
+			for i in 7:
+				var k := i / 6.0
+				pts.append(wall + side * (o + sin(k * 5.0 + o * 3.0) * 0.15) + Vector3(0, k * H, 0)); rs.append(0.025 * (1.0 - k * 0.5))
+			MeshKit.tube(st, pts, rs, {"sides": 5, "bumps": 0.3, "cap": false}), Tex.mat("flesh_dark", 3.0, {"emission": Vector3(0.5, 0.1, 0.4), "pulse": 0.01}))
+	Build.organic(world, func(st):
+		for p in strands:
+			var o := Vector3(r.randf_range(-0.5, 0.5), 0, r.randf_range(-0.5, 0.5))
+			var L := r.randf_range(0.3, 1.1)
+			MeshKit.tube(st, [p + o + Vector3(0, H, 0), p + o + Vector3(0.02, H - L * 0.5, 0), p + o + Vector3(0, H - L, 0.02)], [0.02, 0.008, 0.012], {"sides": 4})
+			MeshKit.blob(st, p + o + Vector3(0, H - L - 0.02, 0.02), Vector3.ONE * 0.025, {"rings": 3, "segs": 5}), _goo())
+	Build.organic(world, func(st):
+		for p in pools:
+			MeshKit.blob(st, p + Vector3(r.randf_range(-0.3, 0.3), 0.0, r.randf_range(-0.3, 0.3)), Vector3(r.randf_range(0.3, 0.6), 0.012, r.randf_range(0.3, 0.6)), {"bumps": 0.3, "freq": 3.0}), _goo())
+
+## Knocking, as Kurt knocked on her door: three, then four.
+func _knocking(at: Vector3) -> void:
+	for i in 3:
+		Sfx.play_at("knock", at, -2.0, randf_range(0.85, 0.95), 25.0); await get_tree().create_timer(0.36).timeout
+	await get_tree().create_timer(1.6).timeout
+	for i in 4:
+		Sfx.play_at("knock", at, 0.0, randf_range(0.8, 0.9), 25.0); await get_tree().create_timer(0.3).timeout
+
+## Somewhere a few metres off, on the other side of the meat.
+func _behind_a_wall() -> Vector3:
+	var a := randf() * TAU
+	return player.global_position + Vector3(cos(a) * randf_range(3.0, 6.0), randf_range(0.5, 2.2), sin(a) * randf_range(3.0, 6.0))
+
 func begin() -> void:
 	Sfx.loop("drone", "flesh_drone", -10.0)
+	Sfx.loop("heart", "heart_loop", -26.0)
+	Fx.reset({"grain": 0.08, "vignette": 0.62, "fringe": 0.25, "drain": 0.08})
 	if not get_meta("from_checkpoint", false):
 		await _come_out()
 	else:
@@ -202,6 +291,9 @@ func begin() -> void:
 	random_talk = true
 	set_cutscene(false)
 	objective("Find the way out.")
+	if not Game.flag("torch_hint"):
+		Game.set_flag("torch_hint")
+		hud.hint("LIGHT / F: torch. She'll see it too." if Game.uses_touch() else "F: torch. She'll see it too.")
 
 ## He slides out of the wall onto the floor, in goo, and gets up.
 func _come_out() -> void:
@@ -233,6 +325,16 @@ func _process(delta: float) -> void:
 		if marta.state == "chase": socko.emotion = "nervous"; socko.look = "marta"
 		elif socko.look == "marta" and marta.state == "patrol": socko.look = "ahead"; socko.emotion = "neutral"
 	random_talk = marta.state == "patrol" and not _ending
+	# how near she is: the heartbeat, the edges of the picture, the torch
+	var d := marta.global_position.distance_to(player.global_position)
+	var near := clampf(1.0 - (d - 2.0) / 12.0, 0.0, 1.0)
+	if marta.state == "chase": near = maxf(near, 0.7)
+	_near = lerpf(_near, near, 1.0 - exp(-2.0 * delta))
+	Sfx.set_loop_volume("heart", lerpf(-26.0, -4.0, _near))
+	Fx.set_k("pulse", _near * 0.55)
+	Fx.set_k("fringe", 0.25 + _near * 0.9)
+	Fx.set_k("tear", 0.25 if marta.state == "chase" else _near * 0.08)
+	player.torch_flicker = smoothstep(0.45, 1.0, _near)
 
 func _on_spotted() -> void:
 	if not _encountered: _encounter()
@@ -242,6 +344,8 @@ func _encounter() -> void:
 	_encountered = true
 	Game.set_flag("met_marta_maze")
 	marta.set_state("encounter")
+	Sfx.play("sting", -4.0, 0.9)
+	Fx.kick("tear", 0.8, 1.2); Fx.kick("drain", 0.5, 2.0)
 	await Dialogue.play("marta_maze")
 	if marta.state == "encounter":
 		marta._last_seen = player.global_position

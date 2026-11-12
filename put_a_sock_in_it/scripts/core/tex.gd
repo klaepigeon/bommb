@@ -19,8 +19,19 @@ static func mat(name: String, density := 1.0, opts := {}) -> ShaderMaterial:
 	if opts.has("pulse"): m.set_shader_parameter("pulse", opts.pulse)
 	if opts.has("emission"): m.set_shader_parameter("emission", opts.emission)
 	if opts.has("rough"): m.set_shader_parameter("roughness", opts.rough)
+	m.set_meta("surface", surface_of(name))
 	_mat[key] = m
 	return m
+
+## What a material sounds like underfoot.
+static func surface_of(name: String) -> String:
+	if name in ["parquet", "wood", "wood_light"]: return "wood"
+	if name == "lino": return "lino"
+	if name in ["tiles", "enamel"]: return "tile"
+	if name in ["concrete", "stairwell", "plaster"]: return "concrete"
+	if name in ["rug", "fabric", "fabric_green", "cloth_red", "cardboard"]: return "soft"
+	if name.begins_with("flesh") or name == "coral": return "flesh"
+	return "wood"
 
 static func tex(name: String) -> Texture2D:
 	if _tex.has(name): return _tex[name]
@@ -41,7 +52,7 @@ static func tex(name: String) -> Texture2D:
 		"fabric": img = _fabric(Color("6b4a3a"), Color("8c6a4a"))
 		"fabric_green": img = _fabric(Color("4f5a3e"), Color("6c7552"))
 		"flesh": img = _flesh(Color("8c3b3b"), Color("c4706a"), 7)
-		"flesh_dark": img = _flesh(Color("4e1b20"), Color("8a3a3a"), 13)
+		"flesh_dark": img = _flesh(Color("6a2a2e"), Color("a04a48"), 13)
 		"coral": img = _coral()
 		"mould": img = _mould()
 		"skin": img = _skin()

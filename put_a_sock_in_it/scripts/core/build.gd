@@ -36,6 +36,7 @@ static func box(parent: Node, pos: Vector3, size: Vector3, material: Material, s
 		var sb := StaticBody3D.new()
 		var cs := CollisionShape3D.new(); var sh := BoxShape3D.new(); sh.size = size
 		cs.shape = sh; sb.add_child(cs); mi.add_child(sb)
+		sb.set_meta("surface", material.get_meta("surface", "wood"))
 	return mi
 
 ## A wall from a to b (x,z on the floor), `h` tall, `t` thick, with openings: each

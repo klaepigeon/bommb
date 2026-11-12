@@ -28,8 +28,17 @@ var gun_drawer: Drawer
 var goo_seep: MeshInstance3D
 var hole_parts: Node3D
 var goo_spurt: CPUParticles3D
-var landing_bulb: OmniLight3D
-var living_lamp: OmniLight3D
+var landing_bulb: Fitting
+var living_lamp: Fitting
+var hall_bulb: Fitting
+var kitchen_tube: Fitting
+var tv_light: Fitting
+var bed_lamp: Fitting
+var tv_screen: MeshInstance3D
+var curtains: Array = []
+var flies: CPUParticles3D
+var _gust := 0.0
+var _marta_t := 0.0
 var sticky: Node3D
 var _seen_marta := false
 var _woke := false
@@ -74,6 +83,7 @@ func build() -> void:
 	_bedroom()
 	_balcony()
 	_lights()
+	_atmosphere()
 	player.position = Vector3(1.96, 0, 9.4)
 	player.set_view(0.0, -0.05)
 	socko.points = {"door": Vector3(1.96, 1.2, 8.0), "hole": HOLE + Vector3(0, 0.5, 0), "gun": gun_drawer, "wardrobe": wardrobe}
@@ -199,7 +209,6 @@ func _living() -> void:
 	Build.box(world, Vector3(3.45, 0.6, 5.8), Vector3(0.3, 0.7, 1.9), Tex.mat("fabric", 3.0))
 	Build.box(world, Vector3(9.4, 0.3, 7.3), Vector3(0.8, 0.6, 0.5), Tex.mat("wood", 2.0))
 	Build.box(world, Vector3(9.4, 0.85, 7.3), Vector3(0.6, 0.5, 0.5), Tex.mat("gunmetal"))         # TV
-	Build.box(world, Vector3(9.4, 0.87, 7.04), Vector3(0.44, 0.34, 0.02), Tex.mat("glass", 1.0, {"emission": Vector3(0.3, 0.35, 0.4)}), false)
 	Build.box(world, Vector3(6.4, 0.22, 5.8), Vector3(1.0, 0.44, 0.6), Tex.mat("wood_light", 2.0))  # coffee table
 	_drawings(Vector3(6.4, 0.45, 5.8), "z", 0, 0.0, 1)
 	for i in 5:
@@ -316,23 +325,137 @@ func _balcony() -> void:
 	zone(Vector3(10.7, 1.0, 5.8), Vector3(1.2, 2.0, 2.8), _on_balcony)
 
 func _lights() -> void:
-	landing_bulb = Build.lamp(world, Vector3(2.0, 2.7, 9.6), Color("ffe0a0"), 1.3, 6.0)
-	Build.box(world, Vector3(2.0, 2.78, 9.6), Vector3(0.08, 0.12, 0.08), Tex.mat("enamel", 1.0, {"emission": Vector3(2.0, 1.8, 1.2)}), false)
-	Build.lamp(world, Vector3(1.6, 2.4, 6.5), Color("ffcf90"), 0.7, 5.0)
-	Build.lamp(world, Vector3(1.6, 2.2, 1.4), Color("a8b8c8"), 0.45, 4.5)
-	Build.lamp(world, Vector3(0.8, 2.2, 3.9), Color("a8c0a0"), 0.25, 3.0)
-	Build.lamp(world, Vector3(4.6, 2.2, 1.6), Color("c0a080"), 0.25, 3.5)
-	Build.lamp(world, Vector3(7.9, 1.2, 3.0), Color("ffc080"), 0.6, 4.0)
-	# her standard lamp, beside her: the brightest thing in the flat, aimed at her
+	# the landing: one bulb, on its way out, throwing the door frame's shadow
+	landing_bulb = Fitting.make(world, Vector3(1.96, 2.62, 9.5), Color("ffd890"), 1.5, 6.5, "dying", true)
+	_bulb(landing_bulb, Vector3(1.96, 2.62, 9.5), 0.28)
+	# hall: a bare bulb on its flex
+	hall_bulb = Fitting.make(world, Vector3(1.6, 2.25, 6.5), Color("ffcf8a"), 0.9, 5.0, "bulb")
+	_bulb(hall_bulb, Vector3(1.6, 2.25, 6.5), 0.45)
+	# kitchen: the fluorescent tube, stuttering, buzzing
+	kitchen_tube = Fitting.make(world, Vector3(1.6, 2.6, 1.4), Color("cfe0e8"), 0.8, 5.0, "fluoro")
+	var tube := Build.box(world, Vector3(1.6, 2.64, 1.4), Vector3(1.2, 0.05, 0.06), Tex.mat("enamel", 1.0, {"emission": Vector3(2.5, 2.8, 3.0)}), false)
+	kitchen_tube.add_glow(tube, Vector3(2.5, 2.8, 3.0))
+	kitchen_tube.buzz_key = "buzz_kitchen"
+	Sfx.loop("buzz_kitchen", "buzz", -14.0, Vector3(1.6, 2.5, 1.4))
+	# her standard lamp, beside her: the brightest thing in the flat, and it throws the coral's
+	# shadow up the wall behind her
 	Build.box(world, Vector3(8.4, 0.75, 3.75), Vector3(0.04, 1.5, 0.04), Tex.mat("metal"), false)
-	Build.box(world, Vector3(8.4, 1.55, 3.75), Vector3(0.36, 0.25, 0.36), Tex.mat("fabric", 4.0, {"emission": Vector3(1.2, 0.9, 0.5)}), false)
-	living_lamp = Build.lamp(world, Vector3(8.4, 1.5, 3.85), Color("ffb870"), 1.6, 5.5)
-	Build.lamp(world, Vector3(5.8, 2.3, 6.4), Color("c8a888"), 0.35, 5.0)
+	var shade := Build.box(world, Vector3(8.4, 1.55, 3.75), Vector3(0.36, 0.25, 0.36), Tex.mat("fabric", 4.0, {"emission": Vector3(1.4, 1.0, 0.55)}), false)
+	living_lamp = Fitting.make(world, Vector3(8.35, 1.42, 3.95), Color("ffb070"), 2.0, 6.0, "bulb", true)
+	living_lamp.add_glow(shade, Vector3(1.4, 1.0, 0.55))
+	var cone := Air.beam(living_lamp, 1.45, 0.75, Color("ffb070"), 0.025); cone.rotation.x = -PI * 0.5
+	# the television: no signal, just snow, and the room lit blue by it
+	tv_light = Fitting.make(world, Vector3(9.4, 0.9, 6.8), Color("9ab0ff"), 0.6, 3.5, "tv")
+	tv_light.mains = true
+	# bedroom: the bedside lamp; and in the corner the icon, with its little red lamp
+	bed_lamp = Fitting.make(world, Vector3(7.9, 0.95, 3.0), Color("ffc080"), 0.7, 4.0, "bulb")
+	var bshade := Build.box(world, Vector3(7.9, 0.85, 3.0), Vector3(0.22, 0.18, 0.22), Tex.mat("cloth_red", 4.0, {"emission": Vector3(1.0, 0.5, 0.3)}), false)
+	bed_lamp.add_glow(bshade, Vector3(1.0, 0.5, 0.3))
+	var lampada := Fitting.make(world, Vector3(9.85, 1.95, 0.2), Color("ff6040"), 0.35, 2.0, "candle")
+	lampada.mains = false
+	Build.box(world, Vector3(9.85, 1.92, 0.2), Vector3(0.05, 0.07, 0.05), Tex.mat("glass", 1.0, {"tint": Color(1.0, 0.3, 0.2), "emission": Vector3(2.0, 0.6, 0.3)}), false)
+	# the dusk outside, coming through her papers: cold, dim, the only light that isn't hers
+	for w in [Vector3(6.06, 1.45, 7.75), Vector3(8.56, 1.45, 7.75), Vector3(0.3, 1.45, 1.4), Vector3(9.7, 1.45, 1.7)]:
+		var l := Build.lamp(world, w, Color("8fa2c0"), 0.35, 3.2)
+	# switches by the doors
+	switch(Vector3(0.3, 1.35, 7.93), 0.0, [hall_bulb])
+	switch(Vector3(2.0, 1.35, 2.73), 0.0, [kitchen_tube])
+	switch(Vector3(6.9, 1.35, 3.33), 0.0, [bed_lamp])
+
+func _bulb(f: Fitting, at: Vector3, flex: float) -> void:
+	Build.box(world, at + Vector3(0, flex * 0.5 + 0.04, 0), Vector3(0.01, flex, 0.01), Tex.mat("black"), false)
+	var b := Build.box(world, at, Vector3(0.05, 0.07, 0.05), Tex.mat("enamel", 1.0, {"emission": Vector3(1.4, 1.2, 0.8)}), false)
+	f.add_glow(b, Vector3(1.4, 1.2, 0.8))
+
+## Everything that makes it a place: dust, curtains, the radiator, the phone off its hook, the
+## clock, the photographs; and what you hear: drips, the fridge, someone upstairs, the pipes,
+## the building, a siren a long way off, the wind in her papers.
+func _atmosphere() -> void:
+	for r in [[Vector3(1.6, 1.3, 6.5), Vector3(1.5, 1.2, 1.4), 300], [Vector3(6.6, 1.3, 5.7), Vector3(3.3, 1.2, 2.2), 900],
+			[Vector3(1.6, 1.3, 1.4), Vector3(1.5, 1.2, 1.3), 300], [Vector3(8.0, 1.3, 1.7), Vector3(2.0, 1.2, 1.6), 400],
+			[Vector3(2.0, 1.4, 9.4), Vector3(3.0, 1.3, 1.3), 350], [Vector3(4.6, 1.3, 1.7), Vector3(1.3, 1.2, 1.6), 200]]:
+		Air.dust(world, r[0], r[1], r[2])
+	# curtains, half drawn over the papered windows, moving in the draught
+	curtains = []
+	for x in [6.06, 8.56]:
+		for side in [-1, 1]:
+			var c := Build.box(world, Vector3(x + side * 0.62, 1.4, 7.86), Vector3(0.35, 2.3, 0.03), Tex.mat("cloth_red", 2.0, {"tint": Color(0.8, 0.6, 0.5)}), false)
+			curtains.append(c)
+	# the radiator under the window: cast iron, rust at the joints. You can knock on its pipe.
+	for i in 9:
+		Build.box(world, Vector3(5.6 + i * 0.1, 0.4, 7.82), Vector3(0.07, 0.55, 0.1), Tex.mat("enamel", 3.0, {"tint": Color(0.75, 0.68, 0.6)}), false)
+	Build.box(world, Vector3(5.2, 1.35, 7.88), Vector3(0.04, 2.7, 0.04), Tex.mat("enamel", 3.0, {"tint": Color(0.6, 0.55, 0.5)}), false)
+	Hotspot.make(world, Vector3(6.0, 0.45, 7.75), Vector3(1.0, 0.6, 0.3), "Knock on the pipe", _knock_pipe)
+	# the telephone in the hall: the receiver off the hook, hanging, the tone going on and on
+	Build.box(world, Vector3(2.75, 0.55, 5.85), Vector3(0.05, 0.22, 0.05), Tex.mat("enamel", 4.0, {"tint": Color(0.5, 0.15, 0.12)}), false)
+	Sfx.loop("busy", "busy_tone", -24.0, Vector3(2.75, 0.55, 5.85))
+	# the clock in the living room: stopped at seventeen minutes past four
+	var clock := Build.box(world, Vector3(3.27, 2.0, 5.0), Vector3(0.02, 0.3, 0.3), Tex.mat("enamel", 3.0), false)
+	for h in [[0.11, 4.0 / 12.0], [0.14, 17.0 / 60.0]]:
+		var hand := Build.box(world, Vector3(3.29, 2.0, 5.0), Vector3(0.005, h[0], 0.01), Tex.mat("black"), false)
+		hand.rotation.x = -TAU * h[1]; hand.position += Vector3(0, cos(TAU * h[1]), sin(TAU * h[1])) * h[0] * 0.5 * Vector3(0, 1, -1)
+	# photographs over the sofa: her, her sister, a man in uniform; one frame empty
+	for i in 5:
+		var fr := Build.box(world, Vector3(3.28, 1.55 + (i % 2) * 0.3, 5.2 + i * 0.32), Vector3(0.02, 0.22, 0.17), Tex.mat("wood", 6.0), false)
+		if i != 3: Build.box(world, Vector3(3.29, 1.55 + (i % 2) * 0.3, 5.2 + i * 0.32), Vector3(0.012, 0.16, 0.12), Tex.mat("newspaper", 8.0, {"tint": Color(0.7, 0.62, 0.5)}), false)
+	# the TV's snow, and its hiss
+	tv_screen = Build.box(world, Vector3(9.4, 0.87, 7.04), Vector3(0.44, 0.34, 0.02), _snow(), false)
+	Sfx.loop("tv", "tv_static", -22.0, Vector3(9.4, 0.9, 7.0))
+	# the fridge, and the flies round her
+	Sfx.loop("fridge", "hum", -20.0, Vector3(0.35, 1.0, 2.4))
+	Sfx.loop("flies", "flies", -14.0, MARTA_POS + Vector3(0, 1.2, 0))
+	Sfx.loop("marta", "marta_breath", -18.0, MARTA_POS + Vector3(0, 1.0, 0))
+	flies = CPUParticles3D.new(); world.add_child(flies); flies.position = MARTA_POS + Vector3(-0.1, 1.1, 0)
+	flies.amount = 14; flies.lifetime = 4.0; flies.preprocess = 4.0; flies.gravity = Vector3.ZERO
+	flies.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE; flies.emission_sphere_radius = 0.4
+	flies.orbit_velocity_min = 0.3; flies.orbit_velocity_max = 0.8; flies.initial_velocity_min = 0.2; flies.initial_velocity_max = 0.6
+	var fm := BoxMesh.new(); fm.size = Vector3.ONE * 0.012; var fmat := StandardMaterial3D.new(); fmat.albedo_color = Color(0.03, 0.03, 0.02); fm.material = fmat
+	flies.mesh = fm
+	Sfx.set_room(0.45, 0.2)
+	# the building, all evening
+	ambient([1.5, 4.0], func(): Sfx.play_at("drip", Vector3(0.4, 0.55, 3.6), -10.0, randf_range(0.9, 1.15)))
+	ambient([6.0, 11.0], func(): Sfx.play_at("drip", Vector3(0.7, 0.9, 0.3), -14.0, randf_range(1.2, 1.4)))
+	ambient([25.0, 55.0], func(): walk_above(Vector3(randf_range(1, 9), 2.85, randf_range(1, 7)), Vector3(randf_range(1, 9), 2.85, randf_range(1, 7))), 12.0)
+	ambient([40.0, 80.0], func(): _pipes(Vector3(5.2, 1.4, 7.88), randi_range(2, 4)), 30.0)
+	ambient([20.0, 45.0], func(): Sfx.play_at("groan" if randf() < 0.5 else "creak", Vector3(randf_range(0, 10), 2.6, randf_range(0, 8)), -10.0))
+	ambient([90.0, 160.0], func(): Sfx.play_at("siren", Vector3(6.0, 5.0, 30.0), 2.0, 1.0, 60.0), 45.0)
+	ambient([14.0, 30.0], func():
+		var w: Vector3 = [Vector3(6.06, 1.45, 7.9), Vector3(8.56, 1.45, 7.9), Vector3(9.9, 1.45, 1.7)].pick_random()
+		Sfx.play_at("paper", w, -6.0, randf_range(0.7, 1.0))
+		_gust = 1.0)
+	Sfx.loop("wind", "wind", -26.0, Vector3(7.3, 1.5, 8.6))
+
+func _snow() -> ShaderMaterial:
+	var sh := Shader.new()
+	sh.code = """shader_type spatial; render_mode unshaded;
+float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+void fragment(){ vec2 g = floor(UV * vec2(48.0, 36.0)); float n = h(g + floor(TIME * 24.0) * 3.1);
+float roll = 0.8 + 0.2 * sin(UV.y * 40.0 + TIME * 6.0); ALBEDO = vec3(n * 0.75 * roll) * vec3(0.85, 0.9, 1.0); }"""
+	var m := ShaderMaterial.new(); m.shader = sh
+	return m
+
+## Something answers in the pipes: a few knocks, from somewhere in the building.
+func _pipes(at: Vector3, n: int) -> void:
+	for i in n:
+		Sfx.play_at("pipe_knock", at, -2.0, randf_range(0.92, 1.05), 25.0)
+		await get_tree().create_timer(randf_range(0.28, 0.45)).timeout
+
+func _knock_pipe() -> void:
+	player.shake(0.003, 0.1)
+	for i in 3:
+		Sfx.play_at("pipe_knock", Vector3(5.2, 0.9, 7.85), 0.0, 1.0)
+		await get_tree().create_timer(0.35).timeout
+	Game.make_noise(player.global_position, 0.5)
+	await get_tree().create_timer(randf_range(2.0, 3.5)).timeout
+	# after a wait, an answer: the same count, or not quite
+	var answer := 3 if randf() < 0.6 else randi_range(2, 5)
+	_pipes(Vector3(randf_range(2, 9), randf_range(2.0, 4.0), randf_range(-2.0, 10.0)), answer)
 
 # ------------------------------------------------------------------ the story
 func begin() -> void:
 	Game.checkpoint()
-	Sfx.loop("drone", "drone", -16.0)
+	Sfx.loop("drone", "drone", -18.0)
+	Fx.reset({"grain": 0.06, "vignette": 0.5})
 	set_cutscene(true)
 	player.look_enabled = true      # he can look round the landing while he knocks
 	Game.fade(0.0, 3.0)
@@ -351,7 +474,10 @@ func on_event(n: String, _step: Dictionary) -> void:
 				Sfx.play_at("knock", Vector3(1.96, 1.3, 8.0), 3.0, randf_range(0.9, 1.0)); player.shake(0.006, 0.08)
 				await get_tree().create_timer(0.3).timeout
 		"marta_stirs":
-			Sfx.play_at("marta_breath", marta.head_pos(), -4.0)
+			Sfx.play_at("marta_breath", marta.head_pos(), -2.0)
+			Sfx.set_loop_volume("marta", -10.0)
+			living_lamp.kind = "dying"
+			Fx.kick("fringe", 0.6, 2.0)
 			marta.pose.head = marta.pose.head + Vector3(0.25, 0, 0.1)
 			marta.pose.sh_l = Vector3(0.9, 0, 0.12)
 		"marta_turns":
@@ -359,9 +485,12 @@ func on_event(n: String, _step: Dictionary) -> void:
 			marta.face_toward(player.cam.global_position, 1.0)
 			marta.pose.jaw = Vector3(0.35, 0, 0)
 			Sfx.play_at("click", marta.head_pos(), -6.0, 0.7)
+			Sfx.set_loop_volume("flies", -30.0)
+			Fx.set_k("pulse", 0.35); Fx.set_k("fringe", 0.35)
 		"grab":
 			pass   # _investigate runs the grab once the conversation is over
 		"rub_head":
+			Sfx.play("breath", -8.0, 0.85)
 			socko.visible = true; socko.hold = "rub"; socko.emotion = "neutral"
 			socko.rig.jaw = 0.0
 		"socko_reveal":
@@ -370,22 +499,38 @@ func on_event(n: String, _step: Dictionary) -> void:
 			player.set_roll(0.0)
 			await get_tree().create_timer(0.7).timeout
 			player.head_override = -1.0
+			Sfx.play("sting", -16.0, 1.6)
 			socko.look = "kurt"; socko.hold = "face"; socko.emotion = "happy"
 		"cross_eyed":
+			Sfx.play("board_creak", -6.0, 2.2)
 			socko.set_cross_eyed(true)
 			await get_tree().create_timer(1.6).timeout
 			socko.set_cross_eyed(false)
 
 func _process(delta: float) -> void:
 	super(delta)
-	# the landing bulb is on its way out
-	_flicker_t -= delta
-	if _flicker_t <= 0.0:
-		_flicker_t = randf_range(0.05, 1.8)
-		landing_bulb.light_energy = 1.3 if randf() > 0.2 else randf_range(0.1, 0.6)
+	# the curtains, in the draught (more when the wind gusts at the paper)
+	_gust = maxf(0.0, _gust - delta * 0.5)
+	var tt := Time.get_ticks_msec() / 1000.0
+	for i in curtains.size():
+		(curtains[i] as Node3D).rotation.x = sin(tt * (0.8 + i * 0.13) + i) * (0.03 + _gust * 0.12)
+	# Marta, before: still, nearly; she breathes, and a finger moves now and then
+	if not _woke and marta.visible and not cutscene:
+		_marta_t -= delta
+		marta.pose.chest = Vector3(-0.2 + sin(tt * 1.1) * 0.03, 0, 0.05)
+		if _marta_t <= 0.0:
+			_marta_t = randf_range(2.0, 6.0)
+			marta.pose.el_r = Vector3(1.0 + randf_range(-0.1, 0.1), 0, randf_range(-0.05, 0.05))
+			if randf() < 0.3: marta.pose.head = Vector3(-0.5 + randf_range(-0.08, 0.08), 0.2 + randf_range(-0.1, 0.1), -0.35)
+	# near the hole, the picture goes a little blue and comes apart at the edges
+	if hole_parts.visible and not cutscene:
+		var d := player.global_position.distance_to(HOLE)
+		Fx.set_k("fringe", clampf(1.0 - d / 4.0, 0.0, 1.0) * 0.8)
 	# seeing her
 	if not _seen_marta and not _woke and not cutscene and player_sees(marta.head_pos(), 6.5, 0.8):
 		_seen_marta = true
+		Fx.kick("fringe", 0.8, 3.0); Fx.kick("pulse", 0.4, 3.0)
+		Sfx.play("heartbeat", -12.0)
 		Dialogue.play("see_marta")
 		marta_spot.prompt = "Look closer"; marta_spot.enabled = true
 	if _woke and socko.visible and not cutscene and not Dialogue.busy and socko.look != "ahead" and socko.look != "gun":
@@ -395,7 +540,9 @@ func _process(delta: float) -> void:
 func _investigate() -> void:
 	marta_spot.enabled = false
 	set_cutscene(true)
-	Sfx.loop("marta", "marta_breath", -12.0, marta.head_pos())
+	Sfx.set_loop_volume("marta", -14.0)
+	Sfx.loop("heart", "heart_loop", -20.0)
+	var tvh := create_tween(); tvh.tween_method(func(v): Sfx.set_loop_volume("heart", v), -20.0, -8.0, 14.0)
 	var stand := MARTA_POS + Vector3(-1.05, 0, 0.1)
 	var tw := create_tween().set_trans(Tween.TRANS_SINE)
 	tw.tween_property(player, "global_position", stand, 1.2)
@@ -406,7 +553,12 @@ func _investigate() -> void:
 	await _grab()
 
 func _grab() -> void:
-	Sfx.stop_loop("marta")
+	Sfx.stop_loop("marta"); Sfx.stop_loop("flies")
+	Sfx.play("sting", 2.0)
+	Fx.kick("tear", 1.0, 1.4); Fx.kick("fringe", 2.5, 1.5); Fx.set_k("pulse", 0.6)
+	living_lamp.kind = "dying"
+	Engine.time_scale = 0.4
+	get_tree().create_timer(0.35, true, false, true).timeout.connect(func(): Engine.time_scale = 1.0)
 	# she comes up out of the chair at him: the arm, the face, all at once
 	marta.snap = 30.0
 	marta.pose.sh_r = Vector3(PI * 0.5 + 0.35, 0, -0.15); marta.pose.el_r = Vector3(0.15, 0, 0)
@@ -434,13 +586,17 @@ func _grab() -> void:
 		player.set_roll(k * 1.1), 0.0, 1.0, 0.75).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
 	await fly.finished
 	Sfx.play("thud", 4.0, 0.8)
+	Sfx.play("glass", -4.0, 0.7)
 	player.shake(0.06, 0.3)
+	Fx.kick("drain", 1.0, 0.3)
 	await Game.fade(1.0, 0.06)
 	await _blackout()
 
 ## Dark. His heart. Somewhere, the front door slams. When he comes to, she isn't there.
 func _blackout() -> void:
-	Sfx.stop_loop("drone")
+	Sfx.stop_loop("drone"); Sfx.stop_loop("heart"); Sfx.stop_loop("tv"); Sfx.stop_loop("busy")
+	Fx.set_k("pulse", 0.0); Fx.set_k("fringe", 0.0)
+	Sfx.play("tinnitus", -6.0)
 	for i in 3:
 		Sfx.play("heartbeat", -6.0 - i * 3.0); await get_tree().create_timer(1.1).timeout
 	front_door.slam(); front_door.blocked = true
@@ -450,7 +606,10 @@ func _blackout() -> void:
 	# she's gone. The chair, the coral, broken where she tore herself loose
 	marta.visible = false
 	marta_spot.enabled = false
-	living_lamp.light_energy = 0.8
+	# her lamp went over when she went: it lies on the floor now, lighting the room from below
+	living_lamp.position = Vector3(8.0, 0.25, 4.2); living_lamp.kind = "bulb"; living_lamp.base = 1.2
+	flies.emitting = false
+	tv_screen.visible = true
 	balcony_door.locked = false
 	wardrobe.pushable = true
 	# on the floor, on his back, looking at the ceiling
@@ -459,8 +618,15 @@ func _blackout() -> void:
 	player.set_view(-PI * 0.55, 1.1); player.set_roll(0.35)
 	player.crouching = false
 	await get_tree().create_timer(0.8).timeout
-	Sfx.loop("drone", "drone", -18.0)
-	Sfx.loop("goo", "goo_loop", -10.0, HOLE + Vector3(0, 0.3, 0.3))
+	Sfx.loop("drone", "drone", -16.0)
+	Sfx.loop("tv", "tv_static", -20.0, Vector3(9.4, 0.9, 7.0))
+	Sfx.loop("goo", "goo_loop", -12.0, HOLE + Vector3(0, 0.3, 0.3))
+	# coming to: concussed, the picture doubled and drifting, the colour not all there
+	Fx.set_k("double_k", 1.0); Fx.set_k("fringe", 0.8); Fx.set_k("drain", 0.35)
+	var clear := create_tween()
+	clear.tween_method(func(k): Fx.set_k("double_k", k); Fx.set_k("fringe", 0.8 * k); Fx.set_k("drain", 0.35 * k), 1.0, 0.0, 16.0).set_delay(3.0)
+	Fitting._brown = 0.15
+	get_tree().create_timer(2.5).timeout.connect(func(): Fitting._brown = 1.0)
 	Game.fade(0.0, 3.5)
 	player.look_toward(Vector3(5.0, 1.6, 5.0), 3.0)
 	await get_tree().create_timer(1.6).timeout
@@ -485,6 +651,8 @@ func _on_front_door_tried(_d: Door) -> void:
 
 func _on_wardrobe_pushed(_w: Wardrobe) -> void:
 	goo_seep.visible = false
+	Sfx.play("sting", -10.0, 0.8)
+	Fx.kick("tear", 0.5, 0.8)
 	hole_parts.visible = true
 	socko.interest = null
 	Sfx.stop_loop("goo"); Sfx.loop("goo", "goo_loop", -2.0, HOLE + Vector3(0, 0.3, 0.2))
@@ -536,6 +704,9 @@ func _crawl() -> void:
 	player.head_override = 0.45
 	await get_tree().create_timer(0.6).timeout
 	Sfx.play("crawl", -2.0)
+	Fx.tint(Color(0.45, 0.6, 1.0, 0.6), 3.0)
+	Fx.set_k("fringe", 1.2)
+	var tr := create_tween(); tr.tween_method(func(v): Fx.set_k("tear", v), 0.0, 0.8, 4.0)
 	var in_t := create_tween()
 	in_t.tween_property(player, "global_position", Vector3(HOLE.x + 0.1, -0.05, -1.2), 2.6)
 	player.look_toward(Vector3(HOLE.x + 0.4, 0.0, -4.0), 2.0)

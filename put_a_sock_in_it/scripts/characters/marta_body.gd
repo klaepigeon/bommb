@@ -75,9 +75,9 @@ func _body() -> void:
 	joints.head.position.y = neck_len
 	joints.wr_l.position.y = -fore; joints.wr_r.position.y = -fore
 	# torso: a housecoat over a sagging body
-	_part("hips", func(st): MeshKit.blob(st, Vector3(0, 0.04, 0), Vector3(0.19, 0.14, 0.15), {"bumps": 0.05, "sag": 0.3}), _coat)
-	_part("spine", func(st): MeshKit.blob(st, Vector3(0, 0.12, 0), Vector3(0.17, 0.17, 0.12), {"bumps": 0.06, "seed": 2.0}), _coat)
-	_part("chest", func(st): MeshKit.blob(st, Vector3(0, 0.07, 0.0), Vector3(0.2, 0.15, 0.13), {"bumps": 0.08, "sag": 0.4, "seed": 3.0}), _coat)
+	_part("hips", func(st): MeshKit.blob(st, Vector3(0, 0.08, 0), Vector3(0.2, 0.2, 0.15), {"bumps": 0.05, "sag": 0.3}), _coat)
+	_part("spine", func(st): MeshKit.blob(st, Vector3(0, 0.13, 0), Vector3(0.18, 0.24, 0.13), {"bumps": 0.06, "seed": 2.0}), _coat)
+	_part("chest", func(st): MeshKit.blob(st, Vector3(0, 0.05, 0.0), Vector3(0.21, 0.2, 0.14), {"bumps": 0.08, "sag": 0.4, "seed": 3.0}), _coat)
 	_part("neck", func(st): MeshKit.tube(st, [Vector3.ZERO, Vector3(0, neck_len * 0.5, -0.01), Vector3(0, neck_len, 0)], [0.05, 0.045, 0.05], {"sides": 7, "bumps": 0.15}), _skin)
 	# head: long in the face, cheek slid down, hair pulled back into a clip
 	_part("head", func(st): MeshKit.blob(st, Vector3(0, 0.1, -0.01), Vector3(0.085, 0.12, 0.1), {"bumps": 0.1, "slide": 0.35, "seed": 7.0}), _skin)

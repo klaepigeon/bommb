@@ -25,6 +25,8 @@ func _ready() -> void:
 	_slider("Volume", 0.0, 1.0, "volume")
 	_check("Invert look", "invert_y")
 	_check("Touch controls", "force_touch")
+	_check("Film effects (grain, dither)", "post_fx")
+	_check("Shadows", "shadows")
 	_slider("Button size", 0.6, 1.8, "touch_scale")
 	_slider("Button opacity", 0.15, 1.0, "touch_opacity")
 	_button("Move buttons", func(): close(); if touch: touch.editing = true)
@@ -32,7 +34,7 @@ func _ready() -> void:
 	_button("Restart from checkpoint", func(): close(); Game.restart_level())
 	_button("Quit to title", func(): close(); Game.to_title())
 	var help := Label.new()
-	help.text = "Keyboard: WASD move · mouse look · E use · Shift run · C crouch · LMB fire / throw · RMB or Q turn over · R reload · Space hurry dialogue · Esc pause\nGamepad: sticks · A use · B crouch · X reload · Y hurry · RT fire / throw · LT turn over · L3 run · Start pause"
+	help.text = "Keyboard: WASD move · mouse look · E use · Shift run · C crouch · F torch · LMB fire / throw · RMB or Q turn over · R reload · Space hurry dialogue · Esc pause\nGamepad: sticks · A use · B crouch · X reload · Y hurry · RB torch · RT fire / throw · LT turn over · L3 run · Start pause"
 	help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	help.add_theme_font_size_override("font_size", 16); help.add_theme_color_override("font_color", Color("9a917e"))
 	_box.add_child(help)

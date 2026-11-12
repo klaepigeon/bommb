@@ -67,6 +67,7 @@ func fire() -> void:
 	Sfx.play("gunshot", 0.0, randf_range(0.95, 1.05))
 	Game.make_noise(player.global_position, 1.0)
 	player.shake(0.006, 0.12)
+	Fx.kick("fringe", 0.8, 0.35)
 	player.add_look(Vector2(randf_range(-0.004, 0.004), 0.018))   # muzzle climb he puts back himself
 	_flash.light_energy = 3.0; _flash_mesh.visible = true; _flash_mesh.rotation.z = randf() * TAU
 	get_tree().create_timer(0.05).timeout.connect(func(): _flash.light_energy = 0.0; _flash_mesh.visible = false)

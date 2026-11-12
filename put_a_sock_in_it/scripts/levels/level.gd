@@ -26,6 +26,9 @@ func _ready() -> void:
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR; e.ambient_light_color = Color("3a322b"); e.ambient_light_energy = 1.0
 	e.fog_enabled = true; e.fog_light_color = Color("100c0a"); e.fog_density = 0.06
 	e.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	# bulbs, tubes and lampshades bloom a little, like they do on old tape
+	e.glow_enabled = true; e.glow_intensity = 0.5; e.glow_bloom = 0.0; e.glow_hdr_threshold = 1.0
+	e.adjustment_enabled = true; e.adjustment_contrast = 1.08; e.adjustment_saturation = 0.9
 	add_child(env)
 	player = Player.new(); player.name = "Kurt"; add_child(player)
 	socko = Socko.new(); add_child(socko); socko.attach(player)
@@ -35,6 +38,7 @@ func _ready() -> void:
 	touch = TouchControls.new(); touch.player = player; tl.add_child(touch)
 	pause = PauseMenu.new(); pause.touch = touch; add_child(pause)
 	Dialogue.event.connect(_on_event)
+	Fx.reset()
 	build()
 	set_cutscene(true)     # nothing moves until begin() says so
 
@@ -72,6 +76,7 @@ func _process(delta: float) -> void:
 		if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and DisplayServer.window_is_focused():
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	if Input.is_action_just_pressed("skip"): Dialogue.skip_line()
+	_tick_ambience(delta)
 	# idle conversations: after a long enough quiet stretch of free play, the next one not yet had
 	if random_talk and not cutscene and not Dialogue.busy and socko.visible:
 		_quiet_t += delta
@@ -82,6 +87,38 @@ func _process(delta: float) -> void:
 					Game.set_flag("talked_" + id); Dialogue.play(id); break
 	else:
 		_quiet_t = minf(_quiet_t, 40.0) if Dialogue.busy else _quiet_t
+
+## Ambience: something that happens now and then, somewhere. `every` is [min, max] seconds.
+var _amb: Array = []
+func ambient(every: Array, f: Callable, first := -1.0) -> void:
+	_amb.append({"every": every, "f": f, "t": first if first >= 0.0 else randf_range(every[0], every[1])})
+
+func _tick_ambience(delta: float) -> void:
+	for a in _amb:
+		a.t -= delta
+		if a.t <= 0.0:
+			a.t = randf_range(a.every[0], a.every[1])
+			a.f.call()
+
+## Someone walking about in the flat upstairs: steps across the ceiling, and sometimes they stop
+## right over you.
+func walk_above(from: Vector3, to: Vector3) -> void:
+	var n := randi_range(5, 10)
+	for i in n:
+		var p := from.lerp(to, float(i) / n)
+		Sfx.play_at("step_above", p, -6.0, randf_range(0.9, 1.1), 14.0)
+		await get_tree().create_timer(randf_range(0.5, 0.7)).timeout
+	if randf() < 0.3:
+		await get_tree().create_timer(2.0).timeout
+		Sfx.play_at("thud_far", player.global_position + Vector3(0, 2.8, 0), -4.0)
+
+## A wall switch: a bakelite rocker that toggles some fittings.
+func switch(pos: Vector3, rot_y: float, fittings: Array) -> void:
+	var plate := Build.box(world, pos, Vector3(0.075, 0.075, 0.012), Tex.mat("enamel", 8.0, {"tint": Color(0.85, 0.8, 0.7)}), false, rot_y)
+	var h := Hotspot.make(world, pos, Vector3(0.2, 0.2, 0.15), "Light switch", func():
+		for f in fittings: f.toggle()
+		Sfx.play_at("switch", pos, -4.0))
+	h.rotation.y = rot_y
 
 ## A box of space that calls `cb` the first time Kurt walks into it.
 func zone(pos: Vector3, size: Vector3, cb: Callable, once := true) -> Area3D:
