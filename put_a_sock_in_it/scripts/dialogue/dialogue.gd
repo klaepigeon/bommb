@@ -64,7 +64,7 @@ func _ready() -> void:
 						for who in d[k]:
 							NAMES[who] = String(d[k][who].get("name", who.to_upper()))
 							COLORS[who] = Color(String(d[k][who].get("color", "#ffffff")))
-					elif not String(k).begins_with("_"): data[k] = d[k]
+					elif typeof(d[k]) == TYPE_ARRAY: data[k] = d[k]       # (a conversation; anything else is a note)
 			else:
 				push_error("dialogue: can't parse " + f)
 	_build_ui()

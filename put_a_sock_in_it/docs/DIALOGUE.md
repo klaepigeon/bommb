@@ -122,4 +122,4 @@ Socko's cues take these values:
 | `gesture` | `recoil`, `tilt`, `nod`, `bounce`, `point`, `shake`, `snap` (whips round to Kurt), `jab` (at his face), `tremble` |
 | `look` | `kurt`, `ahead`, or a named point the level set |
 
-Keys starting with `_` are ignored, so use them for notes, like `_about`.
+Anything in a file that isn't a list of steps is ignored, so `_about` and similar notes are safe.

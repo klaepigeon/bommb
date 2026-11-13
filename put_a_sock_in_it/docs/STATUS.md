@@ -148,3 +148,13 @@ stepping into it; where the lobby leads is open.
 ## Known issues
 
 - Test runs report a few leaked ObjectDB instances at exit (quit mid-level); harmless.
+
+## Chapter 2: The Lobby
+
+Built (docs/CHAPTER2.md, docs/DIALOGUE.md): entered from the lobby 47's balcony becomes.
+The three-floor building, ten inhabitants with their own objectives, the super's conversation
+(five approaches, persistent consequences), the lift / fuses / mains / boiler / ladder / vent /
+meat puzzles with more than one way past each, the wife's story in the environment, Socko's
+suggestions and anger, Kurt's health, dark Chapter 2 sound, the developer overlay.
+`tools/chapter2_test.gd`: 0 fails. Not yet played by hand or on a phone; the inhabitants' bodies
+are procedural and want a proper art pass.
