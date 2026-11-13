@@ -76,7 +76,14 @@ func _ready() -> void:
 	var h: float = float(prof.get("body", {}).get("height", 1.75))
 	var cs := CollisionShape3D.new(); var cap := CapsuleShape3D.new(); cap.radius = 0.18; cap.height = maxf(0.6, h)
 	cs.shape = cap; cs.position.y = cap.height * 0.5; add_child(cs)
-	body = FleshBody.new(prof.get("body", {})); add_child(body)
+	# the sculpted body (assets/people/<id>.glb, tools/sculpt), if there is one: the crawlers share theirs
+	var bp: Dictionary = prof.get("body", {}).duplicate()
+	if not bp.has("model"):
+		var id := String(prof.get("id", ""))
+		if id.begins_with("crawler"): id = "crawler"
+		bp["model"] = id; bp["speaker"] = String(prof.get("id", ""))
+		if id == "crawler" and bp.has("tint"): bp["model_tint"] = (bp.tint as Color) / Color(0.6, 0.55, 0.6)
+	body = FleshBody.new(bp); add_child(body)
 	agent = NavigationAgent3D.new(); agent.path_desired_distance = 0.4; agent.target_desired_distance = 0.5
 	agent.avoidance_enabled = false; agent.max_speed = float(prof.get("run", 2.6))
 	add_child(agent)

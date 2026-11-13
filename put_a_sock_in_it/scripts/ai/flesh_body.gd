@@ -21,7 +21,9 @@ func _init(params := {}) -> void:
 	p = params
 
 func _ready() -> void:
-	_build()
+	var path := "res://assets/people/%s.glb" % String(g("model", ""))
+	if p.has("model") and ResourceLoader.exists(path): _build_model(path)
+	else: _build()
 	for k in J: pose[k] = Vector3.ZERO
 
 func g(k: String, d):
@@ -199,7 +201,96 @@ func at(j: String) -> Vector3:
 
 func _process(delta: float) -> void:
 	var t := 1.0 - exp(-snap * delta)
+	if skel:
+		_process_model(delta, t)
+		return
 	for k in J:
 		var want: Vector3 = _rest[k] + pose.get(k, Vector3.ZERO)
 		var jn: Node3D = J[k]
 		jn.rotation = jn.rotation.lerp(want, t)
+
+# ------------------------------------------------------------------ sculpted bodies
+## A sculpted, rigged body (tools/sculpt, docs/PEOPLE.md): one skinned mesh, its bones the joints
+## above, at rest with no rotation, so `pose` means the same here. J holds a BoneAttachment3D per
+## bone (at(), and anything hung on a joint). The jaw talks with the voice (Dialogue.syllable),
+## the belly and the jowls swing on springs, and the skin shows the wounds as the hp goes.
+const FLESH := preload("res://shaders/flesh.gdshader")
+var skel: Skeleton3D
+var flesh_mat: ShaderMaterial
+var _bone := {}                   # joint -> bone index
+var _cur := {}                    # joint -> current euler
+var _talk := 0.0                  # the jaw's opening from speech
+var _last_pos := Vector3.ZERO
+var _vel := Vector3.ZERO
+var _jig := Vector3.ZERO           # the belly's spring
+var _jig_v := Vector3.ZERO
+var _belly_rest := Vector3.ZERO
+
+func _build_model(path: String) -> void:
+	var scene: Node3D = (load(path) as PackedScene).instantiate()
+	scene.name = "Model"
+	add_child(scene)
+	skel = scene.find_children("*", "Skeleton3D", true, false)[0]
+	flesh_mat = ShaderMaterial.new(); flesh_mat.shader = FLESH
+	flesh_mat.set_shader_parameter("tint", g("model_tint", Color(1, 1, 1)))
+	flesh_mat.set_shader_parameter("wet_gain", float(g("wet_gain", 1.0)))
+	for mi in scene.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).material_override = flesh_mat
+	for i in skel.get_bone_count():
+		var n := skel.get_bone_name(i)
+		_bone[n] = i
+		var a := BoneAttachment3D.new(); a.name = n; a.bone_name = n
+		skel.add_child(a)
+		J[n] = a
+		_cur[n] = Vector3.ZERO
+		_rest[n] = Vector3.ZERO
+	if _bone.has("belly"): _belly_rest = skel.get_bone_rest(_bone.belly).origin
+	if g("keys", false) and J.has("chest"): _keys(J.chest)
+	if Engine.has_singleton("Dialogue") or get_node_or_null("/root/Dialogue"):
+		var d := get_node_or_null("/root/Dialogue")
+		if d: d.syllable.connect(_on_syllable)
+	_last_pos = global_position if is_inside_tree() else Vector3.ZERO
+
+func _keys(chest: Node3D) -> void:
+	# the keys on a cord round his neck, lying on his chest
+	var k: float = float(g("height", 1.75)) / 1.75
+	var front := 0.27 * k * float(g("girth", 1.0)) / 1.45
+	var dark := _mat("black", Color(1, 1, 1))
+	var cord := MeshInstance3D.new(); cord.mesh = Build.box_mesh(Vector3(0.004, 0.3, 0.004)); cord.material_override = _mat("fabric", Color(0.3, 0.25, 0.2))
+	cord.position = Vector3(0, 0.12, -front + 0.05); cord.rotation.x = 0.3; chest.add_child(cord)
+	for i in 7:
+		var key := MeshInstance3D.new(); key.mesh = Build.box_mesh(Vector3(0.014, 0.055, 0.004)); key.material_override = Tex.mat("brass")
+		key.position = Vector3(randf_range(-0.035, 0.035), -0.03 - i * 0.01, -front - 0.01); key.rotation.z = randf_range(-0.5, 0.5)
+		chest.add_child(key)
+
+func _on_syllable(who: String) -> void:
+	if who == String(g("speaker", g("model", ""))): _talk = randf_range(0.18, 0.4)
+
+func _process_model(delta: float, t: float) -> void:
+	_talk = maxf(0.0, _talk - delta * 1.6)
+	for k in _bone:
+		var want: Vector3 = pose.get(k, Vector3.ZERO)
+		if k == "jaw":
+			# (pose: + opens. On this rig + would shut it: the chin's in front of the hinge)
+			want = Vector3(-(maxf(want.x, 0.0) * 0.45 + _talk + float(g("slack", 0.0))), want.y, want.z)
+		var c: Vector3 = _cur[k].lerp(want, t)
+		_cur[k] = c
+		skel.set_bone_pose_rotation(_bone[k], Quaternion.from_euler(c))
+	# the belly swings: a spring behind the body's movement
+	var pos := global_position
+	var v := (pos - _last_pos) / maxf(delta, 0.001)
+	_last_pos = pos
+	var acc := (v - _vel) / maxf(delta, 0.001)
+	_vel = v
+	if _bone.has("belly"):
+		var local_acc := global_transform.basis.inverse() * acc
+		local_acc.y -= 0.0
+		_jig_v += (-_jig * 90.0 - _jig_v * 9.0 - local_acc.limit_length(30.0) * 0.6) * delta
+		_jig += _jig_v * delta
+		_jig = _jig.limit_length(0.06)
+		var bob := sin(Time.get_ticks_msec() * 0.0021) * 0.003      # breathing
+		skel.set_bone_pose_position(_bone.belly, _belly_rest + _jig + Vector3(0, bob, -bob))
+	var host := get_parent()
+	if host and "hp" in host and "prof" in host:
+		var mx: float = float(host.prof.get("hp", 60.0))
+		flesh_mat.set_shader_parameter("hurt", clampf(1.0 - float(host.hp) / maxf(mx, 1.0), 0.0, 1.0))
