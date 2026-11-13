@@ -189,9 +189,10 @@ func _update_lights() -> void:
 
 ## Lit enough to be seen by (and to keep the things in the walls away).
 func lit(p: Vector3) -> bool:
+	var f := B.floor_of(p)
 	for l in lights:
-		if (l[0] as OmniLight3D).light_energy > 0.0 and p.distance_to((l[0] as Node3D).global_position) < float(l[2]) * 0.6:
-			if absf(p.y - (l[0] as Node3D).global_position.y) < 3.0: return true
+		var lp: Vector3 = (l[0] as Node3D).global_position
+		if (l[0] as OmniLight3D).light_energy > 0.0 and B.floor_of(lp - Vector3(0, 2.0, 0)) == f and p.distance_to(lp) < float(l[2]) * 0.6: return true
 	return false
 
 ## Somewhere dark near p, on its floor (the ones who hate the light go there).
@@ -381,8 +382,8 @@ func _crawl(from: Vector3, to: Vector3) -> void:
 
 # ------------------------------------------------------------------ meat
 func _growths() -> void:
-	barricade = Growth.new(); barricade.size = Vector3(3.9, 2.6, 0.6)
-	world.add_child(barricade); barricade.position = Vector3(22.0, FH + 1.6, 13.65)
+	barricade = Growth.new(); barricade.size = Vector3(3.9, 2.6, 0.7)
+	world.add_child(barricade); barricade.position = Vector3(22.0, FH + 1.6, 13.45)
 	barricade.cleared.connect(func(_g): Game.flags["ch2_barricade"] = true; _rebake_t = 1.0)
 	door27 = Growth.new(); door27.size = Vector3(1.5, 2.3, 0.5)
 	world.add_child(door27); door27.position = Vector3(17.5, FH * 2, 7.75)
@@ -493,7 +494,7 @@ func _people() -> void:
 		"body": {"height": 1.98, "girth": 0.8, "arm": 1.35, "neck": 1.6, "head": 0.85, "hunch": 0.5, "eyes": "sewn", "mouth": 0.7, "apron": Color(0.6, 0.6, 0.55), "dress": Color(0.35, 0.3, 0.32), "hair": true, "hair_tint": Color(0.5, 0.5, 0.48), "tint": skin, "fingers": 1.5},
 		"territory": [Vector3(1.5, -0.5, 8.0), Vector3(7.0, 3.0, 14.0)], "voice": "whisper", "attack": {"dmg": 0.12, "reach": 1.2, "windup": 0.6, "cool": 1.6},
 		"objectives": [{"type": "work", "stations": ["washer", "fold", "line"], "weight": 1.0}]}, Vector3(4.0, 0, 12.0))
-	_spawn({"id": "hunter", "faction": "hunter", "hostile_to": ["kurt", "residents"], "hp": 130, "poise": 55, "speed": 1.2, "run": 2.9, "hearing": 0.8,
+	_spawn({"id": "hunter", "faction": "hunter", "asleep": true, "hostile_to": ["kurt", "residents"], "hp": 130, "poise": 55, "speed": 1.2, "run": 2.9, "hearing": 0.8,
 		"sight": {"range": 11.0, "cos": 0.45}, "attack": {"dmg": 0.34, "reach": 1.55, "windup": 0.55, "cool": 1.5},
 		"body": {"height": 2.05, "girth": 1.4, "arm": 1.45, "head": 0.65, "neck": 0.5, "mouth": 1.7, "eyes": "many", "hunch": 0.75, "lumps": 0.6, "tint": Color(0.68, 0.58, 0.52), "fingers": 1.6, "naked": true},
 		"voice": "marta_breath", "voice_attack": "marta_rattle", "step": "step_concrete",
@@ -628,6 +629,13 @@ func on_event(n: String, _step: Dictionary) -> void:
 func _after_talk() -> void:
 	super_npc.set_physics_process(true)
 	_super_react()
+	# the big one in 3 has been asleep; not for long (through the wall: the bed going, a door)
+	var hu: Inhabitant = people.get("hunter")
+	if hu and hu.asleep:
+		await get_tree().create_timer(45.0).timeout
+		if is_instance_valid(hu) and hu.asleep:
+			Sfx.play_at("door_slam", Vector3(14.5, 1.0, 8.0), -2.0, 0.6)
+			hu.wake()
 
 func _super_react() -> void:
 	if not super_npc or super_npc.dead: return
@@ -765,6 +773,7 @@ func on_player_down() -> void:
 	set_cutscene(true)
 	Sfx.play("thud", 2.0, 0.6)
 	await Game.fade(1.0, 0.8)
+	if not is_inside_tree() or Game.level != self: return      # (something else has the screen now)
 	Game.restart_level()
 
 # ------------------------------------------------------------------ remembering

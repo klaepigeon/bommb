@@ -68,6 +68,7 @@ func _init(profile := {}) -> void:
 	id = String(profile.get("id", "someone"))
 	faction = String(profile.get("faction", "residents"))
 	hp = float(profile.get("hp", 60.0)); poise = float(profile.get("poise", 30.0))
+	asleep = bool(profile.get("asleep", false))
 
 func _ready() -> void:
 	add_to_group("inhabitant")
@@ -117,6 +118,9 @@ func _on_noise(pos: Vector3, loud: float) -> void:
 	var hear: float = float(prof.get("hearing", 1.0))
 	if hear <= 0.0: return
 	var d := pos.distance_to(global_position)
+	if asleep:
+		if loud >= 0.6 and d < 7.0: wake()
+		return
 	if pos.distance_to(global_position) < 0.8: return            # (its own)
 	var through := not get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(eye(), pos + Vector3(0, 0.4, 0), 1, [get_rid()])).is_empty()
 	var reach := loud * 14.0 * hear * (0.55 if through else 1.0)
@@ -126,9 +130,22 @@ func _on_noise(pos: Vector3, loud: float) -> void:
 		_think = 0.0
 
 # ------------------------------------------------------------------ deciding
+var asleep := false              # (profile "asleep": lying still till something wakes it: wake())
+
+func wake() -> void:
+	if not asleep: return
+	asleep = false
+	_say("attack")
+
 func _physics_process(delta: float) -> void:
 	if dead or not player: return
 	_anim_t += delta
+	if asleep:
+		var sp := {"spine": Vector3(-1.3, 0, 0.2), "neck": Vector3(-0.3, 0, 0), "hip_l": Vector3(1.5, 0, 0), "hip_r": Vector3(1.4, 0, 0),
+			"kn_l": Vector3(-1.6, 0, 0), "kn_r": Vector3(-1.6, 0, 0), "sh_l": Vector3(0.6, 0, 0.3), "sh_r": Vector3(0.5, 0, -0.3)}
+		for k in body.pose: body.pose[k] = sp.get(k, Vector3.ZERO)
+		_sounds(delta)
+		return
 	_attack_t = maxf(0.0, _attack_t - delta)
 	_noise_t = maxf(0.0, _noise_t - delta)
 	if _stagger > 0.0:
@@ -286,6 +303,7 @@ func _strike(delta: float) -> void:
 			if is_instance_valid(target) and target.global_position.distance_to(global_position) < float(a.get("reach", 1.3)) + 0.3:
 				var to: Vector3 = (target.global_position - global_position) * Vector3(1, 0, 1)
 				if (-global_basis.z).dot(to.normalized()) > 0.4:
+					if target == player and level and level.get("cutscene"): return      # (not while the camera's someone else's)
 					attacked.emit(self, target)
 					Sfx.play_at("thud", target.global_position + Vector3(0, 1.2, 0), -2.0, 0.8)
 					if target == player: player.hurt(float(a.get("dmg", 0.25)), global_position)
@@ -297,6 +315,7 @@ func _strike(delta: float) -> void:
 
 func take_hit(dmg: float, from: Vector3, by: Node = null) -> void:
 	if dead: return
+	wake()
 	hp -= dmg; poise -= dmg
 	Sfx.play_at("bone_crack", eye(), -4.0, randf_range(0.7, 1.0))
 	if poise <= 0.0:
@@ -328,8 +347,9 @@ func die() -> void:
 	collision_layer = 0
 	_say("die")
 	body.snap = 5.0
-	body.pose = {"spine": Vector3(-1.2, 0, 0.3), "neck": Vector3(-0.4, 0, 0.3), "kn_l": Vector3(-1.6, 0, 0), "kn_r": Vector3(-1.4, 0, 0),
+	var dp := {"spine": Vector3(-1.2, 0, 0.3), "neck": Vector3(-0.4, 0, 0.3), "kn_l": Vector3(-1.6, 0, 0), "kn_r": Vector3(-1.4, 0, 0),
 		"hip_l": Vector3(1.3, 0, 0.2), "hip_r": Vector3(1.1, 0, -0.2), "sh_l": Vector3(-0.4, 0, 0.8), "sh_r": Vector3(-0.3, 0, -0.9), "jaw": Vector3(0.6, 0, 0)}
+	for k in body.pose: body.pose[k] = dp.get(k, Vector3.ZERO)
 	var tw := create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tw.tween_property(body, "position:y", -0.5, 0.9).set_delay(0.3)
 	died.emit(self)
@@ -489,6 +509,7 @@ func _sounds(delta: float) -> void:
 
 func _animate(_delta: float) -> void:
 	var P := body.pose
+	for k in body.J: if not P.has(k): P[k] = Vector3.ZERO
 	var w := _walk
 	var moving := Vector2(velocity.x, velocity.z).length() > 0.2
 	var hunch: float = float(prof.get("body", {}).get("hunch", 0.0))

@@ -208,17 +208,18 @@ static func _stairs(root: Node3D, mats: Array) -> void:
 		# up the west side, north, to the half-landing
 		for i in 10:
 			var top := y0 + 0.16 * (i + 1)
-			Build.box(root, Vector3(21.07, top - 0.1, 8.5 + i * 0.49 + 0.245), Vector3(1.85, 0.2, 0.49), m.floor, false)
-		_ramp(root, Vector3(21.07, y0, 8.5), Vector3(21.07, y0 + 1.6, 13.4), 1.85)
-		Build.box(root, Vector3(22.0, y0 + 1.6 - 0.1, 13.7), Vector3(4.0, 0.2, 0.6), m.floor)
+			Build.box(root, Vector3(21.07, top - 0.1, 8.5 + i * 0.45 + 0.225), Vector3(1.85, 0.2, 0.45), m.floor, false)
+		_ramp(root, Vector3(21.07, y0, 8.5), Vector3(21.07, y0 + 1.6, 13.0), 1.85)
+		# (a half-landing deep enough to turn on: 0.9 m, wall to the flights' ends)
+		Build.box(root, Vector3(22.0, y0 + 1.6 - 0.1, 13.45), Vector3(4.0, 0.2, 0.9), m.floor)
 		# and back down the east side to the next floor's landing
 		for j in 10:
 			var top2 := y0 + 1.6 + 0.16 * (j + 1)
-			Build.box(root, Vector3(22.95, top2 - 0.1, 13.4 - (j + 1) * 0.49 + 0.245), Vector3(1.85, 0.2, 0.49), m.floor, false)
-		_ramp(root, Vector3(22.95, y0 + 1.6, 13.4), Vector3(22.95, y0 + 3.2, 8.5), 1.85)
+			Build.box(root, Vector3(22.95, top2 - 0.1, 13.0 - (j + 1) * 0.45 + 0.225), Vector3(1.85, 0.2, 0.45), m.floor, false)
+		_ramp(root, Vector3(22.95, y0 + 1.6, 13.0), Vector3(22.95, y0 + 3.2, 8.5), 1.85)
 		# (the half-landing under the meat on the first floor is solid: the stairs end there)
 		# a rail between the two flights
-		Build.box(root, Vector3(22.0, y0 + 1.6, 11.0), Vector3(0.06, 3.2, 4.8), Tex.mat("gunmetal"))
+		Build.box(root, Vector3(22.0, y0 + 1.6, 10.7), Vector3(0.06, 3.2, 4.2), Tex.mat("gunmetal"))
 
 ## What feet walk on, under the steps: a slope from a (bottom, centre of the edge) to b (top),
 ## `w` wide. Invisible; the steps are what you see. (Nobody but Kurt can step up a stair.)
