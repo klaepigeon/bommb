@@ -6,7 +6,7 @@ extends CanvasLayer
 
 var rect: ColorRect
 var mat: ShaderMaterial
-var base := {"grain": 0.05, "vignette": 0.45, "fringe": 0.0, "drain": 0.0, "tear": 0.0, "double_k": 0.0, "pulse": 0.0, "fear": 0.0}
+var base := {"grain": 0.05, "vignette": 0.45, "fringe": 0.0, "drain": 0.0, "tear": 0.0, "double_k": 0.0, "pulse": 0.0, "fear": 0.0, "hurt": 0.0}
 var _kick := {}
 var _tint := Color(0, 0, 0, 0)
 var _t := 0.0
@@ -23,7 +23,7 @@ func _ready() -> void:
 
 ## Reset to a level's resting look.
 func reset(b := {}) -> void:
-	base = {"grain": 0.05, "vignette": 0.45, "fringe": 0.0, "drain": 0.0, "tear": 0.0, "double_k": 0.0, "pulse": 0.0, "fear": 0.0}
+	base = {"grain": 0.05, "vignette": 0.45, "fringe": 0.0, "drain": 0.0, "tear": 0.0, "double_k": 0.0, "pulse": 0.0, "fear": 0.0, "hurt": 0.0}
 	for k in b: base[k] = b[k]
 	_kick.clear(); _tint = Color(0, 0, 0, 0)
 

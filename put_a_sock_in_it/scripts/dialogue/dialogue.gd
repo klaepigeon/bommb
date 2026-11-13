@@ -15,6 +15,20 @@ extends Node
 ## The pick plays its "steps" and the conversation carries on. Conditions can test `memories`,
 ## `flags` and `skills` (unlocked skill ids: skills.has("s_telepathy")).
 ## The subtitles are part of this node, so every scene gets them without wiring.
+##
+## Branching (docs/DIALOGUE.md): any step may have an "id"; {"goto": id} jumps to it (in this
+## conversation, or "other_conversation:id"); {"end": true} ends the conversation. Steps and
+## choices may carry "do": a list of consequences, applied when reached / picked:
+##   {"rel": who, "add": {key: n}} / {"rel": who, "set": {key: v}}   a relationship (Game.rel)
+##   {"flag": name} / {"flag": {name: value}} / {"unflag": name}     story flags
+##   {"know": [who, fact]}       what someone knows (rel.who.known)   {"give": item} / {"take": item}
+##   {"event": name}             the level acts on it                  {"objective": text}
+## A choice may carry "approach" ("cooperative", "neutral", "suspicious", "hostile", "deceptive")
+## and the choice list "with" (who it's said to): the pick counts toward rel.<with>.approach.
+## Conditions see memories, flags, skills, rel (Game.rel), inv (Game.inventory) and
+## Relations.disposition(who) as disp(who) is not available: use rel.super.disposition.
+## Speakers beyond Kurt, Socko and Marta are declared in any file's "_speakers":
+##   {"super": {"name": "SUPERINTENDENT", "color": "#b8a07a"}}
 
 signal line_started(step: Dictionary)
 signal line_finished(step: Dictionary)
@@ -24,8 +38,9 @@ signal chose(index: int, option: Dictionary)
 
 const TAGS := {"memory": ["[Memory] ", Color("e0c890")], "telepathy": ["[Telepathy] ", Color("9fd4ff")]}
 
-const NAMES := {"kurt": "KURT", "socko": "SOCKO", "marta": "MARTA"}
-const COLORS := {"kurt": Color("d6cbb3"), "socko": Color("f2c94c"), "marta": Color("9fc7b8")}
+var NAMES := {"kurt": "KURT", "socko": "SOCKO", "marta": "MARTA"}
+var COLORS := {"kurt": Color("d6cbb3"), "socko": Color("f2c94c"), "marta": Color("9fc7b8")}
+const APPROACHES := ["cooperative", "neutral", "suspicious", "hostile", "deceptive"]
 
 var data := {}
 var busy := false
@@ -44,7 +59,12 @@ func _ready() -> void:
 		if f.ends_with(".json"):
 			var d = JSON.parse_string(FileAccess.get_file_as_string("res://data/dialogue/" + f))
 			if typeof(d) == TYPE_DICTIONARY:
-				for k in d: data[k] = d[k]
+				for k in d:
+					if k == "_speakers":
+						for who in d[k]:
+							NAMES[who] = String(d[k][who].get("name", who.to_upper()))
+							COLORS[who] = Color(String(d[k][who].get("color", "#ffffff")))
+					elif not String(k).begins_with("_"): data[k] = d[k]
 			else:
 				push_error("dialogue: can't parse " + f)
 	_build_ui()
@@ -59,31 +79,84 @@ func play(id: String) -> bool:
 	stop()
 	busy = true
 	var g := _gen
-	await _run(data[id], g)
+	var conv := id
+	var steps: Array = data[id]
+	var jump: String = await _run(steps, g)
+	while jump != "" and g == _gen:
+		if jump == "<end>": break
+		if jump.contains(":"):
+			conv = jump.get_slice(":", 0); jump = jump.get_slice(":", 1)
+			if not data.has(conv): push_error("dialogue: no conversation " + conv); break
+		var at := _find(data[conv], jump)
+		if at < 0: push_error("dialogue: no step '%s' in %s" % [jump, conv]); break
+		steps = (data[conv] as Array).slice(at)
+		jump = await _run(steps, g)
 	if g == _gen:
 		busy = false
 		_panel.visible = false
 	return g == _gen
 
-func _run(steps: Array, g: int) -> void:
+## The index of the step with this "id" (top level of the conversation).
+func _find(steps: Array, id: String) -> int:
+	for i in steps.size():
+		if typeof(steps[i]) == TYPE_DICTIONARY and String(steps[i].get("id", "")) == id: return i
+	return -1
+
+## Plays steps; returns where to jump next ("" carry on / done, "<end>", or a step id).
+func _run(steps: Array, g: int) -> String:
 	for step in steps:
-		if g != _gen: return
+		if g != _gen: return ""
 		if step.has("if") and not test(step["if"]): continue
 		var p: float = step.get("pause", 0.0)
 		if p > 0.0:
 			await _wait(p, g)
-		if g != _gen: return
+		if g != _gen: return ""
+		if step.has("do"): apply(step["do"])
 		if step.has("event"):
 			event.emit(step.event, step)
 			if step.has("wait"): await _wait(float(step.wait), g)
-			continue
-		if step.has("choices"):
+		elif step.has("choices"):
 			var pick: Dictionary = await _choose(step.choices, g)
-			if g != _gen: return
-			if not pick.is_empty(): await _run(pick.get("steps", []), g)
-			continue
-		if Game.hides_placeholders() and Game.is_placeholder(String(step.get("text", ""))): continue
-		await _say(step, g)
+			if g != _gen: return ""
+			if not pick.is_empty():
+				if pick.has("approach") and step.has("with"):
+					var r: Dictionary = Game.rel_of(String(step.with))
+					var ap: Dictionary = r.get("approach", {})
+					ap[pick.approach] = int(ap.get(pick.approach, 0)) + 1
+					r["approach"] = ap
+				if pick.has("do"): apply(pick["do"])
+				var j: String = await _run(pick.get("steps", []), g)
+				if j != "": return j
+				if pick.has("goto"): return String(pick.goto)
+		elif step.has("text"):
+			if not (Game.hides_placeholders() and Game.is_placeholder(String(step.get("text", "")))):
+				await _say(step, g)
+		if step.get("end", false): return "<end>"
+		if step.has("goto"): return String(step.goto)
+	return ""
+
+## Consequences (see the header). Reusable: levels and scripts call it too.
+func apply(ops) -> void:
+	if typeof(ops) == TYPE_DICTIONARY: ops = [ops]
+	for op in ops:
+		if op.has("rel"):
+			var r: Dictionary = Game.rel_of(String(op.rel))
+			for k in op.get("add", {}): r[k] = float(r.get(k, 0.0)) + float(op.add[k])
+			for k in op.get("set", {}): r[k] = op.set[k]
+		if op.has("flag"):
+			if typeof(op.flag) == TYPE_DICTIONARY:
+				for k in op.flag: Game.flags[k] = op.flag[k]
+			else: Game.flags[String(op.flag)] = true
+		if op.has("unflag"): Game.flags.erase(String(op.unflag))
+		if op.has("know"):
+			var r2: Dictionary = Game.rel_of(String(op.know[0]))
+			var kn: Array = r2.get("known", [])
+			if not kn.has(op.know[1]): kn.append(op.know[1])
+			r2["known"] = kn
+		if op.has("give"): Game.add_item(String(op.give))
+		if op.has("take"): Game.take_item(String(op.take))
+		if op.has("objective") and Game.level and Game.level.has_method("objective"): Game.level.objective(String(op.objective))
+		if op.has("event"): event.emit(String(op.event), op)
 
 # ------------------------------------------------------------------ choices
 var _choice_box: VBoxContainer
@@ -153,9 +226,10 @@ func skip_line() -> void:
 
 func test(cond: String) -> bool:
 	var e := Expression.new()
-	if e.parse(cond, ["memories", "flags", "skills"]) != OK:
+	if e.parse(cond, ["memories", "flags", "skills", "rel", "inv"]) != OK:
 		push_error("dialogue: bad condition " + cond); return false
-	var r = e.execute([Game.memories, Game.flags, Game.skills])
+	for who in ["super", "socko"]: Game.rel_of(who)        # (so rel.super.x never fails)
+	var r = e.execute([Game.memories, Game.flags, Game.skills, Game.rel, Game.inventory])
 	return bool(r) if not e.has_execute_failed() else false
 
 func _say(step: Dictionary, g: int) -> void:

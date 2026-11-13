@@ -64,7 +64,31 @@ var _strafe := 0.0
 var _sway := Vector3.ZERO     # the hands and what's in them lag the look, and the walk
 var _breath := 0.0
 var _torch_near := 1.0
-var tremor := 0.0             # his nerve (Nerve): the hands and the aim shake
+var tremor := 0.0
+## Health (0..1). No meter: it shows in Socko (blood through the knit, a sag) and the picture's
+## edges. Back slowly after nine seconds unhurt. At nothing, the level decides (on_player_down).
+var health := 1.0
+var _hurt_t := 99.0
+signal hurt_by(amount: float, from: Vector3)
+
+func hurt(amount: float, from: Vector3) -> void:
+	if health <= 0.0: return
+	health = maxf(0.0, health - amount)
+	_hurt_t = 0.0
+	shake(0.03 + amount * 0.05, 0.35)
+	fov_kick = 4.0
+	Sfx.play("gasp", -4.0, randf_range(0.9, 1.05))
+	Sfx.play("thud", -6.0, 1.2)
+	Fx.kick("fringe", 1.2, 0.8)
+	var away := (global_position - from) * Vector3(1, 0, 1)
+	if away.length() > 0.01: velocity += away.normalized() * 3.0 * amount
+	var s = get_parent().get("socko")
+	if s: s.gesture("recoil")
+	hurt_by.emit(amount, from)
+	if health <= 0.0:
+		var lv = get_parent()
+		if lv and lv.has_method("on_player_down"): lv.on_player_down()
+		else: Game.restart_level()             # his nerve (Nerve): the hands and the aim shake
 var hidden_in: Node = null
 var breath_held := false      # (Nerve sets it; she listens for it)    # a HideSpot he's inside
 var _hide_from := Transform3D()
@@ -280,6 +304,12 @@ func _physics_process(delta: float) -> void:
 	if stamina < stamina_max() * 0.4 and running: _pant = maxf(_pant, 0.6)
 	Sfx.set_loop_volume("pant", linear_to_db(maxf(0.0001, _pant * 0.5)))
 	_torch_update(delta)
+	# health: back slowly when he's been left alone a while
+	_hurt_t += delta
+	if _hurt_t > 9.0 and health > 0.0: health = minf(1.0, health + delta * 0.04)
+	var sk = get_parent().get("socko")
+	if sk: sk.vitals = health
+	Fx.set_k("hurt", 1.0 - health)
 	# what's in reach
 	_update_target()
 	if held: _carry(delta)

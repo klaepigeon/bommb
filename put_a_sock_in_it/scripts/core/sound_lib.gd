@@ -715,3 +715,193 @@ static func sting() -> PackedFloat32Array:
 	sat(d, 1.3)
 	norm(d, 0.9)
 	return d
+
+# ================================================================== Chapter 2 (docs/SOUND.md)
+## Nothing cartoonish here: no bubbles, no pitch-drops. Low, dry, close, and wrong.
+
+## The building at night: a mains drone that never sits still in pitch, pipes moaning somewhere
+## above, and now and then a knock through a wall. Loops.
+static func lobby_bed() -> PackedFloat32Array:
+	var r := rng(201)
+	var n := int(16.0 * SR)
+	var d := PackedFloat32Array(); d.resize(n)
+	var ph := 0.0
+	for i in n:
+		var t := float(i) / SR
+		var f := 49.6 + sin(t * 0.11) * 0.6 + sin(t * 0.037) * 0.4
+		ph += TAU * f / SR
+		d[i] = sin(ph) * 0.18 + sin(ph * 2.0) * 0.08 + sin(ph * 3.01) * 0.04
+	var air := brown(n, r); biquad(air, "lp", 160.0); mix(d, air, 0.7)
+	var hiss := pink(n, r); biquad(hiss, "bp", 2400.0, 0.7); mix(d, hiss, 0.025)
+	# pipes, far off: a slow friction moan through the iron
+	for k in 3:
+		var at := r.randf_range(1.0, 13.0)
+		var tmp := PackedFloat32Array(); tmp.resize(n)
+		friction(tmp, at, r.randf_range(2.0, 3.5), func(x): return 18.0 + sin(x * PI) * 10.0, [[210.0, 12.0, 1.0], [630.0, 14.0, 0.4]], r, 0.5, 0.05)
+		env_ad(tmp, 0.8, 1.5, at)
+		biquad(tmp, "lp", 800.0)
+		mix(d, tmp, 0.4)
+	# a knock through the wall, twice
+	for k in 2:
+		var at2 := r.randf_range(2.0, 14.0)
+		thump(d, at2, 70.0, 0.2, 0.25, 0.2); thump(d, at2 + 0.32, 66.0, 0.2, 0.18, 0.2)
+	norm(d, 0.5)
+	return d
+
+## A washing machine on its spin: the drum thudding round, the case rattling.
+static func washer() -> PackedFloat32Array:
+	var r := rng(202)
+	var d := buf(2.6)
+	for i in 5:
+		var t := i * 0.5
+		thump(d, t, 55.0, 0.25, 0.9, 0.15)
+		strike(d, t + 0.02, [180, 340, 720], [0.08, 0.05, 0.03], [0.5, 0.3, 0.15], r, 0.003, 0.6)
+	var hum := buf(2.6)
+	for i in hum.size(): hum[i] = sin(TAU * 98.0 * float(i) / SR) * 0.12
+	mix(d, hum, 1.0)
+	grains(d, 0.0, 2.5, 30, 900.0, 2500.0, 3.0, r, 0.12, false)
+	biquad(d, "lp", 2000.0)
+	norm(d, 0.7)
+	return d
+
+## Fat on a gas ring: a hiss that crackles, low.
+static func stove() -> PackedFloat32Array:
+	var r := rng(203)
+	var d := pink(int(2.5 * SR), r); biquad(d, "hp", 1500.0); biquad(d, "lp", 6000.0)
+	for i in d.size(): d[i] *= 0.25
+	grains(d, 0.0, 2.4, 60, 2000.0, 7000.0, 1.5, r, 0.5, false)
+	env_ad(d, 0.1, 2.0)
+	norm(d, 0.45)
+	return d
+
+## His breathing: heavy, through the mouth, wet at the back of the throat.
+static func super_breath() -> PackedFloat32Array:
+	var r := rng(204)
+	var d := buf(2.8)
+	for k in 2:
+		var at := k * 1.35
+		var b := pink(int(1.2 * SR), r)
+		biquad(b, "bp", 520.0 if k == 0 else 380.0, 1.4)
+		for i in b.size():
+			var t := float(i) / SR
+			b[i] *= sin(minf(1.0, t / 1.1) * PI) * (1.0 + 0.35 * sin(t * TAU * 23.0))      # the wet rattle in it
+		mix(d, b, 1.0, int(at * SR))
+	var low := brown(d.size(), r); biquad(low, "lp", 140.0); mix(d, low, 0.5)
+	norm(d, 0.6)
+	return d
+
+static func super_grunt() -> PackedFloat32Array:
+	var r := rng(205)
+	var d := buf(0.7)
+	var ph := 0.0
+	for i in d.size():
+		var t := float(i) / SR
+		ph += TAU * (95.0 - t * 30.0) / SR
+		var saw := 1.0 - 2.0 * fposmod(ph / TAU, 1.0)
+		d[i] = saw * exp(-t / 0.25) * minf(1.0, t * 40.0)
+	biquad(d, "bp", 420.0, 1.2); biquad(d, "lp", 1500.0)
+	var n := white(d.size(), r); env_ad(n, 0.01, 0.12); biquad(n, "bp", 900.0, 2.0); mix(d, n, 0.3)
+	sat(d, 2.5)
+	norm(d, 0.8)
+	return d
+
+## Nails on skin, slowly.
+static func super_scratch() -> PackedFloat32Array:
+	var r := rng(206)
+	var d := buf(1.6)
+	for k in 4:
+		var at := k * 0.36
+		grains(d, at, at + 0.22, 40, 2500.0, 6000.0, 1.2, r, 0.5, true)
+	biquad(d, "lp", 7000.0)
+	norm(d, 0.5)
+	return d
+
+## A ring of keys on a cord, against a body.
+static func keys() -> PackedFloat32Array:
+	var r := rng(207)
+	var d := buf(0.9)
+	for k in 9:
+		var t := r.randf_range(0.0, 0.6)
+		var f := r.randf_range(2800.0, 5200.0)
+		strike(d, t, [f, f * 1.37, f * 2.21], [0.05, 0.03, 0.02], [0.4, 0.25, 0.12], r, 0.0002, r.randf_range(0.3, 0.8))
+	norm(d, 0.5)
+	return d
+
+## The lift: steel cable over a wheel, the cage grinding in its guides. Two seconds of it.
+static func lift_grind() -> PackedFloat32Array:
+	var r := rng(208)
+	var d := buf(2.0)
+	friction(d, 0.0, 1.9, func(k): return 40.0 + sin(k * 7.0) * 6.0, [[160.0, 6.0, 1.0], [460.0, 8.0, 0.6], [1250.0, 10.0, 0.25]], r, 1.0, 0.2)
+	var hum := brown(d.size(), r); biquad(hum, "lp", 90.0); mix(d, hum, 0.8)
+	env_ad(d, 0.2, 1.4)
+	norm(d, 0.7)
+	return d
+
+## The lift's doors: a shove of sheet steel, the rattle of the rollers, the clang.
+static func lift_doors() -> PackedFloat32Array:
+	var r := rng(209)
+	var d := buf(1.4)
+	friction(d, 0.0, 0.9, func(_k): return 70.0, [[700.0, 4.0, 1.0], [1700.0, 6.0, 0.4]], r, 0.7, 0.3)
+	strike(d, 0.95, [210, 520, 1130, 2300], [0.2, 0.12, 0.07, 0.04], [1.0, 0.6, 0.35, 0.2], r, 0.0008)
+	norm(d, 0.7)
+	return d
+
+## A radiator coming up to heat: the ticks of the iron expanding, a far knock in the pipe.
+static func radiator() -> PackedFloat32Array:
+	var r := rng(210)
+	var d := buf(1.8)
+	for k in 6:
+		var t := r.randf_range(0.0, 1.5)
+		strike(d, t, [1400.0 + r.randf() * 600.0, 3300.0], [0.03, 0.015], [0.4, 0.2], r, 0.0003, r.randf_range(0.3, 0.9))
+	strike(d, 0.9, [212, 589], [0.4, 0.25], [0.5, 0.3], r, 0.002, 0.4)
+	biquad(d, "lp", 5000.0)
+	norm(d, 0.45)
+	return d
+
+## The boiler, lit: a low roar in its firebox, the casing ticking. Loops.
+static func boiler_loop() -> PackedFloat32Array:
+	var r := rng(211)
+	var n := int(6.0 * SR)
+	var d := brown(n, r); biquad(d, "lp", 260.0)
+	var roar := pink(n, r); biquad(roar, "bp", 380.0, 0.8)
+	for i in n: d[i] = d[i] * 0.9 + roar[i] * (0.35 + 0.1 * sin(float(i) / SR * 1.7))
+	norm(d, 0.55)
+	return d
+
+## Something small with too many joints in the ductwork: claws on sheet metal, fast.
+static func vent_scrabble() -> PackedFloat32Array:
+	var r := rng(212)
+	var d := buf(1.4)
+	var t := 0.0
+	while t < 1.2:
+		strike(d, t, [1900.0 + r.randf() * 900.0, 4100.0], [0.02, 0.012], [0.35, 0.2], r, 0.0002, r.randf_range(0.4, 1.0))
+		thump(d, t, 260.0, 0.02, 0.15, 0.3)
+		t += r.randf_range(0.03, 0.09)
+	biquad(d, "lp", 6000.0)
+	norm(d, 0.6)
+	return d
+
+## What's in the bath, breathing: slow, huge, through water.
+static func bath_breath() -> PackedFloat32Array:
+	var r := rng(213)
+	var d := buf(4.0)
+	var b := brown(d.size(), r); biquad(b, "lp", 220.0)
+	for i in d.size():
+		var t := float(i) / SR
+		var k := maxf(0.0, sin(t * TAU / 4.0))
+		d[i] = b[i] * (0.25 + 1.2 * k)
+	var wet := pink(d.size(), r); biquad(wet, "bp", 700.0, 3.0)
+	for i in d.size(): wet[i] *= maxf(0.0, sin(float(i) / SR * TAU / 4.0)) * 0.5
+	mix(d, wet, 0.6)
+	norm(d, 0.6)
+	return d
+
+## Meat coming apart: fibres tearing, a wet give with no comedy in it.
+static func flesh_tear() -> PackedFloat32Array:
+	var r := rng(214)
+	var d := buf(0.9)
+	friction(d, 0.0, 0.6, func(k): return 120.0 + k * 200.0, [[650.0, 2.5, 1.0], [1800.0, 4.0, 0.5]], r, 0.8, 0.5)
+	var w := white(int(0.6 * SR), r); env_ad(w, 0.02, 0.15); biquad(w, "bp", 1100.0, 1.2); mix(d, w, 0.4)
+	thump(d, 0.0, 80.0, 0.1, 0.4, 0.2)
+	norm(d, 0.7)
+	return d

@@ -22,6 +22,11 @@ const EMOTIONS := {
 	"nervous":      {"bounce": 0.2, "jaw": 0.02, "smile": -0.3, "squash": 0.5,  "curl": 0.4,  "tilt": -0.1},
 	"disappointed": {"bounce": 0.1, "jaw": 0.0,  "smile": -0.6, "squash": 0.5,  "curl": 0.2,  "tilt": -0.15},
 	"uncanny":      {"bounce": 0.0, "jaw": 0.0,  "smile": 0.6,  "squash": -0.1, "curl": 0.0,  "tilt": 0.0},
+	# (Chapter 2: the friend wearing thin)
+	"artificial":   {"bounce": 0.7, "jaw": 0.12, "smile": 1.0,  "squash": -0.3, "curl": -0.3, "tilt": 0.0},   # too much smile, held too long
+	"irritated":    {"bounce": 0.05,"jaw": 0.0,  "smile": -0.2, "squash": 0.2,  "curl": 0.5,  "tilt": -0.05},
+	"angry":        {"bounce": 0.0, "jaw": 0.05, "smile": -0.9, "squash": 0.35, "curl": 0.9,  "tilt": 0.0},
+	"still":        {"bounce": 0.0, "jaw": 0.0,  "smile": 0.0,  "squash": 0.0,  "curl": 0.0,  "tilt": 0.12},   # uncomfortably
 }
 
 # Holds, in the camera's frame: elbow position, forearm direction, the back of the hand's
@@ -40,6 +45,7 @@ var points := {}              # look targets the level names: "door", "hole", "g
 var interest = null           # a point he keeps half an eye on (divided attention), or null
 var hold := "hidden"
 var emotion := "neutral"
+var vitals := 1.0             # Kurt's health, 0..1 (the player sets it): it shows in the sock
 var look := "ahead"           # "kurt", "ahead", "away", or a key in points
 var cross_eyed := false
 
@@ -101,6 +107,16 @@ func gesture(g: String) -> void:
 			tw.tween_callback(func(): _point_at = null)
 		"shake":
 			tw.tween_method(func(k): _g.yaw = 0.3 * sin(k * TAU * 2.5) * (1.0 - k), 0.0, 1.0, 0.8)
+		"snap":     # whips round to Kurt, all at once, and stays
+			tw.tween_method(func(k): _g.yaw = -0.6 * (1.0 - k); _g.push = 0.05 * k, 0.0, 1.0, 0.07)
+			tw.tween_interval(1.4)
+			tw.tween_method(func(k): _g.push = 0.05 * k, 1.0, 0.0, 0.6)
+		"jab":      # at his face: twice, hard
+			for i in 2:
+				tw.tween_method(func(k): _g.push = 0.11 * k; _g.jaw = 0.4 * k, 0.0, 1.0, 0.06)
+				tw.tween_method(func(k): _g.push = 0.11 * k; _g.jaw = 0.4 * k, 1.0, 0.0, 0.18)
+		"tremble":  # holding something in
+			tw.tween_method(func(k): _g.roll = 0.03 * sin(k * 90.0) * (1.0 - k); _g.squash = 0.15 * sin(k * 70.0) * (1.0 - k), 0.0, 1.0, 1.6)
 
 func set_cross_eyed(on: bool) -> void:
 	cross_eyed = on
@@ -157,7 +173,9 @@ func _process(delta: float) -> void:
 	_jaw += _jaw_v * delta
 	rig.jaw = maxf(_jaw, -0.03)
 	rig.smile_l = _e.smile; rig.smile_r = _e.smile * (0.85 if emotion == "uncanny" else 1.0)
-	rig.squash = _e.squash + _g.squash
+	# Kurt's health is the same arm: blood comes through, and he sags (docs/CHAPTER2.md)
+	rig.set_wound(clampf((1.0 - vitals) * 1.25, 0.0, 1.0))
+	rig.squash = _e.squash + _g.squash + maxf(0.0, 0.6 - vitals) * 0.8
 	rig.stretch = _g.stretch
 	rig.curl = _e.curl
 	rig.apply_pose()

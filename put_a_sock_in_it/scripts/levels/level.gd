@@ -51,6 +51,8 @@ func _ready() -> void:
 	touch = TouchControls.new(); touch.player = player; tl.add_child(touch)
 	pause = PauseMenu.new(); pause.touch = touch; add_child(pause)
 	Dialogue.event.connect(_on_event)
+	if DevOverlay.wanted():
+		var dv := DevOverlay.new(); dv.level = self; add_child(dv)
 	Fx.reset()
 	build()
 	set_cutscene(true)     # nothing moves until begin() says so

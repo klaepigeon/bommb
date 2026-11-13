@@ -22,6 +22,7 @@ uniform bool safe = true;          // reduce flashing: no jumping bands, slow wa
 uniform float double_k = 0.0;
 uniform float pulse = 0.0;
 uniform vec4 tint = vec4(0.0);
+uniform float hurt = 0.0;          // Kurt's health gone: the edges dark and a little red (steady)
 uniform float fear = 0.0;          // Kurt's nerve: the edges close in and the colour goes (steady: never pulses)
 uniform vec2 res = vec2(640.0, 360.0);
 
@@ -65,6 +66,8 @@ void fragment() {
 	float r = length(d * vec2(1.0, 0.82));
 	float v = smoothstep(0.85, 0.2, r * (1.0 + vignette + fear * 0.55));
 	c *= mix(1.0, v, 0.85);
+	float he = smoothstep(0.2, 0.75, r) * hurt;
+	c = mix(c, c * vec3(0.55, 0.12, 0.1), he * 0.8);
 	c *= 1.0 - pulse * smoothstep(0.25, 0.75, r) * 0.8;
 	// 15-bit colour with ordered dither, at the 3D picture's resolution
 	if (dither > 0.0) {

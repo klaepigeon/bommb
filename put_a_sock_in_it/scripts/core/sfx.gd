@@ -566,11 +566,16 @@ func _define() -> void:
 		"siren": SoundLib.siren, "paper": SoundLib.paper, "sting": SoundLib.sting,
 		"heartbeat": SoundLib.heartbeat, "whoosh": SoundLib.whoosh, "bone_crack": SoundLib.bone_crack,
 		"crawl": SoundLib.crawl, "tinnitus": SoundLib.tinnitus,
+		# Chapter 2
+		"washer": SoundLib.washer, "stove": SoundLib.stove, "super_breath": SoundLib.super_breath, "super_grunt": SoundLib.super_grunt,
+		"super_scratch": SoundLib.super_scratch, "keys": SoundLib.keys, "lift_grind": SoundLib.lift_grind, "lift_doors": SoundLib.lift_doors,
+		"radiator": SoundLib.radiator, "vent_scrabble": SoundLib.vent_scrabble, "bath_breath": SoundLib.bath_breath, "flesh_tear": SoundLib.flesh_tear,
 	}
 	var lib_loops := {
 		"goo_loop": SoundLib.goo, "wind": SoundLib.wind, "buzz": SoundLib.tube_buzz, "hum": SoundLib.fridge,
 		"tv_static": SoundLib.tv_static, "busy_tone": SoundLib.busy_tone, "flies": SoundLib.flies,
 		"heart_loop": SoundLib.heart_loop, "flesh_drone": SoundLib.flesh_bed, "drone": SoundLib.room_tone,
+		"lobby_bed": SoundLib.lobby_bed, "boiler_loop": SoundLib.boiler_loop,
 	}
 	for k in lib: GEN[k] = [0.0, lib[k], false, L]
 	for k in lib_loops: GEN[k] = [0.0, lib_loops[k], true, L]
@@ -582,6 +587,7 @@ func _define() -> void:
 		GEN["v_socko%d" % i] = [0.09, _voice(f0, 0.09, 0.55, 0.35, 1.3)]
 		GEN["v_kurt%d" % i] = [0.12, _voice(105.0 + i * 9.0, 0.12, 0.25, 0.6, 1.0)]
 		GEN["v_marta%d" % i] = [0.24, _marta_voice(i)]
+		GEN["v_super%d" % i] = [0.15, _voice(74.0 + i * 5.0, 0.15, 0.3, 0.8, 0.55)]     # (low, breathy, close)
 
 func _board() -> Callable:
 	return func(d):

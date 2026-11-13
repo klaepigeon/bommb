@@ -1,0 +1,188 @@
+{
+	"_about": "Chapter 2: the Lobby (scripts/levels/lobby.gd, docs/CHAPTER2.md). The superintendent's conversation branches on approach and leaves Game.rel.super; Socko's guide lines and his suggestions (obey/defy) follow.",
+	"_speakers": {
+		"super": {"name": "THE SUPER", "color": "#b9a27c"}
+	},
+
+	"super_hello": [
+		{"pause": 0.6, "who": "super", "text": "You. Visitor.", "event": "super_looks"},
+		{"who": "super", "text": "Come here. Into the light, where I can see you."},
+		{"who": "super", "text": "Nobody comes in through there. Nobody comes in at all. So which flat are you visiting?", "event": "super_scratch"},
+		{"who": "kurt", "text": "...You're naked.", "tone": "quiet"},
+		{"who": "super", "text": "It's my lobby."},
+		{"with": "super", "choices": [
+			{"text": "Sorry. Didn't mean to barge in. I'm just trying to get upstairs.", "approach": "cooperative",
+				"do": [{"rel": "super", "add": {"trust": 2}}],
+				"steps": [
+					{"who": "super", "text": "Upstairs.", "hold": 0.6},
+					{"who": "super", "text": "Polite. I like polite. Polite people sign the book.", "event": "super_book"}
+				], "goto": "book"},
+			{"text": "I'm looking for a way up. Is the lift working?", "approach": "neutral",
+				"do": [{"rel": "super", "add": {"trust": 0.5}}],
+				"steps": [
+					{"who": "super", "text": "No. Nothing works. That's why they pay me."},
+					{"who": "super", "text": "You'll sign the book first. Everybody signs the book.", "event": "super_book"}
+				], "goto": "book"},
+			{"text": "Who are you? The super doesn't sit here naked in the dark.", "approach": "suspicious",
+				"do": [{"rel": "super", "add": {"suspicion": 1.5}}],
+				"steps": [
+					{"who": "super", "text": "This one does."},
+					{"who": "super", "text": "Twenty-two years. Every pipe, every fuse, every key. Who are you?"},
+					{"who": "kurt", "text": "Kurt."},
+					{"who": "super", "text": "Kurt. Kurt signs the book.", "event": "super_book"}
+				], "goto": "book"},
+			{"text": "Put some clothes on and get out of my way.", "approach": "hostile",
+				"do": [{"rel": "super", "add": {"hostility": 2, "suspicion": 1}, "set": {"offended": true}}],
+				"steps": [
+					{"who": "super", "text": "Your way.", "hold": 0.8, "event": "super_stare"},
+					{"who": "super", "text": "Nothing in here is your way. The stairs are mine. The doors are mine. The light you're standing in is mine."},
+					{"who": "super", "text": "Sign the book.", "event": "super_book"}
+				], "goto": "book"},
+			{"text": "Housing committee. I'm here about the lift.", "approach": "deceptive",
+				"do": [{"rel": "super", "add": {"trust": 2.5}, "set": {"lied": true}}, {"flag": "ch2_said_committee"}],
+				"steps": [
+					{"who": "super", "text": "The committee.", "hold": 0.5},
+					{"who": "super", "text": "They never come. Three years I wrote to them about that lift.", "event": "super_scratch"},
+					{"who": "super", "text": "Well. The committee signs the book like everybody else.", "event": "super_book"}
+				], "goto": "book"}
+		]},
+
+		{"id": "book", "who": "socko", "text": "Psst. Kurt. Don't touch the pen. It's sticky.", "tone": "aside", "socko": {"emotion": "nervous", "look": "ahead"}},
+		{"who": "super", "text": "Name. Flat. Time in. Time out."},
+		{"with": "super", "choices": [
+			{"text": "(Sign it. Kurt. Twenty-seven. Now.)", "approach": "cooperative",
+				"do": [{"rel": "super", "add": {"trust": 1}}, {"flag": "ch2_signed"}],
+				"steps": [{"who": "super", "text": "Twenty-seven.", "hold": 0.8}], "goto": "twentyseven"},
+			{"text": "(Sign a name that isn't yours.)", "approach": "deceptive",
+				"do": [{"rel": "super", "add": {"trust": 0.5}, "set": {"lied": true}}, {"flag": "ch2_signed_false"}],
+				"steps": [{"who": "super", "text": "Hm. Nice handwriting. Twenty-seven?", "hold": 0.4}], "goto": "twentyseven"},
+			{"text": "I'm not signing anything.", "approach": "hostile",
+				"do": [{"rel": "super", "add": {"hostility": 1.5, "suspicion": 1}}],
+				"steps": [{"who": "super", "text": "Then you were never here. Easier for everybody."}], "goto": "twentyseven"},
+			{"text": "Who else signed tonight? (Read the book.)", "approach": "suspicious",
+				"do": [{"rel": "super", "add": {"suspicion": 1.5}}, {"know": ["kurt", "book_empty"]}],
+				"steps": [
+					{"who": "kurt", "text": "There's nothing in here since... ninety-three.", "tone": "quiet"},
+					{"who": "super", "text": "Quiet building."}
+				], "goto": "twentyseven"}
+		]},
+
+		{"id": "twentyseven", "who": "socko", "text": "Twenty-seven! Up there. It smells like the way out.", "socko": {"emotion": "happy", "look": "ahead", "gesture": "bounce"}},
+		{"who": "super", "text": "Nobody goes up there."},
+		{"who": "kurt", "text": "Why not?"},
+		{"who": "super", "text": "Because I said so. The lift's dead and the stairs are... dirty. Second floor is dirty."},
+		{"with": "super", "choices": [
+			{"text": "Then help me fix the lift. You know the building.", "approach": "cooperative", "if": "rel.super.hostility < 2",
+				"do": [{"rel": "super", "add": {"trust": 1}}],
+				"steps": [
+					{"who": "super", "text": "Help you.", "hold": 0.5},
+					{"who": "super", "text": "...The fuses are upstairs, in the box by the lift. The breaker's in maintenance.", "do": [{"know": ["kurt", "fuses_upstairs"]}]}
+				], "goto": "key"},
+			{"text": "The nameplate on your door says two names. Where's the other one?", "approach": "suspicious",
+				"do": [{"rel": "super", "add": {"suspicion": 2}}, {"know": ["kurt", "wife_tula"]}, {"flag": "ch2_asked_wife"}],
+				"steps": [
+					{"who": "super", "text": "Lyuda?", "hold": 0.6, "event": "super_stare"},
+					{"who": "super", "text": "At her sister's. In Tula. She likes it there.", "tone": "quiet"},
+					{"who": "super", "text": "Women like to visit. Don't they?"}
+				], "goto": "key"},
+			{"text": "Then I'll make my own way up.", "approach": "neutral",
+				"steps": [{"who": "super", "text": "Make it quietly."}], "goto": "key"},
+			{"text": "Get in my way again and I'll put you through that window.", "approach": "hostile",
+				"do": [{"rel": "super", "add": {"hostility": 3}, "set": {"threatened": true}}],
+				"steps": [
+					{"who": "super", "text": "...", "hold": 1.2, "event": "super_stare"},
+					{"who": "super", "text": "Mm. All right.", "tone": "quiet"}
+				], "goto": "key"},
+			{"text": "The committee will want to see the lift for itself. I'll need the keys.", "approach": "deceptive", "if": "flags.has('ch2_said_committee')",
+				"do": [{"rel": "super", "add": {"trust": 1.5}}],
+				"steps": [{"who": "super", "text": "For itself. Of course."}], "goto": "key"}
+		]},
+
+		{"id": "key", "event": "super_decides"},
+		{"if": "rel.super.disposition == 'cooperative' or rel.super.disposition == 'deceived'", "who": "super", "text": "Here. Maintenance. The breaker, the boiler. You bring that key back to me, and you don't go anywhere else with it.", "event": "super_gives_key"},
+		{"if": "rel.super.disposition == 'cooperative' or rel.super.disposition == 'deceived'", "who": "super", "text": "And you stay out of my flat."},
+		{"if": "rel.super.disposition == 'neutral'", "who": "super", "text": "Off you go, then. I'll be here. I'm always here."},
+		{"if": "rel.super.disposition == 'suspicious'", "who": "super", "text": "Go on. I'll know where you are. I always know where everybody is."},
+		{"if": "rel.super.disposition == 'hostile'", "who": "super", "text": "Go on, then, Kurt. It's a big building.", "tone": "quiet"},
+		{"if": "rel.super.disposition == 'hostile'", "who": "socko", "text": "I don't like him. He smells like old soup. Old soup and something else.", "tone": "aside", "socko": {"emotion": "nervous", "look": "ahead"}},
+		{"event": "super_done"}
+	],
+
+	"super_found_in_flat": [
+		{"who": "super", "text": "What are you doing in my home?", "event": "super_stare"},
+		{"who": "super", "text": "I told you. I was very clear.", "do": [{"rel": "super", "add": {"hostility": 3, "suspicion": 2}}]}
+	],
+	"super_found_out": [
+		{"who": "super", "text": "Housing committee.", "hold": 0.6},
+		{"who": "super", "text": "The committee doesn't go through people's drawers.", "do": [{"rel": "super", "add": {"hostility": 4}, "set": {"lied": false}}]}
+	],
+	"super_return_key": [
+		{"who": "super", "text": "My key.", "hold": 0.4},
+		{"who": "super", "text": "Good boy.", "tone": "quiet", "do": [{"take": "maint_key"}, {"rel": "super", "add": {"trust": 1}}]}
+	],
+	"super_sees_power": [
+		{"who": "super", "text": "Who told you to touch my breaker?", "tone": "shout"}
+	],
+
+	"socko_first_inhabitant": [
+		{"who": "socko", "text": "Ooh, a neighbour! She's busy. Busy people don't bite.", "socko": {"emotion": "curious", "look": "ahead"}},
+		{"who": "socko", "text": "Probably.", "tone": "aside", "socko": {"emotion": "neutral"}}
+	],
+	"socko_listener": [
+		{"who": "socko", "text": "Shhh. That one can't see. It hears though. It hears REALLY good.", "tone": "quiet", "socko": {"emotion": "nervous", "look": "ahead"}},
+		{"who": "socko", "text": "Crouch, buddy. Throw something. Noises go where you throw them.", "tone": "quiet"}
+	],
+	"socko_dark": [
+		{"who": "socko", "text": "Kurt, it's very dark in here and something is in the walls. Torch?", "tone": "quiet", "socko": {"emotion": "nervous"}}
+	],
+	"socko_fuse_hint": [
+		{"who": "socko", "text": "The box needs a fuse! Fuses are little. Little things hide in drawers.", "socko": {"emotion": "curious", "gesture": "tilt"}}
+	],
+
+	"socko_suggest_laundress": [
+		{"who": "socko", "text": "Kurt. Kurt. The big one's after the laundry lady.", "socko": {"emotion": "artificial", "look": "ahead"}},
+		{"who": "socko", "text": "Shut the door on them. He'll be busy for ages and we can go where we like.", "socko": {"emotion": "artificial", "gesture": "bounce"}}
+	],
+	"socko_obeyed": [
+		{"who": "socko", "text": "See? Easy! You're good at this.", "socko": {"emotion": "happy", "gesture": "bounce"}}
+	],
+	"socko_defied_1": [
+		{"who": "socko", "text": "Huh. Okay. That's... a choice.", "socko": {"emotion": "irritated"}}
+	],
+	"socko_suggest_bath": [
+		{"who": "socko", "text": "That's the one. It's holding the door shut, I can smell it.", "socko": {"emotion": "artificial", "look": "ahead"}},
+		{"who": "socko", "text": "It's just a big baby, Kurt. Big babies are the easiest kind.", "socko": {"emotion": "uncanny"}}
+	],
+	"socko_defied_2": [
+		{"who": "socko", "text": "Why are you making this hard?", "tone": "quiet", "socko": {"emotion": "angry", "gesture": "snap"}},
+		{"who": "socko", "text": "I'm trying to HELP you.", "socko": {"emotion": "angry", "gesture": "jab"}}
+	],
+	"socko_suggest_super": [
+		{"who": "socko", "text": "He's a bad man. You can tell. Bad men go bonk and then they're not bad any more.", "socko": {"emotion": "artificial", "look": "ahead"}}
+	],
+	"socko_defied_3": [
+		{"who": "socko", "text": "...", "hold": 1.0, "socko": {"emotion": "still"}},
+		{"who": "socko", "text": "Fine. Fine, fine, fine. Do it your way, Kurt. See where your way gets you.", "tone": "quiet", "socko": {"emotion": "angry", "gesture": "tremble"}}
+	],
+
+	"wife_letter": [
+		{"who": "kurt", "text": "From Tula. 'Lyuda, why don't you write.' Postmarked ninety-four.", "tone": "quiet"},
+		{"who": "kurt", "text": "Another one. Ninety-five.", "tone": "quiet"}
+	],
+	"wife_freezer": [
+		{"who": "kurt", "text": "Padlocked.", "tone": "quiet"},
+		{"who": "socko", "text": "There's slippers. Why are there slippers by the freezer?", "socko": {"emotion": "curious"}},
+		{"who": "kurt", "text": "Let's not.", "tone": "quiet"}
+	],
+
+	"heat_on": [
+		{"who": "socko", "text": "Ooh, it's getting toasty.", "socko": {"emotion": "neutral"}}
+	],
+	"door27_clear": [
+		{"who": "socko", "text": "There it is. Twenty-seven.", "tone": "quiet", "socko": {"emotion": "still", "look": "ahead"}}
+	],
+	"flat27": [
+		{"who": "kurt", "text": "Twenty-seven.", "tone": "quiet"},
+		{"who": "socko", "text": "Go on, Kurt. Open it.", "socko": {"emotion": "uncanny", "look": "ahead"}}
+	]
+}

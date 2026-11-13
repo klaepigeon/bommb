@@ -23,8 +23,14 @@ var leaf_opts := {}
 var conv: Callable
 var _busy := false
 
+## The panel's collision layer (1, like walls; Chapter 2 uses 32, so a navigation mesh baked from
+## the walls runs through doorways, and inhabitants open the doors as they come to them).
+var panel_layer := 1
+
 func _ready() -> void:
+	add_to_group("door")
 	panel = AnimatableBody3D.new(); panel.sync_to_physics = false
+	panel.collision_layer = panel_layer
 	add_child(panel)
 	var cs := CollisionShape3D.new(); var sh := BoxShape3D.new(); sh.size = Vector3(width, height, 0.05)
 	cs.shape = sh; cs.position = Vector3(width * 0.5, height * 0.5, 0); panel.add_child(cs)
@@ -64,6 +70,8 @@ func interact(_p = null) -> void:
 
 func set_open(o: bool, secs := 0.7) -> void:
 	is_open = o; _busy = true
+	# (open, the leaf stands back against the wall and doesn't get in anyone's way; shut, it's a door)
+	if panel_layer != 1: panel.collision_layer = 0 if o else panel_layer
 	Sfx.play_at("drawer", global_position + Vector3(0, 1, 0), -8.0, 0.7)
 	var tw := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tw.tween_property(panel, "rotation:y", open_angle if o else 0.0, secs)

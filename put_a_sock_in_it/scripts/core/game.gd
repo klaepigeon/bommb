@@ -16,6 +16,7 @@ const LEVELS := {
 	"flat47": {"scene": "res://scenes/levels/flat47.tscn", "title": "Flat 47", "sub": "Kerzhansk, 1996"},
 	"flesh47": {"scene": "res://scenes/levels/maze47.tscn", "title": "Flat 47", "sub": "again"},
 	"flat48": {"scene": "res://scenes/levels/flat48.tscn", "title": "Flat 48", "sub": ""},
+	"lobby": {"scene": "res://scenes/levels/lobby.tscn", "title": "The Lobby", "sub": "Chapter 2"},
 }
 const SAVE_PATH := "user://save.json"
 const SETTINGS_PATH := "user://settings.json"
@@ -28,13 +29,18 @@ var skill_points := 0           # to spend in the Infection tree
 ## This run, for the demo's end screen: seconds played, times she caught him, times he hid,
 ## times he put her down (stunned), memories found. Not saved: a run is a sitting.
 var run := {"time": 0.0, "caught": 0, "hid": 0, "stuns": 0, "memories": 0}
-var demo_over := false          # the title shows the end-of-demo panel once, after the last card
+var demo_over := false
+## How characters stand with Kurt (docs/DIALOGUE.md): who -> {suspicion, hostility, trust,
+## threatened, offended, lied, known: [facts], approach: {approach: count}, disposition}. Real
+## game state, saved; never shown as a meter. Dialogue's "do" changes it; disposition() reads it.
+var rel := {}          # the title shows the end-of-demo panel once, after the last card
 var demo := {}                  # data/demo.json
 var fear := 0.0                 # 0..1: Kurt's nerve (scripts/player/nerve.gd); not saved, he calms down between
 var torch_charge := 1.0         # 0..1: the torch's battery (saved)
 var strain := 0.0               # 0..1: what the powers have taken out of him (refills)
 var inventory := {}             # item id -> count
 var pistol := {"have": false, "mag": 0}
+var chapter := 1
 ## Papa's sawn-off (Flat 48): two barrels, loaded or not; shells are inventory "shells".
 ## Only one gun is out at a time: pistol.drawn / shotgun.drawn, cycled by "holster".
 var shotgun := {"have": false, "loaded": 0, "drawn": false}
@@ -95,6 +101,24 @@ func _setup_input() -> void:
 	var mmb := InputEventMouseButton.new(); mmb.button_index = MOUSE_BUTTON_MIDDLE; InputMap.action_add_event("throw", mmb)
 
 # ------------------------------------------------------------------ flags and inventory
+func rel_of(who: String) -> Dictionary:
+	if not rel.has(who):
+		rel[who] = {"suspicion": 0.0, "hostility": 0.0, "trust": 0.0, "threatened": false, "offended": false,
+			"lied": false, "known": [], "approach": {}, "disposition": "unknown"}
+	return rel[who]
+
+## What someone's attitude to Kurt comes to, from the numbers (and kept on the record):
+## hostile (threatened him, or hostility 4+), suspicious (suspicion 4+), cooperative (trust 3+ and
+## not suspicious), else neutral. Deceived: they trust him on a lie (lied, and not yet found out).
+func disposition(who: String) -> String:
+	var r := rel_of(who)
+	var d := "neutral"
+	if bool(r.threatened) or float(r.hostility) >= 4.0: d = "hostile"
+	elif float(r.suspicion) >= 4.0: d = "suspicious"
+	elif float(r.trust) >= 3.0: d = "deceived" if bool(r.lied) else "cooperative"
+	r["disposition"] = d
+	return d
+
 ## Which gun is out: "pistol", "shotgun" or "" (his fists).
 func gun_out() -> String:
 	if shotgun.get("have", false) and shotgun.get("drawn", false): return "shotgun"
@@ -139,7 +163,7 @@ func uses_touch() -> bool:
 func new_game() -> void:
 	run = {"time": 0.0, "caught": 0, "hid": 0, "stuns": 0, "memories": 0}
 	flags = {}; memories = 0; inventory = {}; pistol = {"have": false, "mag": 0, "drawn": true}; shotgun = {"have": false, "loaded": 0, "drawn": false}
-	skills = {}; memory_points = 0; skill_points = 0; strain = 0.0; fear = 0.0; torch_charge = 1.0
+	skills = {}; memory_points = 0; skill_points = 0; strain = 0.0; fear = 0.0; torch_charge = 1.0; rel = {}
 	Skills.apply()
 	change_level("flat47", {"fade": 1.5, "card": false})
 
@@ -159,7 +183,7 @@ func continue_game() -> void:
 func _snapshot() -> Dictionary:
 	return {"level": level_id, "flags": flags.duplicate(true), "memories": memories,
 		"skills": skills.keys(), "memory_points": memory_points, "skill_points": skill_points, "torch_charge": torch_charge,
-		"inventory": inventory.duplicate(true), "pistol": pistol.duplicate(true), "shotgun": shotgun.duplicate(true)}
+		"inventory": inventory.duplicate(true), "pistol": pistol.duplicate(true), "shotgun": shotgun.duplicate(true), "rel": rel.duplicate(true)}
 
 func _restore(d: Dictionary) -> void:
 	flags = d.get("flags", {}).duplicate(true)
@@ -172,6 +196,7 @@ func _restore(d: Dictionary) -> void:
 	for k in d.get("inventory", {}): inventory[k] = int(d.inventory[k])
 	var p: Dictionary = d.get("pistol", {})
 	pistol = {"have": bool(p.get("have", false)), "mag": int(p.get("mag", 0)), "drawn": bool(p.get("drawn", true))}
+	rel = (d.get("rel", {}) as Dictionary).duplicate(true)
 	var sg: Dictionary = d.get("shotgun", {})
 	shotgun = {"have": bool(sg.get("have", false)), "loaded": int(sg.get("loaded", 0)), "drawn": bool(sg.get("drawn", false))}
 	if shotgun.drawn: pistol.drawn = false

@@ -903,5 +903,5 @@ func _into_lobby() -> void:
 	set_cutscene(true)
 	await Dialogue.play("f47_lobby_in")
 	Game.checkpoint()
-	Game.demo_over = bool(Game.demo.get("is_demo", false))
-	await Game.end_chapter("Lobby", "")
+	# into it: Chapter 2
+	Game.change_level("lobby")
