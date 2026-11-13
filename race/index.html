@@ -1,7 +1,7 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Eight-Ball Derby</title>
+<title>Shape Derby</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,7 +23,7 @@
   }
   html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--fg); }
   body { font-family: var(--body); font-size: 14px; }
-  .app { height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr); }
+  .app { height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); }
 
   header {
     display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px;
@@ -41,7 +41,7 @@
   .blurb { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .clock { display: flex; align-items: baseline; gap: 10px; margin-left: auto; }
   #timer { font-family: var(--display); font-weight: 700; font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; min-width: 6.2ch; text-align: right; }
-  .controls { display: flex; gap: 8px; align-items: center; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   button {
     font: 600 14px/1 var(--body); color: var(--fg); background: var(--bg);
     border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; cursor: pointer; white-space: nowrap;
@@ -68,12 +68,12 @@
   #state { font-size: 13px; color: var(--muted); }
   .ranks { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
   .row {
-    display: grid; grid-template-columns: 20px 12px minmax(0, 1fr) auto; align-items: center; gap: 8px;
+    display: grid; grid-template-columns: 20px 14px minmax(0, 1fr) auto; align-items: center; gap: 8px;
     padding: 7px 10px; border-radius: 7px; background: var(--bg); border: 1px solid var(--line);
   }
   .row.done { border-color: color-mix(in srgb, var(--c) 50%, var(--line)); }
   .pos { font-family: var(--display); font-weight: 700; font-size: 16px; font-variant-numeric: tabular-nums; }
-  .chip { width: 12px; height: 12px; border-radius: 50%; background: var(--c); }
+  .chip { width: 14px; height: 14px; }
   .who { display: grid; gap: 4px; min-width: 0; }
   .name { font-weight: 600; font-size: 13px; }
   .bar { height: 3px; border-radius: 2px; background: var(--line); overflow: hidden; }
@@ -86,25 +86,31 @@
   .tally span { display: flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; font-weight: 600; font-size: 13px; }
   .tally i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; }
 
-  .key span:not(.label) { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
-  .k { width: 16px; height: 16px; border-radius: 50%; flex: none; }
-  .k.boost { background: rgba(255,255,255,0.08); border: 1.5px dashed rgba(220,228,255,0.6); }
-  .k.sludge { background: #3a2f20; border: 1.5px solid rgba(160,128,84,0.5); }
-  .k.bump { background: #262c42; border: 2.5px solid #7f89b0; }
+  .chip { background: none; border-radius: 0; display: block; }
+  .chip svg, .tally svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .tally i { background: none; border-radius: 0; width: 12px; height: 12px; }
+  .row.ko { opacity: .55; }
+  .row.ko .name { text-decoration: line-through; }
+  .hint { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; border-top: 1px solid var(--line); padding-top: 12px; }
   #snd[aria-pressed="false"] { color: var(--muted); }
   @media (max-width: 760px) {
     header { gap: 8px 10px; }
     h1 { font-size: 16px; }
     .blurb { display: none; }
     #timer { font-size: 24px; }
+    .pick { flex: 1 1 100%; order: 3; }
+    .clock { margin-left: auto; }
+    .controls { flex: 1 1 100%; order: 4; gap: 6px; }
+    button { padding: 9px 11px; }
+    .speed button { padding: 9px 9px; }
     .stage { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
     .tower { border-left: 0; border-top: 1px solid var(--line); padding: 8px max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px)); gap: 6px; overflow: visible; }
-    .tower > .label, .wins, #state { display: none; }
+    .tower > .label, .wins, #state, .hint { display: none; }
     .ranks { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
-    .row { grid-template-columns: auto 10px minmax(0, 1fr); gap: 5px; padding: 5px 6px; }
+    .row { grid-template-columns: auto 12px minmax(0, 1fr); gap: 5px; padding: 5px 6px; }
     .row .who { display: none; }
     .pos { font-size: 13px; }
-    .chip { width: 10px; height: 10px; }
+    .chip { width: 12px; height: 12px; }
     .t { font-size: 12px; }
     .gap { display: none; }
   }
@@ -112,7 +118,7 @@
 
 <div class="app">
   <header>
-    <h1>Eight-Ball Derby</h1>
+    <h1>Shape Derby</h1>
     <div class="pick">
       <label class="label" for="pick">Course</label>
       <select id="pick" aria-label="Course"></select>
@@ -126,6 +132,7 @@
         <button type="button" data-speed="1" aria-pressed="true">1×</button>
         <button type="button" data-speed="2" aria-pressed="false">2×</button>
         <button type="button" data-speed="4" aria-pressed="false">4×</button>
+        <button type="button" data-speed="8" aria-pressed="false">8×</button>
       </div>
       <button id="snd" type="button" aria-pressed="true">Sound on</button>
     </div>
@@ -141,44 +148,69 @@
         <span class="label">Wins this session</span>
         <div class="tally" id="tally"></div>
       </div>
-      <div class="wins key">
-        <span class="label">On the track</span>
-        <span><i class="k boost"></i>Boost pad: flings a ball forward</span>
-        <span><i class="k sludge"></i>Sludge: slows a ball right down</span>
-        <span><i class="k bump"></i>Bumper: kicks a ball away faster</span>
-      </div>
+      <p class="hint" id="hint">Every aim, bounce, spin and curve is random. The one rule: a shape always leaves a wall heading away from it.</p>
     </aside>
   </div>
 </div>
 
 <script>
 // ---------- constants ----------
-const R = 10, M = 20;
+const T = 30;                // tile size: courses are built from 30px tiles
 const SHORT = 600;           // the world's short side; the long side follows the screen
-let SPEED = 330;             // px per second, same for every ball (set per course from its length)
-let DRIFT = 650;             // gentle pull along the course so races end
-const JITTER = 1.0;          // max random deflection on a bounce (radians, ~57°)
-const MIN_SPD = 0.35, MAX_SPD = 2.3;  // a ball's speed range, as multiples of cruising speed
-const STUMBLE = 0.06;        // chance per second that a ball stumbles off line
+const SPEED = 520;           // cruising speed in px per second
+const SPREAD = 85 * Math.PI / 180;  // a bounce leaves at any angle within ±85° of the surface normal
+const STUMBLE = 0.12;        // chance per second of a sudden new random heading
 const COURSE_COUNT = 100;
+let DMG_LO = .55, DMG_HI = 1.9;   // hidden: damage per shape-on-shape hit
+const PI2 = Math.PI * 2;
+
+// ---------- shapes ----------
+function regular(n, r, rot = 0) { return Array.from({ length: n }, (_, k) => [Math.cos(rot + k * PI2 / n) * r, Math.sin(rot + k * PI2 / n) * r]); }
+function starPts(n, ro, ri) { const o = []; for (let k = 0; k < 2 * n; k++) { const a = -Math.PI / 2 + k * Math.PI / n, r = k % 2 ? ri : ro; o.push([Math.cos(a) * r, Math.sin(a) * r]); } return o; }
+function heartPts() {
+  const o = [];
+  for (let k = 0; k < 24; k++) { const t = k / 24 * PI2; o.push([16 * Math.sin(t) ** 3 * .7, -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * .7]); }
+  return o;
+}
+function plusPts(L, w) { return [[w, -L], [w, -w], [L, -w], [L, w], [w, w], [w, L], [-w, L], [-w, w], [-L, w], [-L, -w], [-w, -w], [-w, -L]]; }
+function centre(pts) {
+  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+  const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+  return pts.map(p => [p[0] - cx, p[1] - cy]);
+}
+// Durability and how each shape fails. hp and the rest stay hidden from the viewer.
+//  hp: hit points · armor: damage taken multiplier · dent: how much a hit caves in a corner
+//  crackAt: damage fraction where cracks start · chip: chance a hit snaps a corner off
+//  slow: speed lost at full damage · stall: how prone it is to seizing up · split: dies in two halves
+const SHAPES = {
+  triangle: { verts: regular(3, 12.5, -Math.PI / 2), hp: 60,  armor: 1,   dent: .05, crackAt: .15, chip: .35, slow: .25, stall: 0 },
+  square:   { verts: regular(4, 12, Math.PI / 4),     hp: 115, armor: .8,  dent: .09, crackAt: .7,  chip: .05, slow: .45, stall: .25 },
+  star:     { verts: starPts(5, 13, 5.6),             hp: 70,  armor: 1,   dent: .03, crackAt: .4,  chip: .5,  slow: .2,  stall: 0 },
+  hexagon:  { verts: regular(6, 11.5),                hp: 100, armor: .85, dent: .07, crackAt: .6,  chip: .08, slow: .3,  stall: .5 },
+  diamond:  { verts: [[13, 0], [0, 8.5], [-13, 0], [0, -8.5]], hp: 45, armor: 1, dent: .02, crackAt: .05, chip: .15, slow: .1, stall: 0, speed: 1.12 },
+  pentagon: { verts: regular(5, 12, -Math.PI / 2),    hp: 100, armor: 1,   dent: .06, crackAt: .45, chip: .12, slow: .35, stall: .2 },
+  heart:    { verts: heartPts(),                      hp: 85,  armor: 1,   dent: .05, crackAt: .3,  chip: .1,  slow: .3,  stall: .15, split: true },
+  plus:     { verts: plusPts(12, 4.5),                hp: 110, armor: .9,  dent: .08, crackAt: .55, chip: .3,  slow: .3,  stall: .1 },
+};
+for (const k in SHAPES) SHAPES[k].verts = centre(SHAPES[k].verts);
 const RACERS = [
-  { id: 'red',    name: 'Red',    color: '#ff4d4d', dark: '#a8262b' },
-  { id: 'blue',   name: 'Blue',   color: '#3d8bff', dark: '#1d4fa8' },
-  { id: 'yellow', name: 'Yellow', color: '#ffd23f', dark: '#b08a12' },
-  { id: 'green',  name: 'Green',  color: '#34d27b', dark: '#16834a' },
-  { id: 'orange', name: 'Orange', color: '#ff8a2b', dark: '#a8500f' },
-  { id: 'purple', name: 'Purple', color: '#a66bff', dark: '#5d32a8' },
-  { id: 'pink',   name: 'Pink',   color: '#ff6fc8', dark: '#a8337c' },
-  { id: 'cyan',   name: 'Cyan',   color: '#2fd6d6', dark: '#13807f' },
+  { id: 'red',    name: 'Red Triangle',    shape: 'triangle', color: '#ff4d4d', dark: '#a8262b' },
+  { id: 'blue',   name: 'Blue Square',     shape: 'square',   color: '#3d8bff', dark: '#1d4fa8' },
+  { id: 'yellow', name: 'Yellow Star',     shape: 'star',     color: '#ffd23f', dark: '#b08a12' },
+  { id: 'green',  name: 'Green Hexagon',   shape: 'hexagon',  color: '#34d27b', dark: '#16834a' },
+  { id: 'orange', name: 'Orange Diamond',  shape: 'diamond',  color: '#ff8a2b', dark: '#a8500f' },
+  { id: 'purple', name: 'Purple Pentagon', shape: 'pentagon', color: '#a66bff', dark: '#5d32a8' },
+  { id: 'pink',   name: 'Pink Heart',      shape: 'heart',    color: '#ff6fc8', dark: '#a8337c' },
+  { id: 'cyan',   name: 'Cyan Cross',      shape: 'plus',     color: '#2fd6d6', dark: '#13807f' },
 ];
 const N = RACERS.length;
-let W = 1067, H = 600;
+let W = 1110, H = 600;
 
 // Course layouts use a seeded generator so course #37 is always course #37.
 let rnd = Math.random;
 const rand = (a, b) => a + rnd() * (b - a);
 const irand = (a, b) => Math.floor(rand(a, b + 1));
-const jr = (a, b) => a + Math.random() * (b - a);   // race-time randomness (bounces, launch)
+const jr = (a, b) => a + Math.random() * (b - a);   // race-time randomness
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function mulberry(seed) {
   let a = seed >>> 0;
@@ -187,412 +219,439 @@ function mulberry(seed) {
 
 // ---------- geometry ----------
 const seg = (x1, y1, x2, y2) => ({ x1, y1, x2, y2 });
-function poly(pts) { const o = []; for (let i = 0; i < pts.length - 1; i++) o.push(seg(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1])); return o; }
 function closest(px, py, s) {
   const dx = s.x2 - s.x1, dy = s.y2 - s.y1, l2 = dx * dx + dy * dy;
   const t = l2 ? clamp(((px - s.x1) * dx + (py - s.y1) * dy) / l2, 0, 1) : 0;
   return { x: s.x1 + dx * t, y: s.y1 + dy * t };
 }
-function distSeg(px, py, s) { const c = closest(px, py, s); return Math.hypot(px - c.x, py - c.y); }
+// How far a shape reaches from its centre in a world direction (its support distance).
+function extent(b, dx, dy) {
+  const c = Math.cos(b.a), s = Math.sin(b.a), lx = dx * c + dy * s, ly = -dx * s + dy * c;
+  let m = -1e9;
+  for (const v of b.verts) { const d = v[0] * lx + v[1] * ly; if (d > m) m = d; }
+  return m;
+}
+const toLocal = (b, dx, dy) => { const c = Math.cos(b.a), s = Math.sin(b.a); return [dx * c + dy * s, -dx * s + dy * c]; };
 
-// ---------- course building blocks ----------
-// Every generator works in a landscape-style frame {w, h}; the result is mirrored and/or
-// transposed afterwards to fit the screen.
-function frameOf(w, h) { return { w, h, x0: M, y0: M, x1: w - M, y1: h - M }; }
-function baseCourse(f) {
-  return { walls: poly([[f.x0, f.y0], [f.x1, f.y0], [f.x1, f.y1], [f.x0, f.y1], [f.x0, f.y0]]), bumpers: [], deflectors: [], spinners: [], path: [], start: null, finish: null, used: [], patches: [] };
-}
-function canPlace(c, x, y, r, clear) {
-  for (const w of c.walls) if (distSeg(x, y, w) < r + clear) return false;
-  for (const it of c.used) if (Math.hypot(x - it.x, y - it.y) < r + it.r + clear) return false;
-  for (const z of [c.start, c.finish]) {
-    if (x > z.x - r - clear && x < z.x + z.w + r + clear && y > z.y - r - clear && y < z.y + z.h + r + clear) return false;
-  }
-  return true;
-}
-const THEMES = [
-  { name: 'mixed', kinds: ['bumper', 'bumper', 'deflector', 'deflector', 'spinner'] },
-  { name: 'bumpers', kinds: ['bumper'] },
-  { name: 'spinners', kinds: ['spinner', 'spinner', 'bumper'] },
-  { name: 'deflectors', kinds: ['deflector', 'deflector', 'bumper'] },
-];
-function scatter(c, reg, count, kinds, opt = {}) {
-  const clear = opt.clear ?? 34, rMin = opt.rMin ?? 12, rMax = opt.rMax ?? 22;
-  let placed = 0, tries = 0;
-  while (placed < count && tries++ < 500) {
-    const kind = kinds[Math.floor(rnd() * kinds.length)];
-    const x = rand(reg.x, reg.x + reg.w), y = rand(reg.y, reg.y + reg.h);
-    if (kind === 'bumper') {
-      const r = rand(rMin, rMax);
-      if (!canPlace(c, x, y, r, clear)) continue;
-      c.bumpers.push({ x, y, r, flash: 0 }); c.used.push({ x, y, r });
-    } else if (kind === 'deflector') {
-      const len = rand(44, 72), a = rand(0, Math.PI), r = len / 2 + 4;
-      if (!canPlace(c, x, y, r, clear)) continue;
-      const dx = Math.cos(a) * len / 2, dy = Math.sin(a) * len / 2;
-      c.deflectors.push(seg(x - dx, y - dy, x + dx, y + dy)); c.used.push({ x, y, r });
-    } else {
-      const len = rand(70, 104), r = len / 2 + 4;
-      if (!canPlace(c, x, y, r, clear)) continue;
-      c.spinners.push({ x, y, len, a: rand(0, Math.PI), w: rand(1.3, 2.6) * (rnd() < .5 ? -1 : 1) }); c.used.push({ x, y, r });
-    }
-    placed++;
-  }
-}
-// Lanes stacked across the frame, joined by hairpins at alternating ends.
-function laneLayout(f, minH, maxH) {
-  const span = f.y1 - f.y0;
-  const n = clamp(irand(2, 6), Math.ceil(span / maxH), Math.max(2, Math.floor(span / minH)));
-  const lh = span / n, gap = rand(88, 118);
-  const walls = [], tops = [];
-  for (let i = 0; i <= n; i++) tops.push(f.y0 + lh * i);
-  for (let i = 1; i < n; i++) walls.push(i % 2 ? seg(f.x0, tops[i], f.x1 - gap, tops[i]) : seg(f.x0 + gap, tops[i], f.x1, tops[i]));
-  const cy = i => f.y0 + lh * (i + .5);
-  const path = [[f.x0 + 50, cy(0)]];
-  for (let i = 0; i < n; i++) {
-    const right = i % 2 === 0;
-    if (i < n - 1) { const x = right ? f.x1 - gap / 2 : f.x0 + gap / 2; path.push([x, cy(i)], [x, cy(i + 1)]); }
-    else path.push([right ? f.x1 - 35 : f.x0 + 35, cy(i)]);
-  }
-  const lastRight = (n - 1) % 2 === 0;
-  return {
-    n, lh, gap, tops, walls, path,
-    start: { x: f.x0, y: f.y0, w: 120, h: lh },
-    finish: { x: lastRight ? f.x1 - 64 : f.x0, y: tops[n - 1], w: 64, h: lh },
+// ---------- tile grids ----------
+function G(cols, rows, fill) { const m = { cols, rows, g: new Uint8Array(cols * rows).fill(fill) }; border(m); return m; }
+function border(m) { for (let c = 0; c < m.cols; c++) { m.g[c] = 1; m.g[(m.rows - 1) * m.cols + c] = 1; } for (let r = 0; r < m.rows; r++) { m.g[r * m.cols] = 1; m.g[r * m.cols + m.cols - 1] = 1; } }
+const at = (m, c, r) => (c < 0 || r < 0 || c >= m.cols || r >= m.rows) ? 1 : m.g[r * m.cols + c];
+const setT = (m, c, r, v) => { if (c > 0 && r > 0 && c < m.cols - 1 && r < m.rows - 1) m.g[r * m.cols + c] = v; };
+const N4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+
+function genMaze(cols, rows, k, braid) {
+  const m = G(cols, rows, 1), p = k + 1;
+  const mc = Math.floor((cols - 1) / p), mr = Math.floor((rows - 1) / p);
+  const cell = (i, j) => { for (let y = 0; y < k; y++) for (let x = 0; x < k; x++) setT(m, 1 + i * p + x, 1 + j * p + y, 0); };
+  const link = (i, j, a, b) => {
+    if (a !== i) { const x = 1 + Math.min(i, a) * p + k; for (let y = 0; y < k; y++) setT(m, x, 1 + j * p + y, 0); }
+    else { const y = 1 + Math.min(j, b) * p + k; for (let x = 0; x < k; x++) setT(m, 1 + i * p + x, y, 0); }
   };
+  const seen = new Uint8Array(mc * mr), s0 = [irand(0, mc - 1), irand(0, mr - 1)], stack = [s0];
+  seen[s0[1] * mc + s0[0]] = 1; cell(...s0);
+  while (stack.length) {
+    const [i, j] = stack[stack.length - 1];
+    const nb = N4.map(([a, b]) => [i + a, j + b]).filter(([a, b]) => a >= 0 && b >= 0 && a < mc && b < mr && !seen[b * mc + a]);
+    if (!nb.length) { stack.pop(); continue; }
+    const [a, b] = nb[Math.floor(rnd() * nb.length)];
+    seen[b * mc + a] = 1; cell(a, b); link(i, j, a, b); stack.push([a, b]);
+  }
+  for (let j = 0; j < mr; j++) for (let i = 0; i < mc; i++) {
+    if (i < mc - 1 && rnd() < braid) link(i, j, i + 1, j);
+    if (j < mr - 1 && rnd() < braid) link(i, j, i, j + 1);
+  }
+  return m;
+}
+function genCave(cols, rows) {
+  const m = G(cols, rows, 0), fill = rand(.41, .47);
+  for (let r = 1; r < rows - 1; r++) for (let c = 1; c < cols - 1; c++) m.g[r * cols + c] = rnd() < fill ? 1 : 0;
+  for (let it = 0; it < 4; it++) {
+    const g2 = m.g.slice();
+    for (let r = 1; r < rows - 1; r++) for (let c = 1; c < cols - 1; c++) {
+      let n = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (dx || dy) n += at(m, c + dx, r + dy);
+      g2[r * cols + c] = n >= 5 ? 1 : n <= 3 ? 0 : m.g[r * cols + c];
+    }
+    m.g = g2;
+  }
+  pillars(m, .08);
+  return m;
+}
+function pillars(m, p) {
+  for (let r = 2; r < m.rows - 2; r++) for (let c = 2; c < m.cols - 2; c++) {
+    let open = true; for (let dy = -1; dy <= 1 && open; dy++) for (let dx = -1; dx <= 1; dx++) if (at(m, c + dx, r + dy)) { open = false; break; }
+    if (open && rnd() < p) m.g[r * m.cols + c] = 1;
+  }
+}
+function genRooms(cols, rows) {
+  const m = G(cols, rows, 0), rw = irand(5, 8), rh = irand(4, 6);
+  const nx = Math.max(2, Math.floor((cols - 1) / (rw + 1))), ny = Math.max(2, Math.floor((rows - 1) / (rh + 1)));
+  const xs = Array.from({ length: nx + 1 }, (_, i) => Math.round(i * (cols - 1) / nx));
+  const ys = Array.from({ length: ny + 1 }, (_, i) => Math.round(i * (rows - 1) / ny));
+  for (let i = 1; i < nx; i++) for (let r = 0; r < rows; r++) setT(m, xs[i], r, 1);
+  for (let j = 1; j < ny; j++) for (let c = 0; c < cols; c++) setT(m, c, ys[j], 1);
+  const door = (i, j, a, b) => {
+    const w = irand(1, 2);
+    if (a !== i) { const x = xs[Math.max(i, a)], y0 = irand(ys[j] + 1, ys[j + 1] - w); for (let y = 0; y < w; y++) setT(m, x, y0 + y, 0); }
+    else { const y = ys[Math.max(j, b)], x0 = irand(xs[i] + 1, xs[i + 1] - w); for (let x = 0; x < w; x++) setT(m, x0 + x, y, 0); }
+  };
+  const seen = new Uint8Array(nx * ny), stack = [[0, 0]]; seen[0] = 1;
+  while (stack.length) {
+    const [i, j] = stack[stack.length - 1];
+    const nb = N4.map(([a, b]) => [i + a, j + b]).filter(([a, b]) => a >= 0 && b >= 0 && a < nx && b < ny && !seen[b * nx + a]);
+    if (!nb.length) { stack.pop(); continue; }
+    const [a, b] = nb[Math.floor(rnd() * nb.length)];
+    seen[b * nx + a] = 1; door(i, j, a, b); stack.push([a, b]);
+  }
+  const extra = rand(.45, .75);
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+    if (i < nx - 1 && rnd() < extra) door(i, j, i + 1, j);
+    if (j < ny - 1 && rnd() < extra) door(i, j, i, j + 1);
+  }
+  pillars(m, .09);
+  return m;
+}
+function genSieve(cols, rows) {
+  const m = G(cols, rows, 0), vert = rnd() < .45, sp = irand(3, 4);
+  const A = vert ? cols : rows, B = vert ? rows : cols;
+  const put = (u, v, val) => vert ? setT(m, u, v, val) : setT(m, v, u, val);
+  for (let u = sp; u < A - 2; u += sp + 1) {
+    for (let v = 1; v < B - 1; v++) put(u, v, 1);
+    const gaps = irand(2, 4);
+    for (let k = 0; k < gaps; k++) { const w = irand(1, 2), v0 = irand(1, B - 1 - w); for (let v = 0; v < w; v++) put(u, v0 + v, 0); }
+    for (let v = 2; v < B - 2; v++) if (rnd() < .06) put(u + (rnd() < .5 ? 1 : -1), v, 1);
+  }
+  return m;
+}
+function genThicket(cols, rows) {
+  const m = G(cols, rows, 0), blocks = [[[0, 0]], [[0, 0], [1, 0]], [[0, 0], [0, 1]], [[0, 0], [1, 0], [0, 1], [1, 1]], [[0, 0], [1, 0], [0, 1]], [[0, 0], [1, 0], [2, 0]], [[0, 0], [0, 1], [0, 2]]];
+  const target = (cols - 2) * (rows - 2) * rand(.14, .22);
+  let solid = 0, tries = 0;
+  while (solid < target && tries++ < 6000) {
+    const bl = blocks[irand(0, blocks.length - 1)], x = irand(1, cols - 3), y = irand(1, rows - 3);
+    for (const [dx, dy] of bl) if (!at(m, x + dx, y + dy)) { setT(m, x + dx, y + dy, 1); solid++; }
+  }
+  return m;
 }
 
-// ---------- course families ----------
-function famSwitchback(f) {
-  const c = baseCourse(f), L = laneLayout(f, 112, 230), theme = THEMES[irand(0, 3)];
-  c.walls.push(...L.walls); c.path = L.path; c.start = L.start; c.finish = L.finish;
-  const per = Math.max(2, Math.round((f.x1 - f.x0 - 2 * L.gap) / 165 * rand(.8, 1.2)));
-  for (let i = 0; i < L.n; i++) scatter(c, { x: f.x0 + L.gap + 20, y: L.tops[i], w: f.x1 - f.x0 - 2 * L.gap - 40, h: L.lh }, per, theme.kinds);
-  c.blurb = `${L.n} lanes, ${L.n - 1} hairpins, ${theme.name}`;
-  return c;
-}
-function famChicanes(f) {
-  const c = baseCourse(f), L = laneLayout(f, 112, 190);
-  c.walls.push(...L.walls); c.path = L.path; c.start = L.start; c.finish = L.finish;
-  const spacing = rand(140, 200), depth = rand(.32, .48);
-  for (let i = 0; i < L.n; i++) {
-    let fromTop = rnd() < .5;
-    for (let x = f.x0 + L.gap + 70 + rand(0, 40); x < f.x1 - L.gap - 50; x += spacing * rand(.85, 1.15)) {
-      const len = L.lh * depth * rand(.9, 1.1), y = fromTop ? L.tops[i] : L.tops[i] + L.lh;
-      c.walls.push(seg(x, y, x, fromTop ? y + len : y - len));
-      fromTop = !fromTop;
-    }
-  }
-  c.blurb = `${L.n} lanes of staggered baffles`;
-  return c;
-}
-function famSnail(f) {
-  const c = baseCourse(f), g = rand(84, 108), h = f.y1 - f.y0;
-  const pts = [[f.x0, f.y0 + g]];
-  let k = 1;
-  for (;;) {
-    pts.push([f.x1 - k * g, f.y0 + k * g], [f.x1 - k * g, f.y1 - k * g], [f.x0 + k * g, f.y1 - k * g], [f.x0 + k * g, f.y0 + (k + 1) * g]);
-    if (h - (2 * k + 3) * g >= g * .95) k++; else break;
-  }
-  pts.push([f.x1 - (k + 1) * g, f.y0 + (k + 1) * g]);
-  c.walls.push(...poly(pts));
-  const p = [[f.x0 + 45, f.y0 + g / 2]];
-  for (let j = 0; j < k; j++) {
-    const o = (j + .5) * g;
-    p.push([f.x1 - o, f.y0 + o], [f.x1 - o, f.y1 - o], [f.x0 + o, f.y1 - o], [f.x0 + o, f.y0 + o + g]);
-  }
-  const pocketTop = f.y0 + (k + 1) * g, pocketBot = f.y1 - k * g, pcy = (pocketTop + pocketBot) / 2;
-  p.push([f.x1 - (k + .5) * g, f.y0 + (k + .5) * g], [f.x1 - (k + .5) * g, pcy], [f.x0 + k * g + 45, pcy]);
-  c.path = p;
-  c.start = { x: f.x0, y: f.y0, w: 130, h: g };
-  c.finish = { x: f.x0 + k * g, y: pocketTop, w: 80, h: pocketBot - pocketTop };
-  const o = { rMin: 7, rMax: 11, clear: 28 };
-  const count = irand(6, 16);
-  for (let j = 0; j <= k; j++) {
-    scatter(c, { x: f.x0 + j * g + 60, y: f.y0 + j * g, w: f.x1 - f.x0 - 2 * j * g - 120, h: g }, Math.ceil(count / (k + 1) / 2), ['bumper'], o);
-    scatter(c, { x: f.x0 + j * g + 60, y: f.y1 - (j + 1) * g, w: f.x1 - f.x0 - 2 * j * g - 120, h: g }, Math.ceil(count / (k + 1) / 2), ['bumper'], o);
-  }
-  c.blurb = `a ${k + 1}-ring spiral into a centre pocket`;
-  return c;
-}
-function famPinfield(f) {
-  const c = baseCourse(f), gh = rand(100, 130), gcy = rand(f.y0 + 90 + gh / 2, f.y1 - 90 - gh / 2);
-  const gy0 = gcy - gh / 2, gy1 = gcy + gh / 2, fx = f.x1 - 64, fun = rand(90, 200);
-  c.walls.push(seg(fx - fun, f.y0, fx, gy0), seg(fx - fun, f.y1, fx, gy1), seg(fx, gy0, f.x1, gy0), seg(fx, gy1, f.x1, gy1));
-  const mid = (f.y0 + f.y1) / 2;
-  c.path = [[f.x0 + 45, mid], [f.x1 - 30, gcy]];
-  c.start = { x: f.x0, y: mid - 85, w: 90, h: 170 };
-  c.finish = { x: fx, y: gy0, w: f.x1 - fx, h: gh };
-  const field = { x: f.x0 + 140, y: f.y0 + 40, w: fx - fun - f.x0 - 180, h: f.y1 - f.y0 - 80 };
-  scatter(c, field, irand(0, 5), ['spinner']);
-  scatter(c, field, irand(0, 6), ['deflector']);
-  const step = rand(56, 76), skip = rand(.1, .35), hex = rnd() < .7;
-  for (let row = 0, y = f.y0 + 36; y < f.y1 - 20; row++, y += step * (hex ? .87 : 1)) {
-    for (let x = f.x0 + 110 + (hex && row % 2 ? step / 2 : 0); x < fx - 40; x += step) {
-      if (rnd() < skip) continue;
-      const px = x + rand(-9, 9), py = y + rand(-9, 9), r = rand(6, 10);
-      if (!canPlace(c, px, py, r, 26)) continue;
-      c.bumpers.push({ x: px, y: py, r, flash: 0 }); c.used.push({ x: px, y: py, r });
-    }
-  }
-  c.blurb = `a ${hex ? 'staggered' : 'square'} peg field into a narrow gate`;
-  return c;
-}
-function famIslands(f) {
-  const c = baseCourse(f), gh = rand(110, 150), gcy = rand(f.y0 + 80 + gh / 2, f.y1 - 80 - gh / 2);
-  const fx = f.x1 - 60;
-  c.walls.push(seg(fx, f.y0, fx, gcy - gh / 2), seg(fx, gcy + gh / 2, fx, f.y1));
-  const mid = (f.y0 + f.y1) / 2;
-  c.path = [[f.x0 + 45, mid], [f.x1 - 30, gcy]];
-  c.start = { x: f.x0, y: mid - 85, w: 100, h: 170 };
-  c.finish = { x: fx, y: gcy - gh / 2, w: f.x1 - fx, h: gh };
-  const area = (fx - f.x0) * (f.y1 - f.y0), want = Math.round(area / 30000 * rand(.7, 1.2));
-  let made = 0, tries = 0;
-  while (made < want && tries++ < 700) {
-    const bw = rand(40, 140), bh = rand(30, 120), x = rand(f.x0 + 140, fx - 60 - bw), y = rand(f.y0 + 10, f.y1 - 10 - bh);
-    const cx = x + bw / 2, cy = y + bh / 2, r = Math.hypot(bw, bh) / 2;
-    if (!canPlace(c, cx, cy, r, 36)) continue;
-    c.walls.push(...poly([[x, y], [x + bw, y], [x + bw, y + bh], [x, y + bh], [x, y]]));
-    c.used.push({ x: cx, y: cy, r }); made++;
-  }
-  scatter(c, { x: f.x0 + 140, y: f.y0, w: fx - f.x0 - 200, h: f.y1 - f.y0 }, irand(2, 8), ['bumper', 'spinner']);
-  c.blurb = `${made} islands to weave between`;
-  return c;
-}
 const FAMILIES = [
-  { noun: 'Switchback', gen: famSwitchback, cross: false },
-  { noun: 'Columns',    gen: famSwitchback, cross: true, blurb: b => b.replace('lanes', 'columns') },
-  { noun: 'Snail',      gen: famSnail,      cross: false },
-  { noun: 'Pinfield',   gen: famPinfield,   cross: false },
-  { noun: 'Chicanes',   gen: famChicanes,   cross: false },
-  { noun: 'Islands',    gen: famIslands,    cross: false },
-  { noun: 'Ladder',     gen: famChicanes,   cross: true, blurb: b => b.replace('lanes', 'columns') },
+  { noun: 'Maze',    gen: (c, r) => genMaze(c, r, 2, rand(.1, .3)),  blurb: 'two-tile corridors and dead ends', spin: [0, 0] },
+  { noun: 'Needle',  gen: (c, r) => genMaze(c, r, 1, rand(.35, .55)), blurb: 'one-tile corridors with no room to pass', spin: [0, 0] },
+  { noun: 'Cave',    gen: genCave,    blurb: 'twisting caverns and choke points', spin: [0, 3] },
+  { noun: 'Rooms',   gen: genRooms,   blurb: 'cramped rooms joined by narrow doors', spin: [0, 2] },
+  { noun: 'Sieve',   gen: genSieve,   blurb: 'walls riddled with small gaps', spin: [0, 1] },
+  { noun: 'Thicket', gen: genThicket, blurb: 'dense blocks with gaps barely wide enough', spin: [0, 2] },
 ];
 const ADJ = ['Copper', 'Velvet', 'Granite', 'Harbor', 'Midnight', 'Cobalt', 'Saffron', 'Juniper', 'Ember', 'Glacier', 'Thistle', 'Basalt', 'Marigold', 'Lantern', 'Orchid', 'Quarry', 'Sable', 'Tundra'];
 const courseName = i => `${ADJ[Math.floor(i / FAMILIES.length)]} ${FAMILIES[i % FAMILIES.length].noun}`;
 
-// Course i for a world of size W×H. Generated in a landscape frame, then mirrored and
-// transposed so it fills the screen whatever its shape.
+function bfs(m, sources) {
+  const d = new Int32Array(m.cols * m.rows).fill(-1), q = [];
+  for (const s of sources) if (!m.g[s]) { d[s] = 0; q.push(s); }
+  for (let h = 0; h < q.length; h++) {
+    const i = q[h], c = i % m.cols, r = (i - c) / m.cols;
+    for (const [dx, dy] of N4) {
+      const nc = c + dx, nr = r + dy;
+      if (at(m, nc, nr)) continue;
+      const j = nr * m.cols + nc;
+      if (d[j] < 0) { d[j] = d[i] + 1; q.push(j); }
+    }
+  }
+  return d;
+}
+
 function makeCourse(i) {
   rnd = mulberry(i * 7919 + 17);
   const fam = FAMILIES[i % FAMILIES.length];
-  const long = Math.max(W, H), short = Math.min(W, H), landscape = W >= H;
-  const transpose = fam.cross ? landscape : !landscape;
-  const fw = fam.cross ? short : long, fh = fam.cross ? long : short;
-  const c = fam.gen(frameOf(fw, fh));
-  addPatches(c, frameOf(fw, fh));
-  const mx = rnd() < .5, my = rnd() < .5;
-  rnd = Math.random;
-  const T = (x, y) => { if (mx) x = fw - x; if (my) y = fh - y; return transpose ? [y, x] : [x, y]; };
-  const TS = s => { const [a, b] = T(s.x1, s.y1), [d, e] = T(s.x2, s.y2); return seg(a, b, d, e); };
-  const TR = z => { const [a, b] = T(z.x, z.y), [d, e] = T(z.x + z.w, z.y + z.h); return { x: Math.min(a, d), y: Math.min(b, e), w: Math.abs(d - a), h: Math.abs(e - b) }; };
-  c.walls = c.walls.map(TS); c.deflectors = c.deflectors.map(TS);
-  c.bumpers = c.bumpers.map(p => { const [x, y] = T(p.x, p.y); return { ...p, x, y }; });
-  c.spinners = c.spinners.map(p => { const [x, y] = T(p.x, p.y); return { ...p, x, y }; });
-  c.patches = c.patches.map(p => { const [x, y] = T(p.x, p.y); return { ...p, x, y }; });
-  c.path = c.path.map(p => T(p[0], p[1]));
-  c.start = TR(c.start); c.finish = TR(c.finish);
-  c.name = courseName(i); c.index = i;
-  if (fam.blurb) c.blurb = fam.blurb(c.blurb);
-  buildPath(c);
-  for (const p of c.patches) {   // point each boost pad's arrows along the course
-    let best = Infinity;
-    for (const g of c.segs) { const q = closest(p.x, p.y, seg(g.a.x, g.a.y, g.b.x, g.b.y)), d = Math.hypot(p.x - q.x, p.y - q.y); if (d < best) { best = d; p.dir = Math.atan2(g.dy, g.dx); } }
-  }
-  return c;
-}
-// Floor patches: boost pads that fling a ball forward and sludge that bogs it down.
-function addPatches(c, f) {
-  const want = Math.round((f.x1 - f.x0) * (f.y1 - f.y0) / 65000 * rand(.6, 1.6));
-  let made = 0, tries = 0;
-  while (made < want && tries++ < 500) {
-    const r = rand(22, 34), x = rand(f.x0 + r, f.x1 - r), y = rand(f.y0 + r, f.y1 - r);
-    if (!canPlace(c, x, y, r, 4)) continue;
-    if (c.patches.some(p => Math.hypot(p.x - x, p.y - y) < p.r + r + 24)) continue;
-    c.patches.push({ x, y, r, kind: rnd() < .55 ? 'boost' : 'sludge', pulse: 0, dir: 0 });
-    made++;
-  }
-}
+  const cols = Math.round(W / T), rows = Math.round(H / T);
+  const m = fam.gen(cols, rows);
+  const idx = (c, r) => r * cols + c;
 
-function buildPath(c) {
-  const pts = c.path.map(p => ({ x: p[0], y: p[1] }));
-  c.segs = []; let acc = 0;
-  for (let i = 0; i < pts.length - 1; i++) {
-    const a = pts[i], b = pts[i + 1], len = Math.hypot(b.x - a.x, b.y - a.y) || 1;
-    c.segs.push({ a, b, len, start: acc, dx: (b.x - a.x) / len, dy: (b.y - a.y) / len });
-    acc += len;
+  // Start pen in a random corner.
+  const corner = irand(0, 3), pw = 5, ph = 4;
+  const px = corner & 1 ? cols - 1 - pw : 1, py = corner & 2 ? rows - 1 - ph : 1;
+  for (let y = 0; y < ph; y++) for (let x = 0; x < pw; x++) setT(m, px + x, py + y, 0);
+  const pc = px + 2, pr = py + 2;
+
+  // Join the pen to the biggest open region if it is cut off.
+  const comp = new Int32Array(cols * rows).fill(-1), sizes = [];
+  for (let k = 0; k < cols * rows; k++) {
+    if (m.g[k] || comp[k] >= 0) continue;
+    const id = sizes.length, q = [k]; comp[k] = id;
+    for (let h = 0; h < q.length; h++) {
+      const j = q[h], c = j % cols, r = (j - c) / cols;
+      for (const [dx, dy] of N4) { const nc = c + dx, nr = r + dy; if (at(m, nc, nr)) continue; const n = idx(nc, nr); if (comp[n] < 0) { comp[n] = id; q.push(n); } }
+    }
+    sizes.push(q.length);
   }
-  c.total = acc;
-  c.speed = clamp(acc / 10, 300, 480);
-  c.cap = Math.max(240, Math.round(acc / c.speed * 20));
-}
-function pointAt(c, s) {
-  s = clamp(s, 0, c.total);
-  for (const g of c.segs) if (s <= g.start + g.len) { const t = s - g.start; return { x: g.a.x + g.dx * t, y: g.a.y + g.dy * t }; }
-  const g = c.segs[c.segs.length - 1]; return { x: g.b.x, y: g.b.y };
-}
-function track(c, b) {
-  let best = null;
-  for (let i = Math.max(0, b.si - 1); i <= Math.min(c.segs.length - 1, b.si + 1); i++) {
-    const g = c.segs[i];
-    const t = clamp((b.x - g.a.x) * g.dx + (b.y - g.a.y) * g.dy, 0, g.len);
-    const d = Math.hypot(b.x - (g.a.x + g.dx * t), b.y - (g.a.y + g.dy * t));
-    if (!best || d < best.d - .01) best = { i, t, d };
+  const big = sizes.indexOf(Math.max(...sizes));
+  if (comp[idx(pc, pr)] !== big) {
+    let best = null, bd = Infinity;
+    for (let k = 0; k < cols * rows; k++) if (comp[k] === big) { const c = k % cols, r = (k - c) / cols, d = Math.hypot(c - pc, r - pr); if (d < bd) { bd = d; best = [c, r]; } }
+    const [tx, ty] = best;
+    for (let x = Math.min(pc, tx); x <= Math.max(pc, tx); x++) { setT(m, x, pr, 0); setT(m, x, pr + 1, 0); }
+    for (let y = Math.min(pr, ty); y <= Math.max(pr, ty); y++) { setT(m, tx, y, 0); setT(m, tx + (tx < cols - 2 ? 1 : -1), y, 0); }
   }
-  b.si = best.i; b.prog = c.segs[best.i].start + best.t;
+  // Fill anything the pen can't reach.
+  let dPen = bfs(m, [idx(pc, pr)]);
+  for (let k = 0; k < cols * rows; k++) if (!m.g[k] && dPen[k] < 0) m.g[k] = 1;
+
+  // Goal: far from the start, and preferably tucked into a nook.
+  const maxd = Math.max(...dPen), frac = rand(.5, .85), cands = [];
+  let wsum = 0;
+  for (let r = 1; r < rows - 2; r++) for (let c = 1; c < cols - 2; c++) {
+    const k = idx(c, r);
+    if (m.g[k] || dPen[k] < frac * maxd) continue;
+    const w = 1 + 3 * N4.reduce((n, [dx, dy]) => n + at(m, c + dx, r + dy), 0);
+    cands.push([c, r, w]); wsum += w;
+  }
+  let pick = rnd() * wsum, gc = cands[0][0], gr = cands[0][1];
+  for (const [c, r, w] of cands) { pick -= w; if (pick <= 0) { gc = c; gr = r; break; } }
+  for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) setT(m, gc + x, gr + y, 0);
+  const dist = bfs(m, [idx(gc, gr), idx(gc + 1, gr), idx(gc, gr + 1), idx(gc + 1, gr + 1)]);
+
+  const c = {
+    index: i, name: courseName(i), blurb: fam.blurb, cols, rows, g: m.g, dist,
+    startDist: Math.max(1, dist[idx(pc, pr)]),
+    start: { x: px * T, y: py * T, w: pw * T, h: ph * T },
+    finish: { x: gc * T, y: gr * T, w: 2 * T, h: 2 * T },
+    spinners: [],
+  };
+  c.cap = clamp(Math.round(c.startDist * 12), 300, 420);
+
+  // Spinners, only where there is open floor all around.
+  const want = irand(fam.spin[0], fam.spin[1]);
+  for (let t = 0; t < 80 && c.spinners.length < want; t++) {
+    const len = rand(50, 76), rad = len / 2 + 16, x = rand(T + rad, W - T - rad), y = rand(T + rad, H - T - rad);
+    let ok = true;
+    for (let r = Math.floor((y - rad) / T); r <= Math.floor((y + rad) / T) && ok; r++) for (let q = Math.floor((x - rad) / T); q <= Math.floor((x + rad) / T); q++) if (at(m, q, r)) { ok = false; break; }
+    for (const z of [c.start, c.finish]) if (x > z.x - rad && x < z.x + z.w + rad && y > z.y - rad && y < z.y + z.h + rad) ok = false;
+    if (ok && c.spinners.every(s => Math.hypot(s.x - x, s.y - y) > s.len / 2 + rad + 10)) c.spinners.push({ x, y, len, a: rand(0, Math.PI), w: rand(1.3, 2.6) * (rnd() < .5 ? -1 : 1) });
+  }
+  rnd = Math.random;
+
+  // Wall segments along tile edges, merged into runs.
+  const walls = [];
+  for (let r = 1; r < rows; r++) {
+    let s0 = -1;
+    for (let q = 0; q <= cols; q++) {
+      const e = q < cols && at(m, q, r - 1) !== at(m, q, r);
+      if (e && s0 < 0) s0 = q;
+      if (!e && s0 >= 0) { walls.push(seg(s0 * T, r * T, q * T, r * T)); s0 = -1; }
+    }
+  }
+  for (let q = 1; q < cols; q++) {
+    let s0 = -1;
+    for (let r = 0; r <= rows; r++) {
+      const e = r < rows && at(m, q - 1, r) !== at(m, q, r);
+      if (e && s0 < 0) s0 = r;
+      if (!e && s0 >= 0) { walls.push(seg(q * T, s0 * T, q * T, r * T)); s0 = -1; }
+    }
+  }
+  c.walls = walls;
+  // Spatial hash so each shape only checks nearby walls.
+  c.hc = 60; c.hw = Math.ceil(W / c.hc); c.hh = Math.ceil(H / c.hc);
+  c.hash = Array.from({ length: c.hw * c.hh }, () => []);
+  walls.forEach((w, k) => {
+    const x0 = Math.floor((Math.min(w.x1, w.x2) - 20) / c.hc), x1 = Math.floor((Math.max(w.x1, w.x2) + 20) / c.hc);
+    const y0 = Math.floor((Math.min(w.y1, w.y2) - 20) / c.hc), y1 = Math.floor((Math.max(w.y1, w.y2) + 20) / c.hc);
+    for (let y = Math.max(0, y0); y <= Math.min(c.hh - 1, y1); y++) for (let x = Math.max(0, x0); x <= Math.min(c.hw - 1, x1); x++) c.hash[y * c.hw + x].push(k);
+  });
+  // Paths for drawing.
+  c.solidPath = new Path2D();
+  for (let r = 0; r < rows; r++) {
+    let s0 = -1;
+    for (let q = 0; q <= cols; q++) {
+      const s = q < cols && at(m, q, r);
+      if (s && s0 < 0) s0 = q;
+      if (!s && s0 >= 0) { c.solidPath.rect(s0 * T, r * T, (q - s0) * T, T); s0 = -1; }
+    }
+  }
+  c.edgePath = new Path2D();
+  for (const w of walls) { c.edgePath.moveTo(w.x1, w.y1); c.edgePath.lineTo(w.x2, w.y2); }
+  return c;
 }
 
 // ---------- race state ----------
-let bumps = 0, shake = 0;
-const sparks = [];
-let course = null, courseIdx = 0, balls = [], state = 'ready', elapsed = 0, countdown = 0, finishedCount = 0, speedMult = 1;
+let course = null, courseIdx = 0, balls = [], state = 'ready', elapsed = 0, countdown = 0, finishedCount = 0, deadCount = 0, speedMult = 1, bumps = 0, shake = 0;
+const sparks = [], shards = [];
 const wins = Object.fromEntries(RACERS.map(r => [r.id, 0]));
 
 function worldFromBoard() {
   const r = document.getElementById('board').getBoundingClientRect();
   const aspect = clamp((r.width || 16) / (r.height || 9), 1 / 2.6, 2.6);
-  if (aspect >= 1) { W = Math.round(SHORT * aspect); H = SHORT; } else { W = SHORT; H = Math.round(SHORT / aspect); }
+  if (aspect >= 1) { W = Math.round(SHORT * aspect / T) * T; H = SHORT; } else { W = SHORT; H = Math.round(SHORT / aspect / T) * T; }
 }
-function loadCourse(i) {
-  courseIdx = i; worldFromBoard(); course = makeCourse(i); resetRace();
-}
-function randomCourse() {
-  let i; do { i = Math.floor(Math.random() * COURSE_COUNT); } while (i === courseIdx);
-  loadCourse(i);
-}
+function loadCourse(i) { courseIdx = i; worldFromBoard(); course = makeCourse(i); resetRace(); }
+function randomCourse() { let i; do { i = Math.floor(Math.random() * COURSE_COUNT); } while (i === courseIdx); loadCourse(i); }
 function resetRace() {
-  SPEED = course.speed; DRIFT = SPEED * 2.8;
-  const z = course.start, sp = 24;
-  let cols = clamp(Math.floor((z.w - 8) / sp), 1, N), rows = Math.ceil(N / cols);
-  while (rows * sp > z.h - 8 && cols < N) { cols++; rows = Math.ceil(N / cols); }
-  const slots = [];
-  for (let k = 0; k < N; k++) {
-    const cx = k % cols, cy = Math.floor(k / cols), inRow = Math.min(cols, N - cy * cols);
-    slots.push({ x: z.x + z.w / 2 + (cx - (inRow - 1) / 2) * sp, y: z.y + z.h / 2 + (cy - (rows - 1) / 2) * sp });
-  }
+  const z = course.start, sp = 27;
+  const cols = 4, rows = 2, slots = [];
+  for (let k = 0; k < N; k++) slots.push({ x: z.x + z.w / 2 + ((k % cols) - 1.5) * sp, y: z.y + z.h / 2 + (Math.floor(k / cols) - .5) * sp });
   slots.sort(() => Math.random() - .5);
-  balls = RACERS.map((r, k) => ({ ...r, x: slots[k].x, y: slots[k].y, vx: 0, vy: 0, si: 0, prog: 0, done: false, time: 0, place: 0, trail: [], tag: 0, spd: SPEED, form: jr(.9, 1.1), onPad: -1, flash: 0, hits: 0 }));
-  balls.forEach(b => track(course, b));
-  elapsed = 0; finishedCount = 0; bumps = 0; state = 'ready'; sparks.length = 0; shake = 0;
+  balls = RACERS.map((r, k) => {
+    const sh = SHAPES[r.shape];
+    return {
+      ...r, def: sh, verts: sh.verts.map(v => v.slice()), cracks: [],
+      x: slots[k].x, y: slots[k].y, sx: slots[k].x, sy: slots[k].y, vx: 0, vy: 0, spd: 0, a: jr(0, PI2), w: 0, k: 0,
+      hp: sh.hp * jr(.85, 1.15), stall: 0, prog: 0, done: false, dead: false, time: 0, place: 0, deathTime: 0,
+      trail: [], tag: 0, flash: 0, hits: 0,
+    };
+  });
+  for (const b of balls) updateProgress(b);
+  elapsed = 0; finishedCount = 0; deadCount = 0; bumps = 0; state = 'ready'; sparks.length = 0; shards.length = 0; shake = 0;
 }
 function launch() {
-  for (const b of balls) {
-    const a = jr(0, Math.PI * 2);
-    b.spd = SPEED * jr(0.8, 1.25);
-    b.vx = Math.cos(a) * b.spd; b.vy = Math.sin(a) * b.spd;
-  }
+  for (const b of balls) { const a = jr(0, PI2); b.spd = SPEED * jr(.6, 1.5); b.vx = Math.cos(a) * b.spd; b.vy = Math.sin(a) * b.spd; b.w = jr(-8, 8); b.k = jr(-2, 2); }
   state = 'running';
+}
+const damageFrac = b => clamp(1 - b.hp / b.def.hp, 0, 1);
+const speedMul = b => (b.def.speed || 1) * (1 - b.def.slow * damageFrac(b));
+function updateProgress(b) {
+  const c = Math.floor(b.x / T), r = Math.floor(b.y / T), d = course.dist[r * course.cols + c];
+  if (d >= 0) b.prog = clamp(1 - d / course.startDist, 0, 1);
 }
 
 // ---------- physics ----------
-// Each ball has its own current speed (b.spd). Bumps, pads and sludge push it around,
-// and it eases back toward a cruising speed that itself wanders (b.form).
+function setHeading(b, a) { b.vx = Math.cos(a) * b.spd; b.vy = Math.sin(a) * b.spd; }
 function renorm(b) {
-  b.spd = clamp(b.spd, SPEED * MIN_SPD, SPEED * MAX_SPD);
-  const s = Math.hypot(b.vx, b.vy);
-  if (s < 1) { const a = jr(0, Math.PI * 2); b.vx = Math.cos(a) * b.spd; b.vy = Math.sin(a) * b.spd; }
-  else { b.vx *= b.spd / s; b.vy *= b.spd / s; }
+  const s = Math.hypot(b.vx, b.vy) || 1;
+  b.vx *= b.spd / s; b.vy *= b.spd / s;
 }
-function rotate(b, th) {
-  const co = Math.cos(th), si = Math.sin(th), vx = b.vx * co - b.vy * si;
-  b.vy = b.vx * si + b.vy * co; b.vx = vx;
+// Leave a surface at a random angle (anything within ±85° of its normal), at a random speed and spin.
+function randomBounce(b, nx, ny) {
+  const th = jr(-SPREAD, SPREAD);
+  b.spd = SPEED * jr(.6, 1.5) * speedMul(b);
+  setHeading(b, Math.atan2(ny, nx) + th);
+  b.w = jr(-9, 9); b.k = jr(-2.2, 2.2);
 }
-// Mirror off the surface, then kick the new heading by a random angle (kept pointing away from the surface).
-function bounce(b, nx, ny, lo = 1, hi = 1) {
-  const d = b.vx * nx + b.vy * ny;
-  if (d >= 0) return false;
-  let rx = b.vx - 2 * d * nx, ry = b.vy - 2 * d * ny;
-  const sp = Math.hypot(rx, ry) || 1;
-  for (let k = 0; k < 8; k++) {
-    const th = jr(-JITTER, JITTER), co = Math.cos(th), si = Math.sin(th);
-    const vx = rx * co - ry * si, vy = rx * si + ry * co;
-    if ((vx * nx + vy * ny) / sp > .2) { rx = vx; ry = vy; break; }
-  }
-  b.vx = rx; b.vy = ry; b.spd *= jr(lo, hi); renorm(b);
+function collideSeg(b, s, thick) {
+  const c = closest(b.x, b.y, s), dx = b.x - c.x, dy = b.y - c.y, d = Math.hypot(dx, dy);
+  if (d > 16 + thick || d < 1e-6) return false;
+  const nx = dx / d, ny = dy / d, e = extent(b, -nx, -ny) + thick;
+  if (d >= e) return false;
+  b.x = c.x + nx * e; b.y = c.y + ny * e;
+  if (b.vx * nx + b.vy * ny < 0) randomBounce(b, nx, ny);
   return true;
 }
-function hitSegment(b, s, thick, lo, hi) {
-  const c = closest(b.x, b.y, s), dx = b.x - c.x, dy = b.y - c.y, d = Math.hypot(dx, dy);
-  if (d >= R + thick) return false;
-  let nx, ny;
-  if (d > 1e-6) { nx = dx / d; ny = dy / d; }
-  else { const sx = s.x2 - s.x1, sy = s.y2 - s.y1, l = Math.hypot(sx, sy) || 1; nx = -sy / l; ny = sx / l; }
-  b.x = c.x + nx * (R + thick); b.y = c.y + ny * (R + thick);
-  return bounce(b, nx, ny, lo, hi);
-}
 function spinnerSeg(s) { const dx = Math.cos(s.a) * s.len / 2, dy = Math.sin(s.a) * s.len / 2; return seg(s.x - dx, s.y - dy, s.x + dx, s.y + dy); }
-function inside(b, z) { return b.x > z.x && b.x < z.x + z.w && b.y > z.y && b.y < z.y + z.h; }
+const tileSolid = (x, y) => at(course, Math.floor(x / T), Math.floor(y / T));
+const inside = (b, z) => b.x > z.x && b.x < z.x + z.w && b.y > z.y && b.y < z.y + z.h;
+
+// Hidden damage model: only shape-on-shape hits hurt.
+function damage(b, hit, dirx, diry) {
+  const sh = b.def;
+  let dmg = hit * jr(DMG_LO, DMG_HI) * sh.armor;
+  if (Math.random() < .03) dmg *= 4;               // the occasional brutal hit
+  b.hp -= dmg;
+  const frac = damageFrac(b);
+  // Dent: the corner facing the hit caves in.
+  const [lx, ly] = toLocal(b, dirx, diry);
+  let bi = 0, bd = -1e9;
+  b.verts.forEach((v, k) => { const d = v[0] * lx + v[1] * ly; if (d > bd) { bd = d; bi = k; } });
+  const v = b.verts[bi], base = Math.hypot(...v) || 1, dent = sh.dent * hit * jr(.5, 1.5);
+  const nr = Math.max(base * (1 - dent), 4.5);
+  v[0] *= nr / base; v[1] *= nr / base;
+  // Chip: a corner snaps off and leaves two new, blunter corners.
+  if (frac > .2 && b.verts.length < 32 && Math.random() < sh.chip * hit) {
+    const n = b.verts.length, p = b.verts[(bi - 1 + n) % n], q = b.verts[(bi + 1) % n], t = jr(.25, .45);
+    b.verts.splice(bi, 1, [v[0] + (p[0] - v[0]) * t, v[1] + (p[1] - v[1]) * t], [v[0] + (q[0] - v[0]) * t, v[1] + (q[1] - v[1]) * t]);
+    const [wx, wy] = [b.x + dirx * 8, b.y + diry * 8];
+    for (let k = 0; k < 3; k++) shards.push(makeShard(wx, wy, b.color, 2.5));
+  }
+  // Crack: fragile shapes start cracking early.
+  if (frac >= sh.crackAt && b.cracks.length < 7 && Math.random() < .6) {
+    const n = b.verts.length, k0 = Math.floor(Math.random() * n), a = b.verts[k0], z = b.verts[(k0 + 1) % n], t = Math.random();
+    let x = a[0] + (z[0] - a[0]) * t, y = a[1] + (z[1] - a[1]) * t;
+    const line = [[x, y]];
+    for (let s = 0; s < 3; s++) {
+      const ang = Math.atan2(-y, -x) + jr(-.8, .8), len = jr(2.5, 5);
+      x += Math.cos(ang) * len; y += Math.sin(ang) * len; line.push([x, y]);
+    }
+    b.cracks.push(line);
+  }
+  // Some shapes seize up when battered.
+  if (sh.stall && Math.random() < sh.stall * frac * hit) b.stall = Math.max(b.stall, jr(.6, 2.6));
+  if (b.hp <= 0) kill(b);
+}
+function makeShard(x, y, color, size) {
+  const a = jr(0, PI2), v = jr(60, 240);
+  return { x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, a: jr(0, PI2), w: jr(-12, 12), size: size * jr(.7, 1.4), life: jr(.7, 1.4), max: 1.4, color };
+}
+function kill(b) {
+  b.dead = true; deadCount++; b.deathTime = elapsed; b.tag = 2.2;
+  if (b.def.split) {
+    // A heart breaks clean in two.
+    for (const side of [-1, 1]) {
+      const half = b.verts.filter(v => v[0] * side >= -0.5);
+      shards.push({ x: b.x, y: b.y, vx: side * jr(80, 160), vy: jr(-60, 60), a: b.a, w: side * jr(2, 5), verts: half, life: 1.6, max: 1.6, color: b.color, size: 1 });
+    }
+  } else {
+    for (let k = 0; k < 12; k++) shards.push(makeShard(b.x, b.y, b.color, 4));
+  }
+  for (let k = 0; k < 14; k++) { const a = jr(0, PI2), v = jr(100, 320); sparks.push({ x: b.x, y: b.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: .5, max: .5, color: '#ffffff' }); }
+  shake = Math.max(shake, 5);
+  crunch();
+}
 
 function step(dt) {
   for (const s of course.spinners) s.a += s.w * dt;
-  for (const p of course.bumpers) if (p.flash > 0) p.flash = Math.max(0, p.flash - dt * 3);
-  const spinSegs = course.spinners.map(spinnerSeg);
-  const root = Math.sqrt(dt);
+  const spin = course.spinners.map(spinnerSeg), root = Math.sqrt(dt);
   for (const b of balls) {
-    if (b.done) continue;
-    // Form wanders through the race, so who is quick keeps changing.
-    b.form = clamp(b.form + jr(-1, 1) * 0.5 * root, 0.78, 1.22);
-    let target = SPEED * b.form, pad = -1;
-    for (let k = 0; k < course.patches.length; k++) {
-      const p = course.patches[k];
-      if (Math.hypot(b.x - p.x, b.y - p.y) < p.r) { if (p.kind === 'sludge') target *= 0.42; else pad = k; }
+    if (b.done || b.dead) continue;
+    b.a += b.w * dt;
+    if (b.stall > 0) {
+      // Seized up: barely moving, shuddering in place.
+      b.stall -= dt; b.spd = SPEED * .06; b.w *= .9;
+    } else {
+      // The path curves at a randomly changing rate, and the speed drifts.
+      b.k = clamp(b.k + jr(-1, 1) * 3 * root, -2.4, 2.4);
+      const h = Math.atan2(b.vy, b.vx) + b.k * dt;
+      const m = speedMul(b);
+      b.spd = clamp(b.spd * (1 + jr(-1, 1) * .35 * root), SPEED * .5 * m, SPEED * 1.6 * m);
+      if (b.spd < SPEED * .3 * m) b.spd = SPEED * .6 * m;
+      setHeading(b, Math.random() < STUMBLE * dt ? jr(0, PI2) : h);
     }
-    if (pad >= 0 && pad !== b.onPad) { b.spd = Math.max(b.spd, SPEED * jr(1.6, 2.1)); course.patches[pad].pulse = 1; }
-    b.onPad = pad;
-    b.spd += (target - b.spd) * Math.min(1, dt * 1.4);
-    // A constant wobble in heading, and now and then a proper stumble.
-    rotate(b, jr(-1, 1) * 1.2 * root);
-    if (Math.random() < STUMBLE * dt) { rotate(b, jr(-2, 2)); b.spd *= jr(.6, 1.3); b.flash = 1; }
-    // Gentle pull along the course.
-    const la = pointAt(course, b.prog + 70);
-    const fx = la.x - b.x, fy = la.y - b.y, fl = Math.hypot(fx, fy) || 1;
-    const sp = b.spd;
-    b.vx += fx / fl * DRIFT * dt; b.vy += fy / fl * DRIFT * dt; b.spd = sp; renorm(b);
+    renorm(b);
     b.x += b.vx * dt; b.y += b.vy * dt;
-    for (const w of course.walls) hitSegment(b, w, 3, .8, 1);
-    for (const w of course.deflectors) hitSegment(b, w, 3, .9, 1.2);
-    for (const w of spinSegs) if (hitSegment(b, w, 4, 1.15, 1.6)) b.flash = Math.max(b.flash, .6);
-    for (const p of course.bumpers) {
-      const dx = b.x - p.x, dy = b.y - p.y, d = Math.hypot(dx, dy);
-      if (d < p.r + R && d > 1e-6) {
-        const nx = dx / d, ny = dy / d;
-        b.x = p.x + nx * (p.r + R); b.y = p.y + ny * (p.r + R);
-        if (bounce(b, nx, ny, 1.2, 1.7)) p.flash = 1;
-      }
-    }
+    const hx = clamp(Math.floor(b.x / course.hc), 0, course.hw - 1), hy = clamp(Math.floor(b.y / course.hc), 0, course.hh - 1);
+    for (const k of course.hash[hy * course.hw + hx]) collideSeg(b, course.walls[k], 0);
+    for (const s of spin) if (collideSeg(b, s, 4)) b.flash = Math.max(b.flash, .6);
   }
-  // Ball-to-ball collisions: equal masses, a springy and random restitution, and a bit of spin.
   for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++) {
     const a = balls[i], b = balls[j];
-    if (a.done || b.done) continue;
+    if (a.done || b.done || a.dead || b.dead) continue;
     const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
-    if (d >= 2 * R || d < 1e-6) continue;
-    const nx = dx / d, ny = dy / d, push = (2 * R - d) / 2;
+    if (d > 30 || d < 1e-6) continue;
+    const nx = dx / d, ny = dy / d, sum = extent(a, nx, ny) + extent(b, -nx, -ny);
+    if (d >= sum) continue;
+    const push = (sum - d) / 2;
     a.x -= nx * push; a.y -= ny * push; b.x += nx * push; b.y += ny * push;
     const rel = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
     if (rel <= 0) continue;
-    const e = jr(0.9, 1.6), imp = rel * (1 + e) / 2;
-    a.vx -= imp * nx; a.vy -= imp * ny; b.vx += imp * nx; b.vy += imp * ny;
-    for (const o of [a, b]) { rotate(o, jr(-.45, .45)); o.spd = Math.hypot(o.vx, o.vy); renorm(o); }
-    const hit = Math.min(1.5, rel / SPEED);
+    const hit = Math.min(1.6, rel / SPEED);
+    randomBounce(a, -nx, -ny); randomBounce(b, nx, ny);
     a.flash = Math.max(a.flash, hit); b.flash = Math.max(b.flash, hit);
-    a.hits++; b.hits++; bumps++;
-    impact(a.x + nx * R, a.y + ny * R, a.color, b.color, hit);
+    bumps++;
+    impact(a.x + nx * extent(a, nx, ny), a.y + ny * extent(a, nx, ny), a.color, b.color, hit);
+    damage(a, hit, nx, ny); damage(b, hit, -nx, -ny);
   }
   elapsed += dt;
   for (const b of balls) {
-    if (b.done) continue;
-    track(course, b);
+    if (b.done || b.dead) continue;
+    // Never let a shape end up inside a wall: put it back where it last stood.
+    if (tileSolid(b.x, b.y)) { b.x = b.sx; b.y = b.sy; setHeading(b, jr(0, PI2)); } else { b.sx = b.x; b.sy = b.y; }
+    updateProgress(b);
     if (inside(b, course.finish)) {
-      b.done = true; b.time = elapsed; b.place = ++finishedCount; b.prog = course.total; b.tag = 2.2;
+      b.done = true; b.time = elapsed; b.place = ++finishedCount; b.prog = 1; b.tag = 2.2;
       if (b.place === 1) wins[b.id]++;
     }
   }
-  if (finishedCount === N || elapsed >= course.cap) state = 'finished';
+  if (finishedCount + deadCount === N || elapsed >= course.cap) state = 'finished';
 }
 
 // ---------- impacts: sparks, shake, sound ----------
-let audio = null, soundOn = true, lastClack = 0;
+let audio = null, soundOn = true, lastClack = 0, noiseBuf = null;
 function ensureAudio() {
   try {
     if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
@@ -612,23 +671,30 @@ function clack(strength) {
   g.gain.exponentialRampToValueAtTime(.0005, t + .09);
   o.connect(g).connect(audio.destination); o.start(t); o.stop(t + .1);
 }
+function crunch() {
+  if (!soundOn || !audio || audio.state !== 'running') return;
+  const t = audio.currentTime;
+  if (!noiseBuf) { noiseBuf = audio.createBuffer(1, audio.sampleRate * .4, audio.sampleRate); const d = noiseBuf.getChannelData(0); for (let k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1; }
+  const src = audio.createBufferSource(), f = audio.createBiquadFilter(), g = audio.createGain();
+  src.buffer = noiseBuf; f.type = 'lowpass'; f.frequency.setValueAtTime(1800, t); f.frequency.exponentialRampToValueAtTime(200, t + .35);
+  g.gain.setValueAtTime(.35, t); g.gain.exponentialRampToValueAtTime(.001, t + .38);
+  src.connect(f).connect(g).connect(audio.destination); src.start(t); src.stop(t + .4);
+}
 function impact(x, y, c1, c2, hit) {
   const n = 3 + Math.round(hit * 8);
   for (let k = 0; k < n; k++) {
-    const a = jr(0, Math.PI * 2), v = jr(60, 280) * (0.5 + hit), life = jr(.25, .55);
+    const a = jr(0, PI2), v = jr(60, 280) * (0.5 + hit), life = jr(.25, .55);
     sparks.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life, max: life, color: k % 2 ? c1 : c2 });
   }
   if (sparks.length > 400) sparks.splice(0, sparks.length - 400);
-  if (hit > .6) shake = Math.max(shake, hit * 3.5);
+  if (hit > .6) shake = Math.max(shake, hit * 3);
   clack(hit);
 }
 
 // ---------- drawing ----------
 const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
-let dpr = 1;
 function resizeCanvas() {
-  const r = cv.getBoundingClientRect();
-  dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  const r = cv.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2.5);
   cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
 }
 let resizeTimer = 0;
@@ -642,6 +708,21 @@ new ResizeObserver(() => {
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const ordinal = n => n + ({ 1: 'st', 2: 'nd', 3: 'rd' }[n] || 'th');
 
+function polyPath(verts, x, y, a, scale = 1) {
+  const c = Math.cos(a), s = Math.sin(a);
+  ctx.beginPath();
+  verts.forEach(([vx, vy], i) => { const px = x + (vx * c - vy * s) * scale, py = y + (vx * s + vy * c) * scale; i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+  ctx.closePath();
+}
+function drawTag(x, y, label, color, alpha, rise) {
+  ctx.globalAlpha = alpha;
+  const ty = y - 34 - rise;
+  ctx.font = '700 13px "Chakra Petch", sans-serif'; const tw = ctx.measureText(label).width + 12;
+  ctx.fillStyle = color; ctx.fillRect(x - tw / 2, ty, tw, 18);
+  ctx.fillStyle = '#0e1119'; ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; ctx.fillText(label, x, ty + 9.5);
+  ctx.textAlign = 'left'; ctx.globalAlpha = 1;
+}
+
 function draw() {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.fillStyle = '#161a26'; ctx.fillRect(0, 0, cv.width, cv.height);
@@ -650,19 +731,7 @@ function draw() {
   if (shake > .1 && !reduceMotion) ctx.translate(jr(-shake, shake), jr(-shake, shake));
 
   ctx.fillStyle = 'rgba(255,255,255,0.035)';
-  for (let x = 15; x < W; x += 30) for (let y = 15; y < H; y += 30) ctx.fillRect(x - 1, y - 1, 2, 2);
-
-  // racing line + chevrons
-  ctx.save();
-  ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 2; ctx.setLineDash([6, 10]);
-  ctx.beginPath(); course.path.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke();
-  ctx.setLineDash([]); ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
-  for (let d = 90; d < course.total - 60; d += 130) {
-    const p = pointAt(course, d), q = pointAt(course, d + 1), a = Math.atan2(q.y - p.y, q.x - p.x);
-    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(a);
-    ctx.beginPath(); ctx.moveTo(-5, -7); ctx.lineTo(3, 0); ctx.lineTo(-5, 7); ctx.stroke(); ctx.restore();
-  }
-  ctx.restore();
+  for (let x = T / 2; x < W; x += T) for (let y = T / 2; y < H; y += T) ctx.fillRect(x - 1, y - 1, 2, 2);
 
   const z = course.start;
   ctx.save(); ctx.beginPath(); ctx.rect(z.x, z.y, z.w, z.h); ctx.clip();
@@ -670,91 +739,69 @@ function draw() {
   for (let k = -z.h; k < z.w + z.h; k += 16) { ctx.beginPath(); ctx.moveTo(z.x + k, z.y); ctx.lineTo(z.x + k + z.h, z.y + z.h); ctx.stroke(); }
   ctx.restore();
   ctx.fillStyle = 'rgba(233,236,245,0.45)'; ctx.font = '700 11px "Chakra Petch", sans-serif'; ctx.textBaseline = 'top';
-  ctx.fillText('START', z.x + 8, z.y + 6);
+  ctx.fillText('START', z.x + 6, z.y + 5);
 
   const f = course.finish, sq = 10;
   for (let x = 0; x < f.w; x += sq) for (let y = 0; y < f.h; y += sq) {
     ctx.fillStyle = ((x + y) / sq) % 2 ? 'rgba(14,17,25,0.9)' : 'rgba(240,242,248,0.85)';
-    ctx.fillRect(f.x + x, f.y + y, Math.min(sq, f.w - x), Math.min(sq, f.h - y));
+    ctx.fillRect(f.x + x, f.y + y, sq, sq);
   }
 
-  for (const p of course.patches) {
-    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-    if (p.kind === 'sludge') {
-      ctx.fillStyle = 'rgba(58,47,32,0.9)'; ctx.fill();
-      ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(160,128,84,0.45)'; ctx.stroke();
-      ctx.fillStyle = 'rgba(20,16,10,0.55)';
-      for (let k = 0; k < 4; k++) { const a = k * 2.1 + p.x, d = p.r * (.25 + .15 * k); ctx.beginPath(); ctx.arc(p.x + Math.cos(a) * d, p.y + Math.sin(a) * d, 3 + (k % 2) * 2, 0, Math.PI * 2); ctx.fill(); }
-    } else {
-      ctx.fillStyle = `rgba(255,255,255,${0.06 + 0.12 * p.pulse})`; ctx.fill();
-      ctx.setLineDash([5, 5]); ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(220,228,255,0.5)'; ctx.stroke(); ctx.setLineDash([]);
-      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.dir);
-      ctx.strokeStyle = `rgba(240,244,255,${0.55 + 0.45 * p.pulse})`; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      for (const ox of [-7, 5]) { ctx.beginPath(); ctx.moveTo(ox - 5, -9); ctx.lineTo(ox + 4, 0); ctx.lineTo(ox - 5, 9); ctx.stroke(); }
-      ctx.restore();
-      if (p.pulse > 0) { ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 10 * (1 - p.pulse), 0, Math.PI * 2); ctx.strokeStyle = `rgba(255,255,255,${0.6 * p.pulse})`; ctx.lineWidth = 2; ctx.stroke(); }
-    }
-  }
-
+  ctx.fillStyle = '#232a40'; ctx.fill(course.solidPath);
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 8;
-  ctx.beginPath(); for (const w of course.walls) { ctx.moveTo(w.x1 + 2, w.y1 + 3); ctx.lineTo(w.x2 + 2, w.y2 + 3); } ctx.stroke();
-  ctx.strokeStyle = '#d6dbe8'; ctx.lineWidth = 6;
-  ctx.beginPath(); for (const w of course.walls) { ctx.moveTo(w.x1, w.y1); ctx.lineTo(w.x2, w.y2); } ctx.stroke();
+  ctx.strokeStyle = '#4d5880'; ctx.lineWidth = 2; ctx.stroke(course.edgePath);
 
-  ctx.strokeStyle = '#9aa5cc'; ctx.lineWidth = 6;
-  ctx.beginPath(); for (const w of course.deflectors) { ctx.moveTo(w.x1, w.y1); ctx.lineTo(w.x2, w.y2); } ctx.stroke();
-
-  for (const p of course.bumpers) {
-    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-    ctx.fillStyle = '#262c42'; ctx.fill();
-    ctx.lineWidth = 3; ctx.strokeStyle = '#7f89b0'; ctx.stroke();
-    if (p.flash > 0) {
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 4 * p.flash, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(255,255,255,${0.8 * p.flash})`; ctx.lineWidth = 3; ctx.stroke();
-    }
-  }
   for (const sp of course.spinners) {
     const g = spinnerSeg(sp);
     ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.arc(sp.x, sp.y, sp.len / 2, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(sp.x, sp.y, sp.len / 2, 0, PI2); ctx.stroke();
     ctx.strokeStyle = '#eef0f7'; ctx.lineWidth = 7;
     ctx.beginPath(); ctx.moveTo(g.x1, g.y1); ctx.lineTo(g.x2, g.y2); ctx.stroke();
-    ctx.beginPath(); ctx.arc(sp.x, sp.y, 6, 0, Math.PI * 2); ctx.fillStyle = '#161a26'; ctx.fill();
+    ctx.beginPath(); ctx.arc(sp.x, sp.y, 6, 0, PI2); ctx.fillStyle = '#161a26'; ctx.fill();
     ctx.lineWidth = 2.5; ctx.strokeStyle = '#eef0f7'; ctx.stroke();
   }
 
   if (!reduceMotion) for (const b of balls) {
     for (let i = 0; i < b.trail.length; i++) {
       const t = b.trail[i], a = (i + 1) / b.trail.length;
-      ctx.globalAlpha = a * 0.28; ctx.fillStyle = b.color;
-      ctx.beginPath(); ctx.arc(t.x, t.y, R * (0.4 + 0.5 * a), 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = a * 0.22; ctx.fillStyle = b.color;
+      polyPath(b.verts, t.x, t.y, t.a, 0.35 + 0.5 * a); ctx.fill();
     }
   }
   ctx.globalAlpha = 1;
 
   for (const b of balls) {
-    ctx.beginPath(); ctx.arc(b.x + 2, b.y + 3, R, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
-    const gr = ctx.createRadialGradient(b.x - 4, b.y - 4, 1, b.x, b.y, R);
-    gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.25, b.color); gr.addColorStop(1, b.dark);
-    ctx.beginPath(); ctx.arc(b.x, b.y, R, 0, Math.PI * 2); ctx.fillStyle = gr; ctx.fill();
-    if (b.flash > .05 && !b.done) {
-      ctx.beginPath(); ctx.arc(b.x, b.y, R + 3 + 6 * (1 - Math.min(1, b.flash)), 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(255,255,255,${0.7 * Math.min(1, b.flash)})`; ctx.lineWidth = 2; ctx.stroke();
-    }
-    if (b.done) {
-      ctx.lineWidth = 2; ctx.strokeStyle = '#ffffff'; ctx.stroke();
-      if (b.tag > 0) {
-        ctx.globalAlpha = Math.min(1, b.tag);
-        const label = ordinal(b.place), ty = b.y - R - 22 - (2.2 - b.tag) * 6;
-        ctx.font = '700 13px "Chakra Petch", sans-serif'; const tw = ctx.measureText(label).width + 12;
-        ctx.fillStyle = b.color; ctx.fillRect(b.x - tw / 2, ty, tw, 18);
-        ctx.fillStyle = '#0e1119'; ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; ctx.fillText(label, b.x, ty + 9.5);
-        ctx.textAlign = 'left'; ctx.globalAlpha = 1;
+    if (b.dead) continue;
+    let x = b.x, y = b.y;
+    if (b.stall > 0 && !reduceMotion) { x += jr(-1.2, 1.2); y += jr(-1.2, 1.2); }
+    polyPath(b.verts, x + 2, y + 3, b.a); ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fill();
+    const gr = ctx.createRadialGradient(x - 4, y - 4, 1, x, y, 14);
+    gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.3, b.color); gr.addColorStop(1, b.dark);
+    polyPath(b.verts, x, y, b.a); ctx.fillStyle = gr; ctx.fill();
+    ctx.lineWidth = 1.5; ctx.strokeStyle = b.done ? '#ffffff' : b.dark; ctx.stroke();
+    if (b.cracks.length) {
+      const c = Math.cos(b.a), sn = Math.sin(b.a);
+      ctx.strokeStyle = 'rgba(14,17,25,0.85)'; ctx.lineWidth = 1.2;
+      for (const line of b.cracks) {
+        ctx.beginPath();
+        line.forEach(([vx, vy], i) => { const px = x + vx * c - vy * sn, py = y + vx * sn + vy * c; i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+        ctx.stroke();
       }
     }
+    if (b.flash > .05 && !b.done) {
+      ctx.beginPath(); ctx.arc(x, y, 15 + 6 * (1 - Math.min(1, b.flash)), 0, PI2);
+      ctx.strokeStyle = `rgba(255,255,255,${0.6 * Math.min(1, b.flash)})`; ctx.lineWidth = 2; ctx.stroke();
+    }
+    if (b.done && b.tag > 0) drawTag(x, y, ordinal(b.place), b.color, Math.min(1, b.tag), (2.2 - b.tag) * 6);
   }
+  for (const b of balls) if (b.dead && b.tag > 0) drawTag(b.x, b.y + 10, 'KO', b.color, Math.min(1, b.tag), (2.2 - b.tag) * 8);
 
+  for (const sh of shards) {
+    ctx.globalAlpha = Math.min(1, sh.life / sh.max * 1.5); ctx.fillStyle = sh.color;
+    if (sh.verts) polyPath(sh.verts, sh.x, sh.y, sh.a);
+    else { const r = sh.size; polyPath([[r, 0], [-r * .6, r * .7], [-r * .5, -r * .8]], sh.x, sh.y, sh.a); }
+    ctx.fill();
+  }
   ctx.lineCap = 'round';
   for (const sp of sparks) {
     ctx.globalAlpha = sp.life / sp.max; ctx.strokeStyle = sp.color; ctx.lineWidth = 2.5;
@@ -774,14 +821,15 @@ function draw() {
     ctx.fillStyle = 'rgba(14,17,25,0.6)'; ctx.fillRect(0, 0, W, H);
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     if (win) {
-      ctx.beginPath(); ctx.arc(W / 2, H / 2 - 70, 26, 0, Math.PI * 2); ctx.fillStyle = win.color; ctx.fill();
-      ctx.fillStyle = '#f2f4fa'; ctx.font = `700 ${Math.min(56, W / 10)}px "Chakra Petch", sans-serif`;
+      ctx.fillStyle = win.color; polyPath(win.verts, W / 2, H / 2 - 74, 0, 2.2); ctx.fill();
+      ctx.fillStyle = '#f2f4fa'; ctx.font = `700 ${Math.min(52, W / 14)}px "Chakra Petch", sans-serif`;
       ctx.fillText(`${win.name.toUpperCase()} WINS`, W / 2, H / 2 + 4);
       ctx.font = '500 20px "Chakra Petch", sans-serif'; ctx.fillStyle = 'rgba(233,236,245,0.75)';
-      ctx.fillText(`${fmt(win.time)} on ${course.name}`, W / 2, H / 2 + 50);
+      ctx.fillText(`${fmt(win.time)} on ${course.name}`, W / 2, H / 2 + 48);
+      if (deadCount) ctx.fillText(`${deadCount} ${deadCount === 1 ? 'shape' : 'shapes'} didn't survive`, W / 2, H / 2 + 76);
     } else {
       ctx.fillStyle = '#f2f4fa'; ctx.font = '700 40px "Chakra Petch", sans-serif';
-      ctx.fillText('TIME CAP, NO FINISHERS', W / 2, H / 2);
+      ctx.fillText(deadCount === N - 1 || balls.every(b => b.dead) ? 'NO SURVIVORS CROSSED' : 'TIME CAP, NO FINISHERS', W / 2, H / 2);
     }
     ctx.textAlign = 'left';
   }
@@ -791,6 +839,7 @@ function draw() {
 const $ = id => document.getElementById(id);
 const goBtn = $('go'), shuffleBtn = $('shuffle'), pick = $('pick'), timerEl = $('timer'), stateEl = $('state'), ranksEl = $('ranks');
 function fmt(t) { const m = Math.floor(t / 60), s = t - m * 60; return `${m}:${s.toFixed(2).padStart(5, '0')}`; }
+const shapeSvg = r => `<svg viewBox="-14 -14 28 28" aria-hidden="true"><polygon points="${SHAPES[r.shape].verts.map(v => v.map(n => n.toFixed(1)).join(',')).join(' ')}" fill="${r.color}"/></svg>`;
 
 for (let i = 0; i < COURSE_COUNT; i++) {
   const o = document.createElement('option'); o.value = i; o.textContent = `${i + 1}. ${courseName(i)}`; pick.appendChild(o);
@@ -798,34 +847,31 @@ for (let i = 0; i < COURSE_COUNT; i++) {
 const rows = {};
 for (const r of RACERS) {
   const li = document.createElement('li'); li.className = 'row'; li.style.setProperty('--c', r.color);
-  li.innerHTML = `<span class="pos"></span><span class="chip" title="${r.name}"></span><div class="who"><span class="name">${r.name}</span><div class="bar"><i></i></div></div><div class="stat"><span class="t"></span><span class="gap"></span></div>`;
+  li.innerHTML = `<span class="pos"></span><span class="chip" title="${r.name}">${shapeSvg(r)}</span><div class="who"><span class="name">${r.name}</span><div class="bar"><i></i></div></div><div class="stat"><span class="t"></span><span class="gap"></span></div>`;
   ranksEl.appendChild(li);
   rows[r.id] = { li, pos: li.querySelector('.pos'), bar: li.querySelector('.bar i'), t: li.querySelector('.t'), gap: li.querySelector('.gap') };
 }
-$('tally').innerHTML = RACERS.map(r => `<span style="--c:${r.color}" title="${r.name}"><i></i><b id="w-${r.id}">0</b></span>`).join('');
+$('tally').innerHTML = RACERS.map(r => `<span title="${r.name}"><i>${shapeSvg(r)}</i><b id="w-${r.id}">0</b></span>`).join('');
 
 function standings() {
-  return [...balls].sort((a, b) => (a.done && b.done) ? a.place - b.place : a.done ? -1 : b.done ? 1 : b.prog - a.prog);
+  const rank = b => b.done ? 0 : b.dead ? 2 : 1;
+  return [...balls].sort((a, b) => rank(a) - rank(b) || (a.done ? a.place - b.place : a.dead ? b.deathTime - a.deathTime : b.prog - a.prog));
 }
 function updateUI() {
   timerEl.textContent = fmt(elapsed);
   const list = standings(), winner = balls.find(b => b.place === 1);
   list.forEach((b, i) => {
-    const row = rows[b.id], pct = Math.floor(b.prog / course.total * 100);
+    const row = rows[b.id], pct = Math.floor(b.prog * 100);
     row.li.style.order = i;
     row.li.classList.toggle('done', b.done);
+    row.li.classList.toggle('ko', b.dead);
     row.pos.textContent = i + 1;
-    row.bar.style.width = `${(b.prog / course.total * 100).toFixed(1)}%`;
-    if (b.done) {
-      row.t.textContent = fmt(b.time);
-      row.gap.textContent = b.place === 1 ? 'Winner' : `+${(b.time - winner.time).toFixed(2)}s`;
-    } else if (state === 'ready' || state === 'countdown') {
-      row.t.textContent = '—'; row.gap.textContent = 'on the grid';
-    } else if (state === 'finished') {
-      row.t.textContent = 'DNF'; row.gap.textContent = `${pct}% done`;
-    } else {
-      row.t.textContent = `${pct}%`; row.gap.textContent = 'racing';
-    }
+    row.bar.style.width = `${(b.prog * 100).toFixed(1)}%`;
+    if (b.dead) { row.t.textContent = 'KO'; row.gap.textContent = `at ${fmt(b.deathTime)}`; }
+    else if (b.done) { row.t.textContent = fmt(b.time); row.gap.textContent = b.place === 1 ? 'Winner' : `+${(b.time - winner.time).toFixed(2)}s`; }
+    else if (state === 'ready' || state === 'countdown') { row.t.textContent = '—'; row.gap.textContent = 'on the grid'; }
+    else if (state === 'finished') { row.t.textContent = 'DNF'; row.gap.textContent = `${pct}% of the way`; }
+    else { row.t.textContent = `${pct}%`; row.gap.textContent = 'racing'; }
   });
   for (const r of RACERS) $('w-' + r.id).textContent = wins[r.id];
   if (state === 'running') stateEl.textContent = `${finishedCount} of ${N} across the line · ${bumps} collisions`;
@@ -840,7 +886,7 @@ function setControls() {
     ready: 'On the grid. Press Start.',
     countdown: 'Lights…',
     running: `${finishedCount} of ${N} across the line · ${bumps} collisions`,
-    finished: finishedCount === N ? `Race complete. ${bumps} collisions.` : `Time cap reached. ${finishedCount} of ${N} finished.`,
+    finished: `${finishedCount} of ${N} finished · ${bumps} collisions`,
   }[state];
 }
 
@@ -876,23 +922,21 @@ function frame(now) {
     if (countdown <= 0) { launch(); setControls(); }
   }
   if (state === 'running') {
-    const dt = real * speedMult, n = Math.max(1, Math.ceil(SPEED * MAX_SPD * dt / 3));
-    const before = finishedCount;
+    const dt = real * speedMult, n = Math.max(1, Math.ceil(SPEED * 1.7 * dt / 3));
+    const before = finishedCount + deadCount;
     for (let i = 0; i < n && state === 'running'; i++) step(dt / n);
     for (const b of balls) {
-      if (!b.done) { b.trail.push({ x: b.x, y: b.y }); if (b.trail.length > 14) b.trail.shift(); }
+      if (!b.done && !b.dead) { b.trail.push({ x: b.x, y: b.y, a: b.a }); if (b.trail.length > 12) b.trail.shift(); }
       else if (b.trail.length) b.trail.shift();
     }
-    if (finishedCount !== before || state !== 'running') setControls();
-  } else {
-    for (const p of course.bumpers) if (p.flash > 0) p.flash = Math.max(0, p.flash - real * 3);
+    if (finishedCount + deadCount !== before || state !== 'running') setControls();
   }
   for (const b of balls) { if (b.tag > 0) b.tag = Math.max(0, b.tag - real); if (b.flash > 0) b.flash = Math.max(0, b.flash - real * 2.5); }
-  for (const p of course.patches) if (p.pulse > 0) p.pulse = Math.max(0, p.pulse - real * 2);
-  for (let i = sparks.length - 1; i >= 0; i--) {
-    const sp = sparks[i]; sp.life -= real;
-    if (sp.life <= 0) { sparks.splice(i, 1); continue; }
-    sp.x += sp.vx * real; sp.y += sp.vy * real; sp.vx *= 1 - 3 * real; sp.vy *= 1 - 3 * real;
+  for (const list of [sparks, shards]) for (let i = list.length - 1; i >= 0; i--) {
+    const p = list[i]; p.life -= real;
+    if (p.life <= 0) { list.splice(i, 1); continue; }
+    p.x += p.vx * real; p.y += p.vy * real; p.vx *= 1 - 3 * real; p.vy *= 1 - 3 * real;
+    if (p.w) p.a += p.w * real;
   }
   shake = Math.max(0, shake - real * 18);
   uiTimer -= real;
