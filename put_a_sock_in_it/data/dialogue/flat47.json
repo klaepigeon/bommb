@@ -348,5 +348,8 @@
     "gesture": "nod"
    }
   }
- ]
+ ],
+	"f47_back": [{"pause": 0.5, "who": "socko", "text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder", "socko": {"emotion": "curious", "look": "ahead"}}],
+	"f47_lobby": [{"pause": 0.4, "who": "socko", "text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder", "socko": {"emotion": "happy", "look": "ahead"}}, {"who": "kurt", "text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder"}],
+	"f47_lobby_in": [{"who": "socko", "text": "neenor neenor neenor neenor ki or Jules have to write this later neenor neenor neenor placeholder", "socko": {"emotion": "curious", "look": "ahead"}}]
 }

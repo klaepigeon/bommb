@@ -9,7 +9,9 @@ extends Level
 ## gone and the thing is there, solid, the note on it; any other word won't stay on.
 ## In the box room, a tall narrow block that isn't in 47: GUN SAFE makes it Papa's steel cabinet,
 ## and in it the sawn-off and a box of shells. The names on the wall dress the figures: MARTA on
-## MAMA, KURT on PAPA. SONYA won't stay on the child. Once each name has been tried, it ends.
+## MAMA, KURT on PAPA. SONYA won't stay on the child. Once each name has been tried, a note that
+## wasn't there is on the wall: LOBBY. Across the landing is 47 (the door that's 48 from 47's side);
+## he takes LOBBY there, to the balcony, where outside is a sticky note that says "outside".
 ##
 ## Every line is a placeholder for the writers (data/dialogue/flat48.json); the only real words
 ## are the ones the puzzle runs on.
@@ -49,6 +51,8 @@ var _draft: Material
 var _said := {}
 var _sonya_tried := false
 var _ending := false
+var door47: Hotspot            # across the landing: 47 (opens once LOBBY is on the wall)
+var lobby_spot: Hotspot
 
 func build() -> void:
 	add_to_group("level")
@@ -62,7 +66,14 @@ func build() -> void:
 		if (lb as Label3D).text == "47": (lb as Label3D).text = "48"
 	for id in flat.doors:
 		if String(id).begins_with("bal"): flat.doors[id].locked = true
-	Stairwell.build(flat)
+	var sw := Stairwell.build(flat)
+	# the door across the landing is 47 from here
+	var d: Node3D = sw.get("door48")
+	if d:
+		for lb in d.find_children("*", "Label3D", true, false):
+			if (lb as Label3D).text == "48": (lb as Label3D).text = "47"
+		door47 = Hotspot.make(world, d.global_position + Vector3(0, 1.0, -0.25), Vector3(1.0, 2.0, 0.3), "Flat 47", _to_47)
+		door47.enabled = false
 	_environment()
 	_blocks()
 	_draft_everything()
@@ -343,22 +354,41 @@ func name_figure(f: DraftFigure, p) -> void:
 		return
 	_falls_off(n, f.global_position + Vector3(0, f.tall * 0.7, 0))
 
-## Each name has been tried: that's 48, for now.
+## Each name has been tried: a note that wasn't on the wall before.
 func _check_end() -> void:
 	var done := _sonya_tried
 	for f in figures:
 		if f.identity != "" and f.dressed == "" and not f.down: done = false
-	if done and not _ending: _finish()
+	if done and not _ending: _unveil()
 
-func _finish() -> void:
+const LOBBY_AT := Vector3(5.5, 0.95, WALL_Z + 0.006)      # (low on the wall, under the others, on its own)
+func _unveil(quiet := false) -> void:
 	_ending = true
-	await get_tree().create_timer(2.5).timeout
-	set_cutscene(true)
-	await Dialogue.play("f48_end")
+	if not quiet:
+		await get_tree().create_timer(2.0).timeout
+		Sfx.play_at("paper", LOBBY_AT, -2.0, 0.8)
+		Sfx.play("sting", -16.0, 1.3)
+		Fx.kick("fringe", 0.6, 1.2)
+	var vis := Node3D.new(); world.add_child(vis); vis.position = LOBBY_AT; vis.rotation.z = -0.05
+	_note_face(vis, "LOBBY")
+	lobby_spot = Hotspot.make(world, LOBBY_AT + Vector3(0, 0, 0.02), Vector3(0.1, 0.1, 0.05), "Take the note: LOBBY", Callable())
+	lobby_spot.action = _take_note.bind("LOBBY", lobby_spot, vis)
+	if door47: door47.enabled = true
+	Game.set_flag("lobby_unveiled")
 	Game.set_flag("flat48_done")
+	objective("47.")
+	if not quiet: _line_once("f48_end")
+
+## Across the landing, with LOBBY in his hand.
+func _to_47() -> void:
+	if not (player.held and String(player.held.get_meta("word", "")) == "LOBBY"):
+		hud.hint("The note.", 3.0)
+		return
+	set_cutscene(true)
+	Sfx.play_at("door_creak", door47.global_position, -6.0, 1.0)
+	Game.set_flag("lobby_note")
 	Game.checkpoint()
-	Game.demo_over = bool(Game.demo.get("is_demo", false))
-	await Game.end_chapter("Flat 48", "")
+	Game.change_level("flat47", {"card": false})
 
 func _line_once(id: String) -> void:
 	if _said.has(id) or Dialogue.busy: return
@@ -375,7 +405,8 @@ func begin() -> void:
 	random_talk = false
 	objective("Flat 48.")
 	await Game.fade(0.0, 1.0)
-	_line_once("f48_enter")
+	if Game.flag("lobby_unveiled"): _unveil(true)        # (back from a checkpoint after it)
+	else: _line_once("f48_enter")
 
 ## The first time one of them is in sight.
 var _figures_seen := false

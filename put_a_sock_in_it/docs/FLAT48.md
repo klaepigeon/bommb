@@ -58,8 +58,27 @@ The note wall is on the hall's north wall and holds 25 notes.
   - SONYA won't stay on the child.
   - Dressed mannequins still turn when unseen, and can still be shot.
 
-## The end (a decision for you)
+## LOBBY, and back to 47
 
-The old Hysteria notes leave open how 48 ends, and how each figure is "helped". For now 48 ends once every name has been tried: MAMA dressed or put down, PAPA dressed or put down, and SONYA tried on the child. Then the `f48_end` lines play, then the Flat 48 card, then the demo's end screen.
+1. **The unveiling.** Once every name has been tried, a note that wasn't there before is on the wall, low and on its own: **LOBBY**. The beat is `f48_end`. The door across the landing opens; from 48's side it's **47**.
+2. **Across the landing.** Holding LOBBY, "use" on 47's door. 47 loads as he left it: her gone from the chair, the white where outside was, the giant sticky note saying "outside" past the balcony. He starts on the landing with LOBBY still in his hand, and the beat `f47_back` plays.
+3. **The balcony.** Looking out from the balcony with LOBBY in hand, the prompt reads *Stick "LOBBY" on outside*. The note goes out over the rail, grows, and lands over the word, so the big note reads "LOBBY". Then the white comes up and goes. The beat is `f47_lobby`.
+4. **The lobby.** Where outside was is the block's ground-floor lobby (`scripts/world/lobby.gd`), level with the balcony:
+   - metlakh tiles
+   - green paint to shoulder height with whitewash above, and a dark line along the top of the green
+   - three rows of tin mailboxes
+   - a radiator under a small high window
+   - the double doors out, with reeded glass, shut
+   - a stair up the east wall to a landing and a dark way on
+   - one steady bare bulb
+5. **The rail opens.** The balcony's rail and its invisible wall are gone, so he steps off into the lobby.
+6. **Into it.** A few metres in, the beat `f47_lobby_in` plays, then the "Lobby" card and the demo's end screen.
 
-When you decide what 48 is for, the ending can change.
+All the new beats are placeholders: `f48_end` is in `data/dialogue/flat48.json`, and `f47_back`, `f47_lobby` and `f47_lobby_in` are in `flat47.json`.
+
+**Saving.** It checkpoints when he leaves 48 with LOBBY, when he arrives back in 47, and on entering the lobby. A continue in 48 after LOBBY has appeared puts it straight back on the wall.
+
+## Open (decisions for you)
+
+- What the lobby leads to. The demo ends on entering it for now.
+- Whether 48's figures should be "helped" beyond naming. The old Hysteria notes left that open.

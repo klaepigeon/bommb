@@ -140,7 +140,9 @@ its signature verified here; **not yet run on a phone** (no device in this envir
 
 Built (docs/FLAT48.md): the maze's end leads into it. The draft flat, the blocks and the note wall,
 Papa's gun safe and the sawn-off, and the three figures and their mannequins. Every line and tag is
-a placeholder. It ends once every name has been tried; how 48 should really end is open.
+a placeholder. Once every name has been tried, LOBBY appears on the wall; carried back across the landing
+to 47's balcony and stuck on "outside", outside becomes the building's lobby. The demo ends on
+stepping into it; where the lobby leads is open.
 `tools/flat48_test.gd`: 0 fails.
 
 ## Known issues

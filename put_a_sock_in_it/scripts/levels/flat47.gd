@@ -327,6 +327,9 @@ func _knock_pipe() -> void:
 
 # ------------------------------------------------------------------ the story
 func begin() -> void:
+	if Game.flag("lobby_note") and not Game.flag("lobby_done"):
+		await _return_from_48()
+		return
 	Game.checkpoint()
 	Sfx.loop("drone", "drone", -18.0)
 	Fx.reset({"grain": 0.06, "vignette": 0.5})
@@ -417,6 +420,7 @@ func _hand_at(k: float) -> Transform3D:
 	return Transform3D(Basis.looking_at(dir, Vector3(0.1, 0.25, 1.0)), at)
 
 func _process(delta: float) -> void:
+	_lobby_tick()
 	super(delta)
 	if not _seen_marta and not _woke and not cutscene and player_sees(_face(), 7.0, 0.8):
 		_seen_marta = true
@@ -776,3 +780,128 @@ func _crawl() -> void:
 	Game.set_flag("crawled_in")
 	var on := create_tween(); on.tween_property(player, "global_position", HOLE + Vector3(0.2, 0.15, 2.2), 3.0)
 	Game.change_level("flesh47", {"fade": 1.4})
+
+
+# ------------------------------------------------------------------ back from 48 (docs/FLAT48.md)
+## Across the landing from 48 with LOBBY in his hand: 47 as he left it (her gone from the chair,
+## the white where outside was, the sticky note that says "outside" past the balcony). LOBBY on
+## "outside", and outside is the lobby.
+var lobby_spot: Hotspot
+var lobby: Node3D
+var _lobby_zone := false
+func _return_from_48() -> void:
+	_woke = true
+	(marta.joints.hips as Node3D).visible = false
+	jumper.visible = false
+	_room_dark(false)
+	if table_lamp: table_lamp.kind = "bulb"
+	if hand: hand.queue_free(); hand = null
+	marta_spot.enabled = false
+	hole_spot.enabled = false
+	balcony_door.locked = false
+	front_door.blocked = false; front_door.locked = false
+	outside.visible = true
+	env.environment.background_color = Color(0.93, 0.93, 0.92); env.environment.background_energy_multiplier = 1.0
+	socko.visible = true; socko.hold = "out"; socko.look = "ahead"; socko.emotion = "neutral"
+	Sfx.loop("drone", "drone", -18.0)
+	Fx.reset({"grain": 0.06, "vignette": 0.5})
+	# on the landing, in front of 47's door, the note in his hand
+	player.global_position = Vector3(11.9, 0, 4.56)
+	player.set_view(PI * 0.5, 0.0)
+	_hand_note("LOBBY")
+	# the railing's edge: where the note goes on "outside"
+	lobby_spot = Hotspot.make(world, Vector3(2.25, 1.3, -1.6), Vector3(3.3, 1.8, 0.1), "Stick \"LOBBY\" on outside", _to_lobby)
+	lobby_spot.enabled = false
+	Game.checkpoint()
+	random_talk = true
+	set_cutscene(false)
+	objective("The balcony.")
+	await Game.fade(0.0, 1.0)
+	Dialogue.play("f47_back")
+
+## A sticky note in his hand, the word on it (as he took it off 48's wall).
+func _hand_note(word: String) -> void:
+	var n := Prop.make(world, player.global_position + Vector3(0, 1.4, 0), Vector3(0.08, 0.08, 0.004), Tex.mat("enamel", 1.0, {"tint": Color(1.0, 0.92, 0.42)}), "note: %s" % word, 0.02, 0.05)
+	n.collision_layer = 16
+	var l := Label3D.new(); l.text = word; l.font_size = 30; l.pixel_size = 0.001
+	l.modulate = Color(0.12, 0.12, 0.16); l.outline_size = 0; l.position = Vector3(0, 0, 0.003); l.double_sided = true
+	n.add_child(l)
+	n.set_meta("word", word)
+	player.pick_up(n)
+
+func _holding(word: String) -> bool:
+	return player.held != null and String(player.held.get_meta("word", "")) == word
+
+func _lobby_tick() -> void:
+	if lobby_spot and is_instance_valid(lobby_spot) and not Game.flag("lobby_done"):
+		lobby_spot.enabled = _holding("LOBBY") and lobby == null
+	if lobby and not _lobby_zone and player.global_position.z < -3.6:
+		_lobby_zone = true
+		_into_lobby()
+
+## The note goes out over the rail and onto "outside", over the word; the white goes; the lobby.
+func _to_lobby() -> void:
+	if not _holding("LOBBY") or lobby: return
+	set_cutscene(true)
+	lobby_spot.enabled = false
+	var n: RigidBody3D = player.held
+	player.drop_held()
+	n.freeze = true; n.collision_layer = 0; n.liftable = false
+	Sfx.play("paper", -2.0, 0.9)
+	await player.look_toward(sticky_at, 0.8)
+	# (out in the white there's no light to see it by: paper that shows like the big one does)
+	var lit := StandardMaterial3D.new(); lit.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	lit.albedo_color = Color("f4e06a"); lit.disable_fog = true; lit.cull_mode = BaseMaterial3D.CULL_DISABLED
+	for mi in n.find_children("*", "MeshInstance3D", true, false): (mi as MeshInstance3D).material_override = lit
+	for lb in n.find_children("*", "Label3D", true, false): (lb as Label3D).shaded = false; (lb as Label3D).modulate = Color("1d2333")
+	var tw := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	var to: Vector3 = sticky_at + Vector3(0, -0.21, 0.15)       # over the word
+	tw.tween_property(n, "global_position", to, 1.8)
+	tw.parallel().tween_property(n, "scale", Vector3(52, 52, 1), 1.8)
+	tw.parallel().tween_property(n, "global_rotation", Vector3(0, 0, -0.035), 1.8)
+	await tw.finished
+	Sfx.play("paper", 0.0, 0.6)
+	await get_tree().create_timer(1.2).timeout
+	# the white comes up, and goes, and outside is the lobby
+	Game._black.color = Color(0.93, 0.93, 0.92, Game._black.color.a)
+	await Game._fade(1.0, 1.4)
+	var q := PhysicsRayQueryParameters3D.create(Vector3(2.25, 1.0, -1.2), Vector3(2.25, -1.0, -1.2), 1)
+	var hit := get_world_3d().direct_space_state.intersect_ray(q)
+	var fy: float = (hit.position as Vector3).y if not hit.is_empty() else 0.0
+	outside.visible = false
+	n.queue_free()
+	env.environment.background_color = Color(0.05, 0.05, 0.06)
+	_open_the_rail()
+	lobby = Lobby.build(world, fy)
+	Sfx.set_room(0.75, 0.32)
+	await get_tree().create_timer(0.6).timeout
+	await Game._fade(0.0, 1.8)
+	Game._black.color = Color(0, 0, 0, 0)
+	Game.set_flag("lobby_made")
+	set_cutscene(false)
+	objective("")
+	Dialogue.play("f47_lobby")
+
+## The balcony's rail and its invisible wall: gone, so he can step off into it.
+func _open_the_rail() -> void:
+	for cs in flat.find_children("*", "CollisionShape3D", true, false):
+		var c := cs as CollisionShape3D
+		if c.shape is BoxShape3D:
+			var p := c.global_position; var sz: Vector3 = (c.shape as BoxShape3D).size
+			if absf(p.z + 1.75) < 0.12 and absf(p.x - 2.25) < 0.3 and sz.x > 3.0: c.disabled = true
+	for mi in flat.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		if not m.mesh: continue
+		var a: AABB = m.global_transform * m.get_aabb()
+		var ctr := a.get_center()
+		if ctr.z < -1.6 and ctr.z > -1.95 and ctr.x > 0.4 and ctr.x < 4.1 and a.size.y < 1.4: m.visible = false
+
+## In: that's as far as it goes, for now.
+func _into_lobby() -> void:
+	Game.set_flag("lobby_done")
+	await get_tree().create_timer(1.5).timeout
+	set_cutscene(true)
+	await Dialogue.play("f47_lobby_in")
+	Game.checkpoint()
+	Game.demo_over = bool(Game.demo.get("is_demo", false))
+	await Game.end_chapter("Lobby", "")

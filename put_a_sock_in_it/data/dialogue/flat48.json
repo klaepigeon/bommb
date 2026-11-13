@@ -1,5 +1,5 @@
 {
-	"_about": "Flat 48 (scripts/levels/flat48.gd). Every line here is a placeholder for the writers: the beat it plays on is its name.",
+	"_about": "Flat 48 (scripts/levels/flat48.gd) and the way back to 47's balcony. Every line here is a placeholder for the writers: the beat it plays on is its name. f48_end: LOBBY appears on the wall.",
 	"f48_enter": [
 		{
 			"who": "socko",
