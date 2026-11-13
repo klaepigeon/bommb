@@ -531,11 +531,11 @@ func _people() -> void:
 		"body": {"height": 1.62, "girth": 0.95, "hunch": 0.65, "eyes": "sewn", "mouth": 0.6, "dress": Color(0.18, 0.12, 0.14), "hair": true, "hair_tint": Color(0.15, 0.1, 0.1), "tint": Color(0.8, 0.7, 0.68), "lumps": 0.3},
 		"voice": "whisper",
 		"objectives": [{"type": "carry", "from": "meat", "to": "bath", "weight": 1.0}]}, B.centre("flat22"))
-	# the super: naked, heavy, wet, his keys on a cord round his neck. Nobody here is human; he
+	# the super: naked, starved-thin, wet, his keys on a cord round his neck. Nobody here is human; he
 	# was the least human of them before any of it
 	super_npc = _spawn({"id": "super", "faction": "super", "hostile_to": [], "keys": true, "hp": 220, "poise": 90, "speed": 0.95, "run": 2.3, "hearing": 1.1,
 		"sight": {"range": 13.0, "cos": 0.4}, "attack": {"dmg": 0.4, "reach": 1.5, "windup": 0.6, "cool": 1.7},
-		"body": {"height": 1.84, "girth": 1.45, "belly": 1.0, "mouth": 1.9, "eyes": "normal", "head": 1.08, "neck": 0.6, "hunch": 0.25, "fingers": 1.55,
+		"body": {"height": 1.84, "girth": 0.82, "mouth": 1.9, "eyes": "normal", "head": 1.05, "neck": 1.35, "hunch": 0.35, "keys_front": 0.1, "fingers": 1.55,
 			"tint": Color(0.52, 0.49, 0.38), "wet": 0.85, "naked": true, "keys": true, "lumps": 0.15, "repugnant": true, "slide": 0.55},
 		"voice": "super_breath", "voice_attack": "super_grunt", "voice_die": "groan", "step": "step_flesh", "twitch": false,
 		"objectives": [{"type": "work", "stations": ["desk", "mailbox", "desk", "laundry_watch", "desk", "maint"], "weight": 1.0},

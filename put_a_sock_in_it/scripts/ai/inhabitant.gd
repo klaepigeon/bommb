@@ -76,7 +76,7 @@ func _ready() -> void:
 	var h: float = float(prof.get("body", {}).get("height", 1.75))
 	var cs := CollisionShape3D.new(); var cap := CapsuleShape3D.new(); cap.radius = 0.18; cap.height = maxf(0.6, h)
 	cs.shape = cap; cs.position.y = cap.height * 0.5; add_child(cs)
-	# the sculpted body (assets/people/<id>.glb, tools/sculpt), if there is one: the crawlers share theirs
+	# the modelled body (assets/people/<id>.glb + .png, tools/people), if there is one: the crawlers share theirs
 	var bp: Dictionary = prof.get("body", {}).duplicate()
 	if not bp.has("model"):
 		var id := String(prof.get("id", ""))

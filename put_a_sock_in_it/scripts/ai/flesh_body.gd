@@ -210,11 +210,12 @@ func _process(delta: float) -> void:
 		jn.rotation = jn.rotation.lerp(want, t)
 
 # ------------------------------------------------------------------ sculpted bodies
-## A sculpted, rigged body (tools/sculpt, docs/PEOPLE.md): one skinned mesh, its bones the joints
+## A modelled, rigged body (tools/people, docs/PEOPLE.md): one skinned low-poly mesh and its painted
+## page (assets/people/<model>.glb + .png), its bones the joints
 ## above, at rest with no rotation, so `pose` means the same here. J holds a BoneAttachment3D per
 ## bone (at(), and anything hung on a joint). The jaw talks with the voice (Dialogue.syllable),
-## the belly and the jowls swing on springs, and the skin shows the wounds as the hp goes.
-const FLESH := preload("res://shaders/flesh.gdshader")
+## the belly and the jowls swing on springs, and the skin darkens as the hp goes.
+const PS1 := preload("res://shaders/ps1.gdshader")
 var skel: Skeleton3D
 var flesh_mat: ShaderMaterial
 var _bone := {}                   # joint -> bone index
@@ -225,15 +226,21 @@ var _vel := Vector3.ZERO
 var _jig := Vector3.ZERO           # the belly's spring
 var _jig_v := Vector3.ZERO
 var _belly_rest := Vector3.ZERO
+var _tint := Color(1, 1, 1)
 
 func _build_model(path: String) -> void:
 	var scene: Node3D = (load(path) as PackedScene).instantiate()
 	scene.name = "Model"
 	add_child(scene)
 	skel = scene.find_children("*", "Skeleton3D", true, false)[0]
-	flesh_mat = ShaderMaterial.new(); flesh_mat.shader = FLESH
-	flesh_mat.set_shader_parameter("tint", g("model_tint", Color(1, 1, 1)))
-	flesh_mat.set_shader_parameter("wet_gain", float(g("wet_gain", 1.0)))
+	# its painted page (tools/people), with the PS1 shader everything in the building uses
+	flesh_mat = ShaderMaterial.new(); flesh_mat.shader = PS1
+	var page := path.get_basename() + ".png"
+	if ResourceLoader.exists(page): flesh_mat.set_shader_parameter("albedo_tex", load(page))
+	_tint = g("model_tint", Color(1, 1, 1))
+	flesh_mat.set_shader_parameter("albedo_color", _tint)
+	flesh_mat.set_shader_parameter("roughness", 1.0)
+	flesh_mat.set_meta("surface", "flesh")
 	for mi in scene.find_children("*", "MeshInstance3D", true, false):
 		(mi as MeshInstance3D).material_override = flesh_mat
 	for i in skel.get_bone_count():
@@ -254,7 +261,7 @@ func _build_model(path: String) -> void:
 func _keys(chest: Node3D) -> void:
 	# the keys on a cord round his neck, lying on his chest
 	var k: float = float(g("height", 1.75)) / 1.75
-	var front := 0.27 * k * float(g("girth", 1.0)) / 1.45
+	var front: float = float(g("keys_front", 0.27 * k * float(g("girth", 1.0)) / 1.45))
 	var dark := _mat("black", Color(1, 1, 1))
 	var cord := MeshInstance3D.new(); cord.mesh = Build.box_mesh(Vector3(0.004, 0.3, 0.004)); cord.material_override = _mat("fabric", Color(0.3, 0.25, 0.2))
 	cord.position = Vector3(0, 0.12, -front + 0.05); cord.rotation.x = 0.3; chest.add_child(cord)
@@ -293,4 +300,6 @@ func _process_model(delta: float, t: float) -> void:
 	var host := get_parent()
 	if host and "hp" in host and "prof" in host:
 		var mx: float = float(host.prof.get("hp", 60.0))
-		flesh_mat.set_shader_parameter("hurt", clampf(1.0 - float(host.hp) / maxf(mx, 1.0), 0.0, 1.0))
+		# hurt: the skin darkens toward raw (steady, no flash)
+		var hurt := clampf(1.0 - float(host.hp) / maxf(mx, 1.0), 0.0, 1.0)
+		flesh_mat.set_shader_parameter("albedo_color", _tint.lerp(_tint * Color(0.75, 0.45, 0.42), hurt * 0.6))

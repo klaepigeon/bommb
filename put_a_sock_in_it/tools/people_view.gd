@@ -28,7 +28,7 @@ func _initialize() -> void:
 	cam.add_child(torch)
 	if light == "torch": bulb.light_energy = 0.25
 	var FB = load("res://scripts/ai/flesh_body.gd")
-	var b = FB.new({"model": model, "height": 1.8, "keys": model == "super", "girth": 1.45})
+	var b = FB.new({"model": model, "height": 1.84, "keys": model == "super", "keys_front": 0.1})
 	w.add_child(b)
 	await process_frame
 	var h: float = 1.0 if model == "crawler" else 2.0

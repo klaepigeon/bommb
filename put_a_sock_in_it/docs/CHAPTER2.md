@@ -67,7 +67,7 @@ Infested: flesh in the walls, dark except for a sick light from the growth.
 
 ## The super
 
-He is Gennady Vorobyov (Kurt never hears the first name). He's naked, heavy and wet, with a mouth too wide and too-long fingers, and his keys hang on a cord round his neck. His wife Lyudmila ("Lyuda") is "at her sister's, in Tula".
+He is Gennady Vorobyov (Kurt never hears the first name). He's naked, starved-thin and wet, the skin hanging loose on him, with a mouth too wide and too-long fingers, and his keys hang on a cord round his neck. His wife Lyudmila ("Lyuda") is "at her sister's, in Tula".
 
 **The conversation** (`super_hello`) has three choice points, each answered by approach: cooperative, neutral, suspicious, hostile or deceptive. Every choice changes `Game.rel.super`:
 
