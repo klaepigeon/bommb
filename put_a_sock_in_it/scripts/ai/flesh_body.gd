@@ -32,14 +32,21 @@ func _mat(name: String, tint: Color, extra := {}) -> Material:
 	for k in extra: o[k] = extra[k]
 	return Tex.mat(name, 2.0, o)
 
+## A piece of body. Placed as written with +z as the front, and mirrored here so the body faces
+## -Z (forward in Godot, where everything that walks looks). Long pieces are capsules, bulky ones
+## ellipsoids: flesh, not boxes (low-poly, as everything here is). Only small details stay boxes.
 func _part(parent: Node3D, at: Vector3, size: Vector3, m: Material, ball := false) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
-	if ball:
-		var sp := SphereMesh.new(); sp.radius = 0.5; sp.height = 1.0; sp.radial_segments = 10; sp.rings = 6
+	var thick := minf(size.x, size.z)
+	if ball or (size.y <= 1.6 * maxf(size.x, size.z) and thick > 0.07 and size.y > 0.07):
+		var sp := SphereMesh.new(); sp.radius = 0.5; sp.height = 1.0; sp.radial_segments = 9; sp.rings = 6
 		mi.mesh = sp; mi.scale = size
+	elif size.y > 1.6 * maxf(size.x, size.z) and thick > 0.02:
+		var cp := CapsuleMesh.new(); cp.radius = thick * 0.5; cp.height = maxf(size.y, thick * 1.01); cp.radial_segments = 8; cp.rings = 2
+		mi.mesh = cp; mi.scale = Vector3(size.x / thick, 1.0, size.z / thick)
 	else:
 		mi.mesh = Build.box_mesh(size)
-	mi.material_override = m; mi.position = at; parent.add_child(mi)
+	mi.material_override = m; mi.position = Vector3(at.x, at.y, -at.z); parent.add_child(mi)
 	return mi
 
 func _joint(name: String, parent: Node3D, at: Vector3) -> Node3D:
@@ -52,7 +59,7 @@ func _build() -> void:
 	var gw: float = g("girth", 1.0); var belly: float = g("belly", 0.0)
 	var arm: float = g("arm", 1.0); var neckl: float = g("neck", 1.0); var headk: float = g("head", 1.0)
 	# skin: pallid and close-grained (plaster's grain, tinted), not the camouflage of the old skin map
-	var skin := _mat(String(g("skin", "plaster")), g("tint", Color(0.9, 0.82, 0.72)) * Color(1.15, 1.1, 1.05), {"rough": lerpf(0.9, 0.25, float(g("wet", 0.0)))})
+	var skin := _mat(String(g("skin", "plaster")), g("tint", Color(0.9, 0.82, 0.72)) * Color(0.78, 0.74, 0.7), {"rough": lerpf(0.9, 0.2, float(g("wet", 0.0)))})
 	var dark := _mat("black", Color(1, 1, 1))
 	var leg := 0.86 * k; var torso := 0.56 * k
 	var hips := _joint("hips", self, Vector3(0, leg, 0))
@@ -60,21 +67,22 @@ func _build() -> void:
 	for s in [-1, 1]:
 		var side := "l" if s < 0 else "r"
 		var hj := _joint("hip_" + side, hips, Vector3(s * 0.1 * gw * k, 0, 0))
-		_part(hj, Vector3(0, -leg * 0.25, 0), Vector3(0.13 * gw, leg * 0.5, 0.14 * gw) * Vector3(k, 1, k), _cloth("legs", skin))
+		_limb(hj, leg * 0.5, [0.085 * gw * k, 0.075 * gw * k, 0.058 * k], _cloth("legs", skin))
 		var kn := _joint("kn_" + side, hj, Vector3(0, -leg * 0.5, 0))
-		_part(kn, Vector3(0, -leg * 0.25, 0), Vector3(0.1, leg * 0.5, 0.11) * Vector3(k, 1, k), skin)
-		_part(kn, Vector3(0, -leg * 0.5 + 0.03, 0.06), Vector3(0.1, 0.05, 0.24) * k, skin if g("barefoot", true) else dark)
+		_limb(kn, leg * 0.5, [0.058 * k, 0.05 * k, 0.034 * k], skin)
+		_part(kn, Vector3(0, -leg * 0.5 + 0.03, 0.06), Vector3(0.09, 0.05, 0.24) * k, skin if g("barefoot", true) else dark)
 	var spine := _joint("spine", hips, Vector3(0, 0.02, 0))
-	_part(spine, Vector3(0, torso * 0.25, 0), Vector3(0.34 * gw, torso * 0.5, 0.2 * gw) * Vector3(k, 1, k), _cloth("dress", skin))
+	var torso_m := _cloth("dress", skin)
+	_blob(spine, Vector3(0, torso * 0.52, 0.0), Vector3(0.2 * gw, torso * 0.58, 0.13 * gw) * Vector3(k, 1, k),
+		{"sag": 0.15 + belly * 0.25, "bumps": 0.1 + float(g("lumps", 0.0)) * 0.2, "seed": h}, torso_m)
 	if belly > 0.01:
 		# the belly: hangs, and hangs over
-		var b := _part(spine, Vector3(0, torso * 0.12 - belly * 0.08, 0.1 + belly * 0.12) * Vector3(1, k, k),
-			Vector3(0.38 * gw + belly * 0.22, 0.32 + belly * 0.28, 0.24 + belly * 0.3) * k, skin, true)
+		var b := _blob(spine, Vector3(0, torso * 0.2 - belly * 0.06, (0.08 + belly * 0.1) * k),
+			Vector3(0.2 * gw + belly * 0.07, 0.15 + belly * 0.12, 0.12 + belly * 0.14) * k, {"sag": 0.4 + belly * 0.5, "bumps": 0.06, "seed": h + 1.0}, skin)
 		b.set_meta("belly", true)
 	var chest := _joint("chest", spine, Vector3(0, torso * 0.5, 0))
-	_part(chest, Vector3(0, torso * 0.25, 0), Vector3(0.4 * gw, torso * 0.5, 0.22 * gw) * Vector3(k, 1, k), _cloth("dress", skin))
 	if float(g("belly", 0.0)) > 0.3:
-		for s in [-1, 1]: _part(chest, Vector3(s * 0.11 * gw * k, torso * 0.12, 0.11 * gw * k), Vector3(0.15, 0.17, 0.12) * gw * k, skin, true)   # sagging
+		for s in [-1, 1]: _blob(chest, Vector3(s * 0.1 * gw * k, torso * 0.02, 0.1 * gw * k), Vector3(0.06, 0.08, 0.05) * gw * k, {"sag": 1.8, "bumps": 0.05}, skin)   # sagging
 	if g("keys", false):
 		var cord := _part(chest, Vector3(0, torso * 0.2, 0.12 * gw * k), Vector3(0.01, torso * 0.6, 0.01), dark)
 		cord.rotation.x = -0.15
@@ -90,13 +98,13 @@ func _build() -> void:
 		var side := "l" if s < 0 else "r"
 		var sh := _joint("sh_" + side, chest, Vector3(s * 0.22 * gw * k, torso * 0.45, 0))
 		var up := 0.32 * k * arm
-		_part(sh, Vector3(0, -up * 0.5, 0), Vector3(0.09, up, 0.09) * Vector3(k, 1, k), _cloth("dress", skin))
+		_limb(sh, up, [0.055 * gw * k, 0.048 * gw * k, 0.042 * k], _cloth("dress", skin))
 		var el := _joint("el_" + side, sh, Vector3(0, -up, 0))
 		var lo := 0.3 * k * arm
-		_part(el, Vector3(0, -lo * 0.5, 0), Vector3(0.075, lo, 0.075) * Vector3(k, 1, k), skin)
+		_limb(el, lo, [0.042 * k, 0.036 * k, 0.03 * k], skin)
 		if g("extra_joint", false):
 			var ex := _joint("ex_" + side, el, Vector3(0, -lo, 0))
-			_part(ex, Vector3(0, -lo * 0.4, 0), Vector3(0.06, lo * 0.8, 0.06) * k, skin)
+			_limb(ex, lo * 0.8, [0.03 * k, 0.028 * k, 0.025 * k], skin)
 			_hand(ex, Vector3(0, -lo * 0.8, 0), skin, k)
 		else:
 			_hand(el, Vector3(0, -lo, 0), skin, k)
@@ -106,7 +114,7 @@ func _build() -> void:
 	_part(neck, Vector3(0, nl * 0.5, 0), Vector3(0.09, nl, 0.09) * k, skin)
 	var head := _joint("head", neck, Vector3(0, nl, 0))
 	var hs := 0.22 * k * headk
-	_part(head, Vector3(0, hs * 0.5, 0), Vector3(hs * 0.8, hs, hs * 0.9), skin, true)
+	_blob(head, Vector3(0, hs * 0.5, 0), Vector3(hs * 0.4, hs * 0.5, hs * 0.45), {"bumps": 0.08, "slide": float(g("slide", 0.0)), "seed": h + 2.0}, skin)
 	var jaw := _joint("jaw", head, Vector3(0, hs * 0.3, hs * 0.2))
 	var mw := 0.07 * k * float(g("mouth", 1.0))
 	_part(jaw, Vector3(0, -0.02, 0.06 * k), Vector3(mw * 1.2, 0.03, 0.1 * k), skin)
@@ -121,9 +129,55 @@ func _build() -> void:
 			for i in 7: _part(head, Vector3(randf_range(-0.3, 0.3) * hs, randf_range(0.45, 0.8) * hs, hs * 0.43), Vector3(0.018, 0.014, 0.01) * k, dark)
 		_:
 			pass
+	if g("repugnant", false): _repugnant(spine, chest, head, hs, torso, gw, k, belly)
 	if g("hair", false):
 		_part(head, Vector3(0, hs * 0.9, -0.01), Vector3(hs * 0.8, hs * 0.35, hs * 0.85), _mat("fabric", g("hair_tint", Color(0.2, 0.17, 0.14))), true)
 	for k2 in J: _rest[k2] = J[k2].rotation
+
+## The super: everything about the body that makes you not want to look, and not able not to.
+## Liver spots and sores across the front of him, hair in patches (the chest, a line down the gut,
+## a dark mat where the belly hangs over), a few yellow teeth in the wide wet mouth, small eyes that
+## catch the light. Nothing sexual about any of it: it's a body, and that's the horror.
+func _repugnant(spine: Node3D, chest: Node3D, head: Node3D, hs: float, torso: float, gw: float, k: float, belly: float) -> void:
+	var rng := RandomNumberGenerator.new(); rng.seed = 1993
+	var spot := _mat("plaster", Color(0.38, 0.28, 0.18))
+	var sore := _mat("cloth_red", Color(0.55, 0.12, 0.1), {"rough": 0.15})
+	var hair := _mat("fabric", Color(0.12, 0.1, 0.09))
+	var tooth := _mat("enamel", Color(0.75, 0.68, 0.4))
+	var eye := _mat("enamel", Color(0.05, 0.05, 0.04), {"rough": 0.05})
+	for i in 16:
+		var parent: Node3D = spine if i % 2 else chest
+		_part(parent, Vector3(rng.randf_range(-0.16, 0.16) * gw * k, rng.randf_range(0.0, torso * 0.45), (0.11 * gw + belly * 0.18) * k), Vector3.ONE * rng.randf_range(0.015, 0.035), spot if i % 4 else sore, true)
+	for i in 10:
+		_part(chest, Vector3(rng.randf_range(-0.08, 0.08) * k, rng.randf_range(torso * 0.1, torso * 0.35), 0.12 * gw * k), Vector3(rng.randf_range(0.02, 0.05), rng.randf_range(0.01, 0.03), 0.01), hair)
+	for i in 6:
+		_part(spine, Vector3(rng.randf_range(-0.02, 0.02), torso * 0.4 - i * 0.05, (0.13 + belly * 0.32) * k), Vector3(0.015, 0.03, 0.01), hair)
+	# where the gut hangs over: a dark mat of hair, and shadow
+	_part(spine, Vector3(0, -torso * 0.12, (0.08 + belly * 0.12) * k), Vector3(0.16 * gw, 0.07, 0.05) * k, hair, true)
+	for i in 4:
+		_part(head, Vector3(-0.025 + i * 0.016, hs * 0.29, hs * 0.45), Vector3(0.011, 0.016, 0.006), tooth)
+	for s2 in [-1, 1]:
+		_part(head, Vector3(s2 * hs * 0.16, hs * 0.6, hs * 0.43), Vector3(0.02, 0.016, 0.012) * k, eye, true)
+
+## A lumpy, sagging piece of flesh (MeshKit.blob), mirrored to face -Z like everything else.
+func _blob(parent: Node3D, c: Vector3, r: Vector3, opts: Dictionary, m: Material) -> MeshInstance3D:
+	var st := SurfaceTool.new(); st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var o := opts.duplicate(); o["rings"] = 8; o["segs"] = 12
+	MeshKit.blob(st, Vector3.ZERO, r, o)
+	st.generate_normals()
+	var mi := MeshInstance3D.new(); mi.mesh = st.commit(); mi.material_override = m
+	mi.position = Vector3(c.x, c.y, -c.z); mi.rotation.y = PI      # (its slide and sag face the front)
+	parent.add_child(mi)
+	return mi
+
+## A limb hanging from its joint: a tube tapering through radii [top, middle, bottom].
+func _limb(parent: Node3D, length: float, radii: Array, m: Material) -> MeshInstance3D:
+	var st := SurfaceTool.new(); st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	MeshKit.tube(st, [Vector3(0, 0.02, 0), Vector3(0, -length * 0.45, 0), Vector3(0, -length - 0.02, 0)], radii, {"sides": 7, "bumps": 0.08})
+	st.generate_normals()
+	var mi := MeshInstance3D.new(); mi.mesh = st.commit(); mi.material_override = m
+	parent.add_child(mi)
+	return mi
 
 ## Clothes, if they wear any: a colour for apron/dress/coat, or skin.
 func _cloth(where: String, skin: Material) -> Material:

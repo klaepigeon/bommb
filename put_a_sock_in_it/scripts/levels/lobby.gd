@@ -535,8 +535,8 @@ func _people() -> void:
 	# was the least human of them before any of it
 	super_npc = _spawn({"id": "super", "faction": "super", "hostile_to": [], "keys": true, "hp": 220, "poise": 90, "speed": 0.95, "run": 2.3, "hearing": 1.1,
 		"sight": {"range": 13.0, "cos": 0.4}, "attack": {"dmg": 0.4, "reach": 1.5, "windup": 0.6, "cool": 1.7},
-		"body": {"height": 1.84, "girth": 1.45, "belly": 1.0, "mouth": 1.9, "eyes": "normal", "head": 0.92, "neck": 0.6, "hunch": 0.25, "fingers": 1.55,
-			"tint": Color(0.78, 0.72, 0.56), "wet": 0.6, "naked": true, "keys": true, "lumps": 0.25},
+		"body": {"height": 1.84, "girth": 1.45, "belly": 1.0, "mouth": 1.9, "eyes": "normal", "head": 1.08, "neck": 0.6, "hunch": 0.25, "fingers": 1.55,
+			"tint": Color(0.52, 0.49, 0.38), "wet": 0.85, "naked": true, "keys": true, "lumps": 0.15, "repugnant": true, "slide": 0.55},
 		"voice": "super_breath", "voice_attack": "super_grunt", "voice_die": "groan", "step": "step_flesh", "twitch": false,
 		"objectives": [{"type": "work", "stations": ["desk", "mailbox", "desk", "laundry_watch", "desk", "maint"], "weight": 1.0},
 			{"type": "follow", "who_rel": "super", "weight": 1.0},
