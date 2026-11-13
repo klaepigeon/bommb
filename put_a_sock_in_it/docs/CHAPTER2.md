@@ -208,7 +208,7 @@ Checkpoints happen after the conversation, when the mains go on, when the boiler
 
 ## Still incomplete
 
-- **Flat 27's meaning.** It's the destination; the chapter ends on its threshold.
+- **Flat 27.** Decided: in this chapter it's only where Socko sends Kurt, for the chase. What's inside (a puppet show) belongs to what comes next and isn't built; the chapter ends on the threshold.
 - **Facial and lip performance** for the inhabitants. Mouths and jaws move with posture, not with speech.
 - **Wall hiding** (wardrobes) isn't placed in this building yet. The hiding system exists.
 - **Electrocution as a trap.** The live water works on anything that walks into it, but there's no dedicated "lure it in" tool beyond noise.
