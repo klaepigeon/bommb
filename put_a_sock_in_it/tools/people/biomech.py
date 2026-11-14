@@ -305,3 +305,88 @@ def face_hoses(M, L, r=0.012, n=1):
 			a = head + F(s * hs * (0.3 + 0.04 * i), hs * (0.3 - 0.05 * i), hs * 0.25)
 			b = L["chest"] + F(s * (0.06 + 0.03 * i), L["torso"] * 0.42, 0.08 * L["gw"] * L["k"])
 			hose(M, a, b, ("jaw", "chest"), r, 0.06, (s * 0.8, 0.0, 1.0), name="hose_face%d%s" % (i, "lr"[s > 0]))
+
+
+def plates(M, L, side="front", n=5, y0=None, y1=None, width=0.13, thick=0.012, out=1.0, name="plate"):
+	"""Segmented plates laid over the abdomen (front) or along the back: each a short wide flattened
+	shell bent to the body, with a dark gap to the next. Like the plates of something that
+	moults."""
+	k, gw = L["k"], L["gw"]
+	y0 = L["hips"][1] + 0.06 if y0 is None else y0
+	y1 = L["chest"][1] + 0.12 if y1 is None else y1
+	sgn = 1.0 if side == "front" else -1.0
+	step = (y1 - y0) / n
+	for i in range(n):
+		y = y0 + step * (i + 0.5)
+		if y < L["spine"][1] + 0.05:
+			w = {"hips": 1.0}
+		elif y < L["chest"][1]:
+			w = {"spine": 1.0}
+		else:
+			w = {"chest": 1.0}
+		depth = 0.1 * gw * k * out + thick
+		hw = width * gw * k * (1.0 - 0.15 * abs(i - n / 2) / n)
+		# a plate: a strip across the body, curved round it, three rings left to right
+		pts = []
+		for a in np.linspace(-1.0, 1.0, 5):
+			x = np.sin(a) * hw
+			z = np.cos(a) * depth
+			pts.append(F(x, y, sgn * z))
+		rs = [Ring(p_, thick, step * 0.42, w=w) for p_ in pts]
+		M.add(Loft("%s_%s%d" % (name, side, i), rs, sides=6, front_hint=(0, 1, 0), texel=0.8))
+
+
+def port(M, pos, normal, bone, r=0.03, length=0.03, name="port"):
+	"""A collar in the skin where something goes in: a short ribbed tube, dark inside."""
+	pos = np.asarray(pos, float)
+	n = np.asarray(normal, float)
+	n /= np.linalg.norm(n)
+	rs = [Ring(pos - n * length, r * 1.15, w={bone: 1}), Ring(pos, r * 1.3, w={bone: 1}, dark=0.0),
+		Ring(pos + n * length * 0.5, r * 1.1, w={bone: 1}), Ring(pos + n * length * 0.7, r * 0.8, w={bone: 1}, dark=1.0)]
+	M.add(Loft("%s_%d" % (name, len(M.lofts)), rs, sides=7, cap_start=False, cap_end=True, front_hint=(0, 1, 0) if abs(n[1]) < 0.9 else (0, 0, -1)))
+	return pos + n * length * 0.6
+
+
+def plug(M, a, an, abone, b, bn, bbone, r=0.018, sag=0.12, name="hose"):
+	"""A hose from a port at a to a port at b."""
+	pa = port(M, a, an, abone, r * 1.4)
+	pb = port(M, b, bn, bbone, r * 1.4)
+	out = (np.asarray(an, float) + np.asarray(bn, float))
+	if np.linalg.norm(out) < 1e-3:
+		out = np.array([0, 0, 1.0])
+	hose(M, pa, pb, (abone, bbone), r, sag, out / np.linalg.norm(out), name=name)
+
+
+def crest(M, L, r=0.014, h=0.04):
+	"""A ribbed crest up the middle of the skull from above the brow, over the crown, down the back
+	of the long dome."""
+	hs, head = L["hs"], L["head"]
+	lf = next(l for l in M.lofts if l.name == "head")
+	G, th, fr = lf.grid()
+	n = G.shape[1] - 1
+	pts = []
+	for i, ring in enumerate(lf.rings):
+		yr = (ring.c[1] - head[1]) / hs
+		if yr < 0.78:
+			continue
+		front, back = G[i, n // 2], G[i, 0]
+		p_ = front if front[1] > back[1] + 0.004 or (yr < 0.95 and abs(front[1] - back[1]) < 0.004) else back
+		out = p_ - ring.c
+		out /= max(1e-6, np.linalg.norm(out))
+		pts.append(p_ - out * r * 0.3)
+	if len(pts) < 2:
+		return
+	rs = [Ring(p_ - (p_ - head) * 0.0, r * 1.3, r * 0.7, w={"head": 1}) for p_ in pts]
+	lf2 = Loft("vert_crest", rs, sides=5, front_hint=(0, 0, -1))
+	ribbify(lf2, 110.0, 0.3)
+	M.add(lf2)
+
+
+def temples(M, L, r=0.01):
+	"""Ports in the temples, behind where ears would be; hoses from them down into the neck."""
+	hs, head = L["hs"], L["head"]
+	for s in (-1, 1):
+		a = head + F(s * hs * 0.37, hs * 0.66, -hs * 0.12)
+		pa = port(M, a, (s * 1.0, 0.2, -0.3), "head", r * 1.5, 0.025)
+		b = L["neck"] + F(s * 0.04, 0.02, -0.04)
+		hose(M, pa, b, ("head", "neck"), r, 0.07, (s * 1.0, 0.0, 0.3), name="hose_temple%s" % "lr"[s > 0])

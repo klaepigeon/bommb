@@ -403,6 +403,19 @@ def bio(name, p, skin, build=None, extra=None, seed=0, gloss=0.5):
 	if build:
 		build(M, L, p, rng)
 	B.face_hoses(M, L, p.get("face_hose", 0.011), p.get("face_hoses", 1))
+	if p.get("crest", True):
+		B.crest(M, L, 0.012 * L["k"] ** 0.5)
+	if p.get("temples", True):
+		B.temples(M, L, 0.009 * L["k"] ** 0.5)
+	if p.get("back_plates", True) and not p.get("skirt"):
+		B.plates(M, L, "back", p.get("back_n", 5), width=0.08, thick=0.01, out=1.0)
+	if p.get("belly_plates"):
+		B.plates(M, L, "front", p["belly_plates"], width=0.1, thick=0.011, out=1.0 + p.get("belly", 0.0) * 0.6)
+	# hoses plugged from the back into the shoulders/neck: the building feeding them
+	sp, ch, k, gw = L["spine"], L["chest"], L["k"], L["gw"]
+	for s in (-1, 1):
+		B.plug(M, sp + F(s * 0.06 * gw * k, 0.12 * k, -0.1 * gw * k), (s * 0.3, 0, 1.0), "spine",
+			ch + F(s * 0.14 * gw * k, 0.24 * k, -0.07 * gw * k), (s * 0.4, 0.6, 1.0), "chest", 0.012 * k ** 0.5, 0.08)
 
 	def paint(P, N, part, th, s, M_):
 		y = P[..., 1]
@@ -415,7 +428,11 @@ def bio(name, p, skin, build=None, extra=None, seed=0, gloss=0.5):
 			col = B.grooves(M_, col, C("120a08"), 0.85)
 			col = B.seep(P, N, col, 0.3, seed + 4)
 			return col, 0.75
-		if part.startswith("vert") or part.startswith("rib_"):
+		if part.startswith("port"):
+			col = B.BONE * 0.7
+			col = mix(col, M_.dark, C("0a0404"), 0.95)
+			return B.grime(P, col, 0.3, seed), 0.6
+		if part.startswith("vert") or part.startswith("rib_") or part.startswith("plate"):
 			col = B.BONE * (0.85 + 0.15 * vnoise(P, 25.0, seed)[..., None])
 			col = B.grooves(M_, col, C("2a1a12"), 0.8)
 			return B.grime(P, col, 0.3, seed), 0.35
@@ -467,7 +484,7 @@ def super_():
 	into a skull drawn long and back, crusted in brain coral; a hose from the base of the skull
 	feeds into his back; coral has broken out of his left shoulder. Small wet eyes, a lipless
 	mouth full of yellow teeth hanging open. Long yellow nails."""
-	p = dict(height=1.84, girth=0.86, shoulders=1.05, chest=0.9, waist=0.66, hips=0.85, sunken=0.045, stoop=0.25, butt=0.2,
+	p = dict(belly_plates=4, height=1.84, girth=0.86, shoulders=1.05, chest=0.9, waist=0.66, hips=0.85, sunken=0.045, stoop=0.25, butt=0.2,
 		thigh=0.7, calf=0.75, knees=1.3, ankle=1.0, arm=1.08, upper=0.68, fore=0.72, elbows=1.3, neck=0.9, neckw=0.72,
 		head=1.12, headw=0.9, jaww=0.78, mouth=1.1, lip=0.03,
 		fingers=1.6, hand=1.1, foot=1.1, ears=0.0, eyes="pits", eye_size=0.65, sockets=0.95, teeth=13, missing=0.3, teeth_col=C("b09a58"), lip_col=C("3a1a14"), seed=1993,
@@ -482,7 +499,10 @@ def super_():
 		_shoulder_coral(M, L, "l", rng, 3, 0.2, 0.028, 3)
 		B.crust(M, L["sh_l"] + F(0.02, -0.02, 0.0), (-1.0, 0.3, 0.2), "sh_l", rng, 7, 0.05, 0.013)
 		B.crust(M, L["head"] + F(-0.04, L["hs"] * 0.9, -L["hs"] * 0.45), (-0.3, 0.6, -1.0), "head", rng, 5, 0.03, 0.009)
-		B.coral(M, L["hips"] + F(0.1, 0.06, -0.03), (1.0, 0.4, 0.3), "hips", 0.1, 0.014, 2, 0.6, rng)
+		B.coral(M, L["hips"] + F(0.1, 0.06, -0.03), (1.0, 0.4, 0.3), "hips", 0.12, 0.016, 2, 0.6, rng)
+		B.crust(M, L["kn_r"] + F(0.03, 0.02, 0.0), (1.0, 0.2, 0.4), "kn_r", rng, 6, 0.035, 0.01)
+		B.crust(M, L["el_l"] + F(-0.02, -0.04, 0.0), (-1.0, 0.0, 0.3), "el_l", rng, 6, 0.035, 0.01)
+		B.plug(M, L["chest"] + F(-0.04, 0.0, 0.07), (0, 0.2, 1.0), "chest", L["spine"] + F(0.05, 0.02, 0.06), (0.3, -0.3, 1.0), "spine", 0.01, 0.06)
 
 	def extra(P, N, part, th, s, L, col):
 		y = P[..., 1]
@@ -500,7 +520,7 @@ def super_():
 
 
 def hunter():
-	p = dict(height=2.05, girth=1.3, shoulders=1.35, chest=1.2, waist=0.9, hips=0.95, arm=1.45, upper=1.25, fore=1.2, thigh=1.05, calf=1.0,
+	p = dict(belly_plates=6, back_n=7, height=2.05, girth=1.3, shoulders=1.35, chest=1.2, waist=0.9, hips=0.95, arm=1.45, upper=1.25, fore=1.2, thigh=1.05, calf=1.0,
 		head=0.85, headw=1.0, neck=0.7, neckw=1.3, mouth=1.9, lip=0.12, teeth=18, teeth_col=C("c8b888"), eyes="many", pits=True, eye_count=8, eye_size=0.5,
 		nose=0.0, ears=0.0, fingers=1.7, hand=1.4, stoop=0.6, jawf=0.8, seed=4, mottle=0.2, lip_col=C("2a0c0a"), lipless=True, sockets=0.9, brain=True,
 		shell=C("4a4440"))
@@ -510,6 +530,9 @@ def hunter():
 		B.elongate(M, L, 1.3)
 		B.spine_ridge(M, L, 0.03, True, 0.6)
 		B.rib_hoops(M, L, 7, 0.011, 1.06)
+		for i in range(3):
+			B.coral(M, L["sh_l"] + F(-0.05, 0.05, -0.05 * i), (-0.8, 1.0, rng.uniform(-0.5, 0.5)), "sh_l", 0.35, 0.045, 3, 0.55, rng)
+		B.crust(M, L["neck"] + F(-0.06, 0.02, -0.06), (-0.5, 0.5, 1.0), "neck", rng, 10, 0.07, 0.016)
 		for side in ("l", "r"):
 			_shoulder_coral(M, L, side, rng, 4, 0.26, 0.036, 3)
 			B.crust(M, L["sh_" + side], ((-1.0 if side == "l" else 1.0), 0.6, 0.0), "sh_" + side, rng, 9, 0.07, 0.018)
@@ -520,7 +543,7 @@ def hunter():
 
 
 def listener():
-	p = dict(height=1.85, girth=0.72, shoulders=0.9, chest=0.85, waist=0.68, hips=0.8, thigh=0.7, calf=0.7, knees=1.3, upper=0.66, fore=0.66, elbows=1.3,
+	p = dict(belly_plates=5, height=1.85, girth=0.72, shoulders=0.9, chest=0.85, waist=0.68, hips=0.8, thigh=0.7, calf=0.7, knees=1.3, upper=0.66, fore=0.66, elbows=1.3,
 		neck=2.4, neckw=0.62, head=1.15, headw=0.85, eyes="none", mouth=1.25, lip=0.04, lipless=True, teeth=20, teeth_col=C("d0c8b0"), ears=0.0,
 		fingers=1.9, arm=1.2, seed=9, mottle=0.08, lip_col=C("3a1a14"), brain=True)
 
@@ -578,7 +601,7 @@ def caretaker():
 
 
 def cook():
-	p = dict(height=1.8, girth=1.2, belly=0.9, chest=1.1, waist=1.15, hips=1.05, upper=1.2, fore=1.15, thigh=1.1, calf=1.0, mouth=1.6, lip=0.06,
+	p = dict(belly_plates=5, height=1.8, girth=1.2, belly=0.9, chest=1.1, waist=1.15, hips=1.05, upper=1.2, fore=1.15, thigh=1.1, calf=1.0, mouth=1.6, lip=0.06,
 		lipless=True, teeth=16, fingers=1.3, hand=1.15, head=0.95, headw=1.05, neckw=1.5, neck=0.6, seed=6, lip_col=C("3a1410"),
 		eyes="pits", eye_size=0.7, ears=0.0)
 
@@ -617,7 +640,7 @@ def rearranger():
 
 
 def crawler():
-	p = dict(height=1.0, girth=0.75, shoulders=0.9, chest=0.85, waist=0.6, hips=0.75, thigh=0.6, calf=0.6, knees=1.4, upper=0.6, fore=0.6, elbows=1.4,
+	p = dict(belly_plates=4, height=1.0, girth=0.75, shoulders=0.9, chest=0.85, waist=0.6, hips=0.75, thigh=0.6, calf=0.6, knees=1.4, upper=0.6, fore=0.6, elbows=1.4,
 		arm=1.7, extra_joint=True, eyes="many", pits=True, eye_count=9, eye_size=0.55, mouth=1.7, lip=0.12, lipless=True, teeth=16, teeth_col=C("c0b090"),
 		nose=0.0, ears=0.0, neck=0.6, head=1.1, fingers=1.8, foot=1.4, seed=10, mottle=0.2, sockets=0.9, lip_col=C("2a0c0a"), sunken=0.04, brain=True)
 

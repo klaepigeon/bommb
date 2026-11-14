@@ -1,6 +1,6 @@
 # The inhabitants' bodies
 
-Chapter 2's inhabitants are low-poly, PS1-style biomechanical models, about 2,500–9,000 triangles each, with coral growing through all of them as the common thread. They are built the way late-90s characters were box-modelled. Each one has its own hand-painted 256×256 texture page. They use the same shader as the rest of the building (`shaders/ps1.gdshader`): no texture filtering, vertices snapped to a coarse screen grid, and the PS1 wobble setting applies to them too.
+Chapter 2's inhabitants are low-poly, PS1-style biomechanical models, about 5,000–11,500 triangles each, with coral growing through all of them as the common thread. They are built the way late-90s characters were box-modelled. Each one has its own hand-painted 256×256 texture page. They use the same shader as the rest of the building (`shaders/ps1.gdshader`): no texture filtering, vertices snapped to a coarse screen grid, and the PS1 wobble setting applies to them too.
 
 Each inhabitant is two files: `assets/people/<name>.glb` (the mesh, skeleton and skin) and `assets/people/<name>.png` (the page). The files are:
 
@@ -42,6 +42,23 @@ xvfb-run godot --rendering-driver opengl3 --path . -s tools/people_view.gd -- mo
 - **Baked light.** Light from above and in front is baked into the page, then the colours are cut to 15 bits with a 4×4 ordered dither.
 
 `tools/people/cast.py` holds the characters. `figure()` builds the skeleton and lofts from a dict of proportions (height, girth, chest, waist, belly, stoop, neck, head, jaw width, nose, mouth, fingers, extra joints, skirt, hair and so on). Each character then has its own paint function.
+
+## The biomechanical parts (`tools/people/biomech.py`)
+
+| Part | What it is | Who has it |
+|---|---|---|
+| Sinew cables | Cables down the limbs, twisting, standing off the elbows and knees like bowstrings | Most of the cast |
+| Face hoses | From the cheeks into the chest | Everyone |
+| Temple hoses | From ports in the temples into the neck | Everyone |
+| Back hoses | Plugged from ports in the back into the shoulders | Everyone |
+| Spine ridge | Running up into the skull | Most of the cast |
+| Crest | A low ribbed ridge over the crown | Everyone |
+| Rib hoops | The ribs standing outside the body | The super, the crawlers, the hunter, the listener, the cook |
+| Plates | Segmented plates down the back and over the belly | Back plates on everyone without a skirt; belly plates on the super, the hunter, the listener, the cook, the crawlers |
+| Long skulls | The skull drawn out backward | Most of the cast |
+| Shells | Segmented skirts and hoods | The laundress, the caretaker, the rearranger |
+| Hanging hoses | Hoses hanging from the skull instead of hair | The laundress |
+| Coral | Staghorn branches with bulbous orange tips, knobbed crusts, fan coral where the listener's ears were, brain-coral grooves on skulls | Everyone: coral is the thread that ties every design together |
 
 ## The rig
 
