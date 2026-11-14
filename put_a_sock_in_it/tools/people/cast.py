@@ -269,7 +269,7 @@ def face(P, N, th, s, M, L, p, col):
 	ey, ex = 0.63, 0.32 * p.get("eyegap", 1.0)
 	es = p.get("eye_size", 1.0)
 	spots = []
-	if style in ("normal", "sewn"):
+	if style in ("normal", "sewn", "pits"):
 		spots = [(ex, ey, 1.0), (-ex, ey + p.get("slide_eye", 0.0), 1.0)]
 	elif style == "many":
 		rng = np.random.default_rng(7)
@@ -279,7 +279,13 @@ def face(P, N, th, s, M, L, p, col):
 		dx = (a - axx) / (0.13 * es * sz)
 		dy = (y - ayy) / (0.05 * es * sz)
 		d = np.sqrt(dx * dx + dy * dy)
-		col = mix(col, smoothstep(2.3, 1.0, d), C("3a2a22"), sock)         # the socket's shadow
+		col = mix(col, smoothstep(3.0, 1.0, d), C("1e120c"), sock)         # the socket's shadow
+		if style == "pits" or (style == "many" and p.get("pits")):
+			# a hole: black, deep, one wet glint far down it
+			col = mix(col, d < 1.15, C("070303"))
+			col = mix(col, (d > 0.9) & (d < 1.3), C("2a1410"), 0.7)
+			col = mix(col, np.sqrt((dx + 0.25) ** 2 + (dy - 0.25) ** 2) < 0.18, C("c8c0a8"), 0.8)
+			continue
 		if style == "sewn":
 			lid = d < 1.0
 			col = mix(col, lid, C("8a5a50"), 0.7)
@@ -320,12 +326,17 @@ def face(P, N, th, s, M, L, p, col):
 		col = mix(col, tt, p.get("teeth_col", C("b8a470")) * (0.75 + 0.25 * ln[ti])[..., None])
 		low = inside & ((ti % 2) == 1) & ~gaps[(ti + 7) % 64] & (y - (line - half) < half * 0.5) & (gap > 0.02)
 		col = mix(col, low, p.get("teeth_col", C("b8a470")) * 0.7)
+	if p.get("lipless"):
+		gum = fr & (np.abs(u) < 1.05) & (np.abs(y - line) < half + 0.035) & ~inside
+		col = mix(col, gum, C("5a2420"), 0.85)
+		col = mix(col, gum & (np.abs(np.sin(a * 40)) < 0.4) & (np.abs(y - line) > half + 0.012), C("2a0c0a"), 0.5)
 	lipc = p.get("lip_col", C("7a5050"))
-	near = fr & (np.abs(u) < 1.12) & ~inside
+	near = fr & (np.abs(u) < 1.12) & ~inside & (not p.get("mask"))
 	col = mix(col, near & (y > line) & (y < line + half + 0.03), lipc, 0.55)
 	col = mix(col, near & (y < line) & (y > line - half - 0.04), lipc, 0.65)
 	col = mix(col, near & (y < line - half - 0.04) & (y > line - half - 0.08), C("3a2a22"), 0.35)   # under the lip
-	col = mix(col, fr & (np.abs(u) > 0.95) & (np.abs(u) < 1.25) & (np.abs(y - line) < 0.02), C("2a1c16"), 0.6)  # the corners
+	if not p.get("mask"):
+		col = mix(col, fr & (np.abs(u) > 0.95) & (np.abs(u) < 1.25) & (np.abs(y - line) < 0.02), C("2a1c16"), 0.6)  # the corners
 	# nose: nostrils, the shadow under it, the bridge
 	n = p.get("nose", 1.0)
 	if n > 0:
@@ -334,31 +345,10 @@ def face(P, N, th, s, M, L, p, col):
 			col = mix(col, (np.abs(a - sgn * 0.075) < 0.035) & (np.abs(y - 0.465) < 0.013) & fr, C("140a08"))
 			col = mix(col, (np.abs(a - sgn * 0.13) < 0.03) & (y > 0.47) & (y < 0.6) & fr, C("4a3428"), 0.35)   # its sides
 		col = mix(col, fr & (np.abs(a) < 0.06) & (y > 0.5) & (y < 0.62), C("e0c8a8"), 0.25)
-	# the old face: sockets deep, bags under the eyes, a ridge of brow, lines across the forehead,
-	# from the nose to the mouth, crow's feet; the cheekbones lit and hollow under them
-	for sgn in (-1, 1):
-		ax = sgn * ex
-		d = np.sqrt(((a - ax) / 0.2) ** 2 + ((y - 0.6) / 0.05) ** 2)
-		col = mix(col, (d < 1.0) & (y < 0.6) & ~(np.sqrt(((a - ax) / (0.13 * es)) ** 2 + ((y - ey) / (0.05 * es)) ** 2) < 1.1), C("4a3830"), 0.35)
-		col = mix(col, (np.abs(y - (0.57 - np.abs(a - ax) * 0.1)) < 0.008) & (np.abs(a - ax) < 0.16) & fr, C("3a2a22"), 0.5)  # the bag's line
-		for k2 in range(3):
-			cf = (np.abs(y - (ey - 0.02 + k2 * 0.025) - (np.abs(a) - np.abs(ax) - 0.15) * 0.25 * (k2 - 1)) < 0.006) & (np.abs(a) > np.abs(ax) + 0.13) & (np.abs(a) < np.abs(ax) + 0.3) & (np.sign(a) == sgn)
-			col = mix(col, cf & fr, C("3a2a22"), 0.45)
-		cb = np.sqrt(((a - sgn * 0.62) / 0.2) ** 2 + ((y - 0.53) / 0.04) ** 2)
-		col = mix(col, (cb < 1.0) & fr, C("d8c0a0"), 0.2)
-		fold = fr & (np.abs(a - sgn * (0.2 + (0.47 - y) * 0.9)) < 0.018) & (y > line - 0.02) & (y < 0.47)
-		col = mix(col, fold, C("3a2a22"), 0.55)
-	col = mix(col, fr & (y > 0.69) & (y < 0.73) & (np.abs(a) < 0.7), C("e0c8a8"), 0.18)                # brow ridge, lit
-	col = mix(col, fr & (y > 0.655) & (y < 0.68) & (np.abs(a) < 0.65), C("3a2c22"), 0.45)              # its shadow
-	for k2 in range(p.get("wrinkles", 0)):
-		yy = 0.78 + k2 * 0.04
-		wl = fr & (np.abs(y - yy - 0.012 * np.sin(a * 6 + k2)) < 0.005) & (np.abs(a) < 0.55)
-		col = mix(col, wl, C("4a3a2e"), 0.5)
-	col = mix(col, fr & (np.abs(a) < 0.035) & (y > 0.62) & (y < 0.68) & (p.get("wrinkles", 0) > 0), C("3a2a22"), 0.4)  # the frown
-	if p.get("cheeks", 0.0) < 0:
-		for sgn in (-1, 1):
-			d = np.sqrt(((a - sgn * 0.62) / 0.22) ** 2 + ((y - 0.42) / 0.08) ** 2)
-			col = mix(col, smoothstep(1.2, 0.2, d), C("3a2c24"), 0.55)
+	if p.get("mask"):
+		# a faceplate: a seam down the middle, a ridge across the brow, nothing human
+		col = mix(col, fr & (np.abs(a) < 0.012) & (y > 0.68), C("2a1a12"), 0.6)
+		col = mix(col, fr & (np.abs(y - 0.72) < 0.012) & (np.abs(a) < 0.55), C("2a1a12"), 0.5)
 	return col
 
 
@@ -396,236 +386,243 @@ def body_hair(P, mask, col, c, density=160.0, seed=4):
 
 
 # ------------------------------------------------------------------ the cast
-def super_():
-	"""Gennady Vorobyov. Tall, starved-thin, stooped, naked and wet. Every rib; the collarbones
-	like handles; the belly sucked in under them and the skin there gone loose; knees and elbows
-	wider than the limbs. A long neck, a wattle; a big bald head, liver-spotted, a few strands
-	combed over; small wet eyes sunk under the brow; a wide mouth with too few yellow teeth, hanging
-	open. Long yellow nails. Nothing sexual: a body, and that's the horror."""
-	M = Model("super")
-	p = dict(height=1.84, girth=0.86, shoulders=1.05, chest=0.95, waist=0.72, hips=0.85, sunken=0.03, stoop=0.25, butt=0.2,
-		thigh=0.7, calf=0.75, knees=1.25, ankle=1.0, arm=1.05, upper=0.7, fore=0.75, elbows=1.25, neck=0.85, neckw=0.75, wattle=True,
-		head=1.15, headw=0.92, jaww=0.72, jawf=0.35, nose=1.5, cheeks=-0.03, brow=1.8, mouth=1.3, lip=0.035, droop=1.6, wrinkles=4, fingers=1.5, hand=1.1, foot=1.1,
-		ears=1.4, eyes="normal", eye_size=0.7, sockets=0.8, sclera=C("b8a878"), iris=C("4a3a1c"), lid_col=C("5e4a3c"), teeth=9,
-		missing=0.5, teeth_col=C("a89050"), lip_col=C("5e3c3c"), seed=1993, slide_eye=-0.03, spread=0.08)
+# ------------------------------------------------------------------ the cast (biomechanical)
+import biomech as B  # noqa: E402
+
+
+def bio(name, p, skin, build=None, extra=None, seed=0, gloss=0.5):
+	"""A body (figure()), then what's grown into it (`build`), painted: flesh or gristle for the
+	body, bone for the ridges and ribs and carapace, hose for the hoses, coral for the coral, the
+	ribbed grooves dark and wet, grime, seeping; then `extra`."""
+	# faces are masks of bone, not people's faces: no noses, no lips, no wrinkles or grimaces
+	p = dict(p)
+	p.update(nose=0.0, wrinkles=0, cheeks=0.0, droop=0.0, brow=1.0, jawf=0.0, lip_col=p.get("lip_col", C("2a120e")), mask=True)
+	M = Model(name)
 	L = figure(M, p)
-	skin = C("9a8a70")
+	rng = np.random.default_rng(seed + 100)
+	if build:
+		build(M, L, p, rng)
 
 	def paint(P, N, part, th, s, M_):
 		y = P[..., 1]
-		x = P[..., 0]
-		col = skin_base(P, np.broadcast_to(skin, P.shape).copy(), 0.25, 11)
-		col = mix(col, smoothstep(-0.2, 0.7, fbm(P, 4.0, 2, 31)), C("8c8c80"), 0.3)    # grey under the yellow
-		front = -N[..., 2]
-		if part == "trunk":
-			ch, sp, hp = L["chest"][1], L["spine"][1], L["hips"][1]
-			# the ribs: shadow between each, down the sides and front
-			rib = (y > sp + 0.12) & (y < ch + 0.2)
-			band = 0.5 + 0.5 * np.cos((y - ch) * 2 * np.pi / 0.042 + np.abs(x) * 18.0)
-			col = mix(col, rib * smoothstep(0.55, 0.95, band) * smoothstep(0.02, 0.06, np.abs(x)), C("4a3a2c"), 0.6)
-			col = mix(col, rib * smoothstep(0.1, 0.0, band), C("c4b494"), 0.25)
-			# the sternum, the collarbones, the hollow above them
-			col = mix(col, (np.abs(x) < 0.012) & (y > ch - 0.05) & (y < ch + 0.26) & (front > 0.5), C("4a3a2c"), 0.45)
-			cb = (np.abs(y - (ch + 0.27 - np.abs(x) * 0.15)) < 0.012) & (np.abs(x) > 0.02) & (front > 0.3)
-			col = mix(col, cb, C("c8b898"), 0.5)
-			col = mix(col, (np.abs(y - (ch + 0.25 - np.abs(x) * 0.15)) < 0.012) & (np.abs(x) > 0.02) & (front > 0.3), C("3a2c22"), 0.5)
-			# the gut sucked in, the loose skin folding over itself below it
-			gut = (y > sp - 0.02) & (y < sp + 0.12) & (front > 0.2)
-			col = mix(col, gut & (np.abs(np.sin((y - sp) * 160.0 + x * 6)) < 0.25), C("5a4636"), 0.5)
-			col = mix(col, (np.abs(y - (sp + 0.0)) < 0.012) & (front > 0.3) & (np.abs(x) < 0.12), C("3a2a20"), 0.6)
-			# the hip bones standing out
-			for sgn in (-1, 1):
-				d = np.sqrt(((x - sgn * 0.1) / 0.03) ** 2 + ((y - (hp + 0.07)) / 0.04) ** 2)
-				col = mix(col, smoothstep(1.2, 0.5, d) * (front > 0.2), C("c4b494"), 0.4)
-				col = mix(col, smoothstep(1.6, 1.2, d) * (front > 0.2), C("4a3a2c"), 0.3)
-				nip = np.sqrt((x - sgn * 0.085) ** 2 + (y - (ch + 0.0)) ** 2) < 0.012
-				col = mix(col, nip & (front > 0.4), C("5a3a36"), 0.9)
-			# the shoulder blades and the spine knuckles behind
-			col = mix(col, (np.abs(x) < 0.01) & (front < -0.6) & (np.abs(np.sin(y * 150)) > 0.6), C("c4b494"), 0.4)
-			col = mix(col, (front < -0.3) & (np.abs(np.abs(x) - 0.09) < 0.04) & (y > ch + 0.08) & (y < ch + 0.22), C("4a3a2c"), 0.25)
-			# hair: sparse grey on the chest, a line down the gut, the dark mat at the crotch
-			hair = smoothstep(0.08, 0.02, np.abs(x)) * (y > ch - 0.04) * (y < ch + 0.15) * (front > 0.2)
-			hair = hair + smoothstep(0.02, 0.0, np.abs(x)) * (y > hp + 0.03) * (y < sp + 0.12) * (front > 0.4)
-			col = body_hair(P, hair, col, C("3a3530"))
-			crotch = (y < hp + 0.06) & (front > -0.1) & (np.abs(x) < 0.09)
-			col = body_hair(P, crotch * 1.0, col, C("1e1a16"), 240.0)
-			col = mix(col, (y < hp - 0.02) & (front > -0.1) & (np.abs(x) < 0.07), C("2a2018"), 0.55)
-			# sores on the back, the shoulders
-			so = cells(P, 9.0, 21)
-			pick = vnoise(P, 4.0, 22) > 0.4
-			col = mix(col, smoothstep(0.17, 0.1, so) * pick, C("6e1a16"), 0.9)
-			col = mix(col, smoothstep(0.07, 0.03, so) * pick, C("a08a36"), 0.9)
+		gl = gloss
+		if part.startswith("coral") or part.startswith("fan"):
+			col = B.coral_paint(P, s, np.zeros(P.shape))
+			return col, 0.05
+		if part.startswith("hose"):
+			col = B.HOSE * (0.85 + 0.15 * vnoise(P, 30.0, seed)[..., None])
+			col = B.grooves(M_, col, C("120a08"), 0.85)
+			col = B.seep(P, N, col, 0.3, seed + 4)
+			return col, 0.75
+		if part.startswith("vert") or part.startswith("rib_"):
+			col = B.BONE * (0.85 + 0.15 * vnoise(P, 25.0, seed)[..., None])
+			col = B.grooves(M_, col, C("2a1a12"), 0.8)
+			return B.grime(P, col, 0.3, seed), 0.35
+		if part in ("skirt", "hair"):
+			col = p.get("shell", B.BONE * 0.8) * (0.85 + 0.15 * vnoise(P, 25.0, seed)[..., None])
+			col = B.grooves(M_, col, C("1a100c"), 0.85)
+			col = B.grime(P, col, 0.4, seed)
+			col = B.seep(P, N, col, 0.4, seed + 2)
+			return col, 0.45
+		col = skin_base(P, np.broadcast_to(skin, P.shape).copy(), p.get("mottle", 0.18), seed)
+		col = B.grooves(M_, col, B.CAVITY, 0.8)
 		if part == "head":
-			hs = L["hs"]
-			hy = (y - L["head"][1]) / hs
-			# bald: a dome of liver spots, stubble round the back and sides, three strands combed over
-			sp = cells(P, 30.0, 5)
-			col = mix(col, smoothstep(0.3, 0.15, sp) * (hy > 0.7), C("6a4a2c"), 0.8)
-			col = mix(col, (hy > 0.55) & (hy < 0.85) & (np.cos(th) < 0.2), C("4a4038"), 0.45)
-			comb = (hy > 0.85) & (np.abs(np.sin(hy * 26.0 + th * 0.8)) < 0.12)
-			col = mix(col, comb, C("201a14"), 0.9)
+			hy = (y - L["head"][1]) / L["hs"]
+			if p.get("brain"):
+				col = B.brain_coral(P, ((hy > 0.8) & (np.cos(th) < 0.1)) * 1.0, col, 16.0, seed)
 			col = face(P, N, th, s, M_, L, p, col)
-			# the face slides: the left side heavier, a weeping sore at the corner of the mouth
-			col = mix(col, (np.sqrt(((th - 0.62) / 0.06) ** 2 + ((hy - 0.32) / 0.03) ** 2) < 1), C("7a1a14"), 0.9)
-			col = mix(col, (hy < 0.25) & (np.cos(th) > 0.3), C("5a4436"), 0.3)        # stubble on the chin
-			col = body_hair(P, ((hy < 0.3) & (np.cos(th) > 0.0)) * 1.0, col, C("3a3530"), 300.0)
-		if part.startswith("leg"):
-			# veins, the knees bruised, shins shiny
-			vein = smoothstep(0.035, 0.0, np.abs(vnoise(P * np.array([1.6, 0.4, 1.6]), 14.0, 13)))
-			col = mix(col, vein, C("3e3a5a"), 0.6)
-			kn = L["kn_l"][1]
-			col = mix(col, np.abs(y - kn) < 0.05, C("7a5a50"), 0.4)
-			col = mix(col, (y < kn - 0.1) & (fbm(P, 9.0, 2, 30) > 0.2), C("5a3e40"), 0.5)
-		if part.startswith("arm"):
-			vein = smoothstep(0.03, 0.0, np.abs(vnoise(P * np.array([0.5, 1.6, 0.5]), 18.0, 14)))
-			col = mix(col, vein * (y < L["el_l"][1] + 0.05), C("3e3a5a"), 0.5)
-			col = mix(col, smoothstep(L["wr_l"][1] + 0.12, L["wr_l"][1] - 0.02, y), C("4a3a26"), 0.55)   # grime
-		if part.startswith("finger") or part.startswith("thumb"):
-			col = mix(col, np.ones(s.shape), C("5a4a32"), 0.35)
-		if part.startswith("foot"):
-			col = mix(col, np.ones(s.shape), C("3a3020"), 0.6)
-		col = nails(part, s, col, C("8f7a3e"))
-		return ao(part, P, N, s, col, L)
+		if part == "trunk" and p.get("sunken"):
+			# the cavity behind the ribs
+			ch, sp = L["chest"][1], L["spine"][1]
+			cav = (y > sp + 0.1) & (y < ch + 0.2) & (-N[..., 2] > -0.2)
+			col = mix(col, cav, B.CAVITY, 0.55)
+		col = B.grime(P, col, 0.3, seed)
+		col = B.seep(P, N, col, 0.35, seed + 1)
+		if extra:
+			col = extra(P, N, part, th, s, L, col)
+		col = nails(part, s, col, p.get("nail", C("7a6a40")))
+		return ao(part, P, N, s, col, L), gl
 	M.paint = paint
 	return M
 
 
-def plain(name, p, skin, extra=None, seed=0):
-	"""A body painted plainly (skin, face, clothes), plus whatever `extra` adds."""
-	M = Model(name)
-	L = figure(M, p)
+def _shoulder_coral(M, L, side, rng, n=3, size=0.2, r=0.025, depth=3):
+	sh = L["sh_" + side]
+	sgn = -1 if side == "l" else 1
+	for i in range(n):
+		d = np.array([sgn * 0.6, 1.0, rng.uniform(-0.3, 0.6)]) + rng.normal(0, 0.25, 3)
+		B.coral(M, sh + F(sgn * 0.0, 0.03, -0.03 - i * 0.02), d, "chest" if i % 2 else "sh_" + side, size * rng.uniform(0.7, 1.1), r, depth, 0.65, rng)
 
-	def paint(P, N, part, th, s, M_):
+
+def super_():
+	"""Gennady Vorobyov. Starved-thin, stooped, wet; the building has grown into him. His ribs
+	stand outside him, the chest sunk in behind them; vertebrae stand out of his back and run up
+	into a skull drawn long and back, crusted in brain coral; a hose from the base of the skull
+	feeds into his back; coral has broken out of his left shoulder. Small wet eyes, a lipless
+	mouth full of yellow teeth hanging open. Long yellow nails."""
+	p = dict(height=1.84, girth=0.86, shoulders=1.05, chest=0.9, waist=0.66, hips=0.85, sunken=0.045, stoop=0.25, butt=0.2,
+		thigh=0.7, calf=0.75, knees=1.3, ankle=1.0, arm=1.08, upper=0.68, fore=0.72, elbows=1.3, neck=0.9, neckw=0.72,
+		head=1.12, headw=0.9, jaww=0.78, mouth=1.1, lip=0.03,
+		fingers=1.6, hand=1.1, foot=1.1, ears=0.0, eyes="pits", eye_size=0.65, sockets=0.95, teeth=13, missing=0.3, teeth_col=C("b09a58"), lip_col=C("3a1a14"), seed=1993,
+		spread=0.08, brain=True, mottle=0.25)
+
+	def build(M, L, p, rng):
+		B.elongate(M, L, 0.55)
+		B.spine_ridge(M, L, 0.018, True, 0.55)
+		B.rib_hoops(M, L, 6, 0.007, 1.18)
+		B.hose(M, L["head"] + F(0.03, L["hs"] * 0.3, -L["hs"] * 0.35), L["chest"] + F(0.05, 0.1, -0.08), ("head", "chest"), 0.016, 0.12, (0.3, 0.2, 1.0))
+		_shoulder_coral(M, L, "l", rng, 3, 0.2, 0.028, 3)
+		B.crust(M, L["sh_l"] + F(0.02, -0.02, 0.0), (-1.0, 0.3, 0.2), "sh_l", rng, 7, 0.05, 0.013)
+		B.crust(M, L["head"] + F(-0.04, L["hs"] * 0.9, -L["hs"] * 0.45), (-0.3, 0.6, -1.0), "head", rng, 5, 0.03, 0.009)
+		B.coral(M, L["hips"] + F(0.1, 0.06, -0.03), (1.0, 0.4, 0.3), "hips", 0.1, 0.014, 2, 0.6, rng)
+
+	def extra(P, N, part, th, s, L, col):
 		y = P[..., 1]
-		x = P[..., 0]
-		col = skin_base(P, np.broadcast_to(skin, P.shape).copy(), p.get("mottle", 0.15), seed)
-		front = -N[..., 2]
-		dress = p.get("dress_col")
-		if dress is not None and part in ("trunk", "skirt") or (dress is not None and part.startswith("arm") and y.mean() > L["el_l"][1]):
-			cm = np.ones(y.shape, bool)
-			if part.startswith("arm"):
-				cm = y > L["el_l"][1] + 0.04
-			if part == "trunk":
-				cm = y < L["neck"][1] - 0.01
-			cloth = dress * (0.9 + 0.1 * vnoise(P, 40.0, seed)[..., None])
-			cloth = mix(cloth, fbm(P, 6.0, 3, seed + 3) > 0.3, C("3a2e24"), 0.4)               # stains
-			cloth = mix(cloth, np.abs(np.sin(x * 60.0 + y * 4)) < 0.15, dress * 0.6, 0.6)        # folds
-			col = np.where(cm[..., None], cloth, col)
-		ap = p.get("apron_col")
-		if ap is not None and part in ("trunk", "skirt"):
-			am = (front > 0.2) & (np.abs(x) < 0.15 * L["gw"] + 0.03) & (y < L["chest"][1] + p.get("apron_top", 0.12))
-			cloth = ap * (0.9 + 0.1 * vnoise(P, 40.0, seed)[..., None])
-			col = np.where(am[..., None], cloth, col)
-			strap = (np.abs(np.abs(x) - 0.07) < 0.012) & (y > L["chest"][1] + 0.1) & (front > 0.1)
-			col = mix(col, strap, ap * 0.85)
-		if part == "head":
-			hy = (y - L["head"][1]) / L["hs"]
-			if p.get("hair"):
-				col = mix(col, (hy > 0.78) | ((hy > 0.4) & (np.cos(th) < -0.1)), p["hair_col"])
-				col = mix(col, (hy > 0.78) & (np.abs(np.sin(th * 18.0)) < 0.3), p["hair_col"] * 0.7)
-			col = face(P, N, th, s, M_, L, p, col)
-		if part == "hair":
-			col = p["hair_col"] * (0.75 + 0.25 * np.abs(np.sin(th * 23.0 + vnoise(P, 20.0, 3) * 2))[..., None])
-		if extra:
-			col = extra(P, N, part, th, s, L, col)
-		col = nails(part, s, col, p.get("nail", C("8a7a60")))
-		return ao(part, P, N, s, col, L)
-	M.paint = paint
-	return M, L
+		if part.startswith("leg"):
+			vein = smoothstep(0.035, 0.0, np.abs(vnoise(P * np.array([1.6, 0.4, 1.6]), 14.0, 13)))
+			col = mix(col, vein, C("3a3050"), 0.55)
+		if part == "trunk":
+			hp = L["hips"][1]
+			col = body_hair(P, ((y < hp + 0.06) & (-N[..., 2] > -0.1) & (np.abs(P[..., 0]) < 0.09)) * 1.0, col, C("1a1410"), 240.0)
+			so = cells(P, 9.0, 21)
+			pick = vnoise(P, 4.0, 22) > 0.4
+			col = mix(col, smoothstep(0.17, 0.1, so) * pick, C("6e1a16"), 0.9)
+		return col
+	return bio("super", p, C("8a7656"), build, extra, 11, 0.55)
 
 
 def hunter():
-	p = dict(height=2.05, girth=1.35, shoulders=1.35, chest=1.25, waist=1.0, hips=0.95, arm=1.45, upper=1.4, fore=1.3, thigh=1.1, calf=1.1,
-		head=0.75, headw=1.15, neck=0.6, neckw=1.4, mouth=1.9, lip=0.12, teeth=12, teeth_col=C("c8b888"), eyes="many", eye_count=11, eye_size=0.55,
-		nose=0.0, ears=0.0, fingers=1.6, hand=1.4, stoop=0.6, jawf=0.8, seed=4, mottle=0.3, lip_col=C("6a3030"), sockets=0.9)
+	p = dict(height=2.05, girth=1.3, shoulders=1.35, chest=1.2, waist=0.9, hips=0.95, arm=1.45, upper=1.25, fore=1.2, thigh=1.05, calf=1.0,
+		head=0.85, headw=1.0, neck=0.7, neckw=1.3, mouth=1.9, lip=0.12, teeth=18, teeth_col=C("c8b888"), eyes="many", pits=True, eye_count=8, eye_size=0.5,
+		nose=0.0, ears=0.0, fingers=1.7, hand=1.4, stoop=0.6, jawf=0.8, seed=4, mottle=0.2, lip_col=C("2a0c0a"), lipless=True, sockets=0.9, brain=True,
+		shell=C("4a4440"))
 
-	def extra(P, N, part, th, s, L, col):
-		gr = cells(P, 6.0, 12)
-		col = mix(col, smoothstep(0.25, 0.1, gr), C("c48a7a"), 0.7)         # growths, raw
-		col = mix(col, smoothstep(0.1, 0.04, gr), C("6a2a26"), 0.8)
-		col = mix(col, fbm(P, 20.0, 2, 8) > 0.35, C("8a6a62"), 0.4)
-		return col
-	return plain("hunter", p, C("ae9686"), extra, 2)[0]
+	def build(M, L, p, rng):
+		for lf in M.lofts:
+			if lf.name.startswith("arm") or lf.name.startswith("leg"):
+				B.ribbify(lf, 55.0, 0.07)
+		B.elongate(M, L, 1.3)
+		B.spine_ridge(M, L, 0.03, True, 0.6)
+		for side in ("l", "r"):
+			_shoulder_coral(M, L, side, rng, 4, 0.26, 0.036, 3)
+			B.crust(M, L["sh_" + side], ((-1.0 if side == "l" else 1.0), 0.6, 0.0), "sh_" + side, rng, 9, 0.07, 0.018)
+			B.coral(M, L["el_" + side] + F(0, 0, -0.02), (0.3 * (1 if side == "r" else -1), 0.2, -1.0), "el_" + side, 0.14, 0.018, 2, 0.6, rng)
+		for sx in (-1, 1):
+			B.hose(M, L["jaw"] + F(sx * 0.05, -0.05, 0.05), L["chest"] + F(sx * 0.12, 0.05, 0.12), ("jaw", "chest"), 0.022, 0.1, (sx * 0.6, 0, 1.0))
+	return bio("hunter", p, C("5a5048"), build, None, 2, 0.45)
 
 
 def listener():
-	p = dict(height=1.85, girth=0.72, shoulders=0.9, chest=0.85, waist=0.7, hips=0.8, thigh=0.7, calf=0.7, knees=1.2, upper=0.7, fore=0.7, elbows=1.2,
-		neck=2.4, neckw=0.7, head=1.25, headw=0.92, eyes="none", mouth=1.2, lip=0.03, teeth=14, teeth_col=C("d0c8b0"), nose=0.3, ears=3.0,
-		fingers=1.8, arm=1.2, seed=9, mottle=0.08, lip_col=C("9a7a78"))
+	p = dict(height=1.85, girth=0.72, shoulders=0.9, chest=0.85, waist=0.68, hips=0.8, thigh=0.7, calf=0.7, knees=1.3, upper=0.66, fore=0.66, elbows=1.3,
+		neck=2.4, neckw=0.62, head=1.15, headw=0.85, eyes="none", mouth=1.25, lip=0.04, lipless=True, teeth=20, teeth_col=C("d0c8b0"), ears=0.0,
+		fingers=1.9, arm=1.2, seed=9, mottle=0.08, lip_col=C("3a1a14"), brain=True)
 
-	def extra(P, N, part, th, s, L, col):
-		vein = smoothstep(0.03, 0.0, np.abs(vnoise(P * np.array([1.5, 0.5, 1.5]), 12.0, 1)))
-		col = mix(col, vein, C("6a7a9a"), 0.45)
-		if part.startswith("ear"):
-			col = mix(col, s > 0.3, C("c08a84"), 0.6)
-		return col
-	return plain("listener", p, C("d8cac2"), extra, 5)[0]
+	def build(M, L, p, rng):
+		B.ribbify(M.lofts[0], 45.0, 0.06)          # the trunk, and the long neck: segmented
+		B.elongate(M, L, 0.9)
+		B.spine_ridge(M, L, 0.016, True, 0.6)
+		hs, head = L["hs"], L["head"]
+		for s in (-1, 1):
+			B.fan(M, head + F(s * hs * 0.36, hs * 0.6, -0.02), "head", up=(s * 0.35, 1.0, 0.2), side=(0.1 * s, 0.0, 1.0), size=hs * 1.1, ribs=7, name="fan")
+		B.crust(M, L["neck"] + F(0, 0.15, -0.04), (0, 0.2, 1.0), "neck", rng, 6, 0.03, 0.01)
+		for lf in M.lofts:
+			if lf.name.startswith("arm") or lf.name.startswith("leg"):
+				B.ribbify(lf, 55.0, 0.06)
+	return bio("listener", p, C("a89880"), build, None, 5, 0.4)
 
 
 def laundress():
-	p = dict(height=1.98, girth=0.8, shoulders=0.85, waist=0.8, arm=1.35, upper=0.7, fore=0.7, neck=1.7, neckw=0.7, head=0.85, eyes="sewn", mouth=0.7,
-		fingers=1.5, skirt=0.85, hair=0.55, hair_col=C("8a8a84"), dress_col=C("4e4650"), apron_col=C("8a8a7c"), seed=2, lip_col=C("8a6a68"), stoop=0.3)
+	p = dict(height=1.98, girth=0.78, shoulders=0.85, waist=0.72, arm=1.35, upper=0.65, fore=0.65, neck=1.6, neckw=0.6, head=0.9, eyes="pits", eye_size=0.8,
+		mouth=0.7, fingers=1.6, skirt=0.88, seed=2, lip_col=C("3a2420"), stoop=0.3, shell=C("5e5048"), ears=0.0, sunken=0.02)
+
+	def build(M, L, p, rng):
+		for lf in M.lofts:
+			if lf.name == "skirt":
+				B.ribbify(lf, 18.0, 0.12)
+		B.tendrils(M, L, 12, 0.6, 0.011, rng)
+		B.spine_ridge(M, L, 0.015, False, 0.5)
+		B.coral(M, L["chest"] + F(-0.05, 0.12, -0.08), (-0.3, 0.6, 1.0), "chest", 0.16, 0.026, 3, 0.6, rng)
+		B.crust(M, L["chest"] + F(0.04, 0.05, -0.09), (0.2, 0.2, -1.0), "chest", rng, 8, 0.05, 0.012)
 
 	def extra(P, N, part, th, s, L, col):
-		if part.startswith("finger") or part.startswith("thumb") or (part.startswith("arm") and True):
-			hand = (P[..., 1] < L["wr_l"][1] + 0.05)
-			col = mix(col, hand, C("a0524a"), 0.55)     # raw from the water
+		if part.startswith("finger") or part.startswith("thumb") or part.startswith("arm"):
+			col = mix(col, P[..., 1] < L["wr_l"][1] + 0.05, C("8a3a32"), 0.5)
 		return col
-	return plain("laundress", p, C("cdb9a6"), extra, 3)[0]
+	return bio("laundress", p, C("958470"), build, extra, 3, 0.4)
 
 
 def caretaker():
-	p = dict(height=1.62, girth=0.95, stoop=0.6, eyes="sewn", mouth=0.6, skirt=0.92, hair=0.35, hair_col=C("261a1a"), dress_col=C("2a1c20"),
-		seed=5, lip_col=C("8a6a6a"), fingers=1.1)
+	p = dict(height=1.62, girth=0.95, stoop=0.7, eyes="sewn", mouth=0.6, skirt=0.92, hair=0.35, seed=5, lip_col=C("4a2a28"), fingers=1.2,
+		shell=C("4a3a34"))
+
+	def build(M, L, p, rng):
+		for lf in M.lofts:
+			if lf.name in ("skirt", "hair"):
+				B.ribbify(lf, 22.0, 0.14)
+		for i in range(4):
+			B.coral(M, L["chest"] + F(rng.uniform(-0.1, 0.1), rng.uniform(0.0, 0.18), -0.09), (rng.uniform(-0.6, 0.6), 0.8, 1.0), "chest", 0.2, 0.03, 3, 0.6, rng)
+		B.crust(M, L["neck"] + F(0, 0.05, -0.05), (0, 0.3, 1.0), "neck", rng, 6, 0.04, 0.012)
 
 	def extra(P, N, part, th, s, L, col):
 		y = P[..., 1]
-		front = -N[..., 2]
-		blood = (fbm(P, 9.0, 2, 14) > 0.25) & (front > 0.4) & (y < L["chest"][1])
-		blood |= (y < L["wr_l"][1] + 0.06) & (part.startswith("arm") | part.startswith("finger") | part.startswith("thumb"))
-		col = mix(col, blood, C("4a0a0a"), 0.75)
-		gr = cells(P, 14.0, 3)
-		col = mix(col, smoothstep(0.2, 0.08, gr) * (part == "head") * ((y - L["head"][1]) < 0.1), C("b49088"), 0.8)
-		return col
-	return plain("caretaker", p, C("c9afa9"), extra, 6)[0]
+		blood = (y < L["wr_l"][1] + 0.06) & (part.startswith("arm") | part.startswith("finger") | part.startswith("thumb"))
+		return mix(col, blood, C("3a0806"), 0.75)
+	return bio("caretaker", p, C("96806e"), build, extra, 6, 0.4)
 
 
 def cook():
-	p = dict(height=1.8, girth=1.2, belly=0.9, chest=1.1, waist=1.15, hips=1.05, upper=1.25, fore=1.2, thigh=1.1, calf=1.0, mouth=1.4, lip=0.02,
-		teeth=10, fingers=1.3, hand=1.15, head=0.92, headw=1.1, neckw=1.6, neck=0.6, apron_col=C("a89c8e"), apron_top=0.25, seed=6, lip_col=C("8a5a52"),
-		jawf=0.3, nose=1.2)
+	p = dict(height=1.8, girth=1.2, belly=0.9, chest=1.1, waist=1.15, hips=1.05, upper=1.2, fore=1.15, thigh=1.1, calf=1.0, mouth=1.6, lip=0.06,
+		lipless=True, teeth=16, fingers=1.3, hand=1.15, head=0.95, headw=1.05, neckw=1.5, neck=0.6, seed=6, lip_col=C("3a1410"),
+		eyes="pits", eye_size=0.7, ears=0.0)
+
+	def build(M, L, p, rng):
+		B.ribbify(M.lofts[0], 35.0, 0.05)            # the body in rolls, like ducting
+		B.hose(M, L["spine"] + F(0.06, 0.15, 0.28), L["jaw"] + F(0.04, -0.06, 0.07), ("belly", "jaw"), 0.025, 0.1, (0.6, 0, 1.0))
+		for side in ("l", "r"):
+			B.crust(M, L["el_" + side] + F(0, -0.1, 0), ((1 if side == "r" else -1) * 0.6, 0.0, 0.8), "el_" + side, rng, 8, 0.05, 0.014)
+		B.elongate(M, L, 0.3)
 
 	def extra(P, N, part, th, s, L, col):
 		y = P[..., 1]
 		front = -N[..., 2]
-		smear = (fbm(P * np.array([2.5, 0.6, 2.5]), 8.0, 3, 15) > 0.25) & (front > 0.2) & (part == "trunk")
-		hands = (y < L["el_r"][1]) & (part.startswith("arm") | part.startswith("finger") | part.startswith("thumb")) & (fbm(P, 14.0, 2, 16) > -0.3)
-		col = mix(col, smear | hands, C("3a0806"), 0.6)
-		return col
-	return plain("cook", p, C("c8af96"), extra, 7)[0]
+		smear = (fbm(P * np.array([2.5, 0.6, 2.5]), 8.0, 3, 15) > 0.2) & (front > 0.2) & (part == "trunk")
+		hands = (y < L["el_r"][1]) & (part.startswith("arm") | part.startswith("finger") | part.startswith("thumb"))
+		return mix(col, smear | hands, C("3a0806"), 0.65)
+	return bio("cook", p, C("94785e"), build, extra, 7, 0.55)
 
 
 def rearranger():
-	p = dict(height=1.5, girth=1.3, belly=0.5, waist=1.15, extra_joint=True, dress_col=C("454a5e"), skirt=0.7, hair=0.2, hair_col=C("4a4038"),
-		seed=8, mouth=1.0, lip_col=C("9a7a70"), stoop=0.3)
-	return plain("rearranger", p, C("c9b39f"), None, 8)[0]
+	p = dict(height=1.5, girth=1.3, belly=0.5, waist=1.15, extra_joint=True, skirt=0.7, seed=8, mouth=1.0, lip_col=C("4a2a24"), stoop=0.45,
+		shell=C("5a4e44"), eyes="pits", eye_size=0.6, ears=0.0)
+
+	def build(M, L, p, rng):
+		for lf in M.lofts:
+			if lf.name.startswith("arm"):
+				B.ribbify(lf, 55.0, 0.08)
+			if lf.name == "skirt":
+				B.ribbify(lf, 16.0, 0.12)
+		for i in range(6):
+			B.coral(M, L["chest"] + F(rng.uniform(-0.15, 0.15), rng.uniform(-0.1, 0.2), -0.12), (rng.uniform(-0.7, 0.7), rng.uniform(0.2, 1.0), 1.0), "chest" if i % 2 else "spine", 0.22, 0.028, 3, 0.6, rng)
+		B.crust(M, L["spine"] + F(0, 0.1, -0.12), (0, 0.3, 1.0), "spine", rng, 10, 0.1, 0.018)
+		B.spine_ridge(M, L, 0.02, True, 0.5)
+	return bio("rearranger", p, C("8e7c66"), build, None, 8, 0.4)
 
 
 def crawler():
-	p = dict(height=1.0, girth=0.75, shoulders=0.9, chest=0.85, waist=0.65, hips=0.75, thigh=0.6, calf=0.6, knees=1.4, upper=0.6, fore=0.6, elbows=1.4,
-		arm=1.7, extra_joint=True, eyes="many", eye_count=8, eye_size=0.6, mouth=1.6, lip=0.1, teeth=12, teeth_col=C("c0b090"), nose=0.0, ears=0.0,
-		neck=0.6, head=1.1, fingers=1.7, foot=1.4, seed=10, mottle=0.2, sockets=0.9, lip_col=C("5a3a46"))
+	p = dict(height=1.0, girth=0.75, shoulders=0.9, chest=0.85, waist=0.6, hips=0.75, thigh=0.6, calf=0.6, knees=1.4, upper=0.6, fore=0.6, elbows=1.4,
+		arm=1.7, extra_joint=True, eyes="many", pits=True, eye_count=9, eye_size=0.55, mouth=1.7, lip=0.12, lipless=True, teeth=16, teeth_col=C("c0b090"),
+		nose=0.0, ears=0.0, neck=0.6, head=1.1, fingers=1.8, foot=1.4, seed=10, mottle=0.2, sockets=0.9, lip_col=C("2a0c0a"), sunken=0.04, brain=True)
 
-	def extra(P, N, part, th, s, L, col):
-		y = P[..., 1]
-		x = P[..., 0]
-		if part == "trunk":
-			band = 0.5 + 0.5 * np.cos((y - L["chest"][1]) * 2 * np.pi / 0.03)
-			rib = (y > L["spine"][1] + 0.05) & (y < L["chest"][1] + 0.12)
-			col = mix(col, rib * smoothstep(0.6, 0.95, band), C("3a2a34"), 0.6)
-		col = mix(col, fbm(P, 11.0, 3, 19) > 0.25, C("2a2420"), 0.5)
-		return col
-	return plain("crawler", p, C("b4a8b2"), extra, 9)[0]
+	def build(M, L, p, rng):
+		for lf in M.lofts:
+			if lf.name.startswith("arm") or lf.name.startswith("leg"):
+				B.ribbify(lf, 60.0, 0.08)
+		B.elongate(M, L, 1.1)
+		B.spine_ridge(M, L, 0.014, True, 0.7)
+		B.rib_hoops(M, L, 5, 0.006, 1.2)
+		B.crust(M, L["head"] + F(0, L["hs"] * 0.95, -L["hs"] * 0.6), (0, 0.7, -1.0), "head", rng, 8, 0.04, 0.011)
+		B.crust(M, L["chest"] + F(0, 0.08, -0.08), (0, 0.2, 1.0), "chest", rng, 6, 0.05, 0.012)
+	return bio("crawler", p, C("8a7c70"), build, None, 9, 0.5)
 
 
 CAST = {"super": super_, "hunter": hunter, "listener": listener, "laundress": laundress, "caretaker": caretaker, "cook": cook,

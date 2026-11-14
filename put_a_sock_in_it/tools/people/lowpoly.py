@@ -98,7 +98,8 @@ class Ring:
 	angle giving one (the jaw takes the front of the lower face). `dy` shifts the ring along the
 	loft's 'front' axis (a belly pushed forward, a stoop)."""
 
-	def __init__(self, c, rx, rz=None, w=None, front=0.0, back=0.0, bumps=(), shift=0.0, minv=0.012):
+	def __init__(self, c, rx, rz=None, w=None, front=0.0, back=0.0, bumps=(), shift=0.0, minv=0.012, dark=0.0):
+		self.dark = dark          # 0..1: a groove (the paint darkens it)
 		self.c = np.asarray(c, float)
 		self.rx = rx
 		self.rz = rx if rz is None else rz
@@ -163,7 +164,7 @@ class Loft:
 
 # ------------------------------------------------------------------ the model
 class Model:
-	def __init__(self, name, page=256):
+	def __init__(self, name, page=512):
 		self.name = name
 		self.page = page
 		self.bones = {}
@@ -172,7 +173,9 @@ class Model:
 		self.paint = None          # f(P, N, part, th, s, ctx) -> rgb
 		self.light = np.array([0.35, 0.85, -0.4])
 		self.light /= np.linalg.norm(self.light)
-		self.bake = (0.45, 0.62)   # baked light: ambient, direct
+		self.bake = (0.3, 0.75)   # baked light: ambient, direct
+		self.gloss = {}            # part prefix -> how wet/shiny (a highlight painted in)
+		self.dark = None
 
 	def bone(self, name, parent, pos):
 		self.bones[name] = (parent, np.asarray(pos, float))
@@ -326,9 +329,22 @@ class Model:
 		N /= np.maximum(np.linalg.norm(N, axis=-1, keepdims=True), 1e-9)
 		TH = (np.broadcast_to(u[None, :], (h, w)) - 0.5) * TAU
 		S = np.broadcast_to(v[:, None], (h, w))
-		col = self.paint(P, N, lf.name, TH, S, self)
+		dk = np.array([r.dark for r in lf.rings])
+		dd = dk[i0] * (1 - ti) + dk[i0 + 1] * ti
+		self.dark = np.broadcast_to(dd[:, None], (h, w))
+		out = self.paint(P, N, lf.name, TH, S, self)
+		if isinstance(out, tuple):
+			col, gl = out
+		else:
+			col = out
+			gl = next((g for k, g in self.gloss.items() if lf.name.startswith(k)), 0.25)
 		lit = self.bake[0] + self.bake[1] * np.clip(N @ self.light, 0, 1) - 0.12 * np.clip(-N[..., 1], 0, 1)
 		col = col * lit[..., None]
+		# a wet highlight, painted in (the light from above, the eye in front)
+		H = self.light + np.array([0.0, 0.0, -1.0])
+		H /= np.linalg.norm(H)
+		spec = np.clip(N @ H, 0, 1) ** 18 * np.asarray(gl)
+		col = col + spec[..., None] * np.array([0.9, 0.85, 0.75])
 		self.tex[y0:y0 + h, x0:x0 + w] = np.clip(col, 0, 1)
 
 	# ------------------------------------------------------------- out

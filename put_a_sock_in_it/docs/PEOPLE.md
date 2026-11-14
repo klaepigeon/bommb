@@ -1,6 +1,6 @@
 # The inhabitants' bodies
 
-Chapter 2's inhabitants are low-poly, PS1-style models, about 1,300–1,600 triangles each, built the way late-90s characters were box-modelled. Each one has its own hand-painted 256×256 texture page. They use the same shader as the rest of the building (`shaders/ps1.gdshader`): no texture filtering, vertices snapped to a coarse screen grid, and the PS1 wobble setting applies to them too.
+Chapter 2's inhabitants are low-poly, PS1-style biomechanical models, about 2,500–9,000 triangles each, with coral growing through all of them as the common thread. They are built the way late-90s characters were box-modelled. Each one has its own hand-painted 256×256 texture page. They use the same shader as the rest of the building (`shaders/ps1.gdshader`): no texture filtering, vertices snapped to a coarse screen grid, and the PS1 wobble setting applies to them too.
 
 Each inhabitant is two files: `assets/people/<name>.glb` (the mesh, skeleton and skin) and `assets/people/<name>.png` (the page). The files are:
 
@@ -36,7 +36,7 @@ xvfb-run godot --rendering-driver opengl3 --path . -s tools/people_view.gd -- mo
 - **Lofts.** A body is a handful of lofts: the trunk, the head, each arm, each leg, the feet, the fingers, the ears, and a skirt and hair if the character has them. A loft is a run of rings (cross-sections) along a path. Each ring is an ellipse with bulges (a nose, a belly, a chin), and is weighted to the bones it moves with. The jaw takes the front of the lower face.
 - **The mouth.** The mouth is the band between two rings: the upper lip's ring is on the head and the lower lip's ring is on the jaw. When the jaw opens, that band stretches, and the dark mouth and teeth painted on it open with it.
 - **Painting.** Each loft gets a rectangle of the page. For every texel, the tool works out where it lands on the body (a 3D point, a normal, and the loft's own around/along coordinates) and asks the character's paint function what's there:
-  - the face is painted in the head's coordinates: eyes, sockets, lids, a drooping mouth with uneven teeth, the nose's shadows, wrinkles, hollow cheeks
+  - the face is painted in the head's coordinates. Faces are masks of bone, not human faces: eye pits, a seam, a slit of teeth. No noses, lips, wrinkles or grimaces. Monstrous features come from what has grown into the bodies, never from exaggerated human features
   - skin details: ribs, collarbones, spots, sores, veins, hair, grime
   - clothes: dresses, aprons, stains, blood
 - **Baked light.** Light from above and in front is baked into the page, then the colours are cut to 15 bits with a 4×4 ordered dither.
