@@ -122,38 +122,13 @@ func _west_wall() -> void:
 
 ## A stained-glass window: lead and colour, lit from nowhere, steady.
 func _window(at: Vector3, size: Vector2, motif: String, rot_y: float) -> void:
-	var img := Image.create(32, 96, false, Image.FORMAT_RGB8)
-	var rng := RandomNumberGenerator.new(); rng.seed = hash(motif)
-	var cols := [Color("5a1010"), Color("1a2a5a"), Color("6a5a1a"), Color("2a4a2a"), Color("4a1a4a")]
-	for y in 96:
-		for x in 32:
-			var cell := Vector2i(x / 6 + (y / 8) % 2, y / 8)
-			rng.seed = hash(cell) ^ hash(motif)
-			var c: Color = cols[rng.randi() % cols.size()]
-			if x % 6 == 0 or y % 8 == 0: c = Color(0.02, 0.02, 0.02)     # the lead
-			img.set_pixel(x, y, c)
-	# the motif, in bone-white glass with a red wound
-	var bone := Color("d8c8a0"); var wound := Color("ff2a1a")
-	match motif:
-		"MANUS":
-			for y in range(40, 70): for x in range(9, 23): img.set_pixel(x, y, bone)
-			for f in 4:
-				for y in range(22, 40): img.set_pixel(10 + f * 4, y, bone); img.set_pixel(11 + f * 4, y, bone)
-			for y in range(50, 58): for x in range(14, 18): img.set_pixel(x, y, wound)
-		"PEDES":
-			for s in [0, 1]:
-				for y in range(30, 80): for x in range(6 + s * 12, 13 + s * 12): img.set_pixel(x, y, bone)
-			for y in range(46, 52): for x in range(4, 28): img.set_pixel(x, y, wound)
-		"LATUS":
-			for y in range(24, 80):
-				for x in range(8, 24):
-					if (x - 16) * (x - 16) * 4 + (y - 52) * (y - 52) < 700: img.set_pixel(x, y, bone)
-			for k in 5: for x in range(9, 23): img.set_pixel(x, 34 + k * 8, Color(0.25, 0.2, 0.15))   # ribs
-			for y in range(52, 62): for x in range(17, 20): img.set_pixel(x, y, wound)
-		_:
-			for y in range(20, 80): img.set_pixel(16, y, bone); img.set_pixel(15, y, bone)
-			for x in range(8, 24): img.set_pixel(x, 36, bone); img.set_pixel(x, 37, bone)
-	var tex := ImageTexture.create_from_image(img)
+	var img: Image = _glass_cache.get(motif, null)
+	if img == null:
+		img = _glass(motif)
+		_glass_cache[motif] = img
+	var tex: ImageTexture = _glass_tex.get(motif, null)
+	if tex == null:
+		tex = ImageTexture.create_from_image(img); _glass_tex[motif] = tex
 	var m := StandardMaterial3D.new(); m.albedo_texture = tex; m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED; m.albedo_color = Color(1.4, 1.3, 1.25)
 	var q := MeshInstance3D.new(); var qm := QuadMesh.new(); qm.size = size; q.mesh = qm; q.material_override = m
@@ -162,6 +137,90 @@ func _window(at: Vector3, size: Vector2, motif: String, rot_y: float) -> void:
 	if motif != "":
 		var l := Build.lamp(world, at + Basis(Vector3.UP, rot_y) * Vector3(0, -2.0, -1.6), Color("b0603a"), 0.8, 9.0)
 		l.omni_attenuation = 1.3
+
+var _glass_cache := {}
+var _glass_tex := {}
+
+## The glass for a window (64 x 192): a lancet with a pointed head, cells of dark colour in lead,
+## and the motif in bone-white glass with its wound in red:
+##   MANUS  a hand, the fingers spread, the nail's wound in the palm, a run of blood from it
+##   PEDES  the feet, one over the other, one nail through both
+##   LATUS  the ribs, and the spear's wound under them
+##   ""     (the nave's) a figure with its arms out on a cross, haloed, red at the hands
+func _glass(motif: String) -> Image:
+	var W := 64; var H := 192
+	var img := Image.create(W, H, false, Image.FORMAT_RGB8)
+	var cols := [Color("5a1010"), Color("1a2a5a"), Color("6a5a1a"), Color("2a4a2a"), Color("4a1a4a"), Color("3a1a10")]
+	var rng := RandomNumberGenerator.new()
+	var bone := Color("e0d0a8"); var wound := Color("ff2a1a"); var lead := Color(0.02, 0.02, 0.02); var gold := Color("d8a040")
+	for y in H:
+		for x in W:
+			var cell := Vector2i((x + (y / 12) % 2 * 5) / 10, y / 12)
+			rng.seed = hash(cell) ^ hash(motif)
+			var c: Color = cols[rng.randi() % cols.size()]
+			if (x + (y / 12) % 2 * 5) % 10 == 0 or y % 12 == 0: c = lead
+			var p := Vector2(x, y)
+			var shape := _motif(motif, p)
+			if shape == 1: c = bone
+			elif shape == 2: c = wound
+			elif shape == 3: c = gold
+			elif shape == 4: c = lead
+			# the lancet's pointed head: two arcs meeting at the top
+			if y < 40:
+				var dl := p.distance_to(Vector2(W, 40)); var dr := p.distance_to(Vector2(0, 40))
+				if dl > W or dr > W: c = Color(0.03, 0.025, 0.02)
+			if x < 2 or x > W - 3 or y > H - 3: c = lead
+			img.set_pixel(x, y, c)
+	return img
+
+func _cap(p: Vector2, a: Vector2, b: Vector2, r: float) -> bool:
+	var ab := b - a
+	var t := clampf((p - a).dot(ab) / ab.length_squared(), 0.0, 1.0)
+	return p.distance_to(a + ab * t) < r
+
+func _ell(p: Vector2, c: Vector2, r: Vector2) -> float:
+	var q := (p - c) / r
+	return q.length()
+
+## 0 nothing, 1 bone glass, 2 the wound, 3 gold, 4 lead outline
+func _motif(motif: String, p: Vector2) -> int:
+	match motif:
+		"MANUS":
+			if _ell(p, Vector2(32, 112), Vector2(4, 4)) < 1.0: return 2
+			if _cap(p, Vector2(32, 116), Vector2(33, 160), 1.6) and p.y > 116: return 2            # the run of blood
+			var hand := _ell(p, Vector2(32, 112), Vector2(14, 19)) < 1.0
+			for f in 4:
+				var fx := 22.0 + f * 6.6
+				if _cap(p, Vector2(fx, 100), Vector2(fx + (f - 1.5) * 2.0, 58 + absf(f - 1.5) * 8.0), 3.0): hand = true
+			if _cap(p, Vector2(20, 116), Vector2(9, 96), 3.2): hand = true
+			if _cap(p, Vector2(28, 130), Vector2(28, 160), 7.0) or _cap(p, Vector2(36, 130), Vector2(36, 160), 7.0): hand = true   # the wrist
+			if hand: return 1
+		"PEDES":
+			if _ell(p, Vector2(32, 118), Vector2(4, 4)) < 1.0: return 2
+			if _cap(p, Vector2(14, 118), Vector2(50, 118), 2.0): return 4                                # the nail
+			if _cap(p, Vector2(32, 122), Vector2(31, 165), 1.6) and p.y > 122: return 2
+			var f1 := _ell(p, Vector2(26, 110), Vector2(9, 34)) < 1.0
+			var f2 := _ell(p, Vector2(38, 116), Vector2(9, 34)) < 1.0
+			for t in 4:
+				if _ell(p, Vector2(22 + t * 3, 77 + absf(t - 1.5) * 2.0), Vector2(2, 3)) < 1.0: f1 = true
+				if _ell(p, Vector2(34 + t * 3, 83 + absf(t - 1.5) * 2.0), Vector2(2, 3)) < 1.0: f2 = true
+			if f1 or f2: return 1
+		"LATUS":
+			if _ell(p, Vector2(42, 128), Vector2(3, 10)) < 1.0: return 2
+			if _cap(p, Vector2(43, 138), Vector2(44, 170), 1.6) and p.y > 138: return 2
+			if _cap(p, Vector2(32, 64), Vector2(32, 132), 2.6): return 1                                 # the sternum
+			for k in 7:
+				var c := Vector2(32, 68 + k * 9)
+				var e := _ell(p, c, Vector2(24 - k * 0.8, 10))
+				if absf(e - 1.0) < 0.12 and p.y > c.y - 2: return 1
+		"":
+			if absf(_ell(p, Vector2(32, 52), Vector2(12, 12)) - 1.0) < 0.12: return 3                    # the halo
+			if _ell(p, Vector2(32, 52), Vector2(6, 7)) < 1.0: return 1
+			if _cap(p, Vector2(10, 74), Vector2(54, 74), 2.6): return 1                                  # the arms, out
+			if _ell(p, Vector2(10, 74), Vector2(3, 3)) < 1.0 or _ell(p, Vector2(54, 74), Vector2(3, 3)) < 1.0: return 2
+			var t := (p.y - 62.0) / 100.0
+			if t > 0.0 and t < 1.0 and absf(p.x - 32.0) < 5.0 + t * 9.0: return 1                        # the robe
+	return 0
 
 # ------------------------------------------------------------------ the nave
 func _nave() -> void:
@@ -181,7 +240,7 @@ func _nave() -> void:
 		# a light hanging in each bay, steady: candles in an iron ring
 		var l := Build.lamp(world, Vector3(0, 5.0, z - 3.0), Color("ffb070"), 3.2, 11.0)
 		l.omni_attenuation = 0.9
-		var up := Build.lamp(world, Vector3(0, HANG - 2.2, z - 3.0), Color("c87a6a"), 1.8, 8.0)       # up in the vault: them
+		var up := Build.lamp(world, Vector3(0, HANG - 2.2, z - 3.0), Color("d8906a"), 2.8, 9.0)       # up in the vault: them
 		up.omni_attenuation = 0.9
 		_box(Vector3(0, 5.1, z - 3.0), Vector3(1.4, 0.05, 1.4), Tex.mat("gunmetal", 2.0), false)
 		_box(Vector3(0, 11.05, z - 3.0), Vector3(0.03, 11.9, 0.03), Tex.mat("black"), false)

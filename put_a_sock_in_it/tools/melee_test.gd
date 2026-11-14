@@ -74,8 +74,10 @@ func _initialize() -> void:
 	var leg = P.held
 	P.set_view(P.get_yaw() + PI, 0.0)          # (away from the wall, into the hall)
 	await _wait(0.2)
+	var from: Vector3 = leg.global_position
 	game.level.set_cutscene(false); _press("throw", true); await _wait(0.2); _press("throw", false); await _wait(0.3)
-	_check(P.held == null and is_instance_valid(leg) and leg.linear_velocity.length() > 0.5, "'throw' throws it")
+	# (how far it went, not how fast it's still going: it can have landed already)
+	_check(P.held == null and is_instance_valid(leg) and leg.global_position.distance_to(from) > 0.6, "'throw' throws it (%.2f m)" % (leg.global_position.distance_to(from) if is_instance_valid(leg) else 0.0))
 	# ---- pistol: drawn it shoots, holstered he punches
 	game.pistol.have = true; game.pistol.drawn = true; game.pistol.mag = 4
 	await _wait(0.6)

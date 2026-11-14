@@ -556,7 +556,7 @@ def super_():
 
 def hunter():
 	p = dict(face_style="maw", maw_y=0.42, maw_r=0.17, belly_plates=6, back_n=7, height=2.05, girth=1.3, shoulders=1.35, chest=1.2, waist=0.9, hips=0.95, arm=1.45, upper=1.25, fore=1.2, thigh=1.05, calf=1.0,
-		head=0.85, headw=1.0, neck=0.7, neckw=1.3, mouth=1.9, lip=0.12, teeth=18, teeth_col=C("c8b888"), eyes="many", pits=True, eye_count=8, eye_size=0.5,
+		head=0.95, headw=1.05, neck=0.75, neckw=0.95, mouth=1.9, lip=0.12, teeth=18, teeth_col=C("c8b888"), eyes="many", pits=True, eye_count=8, eye_size=0.5,
 		nose=0.0, ears=0.0, fingers=1.7, hand=1.4, stoop=0.6, jawf=0.8, seed=4, mottle=0.2, lip_col=C("2a0c0a"), lipless=True, sockets=0.9, brain=True,
 		shell=C("4a4440"))
 
