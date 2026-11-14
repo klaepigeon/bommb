@@ -390,3 +390,132 @@ def temples(M, L, r=0.01):
 		pa = port(M, a, (s * 1.0, 0.2, -0.3), "head", r * 1.5, 0.025)
 		b = L["neck"] + F(s * 0.04, 0.02, -0.04)
 		hose(M, pa, b, ("head", "neck"), r, 0.07, (s * 1.0, 0.0, 0.3), name="hose_temple%s" % "lr"[s > 0])
+
+
+# ------------------------------------------------------------------ faces
+def on_face(M, L, a, y, out=0.0):
+	"""A point on the head's surface: a = angle round from the front (radians, + toward the
+	body's left), y = height in head-sizes; pushed `out` along the surface normal. -> (point, normal)."""
+	hs, head = L["hs"], L["head"]
+	lf = next(l for l in M.lofts if l.name == "head")
+	G, th, fr = lf.grid()
+	n = G.shape[1] - 1
+	ys = np.array([(r.c[1] - head[1]) / hs for r in lf.rings])
+	i = int(np.clip(np.searchsorted(ys, y) - 1, 0, len(ys) - 2))
+	t = float(np.clip((y - ys[i]) / max(1e-6, ys[i + 1] - ys[i]), 0, 1))
+	fj = (a / (2 * np.pi) + 0.5) * n
+	j = int(np.clip(np.floor(fj), 0, n - 1))
+	u = fj - j
+	p0 = G[i, j] * (1 - u) + G[i, j + 1] * u
+	p1 = G[i + 1, j] * (1 - u) + G[i + 1, j + 1] * u
+	p = p0 * (1 - t) + p1 * t
+	c = lf.rings[i].c * (1 - t) + lf.rings[i + 1].c * t
+	nrm = p - c
+	nrm[1] *= 0.3
+	nrm /= max(1e-6, np.linalg.norm(nrm))
+	return p + nrm * out, nrm
+
+
+def fang(M, base, d, bone, length=0.03, r=0.006, name="tooth"):
+	"""A tooth: a curved cone."""
+	base = np.asarray(base, float)
+	d = np.asarray(d, float)
+	d /= np.linalg.norm(d)
+	bend = np.cross(d, [0, 1, 0]) if abs(d[1]) < 0.9 else np.array([1.0, 0, 0])
+	rs = [Ring(base - d * r, r, w={bone: 1}), Ring(base + d * length * 0.5 + bend * length * 0.05, r * 0.6, w={bone: 1}),
+		Ring(base + d * length, r * 0.15, w={bone: 1})]
+	M.add(Loft("%s_%d" % (name, len(M.lofts)), rs, sides=4, cap_start=False, cap_end=True, front_hint=(0, 1, 0) if abs(d[1]) < 0.9 else (0, 0, -1), texel=0.6))
+
+
+def mandibles(M, L, length=0.12, r=0.014, spread=0.3, teeth=5, rng=None):
+	"""The jaw split in two: a curved bone hook hanging from each side of the mouth, toothed inside."""
+	rng = rng if rng is not None else np.random.default_rng(4)
+	hs = L["hs"]
+	for s in (-1, 1):
+		root, nrm = on_face(M, L, s * 0.45, 0.3, -0.01)
+		pts = [root]
+		sx = -s                      # (+angle is the body's left, -x)
+		for t in np.linspace(0.25, 1.0, 4):
+			# out from the face, down, then hooking back in: a pincer
+			pts.append(root + F(sx * spread * length * (np.sin(t * np.pi) - 0.45 * t), -length * t, length * 0.45 * np.sin(t * 2.2)))
+		M.add(Loft("mandible_%s" % "lr"[s > 0], [Ring(p_, r * (1 - 0.6 * j / 4), w={"jaw": 1}) for j, p_ in enumerate(pts)], sides=5, front_hint=(0, 0, -1)))
+		for k in range(teeth):
+			t = (k + 0.5) / teeth
+			idx = t * (len(pts) - 1)
+			i0 = int(idx)
+			b = pts[i0] + (pts[min(i0 + 1, len(pts) - 1)] - pts[i0]) * (idx - i0)
+			fang(M, b, F(s * 1.0, 0.2, 0.3), "jaw", length * 0.18 * rng.uniform(0.7, 1.2), r * 0.35)
+
+
+def maw(M, L, y=0.38, radius=0.16, teeth=14, rng=None):
+	"""A round mouth: a raised ring of gristle on the face, fangs all round it pointing in."""
+	rng = rng if rng is not None else np.random.default_rng(5)
+	hs = L["hs"]
+	pts = []
+	for k in range(17):
+		a = k / 16 * 2 * np.pi
+		pa = np.sin(a) * radius * 2.2
+		py = y + np.cos(a) * radius
+		p_, n_ = on_face(M, L, pa, py, 0.004)
+		pts.append((p_, n_, a))
+	rs = [Ring(p_, hs * 0.035, w=({"jaw": 1} if np.cos(a) < 0 else {"head": 1})) for p_, n_, a in pts]
+	M.add(Loft("mawring", rs, sides=6, cap_start=False, cap_end=False, front_hint=(0, 0, -1)))
+	for k in range(teeth):
+		p_, n_, a = pts[int(k / teeth * 16)]
+		centre, _ = on_face(M, L, 0.0, y, -0.01)
+		d = (centre - p_)
+		d = d / max(1e-6, np.linalg.norm(d)) + n_ * 0.4
+		fang(M, p_, d, "jaw" if np.cos(a) < 0 else "head", hs * radius * 0.9 * rng.uniform(0.7, 1.2), hs * 0.018)
+
+
+def cage(M, L, n=5, y0=0.3, y1=0.85, out=0.035):
+	"""Bars of bone curved across the face, standing off it."""
+	hs = L["hs"]
+	for k in range(n):
+		y = y0 + (y1 - y0) * k / max(1, n - 1)
+		pts = [on_face(M, L, a, y, out * hs / 0.2 * 0.2)[0] for a in np.linspace(-1.1, 1.1, 6)]
+		M.add(Loft("cage_%d" % k, [Ring(p_, hs * 0.03, w={"head": 1}) for p_ in pts], sides=4, front_hint=(0, 1, 0)))
+	for a in (-0.4, 0.4):
+		pts = [on_face(M, L, a, y, out * 0.9)[0] for y in np.linspace(y0 - 0.05, y1 + 0.05, 5)]
+		M.add(Loft("cage_v%d" % int(a * 10), [Ring(p_, hs * 0.025, w={"head": 1}) for p_ in pts], sides=4, front_hint=(0, 0, -1)))
+
+
+def stitches(M, L, y=0.63, half=0.65, n=7):
+	"""Heavy bars stapled across a seam."""
+	hs = L["hs"]
+	for k in range(n):
+		a = -half + 2 * half * (k + 0.5) / n
+		p0 = on_face(M, L, a, y + 0.07, 0.002)[0]
+		p1 = on_face(M, L, a + 0.03, y - 0.07, 0.002)[0]
+		M.add(Loft("stitch_%d" % k, [Ring(p0, hs * 0.016, w={"head": 1}), Ring((p0 + p1) * 0.5 + (p0 - L["head"]) * 0.0, hs * 0.02, w={"head": 1}), Ring(p1, hs * 0.016, w={"head": 1})], sides=4))
+
+
+def split_face(M, L, teeth=9, rng=None):
+	"""The mask splits down the middle: two raised lips of bone either side of a dark seam from the
+	crown to the chin, small teeth along its edges."""
+	rng = rng if rng is not None else np.random.default_rng(6)
+	hs = L["hs"]
+	for s in (-1, 1):
+		pts = [on_face(M, L, s * 0.09, y, 0.002)[0] for y in np.linspace(0.12, 0.98, 8)]
+		M.add(Loft("seamlip_%s" % "lr"[s > 0], [Ring(p_, hs * 0.03, w=({"jaw": 1} if (p_[1] - L["head"][1]) / hs < 0.3 else {"head": 1})) for p_ in pts], sides=5, front_hint=(0, 0, -1)))
+		for k in range(teeth):
+			y = 0.2 + 0.7 * k / teeth
+			p_, n_ = on_face(M, L, s * 0.08, y, 0.0)
+			fang(M, p_, F(s * 1.0, -0.2, 0.6), "jaw" if y < 0.3 else "head", hs * 0.09 * rng.uniform(0.6, 1.2), hs * 0.018)
+
+
+def mouth_coral(M, L, rng, n=7, length=0.08):
+	"""Tube coral pouring out of the mouth."""
+	for k in range(n):
+		a = rng.uniform(-0.35, 0.35)
+		p_, n_ = on_face(M, L, a, 0.32 + rng.uniform(-0.03, 0.03), -0.01)
+		d = n_ + np.array([rng.normal(0, 0.3), rng.uniform(-0.8, 0.1), rng.normal(0, 0.3)])
+		coral(M, p_, d, "jaw", length * rng.uniform(0.6, 1.3), 0.012, 2, 0.5, rng)
+
+
+def socket_coral(M, L, rng, ey=0.63, ex=0.32):
+	"""Coral breaking out of where the eyes were."""
+	for s in (-1, 1):
+		p_, n_ = on_face(M, L, s * ex, ey, -0.01)
+		for k in range(3):
+			coral(M, p_, n_ + rng.normal(0, 0.35, 3), "head", 0.05 * rng.uniform(0.7, 1.3), 0.009, 2, 0.6, rng)

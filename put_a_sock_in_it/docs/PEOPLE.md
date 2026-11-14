@@ -60,6 +60,21 @@ xvfb-run godot --rendering-driver opengl3 --path . -s tools/people_view.gd -- mo
 | Hanging hoses | Hoses hanging from the skull instead of hair | The laundress |
 | Coral | Staghorn branches with bulbous orange tips, knobbed crusts, fan coral where the listener's ears were, brain-coral grooves on skulls | Everyone: coral is the thread that ties every design together |
 
+## Faces
+
+Every face is an inhuman mask, never an exaggerated human face. Each one is its own horror, built in geometry and paint (`biomech.py`: `on_face` places things on the head's surface):
+
+| Who | Face |
+|---|---|
+| The super | The mask is split from crown to chin: two raised lips of gristle either side of a wet red seam, small teeth along its edges, and bone pincers hooking in from either side of the mouth. |
+| The hunter | A round lamprey maw: a raised ring of gristle with fangs all round it pointing in, painted rings of teeth going down, and eye pits scattered above. |
+| The listener | No face: the front of its head is covered in pores rimmed in red, with coral nubs breaking out among them. |
+| The laundress | A cage of bone bars standing off her face, with eye pits behind. |
+| The caretaker | Her eyes are stapled shut with heavy bars, and coral breaks out of the sockets. |
+| The cook | The jaw split into two hooked pincers, toothed on the inside. |
+| The rearranger | Tube coral pours out of its mouth. |
+| The crawlers | A vertical mouth from chin to crown, with fangs along both edges. |
+
 ## The rig
 
 The bones are FleshBody's joints:
