@@ -56,7 +56,7 @@ xvfb-run godot --rendering-driver opengl3 --path . -s tools/people_view.gd -- mo
 | Rib hoops | The ribs standing outside the body | The super, the crawlers, the hunter, the listener, the cook |
 | Plates | Segmented plates down the back and over the belly | Back plates on everyone without a skirt; belly plates on the super, the hunter, the listener, the cook, the crawlers |
 | Long skulls | The skull drawn out backward | Most of the cast |
-| Shells | Segmented skirts and hoods | The laundress, the caretaker, the rearranger |
+| Clothes | Skirts as hanging cloth, with folds that deepen toward a torn, filthy hem (bloodied on the caretaker and STIGMATA). The dress is painted up over the body and down the arms to the elbow. The caretaker's hood is a segmented shell. | The laundress, the caretaker, the rearranger; STIGMATA's cassock (torn open to the waist) |
 | Hanging hoses | Hoses hanging from the skull instead of hair | The laundress |
 | Coral | Staghorn branches with bulbous orange tips, knobbed crusts, fan coral where the listener's ears were, brain-coral grooves on skulls | Everyone: coral is the thread that ties every design together |
 

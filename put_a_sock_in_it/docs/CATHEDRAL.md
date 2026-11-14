@@ -10,7 +10,7 @@ The end of Chapter 2. When 27's door lets go, Kurt goes through it (`scripts/lev
 |---|---|
 | **The narthex** | The west wall reaches up to the vault, with the flat's doorway in the bottom of it. Above the doorway are three lancet windows: MANUS (a hand), PEDES (feet) and LATUS (a side). A bell rope hangs under each. Over the door it says *WHOSOEVER TURNETH HIS BACK UPON THE ALTAR SHALL COME UNTO IT*. There's a font (with something red in it) and a lectern. |
 | **The nave** | Ribbed columns like ducting, with coral up their feet, and pews both sides of a red runner. A ring of candles hangs in every bay, and candles sit in sconces on the columns. Stained glass is lit from nowhere. Nothing flickers. |
-| **The vault** | The same pews hang upside down from it, about 12 m up, with people sitting in them: the building's own (the caretaker, the laundress, a crawler, the rearranger). Their heads turn after Kurt. |
+| **The vault** | The same pews hang upside down from it, about 12 m up, with people sitting in them: the building's own (the caretaker, the laundress, a crawler, the rearranger). Their heads turn after Kurt. The first time he walks under them, Socko says quietly: "Kurt. Don't look up." Every 16 to 32 seconds one of them lets go of a hymn book, which falls and stays where it lands; the newest 14 stay. |
 | **The apse** | A dais of three steps, the cross and a rose window. STIGMATA is on the cross, his feet and his right hand nailed. His free left hand holds out the last nail, and the hammer lies at his feet. Behind the altar is a flat's padded front door marked 27. |
 
 ## The loop, and the two ways through

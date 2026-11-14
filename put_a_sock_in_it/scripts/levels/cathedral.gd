@@ -95,6 +95,10 @@ func _hallway() -> void:
 	_box(Vector3(0.6, 1.6, 1.4), Vector3(0.04, 0.5, 0.35), Tex.mat("glass", 1.0, {"tint": Color(0.5, 0.5, 0.55), "rough": 0.1}), false)
 	Build.lamp(world, Vector3(0, 2.3, 1.8), Color("ffc27a"), 0.6, 4.0)
 	zone(Vector3(0, 1, -1.0), Vector3(2.0, 2.0, 1.0), func(): if not Game.flag("c27_entered"): Game.set_flag("c27_entered"); Dialogue.play("c27_enter"))
+	# under the first of them: Socko, quietly
+	zone(Vector3(0, 1, -10.0), Vector3(8.0, 2.0, 1.0), func(): if not Game.flag("c27_look_up") and not Dialogue.busy: Game.set_flag("c27_look_up"); Dialogue.play("c27_look_up"))
+	# and now and then one of them up there lets go of a hymn book
+	ambient([16.0, 32.0], _hymnal, 22.0)
 
 # ------------------------------------------------------------------ the west wall, the narthex
 func _west_wall() -> void:
@@ -430,6 +434,28 @@ func _process(delta: float) -> void:
 		fb.pose["neck"] = Vector3(0.3, clampf(-yaw * 0.4, -0.5, 0.5), 0.0)
 		fb.pose["hip_l"] = Vector3(1.4, 0, 0); fb.pose["hip_r"] = Vector3(1.4, 0, 0)
 		fb.pose["kn_l"] = Vector3(-1.5, 0, 0); fb.pose["kn_r"] = Vector3(-1.5, 0, 0)
+
+var _hymnals: Array = []
+
+## A hymn book falls from the pews hanging in the vault and lands near him (they stay where they
+## land: the floor fills up the longer he's in here).
+func _hymnal() -> void:
+	if cutscene or not player: return
+	var pz := player.global_position.z
+	if pz > -7.0 or pz < NAVE_END + 2.0: return
+	var at := Vector3(player.global_position.x + randf_range(-1.5, 1.5), HANG - 0.6, pz - randf_range(1.0, 3.0))
+	at.x = clampf(at.x, -3.8, 3.8)
+	var b := Build.box(world, at, Vector3(0.14, 0.04, 0.2), Tex.mat("cloth_red", 2.0, {"tint": Color(0.35, 0.25, 0.2)}), false)
+	b.rotation = Vector3(randf() * TAU, randf() * TAU, randf() * TAU)
+	Sfx.play_at("paper", at, -10.0, 0.8, 20.0)
+	var tw := create_tween()
+	tw.tween_property(b, "position:y", 0.03, 1.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(b, "rotation", Vector3(0, randf() * TAU, 0), 1.15)
+	tw.tween_callback(func(): Sfx.play_at("thud", Vector3(at.x, 0.1, at.z), -4.0, 1.6, 22.0))
+	_hymnals.append(b)
+	if _hymnals.size() > 14:
+		var old = _hymnals.pop_front()
+		if is_instance_valid(old): old.queue_free()
 
 # ------------------------------------------------------------------ the loop
 func facing_altar() -> bool:

@@ -18,6 +18,9 @@ from lowpoly import C, F, Loft, Model, Ring, cells, fbm, mix, smoothstep, vnoise
 OUT = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "people")
 
 
+FOLDS = 10
+
+
 def W(**k):
 	return k
 
@@ -183,12 +186,16 @@ def figure(M, p):
 				side = "l" if np.sin(th) > 0 else "r"     # (+angle is the body's left)
 				return {"hips": 1 - t, "hip_" + side: t}
 			return f
+		# cloth, hanging: folds that deepen toward the hem (FOLDS of them round it), the hem flaring
 		rs = []
-		for i, t in enumerate(np.linspace(0, 1, 5)):
+		rng_s = np.random.default_rng(int(h * 100))
+		phase = rng_s.uniform(0, 1, FOLDS)
+		for i, t in enumerate(np.linspace(0, 1, 7)):
 			y = hips[1] + 0.08 - t * leg * ln
-			rx = (0.165 + t * 0.08) * hw * gw * k
-			rs.append(Ring(F(0, y, 0), rx, rx * 0.8, w=sw_(t * 0.7)))
-		M.add(Loft("skirt", rs, sides=12, cap_start=False, cap_end=False, texel=0.8))
+			rx = (0.165 + t * t * 0.1) * hw * gw * k
+			folds = [((j + phase[j] * 0.4) / FOLDS * 2 * np.pi - np.pi, 0.16, rx * (0.02 + 0.16 * t) * (1 if j % 2 else -0.7)) for j in range(FOLDS)]
+			rs.append(Ring(F(0, y, -0.01 * t), rx, rx * 0.82, w=sw_(t * 0.7), bumps=folds, minv=0.02))
+		M.add(Loft("skirt", rs, sides=24, cap_start=False, cap_end=False, texel=0.8))
 	# --- long hair, hanging behind
 	if p.get("hair"):
 		hl = p["hair"]
@@ -469,7 +476,17 @@ def bio(name, p, skin, build=None, extra=None, seed=0, gloss=0.5):
 			col = B.BONE * (0.85 + 0.15 * vnoise(P, 25.0, seed)[..., None])
 			col = B.grooves(M_, col, C("2a1a12"), 0.8)
 			return B.grime(P, col, 0.3, seed), 0.35
-		if part in ("skirt", "hair"):
+		if part == "skirt":
+			cl = p.get("cloth", p.get("shell", B.BONE * 0.8))
+			col = cl * (0.85 + 0.15 * vnoise(P, 60.0, seed)[..., None])
+			fold = 0.5 + 0.5 * np.cos(th * FOLDS)
+			col = col * (0.6 + 0.4 * fold)[..., None]                                    # the folds' shadow
+			col = mix(col, fbm(P, 5.0, 3, seed + 5) > 0.3, C("2a2018"), 0.45)            # stains
+			hem = s > 0.86 + 0.08 * vnoise(P, 25.0, seed + 6)
+			col = mix(col, hem, C("120c0a"), 0.8)                                          # the hem: torn, filthy
+			col = mix(col, (s > 0.6) & (fbm(P * np.array([3.0, 0.4, 3.0]), 9.0, 2, seed + 7) > 0.25), C("3a0806"), p.get("hem_blood", 0.0))
+			return col, 0.1
+		if part == "hair":
 			col = p.get("shell", B.BONE * 0.8) * (0.85 + 0.15 * vnoise(P, 25.0, seed)[..., None])
 			col = B.grooves(M_, col, C("1a100c"), 0.85)
 			col = B.grime(P, col, 0.4, seed)
@@ -492,6 +509,14 @@ def bio(name, p, skin, build=None, extra=None, seed=0, gloss=0.5):
 			ch, sp = L["chest"][1], L["spine"][1]
 			cav = (y > sp + 0.1) & (y < ch + 0.2) & (-N[..., 2] > -0.2)
 			col = mix(col, cav, B.CAVITY, 0.55)
+		# the dressed ones: the dress up over the body and down the arms to the elbow
+		if p.get("cloth") is not None and p.get("bodice", True):
+			if part == "trunk" or (part.startswith("arm") and True):
+				cm = (y < L["neck"][1] - 0.02) if part == "trunk" else (y > L["el_l"][1] - 0.02)
+				cl = p["cloth"] * (0.85 + 0.15 * vnoise(P, 60.0, seed)[..., None])
+				cl = mix(cl, fbm(P, 5.0, 3, seed + 5) > 0.3, C("2a2018"), 0.45)
+				cl = mix(cl, np.abs(np.sin(P[..., 0] * 70.0 + P[..., 1] * 5.0)) < 0.12, p["cloth"] * 0.55, 0.6)   # its creases
+				col = np.where(cm[..., None], cl, col)
 		col = B.veins(P, col, p.get("veins", 0.5), seed)
 		col = B.grime(P, col, 0.3, seed)
 		col = B.seep(P, N, col, 0.35, seed + 1)
@@ -556,7 +581,7 @@ def super_():
 
 def hunter():
 	p = dict(face_style="maw", maw_y=0.42, maw_r=0.17, belly_plates=6, back_n=7, height=2.05, girth=1.3, shoulders=1.35, chest=1.2, waist=0.9, hips=0.95, arm=1.45, upper=1.25, fore=1.2, thigh=1.05, calf=1.0,
-		head=0.95, headw=1.05, neck=0.75, neckw=0.95, mouth=1.9, lip=0.12, teeth=18, teeth_col=C("c8b888"), eyes="many", pits=True, eye_count=8, eye_size=0.5,
+		head=0.95, headw=1.05, neck=0.4, neckw=0.95, mouth=1.9, lip=0.12, teeth=18, teeth_col=C("c8b888"), eyes="many", pits=True, eye_count=8, eye_size=0.5,
 		nose=0.0, ears=0.0, fingers=1.7, hand=1.4, stoop=0.6, jawf=0.8, seed=4, mottle=0.2, lip_col=C("2a0c0a"), lipless=True, sockets=0.9, brain=True,
 		shell=C("4a4440"))
 
@@ -601,12 +626,9 @@ def listener():
 
 def laundress():
 	p = dict(height=1.98, girth=0.78, shoulders=0.85, waist=0.72, arm=1.35, upper=0.65, fore=0.65, neck=1.6, neckw=0.6, head=0.9, eyes="pits", eye_size=0.8,
-		mouth=0.7, fingers=1.6, skirt=0.88, seed=2, lip_col=C("3a2420"), stoop=0.3, shell=C("5e5048"), ears=0.0, sunken=0.02)
+		mouth=0.7, fingers=1.6, skirt=0.88, cloth=C("4e4650"), seed=2, lip_col=C("3a2420"), stoop=0.3, shell=C("5e5048"), ears=0.0, sunken=0.02)
 
 	def build(M, L, p, rng):
-		for lf in M.lofts:
-			if lf.name == "skirt":
-				B.ribbify(lf, 18.0, 0.12)
 		B.tendrils(M, L, 12, 0.6, 0.011, rng)
 		B.cable_limbs(M, rng, 2, 0.005, arms_only=True)
 		B.spine_ridge(M, L, 0.015, False, 0.5)
@@ -622,12 +644,12 @@ def laundress():
 
 
 def caretaker():
-	p = dict(height=1.62, girth=0.95, stoop=0.7, eyes="sewn", mouth=0.6, skirt=0.92, hair=0.35, seed=5, lip_col=C("4a2a28"), fingers=1.2,
+	p = dict(hem_blood=0.6, cloth=C("2a1c20"), height=1.62, girth=0.95, stoop=0.7, eyes="sewn", mouth=0.6, skirt=0.92, hair=0.35, seed=5, lip_col=C("4a2a28"), fingers=1.2,
 		shell=C("4a3a34"))
 
 	def build(M, L, p, rng):
 		for lf in M.lofts:
-			if lf.name in ("skirt", "hair"):
+			if lf.name == "hair":
 				B.ribbify(lf, 22.0, 0.14)
 		for i in range(4):
 			B.coral(M, L["chest"] + F(rng.uniform(-0.1, 0.1), rng.uniform(0.0, 0.18), -0.09), (rng.uniform(-0.6, 0.6), 0.8, 1.0), "chest", 0.2, 0.03, 3, 0.6, rng)
@@ -667,14 +689,11 @@ def cook():
 
 
 def rearranger():
-	p = dict(height=1.5, girth=1.3, belly=0.5, waist=1.15, extra_joint=True, skirt=0.7, seed=8, mouth=1.0, lip_col=C("4a2a24"), stoop=0.45,
+	p = dict(height=1.5, girth=1.3, belly=0.5, waist=1.15, extra_joint=True, skirt=0.7, cloth=C("454a5e"), seed=8, mouth=1.0, lip_col=C("4a2a24"), stoop=0.45,
 		shell=C("5a4e44"), eyes="pits", eye_size=0.6, ears=0.0)
 
 	def build(M, L, p, rng):
 		B.cable_limbs(M, rng)
-		for lf in M.lofts:
-			if lf.name == "skirt":
-				B.ribbify(lf, 16.0, 0.12)
 		for i in range(6):
 			B.coral(M, L["chest"] + F(rng.uniform(-0.15, 0.15), rng.uniform(-0.1, 0.2), -0.12), (rng.uniform(-0.7, 0.7), rng.uniform(0.2, 1.0), 1.0), "chest" if i % 2 else "spine", 0.22, 0.028, 3, 0.6, rng)
 		B.crust(M, L["spine"] + F(0, 0.1, -0.12), (0, 0.3, 1.0), "spine", rng, 10, 0.1, 0.018)
@@ -710,13 +729,10 @@ def stigmata():
 	both palms and both feet, the spear wound in the side. The mask has a mouth: he talks."""
 	p = dict(face_style="slit", height=1.92, girth=0.8, shoulders=1.0, chest=0.88, waist=0.66, hips=0.82, sunken=0.035, arm=1.12, upper=0.66,
 		fore=0.66, elbows=1.25, knees=1.2, thigh=0.7, calf=0.7, neck=1.15, neckw=0.7, head=1.05, headw=0.88, jaww=0.8, mouth=0.8, lip=0.02,
-		eyes="pits", eye_size=0.75, sockets=0.95, fingers=1.4, hand=1.05, skirt=1.0, shell=C("1c181c"), seed=27, mottle=0.2,
+		eyes="pits", eye_size=0.75, sockets=0.95, fingers=1.4, hand=1.05, skirt=1.0, shell=C("1c181c"), cloth=C("1a1618"), hem_blood=0.5, bodice=False, seed=27, mottle=0.2,
 		teeth=0, crest=False, back_plates=False, face_hoses=0, ears=0.0)
 
 	def build(M, L, p, rng):
-		for lf in M.lofts:
-			if lf.name == "skirt":
-				B.ribbify(lf, 12.0, 0.06)            # the cassock's folds
 		B.spine_ridge(M, L, 0.014, False, 0.45)
 		B.rib_hoops(M, L, 5, 0.006, 1.12)
 		# the crown: coral, grown into the skull all the way round

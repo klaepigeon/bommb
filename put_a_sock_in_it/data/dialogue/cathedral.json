@@ -9,6 +9,10 @@
 		{"who": "socko", "text": "It's a big flat.", "tone": "quiet", "socko": {"emotion": "uncanny", "look": "ahead"}},
 		{"who": "socko", "text": "Go on. Up the middle. Somebody's waiting.", "socko": {"emotion": "artificial", "look": "ahead"}}
 	],
+	"c27_look_up": [
+		{"who": "socko", "text": "Kurt.", "tone": "quiet", "socko": {"emotion": "still", "look": "ahead"}},
+		{"who": "socko", "text": "Don't look up.", "tone": "quiet"}
+	],
 	"c27_loop_1": [
 		{"who": "kurt", "text": "We've passed that pew.", "tone": "quiet"},
 		{"who": "socko", "text": "No we haven't.", "socko": {"emotion": "neutral", "look": "ahead"}}
