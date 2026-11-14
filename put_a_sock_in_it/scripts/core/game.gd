@@ -17,6 +17,7 @@ const LEVELS := {
 	"flesh47": {"scene": "res://scenes/levels/maze47.tscn", "title": "Flat 47", "sub": "again"},
 	"flat48": {"scene": "res://scenes/levels/flat48.tscn", "title": "Flat 48", "sub": ""},
 	"lobby": {"scene": "res://scenes/levels/lobby.tscn", "title": "The Lobby", "sub": "Chapter 2"},
+	"cathedral": {"scene": "res://scenes/levels/cathedral.tscn", "title": "Flat 27", "sub": ""},
 }
 const SAVE_PATH := "user://save.json"
 const SETTINGS_PATH := "user://settings.json"

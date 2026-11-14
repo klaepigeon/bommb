@@ -87,8 +87,8 @@ func _initialize() -> void:
 	# 27
 	var d27 = L.built.doors.flat27
 	d27.set_open(true)
-	await _until(func(): return game.flag("ch2_done"), 25.0)
-	_check(game.flag("ch2_done"), "into 27: the chapter ends")
+	await _until(func(): return game.level != L and game.level != null and game.level.has_method("ring") and not game.busy, 40.0)
+	_check(game.flag("ch2_reached_27") and game.level.has_method("ring"), "into 27: the cathedral (tools/cathedral_test.gd goes on from there)")
 	# ---- the other ways: the crowbar and the hatch; the meat on the stairs; the bath
 	await _fresh({"ch2_talked": true})
 	_check(L.built.closet_doors[0].locked, "the ladder's closet on the ground floor is locked")

@@ -905,3 +905,78 @@ static func flesh_tear() -> PackedFloat32Array:
 	thump(d, 0.0, 80.0, 0.1, 0.4, 0.2)
 	norm(d, 0.7)
 	return d
+
+# ================================================================== Flat 27 (docs/CATHEDRAL.md)
+## The cathedral: an organ's lowest pipe held forever, and a fifth above it that won't settle;
+## under it a choir with no words, far off, breathing in and out of tune; air moving in a space
+## too big for a building. Loops. Steady: nothing pulses.
+static func cath_bed() -> PackedFloat32Array:
+	var r := rng(271)
+	var n := int(20.0 * SR)
+	var d := PackedFloat32Array(); d.resize(n)
+	var ph := [0.0, 0.0, 0.0, 0.0]
+	var fs := [32.7, 49.05, 65.4, 98.3]
+	for i in n:
+		var t := float(i) / SR
+		var v := 0.0
+		for k in 4:
+			ph[k] += TAU * fs[k] * (1.0 + 0.0015 * sin(t * (0.05 + k * 0.013) * TAU)) / SR
+			v += (sin(ph[k]) + 0.35 * sin(ph[k] * 2.0) + 0.15 * sin(ph[k] * 3.0)) * [0.22, 0.12, 0.08, 0.05][k]
+		d[i] = v
+	# the choir: breath through vowel formants, swelling slowly
+	for f in [[520.0, 1.0], [880.0, 0.7], [1180.0, 0.5]]:
+		var c := pink(n, r); biquad(c, "bp", f[0], 6.0); biquad(c, "bp", f[0], 6.0)
+		for i in n:
+			var t := float(i) / SR
+			c[i] *= (0.55 + 0.45 * sin(t * TAU / 20.0 + f[0])) * f[1]
+		mix(d, c, 0.35)
+	var air := brown(n, r); biquad(air, "lp", 120.0); mix(d, air, 0.6)
+	norm(d, 0.5)
+	return d
+
+## A great bell, struck once: the hum, the strike note, the minor third that makes a bell sound
+## like a bell, all decaying for seconds.
+static func bell_toll() -> PackedFloat32Array:
+	var r := rng(272)
+	var d := buf(9.0)
+	strike(d, 0.0, [110.0, 220.0, 262.0, 330.0, 440.0, 587.0, 880.0], [7.0, 5.5, 4.5, 3.5, 2.5, 1.8, 1.0], [0.6, 0.8, 0.5, 0.35, 0.3, 0.2, 0.12], r, 0.002, 1.0)
+	thump(d, 0.0, 60.0, 0.3, 0.5, 0.2)
+	norm(d, 0.85)
+	return d
+
+## A bell rung out of turn: it clanks, dead, and the clapper rattles.
+static func bell_dull() -> PackedFloat32Array:
+	var r := rng(273)
+	var d := buf(1.4)
+	strike(d, 0.0, [180.0, 410.0, 690.0], [0.5, 0.3, 0.2], [0.7, 0.4, 0.3], r, 0.004, 1.0)
+	strike(d, 0.09, [300.0, 620.0], [0.2, 0.12], [0.3, 0.2], r, 0.003, 0.5)
+	biquad(d, "lp", 1800.0)
+	norm(d, 0.7)
+	return d
+
+## A hammer on a nail, the nail going into wood through something that isn't wood.
+static func nail_strike() -> PackedFloat32Array:
+	var r := rng(274)
+	var d := buf(1.0)
+	strike(d, 0.0, [1850.0, 3100.0, 4700.0], [0.25, 0.15, 0.08], [0.6, 0.35, 0.2], r, 0.0008, 1.0)
+	thump(d, 0.0, 85.0, 0.18, 0.9, 0.3)
+	var wet := pink(int(0.3 * SR), r); biquad(wet, "bp", 700.0, 1.5); env_ad(wet, 0.005, 0.2)
+	mix(d, wet, 0.5, int(0.01 * SR))
+	sat(d, 1.4)
+	norm(d, 0.9)
+	return d
+
+## His breath on the cross: shallow, through the teeth, catching at the top.
+static func stig_breath() -> PackedFloat32Array:
+	var r := rng(275)
+	var d := buf(3.2)
+	for k in 3:
+		var at := k * 1.0
+		var b := pink(int(0.7 * SR), r)
+		biquad(b, "bp", 2100.0 if k % 2 == 0 else 1500.0, 2.0)
+		for i in b.size():
+			var t := float(i) / SR
+			b[i] *= sin(minf(1.0, t / 0.65) * PI) * (1.0 if t < 0.5 else 0.3)
+		mix(d, b, 0.8, int(at * SR))
+	norm(d, 0.45)
+	return d

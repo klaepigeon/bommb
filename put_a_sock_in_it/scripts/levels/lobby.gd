@@ -762,10 +762,10 @@ func _enter_27() -> void:
 	set_cutscene(true)
 	if super_npc and not super_npc.dead: _socko_outcome("super", false)
 	await Dialogue.play("flat27")
-	Game.set_flag("ch2_done")
+	# through the door: 27 (scripts/levels/cathedral.gd), where the chapter ends
+	Game.set_flag("ch2_reached_27")
 	Game.checkpoint()
-	Game.demo_over = bool(Game.demo.get("is_demo", false))
-	await Game.end_chapter("Flat 27", "")
+	Game.change_level("cathedral")
 var _ending := false
 
 ## Down: back to the last checkpoint (the building remembers what he changed).

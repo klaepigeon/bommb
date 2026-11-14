@@ -428,10 +428,11 @@ def bio(name, p, skin, build=None, extra=None, seed=0, gloss=0.5):
 	rng = np.random.default_rng(seed + 100)
 	if build:
 		build(M, L, p, rng)
-	B.face_hoses(M, L, p.get("face_hose", 0.011), p.get("face_hoses", 1))
+	if p.get("face_hoses", 1):
+		B.face_hoses(M, L, p.get("face_hose", 0.011), p.get("face_hoses", 1))
 	if p.get("crest", True):
 		B.crest(M, L, 0.012 * L["k"] ** 0.5)
-	if p.get("temples", True):
+	if p.get("temples", True) and p.get("face_hoses", 1):
 		B.temples(M, L, 0.009 * L["k"] ** 0.5)
 	if p.get("back_plates", True) and not p.get("skirt"):
 		B.plates(M, L, "back", p.get("back_n", 5), width=0.08, thick=0.01, out=1.0)
@@ -439,7 +440,7 @@ def bio(name, p, skin, build=None, extra=None, seed=0, gloss=0.5):
 		B.plates(M, L, "front", p["belly_plates"], width=0.1, thick=0.011, out=1.0 + p.get("belly", 0.0) * 0.6)
 	# hoses plugged from the back into the shoulders/neck: the building feeding them
 	sp, ch, k, gw = L["spine"], L["chest"], L["k"], L["gw"]
-	for s in (-1, 1):
+	for s in ((-1, 1) if p.get("face_hoses", 1) else ()):
 		B.plug(M, sp + F(s * 0.06 * gw * k, 0.12 * k, -0.1 * gw * k), (s * 0.3, 0, 1.0), "spine",
 			ch + F(s * 0.14 * gw * k, 0.24 * k, -0.07 * gw * k), (s * 0.4, 0.6, 1.0), "chest", 0.012 * k ** 0.5, 0.08)
 
@@ -702,8 +703,70 @@ def crawler():
 	return bio("crawler", p, C("8a7c70"), build, None, 9, 0.5)
 
 
+def stigmata():
+	"""STIGMATA, in 27 (docs/CATHEDRAL.md): the priest who nailed himself to his cross. Tall, starved,
+	the cassock torn open to the waist; the clerical collar still on; a crown of thorns that is
+	coral, grown into the skull; blood down the mask from it, and from the eyes; the wounds through
+	both palms and both feet, the spear wound in the side. The mask has a mouth: he talks."""
+	p = dict(face_style="slit", height=1.92, girth=0.8, shoulders=1.0, chest=0.88, waist=0.66, hips=0.82, sunken=0.035, arm=1.12, upper=0.66,
+		fore=0.66, elbows=1.25, knees=1.2, thigh=0.7, calf=0.7, neck=1.15, neckw=0.7, head=1.05, headw=0.88, jaww=0.8, mouth=0.8, lip=0.02,
+		eyes="pits", eye_size=0.75, sockets=0.95, fingers=1.4, hand=1.05, skirt=1.0, shell=C("1c181c"), seed=27, mottle=0.2,
+		teeth=0, crest=False, back_plates=False, face_hoses=0, ears=0.0)
+
+	def build(M, L, p, rng):
+		for lf in M.lofts:
+			if lf.name == "skirt":
+				B.ribbify(lf, 12.0, 0.06)            # the cassock's folds
+		B.spine_ridge(M, L, 0.014, False, 0.45)
+		B.rib_hoops(M, L, 5, 0.006, 1.12)
+		# the crown: coral, grown into the skull all the way round
+		hs, head = L["hs"], L["head"]
+		for k in range(22):
+			a = k / 22 * 2 * np.pi
+			p_ = head + F(np.sin(a) * hs * 0.38, hs * (0.8 + 0.05 * np.sin(a * 3)), np.cos(a) * hs * 0.38)
+			d = np.array([np.sin(a), 0.25, np.cos(a) * -1.0]) + rng.normal(0, 0.35, 3)
+			B.coral(M, p_, d, "head", hs * 0.2 * rng.uniform(0.6, 1.2), hs * 0.028, 2, 0.9, rng, n=2)
+
+	def extra(P, N, part, th, s, L, col):
+		y = P[..., 1]
+		x = P[..., 0]
+		front = -N[..., 2]
+		blood = C("3a0604")
+		if part == "head":
+			hy = (y - L["head"][1]) / L["hs"]
+			runs = (np.abs(np.sin(th * 9.0 + 0.4)) < 0.16) & (hy > 0.2 + 0.5 * np.abs(np.sin(th * 3.7))) & (hy < 0.92)
+			col = mix(col, runs, blood, 0.85)
+			for sgn in (-1, 1):
+				tear = (np.abs(th - sgn * 0.32) < 0.035) & (hy < 0.62) & (hy > 0.3) & (np.cos(th) > 0)
+				col = mix(col, tear, blood, 0.9)
+		if part == "trunk":
+			ch = L["chest"][1]
+			# the collar
+			col = mix(col, (y > L["neck"][1] + 0.0) & (y < L["neck"][1] + 0.03), C("d8d4c8"), 0.95)
+			col = mix(col, (y > L["neck"][1] + 0.0) & (y < L["neck"][1] + 0.03) & (np.abs(x) < 0.015) & (front > 0.5), C("1a1a1a"), 0.9)
+			# the side: the spear wound, under the right ribs, and what ran from it
+			w = np.sqrt(((x - 0.11) / 0.012) ** 2 + ((y - (ch - 0.06)) / 0.035) ** 2)
+			col = mix(col, w < 1.0, C("1a0202"))
+			col = mix(col, (w >= 1.0) & (w < 1.6), C("6a1010"), 0.8)
+			run = (np.abs(x - 0.11 - 0.01 * np.sin(y * 40)) < 0.012) & (y < ch - 0.06) & (y > L["hips"][1] - 0.05) & (front > -0.2)
+			col = mix(col, run, blood, 0.8)
+		if part.startswith("arm"):
+			# the palms: holes, and blood down the wrists to the elbow
+			wr = L["wr_l"][1]
+			col = mix(col, (y < wr + 0.04) & (fbm(P, 20.0, 2, 3) > -0.2), blood, 0.75)
+		if part.startswith("finger") or part.startswith("thumb"):
+			col = mix(col, np.ones(s.shape), blood, 0.5)
+		if part.startswith("foot"):
+			col = mix(col, (s > 0.25) & (s < 0.6), C("1a0202"), 0.9)
+			col = mix(col, np.ones(s.shape), blood, 0.45)
+		if part.startswith("leg"):
+			col = mix(col, (y < L["kn_l"][1] - 0.1) & (np.abs(np.sin(th * 5.0)) < 0.25), blood, 0.7)
+		return col
+	return bio("stigmata", p, C("9a8a72"), build, extra, 27, 0.5)
+
+
 CAST = {"super": super_, "hunter": hunter, "listener": listener, "laundress": laundress, "caretaker": caretaker, "cook": cook,
-	"rearranger": rearranger, "crawler": crawler}
+	"rearranger": rearranger, "crawler": crawler, "stigmata": stigmata}
 
 if __name__ == "__main__":
 	os.makedirs(OUT, exist_ok=True)

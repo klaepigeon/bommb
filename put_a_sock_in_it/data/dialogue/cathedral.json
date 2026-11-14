@@ -1,0 +1,122 @@
+{
+	"_about": "Flat 27: the cathedral, the end of Chapter 2 (scripts/levels/cathedral.gd, docs/CATHEDRAL.md). Drafted in the script's voice for Jules and ki to rewrite. STIGMATA nailed himself to his cross, all but the last hand; he asks Kurt for it. Kurt doesn't know what Socko is; STIGMATA won't look at it.",
+	"_speakers": {
+		"stigmata": {"name": "STIGMATA", "color": "#c9b8a0"}
+	},
+
+	"c27_enter": [
+		{"pause": 0.8, "who": "kurt", "text": "...This is a flat.", "tone": "quiet"},
+		{"who": "socko", "text": "It's a big flat.", "tone": "quiet", "socko": {"emotion": "uncanny", "look": "ahead"}},
+		{"who": "socko", "text": "Go on. Up the middle. Somebody's waiting.", "socko": {"emotion": "artificial", "look": "ahead"}}
+	],
+	"c27_loop_1": [
+		{"who": "kurt", "text": "We've passed that pew.", "tone": "quiet"},
+		{"who": "socko", "text": "No we haven't.", "socko": {"emotion": "neutral", "look": "ahead"}}
+	],
+	"c27_loop_2": [
+		{"who": "kurt", "text": "It's not getting any closer.", "tone": "quiet"},
+		{"who": "socko", "text": "Then walk faster.", "socko": {"emotion": "irritated"}}
+	],
+	"c27_loop_3": [
+		{"who": "kurt", "text": "It doesn't want me to get there.", "tone": "quiet"},
+		{"who": "socko", "text": "Everything wants you to get there, buddy. You're just doing it wrong.", "socko": {"emotion": "irritated", "gesture": "tilt"}},
+		{"who": "socko", "text": "Read the walls. Churches always say what they want on the walls.", "tone": "aside"}
+	],
+	"c27_bell_wrong": [
+		{"who": "socko", "text": "Ow. That one's broken.", "socko": {"emotion": "nervous", "gesture": "recoil"}}
+	],
+	"c27_bells_right": [
+		{"pause": 2.5, "who": "socko", "text": "Oh.", "tone": "quiet", "socko": {"emotion": "still", "look": "ahead"}},
+		{"who": "socko", "text": "There it is.", "tone": "quiet"}
+	],
+	"c27_backwards": [
+		{"who": "kurt", "text": "...", "hold": 0.6},
+		{"who": "socko", "text": "Huh. You turned your back on it and it came to you.", "tone": "quiet", "socko": {"emotion": "uncanny"}},
+		{"who": "socko", "text": "That's how it always works. Remember that.", "tone": "aside"}
+	],
+
+	"c27_meet": [
+		{"pause": 1.0, "who": "stigmata", "text": "Ah.", "event": "stig_look"},
+		{"who": "stigmata", "text": "You came up the stairs. I knew somebody would. Somebody always does, eventually."},
+		{"who": "kurt", "text": "...Who did this to you?", "tone": "quiet"},
+		{"who": "stigmata", "text": "I did.", "hold": 0.5},
+		{"who": "stigmata", "text": "All but one."},
+		{"who": "stigmata", "text": "And you brought that.", "event": "stig_socko"},
+		{"who": "socko", "text": "Hi!", "socko": {"emotion": "artificial", "gesture": "bounce"}},
+		{"who": "stigmata", "text": "Keep it away from the altar. Please.", "tone": "quiet"},
+		{"id": "ask", "with": "stigmata", "choices": [
+			{"text": "What is this place? It's a flat. It's twenty-seven.", "approach": "neutral",
+				"if": "not flags.has('c27_asked_place')",
+				"do": [{"flag": "c27_asked_place"}],
+				"steps": [
+					{"who": "stigmata", "text": "It was my mother's. Two rooms and a balcony."},
+					{"who": "stigmata", "text": "I kept praying in it. And it kept getting bigger."},
+					{"who": "stigmata", "text": "Nobody else came, so there was room."}
+				], "goto": "ask"},
+			{"text": "Why would anybody do this to themselves?", "approach": "suspicious",
+				"if": "not flags.has('c27_asked_why')",
+				"do": [{"flag": "c27_asked_why"}, {"rel": "stigmata", "add": {"suspicion": 1}}],
+				"steps": [
+					{"who": "stigmata", "text": "They stopped coming. First the young ones. Then the old ones. Then the ones who only came for the warm."},
+					{"who": "stigmata", "text": "So I had to be the congregation as well. You'd be surprised how much one man has to carry."},
+					{"who": "stigmata", "text": "Up there. They came back. They come back if you give enough.", "event": "stig_up"}
+				], "goto": "ask"},
+			{"text": "What do you want from me?", "approach": "cooperative",
+				"do": [{"rel": "stigmata", "add": {"trust": 1}}],
+				"steps": [], "goto": "want"}
+		]},
+		{"id": "want", "who": "stigmata", "text": "The last one.", "event": "stig_offer"},
+		{"who": "stigmata", "text": "You can't do the last hand yourself. Nobody can. That's the whole of it. That was always the whole of it."},
+		{"who": "stigmata", "text": "The hammer's at my feet. It's a good hammer. It was my father's."},
+		{"who": "socko", "text": "He's asking nicely, Kurt.", "tone": "quiet", "socko": {"emotion": "artificial", "look": "ahead"}},
+		{"who": "socko", "text": "One more bang and he's finished. Finished is what he wants. It's rude to say no to what people want.", "socko": {"emotion": "artificial", "gesture": "bounce"}},
+		{"with": "stigmata", "choices": [
+			{"text": "(Take the nail.)", "approach": "cooperative",
+				"do": [{"flag": "c27_chose_nail"}, {"rel": "stigmata", "add": {"trust": 2}}],
+				"steps": [
+					{"who": "stigmata", "text": "Bless you.", "tone": "quiet", "event": "stig_give"},
+					{"who": "stigmata", "text": "Three times. Don't stop in between. Stopping is the worst part."}
+				]},
+			{"text": "I'm getting you down from there.", "approach": "hostile",
+				"do": [{"flag": "c27_chose_free"}, {"rel": "stigmata", "add": {"hostility": 2}}],
+				"steps": [
+					{"who": "stigmata", "text": "No.", "hold": 0.6},
+					{"who": "stigmata", "text": "No, no. Please. I'm nearly finished. Don't you dare. Don't you DARE.", "tone": "shout"}
+				]},
+			{"text": "No. I'm going.", "approach": "neutral",
+				"do": [{"flag": "c27_chose_leave"}],
+				"steps": [
+					{"who": "stigmata", "text": "...", "hold": 1.0},
+					{"who": "stigmata", "text": "That's all right. Somebody else will come up the stairs.", "tone": "quiet"}
+				]}
+		]},
+		{"event": "stig_decided"}
+	],
+
+	"c27_need_hammer": [
+		{"who": "socko", "text": "With your HAND? The hammer, silly. At his feet.", "socko": {"emotion": "irritated", "gesture": "point"}}
+	],
+	"c27_nailed": [
+		{"pause": 1.4, "who": "stigmata", "text": "Thank you.", "tone": "quiet"},
+		{"who": "stigmata", "text": "Now go home, Kurt. Go home and lock the door."},
+		{"who": "kurt", "text": "...How do you know my name?", "tone": "quiet"},
+		{"who": "stigmata", "text": "Everybody up here knows your name.", "tone": "quiet", "event": "stig_up"},
+		{"who": "socko", "text": "See? He's happy. Everybody's happy. You're good at this.", "socko": {"emotion": "happy", "gesture": "bounce"}}
+	],
+	"c27_freed": [
+		{"pause": 1.2, "who": "stigmata", "text": "...Why.", "tone": "quiet"},
+		{"who": "stigmata", "text": "I was nearly finished. Do you know how long it took me? With one hand?"},
+		{"who": "stigmata", "text": "Get out. Take that thing with you and get out of my mother's flat."},
+		{"who": "socko", "text": "...", "hold": 1.0, "socko": {"emotion": "still"}},
+		{"who": "socko", "text": "You always do this. You ALWAYS do this.", "tone": "quiet", "socko": {"emotion": "angry", "gesture": "tremble"}}
+	],
+	"c27_left": [
+		{"who": "stigmata", "text": "Lock the door on your way out. There's a draught.", "tone": "quiet"},
+		{"who": "socko", "text": "You just LEFT him. Like that. Like a coward.", "socko": {"emotion": "angry", "gesture": "jab"}},
+		{"who": "socko", "text": "Fine. Fine. Your way.", "tone": "quiet", "socko": {"emotion": "still"}}
+	],
+	"c27_door": [
+		{"who": "kurt", "text": "Twenty-seven.", "tone": "quiet"},
+		{"who": "socko", "text": "Home time.", "tone": "quiet", "socko": {"emotion": "uncanny", "look": "kurt"}}
+	]
+}

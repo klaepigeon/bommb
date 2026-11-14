@@ -58,7 +58,7 @@ Infested: flesh in the walls, dark except for a sick light from the growth.
 | **Maintenance (locked)** | The super's key, if the conversation gets it. Or the crowbar from the cook's kitchen, which is loud. Or the vent from the laundry, where something lives in the ducts. |
 | **The ladder** | The ground-floor closet is locked like maintenance. The first-floor closet is open. The hatch to the second floor is bolted and needs the crowbar. Once open, the ladder is a shortcut. |
 | **27's door** | Meat grows over it, rooted in the thing in the bath in 24. Either kill the thing (its caretaker defends it), or light the boiler (mains on, a good fuse in BOILER, then the boiler itself). The heat on the second floor makes the meat let go, about 25 s after the boiler is lit. |
-| **Into 27** | Ends the chapter. |
+| **Into 27** | The cathedral (docs/CATHEDRAL.md), where the chapter ends. |
 
 **Backtracking pays off:**
 - The crowbar (first floor) opens maintenance and the ladder (ground floor).
@@ -208,7 +208,7 @@ Checkpoints happen after the conversation, when the mains go on, when the boiler
 
 ## Still incomplete
 
-- **Flat 27.** Decided: in this chapter it's only where Socko sends Kurt, for the chase. What's inside (a puppet show) belongs to what comes next and isn't built; the chapter ends on the threshold.
+- **Flat 27.** Decided: an impossible gothic cathedral, where STIGMATA is nailed to his cross. It ends the chapter; see docs/CATHEDRAL.md.
 - **Facial and lip performance** for the inhabitants. Mouths and jaws move with posture, not with speech.
 - **Wall hiding** (wardrobes) isn't placed in this building yet. The hiding system exists.
 - **Electrocution as a trap.** The live water works on anything that walks into it, but there's no dedicated "lure it in" tool beyond noise.
