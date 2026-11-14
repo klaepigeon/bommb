@@ -66,6 +66,7 @@ func build() -> void:
 	_discoveries()
 	_people()
 	_restore()
+	_batch()
 	_bake_nav()
 	for d in built.doors.values() + built.closet_doors:
 		d.tried.connect(_on_door_tried)
@@ -767,6 +768,24 @@ func _enter_27() -> void:
 	Game.checkpoint()
 	Game.change_level("cathedral")
 var _ending := false
+
+## Draw calls: the walls, slabs, stairs and furniture boxes merged into one mesh per material per
+## floor per 6 m square (small enough that each still gets its own lights). Not the bulbs (they're
+## switched), not the water in 15.
+func _batch() -> void:
+	var keep := []
+	for l in lights: keep.append(l[4])
+	var w15 := world.get_node_or_null("Water15")
+	if w15: keep.append(w15)
+	var buckets := {}
+	for n in world.get_children():
+		if not (n is MeshInstance3D) or keep.has(n): continue
+		var mi := n as MeshInstance3D
+		var c: Vector3 = mi.position + mi.get_aabb().get_center()
+		var k := Vector3i(int(floor(c.x / 6.0)), int(floor(c.y / FH)), int(floor(c.z / 6.0)))
+		if not buckets.has(k): buckets[k] = []
+		buckets[k].append(n)
+	for k in buckets: Build.merge(world, buckets[k], keep)
 
 ## Down: back to the last checkpoint (the building remembers what he changed).
 func on_player_down() -> void:

@@ -63,6 +63,7 @@ func build() -> void:
 	_stigmata()
 	_bell_ropes()
 	_pages()
+	_batch()
 	_restore()
 	player.position = Vector3(0, 0, 2.4)
 	player.set_view(0.0, 0.0)
@@ -381,6 +382,7 @@ func _apse() -> void:
 	# the hammer at his feet
 	var hm := _box(Vector3(0.3, DAIS_Y + 0.03, CROSS_Z + 0.5), Vector3(0.32, 0.04, 0.06), _wood, false)
 	hm.name = "Hammer"
+	_keep.append(hm)
 	var hu := Use.make(world, Vector3(0.3, DAIS_Y + 0.1, CROSS_Z + 0.5), Vector3(0.5, 0.3, 0.4),
 		func(): return "Take the hammer" if Game.count("hammer") == 0 and not Game.flag("c27_took_hammer") else "",
 		func(_p):
@@ -436,6 +438,22 @@ func _process(delta: float) -> void:
 		fb.pose["kn_l"] = Vector3(-1.5, 0, 0); fb.pose["kn_r"] = Vector3(-1.5, 0, 0)
 
 var _hymnals: Array = []
+var _keep: Array = []           # meshes that move: not merged
+
+## Draw calls: hundreds of boxes (pews, candles, sconces, steps) and the columns, merged into one
+## mesh per material per bay, per side, floor or vault (not bigger: on the Compatibility renderer
+## a mesh only takes so many lights, and every bay has its own).
+func _batch() -> void:
+	var buckets := {}
+	for n in world.get_children():
+		if not (n is MeshInstance3D) or _keep.has(n): continue
+		# (by where the mesh is, not the node: the columns are built in place with the node at 0)
+		var mi := n as MeshInstance3D
+		var pz: Vector3 = mi.position + mi.get_aabb().get_center()
+		var k := Vector3i(int(floor(pz.z / 6.0)), int(signf(pz.x)), 1 if pz.y > 8.0 else 0)
+		if not buckets.has(k): buckets[k] = []
+		buckets[k].append(n)
+	for k in buckets: Build.merge(world, buckets[k], _keep)
 
 ## A hymn book falls from the pews hanging in the vault and lands near him (they stay where they
 ## land: the floor fills up the longer he's in here).
@@ -489,6 +507,7 @@ func _bell_ropes() -> void:
 		var z := -1.6 if w == "PEDES" else -0.8
 		var rope := _box(Vector3(x, (VAULT + 1.0) * 0.5, z), Vector3(0.04, VAULT - 1.0, 0.04), Tex.mat("fabric", 4.0, {"tint": Color(0.55, 0.45, 0.32)}), false)
 		var sally := _box(Vector3(x, 1.45, z), Vector3(0.09, 0.4, 0.09), Tex.mat("cloth_red", 2.0), false)
+		_keep.append(rope); _keep.append(sally)
 		var u := Use.make(world, Vector3(x, 1.4, z), Vector3(0.4, 0.8, 0.4), func(): return "" if loop_broken else "Pull the rope (%s)" % w, func(_p): _ring(w, rope, sally))
 		u.name = "Rope_" + w
 

@@ -65,6 +65,21 @@ These are all generated (`SoundLib`):
 
 Blood drips under the cross.
 
+## Cost
+
+The pews, candles, sconces, steps and columns are hundreds of separate meshes. `_batch()` merges them into one mesh per material per bay, per side, floor or vault. Bigger chunks would break the lighting: on the Compatibility renderer a mesh only takes so many lights, and every bay has its own. The chunks are sorted by where each mesh actually is, because the columns are built in place with the node at the origin.
+
+| | Draw calls (narthex / nave / altar) |
+|---|---|
+| Before | 836 / 601 / 109 |
+| After | 200 / 155 / 61 |
+
+The triangle counts are unchanged.
+
+The lobby does the same (`lobby.gd` `_batch()`, per floor per 6 m square, leaving out the switched bulbs and the water in 15): 340 draw calls down to 262 in the ground-floor corridor. The rest are inside the furniture pieces.
+
+`tools/perf_view.gd -- level=<id>` prints draw calls, objects and triangles at a few spots.
+
 ## Tests and tools
 
 - `tools/cathedral_test.gd` checks:
