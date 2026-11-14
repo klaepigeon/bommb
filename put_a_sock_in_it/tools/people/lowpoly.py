@@ -339,11 +339,14 @@ class Model:
 			col = out
 			gl = next((g for k, g in self.gloss.items() if lf.name.startswith(k)), 0.25)
 		lit = self.bake[0] + self.bake[1] * np.clip(N @ self.light, 0, 1) - 0.12 * np.clip(-N[..., 1], 0, 1)
-		col = col * lit[..., None]
+		# volume: darker toward the silhouette (seen from in front or behind), and toward the floor
+		rim = 0.55 + 0.45 * np.abs(N[..., 2]) ** 0.7
+		low = 0.7 + 0.3 * np.clip(P[..., 1] / 1.6, 0, 1)
+		col = col * (lit * rim * low)[..., None]
 		# a wet highlight, painted in (the light from above, the eye in front)
 		H = self.light + np.array([0.0, 0.0, -1.0])
 		H /= np.linalg.norm(H)
-		spec = np.clip(N @ H, 0, 1) ** 18 * np.asarray(gl)
+		spec = np.clip(N @ H, 0, 1) ** 30 * np.asarray(gl) * 1.3
 		col = col + spec[..., None] * np.array([0.9, 0.85, 0.75])
 		self.tex[y0:y0 + h, x0:x0 + w] = np.clip(col, 0, 1)
 

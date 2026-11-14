@@ -402,6 +402,7 @@ def bio(name, p, skin, build=None, extra=None, seed=0, gloss=0.5):
 	rng = np.random.default_rng(seed + 100)
 	if build:
 		build(M, L, p, rng)
+	B.face_hoses(M, L, p.get("face_hose", 0.011), p.get("face_hoses", 1))
 
 	def paint(P, N, part, th, s, M_):
 		y = P[..., 1]
@@ -427,7 +428,12 @@ def bio(name, p, skin, build=None, extra=None, seed=0, gloss=0.5):
 		col = skin_base(P, np.broadcast_to(skin, P.shape).copy(), p.get("mottle", 0.18), seed)
 		col = B.grooves(M_, col, B.CAVITY, 0.8)
 		if part == "head":
+			gl = gloss * 0.45
 			hy = (y - L["head"][1]) / L["hs"]
+			# the mask: darker than the body, stained down from the crown, pitted like coral round the edges
+			col = col * 0.78
+			col = mix(col, smoothstep(0.2, 0.6, fbm(P * np.array([2.0, 0.5, 2.0]), 10.0, 2, seed + 20)), C("3a2618"), 0.45)
+			col = mix(col, smoothstep(0.3, 0.16, cells(P, 70.0, seed + 21)) * (np.cos(th) < 0.5), C("2a1a12"), 0.5)
 			if p.get("brain"):
 				col = B.brain_coral(P, ((hy > 0.8) & (np.cos(th) < 0.1)) * 1.0, col, 16.0, seed)
 			col = face(P, N, th, s, M_, L, p, col)
@@ -436,6 +442,7 @@ def bio(name, p, skin, build=None, extra=None, seed=0, gloss=0.5):
 			ch, sp = L["chest"][1], L["spine"][1]
 			cav = (y > sp + 0.1) & (y < ch + 0.2) & (-N[..., 2] > -0.2)
 			col = mix(col, cav, B.CAVITY, 0.55)
+		col = B.veins(P, col, p.get("veins", 0.5), seed)
 		col = B.grime(P, col, 0.3, seed)
 		col = B.seep(P, N, col, 0.35, seed + 1)
 		if extra:
@@ -468,6 +475,7 @@ def super_():
 
 	def build(M, L, p, rng):
 		B.elongate(M, L, 0.55)
+		B.cable_limbs(M, rng, 2, 0.006)
 		B.spine_ridge(M, L, 0.018, True, 0.55)
 		B.rib_hoops(M, L, 6, 0.007, 1.18)
 		B.hose(M, L["head"] + F(0.03, L["hs"] * 0.3, -L["hs"] * 0.35), L["chest"] + F(0.05, 0.1, -0.08), ("head", "chest"), 0.016, 0.12, (0.3, 0.2, 1.0))
@@ -498,11 +506,10 @@ def hunter():
 		shell=C("4a4440"))
 
 	def build(M, L, p, rng):
-		for lf in M.lofts:
-			if lf.name.startswith("arm") or lf.name.startswith("leg"):
-				B.ribbify(lf, 55.0, 0.07)
+		B.cable_limbs(M, rng)
 		B.elongate(M, L, 1.3)
 		B.spine_ridge(M, L, 0.03, True, 0.6)
+		B.rib_hoops(M, L, 7, 0.011, 1.06)
 		for side in ("l", "r"):
 			_shoulder_coral(M, L, side, rng, 4, 0.26, 0.036, 3)
 			B.crust(M, L["sh_" + side], ((-1.0 if side == "l" else 1.0), 0.6, 0.0), "sh_" + side, rng, 9, 0.07, 0.018)
@@ -521,13 +528,12 @@ def listener():
 		B.ribbify(M.lofts[0], 45.0, 0.06)          # the trunk, and the long neck: segmented
 		B.elongate(M, L, 0.9)
 		B.spine_ridge(M, L, 0.016, True, 0.6)
+		B.rib_hoops(M, L, 6, 0.006, 1.15)
 		hs, head = L["hs"], L["head"]
 		for s in (-1, 1):
 			B.fan(M, head + F(s * hs * 0.36, hs * 0.6, -0.02), "head", up=(s * 0.35, 1.0, 0.2), side=(0.1 * s, 0.0, 1.0), size=hs * 1.1, ribs=7, name="fan")
 		B.crust(M, L["neck"] + F(0, 0.15, -0.04), (0, 0.2, 1.0), "neck", rng, 6, 0.03, 0.01)
-		for lf in M.lofts:
-			if lf.name.startswith("arm") or lf.name.startswith("leg"):
-				B.ribbify(lf, 55.0, 0.06)
+		B.cable_limbs(M, rng)
 	return bio("listener", p, C("a89880"), build, None, 5, 0.4)
 
 
@@ -540,6 +546,7 @@ def laundress():
 			if lf.name == "skirt":
 				B.ribbify(lf, 18.0, 0.12)
 		B.tendrils(M, L, 12, 0.6, 0.011, rng)
+		B.cable_limbs(M, rng, 2, 0.005, arms_only=True)
 		B.spine_ridge(M, L, 0.015, False, 0.5)
 		B.coral(M, L["chest"] + F(-0.05, 0.12, -0.08), (-0.3, 0.6, 1.0), "chest", 0.16, 0.026, 3, 0.6, rng)
 		B.crust(M, L["chest"] + F(0.04, 0.05, -0.09), (0.2, 0.2, -1.0), "chest", rng, 8, 0.05, 0.012)
@@ -576,7 +583,9 @@ def cook():
 		eyes="pits", eye_size=0.7, ears=0.0)
 
 	def build(M, L, p, rng):
-		B.ribbify(M.lofts[0], 35.0, 0.05)            # the body in rolls, like ducting
+		B.ribbify(M.lofts[0], 30.0, 0.04)            # the body in rolls
+		B.cable_limbs(M, rng, 3, 0.008, arms_only=True)
+		B.rib_hoops(M, L, 4, 0.008, 1.12)
 		B.hose(M, L["spine"] + F(0.06, 0.15, 0.28), L["jaw"] + F(0.04, -0.06, 0.07), ("belly", "jaw"), 0.025, 0.1, (0.6, 0, 1.0))
 		for side in ("l", "r"):
 			B.crust(M, L["el_" + side] + F(0, -0.1, 0), ((1 if side == "r" else -1) * 0.6, 0.0, 0.8), "el_" + side, rng, 8, 0.05, 0.014)
@@ -596,9 +605,8 @@ def rearranger():
 		shell=C("5a4e44"), eyes="pits", eye_size=0.6, ears=0.0)
 
 	def build(M, L, p, rng):
+		B.cable_limbs(M, rng)
 		for lf in M.lofts:
-			if lf.name.startswith("arm"):
-				B.ribbify(lf, 55.0, 0.08)
 			if lf.name == "skirt":
 				B.ribbify(lf, 16.0, 0.12)
 		for i in range(6):
@@ -614,9 +622,7 @@ def crawler():
 		nose=0.0, ears=0.0, neck=0.6, head=1.1, fingers=1.8, foot=1.4, seed=10, mottle=0.2, sockets=0.9, lip_col=C("2a0c0a"), sunken=0.04, brain=True)
 
 	def build(M, L, p, rng):
-		for lf in M.lofts:
-			if lf.name.startswith("arm") or lf.name.startswith("leg"):
-				B.ribbify(lf, 60.0, 0.08)
+		B.cable_limbs(M, rng)
 		B.elongate(M, L, 1.1)
 		B.spine_ridge(M, L, 0.014, True, 0.7)
 		B.rib_hoops(M, L, 5, 0.006, 1.2)

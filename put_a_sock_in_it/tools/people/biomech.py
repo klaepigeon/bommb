@@ -195,6 +195,27 @@ def fan(M, root, bone, up=(0, 1, 0), side=(1, 0, 0), size=0.12, ribs=6, name="fa
 			pass
 
 
+def sinews(M, loft, n=3, r=0.007, lift=0.85, twist=0.6, rng=None, spread=None, name="hose_sinew"):
+	"""Cables along a limb: thin tubes laid on its surface the length of it, slightly twisting,
+	weighted as the limb is. Giger's bundles."""
+	rng = rng if rng is not None else np.random.default_rng(5)
+	G, th, fr = loft.grid()
+	rs_src = loft.rings
+	angs = spread if spread is not None else np.linspace(-np.pi, np.pi, n, endpoint=False) + rng.uniform(0, 1)
+	for k, a0 in enumerate(angs):
+		rs = []
+		m = len(rs_src)
+		for i, ring in enumerate(rs_src):
+			t, f, side = fr[i]
+			a = a0 + twist * i / max(1, m - 1)
+			# at a joint (a ring shared by two bones) the cable stands off it like a bowstring
+			joint = (not callable(ring.w)) and len([v for v in ring.w.values() if v > 0.2]) > 1
+			lf_ = lift * (1.45 if joint else 1.0)
+			c = ring.c + f * ring.shift + side * np.sin(a) * (ring.rx * lf_ + r) + f * np.cos(a) * (ring.rz * lf_ + r)
+			rs.append(Ring(c, r, w=ring.w))
+		M.add(Loft("%s%d_%s" % (name, k, loft.name), rs, sides=4, cap_start=True, cap_end=True))
+
+
 def tendrils(M, L, n=10, length=0.5, r=0.012, rng=None):
 	"""Instead of hair: hoses hanging from the back of the skull, to the shoulders and below."""
 	rng = rng if rng is not None else np.random.default_rng(3)
@@ -259,3 +280,28 @@ def seep(P, N, col, amt=0.6, seed=12):
 	"""Dark wet runs down from the joins."""
 	run = fbm(P * np.array([3.0, 0.4, 3.0]), 9.0, 2, seed)
 	return mix(col, smoothstep(0.25, 0.55, run), C("3a1a14"), amt)
+
+
+def cable_limbs(M, rng, n=3, r=0.007, arms_only=False):
+	"""Sinew cables down every arm and leg (or the arms)."""
+	for lf in list(M.lofts):
+		if lf.name.startswith("arm") or (lf.name.startswith("leg") and not arms_only):
+			sinews(M, lf, n, r * (1.3 if lf.name.startswith("leg") else 1.0), 1.0, rng.uniform(0.4, 1.2), rng)
+
+
+def veins(P, col, amt=0.5, seed=0):
+	"""A network of raised vessels under the skin: dark lines, lit along one edge."""
+	v = np.abs(vnoise(P * np.array([1.0, 0.45, 1.0]), 16.0, seed + 60)) + 0.5 * np.abs(vnoise(P, 34.0, seed + 61))
+	line = smoothstep(0.09, 0.0, v)
+	col = mix(col, line, C("3a2420"), 0.7 * amt)
+	return mix(col, smoothstep(0.14, 0.09, v) * (1 - line), C("c0a480"), 0.18 * amt)
+
+
+def face_hoses(M, L, r=0.012, n=1):
+	"""Tubes from the cheeks down into the neck and the chest: the face plumbed in."""
+	hs, head = L["hs"], L["head"]
+	for s in (-1, 1):
+		for i in range(n):
+			a = head + F(s * hs * (0.3 + 0.04 * i), hs * (0.3 - 0.05 * i), hs * 0.25)
+			b = L["chest"] + F(s * (0.06 + 0.03 * i), L["torso"] * 0.42, 0.08 * L["gw"] * L["k"])
+			hose(M, a, b, ("jaw", "chest"), r, 0.06, (s * 0.8, 0.0, 1.0), name="hose_face%d%s" % (i, "lr"[s > 0]))
