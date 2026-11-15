@@ -32,3 +32,11 @@ These show the "neenor … placeholder" text today:
 | `skills.gd` → `m_1`, `m_2`, `m_3` | What each memory node brings back | The skills menu |
 
 Writing those, or setting `hide_placeholders` to `true` for a public build, is the one thing standing between this build and showing it to people.
+
+## What you did (Chapter 2)
+
+After the cathedral, the end screen adds a line for each of Chapter 2's choices (`title.gd` `_what_he_did`):
+
+- **The super:** what he became, from his disposition. "He gave you his key", "you lied to him, and he believed you", "he watched you all the way up", "he hunted you", "he let you be", or "you killed him".
+- **Twenty-seven:** the last nail driven, him taken down, or him left there.
+- **Socko:** how many times Kurt did what Socko wanted, out of how many. Then "He remembers." if Kurt ever refused, or "He's very pleased with you." if he never did.

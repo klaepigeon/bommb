@@ -273,6 +273,9 @@ func _nave() -> void:
 				fb.position = Vector3(s * (1.8 + (k % 3) * 0.7), HANG + 0.02, zr - 0.1)
 				fb.rotation = Vector3(0, 0, PI)          # (hanging from the seat)
 				fb.snap = 3.0
+				# they're 12 m up and small: their coarser LODs, sooner (imported with LODs)
+				for mi in fb.find_children("*", "MeshInstance3D", true, false):
+					(mi as MeshInstance3D).lod_bias = 0.2
 				_congregation.append(fb)
 				k += 1
 

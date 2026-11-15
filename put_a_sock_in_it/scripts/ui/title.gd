@@ -101,6 +101,14 @@ func _end_panel(v: VBoxContainer) -> void:
 		st.add_theme_font_size_override("font_size", 18); st.add_theme_color_override("font_color", Color("a39780"))
 		grid.add_child(st)
 	v.add_child(grid)
+	# what he did in the building: the choices the rest of it will remember
+	var did := _what_he_did()
+	if not did.is_empty():
+		var gh := Control.new(); gh.custom_minimum_size = Vector2(0, 8); v.add_child(gh)
+		for ln in did:
+			var dl := Label.new(); dl.text = ln
+			dl.add_theme_font_size_override("font_size", 18); dl.add_theme_color_override("font_color", Color("c8a878"))
+			v.add_child(dl)
 	var gap2 := Control.new(); gap2.custom_minimum_size = Vector2(0, 14); v.add_child(gap2)
 	var d: Dictionary = Game.demo
 	if String(d.get("store_url", "")) != "":
@@ -110,6 +118,26 @@ func _end_panel(v: VBoxContainer) -> void:
 	_btn(v, "Play again", func(): _go(func(): Game.reset_save(); Game.new_game()))
 	_btn(v, "Quit", func(): get_tree().quit())
 	socko.look = "kurt"; socko.emotion = "happy"; socko.gesture("tilt")
+
+## Chapter 2's choices, in a line each (docs/CATHEDRAL.md, docs/CHAPTER2.md).
+func _what_he_did() -> Array:
+	if not Game.flag("ch2_done"): return []
+	var out := []
+	if Game.flag("ch2_super_dead"): out.append("The super: you killed him.")
+	else:
+		out.append("The super: " + {"cooperative": "he gave you his key.", "deceived": "you lied to him, and he believed you.",
+			"suspicious": "he watched you all the way up.", "hostile": "he hunted you.", "neutral": "he let you be."}.get(Game.disposition("super"), "he let you be."))
+	if Game.flag("c27_nailed"): out.append("Twenty-seven: you drove the last nail.")
+	elif Game.flag("c27_freed"): out.append("Twenty-seven: you took him down.")
+	elif Game.flag("c27_left"): out.append("Twenty-seven: you left him there.")
+	var obey := 0; var defy := 0
+	for k in Game.flags:
+		if String(k).begins_with("ch2_obey_"): obey += 1
+		elif String(k).begins_with("ch2_defy_"): defy += 1
+	if obey + defy > 0:
+		out.append("You did what Socko wanted %d %s out of %d." % [obey, "time" if obey == 1 else "times", obey + defy])
+		out.append("He remembers." if defy > 0 else "He's very pleased with you.")
+	return out
 
 func _go(f: Callable) -> void:
 	Sfx.stop_loops()
