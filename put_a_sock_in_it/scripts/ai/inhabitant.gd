@@ -116,6 +116,36 @@ func sees(n: Node3D) -> bool:
 	var q := PhysicsRayQueryParameters3D.create(eye(), eye() + to, 1, [get_rid()])
 	return get_world_3d().direct_space_state.intersect_ray(q).is_empty()
 
+## Can it see this point (no allowances for Kurt crouching or his torch: a place, not him)?
+func sees_point(p: Vector3) -> bool:
+	if prof.get("blind", false): return false
+	var s: Dictionary = prof.get("sight", {})
+	var to: Vector3 = p - eye()
+	if to.length() > float(s.get("range", 10.0)): return false
+	if to.length() > 1.4 and (-global_basis.z).dot(Vector3(to.x, 0, to.z).normalized()) < float(s.get("cos", 0.5)): return false
+	var q := PhysicsRayQueryParameters3D.create(eye(), p, 1, [get_rid()])
+	return get_world_3d().direct_space_state.intersect_ray(q).is_empty()
+
+# ------------------------------------------------------------------ hiding (HideSpot)
+var saw_hide: HideSpot = null   # it watched him get into this one: it'll have him out
+var _listen_t := 0.0
+
+## He's in a wardrobe it didn't see him get into: as far as it knows, he's gone.
+func lost_him() -> bool:
+	return player != null and player.hidden_in != null and saw_hide != player.hidden_in
+
+## The blind ones hear him in there: stood by the wardrobe, every second there's a chance it
+## hears him breathe, unless he's holding it (better the calmer he is).
+func _listen_for_hidden(delta: float) -> void:
+	if not prof.get("blind", false) or not hates(player) or not player.hidden_in or saw_hide == player.hidden_in: return
+	if global_position.distance_to(player.hidden_in.global_position) > 2.0: _listen_t = 0.0; return
+	_listen_t += delta
+	if _listen_t < 1.0: return
+	_listen_t = 0.0
+	if not player.breath_held and randf() < 0.3 + Game.fear * 0.5:
+		saw_hide = player.hidden_in; target = player; objective = "attack"; awareness = 1.0
+		_say("attack")
+
 func hates(n: Node) -> bool:
 	var h: Array = prof.get("hostile_to", [])
 	if n == player: return h.has("kurt")
@@ -163,6 +193,7 @@ func _physics_process(delta: float) -> void:
 	# Kurt: seen raises it, unseen lets it fall
 	if sees(player): awareness = minf(1.0, awareness + delta * (2.0 if global_position.distance_to(player.global_position) < 4.0 else 0.8))
 	else: awareness = maxf(0.0, awareness - delta * 0.15)
+	_listen_for_hidden(delta)
 	_think -= delta
 	if _think <= 0.0:
 		_think = randf_range(0.35, 0.6)
@@ -227,7 +258,8 @@ func _nearest_target(list: Array, within: float) -> Node3D:
 	return best
 
 func _visible_foe() -> Node3D:
-	if hates(player) and awareness >= 1.0: return player
+	if saw_hide and player.hidden_in == saw_hide and hates(player): return player      # (it watched him go in)
+	if hates(player) and awareness >= 1.0 and (not lost_him() or player.hidden_in == saw_hide): return player
 	if hates(player) and sees(player) and global_position.distance_to(player.global_position) < 2.2: return player
 	for n in get_tree().get_nodes_in_group("inhabitant"):
 		if n != self and not n.dead and hates(n) and n.global_position.distance_to(global_position) < 9.0 and sees(n): return n
@@ -257,6 +289,20 @@ func _act(delta: float) -> void:
 			if objective == "hunt_kurt": target = player
 			if not is_instance_valid(target) or (target is Inhabitant and target.dead):
 				target = null; objective = ""; return
+			# he's in a wardrobe: if it saw him go in, it has him out; if not, he's gone, and it
+			# goes to look where he was
+			if target == player and player.hidden_in:
+				var spot: HideSpot = player.hidden_in
+				if saw_hide == spot:
+					var fp := spot.front()
+					if global_position.distance_to(fp) > 0.9: _go(fp, float(prof.get("run", 2.6)), delta)
+					else:
+						_stop(); _face(spot.global_position, delta * 8.0)
+						spot.drag_out(); saw_hide = null; awareness = 1.0
+					return
+				_noise_at = spot.front(); _noise_t = 6.0; awareness = minf(awareness, 0.4)
+				target = null; objective = "investigate"
+				return
 			var tp: Vector3 = target.global_position
 			var d := global_position.distance_to(tp)
 			var reach: float = float(prof.get("attack", {}).get("reach", 1.3))

@@ -22,6 +22,7 @@ extends Level
 
 const B := preload("res://scripts/levels/chapter2/lobby_build.gd")
 const FH := 3.2
+const T_WALL := 0.08
 const START := Vector3(12.0, 0.0, 1.4)
 
 var built := {}
@@ -65,6 +66,7 @@ func build() -> void:
 	_growths()
 	_discoveries()
 	_people()
+	_hiding()
 	_restore()
 	_batch()
 	_bake_nav()
@@ -471,6 +473,32 @@ func _note(key: String, text: String) -> void:
 func _took(key: String) -> void:
 	if key == "office_fuse": _trespass_check()
 	if key == "crowbar": _cook_notices()
+
+# ------------------------------------------------------------------ hiding
+## Wardrobes he can get into (HideSpot, docs/CHAPTER2.md), against the back walls of six flats,
+## across the floors. Whatever was watching when he got in (it hates him, it was onto him, it
+## could see the wardrobe) comes and has him out; anything else loses him and goes to look
+## where he was. The blind ones can hear him in there unless he holds his breath.
+var hide_spots: Array = []
+
+func _hiding() -> void:
+	# [x, floor, back wall: "s" (z = 0) or "n" (z = 14)]
+	for h in [[6.3, 0, "n"], [11.0, 0, "n"], [4.0, 1, "s"], [7.6, 1, "n"], [2.0, 2, "s"], [8.0, 2, "n"]]:
+		var w := HideSpot.new()
+		world.add_child(w)
+		var south: bool = h[2] == "s"
+		w.position = Vector3(h[0], float(h[1]) * FH, 0.15 + T_WALL + w.size.z * 0.5 if south else B.D - 0.15 - T_WALL - w.size.z * 0.5)
+		w.rotation.y = 0.0 if south else PI
+		w.entered.connect(_hid)
+		w.left.connect(func(_s): for n in people.values(): if is_instance_valid(n): n.saw_hide = null)
+		hide_spots.append(w)
+
+func _hid(spot: HideSpot) -> void:
+	for n in people.values():
+		if not is_instance_valid(n) or n.dead or not n.hates(player): continue
+		var onto: bool = n.awareness > 0.3 or n.target == player
+		if onto and n.global_position.distance_to(spot.global_position) < 14.0 and n.sees_point(spot.front() + Vector3(0, 1.2, 0)):
+			n.saw_hide = spot
 
 # ------------------------------------------------------------------ the people
 ## The building's population (profiles: Inhabitant's header). Each goes about its business

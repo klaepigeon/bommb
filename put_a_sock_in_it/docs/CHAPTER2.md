@@ -189,6 +189,17 @@ Checkpoints happen after the conversation, when the mains go on, when the boiler
 ## What's reused
 
 - Kurt and his systems (movement, health, the nerve, hiding, melee, the pistol and the shotgun).
+
+## Hiding
+
+There are six wardrobes Kurt can get into (`HideSpot`, as in the maze), against the back walls of the laundry and flat 2 (ground floor), 11 and 14 (first floor), and 21 and 25 (second floor). `lobby.gd` `_hiding()` places them. Getting in makes a little noise (the doors).
+
+What happens depends on who saw him get in:
+- **Watched.** Anything that hates him, was onto him (aware of him, or after him) and could see the wardrobe when he got in comes to it and drags him out, then carries on.
+- **Not watched.** Anything else loses him: it goes to look where he was, then gives up. Nothing hits a wardrobe it didn't see him get into.
+- **The blind ones.** The listener hears him. Stood by his wardrobe, every second there's a chance (30%, up to 80% the more scared he is) that it hears him breathe and has him out, unless he holds his breath (B / R3). That's what holding his breath is for here.
+
+`tools/hide2_test.gd` checks all of this: the six wardrobes, seen and dragged out, unseen and lost, and the listener with his breath held and not.
 - Socko's rig.
 - The dialogue system (extended).
 - `Door`, `Prop`, `NoteReader`, `Fx`, the sound library.
@@ -210,7 +221,6 @@ Checkpoints happen after the conversation, when the mains go on, when the boiler
 
 - **Flat 27.** Decided: an impossible gothic cathedral, where STIGMATA is nailed to his cross. It ends the chapter; see docs/CATHEDRAL.md.
 - **Facial and lip performance** for the inhabitants. Mouths and jaws move with posture, not with speech.
-- **Wall hiding** (wardrobes) isn't placed in this building yet. The hiding system exists.
 - **Electrocution as a trap.** The live water works on anything that walks into it, but there's no dedicated "lure it in" tool beyond noise.
 - **Inhabitants' routines restart at a checkpoint** rather than being saved mid-task (by design: "sensible persistence").
 - **Not played by hand or on a phone yet.** Tuning (enemy speeds and damage, how long things take) is first-pass.
