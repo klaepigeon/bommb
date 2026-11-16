@@ -453,6 +453,7 @@ func _take_spot(key: String, at: Vector3, prompt: String, item: String, n := 1) 
 	u.name = "Take_" + key
 
 func _letters() -> void:
+	if not Game.flag("ch2_letters"): Skills.award("memory", 1, "letters nobody answered")
 	Game.set_flag("ch2_letters")
 	Sfx.play("paper", -4.0)
 	var r := NoteReader.open(self, "Lyuda,\n\nWhy don't you write? Mama asks every Sunday. Gena says you're fine and too busy to come to the telephone. Too busy for three years?\n\nWrite, or I'm coming myself.\n\nVera\nTula, March 1996", {"ink": Color("2e3a5e"), "font_size": 24})
@@ -462,6 +463,7 @@ func _letters() -> void:
 	Dialogue.apply([{"know": ["kurt", "wife_letters"]}])
 
 func _note(key: String, text: String) -> void:
+	if key in ["ch2_bag", "ch2_photo"] and not Game.flag(key): Skills.award("memory", 1, {"ch2_bag": "her ticket, never punched", "ch2_photo": "a wedding photograph"}[key])
 	Game.set_flag(key)
 	NoteReader.open(self, text, {"ink": Color("2a2a2a"), "font_size": 24})
 	_trespass_check()
@@ -558,7 +560,19 @@ func _spawn(prof: Dictionary, at: Vector3) -> Inhabitant:
 	var n := Inhabitant.new(prof); n.level = self; n.player = player
 	world.add_child(n); n.global_position = at
 	people[prof.id] = n
+	n.died.connect(_killed)
 	return n
+
+## Kurt killed it (it was him that hurt it last): the infection feeds on it, and with Feed it
+## gives him back what it cost.
+func _killed(n: Inhabitant) -> void:
+	if n.last_hit_by != player: return
+	Game.set_flag("ch2_dead_" + String(n.id))
+	Skills.award("feed", 1)
+	if Skills.has("s_feed"):
+		player.health = minf(1.0, player.health + 0.35)
+		Game.strain = maxf(0.0, Game.strain - 0.5)
+		Sfx.play("heartbeat", -10.0, 0.8)
 
 ## Their work, done (stations call back): the laundry, the meat to the bath.
 func station_done(_n, _s) -> void:
@@ -678,6 +692,10 @@ func _on_door_tried(d: Door) -> void:
 		d.locked = false; Sfx.play_at("keys", d.global_position + Vector3(0, 1, 0), -2.0, 1.0); d.set_open(true)
 		Game.flags["ch2_unlocked_" + id] = true; _rebake_t = 0.5
 		return
+	# Locksmith (the Memory tree): slow, and quiet
+	if id in ["maint", "closet0", "flat1", "flat2", "flat16"] and Skills.has("m_locks") and not _picking:
+		_pick_lock(d, id)
+		return
 	if id in ["maint", "closet0", "flat1", "flat2", "flat16"] and Game.count("crowbar") > 0:
 		d.locked = false
 		Sfx.play_at("door_slam", d.global_position + Vector3(0, 1, 0), 0.0, 1.4); Sfx.play_at("bone_crack", d.global_position + Vector3(0, 1, 0), -2.0, 1.6)
@@ -685,6 +703,26 @@ func _on_door_tried(d: Door) -> void:
 		d.set_open(true)
 		Game.flags["ch2_unlocked_" + id] = true; _rebake_t = 0.5
 		if id == "flat1": Game.rel_of("super").suspicion += 2.0; _super_react()
+
+var _picking := false
+
+## Working a lock: four seconds of him crouched at it, ticking, then it gives. Quiet (a little
+## noise, nothing like the crowbar's).
+func _pick_lock(d: Door, id: String) -> void:
+	_picking = true
+	set_cutscene(true)
+	for i in 8:
+		Sfx.play_at("keys", d.global_position + Vector3(0, 1, 0), -14.0, randf_range(1.3, 1.7))
+		await get_tree().create_timer(0.5).timeout
+		if not is_inside_tree(): return
+	Game.make_noise(d.global_position, 0.15)
+	Sfx.play_at("switch", d.global_position + Vector3(0, 1, 0), -6.0, 0.7)
+	d.locked = false
+	Game.flags["ch2_unlocked_" + id] = true; _rebake_t = 0.5
+	set_cutscene(false)
+	_picking = false
+	d.set_open(true)
+	if id == "flat1": Game.rel_of("super").suspicion += 1.0; _super_react()
 
 # ------------------------------------------------------------------ Socko's ideas
 ## He suggests; Kurt does, or doesn't. Each kept: flags ch2_obey_<what> / ch2_defy_<what>; his

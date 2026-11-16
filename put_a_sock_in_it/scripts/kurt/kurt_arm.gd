@@ -499,7 +499,18 @@ func _arm_weights(z: float) -> Dictionary:
 	return {"forearm": 1.0 - tw, "forearm_twist": tw}
 
 # ================================================================== posing
+## The infection, in his skin: the further he's let it in (Skills.lean, and how much he's spent
+## on it), the greyer the arm and the bluer under it. Steady: it only changes when he buys.
+var _infect_seen := -1
+func _infection_tint() -> void:
+	var n := Skills.spent("infection")
+	if n == _infect_seen or not _mat_skin: return
+	_infect_seen = n
+	var k := clampf(float(n) / 14.0, 0.0, 1.0) * (0.6 + 0.4 * maxf(0.0, Skills.lean()))
+	_mat_skin.set_shader_parameter("albedo_color", Color(1, 1, 1).lerp(Color(0.62, 0.7, 0.72), k))
+
 func _process(delta: float) -> void:
+	_infection_tint()
 	_t += delta
 	var want: Dictionary = POSES.get(pose_name, POSES.relaxed)
 	var k := minf(1.0, delta * blend_speed)

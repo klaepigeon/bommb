@@ -542,6 +542,7 @@ func _pages() -> void:
 func _page(key: String, at: Vector3, text: String) -> void:
 	_box(at + Vector3(0, -0.02, 0), Vector3(0.22, 0.01, 0.3), Tex.mat("newspaper", 4.0, {"tint": Color(0.85, 0.8, 0.7)}), false)
 	Use.make(world, at, Vector3(0.4, 0.25, 0.4), func(): return "Read", func(_p):
+		if key == "c27_page2" and not Game.flag(key): Skills.award("memory", 1, "the order of it")
 		Game.set_flag(key); Sfx.play("paper", -4.0)
 		NoteReader.open(self, text, {"ink": Color("2a1a14"), "font_size": 24}))
 
@@ -604,6 +605,7 @@ func _pull(which: String) -> void:
 func _resolve(how: String) -> void:
 	_done = how
 	Game.set_flag("c27_" + how)
+	Skills.award("infection" if how == "nailed" else "memory", 1)
 	set_cutscene(true)
 	if how == "nailed":
 		Game.set_flag("ch2_obey_nail")

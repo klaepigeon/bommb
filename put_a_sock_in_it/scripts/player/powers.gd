@@ -2,10 +2,13 @@ class_name Powers
 extends Node
 ## What the infection lets him do (the Infection tree, docs/SKILLS.md), on one button, "power"
 ## (T / D-pad down / touch POWER), which does the first of these that applies:
-##   Telekinetic Shove  she's under the crosshair, within 8 m: half her poise and thrown back
+##   Throw Voice        crouched: a sound where he's looking (up to 20 m), for whatever listens
+##   Telekinetic Shove  she (or anything in the building that's after him) is under the crosshair,
+##                      within 8 m: its stance broken, thrown back
 ##   Telekinesis        a loose thing (up to 6 kg) under the crosshair, within 8 m: it flies to
 ##                      his hand
-##   Telepathy          nothing in reach: for three seconds he sees her through the walls
+##   Telepathy          nothing in reach: for three seconds he sees what's alive near him (her,
+##                      the building's people) through the walls
 ## Each costs strain (Game.strain 0..1, refilling at 0.08 a second); with too little left, nothing
 ## happens but a headache.
 
@@ -18,6 +21,7 @@ var _pulling: RigidBody3D = null
 var _pull_t := 0.0
 var _seen_t := 0.0
 var _overlay: StandardMaterial3D
+var _lit_up: Array = []
 
 func attach(p: Player, lv: Node) -> void:
 	player = p; level = lv
@@ -34,14 +38,27 @@ func _unhandled_input(e: InputEvent) -> void:
 	if not player or not player.controls: return
 	if e.is_action_pressed("power"): use()
 
-## Do whatever applies. Returns what it did ("shove", "pull", "listen", "tired", "").
+## Do whatever applies. Returns what it did ("voice", "shove", "pull", "listen", "tired", "").
 func use() -> String:
-	var m = _marta_in_sights()
+	# Throw Voice: crouched, a sound where he's looking, for whatever listens
+	if player.crouching and Skills.has("s_voice"):
+		var at := _aim_point(20.0)
+		if at != Vector3.INF:
+			if not _spend("voice"): return "tired"
+			Game.make_noise(at, 0.8)
+			Sfx.play_at("whisper", at, 0.0, 0.7, 24.0); Sfx.play_at("knock", at, -2.0, 0.9, 24.0)
+			Fx.kick("fringe", 0.6, 0.4)
+			return "voice"
+	var m = _foe_in_sights()
 	if m and Skills.has("s_shove"):
 		if not _spend("shove"): return "tired"
-		var dir: Vector3 = (m.global_position - player.global_position) * Vector3(1, 0, 1)
-		m.melee_hit(MartaHunter.POISE_MAX * 0.5, player.global_position, 4.0, self)
-		Sfx.play("whoosh", 0.0, 0.5); Sfx.play_at("bone_crack", m.head(), 0.0, 0.7)
+		if m is MartaHunter:
+			m.melee_hit(MartaHunter.POISE_MAX * 0.5, player.global_position, 4.0, self)
+			Sfx.play_at("bone_crack", m.head(), 0.0, 0.7)
+		else:
+			m.shove(player.global_position)
+			Sfx.play_at("bone_crack", m.eye(), 0.0, 0.7)
+		Sfx.play("whoosh", 0.0, 0.5)
 		Fx.kick("fringe", 1.4, 0.6); player.shake(0.02, 0.3)
 		return "shove"
 	var thing := _thing_in_sights()
@@ -69,14 +86,31 @@ func _spend(what: String) -> bool:
 	Game.strain += c
 	return true
 
-func _marta_in_sights():
+## Marta, or one of the building's people that wants him dead (or that he's in a fight with),
+## in his sights within RANGE with nothing in the way.
+func _foe_in_sights():
+	var cands := []
 	var m = level.get("marta")
-	if not m or not (m is MartaHunter) or not m.is_inside_tree(): return null
-	var to: Vector3 = m.head() - player.cam.global_position
-	if to.length() > RANGE: return null
-	if (-player.cam.global_transform.basis.z).dot(to.normalized()) < 0.94: return null
-	var q := PhysicsRayQueryParameters3D.create(player.cam.global_position, m.head(), 1, [player.get_rid()])
-	return m if player.get_world_3d().direct_space_state.intersect_ray(q).is_empty() else null
+	if m and m is MartaHunter and m.is_inside_tree(): cands.append([m, m.head()])
+	for n in get_tree().get_nodes_in_group("inhabitant"):
+		if n is Inhabitant and not n.dead and n.is_inside_tree(): cands.append([n, n.eye() - Vector3(0, 0.3, 0)])
+	var best = null; var bd := INF
+	for c in cands:
+		var to: Vector3 = (c[1] as Vector3) - player.cam.global_position
+		if to.length() > RANGE: continue
+		var dot := (-player.cam.global_transform.basis.z).dot(to.normalized())
+		if dot < 0.94: continue
+		var q := PhysicsRayQueryParameters3D.create(player.cam.global_position, c[1], 1, [player.get_rid()])
+		if not player.get_world_3d().direct_space_state.intersect_ray(q).is_empty(): continue
+		if to.length() < bd: bd = to.length(); best = c[0]
+	return best
+
+## Where he's looking: the first solid thing within `reach`, or Vector3.INF.
+func _aim_point(reach: float) -> Vector3:
+	var from := player.cam.global_position
+	var q := PhysicsRayQueryParameters3D.create(from, from - player.cam.global_transform.basis.z * reach, 1, [player.get_rid()])
+	var hit := player.get_world_3d().direct_space_state.intersect_ray(q)
+	return Vector3.INF if hit.is_empty() else (hit.position as Vector3) + (hit.normal as Vector3) * 0.5
 
 func _thing_in_sights() -> RigidBody3D:
 	var from := player.cam.global_position
@@ -119,11 +153,21 @@ func _process(delta: float) -> void:
 				b.collision_mask = int(b.get_meta("tk_mask", 1 | 2 | 16 | 32))
 				# in reach: he has it; caught on something on the way: it drops where it is
 				if not player.held and d.length() < 1.0: player.pick_up(b)
-	# telepathy: her shape through the walls
+	# telepathy: the shapes of what's alive near him, through the walls
+	var on := _seen_t > 0.0
+	var was := _seen_t > 0.0 or _lit_up.size() > 0
+	_seen_t = maxf(0.0, _seen_t - delta)
+	if not was: return
+	var bodies := []
 	var m = level.get("marta")
-	if m and m is MartaHunter and is_instance_valid(m.body):
-		var on := _seen_t > 0.0
-		_seen_t = maxf(0.0, _seen_t - delta)
-		for mi in m.body.find_children("*", "MeshInstance3D", true, false):
-			(mi as MeshInstance3D).material_overlay = _overlay if on else null
-		if on: _overlay.albedo_color.a = 0.35 * minf(1.0, _seen_t)
+	if m and m is MartaHunter and is_instance_valid(m.body): bodies.append(m.body)
+	for n in get_tree().get_nodes_in_group("inhabitant"):
+		if n is Inhabitant and not n.dead and is_instance_valid(n.body) and n.global_position.distance_to(player.global_position) < 25.0: bodies.append(n.body)
+	for mi in _lit_up:
+		if is_instance_valid(mi): (mi as MeshInstance3D).material_overlay = null
+	_lit_up.clear()
+	if on:
+		for b in bodies:
+			for mi in b.find_children("*", "MeshInstance3D", true, false):
+				(mi as MeshInstance3D).material_overlay = _overlay; _lit_up.append(mi)
+		_overlay.albedo_color.a = 0.35 * minf(1.0, _seen_t)

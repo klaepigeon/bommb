@@ -94,11 +94,11 @@ func _initialize() -> void:
 	await _shot("13_flesh_arrive")
 	_check(F.cell_of(F.player.global_position) == F.maze.start, "comes out of the hole at the start of the maze")
 	# the first safe room: a checkpoint, a point
-	var pts0: int = game.skill_points
+	var pts0: int = game.points
 	var s0: Vector2i = F.maze.safe[0]
 	_tp(F, F.centre(s0), F.centre(s0, 1.2) + Vector3(1, 0, 0))
 	await _until(func(): return int(game.flags.get("maze_safe", -1)) == 0, 6.0, "the first safe room is a checkpoint")
-	_check(game.skill_points > pts0, "and the infection grows (a skill point)")
+	_check(game.points > pts0, "and the infection grows (a point)")
 	await _shot("14_safe_room")
 	# meet her: down a straight run of cells, her at one end
 	var run: Array = F.straight(3)

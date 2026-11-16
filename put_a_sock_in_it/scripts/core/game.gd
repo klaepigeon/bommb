@@ -25,8 +25,10 @@ const SETTINGS_PATH := "user://settings.json"
 var flags := {}
 var memories := 0               # Memory nodes unlocked (the dialogue's memory branches test this)
 var skills := {}                # unlocked skill ids (Skills)
-var memory_points := 0          # to spend in the Memory tree
-var skill_points := 0           # to spend in the Infection tree
+## One pool for both trees (docs/SKILLS.md): every point spent on getting himself back is one not
+## spent on the thing in him, and the other way about. Earned from what brings something back to
+## him, from the infection growing, and from what he kills (it feeds).
+var points := 0
 ## This run, for the demo's end screen: seconds played, times she caught him, times he hid,
 ## times he put her down (stunned), memories found. Not saved: a run is a sitting.
 var run := {"time": 0.0, "caught": 0, "hid": 0, "stuns": 0, "memories": 0}
@@ -164,7 +166,7 @@ func uses_touch() -> bool:
 func new_game() -> void:
 	run = {"time": 0.0, "caught": 0, "hid": 0, "stuns": 0, "memories": 0}
 	flags = {}; memories = 0; inventory = {}; pistol = {"have": false, "mag": 0, "drawn": true}; shotgun = {"have": false, "loaded": 0, "drawn": false}
-	skills = {}; memory_points = 0; skill_points = 0; strain = 0.0; fear = 0.0; torch_charge = 1.0; rel = {}
+	skills = {}; points = 0; strain = 0.0; fear = 0.0; torch_charge = 1.0; rel = {}
 	Skills.apply()
 	change_level("flat47", {"fade": 1.5, "card": false})
 
@@ -183,7 +185,7 @@ func continue_game() -> void:
 
 func _snapshot() -> Dictionary:
 	return {"level": level_id, "flags": flags.duplicate(true), "memories": memories,
-		"skills": skills.keys(), "memory_points": memory_points, "skill_points": skill_points, "torch_charge": torch_charge,
+		"skills": skills.keys(), "points": points, "torch_charge": torch_charge,
 		"inventory": inventory.duplicate(true), "pistol": pistol.duplicate(true), "shotgun": shotgun.duplicate(true), "rel": rel.duplicate(true)}
 
 func _restore(d: Dictionary) -> void:
@@ -191,7 +193,8 @@ func _restore(d: Dictionary) -> void:
 	memories = int(d.get("memories", 0))
 	skills = {}
 	for k in d.get("skills", []): skills[String(k)] = true
-	memory_points = int(d.get("memory_points", 0)); skill_points = int(d.get("skill_points", 0)); torch_charge = float(d.get("torch_charge", 1.0)); fear = 0.0
+	# (saves from before the trees shared a pool had two: they're one now)
+	points = int(d.get("points", int(d.get("memory_points", 0)) + int(d.get("skill_points", 0)))); torch_charge = float(d.get("torch_charge", 1.0)); fear = 0.0
 	Skills.apply()
 	inventory = {}
 	for k in d.get("inventory", {}): inventory[k] = int(d.inventory[k])

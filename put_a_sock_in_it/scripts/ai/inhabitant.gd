@@ -108,6 +108,8 @@ func sees(n: Node3D) -> bool:
 		if player.crouching: reach *= 0.6
 		if player.torch_on: reach *= 1.5
 		elif s.get("needs_light", false) and level and level.has_method("lit") and not level.lit(player.global_position): reach *= 0.3
+		# Shade (the Infection tree): out of the light, eyes slide off him
+		if not player.torch_on and level and level.has_method("lit") and not level.lit(player.global_position): reach *= Game.stat("seen_dark")
 	if to.length() > reach: return false
 	var fwd := -global_basis.z
 	if to.length() > 1.4 and fwd.dot(Vector3(to.x, 0, to.z).normalized()) < float(s.get("cos", 0.5)): return false
@@ -320,8 +322,11 @@ func _strike(delta: float) -> void:
 		_windup = float(a.get("windup", 0.45))
 		_say("attack")
 
+var last_hit_by: Node = null     # (who killed it, when it dies: Kurt's kills feed the infection)
+
 func take_hit(dmg: float, from: Vector3, by: Node = null) -> void:
 	if dead: return
+	if by: last_hit_by = by
 	wake()
 	hp -= dmg; poise -= dmg
 	Sfx.play_at("bone_crack", eye(), -4.0, randf_range(0.7, 1.0))
@@ -341,8 +346,26 @@ func take_hit(dmg: float, from: Vector3, by: Node = null) -> void:
 
 ## (the player's weapons and Fx call these, the same names Marta answers to)
 func melee_hit(dmg: float, from: Vector3, knock: float, by = null) -> void:
+	# Coup de Grace (the Infection tree): a heavy blow with an edge finishes it if it's reeling, or if
+	# it hasn't seen him and has its back to him
+	if by is Hands and by.heavy and Skills.has("s_reaper") and String(by._prof.get("kind", "")) == "sharp" and not dead:
+		var to_him := (player.global_position - global_position) * Vector3(1, 0, 1)
+		var behind := (-global_basis.z).dot(to_him.normalized()) < -0.2
+		if _stagger > 0.0 or (behind and awareness < 0.5 and not sees(player)):
+			last_hit_by = player
+			Fx.hitstop(0.16); Sfx.play_at("flesh_tear", eye(), 2.0, 0.8)
+			die()
+			return
 	take_hit(dmg, from, player if by != null else null)
 	velocity += ((global_position - from) * Vector3(1, 0, 1)).normalized() * knock
+
+## The Telekinetic Shove: its stance broken, thrown back, and it knows who did it.
+func shove(from: Vector3) -> void:
+	if dead: return
+	take_hit(6.0, from, player)
+	_stagger = 1.6; _windup = 0.0
+	var away := (global_position - from) * Vector3(1, 0, 1)
+	if away.length() > 0.01: velocity = away.normalized() * 6.0
 
 func shot(point: Vector3, dir: Vector3) -> void:
 	take_hit(22.0, point - dir, player)

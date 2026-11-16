@@ -1,6 +1,7 @@
 class_name SkillsMenu
 extends CanvasLayer
-## The two trees, side by side (docs/SKILLS.md): Memory on the left, Infection on the right.
+## The two trees, side by side (docs/SKILLS.md): Memory on the left, Infection on the right,
+## bought from one pool: the top line says how many he has and which way he's been going.
 ## Each node is a button in its tree's grid (tier = row, col = column); a node lit is his, one
 ## outlined can be had now, one dim isn't reachable yet. The panel at the bottom says what the
 ## selected node does (and, for a Memory node he has, what he remembers) and buys it.
@@ -17,6 +18,8 @@ var _sel := ""
 var _title: Label
 var _body: Label
 var _buy: Button
+var _pool: Label
+var _lean: Label
 
 func _ready() -> void:
 	layer = 60
@@ -55,7 +58,13 @@ func _build() -> void:
 	var margin := MarginContainer.new(); margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]: margin.add_theme_constant_override("margin_" + side, 28)
 	_root.add_child(margin)
-	var v := VBoxContainer.new(); v.add_theme_constant_override("separation", 14); margin.add_child(v)
+	var v := VBoxContainer.new(); v.add_theme_constant_override("separation", 12); margin.add_child(v)
+	# the one pool, and which way he's going
+	var top := HBoxContainer.new(); v.add_child(top)
+	_pool = Label.new(); _pool.add_theme_font_size_override("font_size", 22); _pool.add_theme_color_override("font_color", Color("e8e0cc"))
+	top.add_child(_pool)
+	var sp0 := Control.new(); sp0.size_flags_horizontal = Control.SIZE_EXPAND_FILL; top.add_child(sp0)
+	_lean = Label.new(); _lean.add_theme_font_size_override("font_size", 18); top.add_child(_lean)
 	var trees := HBoxContainer.new(); trees.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	trees.add_theme_constant_override("separation", 40)
 	v.add_child(trees)
@@ -73,17 +82,17 @@ func _build() -> void:
 		var grid := GridContainer.new(); grid.columns = 3
 		grid.add_theme_constant_override("h_separation", 10); grid.add_theme_constant_override("v_separation", 10)
 		col.add_child(grid)
-		# a 4 x 3 grid: blanks where a tree has no node
+		# a 5 x 3 grid: blanks where a tree has no node
 		var cells := {}
 		for id in Skills.NODES:
 			var n: Dictionary = Skills.NODES[id]
 			if n.tree == tree: cells[Vector2i(int(n.col), int(n.tier))] = id
-		for row in 4:
+		for row in 5:
 			for c in 3:
 				var key := Vector2i(c, row)
 				if cells.has(key):
 					var id: String = cells[key]
-					var b := Button.new(); b.custom_minimum_size = Vector2(150, 64)
+					var b := Button.new(); b.custom_minimum_size = Vector2(150, 56)
 					b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 					b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 					b.add_theme_font_size_override("font_size", 17)
@@ -92,7 +101,7 @@ func _build() -> void:
 					b.pressed.connect(func(): _select(id); _try_buy())
 					grid.add_child(b); _buttons[id] = b
 				else:
-					var gap := Control.new(); gap.custom_minimum_size = Vector2(150, 64); grid.add_child(gap)
+					var gap := Control.new(); gap.custom_minimum_size = Vector2(150, 56); grid.add_child(gap)
 	# the details
 	var panel := PanelContainer.new()
 	var sb := StyleBoxFlat.new(); sb.bg_color = Color(0.08, 0.08, 0.1, 0.95); sb.set_content_margin_all(16)
@@ -110,8 +119,12 @@ func _build() -> void:
 	close_b.pressed.connect(close); row.add_child(close_b)
 
 func _refresh() -> void:
-	(_points.memory as Label).text = "%d point%s" % [Game.memory_points, "" if Game.memory_points == 1 else "s"]
-	(_points.infection as Label).text = "%d point%s" % [Game.skill_points, "" if Game.skill_points == 1 else "s"]
+	_pool.text = "%d %s%s to spend, on either" % [Game.points, Skills.POINT, "" if Game.points == 1 else "s"]
+	(_points.memory as Label).text = "%d spent" % Skills.spent("memory")
+	(_points.infection as Label).text = "%d spent" % Skills.spent("infection")
+	var l := Skills.lean()
+	_lean.text = "" if Skills.spent("memory") + Skills.spent("infection") == 0 else ("more himself" if l < -0.2 else ("more it" if l > 0.2 else "both"))
+	_lean.add_theme_color_override("font_color", COL_MEMORY.lerp(COL_INFECT, (l + 1.0) * 0.5))
 	for id in _buttons:
 		var b: Button = _buttons[id]
 		var n: Dictionary = Skills.NODES[id]

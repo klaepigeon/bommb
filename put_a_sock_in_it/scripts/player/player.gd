@@ -306,7 +306,11 @@ func _physics_process(delta: float) -> void:
 	_torch_update(delta)
 	# health: back slowly when he's been left alone a while
 	_hurt_t += delta
-	if _hurt_t > 9.0 and health > 0.0: health = minf(1.0, health + delta * 0.04)
+	# (Regrowth: sooner and faster; First Aid: crouched and still, out of it, he sees to himself)
+	if _hurt_t > Game.stat("regen_delay") and health > 0.0:
+		var r := 0.04 * Game.stat("regen")
+		if Skills.has("m_aid") and crouching and velocity.length() < 0.3 and _hurt_t > 5.0: r *= 4.0
+		health = minf(1.0, health + delta * r)
 	var sk = get_parent().get("socko")
 	if sk: sk.vitals = health
 	Fx.set_k("hurt", 1.0 - health)

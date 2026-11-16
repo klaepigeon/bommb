@@ -116,6 +116,7 @@ func _run(steps: Array, g: int) -> String:
 			event.emit(step.event, step)
 			if step.has("wait"): await _wait(float(step.wait), g)
 		elif step.has("choices"):
+			_reading = String(step.get("with", ""))
 			var pick: Dictionary = await _choose(step.choices, g)
 			if g != _gen: return ""
 			if not pick.is_empty():
@@ -162,6 +163,10 @@ func apply(ops) -> void:
 var _choice_box: VBoxContainer
 var _picked := -1
 var _options: Array = []
+var _reading := ""             # who this choice is with (Read People shows how they feel)
+const READS := {"cooperative": "warm", "neutral": "plain", "suspicious": "prying", "hostile": "hostile", "deceptive": "a lie"}
+const MOODS := {"cooperative": "takes to you", "deceived": "believes you", "neutral": "doesn't know what to make of you",
+	"suspicious": "doesn't trust you", "hostile": "wants you gone"}
 
 ## Show the options (those whose condition holds, and locked ones greyed), wait for a pick.
 func _choose(choices: Array, g: int) -> Dictionary:
@@ -174,6 +179,8 @@ func _choose(choices: Array, g: int) -> Dictionary:
 		var tag: Array = TAGS.get(c.get("tag", ""), ["", Color("ece6d6")])
 		var b := Button.new()
 		b.text = "%d.  %s%s" % [_options.size() + 1, tag[0], c.get("text", "")]
+		# Read People (the Memory tree): how it'll land
+		if Skills.has("m_people") and c.has("approach"): b.text += "   (%s)" % READS.get(String(c.approach), String(c.approach))
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		b.add_theme_font_size_override("font_size", 22)
@@ -184,6 +191,8 @@ func _choose(choices: Array, g: int) -> Dictionary:
 		_choice_box.add_child(b)
 		_options.append(c)
 	if _options.is_empty(): return {}
+	if Skills.has("m_people") and _reading != "" and Game.level and Game.level.get("hud"):
+		Game.level.hud.hint("%s %s." % [NAMES.get(_reading, _reading.capitalize()).capitalize(), MOODS.get(Game.disposition(_reading), "is hard to read")], 5.0)
 	var lv = Game.level
 	var was_cut: bool = lv.cutscene if lv and lv.get("cutscene") != null else true
 	if lv and lv.has_method("set_cutscene"): lv.set_cutscene(true)
@@ -226,10 +235,10 @@ func skip_line() -> void:
 
 func test(cond: String) -> bool:
 	var e := Expression.new()
-	if e.parse(cond, ["memories", "flags", "skills", "rel", "inv"]) != OK:
+	if e.parse(cond, ["memories", "flags", "skills", "rel", "inv", "lean"]) != OK:
 		push_error("dialogue: bad condition " + cond); return false
 	for who in ["super", "socko"]: Game.rel_of(who)        # (so rel.super.x never fails)
-	var r = e.execute([Game.memories, Game.flags, Game.skills, Game.rel, Game.inventory])
+	var r = e.execute([Game.memories, Game.flags, Game.skills, Game.rel, Game.inventory, Skills.lean()])
 	return bool(r) if not e.has_execute_failed() else false
 
 func _say(step: Dictionary, g: int) -> void:
