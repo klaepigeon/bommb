@@ -54,6 +54,6 @@ func _burst(from: Vector3) -> void:
 		var bit := Prop.make(get_parent(), global_position + Vector3(randf_range(-size.x * 0.4, size.x * 0.4), randf_range(-0.8, 0.8), 0), s, Tex.mat("plaster", 1.0), "Plaster", 0.3, 0.3)
 		bit.collision_layer = 16; bit.liftable = false
 		bit.linear_velocity = away * randf_range(2.0, 5.0) + Vector3(0, randf_range(0.5, 2.5), 0)
-		get_tree().create_timer(30.0).timeout.connect(func(): if is_instance_valid(bit): bit.queue_free())
+		get_tree().create_timer(30.0).timeout.connect(bit.queue_free)     # (bound to it: gone first, no call into freed)
 	breached.emit()
 	queue_free()

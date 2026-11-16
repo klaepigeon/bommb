@@ -88,7 +88,8 @@ func _initialize() -> void:
 	L.hole_spot.interact(L.player)
 	await _wait(3.0)
 	await _shot("12_crawling")
-	await _until(func(): return game.level_id == "flesh47" and game.level != L and is_instance_valid(game.level), 40.0, "crawl loads Flat 47 (flesh)")
+	var old_id: int = L.get_instance_id()       # (not L itself in the lambda: it's freed while this waits)
+	await _until(func(): return game.level_id == "flesh47" and is_instance_valid(game.level) and game.level.get_instance_id() != old_id, 40.0, "crawl loads Flat 47 (flesh)")
 	var F = game.level
 	await _until(func(): return F.player.controls, 30.0, "arrival cutscene ends")
 	await _shot("13_flesh_arrive")

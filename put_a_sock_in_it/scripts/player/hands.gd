@@ -283,7 +283,9 @@ func _break(at: Vector3) -> void:
 		var bit := Prop.make(player.get_parent(), pos + Vector3(randf_range(-0.1, 0.1), randf_range(0.0, 0.1), randf_range(-0.1, 0.1)), s, mat, "Piece", 0.05, 0.2)
 		bit.set_meta("debris", true); bit.liftable = false
 		bit.linear_velocity = Vector3(randf_range(-2, 2), randf_range(0.5, 2.5), randf_range(-2, 2))
-		get_tree().create_timer(20.0).timeout.connect(func(): if is_instance_valid(bit): bit.queue_free())
+		# (bound to the bit itself, not a lambda holding it: if the bit's gone first, say the level
+		# changed, the connection goes with it instead of calling into something freed)
+		get_tree().create_timer(20.0).timeout.connect(bit.queue_free)
 	old.queue_free()
 	broke.emit(cls)
 	if into != "":

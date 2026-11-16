@@ -38,6 +38,7 @@ const BELL_ORDER := ["PEDES", "MANUS", "LATUS"]
 var _decided := ""               # "nail" / "free" / "leave" (what he chose in the conversation)
 var _done := ""                  # "nailed" / "freed" (what he did)
 var _strikes := 0
+var _striking := false
 var _pulled := {}
 var _met := false
 var _ending := false
@@ -550,11 +551,12 @@ func _page(key: String, at: Vector3, text: String) -> void:
 func _meet() -> void:
 	if _met or not loop_broken: return
 	_met = true
+	for f in ["c27_chose_nail", "c27_chose_free", "c27_chose_leave"]: Game.flags.erase(f)      # (a choice from before a reload doesn't stick)
 	set_cutscene(true)
 	var d: Vector3 = stig.at("head") - player.cam.global_position
 	player.set_view(atan2(-d.x, -d.z), atan2(d.y, Vector2(d.x, d.z).length()))
 	await Dialogue.play("c27_meet")
-	set_cutscene(false)
+	if is_inside_tree(): set_cutscene(false)
 
 func on_event(n: String, _step: Dictionary) -> void:
 	match n:
@@ -576,7 +578,9 @@ func _left_prompt() -> String:
 	return "Drive the nail" if Game.count("hammer") > 0 else "The nail"
 
 func _strike() -> void:
+	if _done != "" or _striking: return
 	if Game.count("hammer") == 0: Dialogue.play("c27_need_hammer"); return
+	_striking = true          # (one blow at a time: mashing it doesn't end it three times over)
 	_strikes += 1
 	Sfx.play_at("nail_strike", stig.at("el_l"), 0.0, randf_range(0.95, 1.05))
 	Fx.hitstop(0.08); Fx.burst("flesh", stig.at("el_l"), Vector3(0, 0, 1))
@@ -584,6 +588,8 @@ func _strike() -> void:
 	stig.snap = 30.0
 	stig.pose["spine"] = Vector3(0.25, 0, 0); stig.pose["head"] = Vector3(0.7, 0.2, 0.0); stig.pose["kn_l"] = Vector3(-0.6, 0, 0)
 	await get_tree().create_timer(0.25).timeout
+	if not is_inside_tree(): return
+	_striking = false
 	stig.snap = 4.0
 	_apply_pose()
 	if _strikes >= 3: _resolve("nailed")
@@ -593,6 +599,7 @@ func _pull_prompt(which: String) -> String:
 	return "Pull the nail" + (" (hand)" if which == "hand" else " (feet)")
 
 func _pull(which: String) -> void:
+	if _done != "" or _pulled.get(which, false): return
 	if Game.count("hammer") == 0: Dialogue.play("c27_need_hammer"); return
 	_pulled[which] = true
 	Sfx.play_at("flesh_tear", stig.at("chest"), 0.0)
@@ -603,6 +610,7 @@ func _pull(which: String) -> void:
 	if _pulled.size() >= 2: _resolve("freed")
 
 func _resolve(how: String) -> void:
+	if _done != "": return
 	_done = how
 	Game.set_flag("c27_" + how)
 	Skills.award("infection" if how == "nailed" else "memory", 1)
@@ -611,6 +619,7 @@ func _resolve(how: String) -> void:
 		Game.set_flag("ch2_obey_nail")
 		var tw := create_tween(); tw.tween_property(_rose_light, "light_energy", 2.2, 6.0)
 		await Dialogue.play("c27_nailed")
+		if not is_inside_tree(): return
 	else:
 		Game.set_flag("ch2_defy_nail")
 		# he comes down: slides off the footrest, folds onto the dais
@@ -620,6 +629,7 @@ func _resolve(how: String) -> void:
 		_apply_pose()
 		Sfx.play_at("thud", stig.global_position, 0.0)
 		await tw.finished
+		if not is_inside_tree(): return
 		await Dialogue.play("c27_freed")
 	objective("The door behind the altar.")
 	set_cutscene(false)
@@ -630,7 +640,7 @@ func _leave() -> void:
 	set_cutscene(true)
 	if _done == "":
 		Game.set_flag("c27_left")
-		if _decided != "nail": Game.set_flag("ch2_defy_nail")
+		Game.set_flag("ch2_defy_nail")
 		await Dialogue.play("c27_left")
 	Sfx.play("door_creak", -4.0)
 	await Dialogue.play("c27_door")

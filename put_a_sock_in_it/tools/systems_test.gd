@@ -12,6 +12,7 @@ func _initialize() -> void:
 	game = root.get_node("Game")
 	game.flags["maze_safe"] = 0; game.flags["met_marta_maze"] = true
 	game.change_level("flesh47", {"card": false, "checkpoint": true, "fade": 0.01})
+	while game.busy or game.level == null or not is_instance_valid(game.level): await process_frame     # (loaded, however long it takes)
 	await _wait(3.0)
 	var F = game.level
 	F._encountered = true

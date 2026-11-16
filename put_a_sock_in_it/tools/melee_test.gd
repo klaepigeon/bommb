@@ -15,6 +15,7 @@ func _initialize() -> void:
 	DirAccess.make_dir_recursive_absolute(out)
 	game = root.get_node("Game")
 	game.change_level("flat47", {"card": false, "fade": 0.01})
+	while game.busy or game.level == null or not is_instance_valid(game.level): await process_frame     # (loaded, however long it takes)
 	await _wait(2.0)
 	var L = game.level
 	root.get_node("Dialogue").stop(); L.set_cutscene(false); game._black.visible = false
@@ -74,10 +75,15 @@ func _initialize() -> void:
 	var leg = P.held
 	P.set_view(P.get_yaw() + PI, 0.0)          # (away from the wall, into the hall)
 	await _wait(0.2)
-	var from: Vector3 = leg.global_position
-	game.level.set_cutscene(false); _press("throw", true); await _wait(0.2); _press("throw", false); await _wait(0.3)
-	# (how far it went, not how fast it's still going: it can have landed already)
-	_check(P.held == null and is_instance_valid(leg) and leg.global_position.distance_to(from) > 0.6, "'throw' throws it (%.2f m)" % (leg.global_position.distance_to(from) if is_instance_valid(leg) else 0.0))
+	# (how fast it leaves his hand: not how far it got, which depends on what's in front of him)
+	game.level.set_cutscene(false); _press("throw", true)
+	var top := [0.0]
+	var t0 := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - t0 < 200:
+		await physics_frame
+		if is_instance_valid(leg) and P.held != leg: top[0] = maxf(top[0], leg.linear_velocity.length())
+	_press("throw", false); await _wait(0.2)
+	_check(P.held == null and is_instance_valid(leg) and top[0] > 2.5, "'throw' throws it (%.1f m/s)" % top[0])
 	# ---- pistol: drawn it shoots, holstered he punches
 	game.pistol.have = true; game.pistol.drawn = true; game.pistol.mag = 4
 	await _wait(0.6)
@@ -91,6 +97,7 @@ func _initialize() -> void:
 	# ---- Marta: blows take her poise; enough of them stun her
 	game.flags["maze_safe"] = 0; game.flags["met_marta_maze"] = true
 	game.change_level("flesh47", {"card": false, "checkpoint": true, "fade": 0.01})
+	while game.busy or game.level == null or not is_instance_valid(game.level): await process_frame     # (loaded, however long it takes)
 	await _wait(3.0)
 	var F = game.level
 	game._black.visible = false; root.get_node("Dialogue").stop(); F.set_cutscene(false)

@@ -210,6 +210,9 @@ func melee_hit(dmg: float, from: Vector3, knock: float, _by = null) -> void:
 			_last_seen = player.global_position if player else from
 			set_state("chase"); go_to(_last_seen)
 
+func _crack() -> void:
+	if is_inside_tree(): Sfx.play_at("bone_crack", head(), 0.0, randf_range(0.6, 0.9))
+
 ## Down, for good (in this copy of the flat: what she is reforms ahead of him).
 func die() -> void:
 	set_state("dead")
@@ -217,7 +220,7 @@ func die() -> void:
 	collision_layer = 0
 	velocity = Vector3.ZERO
 	Sfx.play_at("marta_scream", head(), 2.0, 0.6)
-	for i in 4: get_tree().create_timer(0.15 * i).timeout.connect(func(): Sfx.play_at("bone_crack", head(), 0.0, randf_range(0.6, 0.9)))
+	for i in 4: get_tree().create_timer(0.15 * i).timeout.connect(_crack)
 	body.snap = 6.0
 	body.pose.spine = Vector3(-0.9, 0, 0.3); body.pose.neck = Vector3(-0.6, 0, 0.4); body.pose.head = Vector3(-0.5, 0.4, 0.9)
 	body.pose.kn_l = Vector3(-1.6, 0, 0); body.pose.kn_r = Vector3(-1.4, 0, 0); body.pose.hip_l = Vector3(1.2, 0, 0.2); body.pose.hip_r = Vector3(1.0, 0, -0.2)

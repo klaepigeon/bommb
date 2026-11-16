@@ -33,6 +33,7 @@ func _initialize() -> void:
 	_check(S.unlock("s_tk"), "Telekinesis")
 	# ---- in the flat
 	game.change_level("flat47", {"card": false, "fade": 0.01})
+	while game.busy or game.level == null or not is_instance_valid(game.level): await process_frame     # (loaded, however long it takes)
 	await _wait(2.0)
 	var L = game.level
 	D.stop(); L.set_cutscene(false); game._black.visible = false
@@ -108,6 +109,7 @@ func _initialize() -> void:
 	# ---- the flesh flat: breach, shove, coup de grace
 	game.flags["maze_safe"] = 0; game.flags["met_marta_maze"] = true
 	game.change_level("flesh47", {"card": false, "checkpoint": true, "fade": 0.01})
+	while game.busy or game.level == null or not is_instance_valid(game.level): await process_frame     # (loaded, however long it takes)
 	await _wait(3.0)
 	var F = game.level
 	game._black.visible = false; D.stop(); F.set_cutscene(false)

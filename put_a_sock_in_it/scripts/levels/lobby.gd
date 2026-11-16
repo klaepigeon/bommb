@@ -395,7 +395,7 @@ func _growths() -> void:
 		Game.flags["ch2_bath_dead"] = true
 		_socko_outcome("bath", true)
 		await get_tree().create_timer(2.5).timeout
-		door27.recede())
+		if is_inside_tree() and is_instance_valid(door27): door27.recede())
 
 # ------------------------------------------------------------------ what there is to find
 func _discoveries() -> void:
@@ -675,7 +675,7 @@ func _trespass_check() -> void:
 		var deceived := Game.disposition("super") == "deceived"
 		Dialogue.play("super_found_out" if deceived else "super_found_in_flat")
 		await get_tree().create_timer(3.0).timeout
-		_super_react()
+		if is_inside_tree(): _super_react()
 
 func _cook_notices() -> void:
 	var c: Inhabitant = people.get("cook")
@@ -706,20 +706,23 @@ func _on_door_tried(d: Door) -> void:
 
 var _picking := false
 
-## Working a lock: four seconds of him crouched at it, ticking, then it gives. Quiet (a little
-## noise, nothing like the crowbar's).
+## Working a lock: four seconds at it, ticking, then it gives. Quiet (a little noise, nothing
+## like the crowbar's). He isn't frozen there: walk away (or be knocked away) and he loses it.
 func _pick_lock(d: Door, id: String) -> void:
 	_picking = true
-	set_cutscene(true)
+	hud.hint("Working the lock...", 4.0)
 	for i in 8:
 		Sfx.play_at("keys", d.global_position + Vector3(0, 1, 0), -14.0, randf_range(1.3, 1.7))
 		await get_tree().create_timer(0.5).timeout
 		if not is_inside_tree(): return
+		if player.global_position.distance_to(d.global_position) > 1.8 or player.health <= 0.0:
+			_picking = false
+			hud.hint("Lost it.", 2.0)
+			return
 	Game.make_noise(d.global_position, 0.15)
 	Sfx.play_at("switch", d.global_position + Vector3(0, 1, 0), -6.0, 0.7)
 	d.locked = false
 	Game.flags["ch2_unlocked_" + id] = true; _rebake_t = 0.5
-	set_cutscene(false)
 	_picking = false
 	d.set_open(true)
 	if id == "flat1": Game.rel_of("super").suspicion += 1.0; _super_react()
@@ -753,7 +756,7 @@ func _line_once(id: String) -> void:
 	if _said.has(id) or not Dialogue.has(id): return
 	_said[id] = true
 	if Dialogue.busy: await get_tree().create_timer(2.0).timeout
-	if not Dialogue.busy: Dialogue.play(id)
+	if is_inside_tree() and Game.level == self and not Dialogue.busy: Dialogue.play(id)
 
 # ------------------------------------------------------------------ going on
 func _process(delta: float) -> void:
@@ -763,7 +766,7 @@ func _process(delta: float) -> void:
 		if _rebake_t <= 0.0: _bake_nav()
 	# heat: the boiler on, the second floor warms; the meat on 27's door lets go of it
 	heat = move_toward(heat, 1.0 if (boiler_on and power_on) else 0.0, delta / 25.0)
-	if heat > 0.6 and door27 and not door27.gone:
+	if heat > 0.6 and is_instance_valid(door27) and not door27.gone:
 		door27.recede()
 		_socko_outcome("bath", false)
 	for r in _radiators: (r as MeshInstance3D).material_override = Tex.mat("enamel", 3.0, {"tint": Color(0.6, 0.55, 0.5).lerp(Color(0.95, 0.55, 0.4), heat)})

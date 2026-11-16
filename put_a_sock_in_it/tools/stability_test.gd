@@ -13,6 +13,7 @@ func _initialize() -> void:
 	game.settings.post_fx = false
 	game.settings.sway = false        # (the camera breathing isn't flicker: hold it still to look for flicker)
 	game.change_level("flat47", {"card": false, "fade": 0.01})
+	while game.busy or game.level == null or not is_instance_valid(game.level): await process_frame     # (loaded, however long it takes)
 	await _wait(5.0)          # (the level fades in from black over its first 3 s)
 	var L = game.level
 	root.get_node("Dialogue").stop(); L.set_cutscene(false); game._black.visible = false
@@ -27,6 +28,7 @@ func _initialize() -> void:
 		await _hold(L, v[0], v[1], v[2])
 	game.flags["maze_safe"] = 0; game.flags["met_marta_maze"] = true
 	game.change_level("flesh47", {"card": false, "checkpoint": true, "fade": 0.01})
+	while game.busy or game.level == null or not is_instance_valid(game.level): await process_frame     # (loaded, however long it takes)
 	await _wait(3.0)
 	var F = game.level
 	game._black.visible = false; root.get_node("Dialogue").stop(); F.set_cutscene(false)

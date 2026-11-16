@@ -8,6 +8,7 @@ func _initialize() -> void:
 	var game = root.get_node("Game")
 	game.settings.force_touch = true
 	game.change_level("flesh47", {"card": false, "checkpoint": true, "fade": 0.01})
+	while game.busy or game.level == null or not is_instance_valid(game.level): await process_frame     # (loaded, however long it takes)
 	await _wait(1.0)
 	var F = game.level
 	var t0 := Time.get_ticks_msec()

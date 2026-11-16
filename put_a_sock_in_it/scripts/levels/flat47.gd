@@ -371,7 +371,7 @@ func on_event(n: String, _step: Dictionary) -> void:
 			var tw := create_tween()
 			tw.tween_method(func(k): marta.base.head = from.lerp(to, k), 0.0, 1.0, 2.2).set_trans(Tween.TRANS_SINE)
 			tw.tween_method(func(k): marta.base.head = to + Vector3(0, 0, 0.55 * k), 0.0, 1.0, 1.4).set_trans(Tween.TRANS_QUAD)
-			for i in 4: get_tree().create_timer(0.4 + i * 0.7).timeout.connect(func(): Sfx.play_at("bone_crack", _face(), -4.0, randf_range(0.7, 1.0)))
+			for i in 4: get_tree().create_timer(0.4 + i * 0.7).timeout.connect(func(): if is_inside_tree(): Sfx.play_at("bone_crack", _face(), -4.0, randf_range(0.7, 1.0)))
 			get_tree().create_timer(1.6).timeout.connect(_eye_on_him)
 			Sfx.set_loop_volume("flies", -30.0)
 			Fx.set_k("pulse", 0.35); Fx.set_k("fringe", 0.35)

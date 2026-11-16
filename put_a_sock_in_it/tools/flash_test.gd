@@ -13,6 +13,7 @@ func _initialize() -> void:
 	game = root.get_node("Game")
 	game.settings.reduce_flashing = true
 	game.change_level("flat47", {"card": false, "fade": 0.01})
+	while game.busy or game.level == null or not is_instance_valid(game.level): await process_frame     # (loaded, however long it takes)
 	await _wait(1.5)
 	var L = game.level
 	root.get_node("Dialogue").stop(); game._black.visible = false; L.set_cutscene(false)
@@ -25,6 +26,7 @@ func _initialize() -> void:
 	await _scene(L, "kitchen tube restarting", Vector3(8.2, 0, 3.4), Vector3(9.0, 1.4, 1.0))
 	game.flags["maze_safe"] = 0; game.flags["met_marta_maze"] = true
 	game.change_level("flesh47", {"card": false, "checkpoint": true, "fade": 0.01})
+	while game.busy or game.level == null or not is_instance_valid(game.level): await process_frame     # (loaded, however long it takes)
 	await _wait(3.0)
 	var F = game.level
 	game._black.visible = false
