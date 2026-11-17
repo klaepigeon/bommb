@@ -11,15 +11,22 @@ What actually works, checked by the tools in `tools/` (run with
 | `hunt_test.gd` | Marta (in copy B): hears and investigates, gives up, sees standing / not crouched at range, stunned by a bullet, hunts again more suspicious, searches and returns to patrol | 0 fails |
 | `build_apk.sh` | exports and verifies the signed APK | signed |
 | `touch_test.gd` | stick walks, right-half drag looks, both at once, USE presses interact | 0 fails |
-| `melee_test.gd` | through the real inputs: a punch shoves a loose thing; blows cost stamina; hold for a heavy blow; a hammer wears a hit at a time; a jar breaks into a shard he keeps; a chair breaks into a leg; throw; pistol drawn shoots, holstered punches; blows take Marta's poise, she comes for him, a heavy axe blow stuns her | see below |
-| `skills_test.gd` | points and prerequisites; Memory nodes open the memory branches; Sinew, Lungs; telekinesis pulls a thing into his hand; the choice UI (greyed locked options, [Memory] / [Telepathy] tags, picking); telepathy; the skills screen; Breach through a cracked wall (not without it); the shove; Coup de Grace, and her coming back further along in the next copy | see below |
+| `melee_test.gd` | through the real inputs: a punch shoves a loose thing; blows cost stamina; hold for a heavy blow; a hammer wears a hit at a time; a jar breaks into a shard he keeps; a chair breaks into a leg; throw; pistol drawn shoots, holstered punches; blows take Marta's poise, she comes for him, a heavy axe blow stuns her | 0 fails |
+| `skills_test.gd` | the one pool and the lean; prerequisites; Memory nodes open the memory branches; Sinew, Lungs; telekinesis pulls a thing into his hand; the choice UI (greyed locked options, [Memory] / [Telepathy] tags, picking); telepathy; the skills screen; Breach through a cracked wall (not without it); the shove; Coup de Grace, and her coming back further along in the next copy | 0 fails |
 | `flash_test.gd` | photosensitivity: renders the flickering scenes and counts brightness flashes per screen quadrant (WCAG general-flash rule, simplified) | 0 fails (≤ 1 flash/s) |
 | `socko_view.gd`, `marta_view.gd`, `marta_stages.gd`, `scare_view.gd`, `hunter_pose.gd`, `landing_view.gd`, `note_view.gd`, `beauty.gd`, `title_shot.gd` | render characters, Marta's poses, the stairwell and doors, Sonya's note and fixed views for judging the look | |
-| `bake_audio.gd` | synthesises every sound into `assets/audio/` | 78 sounds |
+| `flat48_test.gd` | Flat 48: the blocks, the note wall, LOBBY, the gun safe, the figures | 0 fails |
+| `chapter2_test.gd` | the super's conversation five ways and what it leaves; maintenance, the breaker, the fuses, the lift, the boiler, the crowbar and hatch, the meat on the stairs, the bath; the inhabitants on their own; a checkpoint restoring the building; 27's door into the cathedral | 0 fails |
+| `cathedral_test.gd` | the looping nave; the bells wrong and right; walking it backwards; meeting STIGMATA; the nail (hammer, three strikes), pulling the nails, leaving; the door ending the chapter | 0 fails |
+| `skills2_test.gd` | the trees in Chapter 2: Read People, a point from the letters, the shove / Coup de Grace / Feed on an inhabitant, telepathy, Throw Voice, Shade, Regrowth, Locksmith, First Aid | 0 fails |
+| `hide2_test.gd` | Chapter 2 hiding: the six wardrobes; seen getting in (dragged out); unseen (lost, unhurt); the listener and his held breath | 0 fails |
+| `systems_test.gd`, `stability_test.gd` | the nerve, hiding, the torch battery; frame-to-frame stability (no flicker, no jitter) | 0 fails |
+| `perf_view.gd` | draw calls / objects / triangles at spots in a level | cathedral ≤ 200 draw calls, lobby ≤ 262 |
+| `bake_audio.gd` | synthesises every sound into `assets/audio/` | |
 
 ## Implemented
 
-- Two levels with loading cards between them; the crawl cutscene runs into the load.
+- Flat 47, the flesh maze, Flat 48, the lobby and the cathedral, with loading cards between them; the crawl cutscene runs into the load.
 - The whole authored script for Flat 47, the maze encounter, and random conversations A, B, C
   (C's memory branch reads `Game.memories`).
 - Kurt: walk, limited-stamina run, trained crouch, head bob, footsteps that make noise, carrying,
@@ -121,15 +128,11 @@ What actually works, checked by the tools in `tools/` (run with
 
 ## Partially implemented / placeholder
 
-- **Voices** are synthesised babble under subtitles, not recordings. Every sound is synthesised (and baked).
-- **Kurt's body**: no visible body or left/right hand animation beyond Socko's arm and the hand on
-  the pistol. No contextual hand animations for doors and drawers.
-- **Infection** system: not started (flags only).
-- **Memory tree**: only `Game.memories` exists (for random conversation C); nothing spends it.
-- **Socko's antagonism**: his personality is in the lines and performance, but there's no
-  obey/defy tracking yet.
-- **Hiding places**: none dedicated; crouching and breaking line of sight are the stealth.
-- Marta can't be killed (by design for now: the pistol buys time).
+- **Writing.** Every placeholder ("neenor neenor…") is the authors' to write. That covers the Memory nodes' texts, Flat 48, and some of Flat 47. Chapter 2's and 27's lines are drafts in the script's voice, for Jules and ki to rewrite.
+- **Voices** are synthesised babble under subtitles, not recordings. Every sound is synthesised and baked.
+- **Kurt's body:** there are no contextual hand animations for doors and drawers.
+- **Inhabitants' faces:** they're masks (docs/PEOPLE.md). The jaw moves with speech, but there's no lip shape.
+- Marta can't be killed outright, by design: she reforms in the next copy.
 
 ## Android
 
@@ -141,20 +144,33 @@ its signature verified here; **not yet run on a phone** (no device in this envir
 Built (docs/FLAT48.md): the maze's end leads into it. The draft flat, the blocks and the note wall,
 Papa's gun safe and the sawn-off, and the three figures and their mannequins. Every line and tag is
 a placeholder. Once every name has been tried, LOBBY appears on the wall; carried back across the landing
-to 47's balcony and stuck on "outside", outside becomes the building's lobby. The demo ends on
-stepping into it; where the lobby leads is open.
+to 47's balcony and stuck on "outside", outside becomes the building's lobby, and Chapter 2.
 `tools/flat48_test.gd`: 0 fails.
 
 ## Known issues
 
-- Test runs report a few leaked ObjectDB instances at exit (quit mid-level); harmless.
+- Test runs report a few leaked ObjectDB instances and resources at exit (they quit mid-level). This is harmless.
+- **Not yet played by hand, and not on a phone.** That's everything from Flat 48 on.
+- The cathedral shows about 100k triangles from the narthex, most of them the 17 bodies hanging in the vault (on coarser LODs). It needs measuring on a phone.
 
-## Chapter 2: The Lobby
+## Chapter 2: The Lobby, and Flat 27
 
-Built (docs/CHAPTER2.md, docs/DIALOGUE.md): entered from the lobby 47's balcony becomes.
-The three-floor building, ten inhabitants with their own objectives, the super's conversation
-(five approaches, persistent consequences), the lift / fuses / mains / boiler / ladder / vent /
-meat puzzles with more than one way past each, the wife's story in the environment, Socko's
-suggestions and anger, Kurt's health, dark Chapter 2 sound, the developer overlay.
-`tools/chapter2_test.gd`: 0 fails. Not yet played by hand or on a phone; the inhabitants' bodies
-are procedural and want a proper art pass.
+The lobby: docs/CHAPTER2.md and docs/DIALOGUE.md. It's entered from the lobby that 47's balcony
+becomes. It has:
+
+- the three-floor building, and the ten inhabitants with their own objectives (biomechanical, PS1-style models with coral through all of them; docs/PEOPLE.md)
+- the super's conversation: five approaches, with consequences that last
+- the lift, fuses, mains, boiler, ladder, vent and meat puzzles, with more than one way past each
+- the wife's story, told through the environment
+- Socko's suggestions and his anger
+- Kurt's health
+- hiding in six wardrobes (see the Hiding section in CHAPTER2.md)
+- the dark Chapter 2 sound
+- the developer overlay
+
+Flat 27 (docs/CATHEDRAL.md) is the impossible cathedral: the looping nave, and the bells or the
+backwards way through it. STIGMATA asks for the last nail. Drive it, take him down, or leave. The
+chapter ends through the door behind the altar, and the demo's end screen says what Kurt did.
+
+The skill trees (docs/SKILLS.md) share one pool of points. The powers work on the inhabitants, and
+points are earned in the lobby and in 27.

@@ -544,16 +544,16 @@ func _people() -> void:
 		"body": {"height": 1.8, "girth": 1.2, "belly": 0.8, "mouth": 1.4, "eyes": "normal", "apron": Color(0.7, 0.65, 0.6), "tint": skin, "fingers": 1.3, "head": 0.9},
 		"voice": "marta_breath",
 		"objectives": [{"type": "work", "stations": ["stove", "chop", "stove", "chute"], "weight": 1.0}]}, Vector3(7.0, y1, 2.0))
-	_spawn({"id": "crawler_f1", "faction": "walls", "hostile_to": ["kurt"], "fear_light": true, "hp": 28, "poise": 10, "speed": 1.4, "run": 3.4,
+	_spawn({"id": "crawler_f1", "faction": "walls", "gait": "crawl", "hostile_to": ["kurt"], "fear_light": true, "hp": 28, "poise": 10, "speed": 1.4, "run": 3.4,
 		"sight": {"range": 8.0, "cos": 0.3}, "hearing": 1.2, "attack": {"dmg": 0.17, "reach": 1.1, "windup": 0.25, "cool": 0.9},
 		"body": {"height": 1.0, "hunch": 1.3, "arm": 1.7, "extra_joint": true, "eyes": "many", "mouth": 1.5, "tint": Color(0.6, 0.55, 0.6), "naked": true, "neck": 0.4},
 		"voice": "vent_scrabble", "step": "step_flesh",
 		"objectives": [{"type": "patrol", "points": corridor1, "wait": 2.0, "weight": 1.0}]}, B.centre("flat15"))
-	_spawn({"id": "crawler_vent", "faction": "walls", "hostile_to": ["kurt"], "fear_light": true, "hp": 24, "poise": 10, "speed": 1.4, "run": 3.4,
+	_spawn({"id": "crawler_vent", "faction": "walls", "gait": "crawl", "hostile_to": ["kurt"], "fear_light": true, "hp": 24, "poise": 10, "speed": 1.4, "run": 3.4,
 		"sight": {"range": 8.0, "cos": 0.3}, "hearing": 1.2, "attack": {"dmg": 0.17, "reach": 1.1, "windup": 0.25, "cool": 0.9},
 		"body": {"height": 0.95, "hunch": 1.3, "arm": 1.7, "extra_joint": true, "eyes": "many", "mouth": 1.5, "tint": Color(0.55, 0.5, 0.55), "naked": true, "neck": 0.4},
 		"voice": "vent_scrabble", "objectives": [{"type": "patrol", "points": [Vector3(19.0, 0, 2.0), Vector3(17.5, 0, 0.8)], "weight": 0.2}]}, Vector3(-30, 0, -30))
-	_spawn({"id": "crawler_f2", "faction": "walls", "hostile_to": ["kurt"], "fear_light": true, "hp": 28, "poise": 10, "speed": 1.4, "run": 3.4,
+	_spawn({"id": "crawler_f2", "faction": "walls", "gait": "crawl", "hostile_to": ["kurt"], "fear_light": true, "hp": 28, "poise": 10, "speed": 1.4, "run": 3.4,
 		"sight": {"range": 8.0, "cos": 0.3}, "hearing": 1.2, "attack": {"dmg": 0.17, "reach": 1.1, "windup": 0.25, "cool": 0.9},
 		"body": {"height": 1.0, "hunch": 1.3, "arm": 1.7, "extra_joint": true, "eyes": "many", "mouth": 1.5, "tint": Color(0.6, 0.45, 0.5), "naked": true},
 		"voice": "vent_scrabble", "objectives": [{"type": "patrol", "points": [B.centre("flat23"), B.centre("flat21"), Vector3(9.0, y2, 7.0)], "wait": 3.0, "weight": 1.0}]}, B.centre("flat23"))

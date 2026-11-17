@@ -49,11 +49,21 @@ func _initialize() -> void:
 		"windup": {"sh_l": Vector3(-1.4, 0, 0.5), "sh_r": Vector3(-1.4, 0, -0.5), "el_l": Vector3(-0.9, 0, 0), "el_r": Vector3(-0.9, 0, 0), "spine": Vector3(0.3, 0, 0), "jaw": Vector3(0.9, 0, 0)},
 		"reach": {"sh_l": Vector3(1.5, 0, 0.1), "sh_r": Vector3(1.4, 0, -0.1), "spine": Vector3(-0.4, 0, 0), "jaw": Vector3(1.1, 0, 0), "head": Vector3(0.3, 0, 0)},
 		"sit": {"hip_l": Vector3(1.4, 0, 0), "hip_r": Vector3(1.4, 0, 0), "kn_l": Vector3(-1.5, 0, 0), "kn_r": Vector3(-1.5, 0, 0), "sh_r": Vector3(0.6, 0, 0), "el_r": Vector3(-1.0, 0, 0)}}
+	# the crawl (Inhabitant._crawl_pose's numbers): two strides, and still
+	if model == "crawler":
+		for pn in ["crawl_a", "crawl_b", "crawl_still"]:
+			var ph := 0.0 if pn == "crawl_a" else PI
+			var a := 0.0 if pn == "crawl_still" else 0.4
+			var bend := 1.35; var arm := bend - 0.15
+			poses[pn] = {"spine": Vector3(-bend, sin(ph) * 0.12, 0), "sh_l": Vector3(arm - sin(ph + 1.57) * a, 0, 0.12), "sh_r": Vector3(arm + sin(ph + 1.57) * a, 0, -0.12),
+				"hip_l": Vector3(0.7 + sin(ph + 1.57) * a, 0, 0.1), "hip_r": Vector3(0.7 - sin(ph + 1.57) * a, 0, -0.1),
+				"kn_l": Vector3(-1.1, 0, 0), "kn_r": Vector3(-1.1, 0, 0), "neck": Vector3(0.75, 0, 0), "head": Vector3(0.45, 0.2, 0)}
 	for pn in poses:
 		for k in b.pose: b.pose[k] = poses[pn].get(k, Vector3.ZERO)
 		b.snap = 40.0
 		await _frames(30)
-		cam.global_position = Vector3(1.4, h * 0.6, -2.0) * Vector3(h / 2.0, 1, h / 2.0); cam.look_at(Vector3(0, h * 0.45, 0))
+		cam.global_position = Vector3(1.4, h * 0.6, -2.0) * Vector3(h / 2.0, 1, h / 2.0) if not pn.begins_with("crawl") else Vector3(2.2, 0.8, -0.3)
+		cam.look_at(Vector3(0, h * 0.45, 0) if not pn.begins_with("crawl") else Vector3(0, 0.3, -0.3))
 		await _frames(3)
 		root.get_viewport().get_texture().get_image().save_png(out.path_join("%s_pose_%s.png" % [model, pn]))
 	quit()

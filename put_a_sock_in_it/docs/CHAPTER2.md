@@ -190,6 +190,10 @@ Checkpoints happen after the conversation, when the mains go on, when the boiler
 
 - Kurt and his systems (movement, health, the nerve, hiding, melee, the pistol and the shotgun).
 
+## How the crawlers move
+
+The crawlers (`"gait": "crawl"`, `Inhabitant._crawl_pose`) go on all fours. They're bent double, with their long double-jointed arms braced on the floor as front legs, each arm going with the opposite leg. The head is craned up to look ahead. Still, they sway, and the head goes round slowly. They rise into the usual telegraph to strike.
+
 ## Hiding
 
 There are six wardrobes Kurt can get into (`HideSpot`, as in the maze), against the back walls of the laundry and flat 2 (ground floor), 11 and 14 (first floor), and 21 and 25 (second floor). `lobby.gd` `_hiding()` places them. Getting in makes a little noise (the doors).

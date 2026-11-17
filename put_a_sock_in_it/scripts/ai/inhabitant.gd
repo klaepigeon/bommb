@@ -583,6 +583,23 @@ func _sounds(delta: float) -> void:
 	if velocity.length() > 0.3 and fmod(_walk, PI) < 0.08:
 		Sfx.play_at(String(prof.get("step", "step_flesh")), global_position, -12.0 + velocity.length() * 2.0, randf_range(0.7, 0.9))
 
+## On all fours (profile "gait": "crawl"): bent double, the long arms down to the floor as front
+## legs, each going with the opposite leg; the head craned up to look ahead; still, it sways and
+## its head goes round.
+func _crawl_pose(P: Dictionary, w: float, moving: bool) -> void:
+	var bend := 1.35
+	P.spine = Vector3(-bend, 0, 0)
+	var a := (0.55 if velocity.length() > 2.0 else 0.4) if moving else 0.0
+	var arm := bend - 0.15           # (down to the floor and a little ahead: the chest's bent forward, so the arms swing back the other way)
+	P.sh_l = Vector3(arm - sin(w) * a, 0, 0.12); P.sh_r = Vector3(arm + sin(w) * a, 0, -0.12)
+	P.el_l = Vector3(-maxf(0.0, cos(w)) * a * 0.8, 0, 0); P.el_r = Vector3(-maxf(0.0, -cos(w)) * a * 0.8, 0, 0)
+	P.hip_l = Vector3(0.7 + sin(w) * a, 0, 0.1); P.hip_r = Vector3(0.7 - sin(w) * a, 0, -0.1)
+	P.kn_l = Vector3(-1.1 - maxf(0.0, -cos(w)) * a, 0, 0); P.kn_r = Vector3(-1.1 - maxf(0.0, cos(w)) * a, 0, 0)
+	P.neck = Vector3(0.75, 0, 0)
+	P.head = Vector3(0.45, sin(_anim_t * (0.6 if moving else 0.35)) * (0.25 if moving else 0.7), sin(_anim_t * 0.4) * 0.2)
+	if moving: P.spine += Vector3(0, sin(w) * 0.12, sin(w * 2.0) * 0.05)
+	else: P.spine += Vector3(sin(_anim_t * 1.6) * 0.04, 0, 0)
+
 func _animate(_delta: float) -> void:
 	var P := body.pose
 	for k in body.J: if not P.has(k): P[k] = Vector3.ZERO
@@ -603,6 +620,9 @@ func _animate(_delta: float) -> void:
 		P.kn_l = Vector3(-maxf(0.0, -cos(w)) * a * 1.6, 0, 0); P.kn_r = Vector3(-maxf(0.0, cos(w)) * a * 1.6, 0, 0)
 		P.sh_l = Vector3(-sin(w) * a * 0.6, 0, 0.08); P.sh_r = Vector3(sin(w) * a * 0.6, 0, -0.08)
 		P.spine += Vector3(-0.1 * velocity.length() / 2.5, sin(w) * 0.06, 0)
+	if prof.get("gait", "") == "crawl" and _windup <= 0.0 and _attack_t <= float(prof.get("attack", {}).get("cool", 1.4)) - 0.25:
+		_crawl_pose(P, w, moving)
+		return
 	if _windup > 0.0:
 		# the telegraph: arms back, head down, the mouth opening
 		P.sh_l = Vector3(-1.4, 0, 0.5); P.sh_r = Vector3(-1.4, 0, -0.5); P.el_l = Vector3(-0.9, 0, 0); P.el_r = Vector3(-0.9, 0, 0)
