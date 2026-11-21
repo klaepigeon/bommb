@@ -24,6 +24,10 @@ There are two ways to break the loop:
 
 Either way the flag `c27_loop_broken` is set, plus `c27_broken_bells` or `c27_broken_backwards`, and the game checkpoints.
 
+## They come down
+
+Once the loop is broken, the congregation leaves the vault (`_descend`). Whenever one of them is somewhere he isn't looking, and so is an empty seat in the front six rows, it's in that seat: sitting up, turned round in its pew, facing back down the nave. They come one at a time, with the creak of a pew. When he turns to the altar the front pews are full, and every one of them is watching him come. Walking it backwards (his back to the altar the whole way) lets the most come down.
+
 ## Him
 
 **STIGMATA** (`tools/people/cast.py` `stigmata`):

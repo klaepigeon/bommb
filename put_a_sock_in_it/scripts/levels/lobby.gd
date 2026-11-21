@@ -67,6 +67,8 @@ func build() -> void:
 	_discoveries()
 	_people()
 	_hiding()
+	_peepholes()
+	_unwatched()
 	_restore()
 	_batch()
 	_bake_nav()
@@ -499,6 +501,133 @@ func _hid(spot: HideSpot) -> void:
 		var onto: bool = n.awareness > 0.3 or n.target == player
 		if onto and n.global_position.distance_to(spot.global_position) < 14.0 and n.sees_point(spot.front() + Vector3(0, 1.2, 0)):
 			n.saw_hide = spot
+
+# ------------------------------------------------------------------ peepholes
+## Every flat's front door has a peephole. Put an eye to it and he sees the room beyond, live,
+## through a fisheye lens: who's in there, what they're doing (it's real: the rest of the
+## building goes on while he looks). But if something in there hates him, it notices the light
+## change at the lens; it comes to the door, its face fills the glass, and the door takes a blow.
+var peeping := ""
+
+func _peepholes() -> void:
+	for r in B.ROOMS:
+		var id: String = r[0]
+		if not id.begins_with("flat") or id in ["flat1", "flat27"] or typeof(r[5]) == TYPE_STRING: continue
+		var south: bool = r[2] == "s"
+		var y0 := float(r[1]) * FH
+		var x := float(r[5])
+		var out := 1.0 if south else -1.0          # (the corridor's side of the door, in z)
+		var plane := 6.0 if south else 8.0
+		var at := Vector3(x + 0.18, y0 + 1.55, plane + out * 0.09)
+		_box(at, Vector3(0.03, 0.03, 0.02), Tex.mat("brass"), false)
+		var u := Use.make(world, at, Vector3(0.3, 0.3, 0.2), func(): return "" if peeping != "" else "Look through the peephole",
+			func(_p): _peep(id, Vector3(x + 0.18, y0 + 1.55, plane - out * 0.14), Vector3(0, 0, -out)))
+		u.name = "Peephole_" + id
+
+func _peep(id: String, eye: Vector3, look: Vector3) -> void:
+	if peeping != "": return
+	peeping = id
+	set_cutscene(true)
+	Sfx.play("scrape", -18.0, 1.6)
+	# the room beyond, from just behind the door
+	var vp := SubViewport.new(); vp.size = Vector2i(480, 480); vp.own_world_3d = false
+	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(vp)
+	var cam := Camera3D.new(); cam.fov = 115.0; cam.near = 0.05; cam.far = 30.0
+	vp.add_child(cam); cam.global_position = eye; cam.look_at(eye + look, Vector3.UP); cam.current = true
+	var layer := CanvasLayer.new(); layer.layer = 45; add_child(layer)
+	var dark := ColorRect.new(); dark.color = Color.BLACK; dark.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); layer.add_child(dark)
+	var lens := TextureRect.new(); lens.texture = vp.get_texture()
+	lens.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; lens.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	lens.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var sm := ShaderMaterial.new(); sm.shader = PEEP; lens.material = sm
+	layer.add_child(lens)
+	hud.hint("Step back: interact", 3.0)
+	var t := 0.0
+	var scare := false
+	while is_inside_tree():
+		await get_tree().process_frame
+		if not is_inside_tree(): return
+		t += get_process_delta_time()
+		if t > 0.3 and (Input.is_action_just_pressed("interact") or Input.is_action_just_pressed("pause") or Input.is_action_just_pressed("ui_cancel") or peep_close):
+			break
+		# something in there that hates him: it notices, and comes to the lens
+		for n in people.values():
+			if not is_instance_valid(n) or n.dead or not n.hates(player) or not B.in_room(id, n.global_position): continue
+			if t > 1.2 and n.objective != "attack":
+				n._noise_at = Vector3(eye.x, eye.y - 1.55, eye.z + look.z * 0.5); n._noise_t = 8.0
+			if n.eye().distance_to(eye) < 0.9:
+				scare = true
+		if scare: break
+	if scare:
+		await get_tree().create_timer(0.35).timeout
+		if not is_inside_tree(): return
+		Sfx.play_at("door_slam", eye, 2.0, 0.8)
+		Sfx.play_at("bone_crack", eye, -2.0, 0.7)
+		Fx.kick("fringe", 1.5, 0.6); Fx.hitstop(0.1)
+		player.shake(0.03, 0.4)
+		Game.fear = minf(1.0, Game.fear + 0.5)
+	layer.queue_free(); vp.queue_free()
+	peep_close = false
+	peeping = ""
+	set_cutscene(false)
+	if scare: player.velocity = -look * 2.5          # (thrown back from the door, into the corridor)
+
+var peep_close := false          # (tests close the peephole with this)
+
+# ------------------------------------------------------------------ while he isn't looking
+## Six chairs, about the building, that are never quite where he left them: when he isn't looking
+## at one (it's behind him, or round a corner), now and then it scrapes a little nearer him and
+## turns to face him. Each stays in its own room, out of the doorways, and has no collision: it
+## never traps him. He only ever hears it, behind him.
+var watchers: Array = []          # [Node3D, room id]
+var _moved_t := 0.0
+
+func _unwatched() -> void:
+	for spot in [["flat2", Vector3(9.0, 0, 11.5)], ["office", Vector3(6.5, 0, 1.5)], ["flat11", Vector3(2.5, FH, 4.5)],
+			["flat14", Vector3(6.2, FH, 11.0)], ["flat22", Vector3(9.5, FH * 2, 3.5)], ["flat25", Vector3(8.0, FH * 2, 10.5)]]:
+		var c := _piece(kit, "prop_9_Chair", spot[1], randf() * TAU, false)
+		if c:
+			c.name = "Watcher_" + String(spot[0])
+			watchers.append([c, spot[0]])
+	ambient([5.0, 11.0], _creep, 8.0)
+
+func _creep() -> void:
+	if cutscene or watchers.is_empty(): return
+	var f := B.floor_of(player.global_position)
+	var cands := []
+	for w in watchers:
+		var c: Node3D = w[0]
+		if not is_instance_valid(c) or B.floor_of(c.global_position) != f: continue
+		if c.global_position.distance_to(player.global_position) < 2.0 or c.global_position.distance_to(player.global_position) > 14.0: continue
+		if _seen(c.global_position + Vector3(0, 0.5, 0)): continue
+		cands.append(w)
+	if cands.is_empty(): return
+	var w: Array = cands[randi() % cands.size()]
+	var c: Node3D = w[0]
+	var r := B.room(String(w[1]))
+	var z0 := (0.0 if r[2] == "s" else 8.0) + 0.6; var z1 := (6.0 if r[2] == "s" else 14.0) - 0.6
+	var to := (player.global_position - c.global_position) * Vector3(1, 0, 1)
+	var p := c.global_position + to.normalized() * minf(0.7, to.length() - 1.5)
+	p.x = clampf(p.x, float(r[3]) + 0.6, float(r[4]) - 0.6); p.z = clampf(p.z, z0, z1)
+	var door := B.door_at(String(w[1])) if typeof(r[5]) != TYPE_STRING else Vector3(-99, 0, -99)
+	if Vector2(p.x - door.x, p.z - door.z).length() < 1.3: return            # (never in the doorway)
+	if _seen(p + Vector3(0, 0.5, 0)): return
+	c.global_position = p
+	var face := player.global_position - p
+	c.rotation.y = atan2(face.x, face.z) + PI
+	Sfx.play_at("scrape", p + Vector3(0, 0.3, 0), -10.0, randf_range(0.7, 0.9), 14.0)
+	_moved_t = Time.get_ticks_msec() * 0.001
+
+## Could he see this point right now: in front of him (well inside the view) and nothing between.
+func _seen(p: Vector3) -> bool:
+	var c := player.cam.global_position
+	var d := p - c
+	if (-player.cam.global_transform.basis.z).dot(d.normalized()) < 0.25: return false
+	var q := PhysicsRayQueryParameters3D.create(c, p, 1, [player.get_rid()])
+	var hit := get_world_3d().direct_space_state.intersect_ray(q)
+	return hit.is_empty() or (hit.position as Vector3).distance_to(p) < 0.4
+const PEEP := preload("res://shaders/peephole.gdshader")
 
 # ------------------------------------------------------------------ the people
 ## The building's population (profiles: Inhabitant's header). Each goes about its business

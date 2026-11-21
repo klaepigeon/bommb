@@ -431,15 +431,69 @@ func _process(delta: float) -> void:
 	super._process(delta)
 	if cutscene: return
 	_loop(delta)
+	_descend(_delta_sum(delta))
 	# the congregation watches him: each head turns after him, slowly
 	for fb in _congregation:
-		if not is_instance_valid(fb): continue
+		if not is_instance_valid(fb) or fb.get_meta("down", false): continue
 		var to: Vector3 = player.global_position - fb.global_position
 		var yaw := atan2(to.x, to.z)
 		fb.pose["head"] = Vector3(0.4, clampf(-yaw, -1.2, 1.2), 0.0)
 		fb.pose["neck"] = Vector3(0.3, clampf(-yaw * 0.4, -0.5, 0.5), 0.0)
 		fb.pose["hip_l"] = Vector3(1.4, 0, 0); fb.pose["hip_r"] = Vector3(1.4, 0, 0)
 		fb.pose["kn_l"] = Vector3(-1.5, 0, 0); fb.pose["kn_r"] = Vector3(-1.5, 0, 0)
+
+# ------------------------------------------------------------------ they come down
+## Once the nave lets him through, the congregation leaves the vault: whenever one of them is
+## somewhere he isn't looking, and so is an empty seat at the front, it's in that seat: sitting
+## up, turned round in its pew, facing back down the nave at him. When he turns to the altar the
+## front pews are full, and every one of them is watching him come.
+var _seats: Array = []
+var _desc_t := 0.0
+
+func _delta_sum(d: float) -> float:
+	_desc_t += d
+	return _desc_t
+
+func _descend(_t: float) -> void:
+	if not loop_broken or _desc_t < 0.5: return
+	_desc_t = 0.0
+	if _seats.is_empty():
+		var z := -8.0
+		var rows := []
+		while z > NAVE_END + 1.0:
+			rows.append(z); z -= 1.2
+		rows.reverse()                  # (from the altar end back)
+		for rz in rows.slice(0, 6):
+			for s in [-1, 1]:
+				for k in 2: _seats.append(Vector3(s * (1.9 + k * 0.9), 0.0, rz + 0.12))
+	for fb in _congregation:
+		if not is_instance_valid(fb) or fb.get_meta("down", false): continue
+		if _seen(fb.global_position + Vector3(0, -0.8, 0)): continue
+		var seat_i := -1
+		for i in _seats.size():
+			if not _seen(_seats[i] + Vector3(0, 0.9, 0)): seat_i = i; break
+		if seat_i < 0: return
+		var seat: Vector3 = _seats[seat_i]
+		_seats.remove_at(seat_i)
+		fb.set_meta("down", true)
+		fb.rotation = Vector3(0, PI, 0)             # (upright, and turned round to face back down the nave)
+		fb.position = seat + Vector3(0, -0.32, 0)
+		fb.snap = 30.0
+		for k in fb.pose: fb.pose[k] = Vector3.ZERO
+		fb.pose["hip_l"] = Vector3(1.45, 0, 0); fb.pose["hip_r"] = Vector3(1.45, 0, 0)
+		fb.pose["kn_l"] = Vector3(-1.5, 0, 0); fb.pose["kn_r"] = Vector3(-1.5, 0, 0)
+		fb.pose["head"] = Vector3(-0.15, 0, 0)
+		Sfx.play_at("creak", seat + Vector3(0, 0.5, 0), -14.0, randf_range(0.6, 0.8), 30.0)
+		return                           # (one at a time)
+
+## Could he see this point: well inside his view, nothing in the way.
+func _seen(p: Vector3) -> bool:
+	var c := player.cam.global_position
+	var d := p - c
+	if (-player.cam.global_transform.basis.z).dot(d.normalized()) < 0.3: return false
+	var q := PhysicsRayQueryParameters3D.create(c, p, 1, [player.get_rid()])
+	var hit := get_world_3d().direct_space_state.intersect_ray(q)
+	return hit.is_empty() or (hit.position as Vector3).distance_to(p) < 0.5
 
 var _hymnals: Array = []
 var _keep: Array = []           # meshes that move: not merged

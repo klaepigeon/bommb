@@ -194,6 +194,16 @@ Checkpoints happen after the conversation, when the mains go on, when the boiler
 
 The crawlers (`"gait": "crawl"`, `Inhabitant._crawl_pose`) go on all fours. They're bent double, with their long double-jointed arms braced on the floor as front legs, each arm going with the opposite leg. The head is craned up to look ahead. Still, they sway, and the head goes round slowly. They rise into the usual telegraph to strike.
 
+## Peepholes
+
+Every flat's front door has one (`_peepholes`, `_peep`, `shaders/peephole.gdshader`). Look through it and Kurt sees the room beyond, live, through a brass-rimmed fisheye lens. The lens gathers light, so dark rooms read. It's real scouting: the building goes on while he looks.
+
+If something in there hates him, it notices after about a second, comes to the door, and its face fills the glass. Then the door takes a blow, and he's thrown back into the corridor with his fear up. Step back with interact.
+
+## While he isn't looking
+
+There are six chairs about the building (in flats 2, 11, 14, 22 and 25, and the office), and they're never quite where he left them (`_unwatched`, `_creep`). Every 5–11 s, one on his floor that he can't see (behind him, or round a corner) may scrape up to 0.7 m nearer him and turn to face him. It stays in its own room, never in a doorway, never while he's looking, and has no collision. He hears it, behind him.
+
 ## Hiding
 
 There are six wardrobes Kurt can get into (`HideSpot`, as in the maze), against the back walls of the laundry and flat 2 (ground floor), 11 and 14 (first floor), and 21 and 25 (second floor). `lobby.gd` `_hiding()` places them. Getting in makes a little noise (the doors).
