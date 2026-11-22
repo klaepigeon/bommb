@@ -75,6 +75,7 @@ func _ui() -> void:
 	var gap := Control.new(); gap.custom_minimum_size = Vector2(0, 40); v.add_child(gap)
 	if Game.has_save(): _btn(v, "Continue", func(): _go(Game.continue_game))
 	_btn(v, "New game", func(): _go(func(): Game.reset_save(); Game.new_game()))
+	if DevOverlay.wanted(): _btn(v, "Lab (dev)", func(): _go(func(): Game.change_level("lab", {"card": false})))
 	_btn(v, "Quit", func(): get_tree().quit())
 
 ## The end of the demo: thanks, how his night went (an invitation to go again and do it

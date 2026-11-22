@@ -18,6 +18,11 @@ const LEVELS := {
 	"flat48": {"scene": "res://scenes/levels/flat48.tscn", "title": "Flat 48", "sub": ""},
 	"lobby": {"scene": "res://scenes/levels/lobby.tscn", "title": "The Lobby", "sub": "Chapter 2"},
 	"cathedral": {"scene": "res://scenes/levels/cathedral.tscn", "title": "Flat 27", "sub": ""},
+	# development only (docs/LAB.md): reached from the title's LAB button with DevOverlay.wanted()
+	"lab": {"scene": "res://scenes/levels/lab/lab.tscn", "title": "The Lab", "sub": "development"},
+	"lab_sandbox": {"scene": "res://scenes/levels/lab/lab_sandbox.tscn", "title": "AI Sandbox", "sub": "the Lab"},
+	"lab_echo": {"scene": "res://scenes/levels/lab/lab_echo.tscn", "title": "Echo", "sub": "the Lab"},
+	"lab_mirror": {"scene": "res://scenes/levels/lab/lab_mirror.tscn", "title": "Mirror", "sub": "the Lab"},
 }
 const SAVE_PATH := "user://save.json"
 const SETTINGS_PATH := "user://settings.json"

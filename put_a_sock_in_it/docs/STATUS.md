@@ -147,6 +147,10 @@ a placeholder. Once every name has been tried, LOBBY appears on the wall; carrie
 to 47's balcony and stuck on "outside", outside becomes the building's lobby, and Chapter 2.
 `tools/flat48_test.gd`: 0 fails.
 
+## The Lab (development only)
+- A hub and three experiments, reached from the title's Lab (dev) button in debug/--dev builds only: AI Sandbox (spawn any inhabitant, toggle hostility, lights, time, freeze), Echo (a dark maze seen only by sound, a blind listener hunting it), Mirror (a reflected camera and render layers: a figure only in the mirror, Kurt with no reflection). See docs/LAB.md; tools/lab_test.gd passes.
+- tools/parse_all.gd now walks every folder under scripts/ (it used to miss chapter2/, ai/ and lab/).
+
 ## Known issues
 
 - Test runs report a few leaked ObjectDB instances and resources at exit (they quit mid-level). This is harmless.
