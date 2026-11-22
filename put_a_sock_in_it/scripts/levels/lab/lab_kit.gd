@@ -21,15 +21,21 @@ static func label(world: Node3D, at: Vector3, rot_y: float, text: String, size :
 	world.add_child(lb); lb.position = at; lb.rotation.y = rot_y
 	return lb
 
-## A door that takes him to another level (a panel, its frame, a Use to go).
-static func portal(world: Node3D, at: Vector3, rot_y: float, label: String, to_level: String, note := "") -> Use:
+## A door that takes him to another level (a panel, its frame, a Use to go). `gate`, if given,
+## says whether it opens now.
+static func portal(world: Node3D, at: Vector3, rot_y: float, label: String, to_level: String, note := "", gate := Callable()) -> Use:
 	var basis := Basis(Vector3.UP, rot_y)
 	var mi := Build.box(world, at + Vector3(0, 1.05, 0), Vector3(1.0, 2.1, 0.08), Tex.mat("door_padded", 1.0), false, rot_y)
 	mi.name = "Portal_" + to_level
 	label(world, at + Vector3(0, 2.45, 0) + basis * Vector3(0, 0, 0.06), rot_y, label, 44)
-	if note != "": label(world, at + Vector3(0, 2.2, 0) + basis * Vector3(0, 0, 0.06), rot_y, note, 30, Color(0.7, 0.66, 0.56))
+	if note != "":
+		var nl := label(world, at + Vector3(0, 2.2, 0) + basis * Vector3(0, 0, 0.06), rot_y, note, 24, Color(0.75, 0.7, 0.6))
+		nl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; nl.width = 420.0; nl.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	var u := Use.make(world, at + Vector3(0, 1.05, 0) + basis * Vector3(0, 0, 0.12), Vector3(1.0, 2.1, 0.3),
-		func(): return "Go: " + label, func(_p): Game.change_level(to_level, {"card": false, "fade": 0.4}))
+		func(): return ("Go: " + label) if (not gate.is_valid() or gate.call()) else "Locked",
+		func(_p):
+			if not gate.is_valid() or gate.call(): Game.change_level(to_level, {"card": false, "fade": 0.4})
+			else: Sfx.play("door_rattle", -4.0))
 	u.name = "Go_" + to_level
 	return u
 

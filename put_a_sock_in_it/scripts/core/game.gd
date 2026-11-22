@@ -23,6 +23,9 @@ const LEVELS := {
 	"lab_sandbox": {"scene": "res://scenes/levels/lab/lab_sandbox.tscn", "title": "AI Sandbox", "sub": "the Lab"},
 	"lab_echo": {"scene": "res://scenes/levels/lab/lab_echo.tscn", "title": "Echo", "sub": "the Lab"},
 	"lab_mirror": {"scene": "res://scenes/levels/lab/lab_mirror.tscn", "title": "Mirror", "sub": "the Lab"},
+	"lab_still": {"scene": "res://scenes/levels/lab/lab_still.tscn", "title": "Still", "sub": "the Lab"},
+	"lab_through": {"scene": "res://scenes/levels/lab/lab_through.tscn", "title": "Through", "sub": "the Lab"},
+	"lab_breath": {"scene": "res://scenes/levels/lab/lab_breath.tscn", "title": "Breath", "sub": "the Lab"},
 }
 const SAVE_PATH := "user://save.json"
 const SETTINGS_PATH := "user://settings.json"

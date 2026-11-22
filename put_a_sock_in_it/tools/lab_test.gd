@@ -15,7 +15,7 @@ func _initialize() -> void:
 	game = root.get_node("Game"); D = root.get_node("Dialogue")
 	# ---- the hub
 	var L = await _go("lab")
-	for ex in ["lab_sandbox", "lab_echo", "lab_mirror"]:
+	for ex in ["lab_sandbox", "lab_echo", "lab_mirror", "lab_still", "lab_through", "lab_breath"]:
 		_check(L.world.get_node_or_null("Go_" + ex) != null, "the Lab has a door to " + ex)
 	_shot("lab.png")
 	# ---- the sandbox
@@ -90,6 +90,89 @@ func _initialize() -> void:
 	_shot("mirror_near.png")
 	P.set_view(PI, 0.0); await _wait(0.2)
 	_check(L.steps == 0 and L.ghost.position.distance_to(L.START) < 0.01, "the next look away, it's back by the far wall")
+	# ---- still: watched, they don't move; unwatched, they come
+	L = await _go("lab_still")
+	P = L.player
+	L._sag_t = 999.0; L.lamp_k = 1.0
+	P.global_position = Vector3(2.25, 0, 7.5); P.set_view(0.0, 0.0)
+	await _wait(0.5)
+	var f0: Node3D = L.figures[1]
+	f0.global_position = Vector3(1.5, 0, 2.0)
+	await _wait(0.1)
+	_check(L.seen(f0), "the one ahead, in the lamplight: seen")
+	var p0 := f0.global_position
+	await _wait(1.0)
+	_check(f0.global_position.distance_to(p0) < 0.01, "  seen, it doesn't move")
+	_shot("still_0.png")
+	P.set_view(PI, 0.0)
+	await _wait(1.5)
+	_check(not L.seen(f0) and f0.global_position.distance_to(p0) > 1.0, "his back turned: it comes (%.2f m)" % f0.global_position.distance_to(p0))
+	P.set_view(0.0, 0.0)
+	await _wait(0.1)
+	_shot("still_after.png")
+	L.lamp_k = 0.1
+	await _wait(0.1)
+	var f2: Node3D = L.figures.filter(func(f): return P.cam.is_position_in_frustum(f.global_position + Vector3(0, 1, 0)))[0] if L.figures.any(func(f): return P.cam.is_position_in_frustum(f.global_position + Vector3(0, 1, 0))) else L.figures[1]
+	_check(not L.seen(f2), "the lamps down: in view but not seen")
+	P.toggle_torch(true)
+	await _wait(0.6)
+	P.cam.look_at(f2.global_position + Vector3(0, 1.0, 0)) if false else null
+	var dd: Vector3 = f2.global_position + Vector3(0, 1.0, 0) - P.cam.global_position
+	P.set_view(atan2(-dd.x, -dd.z), atan2(dd.y, Vector2(dd.x, dd.z).length()))
+	await _wait(0.4)
+	_check(L.seen(f2) or P.cam.global_position.distance_to(f2.global_position) > 13.0 or L.done, "  the torch on it: seen again")
+	P.toggle_torch(false)
+	L.lamp_k = 1.0
+	# caught
+	P.set_view(PI, 0.0)
+	await _until(func(): return L._resetting, 12.0)
+	_check(L._resetting, "unwatched long enough, one reaches him")
+	await _until(func(): return not L._resetting, 6.0)
+	_check(L.figures[1].global_position.distance_to(L.START[1]) < 0.5, "  and they're back where they started")
+	# ---- through: both doorways open on this room
+	L = await _go("lab_through")
+	P = L.player
+	P.global_position = Vector3(0, 0, 1.0); P.set_view(0.0, 0.0)
+	await _wait(1.6)
+	var cn: Camera3D = L.cam_n
+	_check(absf(cn.global_position.z - (P.cam.global_position.z + L.D)) < 0.05, "the north doorway's camera is his, one room along")
+	_check((cn.cull_mask & L.L_S) == 0 and (cn.cull_mask & L.L_KURT) == 0 and (cn.cull_mask & L.L_GHOST) != 0, "  it looks past the south wall, not at him, at the one where he stands")
+	_shot("through_n.png")
+	P.set_view(PI, 0.0); await _wait(0.2)
+	_shot("through_s.png")
+	P.set_view(0.0, 0.0)
+	var c0: int = L.crossings
+	P.global_position = Vector3(0, 0, -L.D * 0.5 - 0.05)
+	await _until(func(): return L.crossings > c0, 3.0)
+	_check(L.crossings == c0 + 1 and P.global_position.z > 2.0, "through the north doorway: in by the south one (z %.2f)" % P.global_position.z)
+	await _wait(1.8)
+	_check(L.ghost.global_position.distance_to(P.global_position) < 0.5, "  the one where he was stays with him (%.2f m)" % L.ghost.global_position.distance_to(P.global_position))
+	# ---- breath: still, it closes; moving, it eases; the valves open the door
+	L = await _go("lab_breath")
+	P = L.player
+	await _wait(3.0)
+	var cl1: float = L.close
+	_check(cl1 > 0.1, "standing still, it closes in (%.2f)" % cl1)
+	_shot("breath_0.png")
+	L.close = 0.7
+	await _wait(0.3)
+	_shot("breath_close.png")
+	_check(absf(P.global_position.x) < L.W * 0.5 - 0.3, "  he's held inside the bulge")
+	var dz0 := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - dz0 < 1500:
+		P.velocity = Vector3(1.5 * sin(Time.get_ticks_msec() * 0.004), 0, 0)
+		await process_frame
+	_check(L.close < 0.7, "moving, it eases back (%.2f)" % L.close)
+	L.close = 0.0
+	for v in L.VALVES:
+		_check(not L.opened, "  door shut before " + v)
+		L._turn(v)
+		await _until(func(): return not L._turning, 5.0)
+	_check(L.opened and L.valves.values().all(func(x): return x), "three valves turned: the door's open")
+	L.close = 0.97; L._turning = false; L.set_cutscene(false)
+	await _wait(0.3)
+	await _until(func(): return not L._caught, 6.0)
+	_check(L.close == 0.0 and not L.opened, "closed all the way: it lets him go, the valves undone")
 	printerr("LAB_TEST fails=%d" % fails)
 	quit()
 

@@ -11,7 +11,9 @@ Test: `tools/lab_test.gd` (each room loads; sandbox spawns and aggro; Echo's cli
 hearing; the mirror's camera, layers and the figure's approach and reset).
 
 ## The hub
-A bare room with a door per experiment, and one back to the title.
+A bare room with six doors to the experiments (three on each long wall, each with a line
+saying what it is), and one back to the title. Doors can be gated (`LabKit.portal(..., gate)`):
+a shut one says Locked and rattles.
 
 ## AI Sandbox
 An arena (pillars, a wall with a wide doorway, low cover, loose boxes, a wardrobe to hide in,
@@ -59,7 +61,39 @@ stands. When it's right behind him and he looks, a breath, and fear rises. The n
 looks away, it's back by the far wall. No flash, no sting. The figure uses the laundress model
 for now.
 
+## Still
+A hall of pillars, five figures, a switch at the far end. The figures move only while nothing
+sees them, and "seen" is honest: in his view (`is_position_in_frustum` at feet, waist and
+head), not behind a pillar (a ray), and lit (near a lamp, or in the torch's cone). Seen, a
+figure is stone, not even a joint. Unseen, it snaps to a new pose and comes along a navmesh
+path at 2.6 m/s. Every 11-17 s the lamps sag (down over 1.5 s, two seconds low, back over 1.5 s:
+no flicker), so the torch matters, and it has a battery. A figure that reaches him knocks him
+down and they all go back. The switch drops them.
+
+## Through
+A small room with a doorway in the north wall and one in the south, and both open onto this
+room. Each doorway is a camera, his own moved one room along, drawn into the doorway with
+SCREEN_UV (a window, not a mirror, so no flip). Walking through one brings him in by the other,
+seamlessly. Layers: each doorway's wall is its own layer, so the camera looking through the
+north doorway (standing one room south, behind the south wall) can look past that wall. The
+doorway cameras can't see each other's doorways, so the far doorway in the copy is dark.
+
+Through the doorway, someone stands where he stands, doing what he did 1.5 s ago. He never
+meets them: they're always one room along. (Kurt himself is on a layer the doorway cameras
+don't draw.)
+
+## Breath
+A room of meat (`shaders/breath.gdshader`: fine grids that swell in along their normals, most
+mid-wall, none at the edges) that closes in while he stands still and eases back while he
+moves. It breathes, and a heartbeat plays, both quickening as it closes (a breath every 4 s at
+rest, every 1.6 s at its closest). The colliders don't move: the level holds him inside the
+bulge. Three valves open the door, and turning one means standing still for 2.5 s. If it closes
+all the way it lets him go: back at the door, the valves undone. Only the shape moves; the light
+on it doesn't.
+
 ## Ideas for more rooms
-- A corridor that's longer walking one way than the other.
-- A room where looking at something holds it in place (and everything you don't moves).
-- A door that opens on the room you're already in, seen from behind.
+- A corridor that's longer walking one way than the other (27's nave already loops one way).
+- A room that's only there in the dark: lights on, it's an empty box; lights off, the torch
+  shows furniture, a door, someone sitting.
+- Sound that comes from where he was standing a few seconds ago.
+- A stairwell where the floor numbers don't add up.

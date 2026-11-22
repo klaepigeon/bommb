@@ -148,7 +148,7 @@ to 47's balcony and stuck on "outside", outside becomes the building's lobby, an
 `tools/flat48_test.gd`: 0 fails.
 
 ## The Lab (development only)
-- A hub and three experiments, reached from the title's Lab (dev) button in debug/--dev builds only: AI Sandbox (spawn any inhabitant, toggle hostility, lights, time, freeze), Echo (a dark maze seen only by sound, a blind listener hunting it), Mirror (a reflected camera and render layers: a figure only in the mirror, Kurt with no reflection). See docs/LAB.md; tools/lab_test.gd passes.
+- A hub and six experiments: Still (figures that move only unseen, honest sight checks, lamp sags and the torch), Through (both doorways open on the same room, seamless, with someone one room along), Breath (a meat room that closes in while he stands still: shaders/breath.gdshader). The first three: reached from the title's Lab (dev) button in debug/--dev builds only: AI Sandbox (spawn any inhabitant, toggle hostility, lights, time, freeze), Echo (a dark maze seen only by sound, a blind listener hunting it), Mirror (a reflected camera and render layers: a figure only in the mirror, Kurt with no reflection). See docs/LAB.md; tools/lab_test.gd passes.
 - tools/parse_all.gd now walks every folder under scripts/ (it used to miss chapter2/, ai/ and lab/).
 
 ## Known issues
