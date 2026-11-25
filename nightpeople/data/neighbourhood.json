@@ -1,0 +1,3901 @@
+{
+ "buildings": [
+  {
+   "id": "t212",
+   "name": "212 Ellery Street",
+   "pos": [
+    -30,
+    -9
+   ],
+   "rot": 180,
+   "size": [
+    18,
+    14
+   ],
+   "floors": 5,
+   "facade": "brick_dirty",
+   "fire_escape": true,
+   "sign": {
+    "text": "212",
+    "color": [
+     0.9,
+     0.9,
+     0.8
+    ],
+    "at": [
+     9,
+     2.7
+    ],
+    "size": 0.5
+   },
+   "rooms": [
+    {
+     "id": "t212_hall",
+     "name": "212 hallway",
+     "rect": [
+      7,
+      0,
+      11,
+      14
+     ],
+     "floor": "tile_dark",
+     "wall": "plaster_stained",
+     "ceiling": "plaster",
+     "light": [
+      0.8,
+      1.0,
+      0.8
+     ],
+     "energy": 0.7,
+     "owners": [],
+     "public": true
+    },
+    {
+     "id": "t212_1a",
+     "name": "Apartment 1A",
+     "rect": [
+      0,
+      0,
+      7,
+      14
+     ],
+     "floor": "wood_floor",
+     "wall": "wallpaper_peeling",
+     "ceiling": "plaster",
+     "light": [
+      1,
+      0.85,
+      0.6
+     ],
+     "energy": 1.0,
+     "owners": [
+      "rita"
+     ],
+     "public": false
+    },
+    {
+     "id": "t212_1b",
+     "name": "Apartment 1B",
+     "rect": [
+      11,
+      0,
+      18,
+      14
+     ],
+     "floor": "carpet",
+     "wall": "plaster",
+     "ceiling": "plaster",
+     "light": [
+      1,
+      0.85,
+      0.6
+     ],
+     "energy": 1.0,
+     "owners": [
+      "marv"
+     ],
+     "public": false
+    }
+   ],
+   "partitions": [
+    [
+     [
+      7,
+      0
+     ],
+     [
+      7,
+      14
+     ]
+    ],
+    [
+     [
+      11,
+      0
+     ],
+     [
+      11,
+      14
+     ]
+    ]
+   ],
+   "doors": [
+    {
+     "id": "t212_front",
+     "at": [
+      9,
+      0
+     ],
+     "room": "t212_hall",
+     "leaf": "door-type-a"
+    },
+    {
+     "id": "t212_1a",
+     "at": [
+      7,
+      10
+     ],
+     "room": "t212_1a",
+     "leaf": "door-type-b",
+     "key": "key_t212_1a"
+    },
+    {
+     "id": "t212_1b",
+     "at": [
+      11,
+      10
+     ],
+     "room": "t212_1b",
+     "leaf": "door-type-b",
+     "key": "key_t212_1b"
+    }
+   ],
+   "props": [
+    {
+     "id": "bedSingle",
+     "at": [
+      1.2,
+      12.5
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "kitchenStove",
+     "at": [
+      3.5,
+      13.4
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "kitchenFridge",
+     "at": [
+      5,
+      13.4
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "table",
+     "at": [
+      3,
+      6
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "chair",
+     "at": [
+      2.3,
+      6.8
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "loungeChair",
+     "at": [
+      1.2,
+      2
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "televisionVintage",
+     "at": [
+      3,
+      1
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "coatRackStanding",
+     "at": [
+      6.4,
+      11.5
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "rugRectangle",
+     "at": [
+      3.5,
+      4
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "bedDouble",
+     "at": [
+      16.2,
+      12.5
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "loungeSofa",
+     "at": [
+      14.5,
+      2
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "sideTable",
+     "at": [
+      14.5,
+      4
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "televisionVintage",
+     "at": [
+      17,
+      6
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "kitchenCabinet",
+     "at": [
+      12,
+      13.4
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "kitchenSink",
+     "at": [
+      13.2,
+      13.4
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "bookcaseOpen",
+     "at": [
+      17.5,
+      9
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "cardboardBoxClosed",
+     "at": [
+      8,
+      13
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "trashcan",
+     "at": [
+      10.4,
+      1
+     ],
+     "yaw": 0
+    }
+   ],
+   "places": [
+    {
+     "id": "t212_1a.bed",
+     "at": [
+      1.6,
+      12.4
+     ],
+     "yaw": 90,
+     "pose": "sleep",
+     "tags": [
+      "home",
+      "bed"
+     ]
+    },
+    {
+     "id": "t212_1a.chair",
+     "at": [
+      2.3,
+      6.8
+     ],
+     "yaw": 0,
+     "pose": "sit",
+     "tags": [
+      "home",
+      "seat"
+     ]
+    },
+    {
+     "id": "t212_1a.tv",
+     "at": [
+      1.2,
+      2.2
+     ],
+     "yaw": 0,
+     "pose": "sit",
+     "tags": [
+      "home",
+      "seat"
+     ]
+    },
+    {
+     "id": "t212_1b.bed",
+     "at": [
+      16.0,
+      12.0
+     ],
+     "yaw": 270,
+     "pose": "sleep",
+     "tags": [
+      "home",
+      "bed"
+     ]
+    },
+    {
+     "id": "t212_1b.sofa",
+     "at": [
+      14.5,
+      2.4
+     ],
+     "yaw": 0,
+     "pose": "sit",
+     "tags": [
+      "home",
+      "seat"
+     ]
+    },
+    {
+     "id": "t212_1b.kitchen",
+     "at": [
+      12.6,
+      12.6
+     ],
+     "yaw": 180,
+     "pose": "stand",
+     "tags": [
+      "home"
+     ]
+    },
+    {
+     "id": "t212.stoop",
+     "at": [
+      8,
+      -0.7
+     ],
+     "yaw": 180,
+     "pose": "stand",
+     "tags": [
+      "street",
+      "hangout"
+     ]
+    }
+   ],
+   "items": [
+    {
+     "id": "rita_tips",
+     "name": "Coffee can of tips ($23)",
+     "value": 23,
+     "owner": "rita",
+     "at": [
+      5.6,
+      13.2
+     ],
+     "y": 1.0,
+     "prop": "cardboardBoxClosed",
+     "cash": true
+    },
+    {
+     "id": "marv_revolver",
+     "name": ".38 revolver, unloaded",
+     "value": 60,
+     "owner": "marv",
+     "at": [
+      17.4,
+      9.2
+     ],
+     "y": 1.2,
+     "prop": "books"
+    }
+   ],
+   "readables": [
+    {
+     "at": [
+      3.2,
+      6.1
+     ],
+     "y": 0.85,
+     "title": "Note on Rita's table",
+     "text": "Rita -\nThe man from the Vesper asked about you again. Said he'd tip big if you came by after close. I said you don't go out after your shift.\nDon't go. I mean it.\n- Gus"
+    }
+   ]
+  },
+  {
+   "id": "bar",
+   "name": "The Nite Owl",
+   "pos": [
+    -14,
+    -9
+   ],
+   "rot": 180,
+   "size": [
+    16,
+    14
+   ],
+   "floors": 3,
+   "facade": "brick_red",
+   "sign": {
+    "text": "NITE OWL",
+    "color": [
+     1.0,
+     0.25,
+     0.35
+    ],
+    "at": [
+     8,
+     3.0
+    ],
+    "size": 1.0
+   },
+   "rooms": [
+    {
+     "id": "bar_room",
+     "name": "The Nite Owl",
+     "rect": [
+      0,
+      0,
+      16,
+      9
+     ],
+     "floor": "wood_floor_dark",
+     "wall": "wallpaper_plain",
+     "ceiling": "plaster",
+     "light": [
+      1.0,
+      0.45,
+      0.3
+     ],
+     "energy": 1.2,
+     "owners": [
+      "marv"
+     ],
+     "public": true,
+     "open": [
+      "18:00",
+      "04:00"
+     ]
+    },
+    {
+     "id": "bar_back",
+     "name": "Nite Owl back room",
+     "rect": [
+      0,
+      9,
+      10,
+      14
+     ],
+     "floor": "planks",
+     "wall": "plaster_stained",
+     "ceiling": "plaster",
+     "light": [
+      1.0,
+      0.8,
+      0.5
+     ],
+     "energy": 0.7,
+     "owners": [
+      "marv"
+     ],
+     "public": false
+    },
+    {
+     "id": "bar_wc",
+     "name": "Nite Owl toilet",
+     "rect": [
+      10,
+      9,
+      16,
+      14
+     ],
+     "floor": "tile_white",
+     "wall": "tile_white",
+     "ceiling": "plaster",
+     "light": [
+      0.8,
+      1.0,
+      0.9
+     ],
+     "energy": 0.6,
+     "owners": [
+      "marv"
+     ],
+     "public": true,
+     "open": [
+      "18:00",
+      "04:00"
+     ]
+    }
+   ],
+   "partitions": [
+    [
+     [
+      0,
+      9
+     ],
+     [
+      16,
+      9
+     ]
+    ],
+    [
+     [
+      10,
+      9
+     ],
+     [
+      10,
+      14
+     ]
+    ]
+   ],
+   "windows": [
+    {
+     "at": [
+      11,
+      0
+     ],
+     "width": 6,
+     "sill": 0.9,
+     "top": 2.4
+    }
+   ],
+   "doors": [
+    {
+     "id": "bar_front",
+     "at": [
+      3,
+      0
+     ],
+     "room": "bar_room",
+     "leaf": "door-type-a"
+    },
+    {
+     "id": "bar_back",
+     "at": [
+      5,
+      9
+     ],
+     "room": "bar_back",
+     "leaf": "door-type-b",
+     "key": "key_bar"
+    },
+    {
+     "id": "bar_wc",
+     "at": [
+      13,
+      9
+     ],
+     "room": "bar_wc",
+     "leaf": "door-type-b"
+    },
+    {
+     "id": "bar_yard",
+     "at": [
+      3,
+      14
+     ],
+     "room": "bar_back",
+     "leaf": "door-type-b",
+     "key": "key_bar"
+    }
+   ],
+   "props": [
+    {
+     "id": "kitchenBar",
+     "at": [
+      7,
+      5.6
+     ],
+     "yaw": 180,
+     "repeat": 6,
+     "step": [
+      0.86,
+      0
+     ]
+    },
+    {
+     "id": "kitchenBarEnd",
+     "at": [
+      12.16,
+      5.6
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "stoolBar",
+     "at": [
+      7,
+      4.6
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "stoolBar",
+     "at": [
+      8.4,
+      4.6
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "stoolBar",
+     "at": [
+      9.8,
+      4.6
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "stoolBar",
+     "at": [
+      11.2,
+      4.6
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "bookcaseOpen",
+     "at": [
+      9.5,
+      8.6
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "kitchenFridge",
+     "at": [
+      12.5,
+      8.4
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "tableRound",
+     "at": [
+      2,
+      3
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "chair",
+     "at": [
+      1.2,
+      3.0
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "chair",
+     "at": [
+      2.8,
+      3.0
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "tableRound",
+     "at": [
+      3.5,
+      6.8
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "chair",
+     "at": [
+      2.7,
+      6.8
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "chair",
+     "at": [
+      4.3,
+      6.8
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "speaker",
+     "at": [
+      15.4,
+      1.0
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "radio",
+     "at": [
+      15.4,
+      3
+     ],
+     "yaw": 270,
+     "y": 1.0
+    },
+    {
+     "id": "table",
+     "at": [
+      4,
+      11.5
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "chair",
+     "at": [
+      3,
+      12.3
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "chair",
+     "at": [
+      5,
+      12.3
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "chair",
+     "at": [
+      4,
+      10.6
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "cardboardBoxClosed",
+     "at": [
+      9,
+      13.3
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "cardboardBoxOpen",
+     "at": [
+      8,
+      13.3
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "bookcaseOpen",
+     "at": [
+      0.6,
+      11.5
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "toilet",
+     "at": [
+      15,
+      13.2
+     ],
+     "yaw": 180
+    }
+   ],
+   "places": [
+    {
+     "id": "bar.work",
+     "at": [
+      9.5,
+      7.2
+     ],
+     "yaw": 180,
+     "pose": "work",
+     "tags": [
+      "bar",
+      "work"
+     ]
+    },
+    {
+     "id": "bar.stool1",
+     "at": [
+      7,
+      4.4
+     ],
+     "yaw": 360,
+     "pose": "sit",
+     "tags": [
+      "bar",
+      "drink",
+      "seat"
+     ]
+    },
+    {
+     "id": "bar.stool2",
+     "at": [
+      8.4,
+      4.4
+     ],
+     "yaw": 0,
+     "pose": "sit",
+     "tags": [
+      "bar",
+      "drink",
+      "seat"
+     ]
+    },
+    {
+     "id": "bar.stool3",
+     "at": [
+      9.8,
+      4.4
+     ],
+     "yaw": 0,
+     "pose": "sit",
+     "tags": [
+      "bar",
+      "drink",
+      "seat"
+     ]
+    },
+    {
+     "id": "bar.stool4",
+     "at": [
+      11.2,
+      4.4
+     ],
+     "yaw": 0,
+     "pose": "sit",
+     "tags": [
+      "bar",
+      "drink",
+      "seat"
+     ]
+    },
+    {
+     "id": "bar.t1a",
+     "at": [
+      1.2,
+      3.0
+     ],
+     "yaw": 90,
+     "pose": "sit",
+     "tags": [
+      "bar",
+      "drink",
+      "seat",
+      "social"
+     ]
+    },
+    {
+     "id": "bar.t1b",
+     "at": [
+      2.8,
+      3.0
+     ],
+     "yaw": 270,
+     "pose": "sit",
+     "tags": [
+      "bar",
+      "drink",
+      "seat",
+      "social"
+     ]
+    },
+    {
+     "id": "bar.t2a",
+     "at": [
+      2.7,
+      6.8
+     ],
+     "yaw": 90,
+     "pose": "sit",
+     "tags": [
+      "bar",
+      "drink",
+      "seat",
+      "social"
+     ]
+    },
+    {
+     "id": "bar.t2b",
+     "at": [
+      4.3,
+      6.8
+     ],
+     "yaw": 270,
+     "pose": "sit",
+     "tags": [
+      "bar",
+      "drink",
+      "seat",
+      "social"
+     ]
+    },
+    {
+     "id": "bar.back1",
+     "at": [
+      3,
+      12.3
+     ],
+     "yaw": 180,
+     "pose": "sit",
+     "tags": [
+      "bar_back",
+      "seat",
+      "secret"
+     ]
+    },
+    {
+     "id": "bar.back2",
+     "at": [
+      5,
+      12.3
+     ],
+     "yaw": 180,
+     "pose": "sit",
+     "tags": [
+      "bar_back",
+      "seat",
+      "secret"
+     ]
+    },
+    {
+     "id": "bar.back3",
+     "at": [
+      4,
+      10.6
+     ],
+     "yaw": 0,
+     "pose": "sit",
+     "tags": [
+      "bar_back",
+      "seat",
+      "secret"
+     ]
+    }
+   ],
+   "items": [
+    {
+     "id": "bar_till",
+     "name": "Nite Owl till money ($140)",
+     "value": 140,
+     "owner": "marv",
+     "at": [
+      10.8,
+      5.7
+     ],
+     "y": 1.0,
+     "prop": "cardboardBoxClosed",
+     "cash": true
+    }
+   ],
+   "readables": [
+    {
+     "at": [
+      4.2,
+      11.4
+     ],
+     "y": 0.85,
+     "title": "Ledger, back room",
+     "text": "SABATO - owes 0. Paid in full, early. Strange.\nKESSLER - $400 by the 15th. Third week late.\nAbe says he has something coming in that will square it. Says it's old. Says it's worth more than the shop.\nThe back room is not for Vinnie's people. Tell him."
+    }
+   ]
+  },
+  {
+   "id": "pawn",
+   "name": "Abe's Loans",
+   "pos": [
+    4,
+    -9
+   ],
+   "rot": 180,
+   "size": [
+    14,
+    14
+   ],
+   "floors": 4,
+   "facade": "brick_yellow",
+   "sign": {
+    "text": "ABE'S LOANS",
+    "color": [
+     1.0,
+     0.8,
+     0.2
+    ],
+    "at": [
+     7,
+     3.0
+    ],
+    "size": 0.8
+   },
+   "rooms": [
+    {
+     "id": "pawn_shop",
+     "name": "Abe's Loans",
+     "rect": [
+      0,
+      0,
+      14,
+      9
+     ],
+     "floor": "tile_dark",
+     "wall": "wallpaper_plain",
+     "ceiling": "plaster",
+     "light": [
+      1.0,
+      0.95,
+      0.75
+     ],
+     "energy": 1.1,
+     "owners": [
+      "abe"
+     ],
+     "public": true,
+     "open": [
+      "17:00",
+      "00:30"
+     ]
+    },
+    {
+     "id": "pawn_office",
+     "name": "Abe's back office",
+     "rect": [
+      0,
+      9,
+      14,
+      14
+     ],
+     "floor": "wood_floor_dark",
+     "wall": "plaster_stained",
+     "ceiling": "plaster",
+     "light": [
+      1.0,
+      0.8,
+      0.5
+     ],
+     "energy": 0.6,
+     "owners": [
+      "abe"
+     ],
+     "public": false
+    }
+   ],
+   "partitions": [
+    [
+     [
+      0,
+      9
+     ],
+     [
+      14,
+      9
+     ]
+    ]
+   ],
+   "windows": [
+    {
+     "at": [
+      9.5,
+      0
+     ],
+     "width": 5,
+     "sill": 0.9,
+     "top": 2.5
+    }
+   ],
+   "doors": [
+    {
+     "id": "pawn_front",
+     "at": [
+      3,
+      0
+     ],
+     "room": "pawn_shop",
+     "leaf": "door-type-a"
+    },
+    {
+     "id": "pawn_office",
+     "at": [
+      11,
+      9
+     ],
+     "room": "pawn_office",
+     "leaf": "door-type-b",
+     "key": "key_pawn"
+    },
+    {
+     "id": "pawn_yard",
+     "at": [
+      3,
+      14
+     ],
+     "room": "pawn_office",
+     "leaf": "door-type-b",
+     "key": "key_pawn"
+    }
+   ],
+   "props": [
+    {
+     "id": "kitchenBar",
+     "at": [
+      6,
+      6
+     ],
+     "yaw": 180,
+     "repeat": 6,
+     "step": [
+      0.86,
+      0
+     ]
+    },
+    {
+     "id": "kitchenBarEnd",
+     "at": [
+      11.16,
+      6
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "bookcaseOpen",
+     "at": [
+      0.6,
+      2.5
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "bookcaseOpen",
+     "at": [
+      0.6,
+      5
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "bookcaseOpen",
+     "at": [
+      13.4,
+      2.5
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "televisionVintage",
+     "at": [
+      13.3,
+      4.5
+     ],
+     "yaw": 270,
+     "y": 0.0
+    },
+    {
+     "id": "radio",
+     "at": [
+      9.8,
+      6
+     ],
+     "yaw": 0,
+     "y": 0.86
+    },
+    {
+     "id": "lampRoundTable",
+     "at": [
+      11.5,
+      6
+     ],
+     "yaw": 0,
+     "y": 0.86
+    },
+    {
+     "id": "desk",
+     "at": [
+      5,
+      12.8
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "chair",
+     "at": [
+      5,
+      12
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "cardboardBoxClosed",
+     "at": [
+      1,
+      13
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "cardboardBoxClosed",
+     "at": [
+      1.8,
+      13.2
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "cardboardBoxOpen",
+     "at": [
+      12.8,
+      13
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "bookcaseOpen",
+     "at": [
+      8,
+      13.6
+     ],
+     "yaw": 180
+    }
+   ],
+   "places": [
+    {
+     "id": "pawn.work",
+     "at": [
+      8,
+      7.3
+     ],
+     "yaw": 180,
+     "pose": "work",
+     "tags": [
+      "pawn",
+      "work"
+     ]
+    },
+    {
+     "id": "pawn.office",
+     "at": [
+      5,
+      12
+     ],
+     "yaw": 180,
+     "pose": "sit",
+     "tags": [
+      "pawn_office",
+      "work"
+     ]
+    },
+    {
+     "id": "pawn.customer",
+     "at": [
+      8,
+      4.4
+     ],
+     "yaw": 0,
+     "pose": "stand",
+     "tags": [
+      "pawn",
+      "shop"
+     ]
+    },
+    {
+     "id": "pawn.browse",
+     "at": [
+      1.8,
+      3.5
+     ],
+     "yaw": 270,
+     "pose": "stand",
+     "tags": [
+      "pawn",
+      "shop"
+     ]
+    }
+   ],
+   "items": [
+    {
+     "id": "pawn_watch",
+     "name": "Gold pocket watch (tagged $45)",
+     "value": 45,
+     "owner": "abe",
+     "at": [
+      7.9,
+      6.0
+     ],
+     "y": 0.88,
+     "prop": "books"
+    },
+    {
+     "id": "pawn_box",
+     "name": "Locked tin box, very heavy, marked 'NOT FOR SALE'",
+     "value": 0,
+     "owner": "abe",
+     "at": [
+      5.4,
+      12.8
+     ],
+     "y": 0.8,
+     "prop": "cardboardBoxClosed",
+     "quest": "missing_merchant"
+    }
+   ],
+   "readables": [
+    {
+     "at": [
+      4.6,
+      12.9
+     ],
+     "y": 0.82,
+     "title": "Abe's appointment book",
+     "text": "THURS. 7th\n- Feld, her husband's ring. Gave $30. Don't sell.\n- C.M. from the Vesper, about the box. 'After midnight.' Who does business after midnight.\n- Marv, $400. Tell him Friday.\nFRI. 8th\n- Bank. Then the man from the Vesper again."
+    }
+   ]
+  },
+  {
+   "id": "t218",
+   "name": "218 Ellery Street",
+   "pos": [
+    22,
+    -9
+   ],
+   "rot": 180,
+   "size": [
+    18,
+    14
+   ],
+   "floors": 5,
+   "facade": "brick_red",
+   "fire_escape": true,
+   "sign": {
+    "text": "218",
+    "color": [
+     0.9,
+     0.9,
+     0.8
+    ],
+    "at": [
+     9,
+     2.7
+    ],
+    "size": 0.5
+   },
+   "rooms": [
+    {
+     "id": "t218_hall",
+     "name": "218 hallway",
+     "rect": [
+      7,
+      0,
+      11,
+      14
+     ],
+     "floor": "tile_dark",
+     "wall": "plaster_stained",
+     "ceiling": "plaster",
+     "light": [
+      0.85,
+      1.0,
+      0.7
+     ],
+     "energy": 0.6,
+     "owners": [],
+     "public": true
+    },
+    {
+     "id": "t218_1c",
+     "name": "Apartment 1C",
+     "rect": [
+      0,
+      0,
+      7,
+      14
+     ],
+     "floor": "carpet",
+     "wall": "wallpaper_peeling",
+     "ceiling": "plaster",
+     "light": [
+      1,
+      0.85,
+      0.6
+     ],
+     "energy": 1.0,
+     "owners": [
+      "ida"
+     ],
+     "public": false
+    },
+    {
+     "id": "t218_1d",
+     "name": "Apartment 1D (yours)",
+     "rect": [
+      11,
+      0,
+      18,
+      14
+     ],
+     "floor": "wood_floor",
+     "wall": "plaster_stained",
+     "ceiling": "plaster",
+     "light": [
+      1.0,
+      0.7,
+      0.5
+     ],
+     "energy": 0.7,
+     "owners": [
+      "player"
+     ],
+     "public": false
+    }
+   ],
+   "partitions": [
+    [
+     [
+      7,
+      0
+     ],
+     [
+      7,
+      14
+     ]
+    ],
+    [
+     [
+      11,
+      0
+     ],
+     [
+      11,
+      14
+     ]
+    ]
+   ],
+   "doors": [
+    {
+     "id": "t218_front",
+     "at": [
+      9,
+      0
+     ],
+     "room": "t218_hall",
+     "leaf": "door-type-a"
+    },
+    {
+     "id": "t218_1c",
+     "at": [
+      7,
+      10
+     ],
+     "room": "t218_1c",
+     "leaf": "door-type-b",
+     "key": "key_t218_1c"
+    },
+    {
+     "id": "t218_1d",
+     "at": [
+      11,
+      10
+     ],
+     "room": "t218_1d",
+     "leaf": "door-type-b",
+     "key": "key_t218_1d"
+    }
+   ],
+   "props": [
+    {
+     "id": "bedSingle",
+     "at": [
+      1.2,
+      12.5
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "loungeChair",
+     "at": [
+      2,
+      3
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "televisionVintage",
+     "at": [
+      3.5,
+      1
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "sideTable",
+     "at": [
+      5,
+      4
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "kitchenStove",
+     "at": [
+      5,
+      13.4
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "bookcaseOpen",
+     "at": [
+      0.6,
+      7
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "rugRectangle",
+     "at": [
+      3.5,
+      6
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "pottedPlant",
+     "at": [
+      6.3,
+      1
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "bedSingle",
+     "at": [
+      16.8,
+      12.5
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "table",
+     "at": [
+      14.5,
+      5
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "chair",
+     "at": [
+      14.5,
+      5.8
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "cardboardBoxOpen",
+     "at": [
+      17,
+      2
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "cardboardBoxClosed",
+     "at": [
+      17.2,
+      3
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "radio",
+     "at": [
+      14.5,
+      5
+     ],
+     "yaw": 0,
+     "y": 0.66
+    },
+    {
+     "id": "kitchenSink",
+     "at": [
+      12.2,
+      13.4
+     ],
+     "yaw": 180
+    }
+   ],
+   "places": [
+    {
+     "id": "t218_1c.bed",
+     "at": [
+      1.6,
+      12.4
+     ],
+     "yaw": 90,
+     "pose": "sleep",
+     "tags": [
+      "home",
+      "bed"
+     ]
+    },
+    {
+     "id": "t218_1c.chair",
+     "at": [
+      2,
+      3.3
+     ],
+     "yaw": 0,
+     "pose": "sit",
+     "tags": [
+      "home",
+      "seat"
+     ]
+    },
+    {
+     "id": "t218_1c.window",
+     "at": [
+      3.5,
+      0.6
+     ],
+     "yaw": 180,
+     "pose": "stand",
+     "tags": [
+      "home"
+     ]
+    },
+    {
+     "id": "t218.stoop",
+     "at": [
+      10,
+      -0.7
+     ],
+     "yaw": 180,
+     "pose": "stand",
+     "tags": [
+      "street",
+      "hangout"
+     ]
+    }
+   ],
+   "items": [
+    {
+     "id": "ida_ring_ticket",
+     "name": "Pawn ticket #0612 (Abe's Loans, a wedding ring)",
+     "value": 0,
+     "owner": "ida",
+     "at": [
+      5,
+      4
+     ],
+     "y": 0.7,
+     "prop": "books"
+    },
+    {
+     "id": "player_cash",
+     "name": "Envelope of cash ($35)",
+     "value": 35,
+     "owner": "player",
+     "at": [
+      14.5,
+      5
+     ],
+     "y": 0.68,
+     "prop": "books",
+     "cash": true
+    }
+   ],
+   "readables": [
+    {
+     "at": [
+      14.9,
+      5.0
+     ],
+     "y": 0.68,
+     "title": "Your notebook",
+     "text": "July 7.\nThree weeks on Ellery Street. The landlord doesn't ask questions as long as it's cash.\nThings I know: the diner never closes. The bar's back room has a lock that's newer than the door. The Vesper opens at ten and nobody goes in before eleven. Abe at the pawn shop keeps a book of who owes him.\nThings I don't know: what I am now."
+    }
+   ]
+  },
+  {
+   "id": "derelict",
+   "name": "Condemned building",
+   "pos": [
+    48,
+    -9
+   ],
+   "rot": 180,
+   "size": [
+    26,
+    14
+   ],
+   "floors": 4,
+   "facade": "brick_dirty",
+   "solid": true,
+   "boarded": true,
+   "props": []
+  },
+  {
+   "id": "diner",
+   "name": "Lucky's Diner",
+   "pos": [
+    -48,
+    9
+   ],
+   "rot": 0,
+   "size": [
+    20,
+    14
+   ],
+   "floors": 3,
+   "facade": "brick_red",
+   "sign": {
+    "text": "LUCKY'S DINER  OPEN 24 HRS",
+    "color": [
+     0.3,
+     0.9,
+     1.0
+    ],
+    "at": [
+     10,
+     3.0
+    ],
+    "size": 0.75
+   },
+   "rooms": [
+    {
+     "id": "diner_room",
+     "name": "Lucky's Diner",
+     "rect": [
+      0,
+      0,
+      20,
+      9
+     ],
+     "floor": "tile_white",
+     "wall": "plaster",
+     "ceiling": "plaster",
+     "light": [
+      0.85,
+      1.0,
+      0.95
+     ],
+     "energy": 1.4,
+     "owners": [
+      "gus",
+      "rita"
+     ],
+     "public": true
+    },
+    {
+     "id": "diner_kitchen",
+     "name": "Lucky's kitchen",
+     "rect": [
+      0,
+      9,
+      20,
+      14
+     ],
+     "floor": "tile_dark",
+     "wall": "tile_white",
+     "ceiling": "plaster",
+     "light": [
+      0.9,
+      1.0,
+      0.9
+     ],
+     "energy": 1.0,
+     "owners": [
+      "gus",
+      "rita"
+     ],
+     "public": false
+    }
+   ],
+   "partitions": [
+    [
+     [
+      0,
+      9
+     ],
+     [
+      20,
+      9
+     ]
+    ]
+   ],
+   "windows": [
+    {
+     "at": [
+      12.5,
+      0
+     ],
+     "width": 11,
+     "sill": 0.8,
+     "top": 2.5
+    }
+   ],
+   "doors": [
+    {
+     "id": "diner_front",
+     "at": [
+      3,
+      0
+     ],
+     "room": "diner_room",
+     "leaf": "door-type-a"
+    },
+    {
+     "id": "diner_kitchen",
+     "at": [
+      16,
+      9
+     ],
+     "room": "diner_kitchen",
+     "leaf": "door-type-b"
+    }
+   ],
+   "props": [
+    {
+     "id": "kitchenBar",
+     "at": [
+      4,
+      6.2
+     ],
+     "yaw": 180,
+     "repeat": 9,
+     "step": [
+      0.86,
+      0
+     ]
+    },
+    {
+     "id": "kitchenBarEnd",
+     "at": [
+      11.74,
+      6.2
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "stoolBar",
+     "at": [
+      4,
+      5.1
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "stoolBar",
+     "at": [
+      5.6,
+      5.1
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "stoolBar",
+     "at": [
+      7.2,
+      5.1
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "stoolBar",
+     "at": [
+      8.8,
+      5.1
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "stoolBar",
+     "at": [
+      10.4,
+      5.1
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "radio",
+     "at": [
+      9.7,
+      6.2
+     ],
+     "yaw": 0,
+     "y": 0.86
+    },
+    {
+     "id": "tableCloth",
+     "at": [
+      9,
+      1.4
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "benchCushion",
+     "at": [
+      8,
+      1.4
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "benchCushion",
+     "at": [
+      10,
+      1.4
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "tableCloth",
+     "at": [
+      13.5,
+      1.4
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "benchCushion",
+     "at": [
+      12.5,
+      1.4
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "benchCushion",
+     "at": [
+      14.5,
+      1.4
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "tableCloth",
+     "at": [
+      18,
+      1.4
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "benchCushion",
+     "at": [
+      17,
+      1.4
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "benchCushion",
+     "at": [
+      19,
+      1.4
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "kitchenStove",
+     "at": [
+      4,
+      13.4
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "kitchenStove",
+     "at": [
+      5.9,
+      13.4
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "kitchenFridge",
+     "at": [
+      8,
+      13.4
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "kitchenSink",
+     "at": [
+      10,
+      13.4
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "kitchenCabinet",
+     "at": [
+      12,
+      13.4
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "cardboardBoxClosed",
+     "at": [
+      18.8,
+      13
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "trashcan",
+     "at": [
+      1,
+      13
+     ],
+     "yaw": 0
+    }
+   ],
+   "places": [
+    {
+     "id": "diner.cook",
+     "at": [
+      5,
+      12.5
+     ],
+     "yaw": 180,
+     "pose": "work",
+     "tags": [
+      "diner_kitchen",
+      "work"
+     ]
+    },
+    {
+     "id": "diner.counter_work",
+     "at": [
+      7.5,
+      7.5
+     ],
+     "yaw": 180,
+     "pose": "work",
+     "tags": [
+      "diner",
+      "work"
+     ]
+    },
+    {
+     "id": "diner.stool1",
+     "at": [
+      4,
+      4.9
+     ],
+     "yaw": 0,
+     "pose": "sit",
+     "tags": [
+      "diner",
+      "eat",
+      "seat"
+     ]
+    },
+    {
+     "id": "diner.stool2",
+     "at": [
+      5.6,
+      4.9
+     ],
+     "yaw": 0,
+     "pose": "sit",
+     "tags": [
+      "diner",
+      "eat",
+      "seat"
+     ]
+    },
+    {
+     "id": "diner.stool3",
+     "at": [
+      7.2,
+      4.9
+     ],
+     "yaw": 0,
+     "pose": "sit",
+     "tags": [
+      "diner",
+      "eat",
+      "seat"
+     ]
+    },
+    {
+     "id": "diner.stool4",
+     "at": [
+      8.8,
+      4.9
+     ],
+     "yaw": 0,
+     "pose": "sit",
+     "tags": [
+      "diner",
+      "eat",
+      "seat"
+     ]
+    },
+    {
+     "id": "diner.stool5",
+     "at": [
+      10.4,
+      4.9
+     ],
+     "yaw": 0,
+     "pose": "sit",
+     "tags": [
+      "diner",
+      "eat",
+      "seat"
+     ]
+    },
+    {
+     "id": "diner.b1a",
+     "at": [
+      8,
+      1.4
+     ],
+     "yaw": 90,
+     "pose": "sit",
+     "tags": [
+      "diner",
+      "eat",
+      "seat",
+      "social"
+     ]
+    },
+    {
+     "id": "diner.b1b",
+     "at": [
+      10,
+      1.4
+     ],
+     "yaw": 270,
+     "pose": "sit",
+     "tags": [
+      "diner",
+      "eat",
+      "seat",
+      "social"
+     ]
+    },
+    {
+     "id": "diner.b2a",
+     "at": [
+      12.5,
+      1.4
+     ],
+     "yaw": 90,
+     "pose": "sit",
+     "tags": [
+      "diner",
+      "eat",
+      "seat",
+      "social"
+     ]
+    },
+    {
+     "id": "diner.b2b",
+     "at": [
+      14.5,
+      1.4
+     ],
+     "yaw": 270,
+     "pose": "sit",
+     "tags": [
+      "diner",
+      "eat",
+      "seat",
+      "social"
+     ]
+    },
+    {
+     "id": "diner.b3a",
+     "at": [
+      17,
+      1.4
+     ],
+     "yaw": 90,
+     "pose": "sit",
+     "tags": [
+      "diner",
+      "eat",
+      "seat",
+      "social"
+     ]
+    },
+    {
+     "id": "diner.b3b",
+     "at": [
+      19,
+      1.4
+     ],
+     "yaw": 270,
+     "pose": "sit",
+     "tags": [
+      "diner",
+      "eat",
+      "seat",
+      "social"
+     ]
+    }
+   ],
+   "items": [
+    {
+     "id": "diner_register",
+     "name": "Diner register cash ($61)",
+     "value": 61,
+     "owner": "gus",
+     "at": [
+      11.4,
+      6.2
+     ],
+     "y": 0.88,
+     "prop": "books",
+     "cash": true
+    }
+   ],
+   "readables": [
+    {
+     "at": [
+      9,
+      1.5
+     ],
+     "y": 0.78,
+     "title": "Daily News, left on a table",
+     "text": "DAILY NEWS - Thursday, July 7, 1977\nHEAT WAVE TO CONTINUE; CON ED SAYS GRID 'SOUND'\nPolice still seek .44 gunman. Mayor urges calm.\nIn Brief: Third disappearance reported on Lower East Side this month; police say no connection."
+    }
+   ]
+  },
+  {
+   "id": "t209",
+   "name": "209 Ellery Street",
+   "pos": [
+    -28,
+    9
+   ],
+   "rot": 0,
+   "size": [
+    20,
+    14
+   ],
+   "floors": 5,
+   "facade": "brick_dirty",
+   "fire_escape": true,
+   "sign": {
+    "text": "209",
+    "color": [
+     0.9,
+     0.9,
+     0.8
+    ],
+    "at": [
+     10,
+     2.7
+    ],
+    "size": 0.5
+   },
+   "rooms": [
+    {
+     "id": "t209_hall",
+     "name": "209 hallway",
+     "rect": [
+      8,
+      0,
+      12,
+      14
+     ],
+     "floor": "tile_dark",
+     "wall": "plaster_stained",
+     "ceiling": "plaster",
+     "light": [
+      1.0,
+      0.9,
+      0.6
+     ],
+     "energy": 0.5,
+     "owners": [],
+     "public": true
+    },
+    {
+     "id": "t209_2a",
+     "name": "Apartment 2A",
+     "rect": [
+      0,
+      0,
+      8,
+      14
+     ],
+     "floor": "wood_floor",
+     "wall": "wallpaper_plain",
+     "ceiling": "plaster",
+     "light": [
+      1,
+      0.85,
+      0.6
+     ],
+     "energy": 1.0,
+     "owners": [
+      "luz",
+      "hector"
+     ],
+     "public": false
+    },
+    {
+     "id": "t209_2b",
+     "name": "Apartment 2B",
+     "rect": [
+      12,
+      0,
+      20,
+      14
+     ],
+     "floor": "carpet",
+     "wall": "wallpaper_peeling",
+     "ceiling": "plaster",
+     "light": [
+      1.0,
+      0.8,
+      0.55
+     ],
+     "energy": 0.8,
+     "owners": [
+      "abe"
+     ],
+     "public": false
+    }
+   ],
+   "partitions": [
+    [
+     [
+      8,
+      0
+     ],
+     [
+      8,
+      14
+     ]
+    ],
+    [
+     [
+      12,
+      0
+     ],
+     [
+      12,
+      14
+     ]
+    ]
+   ],
+   "doors": [
+    {
+     "id": "t209_front",
+     "at": [
+      10,
+      0
+     ],
+     "room": "t209_hall",
+     "leaf": "door-type-a"
+    },
+    {
+     "id": "t209_2a",
+     "at": [
+      8,
+      10
+     ],
+     "room": "t209_2a",
+     "leaf": "door-type-b",
+     "key": "key_t209_2a"
+    },
+    {
+     "id": "t209_2b",
+     "at": [
+      12,
+      10
+     ],
+     "room": "t209_2b",
+     "leaf": "door-type-b",
+     "key": "key_t209_2b"
+    }
+   ],
+   "props": [
+    {
+     "id": "bedDouble",
+     "at": [
+      1.5,
+      12.5
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "bedSingle",
+     "at": [
+      6.8,
+      12.5
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "table",
+     "at": [
+      4,
+      6
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "chair",
+     "at": [
+      3.2,
+      6.8
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "chair",
+     "at": [
+      4.8,
+      6.8
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "loungeSofa",
+     "at": [
+      4,
+      1.3
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "televisionVintage",
+     "at": [
+      4,
+      3.6
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "kitchenStove",
+     "at": [
+      3,
+      13.4
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "kitchenFridge",
+     "at": [
+      4.6,
+      13.4
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "pottedPlant",
+     "at": [
+      0.6,
+      0.6
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "bedSingle",
+     "at": [
+      18.8,
+      12.5
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "desk",
+     "at": [
+      15,
+      13.3
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "chair",
+     "at": [
+      15,
+      12.5
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "bookcaseOpen",
+     "at": [
+      19.4,
+      6
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "bookcaseOpen",
+     "at": [
+      19.4,
+      3.5
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "loungeChair",
+     "at": [
+      14,
+      2
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "lampRoundTable",
+     "at": [
+      15.5,
+      2
+     ],
+     "yaw": 0,
+     "y": 0.0
+    },
+    {
+     "id": "cardboardBoxClosed",
+     "at": [
+      12.8,
+      1
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "sideTableDrawers",
+     "at": [
+      17.5,
+      13.4
+     ],
+     "yaw": 180
+    }
+   ],
+   "places": [
+    {
+     "id": "t209_2a.bed1",
+     "at": [
+      1.5,
+      12.2
+     ],
+     "yaw": 90,
+     "pose": "sleep",
+     "tags": [
+      "home",
+      "bed"
+     ]
+    },
+    {
+     "id": "t209_2a.bed2",
+     "at": [
+      6.8,
+      12.2
+     ],
+     "yaw": 270,
+     "pose": "sleep",
+     "tags": [
+      "home",
+      "bed"
+     ]
+    },
+    {
+     "id": "t209_2a.sofa",
+     "at": [
+      3.4,
+      1.6
+     ],
+     "yaw": 0,
+     "pose": "sit",
+     "tags": [
+      "home",
+      "seat"
+     ]
+    },
+    {
+     "id": "t209_2a.sofa2",
+     "at": [
+      4.6,
+      1.6
+     ],
+     "yaw": 0,
+     "pose": "sit",
+     "tags": [
+      "home",
+      "seat"
+     ]
+    },
+    {
+     "id": "t209_2a.kitchen",
+     "at": [
+      3.8,
+      12.6
+     ],
+     "yaw": 180,
+     "pose": "stand",
+     "tags": [
+      "home"
+     ]
+    },
+    {
+     "id": "t209_2b.bed",
+     "at": [
+      18.8,
+      12.2
+     ],
+     "yaw": 270,
+     "pose": "sleep",
+     "tags": [
+      "home",
+      "bed"
+     ]
+    },
+    {
+     "id": "t209_2b.desk",
+     "at": [
+      15,
+      12.5
+     ],
+     "yaw": 180,
+     "pose": "sit",
+     "tags": [
+      "home",
+      "seat"
+     ]
+    },
+    {
+     "id": "t209_2b.chair",
+     "at": [
+      14,
+      2.3
+     ],
+     "yaw": 0,
+     "pose": "sit",
+     "tags": [
+      "home",
+      "seat"
+     ]
+    },
+    {
+     "id": "t209.stoop",
+     "at": [
+      10,
+      -0.7
+     ],
+     "yaw": 0,
+     "pose": "stand",
+     "tags": [
+      "street",
+      "hangout"
+     ]
+    }
+   ],
+   "items": [
+    {
+     "id": "abe_letter",
+     "name": "Letter to Abe, no stamp, wax seal broken",
+     "value": 0,
+     "owner": "abe",
+     "at": [
+      15,
+      13.3
+     ],
+     "y": 0.82,
+     "prop": "books",
+     "quest": "missing_merchant"
+    }
+   ],
+   "readables": [
+    {
+     "at": [
+      14.6,
+      13.3
+     ],
+     "y": 0.82,
+     "title": "Letter on Abe's desk",
+     "text": "Mr. Kessler,\nThe item you hold was never yours to sell, and it was never your father's to keep. We will pay what you owe and more besides. Bring it to the Vesper after midnight on Friday. Come alone, and come inside. It is important that you come inside.\n- C."
+    }
+   ]
+  },
+  {
+   "id": "bodega",
+   "name": "Rivera's Bodega",
+   "pos": [
+    -8,
+    9
+   ],
+   "rot": 0,
+   "size": [
+    14,
+    14
+   ],
+   "floors": 4,
+   "facade": "brick_yellow",
+   "sign": {
+    "text": "RIVERA GROCERY",
+    "color": [
+     0.4,
+     1.0,
+     0.4
+    ],
+    "at": [
+     7,
+     3.0
+    ],
+    "size": 0.8
+   },
+   "rooms": [
+    {
+     "id": "bodega_shop",
+     "name": "Rivera's Bodega",
+     "rect": [
+      0,
+      0,
+      14,
+      10
+     ],
+     "floor": "tile_white",
+     "wall": "plaster",
+     "ceiling": "plaster",
+     "light": [
+      0.95,
+      1.0,
+      0.9
+     ],
+     "energy": 1.3,
+     "owners": [
+      "luz",
+      "hector"
+     ],
+     "public": true,
+     "open": [
+      "16:00",
+      "02:00"
+     ]
+    },
+    {
+     "id": "bodega_store",
+     "name": "Bodega storeroom",
+     "rect": [
+      0,
+      10,
+      14,
+      14
+     ],
+     "floor": "concrete_dirty",
+     "wall": "concrete_dirty",
+     "ceiling": "plaster",
+     "light": [
+      1.0,
+      0.9,
+      0.7
+     ],
+     "energy": 0.6,
+     "owners": [
+      "luz",
+      "hector"
+     ],
+     "public": false
+    }
+   ],
+   "partitions": [
+    [
+     [
+      0,
+      10
+     ],
+     [
+      14,
+      10
+     ]
+    ]
+   ],
+   "windows": [
+    {
+     "at": [
+      9.5,
+      0
+     ],
+     "width": 5,
+     "sill": 0.9,
+     "top": 2.5
+    }
+   ],
+   "doors": [
+    {
+     "id": "bodega_front",
+     "at": [
+      3,
+      0
+     ],
+     "room": "bodega_shop",
+     "leaf": "door-type-a"
+    },
+    {
+     "id": "bodega_store",
+     "at": [
+      11,
+      10
+     ],
+     "room": "bodega_store",
+     "leaf": "door-type-b",
+     "key": "key_bodega"
+    }
+   ],
+   "props": [
+    {
+     "id": "kitchenBar",
+     "at": [
+      3,
+      3
+     ],
+     "yaw": 90,
+     "repeat": 2,
+     "step": [
+      0,
+      0.86
+     ]
+    },
+    {
+     "id": "kitchenBarEnd",
+     "at": [
+      3,
+      4.72
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "bookcaseOpen",
+     "at": [
+      6,
+      6
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "bookcaseOpen",
+     "at": [
+      8,
+      6
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "bookcaseOpen",
+     "at": [
+      6,
+      7
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "bookcaseOpen",
+     "at": [
+      8,
+      7
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "kitchenFridge",
+     "at": [
+      13.4,
+      3
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "kitchenFridge",
+     "at": [
+      13.4,
+      4.4
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "kitchenFridge",
+     "at": [
+      13.4,
+      5.8
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "cardboardBoxClosed",
+     "at": [
+      1,
+      13
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "cardboardBoxClosed",
+     "at": [
+      2,
+      13
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "cardboardBoxClosed",
+     "at": [
+      1.5,
+      13
+     ],
+     "yaw": 0,
+     "y": 0.6
+    },
+    {
+     "id": "cardboardBoxOpen",
+     "at": [
+      5,
+      13.2
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "pallet",
+     "at": [
+      9,
+      12.5
+     ],
+     "yaw": 0
+    }
+   ],
+   "places": [
+    {
+     "id": "bodega.work",
+     "at": [
+      1.9,
+      4
+     ],
+     "yaw": 90,
+     "pose": "work",
+     "tags": [
+      "bodega",
+      "work"
+     ]
+    },
+    {
+     "id": "bodega.customer",
+     "at": [
+      4.3,
+      4
+     ],
+     "yaw": 270,
+     "pose": "stand",
+     "tags": [
+      "bodega",
+      "shop"
+     ]
+    },
+    {
+     "id": "bodega.aisle",
+     "at": [
+      7,
+      8.5
+     ],
+     "yaw": 0,
+     "pose": "stand",
+     "tags": [
+      "bodega",
+      "shop"
+     ]
+    },
+    {
+     "id": "bodega.stock",
+     "at": [
+      4,
+      12.4
+     ],
+     "yaw": 180,
+     "pose": "work",
+     "tags": [
+      "bodega_store",
+      "work"
+     ]
+    }
+   ],
+   "items": [
+    {
+     "id": "bodega_cash",
+     "name": "Cigar box of cash ($48)",
+     "value": 48,
+     "owner": "luz",
+     "at": [
+      3,
+      3
+     ],
+     "y": 0.88,
+     "prop": "books",
+     "cash": true
+    }
+   ]
+  },
+  {
+   "id": "club",
+   "name": "Club Vesper",
+   "pos": [
+    6,
+    9
+   ],
+   "rot": 0,
+   "size": [
+    20,
+    14
+   ],
+   "floors": 3,
+   "facade": "concrete_dirty",
+   "sign": {
+    "text": "VESPER",
+    "color": [
+     0.85,
+     0.2,
+     1.0
+    ],
+    "at": [
+     10,
+     3.1
+    ],
+    "size": 1.4
+   },
+   "rooms": [
+    {
+     "id": "club_foyer",
+     "name": "Vesper foyer",
+     "rect": [
+      0,
+      0,
+      6,
+      14
+     ],
+     "floor": "carpet",
+     "wall": "wallpaper_plain",
+     "ceiling": "plaster",
+     "light": [
+      0.9,
+      0.2,
+      0.3
+     ],
+     "energy": 2.2,
+     "owners": [
+      "claudette",
+      "ray"
+     ],
+     "public": true,
+     "open": [
+      "22:00",
+      "04:30"
+     ]
+    },
+    {
+     "id": "club_floor",
+     "name": "Vesper dance floor",
+     "rect": [
+      6,
+      0,
+      20,
+      14
+     ],
+     "floor": "diamond_plate",
+     "wall": "concrete_stain",
+     "ceiling": "plaster",
+     "light": [
+      0.7,
+      0.2,
+      1.0
+     ],
+     "energy": 2.2,
+     "owners": [
+      "claudette",
+      "ray"
+     ],
+     "public": true,
+     "open": [
+      "22:00",
+      "04:30"
+     ]
+    }
+   ],
+   "partitions": [
+    [
+     [
+      6,
+      0
+     ],
+     [
+      6,
+      14
+     ]
+    ]
+   ],
+   "doors": [
+    {
+     "id": "club_front",
+     "at": [
+      3,
+      0
+     ],
+     "room": "club_foyer",
+     "leaf": "door-type-a"
+    },
+    {
+     "id": "club_inner",
+     "at": [
+      6,
+      7
+     ],
+     "room": "club_floor",
+     "leaf": "door-type-b"
+    }
+   ],
+   "props": [
+    {
+     "id": "loungeSofa",
+     "at": [
+      2,
+      12.8
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "coatRackStanding",
+     "at": [
+      5.3,
+      1
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "speaker",
+     "at": [
+      7,
+      13
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "speaker",
+     "at": [
+      19,
+      13
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "speaker",
+     "at": [
+      19,
+      1
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "kitchenBar",
+     "at": [
+      12,
+      12.8
+     ],
+     "yaw": 0,
+     "repeat": 4,
+     "step": [
+      0.86,
+      0
+     ]
+    },
+    {
+     "id": "kitchenBarEnd",
+     "at": [
+      15.44,
+      12.8
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "loungeSofa",
+     "at": [
+      19,
+      7
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "tableRound",
+     "at": [
+      9,
+      3
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "tableRound",
+     "at": [
+      16,
+      3.5
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "rugRectangle",
+     "at": [
+      3,
+      7
+     ],
+     "yaw": 90
+    }
+   ],
+   "places": [
+    {
+     "id": "club.door",
+     "at": [
+      2.5,
+      1.5
+     ],
+     "yaw": 0,
+     "pose": "work",
+     "tags": [
+      "club",
+      "work"
+     ]
+    },
+    {
+     "id": "club.bar",
+     "at": [
+      13.5,
+      13.4
+     ],
+     "yaw": 0,
+     "pose": "work",
+     "tags": [
+      "club",
+      "work"
+     ]
+    },
+    {
+     "id": "club.sofa1",
+     "at": [
+      1.5,
+      12.4
+     ],
+     "yaw": 180,
+     "pose": "sit",
+     "tags": [
+      "club",
+      "drink",
+      "seat",
+      "social"
+     ]
+    },
+    {
+     "id": "club.sofa2",
+     "at": [
+      2.6,
+      12.4
+     ],
+     "yaw": 180,
+     "pose": "sit",
+     "tags": [
+      "club",
+      "drink",
+      "seat",
+      "social"
+     ]
+    },
+    {
+     "id": "club.dance1",
+     "at": [
+      11,
+      7
+     ],
+     "yaw": 0,
+     "pose": "dance",
+     "tags": [
+      "club",
+      "drink",
+      "dance",
+      "social"
+     ]
+    },
+    {
+     "id": "club.dance2",
+     "at": [
+      13,
+      6
+     ],
+     "yaw": 90,
+     "pose": "dance",
+     "tags": [
+      "club",
+      "drink",
+      "dance",
+      "social"
+     ]
+    },
+    {
+     "id": "club.dance3",
+     "at": [
+      12,
+      8.5
+     ],
+     "yaw": 200,
+     "pose": "dance",
+     "tags": [
+      "club",
+      "drink",
+      "dance",
+      "social"
+     ]
+    },
+    {
+     "id": "club.dance4",
+     "at": [
+      14.5,
+      8
+     ],
+     "yaw": 270,
+     "pose": "dance",
+     "tags": [
+      "club",
+      "drink",
+      "dance",
+      "social"
+     ]
+    },
+    {
+     "id": "club.lounge",
+     "at": [
+      18.6,
+      7
+     ],
+     "yaw": 270,
+     "pose": "sit",
+     "tags": [
+      "club",
+      "drink",
+      "seat",
+      "social"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "laundromat",
+   "name": "Suds-O-Mat (closed)",
+   "pos": [
+    26,
+    9
+   ],
+   "rot": 0,
+   "size": [
+    22,
+    14
+   ],
+   "floors": 3,
+   "facade": "brick_red",
+   "solid": true,
+   "shuttered": true,
+   "sign": {
+    "text": "SUDS-O-MAT",
+    "color": [
+     0.6,
+     0.6,
+     0.6
+    ],
+    "at": [
+     11,
+     3.0
+    ],
+    "size": 0.7,
+    "dead": true
+   },
+   "props": []
+  },
+  {
+   "id": "west_end",
+   "name": "Warehouse",
+   "pos": [
+    -48,
+    -25
+   ],
+   "rot": 270,
+   "size": [
+    50,
+    12
+   ],
+   "floors": 3,
+   "facade": "brick_dirty",
+   "solid": true,
+   "shuttered": true,
+   "props": []
+  },
+  {
+   "id": "east_end",
+   "name": "Warehouse",
+   "pos": [
+    48,
+    25
+   ],
+   "rot": 90,
+   "size": [
+    50,
+    12
+   ],
+   "floors": 4,
+   "facade": "brick_red",
+   "solid": true,
+   "boarded": true,
+   "props": []
+  }
+ ],
+ "street": {
+  "x": [
+   -48,
+   48
+  ],
+  "road_z": [
+   -5,
+   5
+  ],
+  "sidewalk_width": 4,
+  "lamps": [
+   [
+    -42,
+    -1
+   ],
+   [
+    -26,
+    1
+   ],
+   [
+    -10,
+    -1
+   ],
+   [
+    6,
+    1
+   ],
+   [
+    22,
+    -1
+   ],
+   [
+    38,
+    1
+   ]
+  ],
+  "props": [
+   {
+    "id": "sedan",
+    "at": [
+     -36,
+     -3.6
+    ],
+    "yaw": 90
+   },
+   {
+    "id": "taxi",
+    "at": [
+     -6,
+     3.6
+    ],
+    "yaw": 270
+   },
+   {
+    "id": "van",
+    "at": [
+     14,
+     -3.6
+    ],
+    "yaw": 90
+   },
+   {
+    "id": "police",
+    "at": [
+     40,
+     3.6
+    ],
+    "yaw": 270
+   },
+   {
+    "id": "sedan",
+    "at": [
+     30,
+     -3.6
+    ],
+    "yaw": 92
+   },
+   {
+    "id": "detail-dumpster-closed",
+    "at": [
+     -12.5,
+     -14
+    ],
+    "yaw": 90
+   },
+   {
+    "id": "detail-dumpster-open",
+    "at": [
+     -11.4,
+     -26
+    ],
+    "yaw": 0
+   },
+   {
+    "id": "detail-barrier-strong-damaged",
+    "at": [
+     -45.5,
+     0
+    ],
+    "yaw": 90
+   },
+   {
+    "id": "detail-barrier-type-a",
+    "at": [
+     -45.5,
+     -2.5
+    ],
+    "yaw": 90
+   },
+   {
+    "id": "detail-barrier-type-a",
+    "at": [
+     45.5,
+     2
+    ],
+    "yaw": 90
+   },
+   {
+    "id": "detail-barrier-strong-damaged",
+    "at": [
+     45.5,
+     -1
+    ],
+    "yaw": 90
+   },
+   {
+    "id": "truck-grey",
+    "at": [
+     43,
+     -2.5
+    ],
+    "yaw": 0,
+    "scale": 2.2
+   },
+   {
+    "id": "trashcan",
+    "at": [
+     -20,
+     -6.0
+    ],
+    "yaw": 0
+   },
+   {
+    "id": "trashcan",
+    "at": [
+     12,
+     6.0
+    ],
+    "yaw": 0
+   },
+   {
+    "id": "trashcan",
+    "at": [
+     -40,
+     6.0
+    ],
+    "yaw": 0
+   },
+   {
+    "id": "detail-light-traffic",
+    "at": [
+     -45.5,
+     5.5
+    ],
+    "yaw": 270,
+    "scale": 4.5
+   },
+   {
+    "id": "detail-bench",
+    "at": [
+     0,
+     7.6
+    ],
+    "yaw": 180
+   },
+   {
+    "id": "pallet",
+    "at": [
+     -20,
+     -27.5
+    ],
+    "yaw": 30
+   },
+   {
+    "id": "planks",
+    "at": [
+     -25,
+     -28
+    ],
+    "yaw": 0
+   },
+   {
+    "id": "detail-bricks-type-a",
+    "at": [
+     0,
+     -28
+    ],
+    "yaw": 0
+   },
+   {
+    "id": "cardboardBoxOpen",
+    "at": [
+     -12,
+     -24.5
+    ],
+    "yaw": 0
+   },
+   {
+    "id": "wall-fence",
+    "at": [
+     -30.3,
+     -27
+    ],
+    "yaw": 90,
+    "scale": 4
+   },
+   {
+    "id": "wall-fence",
+    "at": [
+     4.3,
+     -27
+    ],
+    "yaw": 90,
+    "scale": 4
+   },
+   {
+    "id": "garbage-truck",
+    "at": [
+     -22,
+     3.4
+    ],
+    "yaw": 270
+   },
+   {
+    "id": "delivery",
+    "at": [
+     1.5,
+     3.4
+    ],
+    "yaw": 270
+   },
+   {
+    "id": "detail-cables-type-a",
+    "at": [
+     -18,
+     0
+    ],
+    "yaw": 90,
+    "y": 6.8,
+    "scale": 32
+   },
+   {
+    "id": "detail-cables-type-a",
+    "at": [
+     28,
+     0
+    ],
+    "yaw": 90,
+    "y": 7.2,
+    "scale": 32
+   },
+   {
+    "id": "scaffolding-poles",
+    "at": [
+     36,
+     -9.6
+    ],
+    "yaw": 0
+   },
+   {
+    "id": "scaffolding-poles",
+    "at": [
+     32.8,
+     -9.6
+    ],
+    "yaw": 0
+   },
+   {
+    "id": "pallet-small",
+    "at": [
+     -4,
+     -29
+    ],
+    "yaw": 20
+   }
+  ],
+  "places": [
+   {
+    "id": "street.corner_w",
+    "at": [
+     -40,
+     6.4
+    ],
+    "yaw": 0,
+    "pose": "stand",
+    "tags": [
+     "street",
+     "hangout"
+    ]
+   },
+   {
+    "id": "street.corner_e",
+    "at": [
+     24,
+     6.4
+    ],
+    "yaw": 0,
+    "pose": "stand",
+    "tags": [
+     "street",
+     "hangout"
+    ]
+   },
+   {
+    "id": "street.bench",
+    "at": [
+     0,
+     7.4
+    ],
+    "yaw": 0,
+    "pose": "sit",
+    "tags": [
+     "street",
+     "hangout",
+     "seat"
+    ]
+   },
+   {
+    "id": "street.lamp",
+    "at": [
+     -26,
+     6.2
+    ],
+    "yaw": 300,
+    "pose": "stand",
+    "tags": [
+     "street",
+     "hangout"
+    ]
+   },
+   {
+    "id": "alley.nest",
+    "at": [
+     -12.8,
+     -27
+    ],
+    "yaw": 90,
+    "pose": "sleep",
+    "tags": [
+     "alley",
+     "bed"
+    ]
+   },
+   {
+    "id": "alley.lean",
+    "at": [
+     -13,
+     -18
+    ],
+    "yaw": 90,
+    "pose": "stand",
+    "tags": [
+     "alley",
+     "hangout"
+    ]
+   },
+   {
+    "id": "edge.west",
+    "at": [
+     -46,
+     7
+    ],
+    "yaw": 270,
+    "pose": "stand",
+    "tags": [
+     "edge"
+    ]
+   },
+   {
+    "id": "edge.east",
+    "at": [
+     46,
+     -7
+    ],
+    "yaw": 90,
+    "pose": "stand",
+    "tags": [
+     "edge"
+    ]
+   }
+  ],
+  "patrol": [
+   [
+    -45,
+    7
+   ],
+   [
+    -10,
+    7
+   ],
+   [
+    20,
+    7
+   ],
+   [
+    45,
+    7
+   ],
+   [
+    45,
+    -7
+   ],
+   [
+    10,
+    -7
+   ],
+   [
+    -20,
+    -7
+   ],
+   [
+    -45,
+    -7
+   ]
+  ],
+  "yard": {
+   "x": [
+    -30,
+    4
+   ],
+   "z": [
+    -31,
+    -23
+   ],
+   "alley_x": [
+    -14,
+    -10
+   ]
+  },
+  "player_start": [
+   17,
+   -7.5
+  ],
+  "player_yaw": 180
+ }
+}

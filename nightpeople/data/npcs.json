@@ -1,0 +1,837 @@
+{
+ "npcs": [
+  {
+   "id": "abe",
+   "name": "Abe Kessler",
+   "role": "pawnbroker",
+   "look": {
+    "model": "OldClassy_Male",
+    "height": 1.72,
+    "colors": {
+     "Skin": "#e3c7b0",
+     "Hair": "#c8c8c8"
+    }
+   },
+   "home": "t209_2b",
+   "schedule": [
+    {
+     "from": "17:00",
+     "to": "00:30",
+     "do": "work",
+     "at": "pawn.work"
+    },
+    {
+     "from": "00:30",
+     "to": "01:30",
+     "do": "eat"
+    },
+    {
+     "from": "01:30",
+     "to": "03:00",
+     "do": "home"
+    },
+    {
+     "from": "03:00",
+     "to": "17:00",
+     "do": "sleep"
+    }
+   ],
+   "traits": {
+    "eat": 1.0,
+    "drink": 0.3,
+    "social": 0.4,
+    "shop": 0.0,
+    "wander": 0.1
+   },
+   "relationships": {
+    "marv": -0.3,
+    "ida": 0.6,
+    "luz": 0.4,
+    "claudette": 0.1
+   },
+   "lines": {
+    "greet": [
+     "Looking to buy or looking to sell? Either way, don't touch the glass.",
+     "Everything has a price. Most things have two.",
+     "I'm closing at half past twelve, so make up your mind."
+    ],
+    "busy": [
+     "Not now, not now. I have a lot on my mind tonight."
+    ]
+   },
+   "money": 210,
+   "faction": ""
+  },
+  {
+   "id": "rita",
+   "name": "Rita Alvarez",
+   "role": "waitress",
+   "look": {
+    "model": "Chef_Female",
+    "height": 1.72,
+    "colors": {
+     "Skin": "#b8936b",
+     "Hair": "#2a1a12",
+     "Clothes": "#d9c9a8"
+    }
+   },
+   "home": "t212_1a",
+   "schedule": [
+    {
+     "from": "18:00",
+     "to": "04:00",
+     "do": "work",
+     "at": "diner.counter_work"
+    },
+    {
+     "from": "04:00",
+     "to": "05:00",
+     "do": "free"
+    },
+    {
+     "from": "05:00",
+     "to": "18:00",
+     "do": "sleep"
+    }
+   ],
+   "traits": {
+    "eat": 0.6,
+    "drink": 0.5,
+    "social": 1.0,
+    "shop": 0.4,
+    "wander": 0.2
+   },
+   "relationships": {
+    "gus": 0.7,
+    "marv": 0.4,
+    "claudette": -0.4,
+    "eddie": 0.5
+   },
+   "lines": {
+    "greet": [
+     "Coffee's fresh-ish. Sit anywhere.",
+     "You look like you haven't slept since Nixon.",
+     "Gus makes eggs any way you want as long as it's scrambled."
+    ],
+    "busy": [
+     "Hold on, hon, I got four tables."
+    ]
+   },
+   "money": 30,
+   "faction": ""
+  },
+  {
+   "id": "gus",
+   "name": "Gus Pappas",
+   "role": "diner owner and cook",
+   "look": {
+    "model": "Worker_Male",
+    "height": 1.72,
+    "colors": {
+     "Skin": "#c9a183",
+     "Shirt": "#e8e8e0",
+     "Vest": "#e8e8e0",
+     "Hat": "#e8e8e0",
+     "Pants": "#333340"
+    }
+   },
+   "home": "offmap",
+   "schedule": [
+    {
+     "from": "16:00",
+     "to": "06:00",
+     "do": "work",
+     "at": "diner.cook"
+    },
+    {
+     "from": "06:00",
+     "to": "16:00",
+     "do": "away"
+    }
+   ],
+   "traits": {
+    "eat": 0.3,
+    "drink": 0.2,
+    "social": 0.3,
+    "shop": 0.0,
+    "wander": 0.0
+   },
+   "relationships": {
+    "rita": 0.7,
+    "eddie": 0.4,
+    "doyle": 0.5
+   },
+   "lines": {
+    "greet": [
+     "Kitchen's for staff. Out.",
+     "You want something, tell Rita."
+    ],
+    "busy": [
+     "I'm cooking."
+    ]
+   },
+   "money": 300,
+   "faction": ""
+  },
+  {
+   "id": "marv",
+   "name": "Marv Tully",
+   "role": "bartender",
+   "look": {
+    "model": "Casual_Bald",
+    "height": 1.72,
+    "colors": {
+     "Skin": "#e3c7b0",
+     "Shirt": "#5a2020"
+    }
+   },
+   "home": "t212_1b",
+   "schedule": [
+    {
+     "from": "17:30",
+     "to": "04:00",
+     "do": "work",
+     "at": "bar.work"
+    },
+    {
+     "from": "04:00",
+     "to": "05:00",
+     "do": "home"
+    },
+    {
+     "from": "05:00",
+     "to": "17:30",
+     "do": "sleep"
+    }
+   ],
+   "traits": {
+    "eat": 0.5,
+    "drink": 0.2,
+    "social": 0.6,
+    "shop": 0.2,
+    "wander": 0.1
+   },
+   "relationships": {
+    "vinnie": -0.5,
+    "abe": -0.2,
+    "dot": 0.5,
+    "frank": 0.6,
+    "rita": 0.4
+   },
+   "lines": {
+    "greet": [
+     "What'll it be.",
+     "Two-drink minimum if you're gonna stand there.",
+     "Back room's private. Don't ask."
+    ],
+    "busy": [
+     "I'm pouring, I'm pouring."
+    ]
+   },
+   "money": 180,
+   "faction": ""
+  },
+  {
+   "id": "luz",
+   "name": "Luz Rivera",
+   "role": "bodega owner",
+   "look": {
+    "model": "Casual2_Female",
+    "height": 1.72,
+    "colors": {
+     "Skin": "#8a5a3c",
+     "Hair": "#1a1010"
+    }
+   },
+   "home": "t209_2a",
+   "schedule": [
+    {
+     "from": "16:00",
+     "to": "02:00",
+     "do": "work",
+     "at": "bodega.work"
+    },
+    {
+     "from": "02:00",
+     "to": "03:00",
+     "do": "home"
+    },
+    {
+     "from": "03:00",
+     "to": "16:00",
+     "do": "sleep"
+    }
+   ],
+   "traits": {
+    "eat": 0.4,
+    "drink": 0.1,
+    "social": 0.7,
+    "shop": 0.0,
+    "wander": 0.1
+   },
+   "relationships": {
+    "hector": 1.0,
+    "abe": 0.4,
+    "doyle": 0.3,
+    "ida": 0.4
+   },
+   "lines": {
+    "greet": [
+     "Milk's in the back, cigarettes behind me, trouble outside.",
+     "If you're looking for Hector, he's supposed to be stocking shelves.",
+     "Buenas noches. What do you need?"
+    ],
+    "busy": [
+     "Un momento."
+    ]
+   },
+   "money": 120,
+   "faction": ""
+  },
+  {
+   "id": "hector",
+   "name": "Hector Rivera",
+   "role": "Luz's son",
+   "look": {
+    "model": "Casual3_Male",
+    "height": 1.68,
+    "colors": {
+     "Skin": "#8a5a3c",
+     "Hair": "#120c08",
+     "Shirt": "#c04040"
+    }
+   },
+   "home": "t209_2a",
+   "schedule": [
+    {
+     "from": "20:00",
+     "to": "22:00",
+     "do": "work",
+     "at": "bodega.stock"
+    },
+    {
+     "from": "22:00",
+     "to": "03:00",
+     "do": "free"
+    },
+    {
+     "from": "03:00",
+     "to": "13:00",
+     "do": "sleep"
+    },
+    {
+     "from": "13:00",
+     "to": "20:00",
+     "do": "free"
+    }
+   ],
+   "traits": {
+    "eat": 0.5,
+    "drink": 0.8,
+    "social": 1.4,
+    "shop": 0.2,
+    "wander": 0.6
+   },
+   "relationships": {
+    "luz": 0.8,
+    "claudette": 0.6,
+    "ray": 0.5,
+    "nina": 0.3
+   },
+   "lines": {
+    "greet": [
+     "You ever been inside the Vesper? They let me in last week. It's... different in there.",
+     "Don't tell my mother you saw me out here.",
+     "Yo."
+    ],
+    "busy": [
+     "I'm working, I'm working."
+    ]
+   },
+   "money": 12,
+   "faction": ""
+  },
+  {
+   "id": "vinnie",
+   "name": "Vincent Sabato",
+   "role": "loan shark",
+   "look": {
+    "model": "Suit_Male",
+    "height": 1.72,
+    "colors": {
+     "Skin": "#c9a183",
+     "Hair": "#0a0a0a",
+     "Shirt": "#d0d0c0"
+    }
+   },
+   "home": "offmap",
+   "schedule": [
+    {
+     "from": "22:00",
+     "to": "03:30",
+     "do": "free"
+    },
+    {
+     "from": "03:30",
+     "to": "22:00",
+     "do": "away"
+    }
+   ],
+   "traits": {
+    "eat": 0.3,
+    "drink": 1.6,
+    "social": 0.8,
+    "shop": 0.1,
+    "wander": 0.2
+   },
+   "relationships": {
+    "marv": 0.1,
+    "claudette": 0.3,
+    "abe": -0.3
+   },
+   "lines": {
+    "greet": [
+     "Do I know you? No. Let's keep it that way.",
+     "Nice night. Shame if somebody wasted it.",
+     "You need money, you know where I drink."
+    ],
+    "busy": [
+     "Beat it."
+    ]
+   },
+   "money": 900,
+   "faction": "the outfit"
+  },
+  {
+   "id": "claudette",
+   "name": "Claudette Moreau",
+   "role": "hostess at the Vesper",
+   "look": {
+    "model": "Suit_Female",
+    "height": 1.8,
+    "colors": {
+     "Skin": "#cfd0d8",
+     "Hair": "#0d0d12",
+     "Shirt": "#6a1020",
+     "Black": "#101014"
+    }
+   },
+   "home": "offmap",
+   "schedule": [
+    {
+     "from": "21:30",
+     "to": "05:00",
+     "do": "work",
+     "at": "club.door"
+    },
+    {
+     "from": "05:00",
+     "to": "21:30",
+     "do": "away"
+    }
+   ],
+   "traits": {
+    "eat": 0.0,
+    "drink": 0.0,
+    "social": 0.5,
+    "shop": 0.0,
+    "wander": 0.0
+   },
+   "relationships": {
+    "abe": 0.2,
+    "ray": 0.5,
+    "hector": 0.3
+   },
+   "lines": {
+    "greet": [
+     "The Vesper opens at ten. It begins at midnight.",
+     "You have an interesting face. Come back when you've decided what it's for.",
+     "Mr. Kessler? A business acquaintance. Why do you ask?"
+    ],
+    "busy": [
+     "Not tonight, darling."
+    ]
+   },
+   "money": 2000,
+   "faction": "The Court",
+   "supernatural": "vampire"
+  },
+  {
+   "id": "ray",
+   "name": "Ray Dunn",
+   "role": "Vesper barman and DJ",
+   "look": {
+    "model": "Casual_Male",
+    "height": 1.72,
+    "colors": {
+     "Skin": "#5a3a28",
+     "Hair": "#0a0a0a",
+     "Shirt": "#d8b030",
+     "Pants": "#2a2a30"
+    }
+   },
+   "home": "offmap",
+   "schedule": [
+    {
+     "from": "21:30",
+     "to": "05:00",
+     "do": "work",
+     "at": "club.bar"
+    },
+    {
+     "from": "05:00",
+     "to": "21:30",
+     "do": "away"
+    }
+   ],
+   "traits": {
+    "eat": 0.4,
+    "drink": 0.3,
+    "social": 0.8,
+    "shop": 0.0,
+    "wander": 0.0
+   },
+   "relationships": {
+    "claudette": 0.5,
+    "hector": 0.3
+   },
+   "lines": {
+    "greet": [
+     "Music's better after one. Everything's better after one.",
+     "Miss Moreau decides who goes upstairs. Not me.",
+     "You dance? Doesn't matter. Nobody watches."
+    ],
+    "busy": [
+     "Hang on, record's ending."
+    ]
+   },
+   "money": 90,
+   "faction": ""
+  },
+  {
+   "id": "ida",
+   "name": "Ida Feld",
+   "role": "widow, 1C",
+   "look": {
+    "model": "OldClassy_Female",
+    "height": 1.6,
+    "colors": {
+     "Skin": "#e3c7b0",
+     "Hair": "#d8d8d8"
+    }
+   },
+   "home": "t218_1c",
+   "schedule": [
+    {
+     "from": "20:00",
+     "to": "23:00",
+     "do": "home"
+    },
+    {
+     "from": "23:00",
+     "to": "23:45",
+     "do": "free"
+    },
+    {
+     "from": "23:45",
+     "to": "10:00",
+     "do": "sleep"
+    },
+    {
+     "from": "10:00",
+     "to": "20:00",
+     "do": "home"
+    }
+   ],
+   "traits": {
+    "eat": 0.6,
+    "drink": 0.0,
+    "social": 1.0,
+    "shop": 0.6,
+    "wander": 0.1
+   },
+   "relationships": {
+    "abe": 0.6,
+    "luz": 0.4,
+    "doyle": 0.5
+   },
+   "lines": {
+    "greet": [
+     "I see everything from that window, you know. Everything.",
+     "Mr. Kessler has my Herschel's ring. He promised he wouldn't sell it.",
+     "Young people never sleep anymore."
+    ],
+    "busy": [
+     "Not now, dear."
+    ]
+   },
+   "money": 25,
+   "faction": ""
+  },
+  {
+   "id": "dot",
+   "name": "Dot Leary",
+   "role": "regular at the Nite Owl",
+   "look": {
+    "model": "Casual_Female",
+    "height": 1.72,
+    "colors": {
+     "Skin": "#e3c7b0",
+     "Hair": "#b04020",
+     "Shirt": "#3a6a5a"
+    }
+   },
+   "home": "offmap",
+   "schedule": [
+    {
+     "from": "21:00",
+     "to": "02:30",
+     "do": "free"
+    },
+    {
+     "from": "02:30",
+     "to": "21:00",
+     "do": "away"
+    }
+   ],
+   "traits": {
+    "eat": 0.4,
+    "drink": 1.8,
+    "social": 1.2,
+    "shop": 0.2,
+    "wander": 0.2
+   },
+   "relationships": {
+    "marv": 0.6,
+    "frank": 0.5
+   },
+   "lines": {
+    "greet": [
+     "Buy me one and I'll tell you a secret. Two and I'll tell you a true one.",
+     "Marv's been jumpy all week. Something about Abe's money.",
+     "Don't go in the Vesper. Just... don't."
+    ],
+    "busy": [
+     "Shh, I'm thinking."
+    ]
+   },
+   "money": 15,
+   "faction": ""
+  },
+  {
+   "id": "eddie",
+   "name": "Eddie Nuñez",
+   "role": "cab driver",
+   "look": {
+    "model": "Casual2_Male",
+    "height": 1.72,
+    "colors": {
+     "Skin": "#b8936b",
+     "Hair": "#151010",
+     "Shirt": "#d8c040"
+    }
+   },
+   "home": "offmap",
+   "schedule": [
+    {
+     "from": "22:30",
+     "to": "02:00",
+     "do": "free"
+    },
+    {
+     "from": "02:00",
+     "to": "22:30",
+     "do": "away"
+    }
+   ],
+   "traits": {
+    "eat": 1.6,
+    "drink": 0.2,
+    "social": 0.8,
+    "shop": 0.3,
+    "wander": 0.3
+   },
+   "relationships": {
+    "rita": 0.5,
+    "gus": 0.4
+   },
+   "lines": {
+    "greet": [
+     "Meter's off, I'm on break. Ask me anything except directions.",
+     "Picked up a fare outside the Vesper last night. Didn't have a reflection in the mirror. Swear to God.",
+     "Rita! Eggs!"
+    ],
+    "busy": [
+     "I'm eating here."
+    ]
+   },
+   "money": 60,
+   "faction": ""
+  },
+  {
+   "id": "nina",
+   "name": "Nina Cole",
+   "role": "sleeps in the alley",
+   "look": {
+    "model": "Casual3_Female",
+    "height": 1.72,
+    "colors": {
+     "Skin": "#c9a183",
+     "Hair": "#6a5030",
+     "Shirt": "#5a5a40"
+    }
+   },
+   "home": "",
+   "schedule": [
+    {
+     "from": "04:00",
+     "to": "12:00",
+     "do": "sleep"
+    },
+    {
+     "from": "12:00",
+     "to": "04:00",
+     "do": "free"
+    }
+   ],
+   "traits": {
+    "eat": 0.8,
+    "drink": 0.6,
+    "social": 0.3,
+    "shop": 0.0,
+    "wander": 1.5
+   },
+   "relationships": {
+    "hector": 0.3,
+    "doyle": -0.4
+   },
+   "lines": {
+    "greet": [
+     "Got a quarter? Got a dollar? Got a sandwich?",
+     "Somebody went into the pawn shop's back door last night. Wasn't Abe.",
+     "The yard's mine. Find your own."
+    ],
+    "busy": [
+     "Leave me be."
+    ]
+   },
+   "money": 2,
+   "faction": "",
+   "bed": "alley.nest"
+  },
+  {
+   "id": "doyle",
+   "name": "Officer Pat Doyle",
+   "role": "beat cop",
+   "look": {
+    "model": "Casual_Male",
+    "height": 1.72,
+    "colors": {
+     "Skin": "#e3c7b0",
+     "Hair": "#a05030",
+     "Shirt": "#1c2540",
+     "Pants": "#1c2540",
+     "Belt": "#0a0a0a"
+    }
+   },
+   "home": "offmap",
+   "schedule": [
+    {
+     "from": "20:00",
+     "to": "00:00",
+     "do": "patrol"
+    },
+    {
+     "from": "00:00",
+     "to": "00:40",
+     "do": "eat"
+    },
+    {
+     "from": "00:40",
+     "to": "04:00",
+     "do": "patrol"
+    },
+    {
+     "from": "04:00",
+     "to": "20:00",
+     "do": "away"
+    }
+   ],
+   "traits": {
+    "eat": 1.0,
+    "drink": 0.0,
+    "social": 0.4,
+    "shop": 0.1,
+    "wander": 0.0
+   },
+   "relationships": {
+    "luz": 0.3,
+    "frank": 0.6,
+    "gus": 0.5,
+    "nina": -0.3
+   },
+   "lines": {
+    "greet": [
+     "Evening. Keep it moving.",
+     "Third disappearance on the East Side this month. You seen anything, you tell me.",
+     "You live around here? I don't know your face."
+    ],
+    "busy": [
+     "Not now, pal."
+    ]
+   },
+   "money": 40,
+   "faction": "NYPD"
+  },
+  {
+   "id": "frank",
+   "name": "Frank Kowalski",
+   "role": "retired detective",
+   "look": {
+    "model": "Doctor_Male_Old",
+    "height": 1.72,
+    "colors": {
+     "Skin": "#e3c7b0",
+     "Hair": "#9a9a9a"
+    }
+   },
+   "home": "offmap",
+   "schedule": [
+    {
+     "from": "21:00",
+     "to": "01:00",
+     "do": "free"
+    },
+    {
+     "from": "01:00",
+     "to": "21:00",
+     "do": "away"
+    }
+   ],
+   "traits": {
+    "eat": 0.7,
+    "drink": 1.2,
+    "social": 1.0,
+    "shop": 0.1,
+    "wander": 0.4
+   },
+   "relationships": {
+    "marv": 0.6,
+    "doyle": 0.6,
+    "dot": 0.4
+   },
+   "lines": {
+    "greet": [
+     "Twenty-six years on the job. You learn who's lying by how they hold their cigarette.",
+     "People don't just disappear. Somebody always knows where they went.",
+     "Pull up a stool. Don't touch my drink."
+    ],
+    "busy": [
+     "Give me a minute."
+    ]
+   },
+   "money": 70,
+   "faction": ""
+  }
+ ]
+}

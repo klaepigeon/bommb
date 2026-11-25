@@ -1,0 +1,558 @@
+{
+ "packs": {
+  "ambientcg": {
+   "name": "ambientCG materials (24 colour maps, listed in tools/process_textures.py)",
+   "creator": "Lennart Demes / ambientCG",
+   "source": "https://ambientcg.com",
+   "license": "CC0 1.0",
+   "attribution_required": false,
+   "modification": true,
+   "commercial": true,
+   "acquired": "2026-11-25",
+   "path": "res://assets/textures/ambientcg",
+   "notes": "Downloaded via the ambientCG public API (1K-JPG). Reduced to 128px / 48 colours by tools/process_textures.py. Each asset page states CC0."
+  },
+  "kenney_retro_urban": {
+   "name": "Retro Urban Kit 2.0",
+   "creator": "Kenney (www.kenney.nl)",
+   "source": "https://opengameart.org/content/retro-urban-kit (also https://kenney.nl/assets/retro-urban-kit)",
+   "license": "CC0 1.0",
+   "attribution_required": false,
+   "modification": true,
+   "commercial": true,
+   "acquired": "2026-11-25",
+   "path": "res://assets/models/kenney_retro_urban",
+   "notes": "License.txt from the pack kept beside the models. Curated subset (24 models, only those placed in the game)."
+  },
+  "kenney_furniture": {
+   "name": "Furniture Pack 1.0",
+   "creator": "Kenney (www.kenney.nl)",
+   "source": "https://opengameart.org/content/furniture-kit",
+   "license": "CC0 1.0",
+   "attribution_required": false,
+   "modification": true,
+   "commercial": true,
+   "acquired": "2026-11-25",
+   "path": "res://assets/models/kenney_furniture",
+   "notes": "License.txt kept. Curated subset (32 models, only those placed in the game)."
+  },
+  "kenney_cars": {
+   "name": "Car Kit 3.1",
+   "creator": "Kenney (www.kenney.nl)",
+   "source": "https://opengameart.org/content/car-kit",
+   "license": "CC0 1.0",
+   "attribution_required": false,
+   "modification": true,
+   "commercial": true,
+   "acquired": "2026-11-25",
+   "path": "res://assets/models/kenney_cars",
+   "notes": "License.txt kept. Curated subset (6 models, only those placed in the game)."
+  },
+  "quaternius_characters": {
+   "name": "Ultimate Animated Character Pack (Nov 2019)",
+   "creator": "Quaternius (quaternius.com)",
+   "source": "https://opengameart.org/content/animated-characters-pack",
+   "license": "CC0 1.0",
+   "attribution_required": false,
+   "modification": true,
+   "commercial": true,
+   "acquired": "2026-11-25",
+   "path": "res://assets/characters/quaternius",
+   "notes": "OpenGameArt page and quaternius.com/license.html state CC0; the zip itself carries no license file. 14 of 50 characters. Shared 32-bone rig, 11 animations each."
+  }
+ },
+ "props": {
+  "detail-awning-wide": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/detail-awning-wide.glb",
+   "scale": 3.2,
+   "collision": "none",
+   "category": "facade"
+  },
+  "detail-cables-type-a": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/detail-cables-type-a.glb",
+   "scale": 3.2,
+   "collision": "none",
+   "category": "facade"
+  },
+  "balcony-type-a": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/balcony-type-a.glb",
+   "scale": 3.2,
+   "collision": "none",
+   "category": "facade"
+  },
+  "balcony-ladder-bottom": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/balcony-ladder-bottom.glb",
+   "scale": 3.2,
+   "collision": "none",
+   "category": "facade"
+  },
+  "window-wide-type-a": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/window-wide-type-a.glb",
+   "scale": 3.2,
+   "collision": "none",
+   "category": "facade"
+  },
+  "window-wide-type-b": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/window-wide-type-b.glb",
+   "scale": 3.2,
+   "collision": "none",
+   "category": "facade"
+  },
+  "window-small-type-a": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/window-small-type-a.glb",
+   "scale": 3.2,
+   "collision": "none",
+   "category": "facade"
+  },
+  "window-small-type-b": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/window-small-type-b.glb",
+   "scale": 3.2,
+   "collision": "none",
+   "category": "facade"
+  },
+  "door-type-a": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/door-type-a.glb",
+   "scale": 3.2,
+   "collision": "none",
+   "category": "facade"
+  },
+  "door-type-b": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/door-type-b.glb",
+   "scale": 3.2,
+   "collision": "none",
+   "category": "facade"
+  },
+  "scaffolding-poles": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/scaffolding-poles.glb",
+   "scale": 3.2,
+   "collision": "none",
+   "category": "facade"
+  },
+  "detail-dumpster-closed": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/detail-dumpster-closed.glb",
+   "scale": 3.2,
+   "collision": "box",
+   "category": "street"
+  },
+  "detail-dumpster-open": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/detail-dumpster-open.glb",
+   "scale": 3.2,
+   "collision": "box",
+   "category": "street"
+  },
+  "detail-light-single": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/detail-light-single.glb",
+   "scale": 3.2,
+   "collision": "box",
+   "category": "street"
+  },
+  "detail-light-traffic": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/detail-light-traffic.glb",
+   "scale": 3.2,
+   "collision": "box",
+   "category": "street"
+  },
+  "detail-barrier-type-a": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/detail-barrier-type-a.glb",
+   "scale": 3.2,
+   "collision": "box",
+   "category": "street"
+  },
+  "detail-barrier-strong-damaged": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/detail-barrier-strong-damaged.glb",
+   "scale": 3.2,
+   "collision": "box",
+   "category": "street"
+  },
+  "detail-bench": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/detail-bench.glb",
+   "scale": 3.2,
+   "collision": "none",
+   "category": "street"
+  },
+  "detail-bricks-type-a": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/detail-bricks-type-a.glb",
+   "scale": 3.2,
+   "collision": "none",
+   "category": "street"
+  },
+  "pallet": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/pallet.glb",
+   "scale": 3.2,
+   "collision": "none",
+   "category": "street"
+  },
+  "pallet-small": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/pallet-small.glb",
+   "scale": 3.2,
+   "collision": "none",
+   "category": "street"
+  },
+  "planks": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/planks.glb",
+   "scale": 3.2,
+   "collision": "none",
+   "category": "street"
+  },
+  "wall-fence": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/wall-fence.glb",
+   "scale": 3.2,
+   "collision": "box",
+   "category": "street"
+  },
+  "truck-grey": {
+   "pack": "kenney_retro_urban",
+   "path": "res://assets/models/kenney_retro_urban/truck-grey.glb",
+   "scale": 3.2,
+   "collision": "box",
+   "category": "street"
+  },
+  "sideTable": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/sideTable.fbx",
+   "scale": 0.2,
+   "collision": "box",
+   "category": "furniture"
+  },
+  "televisionVintage": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/televisionVintage.fbx",
+   "scale": 0.2,
+   "collision": "box",
+   "category": "furniture"
+  },
+  "stoolBar": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/stoolBar.fbx",
+   "scale": 0.2,
+   "collision": "none",
+   "category": "furniture"
+  },
+  "benchCushion": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/benchCushion.fbx",
+   "scale": 0.2,
+   "collision": "none",
+   "category": "furniture"
+  },
+  "sideTableDrawers": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/sideTableDrawers.fbx",
+   "scale": 0.2,
+   "collision": "box",
+   "category": "furniture"
+  },
+  "bedSingle": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/bedSingle.fbx",
+   "scale": 0.2,
+   "collision": "box",
+   "category": "furniture"
+  },
+  "pottedPlant": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/pottedPlant.fbx",
+   "scale": 0.2,
+   "collision": "none",
+   "category": "furniture"
+  },
+  "kitchenCabinet": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/kitchenCabinet.fbx",
+   "scale": 0.2,
+   "collision": "box",
+   "category": "furniture"
+  },
+  "toilet": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/toilet.fbx",
+   "scale": 0.2,
+   "collision": "box",
+   "category": "furniture"
+  },
+  "bookcaseOpen": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/bookcaseOpen.fbx",
+   "scale": 0.2,
+   "collision": "box",
+   "category": "furniture"
+  },
+  "rugRectangle": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/rugRectangle.fbx",
+   "scale": 0.2,
+   "collision": "none",
+   "category": "furniture"
+  },
+  "lampRoundTable": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/lampRoundTable.fbx",
+   "scale": 0.2,
+   "collision": "none",
+   "category": "furniture"
+  },
+  "loungeChair": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/loungeChair.fbx",
+   "scale": 0.2,
+   "collision": "none",
+   "category": "furniture"
+  },
+  "tableCloth": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/tableCloth.fbx",
+   "scale": 0.2,
+   "collision": "box",
+   "category": "furniture"
+  },
+  "coatRackStanding": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/coatRackStanding.fbx",
+   "scale": 0.2,
+   "collision": "none",
+   "category": "furniture"
+  },
+  "books": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/books.fbx",
+   "scale": 0.2,
+   "collision": "none",
+   "category": "furniture"
+  },
+  "loungeSofa": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/loungeSofa.fbx",
+   "scale": 0.2,
+   "collision": "box",
+   "category": "furniture"
+  },
+  "kitchenBarEnd": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/kitchenBarEnd.fbx",
+   "scale": 0.2,
+   "collision": "box",
+   "category": "furniture"
+  },
+  "cardboardBoxOpen": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/cardboardBoxOpen.fbx",
+   "scale": 0.2,
+   "collision": "box",
+   "category": "furniture"
+  },
+  "kitchenStove": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/kitchenStove.fbx",
+   "scale": 0.2,
+   "collision": "box",
+   "category": "furniture"
+  },
+  "tableRound": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/tableRound.fbx",
+   "scale": 0.2,
+   "collision": "box",
+   "category": "furniture"
+  },
+  "kitchenBar": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/kitchenBar.fbx",
+   "scale": 0.2,
+   "collision": "box",
+   "category": "furniture"
+  },
+  "desk": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/desk.fbx",
+   "scale": 0.2,
+   "collision": "box",
+   "category": "furniture"
+  },
+  "chair": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/chair.fbx",
+   "scale": 0.2,
+   "collision": "none",
+   "category": "furniture"
+  },
+  "bedDouble": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/bedDouble.fbx",
+   "scale": 0.2,
+   "collision": "box",
+   "category": "furniture"
+  },
+  "kitchenFridge": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/kitchenFridge.fbx",
+   "scale": 0.2,
+   "collision": "box",
+   "category": "furniture"
+  },
+  "trashcan": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/trashcan.fbx",
+   "scale": 0.2,
+   "collision": "none",
+   "category": "furniture"
+  },
+  "table": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/table.fbx",
+   "scale": 0.2,
+   "collision": "box",
+   "category": "furniture"
+  },
+  "kitchenSink": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/kitchenSink.fbx",
+   "scale": 0.2,
+   "collision": "box",
+   "category": "furniture"
+  },
+  "cardboardBoxClosed": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/cardboardBoxClosed.fbx",
+   "scale": 0.2,
+   "collision": "box",
+   "category": "furniture"
+  },
+  "speaker": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/speaker.fbx",
+   "scale": 0.2,
+   "collision": "none",
+   "category": "furniture"
+  },
+  "radio": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/radio.fbx",
+   "scale": 0.2,
+   "collision": "none",
+   "category": "furniture"
+  },
+  "taxi": {
+   "pack": "kenney_cars",
+   "path": "res://assets/models/kenney_cars/taxi.glb",
+   "scale": 1.45,
+   "collision": "box",
+   "category": "vehicle"
+  },
+  "van": {
+   "pack": "kenney_cars",
+   "path": "res://assets/models/kenney_cars/van.glb",
+   "scale": 1.45,
+   "collision": "box",
+   "category": "vehicle"
+  },
+  "delivery": {
+   "pack": "kenney_cars",
+   "path": "res://assets/models/kenney_cars/delivery.glb",
+   "scale": 1.45,
+   "collision": "box",
+   "category": "vehicle"
+  },
+  "police": {
+   "pack": "kenney_cars",
+   "path": "res://assets/models/kenney_cars/police.glb",
+   "scale": 1.45,
+   "collision": "box",
+   "category": "vehicle"
+  },
+  "sedan": {
+   "pack": "kenney_cars",
+   "path": "res://assets/models/kenney_cars/sedan.glb",
+   "scale": 1.45,
+   "collision": "box",
+   "category": "vehicle"
+  },
+  "garbage-truck": {
+   "pack": "kenney_cars",
+   "path": "res://assets/models/kenney_cars/garbage-truck.glb",
+   "scale": 1.45,
+   "collision": "box",
+   "category": "vehicle"
+  }
+ },
+ "characters": {
+  "Casual2_Female": {
+   "pack": "quaternius_characters",
+   "path": "res://assets/characters/quaternius/Casual2_Female.fbx"
+  },
+  "Casual2_Male": {
+   "pack": "quaternius_characters",
+   "path": "res://assets/characters/quaternius/Casual2_Male.fbx"
+  },
+  "Casual3_Female": {
+   "pack": "quaternius_characters",
+   "path": "res://assets/characters/quaternius/Casual3_Female.fbx"
+  },
+  "Casual3_Male": {
+   "pack": "quaternius_characters",
+   "path": "res://assets/characters/quaternius/Casual3_Male.fbx"
+  },
+  "Casual_Bald": {
+   "pack": "quaternius_characters",
+   "path": "res://assets/characters/quaternius/Casual_Bald.fbx"
+  },
+  "Casual_Female": {
+   "pack": "quaternius_characters",
+   "path": "res://assets/characters/quaternius/Casual_Female.fbx"
+  },
+  "Casual_Male": {
+   "pack": "quaternius_characters",
+   "path": "res://assets/characters/quaternius/Casual_Male.fbx"
+  },
+  "Chef_Female": {
+   "pack": "quaternius_characters",
+   "path": "res://assets/characters/quaternius/Chef_Female.fbx"
+  },
+  "Doctor_Male_Old": {
+   "pack": "quaternius_characters",
+   "path": "res://assets/characters/quaternius/Doctor_Male_Old.fbx"
+  },
+  "OldClassy_Female": {
+   "pack": "quaternius_characters",
+   "path": "res://assets/characters/quaternius/OldClassy_Female.fbx"
+  },
+  "OldClassy_Male": {
+   "pack": "quaternius_characters",
+   "path": "res://assets/characters/quaternius/OldClassy_Male.fbx"
+  },
+  "Suit_Female": {
+   "pack": "quaternius_characters",
+   "path": "res://assets/characters/quaternius/Suit_Female.fbx"
+  },
+  "Suit_Male": {
+   "pack": "quaternius_characters",
+   "path": "res://assets/characters/quaternius/Suit_Male.fbx"
+  },
+  "Worker_Male": {
+   "pack": "quaternius_characters",
+   "path": "res://assets/characters/quaternius/Worker_Male.fbx"
+  }
+ }
+}
