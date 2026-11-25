@@ -39,8 +39,13 @@ func consume_look() -> Vector2:
 		l += rs * rs.length() * 180.0 * get_physics_process_delta_time()
 	return l
 
+## The screen, not this control's size: under a CanvasLayer a full-rect Control can be laid
+## out at zero size, which once made every touch count as "right half" in HYSTERIA.
+func _screen() -> Vector2:
+	return get_viewport_rect().size
+
 func _rects() -> Dictionary:
-	var s := size
+	var s := _screen()
 	var r := {"pause": Rect2(s.x - 100, 16, 84, 84), "bag": Rect2(s.x - 200, 16, 84, 84),
 		"wait": Rect2(s.x - 300, 16, 84, 84)}
 	if verbs.size() > 0:
@@ -70,7 +75,7 @@ func _input(event: InputEvent) -> void:
 			var k := _hit(p)
 			if k != "":
 				_press(k)
-			elif p.x < size.x * 0.45 and _stick_id < 0:
+			elif p.x < _screen().x * 0.45 and _stick_id < 0:
 				_stick_id = event.index
 				_stick_origin = p
 				_stick_pos = p

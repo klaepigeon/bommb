@@ -1,3 +1,7 @@
+> **Also in this repo: NIGHT PEOPLE** (`nightpeople/`), a separate game: a cooperative supernatural
+> immersive sim set in New York, 1977. See [`nightpeople/README.md`](nightpeople/README.md); install
+> `dist/NightPeople.apk`.
+
 # HYSTERIA
 
 **The game is now `game/`, an Android-first rebuild in Godot 4.7, starting with Scene A.** See

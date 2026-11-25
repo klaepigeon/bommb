@@ -72,6 +72,28 @@ func run(m: Node) -> void:
 	check(npc("ida").activity.do == "home", "Ida is at home in 1C")
 	check(npc("claudette").activity.do == "away", "Claudette hasn't arrived yet (21:30)")
 	check(npc("doyle").activity.do == "patrol", "Doyle is on patrol")
+	# --- touch: a thumb on the left half moves, a drag on the right half looks
+	var c: Controls = main.controls
+	var start_pos := player.global_position
+	var start_yaw := player.yaw
+	_touch(0, Vector2(200, 500), true)
+	for i in 10:
+		_drag(0, Vector2(200, 500 - i * 9))
+		await frames(1)
+	await frames(60)
+	check(c.move.length() > 0.5 and player.global_position.distance_to(start_pos) > 0.5, "touch stick walks the player (%.1f m)" % player.global_position.distance_to(start_pos))
+	_touch(0, Vector2(200, 410), false)
+	_touch(1, Vector2(1000, 400), true)
+	for i in 10:
+		_drag(1, Vector2(1000 + i * 12, 400))
+		await frames(1)
+	_touch(1, Vector2(1120, 400), false)
+	await frames(5)
+	check(absf(player.yaw - start_yaw) > 5.0, "touch drag on the right turns the camera (%.0f°)" % (player.yaw - start_yaw))
+	check(c.move.length() < 0.01, "lifting the thumb stops")
+	player.global_position = start_pos
+	player.yaw = start_yaw
+	await frames(5)
 	# --- walk to 218, open the street door, use the key on 1D
 	var front: Door = main.hood.find_child("Door_t218_front", true, false)
 	check(await walk_to(front.global_position + Vector3(0, 0, 1.4)), "walked along the sidewalk to 218's door")
@@ -169,3 +191,21 @@ func _item(id: String) -> Item:
 		if n is Item and n.data.id == id:
 			return n
 	return null
+
+func _touch(i: int, at: Vector2, down: bool) -> void:
+	var e := InputEventScreenTouch.new()
+	e.index = i
+	e.position = _window(at)
+	e.pressed = down
+	Input.parse_input_event(e)
+
+func _drag(i: int, at: Vector2) -> void:
+	var e := InputEventScreenDrag.new()
+	e.index = i
+	e.position = _window(at)
+	Input.parse_input_event(e)
+
+## Screen (canvas) position → window position, so a test finger lands where a real one would
+## whatever size the (headless) window is.
+func _window(at: Vector2) -> Vector2:
+	return get_viewport().get_final_transform() * at

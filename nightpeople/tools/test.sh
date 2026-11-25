@@ -10,7 +10,7 @@ if [ "$1" = "shots" ]; then
 fi
 "$GODOT" --headless --import --path . >/dev/null 2>&1
 LOG=$(mktemp)
-timeout 900 "$GODOT" --headless --fixed-fps 60 --path . -- --autotest >"$LOG" 2>&1
+timeout 900 "$GODOT" --headless --resolution 1280x720 --fixed-fps 60 --path . -- --autotest >"$LOG" 2>&1
 CODE=$?
 grep -E "AUTOTEST|SCRIPT ERROR|Parse Error|ERROR: .*res://" "$LOG"
 rm -f "$LOG"
