@@ -23,6 +23,7 @@ func _ready() -> void:
 		args[kv[0]] = kv[1] if kv.size() > 1 else "true"
 	_view()
 	_environment()
+	Sfx.attach(world)
 	hood = NeighbourhoodScript.new()
 	hood.name = "Neighbourhood"
 	world.add_child(hood)

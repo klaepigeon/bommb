@@ -9,6 +9,11 @@ if [ "$1" = "shots" ]; then
 	exit
 fi
 "$GODOT" --headless --import --path . >/dev/null 2>&1
+for f in $(find . -name "*.gd" -not -path "./.godot/*"); do
+	if "$GODOT" --headless --path . --check-only -s "$f" 2>&1 | grep -q "Parse Error"; then
+		"$GODOT" --headless --path . --check-only -s "$f" 2>&1 | grep -A1 "Parse Error"; exit 1
+	fi
+done
 LOG=$(mktemp)
 timeout 900 "$GODOT" --headless --resolution 1280x720 --fixed-fps 60 --path . -- --autotest >"$LOG" 2>&1
 CODE=$?

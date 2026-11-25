@@ -41,6 +41,7 @@ var _patrol_i := 0
 var _alarm_t := 0.0
 var _alarm_at := Vector3.ZERO
 var _greet_i := 0
+var _stride := 0.0
 
 func npc_id() -> String:
 	return id
@@ -174,6 +175,11 @@ func _walk_physical(delta: float) -> void:
 	move_and_slide()
 	_face(global_position + dir, delta)
 	puppet.locomote(SPEED)
+	_stride += SPEED * delta
+	if _stride > 0.62:
+		_stride = 0.0
+		if World.players.size() > 0 and global_position.distance_to(World.players[0].global_position) < 14.0:
+			Sfx.play_at("step_" + Sfx.surface_at(global_position), global_position, -5.0)
 	_stuck_t += delta
 	if _stuck_t > 3.0:
 		if global_position.distance_to(_last_pos) < 0.4:

@@ -88,14 +88,19 @@ func verbs(actor: Node) -> Array[String]:
 func perform(actor: Node, verb: String) -> void:
 	match verb:
 		"Open":
+			if not allows("player", actor.global_position):
+				Sfx.play_at("keys", global_position + Vector3.UP)
 			set_open(true)
 		"Close":
 			set_open(false)
 		"Knock":
+			for i in 3:
+				get_tree().create_timer(i * 0.28).timeout.connect(func(): Sfx.play_at("knock", global_position + Vector3.UP * 1.3, 0.0, 0.03))
 			Events.world_event.emit({"kind": "knock", "actor": actor, "position": global_position, "place": room, "loudness": 10.0})
 			Events.notice.emit("You knock. Nobody answers." if not _someone_home() else "You knock. Someone moves inside.")
 		"Pick lock":
 			picked = true
+			Sfx.play_at("lockpick", global_position + Vector3.UP)
 			Events.world_event.emit({"kind": "lockpick", "actor": actor, "position": global_position, "place": room, "loudness": 6.0})
 			Events.notice.emit("The lock gives.")
 			set_open(true)
@@ -110,6 +115,7 @@ func set_open(open: bool) -> void:
 	if open == is_open:
 		return
 	is_open = open
+	Sfx.play_at("door_open" if open else "door_close", global_position + Vector3.UP)
 	if _tween:
 		_tween.kill()
 	_tween = create_tween()

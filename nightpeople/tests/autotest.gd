@@ -130,6 +130,13 @@ func run(m: Node) -> void:
 	var cash := _item("player_cash")
 	cash.perform(player, "Take")
 	check(player.cash == 35, "took own cash: $%d" % player.cash)
+	# --- sound
+	check(Sfx._loops.size() >= 14, "places have sound: %d loops" % Sfx._loops.size())
+	await frames(20)
+	check(Sfx.listener_room == "t218_1d", "sound knows the player is in 1D")
+	var street_loop: Dictionary = Sfx._loops.filter(func(l): return l.room == "")[0]
+	check((street_loop.player as AudioStreamPlayer3D).attenuation_filter_cutoff_hz < 1000.0, "the street is muffled from indoors")
+	check(Sfx.surface_at(Vector3(0, 0.2, 7)) == "boots" and Sfx.surface_at(Vector3(-40, 0.2, 13)) == "tile" and Sfx.surface_at(Vector3(-12, 0.2, -27)) == "gravel", "footsteps know concrete, the diner's tiles and the yard's gravel")
 	# --- shop hours: the pawn shop is open at 21:xx and the office isn't
 	check(World.may_enter("player", "pawn_shop"), "the pawn shop is open to the public at %s" % Clock.text())
 	check(not World.may_enter("player", "pawn_office"), "Abe's office is private")

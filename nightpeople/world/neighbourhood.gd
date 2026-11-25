@@ -63,6 +63,7 @@ func _street() -> void:
 	var kit := MeshKit.new()
 	var ax: Array = yard.alley_x
 	kit.box(Vector3((ax[0] + ax[1]) * 0.5, FLOOR_Y * 0.5, -16), Vector3(ax[1] - ax[0], FLOOR_Y, 14), [null, null, yard_floor, null, null, null])
+	World.yard_rects = [[ax[0], -23.0, ax[1], -9.0], [yard.x[0], yard.z[0], yard.x[1], yard.z[1]]]
 	var yx: Array = yard.x
 	var yz: Array = yard.z
 	var ycx: float = (yx[0] + yx[1]) * 0.5
@@ -87,6 +88,8 @@ func _street() -> void:
 		lamps.append(light)
 	for p in street.props:
 		_prop(p, self, Vector3.ZERO)
+	for tx in [-36.0, 0.0, 36.0]:
+		Sfx.loop_at("street_traffic", Vector3(tx, 1.5, 0), "", {"size": 14.0})
 	for p in street.places:
 		_place(p, Transform3D.IDENTITY, Vector3.ZERO)
 	for pt in street.patrol:
@@ -179,7 +182,12 @@ func _room(r: Dictionary, b: Dictionary, xf: Transform3D, kit: MeshKit) -> void:
 	var open: Array = []
 	if r.has("open"):
 		open = [Clock.parse(r.open[0]), Clock.parse(r.open[1])]
-	World.add_room({"id": r.id, "building": b.id, "name": r.name, "aabb": aabb, "owners": r.owners, "public": r.public, "open": open})
+	World.add_room({"id": r.id, "building": b.id, "name": r.name, "aabb": aabb, "owners": r.owners, "public": r.public, "open": open, "floor": r.floor})
+	for snd in r.get("sounds", []):
+		var at: Vector3 = xf * (c + Vector3(0, 2.0, 0))
+		if snd.has("at"):
+			at = xf * Vector3(snd.at[0], FLOOR_Y + 1.2, snd.at[1])
+		Sfx.loop_at(snd.id, at, r.id, {"when_open": snd.get("when_open", false), "crowd": snd.get("crowd", false), "size": maxf(size.x, size.z) * 0.5})
 	var light := _light(xf * (c + Vector3(0, FLOOR_Y + 2.4, 0)), Color(r.light[0], r.light[1], r.light[2]), maxf(size.x, size.z) * 0.75 + 1.5, r.energy)
 	add_child(light)
 	room_lights[r.id] = light

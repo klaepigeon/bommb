@@ -127,6 +127,7 @@ func _on_use(i: int) -> void:
 func _on_button(n: String) -> void:
 	match n:
 		"bag":
+			Sfx.ui("ui")
 			if _bag.visible:
 				_close_panels()
 			else:
@@ -147,8 +148,8 @@ func _show_pause() -> void:
 	_close_panels()
 	get_tree().paused = true
 	_pause.visible = true
-	_pause_text.text = "PAUSED\n\nThe goal for now: walk the block. Go into the bar, the diner, the shops. Watch who goes where, and when.\n\nRender: %d lines   (tap here to resume)\nDither: %s\nFolks on the block: %d\n\nCREDITS (all CC0): %s" % [Settings.render_height, "on" if Settings.dither else "off", World.npcs.size(),
-		", ".join(Assets.registry.packs.values().map(func(p): return "%s by %s" % [p.name, p.creator]))]
+	_pause_text.text = "PAUSED\n\nThe goal for now: walk the block. Go into the bar, the diner, the shops. Watch who goes where, and when.\n\nRender: %d lines   (tap here to resume)\nDither: %s\nFolks on the block: %d\n\nCREDITS: %s" % [Settings.render_height, "on" if Settings.dither else "off", World.npcs.size(),
+		", ".join(Assets.registry.packs.values().map(func(p): return "%s by %s (%s)" % [p.name, p.creator, p.license]))]
 
 func _any_panel() -> bool:
 	return _reader.visible or _bag.visible or _pause.visible

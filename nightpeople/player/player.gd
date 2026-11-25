@@ -25,6 +25,7 @@ var autopilot := false            ## tests: move toward `autopilot_target`
 var autopilot_target := Vector3.ZERO
 
 var _focus_t := 0.0
+var _stride := 0.0
 
 func _ready() -> void:
 	add_to_group("player")
@@ -88,6 +89,10 @@ func _physics_process(delta: float) -> void:
 	if flat.length() > 0.2:
 		puppet.rotation.y = lerp_angle(puppet.rotation.y, atan2(flat.x, flat.y), 12.0 * delta)
 	puppet.locomote(flat.length())
+	_stride += flat.length() * delta
+	if _stride > (0.85 if flat.length() > 3.0 else 0.62) and is_on_floor():
+		_stride = 0.0
+		Sfx.play_at("step_" + Sfx.surface_at(global_position), global_position, 2.0 if flat.length() > 3.0 else 0.0)
 	_focus_t -= delta
 	if _focus_t <= 0.0:
 		_focus_t = 0.1

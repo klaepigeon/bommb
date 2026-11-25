@@ -59,6 +59,114 @@
    "acquired": "2026-11-25",
    "path": "res://assets/characters/quaternius",
    "notes": "OpenGameArt page and quaternius.com/license.html state CC0; the zip itself carries no license file. 14 of 50 characters. Shared 32-bone rig, 11 animations each."
+  },
+  "oga_traffic": {
+   "name": "High traffic road sounds",
+   "creator": "ignasd (OpenGameArt)",
+   "source": "https://opengameart.org/content/high-traffic-road-sounds",
+   "license": "CC0 1.0",
+   "attribution_required": false,
+   "modification": true,
+   "commercial": true,
+   "acquired": "2026-11-25",
+   "path": "res://assets/audio/ambience/street_traffic.ogg",
+   "notes": "Converted to mono 22 kHz OGG."
+  },
+  "oga_crowd": {
+   "name": "Crowd Shouting/Speaking Ambience",
+   "creator": "starninjas (OpenGameArt)",
+   "source": "https://opengameart.org/content/crowd-shoutingspeaking-ambience",
+   "license": "CC0 1.0",
+   "attribution_required": false,
+   "modification": true,
+   "commercial": true,
+   "acquired": "2026-11-25",
+   "path": "res://assets/audio/ambience/bar_crowd.ogg",
+   "notes": "Low-passed and quietened for a bar room."
+  },
+  "rubberduck_sfx": {
+   "name": "100 CC0 SFX, 100 CC0 metal and wood SFX, 30 CC0 SFX loops",
+   "creator": "rubberduck (OpenGameArt)",
+   "source": "https://opengameart.org/content/100-cc0-sfx ; https://opengameart.org/content/100-cc0-metal-and-wood-sfx ; https://opengameart.org/content/30-cc0-sfx-loops",
+   "license": "CC0 1.0",
+   "attribution_required": false,
+   "modification": true,
+   "commercial": true,
+   "acquired": "2026-11-25",
+   "path": "res://assets/audio/sfx",
+   "notes": "Doors, keys, lock, knocks, dishes, glasses, paper, switch, hum and kitchen loops."
+  },
+  "rpg_sound_pack": {
+   "name": "RPG Sound Pack",
+   "creator": "artisticdude (OpenGameArt)",
+   "source": "https://opengameart.org/content/rpg-sound-pack",
+   "license": "CC0 1.0",
+   "attribution_required": false,
+   "modification": true,
+   "commercial": true,
+   "acquired": "2026-11-25",
+   "path": "res://assets/audio/sfx",
+   "notes": "coin, interface1, cloth."
+  },
+  "static": {
+   "name": "Frequency Static Sound Effects",
+   "creator": "bretbernhoft (OpenGameArt)",
+   "source": "https://opengameart.org/content/frequency-static-sound-effects",
+   "license": "CC0 1.0",
+   "attribution_required": false,
+   "modification": true,
+   "commercial": true,
+   "acquired": "2026-11-25",
+   "path": "res://assets/audio/sfx/radio_static.ogg",
+   "notes": "static1.wav, first 4 s."
+  },
+  "music_blues": {
+   "name": "Blues",
+   "creator": "pro-sensory (OpenGameArt)",
+   "source": "https://opengameart.org/content/blues",
+   "license": "CC0 1.0",
+   "attribution_required": false,
+   "modification": true,
+   "commercial": true,
+   "acquired": "2026-11-25",
+   "path": "res://assets/audio/music/nite_owl_radio.ogg",
+   "notes": "Band-limited to sound like the Nite Owl's radio."
+  },
+  "music_disco": {
+   "name": "Funky Disco Beats to Boogie/Woogie to",
+   "creator": "fupi (OpenGameArt)",
+   "source": "https://opengameart.org/content/funky-disco-beats-to-boogiewoogie-to",
+   "license": "CC0 1.0",
+   "attribution_required": false,
+   "modification": true,
+   "commercial": true,
+   "acquired": "2026-11-25",
+   "path": "res://assets/audio/music/vesper_disco.ogg",
+   "notes": "Club Vesper."
+  },
+  "music_taxi": {
+   "name": "Cugzilia II 2.0 - Taxi Theme",
+   "creator": "Spring Spring (OpenGameArt)",
+   "source": "https://opengameart.org/content/cugzilia-ii-20-taxi-theme",
+   "license": "CC0 1.0",
+   "attribution_required": false,
+   "modification": true,
+   "commercial": true,
+   "acquired": "2026-11-25",
+   "path": "res://assets/audio/music/diner_radio.ogg",
+   "notes": "Band-limited: the diner's radio."
+  },
+  "footsteps": {
+   "name": "Footsteps on different surfaces",
+   "creator": "congusbongus (OpenGameArt), from Freesound recordings by swuing (concrete, wood, tile), ceberation (tile), Eelke (metal); gravel from Ali_6868",
+   "source": "https://opengameart.org/content/footsteps-on-different-surfaces ; https://freesound.org/people/swuing/sounds/38873/ ; https://freesound.org/people/swuing/sounds/38876/ ; https://freesound.org/people/ceberation/sounds/235524/ ; https://freesound.org/people/Eelke/sounds/462598/ ; https://freesound.org/people/Ali_6868/packs/21608/",
+   "license": "CC-BY 3.0 (boots, wood, tile, metal); CC0 1.0 (gravel)",
+   "attribution_required": true,
+   "modification": true,
+   "commercial": true,
+   "acquired": "2026-11-25",
+   "path": "res://assets/audio/footsteps",
+   "notes": "ATTRIBUTION REQUIRED: credit swuing, ceberation, Eelke and congusbongus. Per-folder licence files kept beside the sounds. 5 variants per surface."
   }
  },
  "props": {
@@ -553,6 +661,211 @@
   "Worker_Male": {
    "pack": "quaternius_characters",
    "path": "res://assets/characters/quaternius/Worker_Male.fbx"
+  }
+ },
+ "sounds": {
+  "street_traffic": {
+   "pack": "oga_traffic",
+   "paths": [
+    "res://assets/audio/ambience/street_traffic.ogg"
+   ],
+   "volume_db": -6
+  },
+  "bar_crowd": {
+   "pack": "oga_crowd",
+   "paths": [
+    "res://assets/audio/ambience/bar_crowd.ogg"
+   ],
+   "volume_db": -14
+  },
+  "fluorescent_hum": {
+   "pack": "rubberduck_sfx",
+   "paths": [
+    "res://assets/audio/ambience/fluorescent_hum.ogg"
+   ],
+   "volume_db": -22
+  },
+  "kitchen": {
+   "pack": "rubberduck_sfx",
+   "paths": [
+    "res://assets/audio/ambience/kitchen.ogg"
+   ],
+   "volume_db": -18
+  },
+  "nite_owl_radio": {
+   "pack": "music_blues",
+   "paths": [
+    "res://assets/audio/music/nite_owl_radio.ogg"
+   ],
+   "volume_db": -10
+  },
+  "vesper_disco": {
+   "pack": "music_disco",
+   "paths": [
+    "res://assets/audio/music/vesper_disco.ogg"
+   ],
+   "volume_db": -4
+  },
+  "diner_radio": {
+   "pack": "music_taxi",
+   "paths": [
+    "res://assets/audio/music/diner_radio.ogg"
+   ],
+   "volume_db": -14
+  },
+  "radio_static": {
+   "pack": "static",
+   "paths": [
+    "res://assets/audio/sfx/radio_static.ogg"
+   ],
+   "volume_db": -18
+  },
+  "door_open": {
+   "pack": "rubberduck_sfx",
+   "paths": [
+    "res://assets/audio/sfx/door_open.ogg"
+   ],
+   "volume_db": -6
+  },
+  "door_close": {
+   "pack": "rubberduck_sfx",
+   "paths": [
+    "res://assets/audio/sfx/door_close_01.ogg",
+    "res://assets/audio/sfx/door_close_02.ogg",
+    "res://assets/audio/sfx/door_close_03.ogg"
+   ],
+   "volume_db": -6
+  },
+  "keys": {
+   "pack": "rubberduck_sfx",
+   "paths": [
+    "res://assets/audio/sfx/keys_01.ogg",
+    "res://assets/audio/sfx/keys_02.ogg"
+   ],
+   "volume_db": -8
+  },
+  "lockpick": {
+   "pack": "rubberduck_sfx",
+   "paths": [
+    "res://assets/audio/sfx/lock_open_01.ogg"
+   ],
+   "volume_db": -4
+  },
+  "knock": {
+   "pack": "rubberduck_sfx",
+   "paths": [
+    "res://assets/audio/sfx/wood_hit_02.ogg",
+    "res://assets/audio/sfx/wood_hit_05.ogg"
+   ],
+   "volume_db": -2
+  },
+  "dishes": {
+   "pack": "rubberduck_sfx",
+   "paths": [
+    "res://assets/audio/sfx/dishes_01.ogg",
+    "res://assets/audio/sfx/dishes_02.ogg",
+    "res://assets/audio/sfx/dishes_03.ogg"
+   ],
+   "volume_db": -16
+  },
+  "glass": {
+   "pack": "rubberduck_sfx",
+   "paths": [
+    "res://assets/audio/sfx/glass_01.ogg",
+    "res://assets/audio/sfx/glass_02.ogg"
+   ],
+   "volume_db": -18
+  },
+  "paper": {
+   "pack": "rubberduck_sfx",
+   "paths": [
+    "res://assets/audio/sfx/paper_01.ogg",
+    "res://assets/audio/sfx/paper_02.ogg"
+   ],
+   "volume_db": -8
+  },
+  "switch": {
+   "pack": "rubberduck_sfx",
+   "paths": [
+    "res://assets/audio/sfx/switch_01.ogg"
+   ],
+   "volume_db": -8
+  },
+  "coin": {
+   "pack": "rpg_sound_pack",
+   "paths": [
+    "res://assets/audio/sfx/coin.ogg"
+   ],
+   "volume_db": -8
+  },
+  "take": {
+   "pack": "rpg_sound_pack",
+   "paths": [
+    "res://assets/audio/sfx/cloth.ogg"
+   ],
+   "volume_db": -8
+  },
+  "ui": {
+   "pack": "rpg_sound_pack",
+   "paths": [
+    "res://assets/audio/sfx/interface1.ogg"
+   ],
+   "volume_db": -12
+  },
+  "step_boots": {
+   "pack": "footsteps",
+   "paths": [
+    "res://assets/audio/footsteps/boots/0.ogg",
+    "res://assets/audio/footsteps/boots/1.ogg",
+    "res://assets/audio/footsteps/boots/2.ogg",
+    "res://assets/audio/footsteps/boots/3.ogg",
+    "res://assets/audio/footsteps/boots/4.ogg"
+   ],
+   "volume_db": -12
+  },
+  "step_wood": {
+   "pack": "footsteps",
+   "paths": [
+    "res://assets/audio/footsteps/wood/0.ogg",
+    "res://assets/audio/footsteps/wood/1.ogg",
+    "res://assets/audio/footsteps/wood/2.ogg",
+    "res://assets/audio/footsteps/wood/3.ogg",
+    "res://assets/audio/footsteps/wood/4.ogg"
+   ],
+   "volume_db": -12
+  },
+  "step_tile": {
+   "pack": "footsteps",
+   "paths": [
+    "res://assets/audio/footsteps/tile/0.ogg",
+    "res://assets/audio/footsteps/tile/1.ogg",
+    "res://assets/audio/footsteps/tile/2.ogg",
+    "res://assets/audio/footsteps/tile/3.ogg",
+    "res://assets/audio/footsteps/tile/4.ogg"
+   ],
+   "volume_db": -12
+  },
+  "step_metal": {
+   "pack": "footsteps",
+   "paths": [
+    "res://assets/audio/footsteps/metal/0.ogg",
+    "res://assets/audio/footsteps/metal/1.ogg",
+    "res://assets/audio/footsteps/metal/2.ogg",
+    "res://assets/audio/footsteps/metal/3.ogg",
+    "res://assets/audio/footsteps/metal/4.ogg"
+   ],
+   "volume_db": -12
+  },
+  "step_gravel": {
+   "pack": "footsteps",
+   "paths": [
+    "res://assets/audio/footsteps/gravel/0.ogg",
+    "res://assets/audio/footsteps/gravel/1.ogg",
+    "res://assets/audio/footsteps/gravel/2.ogg",
+    "res://assets/audio/footsteps/gravel/3.ogg",
+    "res://assets/audio/footsteps/gravel/4.ogg"
+   ],
+   "volume_db": -12
   }
  }
 }

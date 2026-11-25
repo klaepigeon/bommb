@@ -15,6 +15,8 @@ var players: Array[Node3D] = []
 ## who live elsewhere come from and go to.
 var patrol: Array = []
 var edges: Array = []
+## Rectangles (x0, z0, x1, z1) of the alley and back yard: gravel underfoot.
+var yard_rects: Array = []
 ## Owned things taken from where they were: {item, owner, room, time}. Owners discover these
 ## only when they look (see npc.gd), never by being told by the game.
 var missing: Array = []
@@ -98,6 +100,12 @@ func pay(from, to: String, amount: int, what: String) -> bool:
 	purses[to] = purses.get(to, 0) + amount
 	ledger.append({"time": Clock.total_minutes, "from": fid, "to": to, "amount": amount, "what": what})
 	return true
+
+func in_yard(p: Vector3) -> bool:
+	for r in yard_rects:
+		if p.x > r[0] and p.x < r[2] and p.z > r[1] and p.z < r[3]:
+			return true
+	return false
 
 func nearest_edge(from: Vector3) -> Vector3:
 	var best: Vector3 = edges[0] if not edges.is_empty() else Vector3.ZERO

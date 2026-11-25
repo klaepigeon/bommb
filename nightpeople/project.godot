@@ -18,6 +18,7 @@ Events="*res://core/events.gd"
 Clock="*res://core/clock.gd"
 Assets="*res://core/assets.gd"
 World="*res://core/world.gd"
+Sfx="*res://core/sfx.gd"
 
 [display]
 

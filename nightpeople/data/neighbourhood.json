@@ -48,7 +48,12 @@
      ],
      "energy": 0.7,
      "owners": [],
-     "public": true
+     "public": true,
+     "sounds": [
+      {
+       "id": "fluorescent_hum"
+      }
+     ]
     },
     {
      "id": "t212_1a",
@@ -94,7 +99,12 @@
      "owners": [
       "marv"
      ],
-     "public": false
+     "public": false,
+     "sounds": [
+      {
+       "id": "radio_static"
+      }
+     ]
     }
    ],
    "partitions": [
@@ -480,6 +490,20 @@
      "open": [
       "18:00",
       "04:00"
+     ],
+     "sounds": [
+      {
+       "id": "nite_owl_radio",
+       "when_open": true,
+       "at": [
+        15.2,
+        3
+       ]
+      },
+      {
+       "id": "bar_crowd",
+       "crowd": true
+      }
      ]
     },
     {
@@ -1059,6 +1083,11 @@
      "open": [
       "17:00",
       "00:30"
+     ],
+     "sounds": [
+      {
+       "id": "fluorescent_hum"
+      }
      ]
     },
     {
@@ -1402,7 +1431,12 @@
      ],
      "energy": 0.6,
      "owners": [],
-     "public": true
+     "public": true,
+     "sounds": [
+      {
+       "id": "fluorescent_hum"
+      }
+     ]
     },
     {
      "id": "t218_1c",
@@ -1787,7 +1821,24 @@
       "gus",
       "rita"
      ],
-     "public": true
+     "public": true,
+     "sounds": [
+      {
+       "id": "diner_radio",
+       "when_open": true,
+       "at": [
+        9.7,
+        6.2
+       ]
+      },
+      {
+       "id": "fluorescent_hum"
+      },
+      {
+       "id": "bar_crowd",
+       "crowd": true
+      }
+     ]
     },
     {
      "id": "diner_kitchen",
@@ -1811,7 +1862,13 @@
       "gus",
       "rita"
      ],
-     "public": false
+     "public": false,
+     "sounds": [
+      {
+       "id": "kitchen",
+       "crowd": true
+      }
+     ]
     }
    ],
    "partitions": [
@@ -2320,7 +2377,12 @@
      ],
      "energy": 0.5,
      "owners": [],
-     "public": true
+     "public": true,
+     "sounds": [
+      {
+       "id": "fluorescent_hum"
+      }
+     ]
     },
     {
      "id": "t209_2a",
@@ -2777,6 +2839,11 @@
      "open": [
       "16:00",
       "02:00"
+     ],
+     "sounds": [
+      {
+       "id": "fluorescent_hum"
+      }
      ]
     },
     {
@@ -3120,6 +3187,16 @@
      "open": [
       "22:00",
       "04:30"
+     ],
+     "sounds": [
+      {
+       "id": "vesper_disco",
+       "when_open": true
+      },
+      {
+       "id": "bar_crowd",
+       "crowd": true
+      }
      ]
     }
    ],
