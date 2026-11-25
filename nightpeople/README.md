@@ -16,8 +16,9 @@ Install `../dist/NightPeople.apk` (arm64, signed with the repo's debug key). Or 
 | Move | left half: a stick under your thumb | WASD (Shift runs) | left stick |
 | Look | drag on the right half | mouse (click to capture) | right stick |
 | Main action (Open, Talk, Take, Read...) | the big round button | E | A |
-| Second action (Pick lock, Knock...) | the smaller button | Q / right mouse | LT |
-| Bag | BAG | Tab / I | Y |
+| Second action (Pick lock, Knock, Ask about...) | the smaller button | Q / right mouse | LT |
+| Next second action (when there are several) | >> | R | RB |
+| Bag and notes (the journal) | BAG | Tab / I | Y |
 | Fast-forward time (watch routines) | WAIT | T | Back |
 | Pause, settings, credits | II | Esc | Start |
 
@@ -37,11 +38,39 @@ Mrs. Feld in 1C, Dot, Eddie the cab driver, Nina who sleeps in the yard, Officer
 beat, and Frank, a retired detective. People who live elsewhere arrive from and leave by the
 ends of the street.
 
-**Seeded for "The Missing Merchant":** Abe owes Marv $400 (the bar's ledger); Abe holds a tin box
-someone wants (his office); a letter on his desk at home tells him to bring it to the Vesper after
-midnight on Friday and "come inside"; his appointment book, Ida's pawn ticket, Rita's note from
-Gus, the newspaper, Eddie's fare with no reflection. The disappearance itself is the next step
-(see roadmap): it has to happen *in the simulation*, not as a script.
+A night lasts about 18 real minutes (the clock runs at 30×; WAIT runs it at 1800×).
+
+## The Missing Merchant
+
+Abe Kessler owes Marv $400 (the Nite Owl's ledger) and keeps a heavy tin box in his office that
+somebody wants. A letter on his desk at home tells him to bring it to the Vesper **tonight, after he
+closes**, and to come inside. His appointment book says the same.
+
+**If nobody interferes**, at 00:35 Abe fetches the box from his office and carries it across the
+street into the Vesper's back room, lifts a hatch in the floor and goes down. The bolt slides shut.
+Nothing after that is scripted:
+
+- whoever could see the Vesper's door remembers him going in (not the Vesper's own people, who
+  lie: Claudette says he left before two);
+- people who expect him notice he isn't there (Rita and the diner's regulars when he doesn't come
+  in for his late meal; anyone passing his dark shop in opening hours), and say so out loud;
+- the news travels by gossip; the shop can't open with its owner gone;
+- Officer Doyle hears, goes to look at the dark shop, and if you show him evidence, he spends his
+  nights watching the Vesper's door;
+- Abe's spectacles lie by the hatch.
+
+**Ways through it**, all tested (`tools/test.sh`):
+
+| Route | How | Result |
+|---|---|---|
+| Steal the box | Abe's office, behind him while he's at the counter (he faces the street) | No box, no meeting. He finds it gone (and doesn't know who), goes home and locks the door. Abe lives. |
+| Warn him | Read his letter (apartment 2B, locked: pick it while he's at work), then *Warn him about the Vesper*. He only listens if he doesn't have reason to distrust you. | He stays home. Abe lives. |
+| Investigate | Ask people about Abe (the topic opens once you know something), read the ledger and the book, see him go in yourself, break into the Vesper's back room (it's locked, and staffed until 04:30) | The spectacles and the hatch. The trail goes down. |
+| Report | Show Doyle the spectacles | The police watch the Vesper from then on. |
+
+Your **notes** (BAG) are written only from what you've actually learned: read, been told,
+overheard, seen, or picked up. They note contradictions (Claudette's story against the people who
+saw him go in). The hatch is the way to Location B (next).
 
 ## Systems (and where they live)
 
@@ -58,14 +87,21 @@ Gus, the newspaper, Eddie's fare with no reflection. The disappearance itself is
 | Gossip | People together share the most striking thing they know, if they don't distrust each other; the listener remembers it as told, by whom. | `simulation/society.gd` |
 | Economy (basic) | Every NPC has a purse; meals, drinks and purchases pay the business's owner; every payment is in `World.ledger`. | `core/world.gd`, `simulation/mind.gd` |
 | Dialogue (basic) | Talking to someone: what they say depends on what they know about you (witnessed crimes, rumours, first meeting), whether they're working, asleep (you woke them, in their home), and their own lines. | `simulation/npc.gd` |
+| Sound | Pooled 3D one-shots; loops that belong to a room and are muffled (low-pass, quieter) from anywhere else, so the Vesper's disco thumps through the wall and the street goes dull indoors; music only while its business is open; crowd murmur as loud as the room is full; footsteps per surface (concrete, tile, wood, metal, gravel) for the player and nearby people. | `core/sfx.gd` |
+| Story events (fates) | Things that happen whether or not the player watches, started from `data/story.json` and then left to the ordinary simulation (walking, doors, witnesses, noticing absences, gossip, police). `NPC.command()` sends someone on an errand; `vanish_forever()` takes them out of the world. | `simulation/fates.gd` |
+| Knowledge and the journal | The player's knowledge (flags) comes only from reading, taking, hearing, being told, seeing. Dialogue topics and the quest log are derived from it. | `core/journal.gd`, `simulation/npc.gd` (`ask`) |
 | Asset pipeline | Every external asset is in `data/asset_registry.json` (licence, source, creator, date, path, scale, collision); the game loads props only through it (`core/assets.gd`), which scales, recentres and converts every material to the PS1 shader. | `core/assets.gd`, `data/asset_registry.json` |
 
 ## Build and test
 
 ```
-tools/test.sh                 # headless: the world, 15 people, touch, doors and keys, reading,
-                              # taking, a witnessed theft, an unwitnessed one discovered later,
-                              # routines from 21:00 to 06:15, gossip, the ledger. Exit 0 = pass.
+tools/test.sh                 # headless, three routes through the night (exit 0 = all pass):
+                              #  night: the world, 15 people, touch, doors and keys, sound, reading,
+                              #    taking, a witnessed theft, an unwitnessed one discovered later,
+                              #    routines 21:00-06:15, gossip, the ledger, and the Missing Merchant
+                              #    left alone (he goes, people notice, you investigate, Doyle)
+                              #  prevent: steal the box;  warn: read the letter, warn him
+tools/test.sh warn            # one route
 tools/test.sh shots DIR       # render fixed views and third-person views to DIR (xvfb)
 tools/build_apk.sh            # → ../dist/NightPeople.apk, signed, or it fails
 python3 -I tools/credits.py   # regenerate ASSET_CREDITS.md from the registry
@@ -88,7 +124,7 @@ limit per mesh, headless autotests and the signed-APK script.
 
 ### 2. Existing functionality
 
-Everything in the Systems table runs and is exercised by `tools/test.sh` (42 checks, passing).
+Everything in the Systems table runs and is exercised by `tools/test.sh` (three routes, all passing).
 
 ### 3. Asset inventory (all CC0, see `ASSET_CREDITS.md`)
 
@@ -98,6 +134,8 @@ Everything in the Systems table runs and is exercised by `tools/test.sh` (42 che
 | Kenney Retro Urban Kit (23 models) | streetlights, traffic light, windows, doors, fire escapes, awnings, dumpsters, barriers, fences, pallets, planks, scaffolding, cables, bench, truck |
 | Kenney Furniture Pack (33 models) | beds, sofas, chairs, stools, tables, bar/kitchen counters, stoves, fridges, sinks, bookcases, TVs, radios, boxes, desk, rug, toilet |
 | Kenney Car Kit (6 models) | sedans, taxi, police car, van, delivery and garbage trucks |
+| Audio (CC0): traffic (ignasd), crowd (starninjas), doors/keys/knocks/dishes/glass/hum/kitchen (rubberduck), coin/cloth/UI (artisticdude), static (bretbernhoft), music: blues (pro-sensory), disco (fupi), funk (Spring Spring) | ambience, radios, the Vesper, interaction sounds |
+| Footsteps on different surfaces, **CC-BY 3.0** (congusbongus, from Freesound recordings by swuing, ceberation, Eelke; gravel CC0 by Ali_6868) | footsteps; **attribution required and given** |
 | Quaternius Ultimate Animated Character Pack (14 characters) | everyone, including the player; one shared rig with Idle, Walk, SitDown, StandUp, PickUp, Punch, RecieveHit, Defeat, Shoot_OneHanded, Walk_Carry, Victory |
 
 Custom content: the architecture (generated boxes, textured with the sourced materials), the
@@ -107,7 +145,6 @@ signs (Label3D), all writing and data. No models were made by hand.
 
 - **Not yet run on a phone.** The APK builds and is signed; performance and the touch layout
   need a real device. Watch: 15 skinned characters (~6.5k triangles each), ~30 omni lights.
-- **No audio** at all yet.
 - **No save/load**, no settings screen beyond the pause panel (settings are in `Settings` and saved).
 - **Not built yet:** RPG layer (attributes, skills, origins, conditions), combat, factions as
   systems, and multiplayer (the code is written to be host-authoritative, with world state in
@@ -157,17 +194,15 @@ ambience and footsteps (audio is the biggest gap), payphone / hydrant / newsstan
 
 ### 8. Prioritized roadmap
 
+Done since the first build: **sound**, and **The Missing Merchant as a world event** (above).
+
 1. **On a phone:** install, measure frame time, tune render height / light count / NPC tiers.
-2. **Sound:** CC0 city ambience, footsteps per surface, doors, the bar's radio, the club's music
-   through the wall.
-3. **The Missing Merchant, as a world event:** on Friday after midnight Abe goes to the Vesper with
-   the box and does not come out. His routine stops, his shop stays shut, Marv's debt goes unpaid,
-   Ida worries, Doyle files a report, rumours spread through gossip. Solutions: talk (Ida, Dot,
-   Eddie, Nina, Frank), evidence (the letter, the book, the ledger), theft (the office), the
-   Vesper itself, and later supernatural powers.
+2. **Location B, under the Vesper:** the hatch opens onto a dead subway platform and service
+   tunnels (multiple routes, traps, loot, the box, what's left of Abe). Needs a modular tunnel kit
+   (OpenGameArt / Kenney) and the dark ambiences already found (ogrebane, CC0).
+3. **Save/load** (the world is in `World`, `Journal`, NPC memories and purses: all plain data).
 4. **RPG foundation:** attributes, skills that improve through use (lock-picking first: picking
    becomes a skill check with time and noise), inventory weight, equipment.
 5. **Origins as stacked traits** (Vampire, Human, Witch) with conditions; Claudette and the Court
    become the first supernatural faction.
-6. **Location B:** the abandoned subway station under the street (Kenney/OGA modular kits).
-7. **Combat**, then **host/client multiplayer** (ENet; the authoritative state is already in one place).
+6. **Combat**, then **host/client multiplayer** (ENet; the authoritative state is already in one place).

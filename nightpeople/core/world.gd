@@ -23,6 +23,10 @@ var missing: Array = []
 ## Money that changed hands: {time, from, to, amount, what}. Business owners' takings and every
 ## NPC's purse change only through pay().
 var ledger: Array = []
+## People who are gone (missing, dead): their businesses don't open, their places stay empty.
+var gone: Dictionary = {}
+## room id → Array of people invited in (on top of the owners).
+var guests: Dictionary = {}
 var purses: Dictionary = {}           ## id → dollars (NPCs and businesses' owners)
 
 func clear() -> void:
@@ -32,6 +36,8 @@ func clear() -> void:
 	players.clear()
 	missing.clear()
 	ledger.clear()
+	gone.clear()
+	guests.clear()
 	purses.clear()
 
 func add_place(p: Dictionary) -> void:
@@ -54,10 +60,12 @@ func may_enter(who: String, room_id: String) -> bool:
 	if room_id == "" or not rooms.has(room_id):
 		return true
 	var r: Dictionary = rooms[room_id]
-	if who != "" and who in r.owners:
+	if who != "" and (who in r.owners or who in guests.get(room_id, [])):
 		return true
 	if not r.public:
 		return false
+	if not r.owners.is_empty() and r.owners.all(func(o): return gone.has(o)):
+		return false        # nobody left to open up
 	if r.open.is_empty():
 		return true
 	return Clock.in_span(Clock.minute_of_day(), r.open[0], r.open[1])

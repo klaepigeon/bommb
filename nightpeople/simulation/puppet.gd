@@ -55,10 +55,10 @@ func _play(n: String, speed := 1.0, blend := 0.2) -> void:
 	anim.speed_scale = speed
 
 ## Moving at `speed` m/s (0 = standing). Clears any held pose.
-func locomote(speed: float) -> void:
+func locomote(speed: float, carrying := false) -> void:
 	_pose = ""
 	if speed > 0.1:
-		_play("Walk", clampf(speed / 1.3, 0.6, 2.2))
+		_play("Walk_Carry" if carrying else "Walk", clampf(speed / 1.3, 0.6, 2.2))
 	else:
 		_play("Idle")
 

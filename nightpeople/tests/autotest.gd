@@ -50,12 +50,21 @@ func fast_forward_to(hhmm: String, rate := 30.0) -> void:
 	while absf(Clock.minute_of_day() - target) > 1.0 and guard < 60 * 400:
 		await get_tree().physics_frame
 		guard += 1
-	Clock.minutes_per_second = 1.0
+	Clock.minutes_per_second = Clock.BASE_RATE
 	await frames(30)
 
 func run(m: Node) -> void:
 	main = m
 	player = m.player
+	var route: String = m.args.get("route", "night")
+	if route != "night":
+		get_tree().create_timer(400.0, true, false, true).timeout.connect(func():
+			print("AUTOTEST FAIL: watchdog (stuck at %s)" % Clock.text())
+			get_tree().quit(1))
+		await frames(10)
+		await call("_route_" + route)
+		_finish_test()
+		return
 	get_tree().create_timer(400.0, true, false, true).timeout.connect(func():
 		print("AUTOTEST FAIL: watchdog (stuck at %s)" % Clock.text())
 		get_tree().quit(1))
@@ -164,7 +173,7 @@ func run(m: Node) -> void:
 	await frames(20)
 	# --- the night goes on: routines
 	await fast_forward_to("00:50")
-	check(npc("abe").activity.do in ["eat", "home", "drink", "social", "wander"], "after closing, Abe does something else: %s" % npc("abe").activity.do)
+	check(npc("abe").activity.do in ["eat", "home", "drink", "social", "wander", "errand", "missing"], "after closing, Abe does something else: %s" % npc("abe").activity.do)
 	check(npc("claudette").activity.do == "work" and not npc("claudette").hidden_away, "Claudette arrived for work at the Vesper")
 	check(not World.may_enter("player", "pawn_shop"), "the pawn shop is closed to the public at %s" % Clock.text())
 	var at_places := 0
@@ -172,8 +181,9 @@ func run(m: Node) -> void:
 		if n.arrived and not n.hidden_away and n.activity.get("place", "") != "":
 			at_places += 1
 	check(at_places >= 6, "people are at their places at %s: %d" % [Clock.text(), at_places])
+	await fast_forward_to("02:40")
+	await _story_went()
 	await fast_forward_to("06:15")
-	check(npc("abe").activity.do == "sleep" and npc("abe").arrived and World.room_at(npc("abe").global_position + Vector3.UP * 0.5) == "t209_2b", "Abe is asleep in 2B at 06:15")
 	check(rita.activity.do == "sleep" and World.room_at(rita.global_position + Vector3.UP * 0.5) == "t212_1a", "Rita went home to 1A")
 	check(rita.memory.knows("theft", "unknown"), "Rita found her tips gone (culprit unknown)")
 	check(not rita.memory.knows("theft", "player") or rita.memory.about("player", "theft").all(func(e): return e.source != Memory.Source.WITNESSED), "Rita doesn't magically know who did it")
@@ -185,7 +195,9 @@ func run(m: Node) -> void:
 	print("AUTOTEST info  memories passed on by gossip: %d" % told)
 	print("AUTOTEST info  ledger: %d payments, e.g. %s" % [World.ledger.size(), str(World.ledger.slice(0, 2))])
 	check(World.ledger.size() > 0, "money changed hands (meals, drinks)")
-	# --- done
+	_finish_test()
+
+func _finish_test() -> void:
 	if failures.is_empty():
 		print("AUTOTEST PASS")
 		get_tree().quit(0)
@@ -216,3 +228,76 @@ func _drag(i: int, at: Vector2) -> void:
 ## whatever size the (headless) window is.
 func _window(at: Vector2) -> Vector2:
 	return get_viewport().get_final_transform() * at
+
+# ------------------------------------------------------------------ The Missing Merchant
+
+## Nobody interferes: Abe takes the box to the Vesper after closing and is gone. The world notices.
+func _story_went() -> void:
+	var abe := npc("abe")
+	check(World.gone.has("abe") and abe.gone, "left alone, Abe went to the Vesper and is gone")
+	check(_item("pawn_box") == null, "he took the tin box with him")
+	var spectacles := _item("abe_spectacles")
+	check(spectacles != null and World.room_at(spectacles.global_position + Vector3.UP * 0.3) == "club_back", "his spectacles lie in the Vesper's back room")
+	check(not World.may_enter("player", "pawn_shop"), "the pawn shop can't open with Abe gone")
+	var knows_missing := World.npcs.values().filter(func(n): return n.memory.knows("missing", "abe"))
+	print("AUTOTEST info  know Abe is missing: %s" % ", ".join(knows_missing.map(func(n): return "%s(%s)" % [n.id, Memory.SOURCE_NAMES[n.memory.about("abe", "missing")[0].source]])))
+	check(npc("rita").memory.knows("missing", "abe"), "Rita noticed: Abe never came in for his late meal")
+	check(knows_missing.size() >= 2, "the news spread: %d people know" % knows_missing.size())
+	check(not npc("claudette").memory.knows("saw_vesper"), "the Vesper's people keep it to themselves")
+	# the player asks around, breaks in, finds the evidence, takes it to the police
+	var rita := npc("rita")
+	var ask_rita := (rita.talk as Interactable).verbs(player)
+	print("AUTOTEST info  Rita's topics before: %s" % str(ask_rita))
+	rita.ask("abe", player)
+	check(Journal.knows("abe_gone_heard"), "asking Rita, the player learns Abe is missing")
+	check("Ask about Abe" in (rita.talk as Interactable).verbs(player), "now the player can ask people about Abe")
+	player.global_position = spectacles.global_position + Vector3(0.8, 0.0, 0.0)
+	await frames(10)
+	spectacles.perform(player, "Take")
+	check(Journal.knows("spectacles_found") and player.has_item("abe_spectacles"), "the spectacles are found (and the journal says so)")
+	var doyle := npc("doyle")
+	check(not doyle.hidden_away, "Doyle is on his beat at %s" % Clock.text())
+	player.global_position = doyle.global_position + Vector3(0, 0, 1.2)
+	await frames(10)
+	doyle.ask("show", player)
+	await frames(5)
+	check(Journal.knows("told_doyle"), "shown the spectacles, Doyle takes it seriously")
+	check(doyle.mind.schedule.any(func(b): return b.get("at", "") == "street.vesper_watch"), "Doyle's nights are now spent watching the Vesper")
+	print("AUTOTEST info  journal:\n" + Journal.quest_text())
+
+## Prevention 1: steal the box before closing. No box, no meeting.
+func _route_prevent() -> void:
+	var box := _item("pawn_box")
+	var abe := npc("abe")
+	player.global_position = box.global_position + Vector3(0.0, -0.6, -0.9)
+	await frames(20)
+	check(not abe.can_see(player), "Abe, at the counter, can't see his office behind him")
+	box.perform(player, "Take")
+	check(Journal.knows("box_taken"), "the box is taken (journal)")
+	player.global_position = Vector3(30, 0.2, 7)
+	await frames(10)
+	await fast_forward_to("02:10")
+	check(not World.gone.has("abe"), "with no box to bring, Abe is still here")
+	check(abe.memory.knows("theft", "unknown"), "Abe found the box gone, and doesn't know who took it")
+	check(World.room_at(abe.global_position + Vector3.UP * 0.5) == "t209_2b", "Abe went home and stayed there")
+	check(Journal.knows("abe_safe"), "the journal closes: Abe is alive")
+
+## Prevention 2: read his letter, then talk him out of it.
+func _route_warn() -> void:
+	var letter: Readable = null
+	for r in get_tree().get_nodes_in_group("interactable"):
+		if r is Readable and r.clue == "letter_read":
+			letter = r
+	letter.perform(player, "Read")
+	main.hud._close_panels()
+	check(Journal.knows("letter_read"), "the letter is read")
+	var abe := npc("abe")
+	player.global_position = abe.global_position + Vector3(0, 0, 1.5)
+	await frames(30)
+	check("Warn him about the Vesper" in player.offered_verbs() or "Warn him about the Vesper" in (abe.talk as Interactable).verbs(player), "Abe can be warned once the letter has been read")
+	abe.ask("warn", player)
+	check(Journal.knows("abe_warned"), "Abe listens")
+	player.global_position = Vector3(30, 0.2, 7)
+	await fast_forward_to("02:10")
+	check(not World.gone.has("abe") and _item("pawn_box") != null, "Abe didn't go; the box is still in his office")
+	check(Journal.knows("abe_safe"), "the journal closes: Abe is alive")

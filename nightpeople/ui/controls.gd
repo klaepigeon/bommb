@@ -52,6 +52,8 @@ func _rects() -> Dictionary:
 		r["use0"] = Rect2(s.x - 230, s.y - 230, 180, 180)
 	if verbs.size() > 1:
 		r["use1"] = Rect2(s.x - 400, s.y - 170, 140, 140)
+	if verbs.size() > 2:
+		r["more"] = Rect2(s.x - 330, s.y - 300, 80, 80)
 	return r
 
 func _hit(p: Vector2) -> String:
@@ -107,6 +109,8 @@ func _input(event: InputEvent) -> void:
 		use_pressed.emit(0)
 	elif event.is_action_pressed("secondary"):
 		use_pressed.emit(1)
+	elif event.is_action_pressed("more"):
+		button.emit("more")
 	elif event.is_action_pressed("inventory"):
 		button.emit("bag")
 	elif event.is_action_pressed("wait"):
@@ -134,7 +138,7 @@ func _draw() -> void:
 	var r := _rects()
 	for k in r:
 		var rect: Rect2 = r[k]
-		var label: String = {"pause": "II", "bag": "BAG", "wait": "WAIT"}.get(k, "")
+		var label: String = {"pause": "II", "bag": "BAG", "wait": "WAIT", "more": ">>"}.get(k, "")
 		if k == "use0":
 			label = verbs[0].to_upper()
 		elif k == "use1":

@@ -1026,7 +1026,8 @@
      ],
      "y": 0.85,
      "title": "Ledger, back room",
-     "text": "SABATO - owes 0. Paid in full, early. Strange.\nKESSLER - $400 by the 15th. Third week late.\nAbe says he has something coming in that will square it. Says it's old. Says it's worth more than the shop.\nThe back room is not for Vinnie's people. Tell him."
+     "text": "SABATO - owes 0. Paid in full, early. Strange.\nKESSLER - $400 by the 15th. Third week late.\nAbe says he has something coming in that will square it. Says it's old. Says it's worth more than the shop.\nThe back room is not for Vinnie's people. Tell him.",
+     "clue": "ledger_read"
     }
    ]
   },
@@ -1368,7 +1369,8 @@
      ],
      "y": 0.8,
      "prop": "cardboardBoxClosed",
-     "quest": "missing_merchant"
+     "quest": "missing_merchant",
+     "clue": "box_taken"
     }
    ],
    "readables": [
@@ -1379,7 +1381,8 @@
      ],
      "y": 0.82,
      "title": "Abe's appointment book",
-     "text": "THURS. 7th\n- Feld, her husband's ring. Gave $30. Don't sell.\n- C.M. from the Vesper, about the box. 'After midnight.' Who does business after midnight.\n- Marv, $400. Tell him Friday.\nFRI. 8th\n- Bank. Then the man from the Vesper again."
+     "text": "THURS. 7th\n- Feld, her husband's ring. Gave $30. Don't sell.\n- C.M. from the Vesper, about the box. Tonight, after I close. 'Come inside.' Who does business after midnight.\n- Marv, $400. Tell him Friday.\nFRI. 8th\n- Bank. Pay Marv. If there is a Friday.",
+     "clue": "book_read"
     }
    ]
   },
@@ -2325,7 +2328,8 @@
      ],
      "y": 0.78,
      "title": "Daily News, left on a table",
-     "text": "DAILY NEWS - Thursday, July 7, 1977\nHEAT WAVE TO CONTINUE; CON ED SAYS GRID 'SOUND'\nPolice still seek .44 gunman. Mayor urges calm.\nIn Brief: Third disappearance reported on Lower East Side this month; police say no connection."
+     "text": "DAILY NEWS - Thursday, July 7, 1977\nHEAT WAVE TO CONTINUE; CON ED SAYS GRID 'SOUND'\nPolice still seek .44 gunman. Mayor urges calm.\nIn Brief: Third disappearance reported on Lower East Side this month; police say no connection.",
+     "clue": "paper_read"
     }
    ]
   },
@@ -2781,7 +2785,8 @@
      ],
      "y": 0.82,
      "title": "Letter on Abe's desk",
-     "text": "Mr. Kessler,\nThe item you hold was never yours to sell, and it was never your father's to keep. We will pay what you owe and more besides. Bring it to the Vesper after midnight on Friday. Come alone, and come inside. It is important that you come inside.\n- C."
+     "text": "Mr. Kessler,\nThe item you hold was never yours to sell, and it was never your father's to keep. We will pay what you owe and more besides. Bring it to the Vesper tonight, after you close. Come alone, and come inside. It is important that you come inside.\n- C.",
+     "clue": "letter_read"
     }
    ]
   },
@@ -3168,7 +3173,7 @@
       6,
       0,
       20,
-      14
+      10
      ],
      "floor": "diamond_plate",
      "wall": "concrete_stain",
@@ -3198,6 +3203,30 @@
        "crowd": true
       }
      ]
+    },
+    {
+     "id": "club_back",
+     "name": "Vesper back room",
+     "rect": [
+      6,
+      10,
+      20,
+      14
+     ],
+     "floor": "concrete_dirty",
+     "wall": "concrete_stain",
+     "ceiling": "plaster",
+     "light": [
+      0.8,
+      0.1,
+      0.15
+     ],
+     "energy": 0.6,
+     "owners": [
+      "claudette",
+      "ray"
+     ],
+     "public": false
     }
    ],
    "partitions": [
@@ -3209,6 +3238,16 @@
      [
       6,
       14
+     ]
+    ],
+    [
+     [
+      6,
+      10
+     ],
+     [
+      20,
+      10
      ]
     ]
    ],
@@ -3230,6 +3269,16 @@
      ],
      "room": "club_floor",
      "leaf": "door-type-b"
+    },
+    {
+     "id": "club_back",
+     "at": [
+      17,
+      10
+     ],
+     "room": "club_back",
+     "leaf": "door-type-b",
+     "key": "key_club"
     }
    ],
    "props": [
@@ -3246,51 +3295,6 @@
      "at": [
       5.3,
       1
-     ],
-     "yaw": 0
-    },
-    {
-     "id": "speaker",
-     "at": [
-      7,
-      13
-     ],
-     "yaw": 180
-    },
-    {
-     "id": "speaker",
-     "at": [
-      19,
-      13
-     ],
-     "yaw": 180
-    },
-    {
-     "id": "speaker",
-     "at": [
-      19,
-      1
-     ],
-     "yaw": 0
-    },
-    {
-     "id": "kitchenBar",
-     "at": [
-      12,
-      12.8
-     ],
-     "yaw": 0,
-     "repeat": 4,
-     "step": [
-      0.86,
-      0
-     ]
-    },
-    {
-     "id": "kitchenBarEnd",
-     "at": [
-      15.44,
-      12.8
      ],
      "yaw": 0
     },
@@ -3325,6 +3329,89 @@
       7
      ],
      "yaw": 90
+    },
+    {
+     "id": "kitchenBar",
+     "at": [
+      11,
+      8.6
+     ],
+     "yaw": 180,
+     "repeat": 4,
+     "step": [
+      0.86,
+      0
+     ]
+    },
+    {
+     "id": "kitchenBarEnd",
+     "at": [
+      14.44,
+      8.6
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "speaker",
+     "at": [
+      7,
+      9.3
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "speaker",
+     "at": [
+      19.4,
+      1
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "table",
+     "at": [
+      9,
+      12.5
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "chair",
+     "at": [
+      8.2,
+      12.5
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "chair",
+     "at": [
+      9.8,
+      12.5
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "cardboardBoxClosed",
+     "at": [
+      19,
+      13.3
+     ]
+    },
+    {
+     "id": "cardboardBoxClosed",
+     "at": [
+      19,
+      12.4
+     ]
+    },
+    {
+     "id": "rugRectangle",
+     "at": [
+      12,
+      12.4
+     ],
+     "yaw": 0
     }
    ],
    "places": [
@@ -3344,10 +3431,10 @@
     {
      "id": "club.bar",
      "at": [
-      13.5,
-      13.4
+      12.5,
+      9.4
      ],
-     "yaw": 0,
+     "yaw": 180,
      "pose": "work",
      "tags": [
       "club",
@@ -3458,6 +3545,42 @@
       "seat",
       "social"
      ]
+    },
+    {
+     "id": "club.back",
+     "at": [
+      16,
+      12.4
+     ],
+     "yaw": 0,
+     "pose": "stand",
+     "tags": [
+      "club_back"
+     ]
+    },
+    {
+     "id": "club.back_seat",
+     "at": [
+      8.2,
+      12.5
+     ],
+     "yaw": 90,
+     "pose": "sit",
+     "tags": [
+      "club_back",
+      "seat"
+     ]
+    }
+   ],
+   "readables": [
+    {
+     "at": [
+      9,
+      12.5
+     ],
+     "y": 0.85,
+     "title": "Guest list, Vesper back room",
+     "text": "THURSDAY\nupstairs: the usual\nbelow: KESSLER (with the box). Miss M. to bring him down personally.\n\nNobody goes below without Miss M."
     }
    ]
   },
@@ -3918,6 +4041,30 @@
     "pose": "stand",
     "tags": [
      "edge"
+    ]
+   },
+   {
+    "id": "pawn.front",
+    "at": [
+     -3,
+     -6.5
+    ],
+    "yaw": 180,
+    "pose": "stand",
+    "tags": [
+     "street"
+    ]
+   },
+   {
+    "id": "street.vesper_watch",
+    "at": [
+     9,
+     -6.6
+    ],
+    "yaw": 0,
+    "pose": "work",
+    "tags": [
+     "street"
     ]
    }
   ],

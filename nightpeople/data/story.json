@@ -1,0 +1,181 @@
+{
+ "summons": [
+  {
+   "id": "abe_meeting",
+   "who": "abe",
+   "at": "00:35",
+   "day": 0,
+   "fetch": {
+    "place": "pawn.office",
+    "item": "pawn_box"
+   },
+   "to": "club.back",
+   "guest_room": "club_back",
+   "watchers_door": "club_front",
+   "complicit": [
+    "claudette",
+    "ray"
+   ],
+   "cancel_if": [
+    "abe_warned"
+   ],
+   "evidence": {
+    "id": "abe_spectacles",
+    "name": "Abe's spectacles, one lens cracked",
+    "value": 0,
+    "owner": "abe",
+    "prop": "books",
+    "evidence": true,
+    "clue": "spectacles_found",
+    "at": "club.back",
+    "offset": [
+     0.6,
+     0.4
+    ]
+   },
+   "hatch": {
+    "place": "club.back",
+    "label": "A hatch in the floor, bolted from below"
+   },
+   "lines": {
+    "fetch_ok": "Alright. Alright. Let's get this over with.",
+    "fetch_missing": "It's gone. The box is gone. God help me.",
+    "arrive": "Miss Moreau. I brought it. Let's- where are we going?"
+   }
+  }
+ ],
+ "notice_absence": {
+  "who": "abe",
+  "expected": [
+   {
+    "room": "pawn_shop",
+    "from": "17:00",
+    "to": "00:30"
+   },
+   {
+    "room": "diner_room",
+    "from": "00:30",
+    "to": "02:30"
+   }
+  ]
+ },
+ "news": {
+  "theft": "Somebody took {item}.",
+  "break_in": "Somebody broke into {place}.",
+  "trespass": "There was a stranger in {place}.",
+  "missing": "Abe Kessler's gone. Nobody's seen him since last night.",
+  "saw_vesper": "Abe went into the Vesper after closing. Nobody saw him come out.",
+  "evidence": "They found Abe's glasses in the Vesper."
+ },
+ "topics": {
+  "abe": {
+   "label": "Ask about Abe",
+   "requires_any": [
+    "abe_gone_heard",
+    "letter_read",
+    "book_read"
+   ]
+  },
+  "warn": {
+   "label": "Warn him about the Vesper",
+   "requires_any": [
+    "letter_read",
+    "book_read"
+   ],
+   "only": [
+    "abe"
+   ]
+  },
+  "show": {
+   "label": "Show Abe's spectacles",
+   "requires_item": "abe_spectacles"
+  }
+ },
+ "answers": {
+  "claudette": {
+   "abe": [
+    "Mr. Kessler? He came by, we talked business, he left before two. Why do you ask?",
+    "claudette_story"
+   ]
+  },
+  "ray": {
+   "abe": [
+    "I pour drinks. I don't keep track of old men.",
+    ""
+   ]
+  },
+  "marv": {
+   "abe": [
+    "Abe owes me four hundred bucks. You think I'd make him disappear before he pays? Use your head.",
+    "marv_alibi"
+   ]
+  }
+ },
+ "quest": {
+  "id": "missing_merchant",
+  "title": "THE MISSING MERCHANT",
+  "stages": [
+   [
+    "letter_read",
+    "A letter on Abe Kessler's desk: 'C.' wants him to bring 'the item' to the Vesper tonight, after he closes, and to come inside."
+   ],
+   [
+    "book_read",
+    "Abe's appointment book: 'C.M. from the Vesper, about the box. Tonight, after I close.'"
+   ],
+   [
+    "ledger_read",
+    "The Nite Owl's ledger: Abe owes Marv $400, three weeks late. He said something 'old' would square it."
+   ],
+   [
+    "box_taken",
+    "You have Abe's tin box. It is very heavy, and something inside it shifts on its own."
+   ],
+   [
+    "abe_gone_heard",
+    "Abe Kessler is missing. Nobody's seen him since he closed the shop."
+   ],
+   [
+    "witness_vesper",
+    "Someone saw Abe go into the Vesper after closing. Nobody saw him come out."
+   ],
+   [
+    "claudette_story",
+    "Claudette Moreau says Abe left the Vesper before two."
+   ],
+   [
+    "marv_alibi",
+    "Marv says he'd never make Abe disappear before he paid. Fair point."
+   ],
+   [
+    "spectacles_found",
+    "Abe's spectacles, cracked, on the floor of the Vesper's back room, beside a hatch bolted from below."
+   ],
+   [
+    "told_doyle",
+    "You showed Officer Doyle the spectacles. He's watching the Vesper now."
+   ]
+  ],
+  "contradictions": [
+   [
+    "claudette_story",
+    "witness_vesper",
+    "Claudette says he left. Nobody saw him leave."
+   ]
+  ],
+  "endings": [
+   [
+    "abe_safe",
+    "Abe never went to the Vesper. He's alive, at home, with the door locked. Someone will come asking about that box."
+   ],
+   [
+    "told_doyle",
+    "Doyle has the spectacles and a reason. Whatever is under the Vesper, the police are watching the door now."
+   ],
+   [
+    "spectacles_found",
+    "Abe went down through the hatch in the Vesper's back room. Whatever is under it, that's where he is. (Continues below the street.)"
+   ]
+  ]
+ }
+}

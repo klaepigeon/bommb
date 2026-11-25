@@ -156,6 +156,7 @@ func _building(b: Dictionary) -> void:
 		var r: Readable = ReadableScript.new()
 		r.title = rd.title
 		r.text = rd.text
+		r.clue = rd.get("clue", "")
 		r.label = rd.title
 		r.position = Vector3(rd.at[0], FLOOR_Y + rd.get("y", 0.8), rd.at[1])
 		var paper := MeshInstance3D.new()

@@ -7,7 +7,10 @@ signal hour_passed(hour: int)
 
 const START_DATE := "Thursday 7 July 1977"
 var total_minutes := 21.0 * 60.0     ## the game starts at 21:00
-var minutes_per_second := 1.0        ## a 10-hour night lasts 10 real minutes
+## Normal pace: 30× real time, so a 21:00-06:00 night lasts about 18 real minutes and people
+## cross the street in a believable number of game minutes.
+const BASE_RATE := 0.5
+var minutes_per_second := BASE_RATE
 var running := true
 
 var _last_minute := -1

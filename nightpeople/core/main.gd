@@ -33,6 +33,7 @@ func _ready() -> void:
 
 var player: Player
 var society: Society
+var fates: Fates
 var controls: Controls
 var hud: Hud
 
@@ -51,6 +52,10 @@ func _start_game() -> void:
 	society.name = "Society"
 	add_child(society)
 	society.spawn(world)
+	fates = Fates.new()
+	fates.name = "Fates"
+	add_child(fates)
+	fates.setup(hood)
 	ui = CanvasLayer.new()
 	ui.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(ui)

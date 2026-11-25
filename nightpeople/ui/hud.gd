@@ -47,7 +47,7 @@ func _ready() -> void:
 	add_child(_subs)
 	_reader = _panel(Vector2(760, 460))
 	_reader_text = _reader.get_child(0) as Label
-	_bag = _panel(Vector2(640, 420))
+	_bag = _panel(Vector2(820, 560))
 	_bag_text = _bag.get_child(0) as Label
 	_pause = _panel(Vector2(560, 360))
 	_pause_text = _pause.get_child(0) as Label
@@ -110,12 +110,12 @@ func _process(_delta: float) -> void:
 func _on_focus(target: Interactable) -> void:
 	var v: Array[String] = []
 	if target and is_instance_valid(target):
-		v = target.verbs(player)
+		v = player.offered_verbs()
 	controls.verbs = v
 	if v.is_empty():
 		_prompt.text = ""
 	else:
-		_prompt.text = "[E] " + v[0] + (("    [Q] " + v[1]) if v.size() > 1 else "")
+		_prompt.text = "[E] " + v[0] + (("    [Q] " + v[1]) if v.size() > 1 else "") + ("    [R] more" if v.size() > 2 else "")
 
 func _on_use(i: int) -> void:
 	if _any_panel():
@@ -126,6 +126,8 @@ func _on_use(i: int) -> void:
 
 func _on_button(n: String) -> void:
 	match n:
+		"more":
+			player.cycle_alt()
 		"bag":
 			Sfx.ui("ui")
 			if _bag.visible:
@@ -136,7 +138,7 @@ func _on_button(n: String) -> void:
 				_bag.visible = true
 		"wait":
 			_waiting = not _waiting
-			Clock.minutes_per_second = WAIT_RATE if _waiting else 1.0
+			Clock.minutes_per_second = WAIT_RATE if _waiting else Clock.BASE_RATE
 			Events.notice.emit("Waiting... (WAIT again to stop)" if _waiting else "You stop waiting.")
 		"pause":
 			if _pause.visible:
@@ -148,7 +150,7 @@ func _show_pause() -> void:
 	_close_panels()
 	get_tree().paused = true
 	_pause.visible = true
-	_pause_text.text = "PAUSED\n\nThe goal for now: walk the block. Go into the bar, the diner, the shops. Watch who goes where, and when.\n\nRender: %d lines   (tap here to resume)\nDither: %s\nFolks on the block: %d\n\nCREDITS: %s" % [Settings.render_height, "on" if Settings.dither else "off", World.npcs.size(),
+	_pause_text.text = "PAUSED\n\nWalk the block. Go into the bar, the diner, the shops. Watch who goes where, and when. Read what people leave lying around. What you learn goes in your notes (BAG).\n\nRender: %d lines   (tap here to resume)\nDither: %s\nFolks on the block: %d\n\nCREDITS: %s" % [Settings.render_height, "on" if Settings.dither else "off", World.npcs.size(),
 		", ".join(Assets.registry.packs.values().map(func(p): return "%s by %s (%s)" % [p.name, p.creator, p.license]))]
 
 func _any_panel() -> bool:
@@ -165,6 +167,10 @@ func _refresh_bag() -> void:
 	for i in player.inventory:
 		var owner: String = i.get("owner", "")
 		lines.append("- " + i.name + ("" if owner in ["", "player"] else "   (not yours)"))
+	var notes := Journal.quest_text()
+	if notes != "":
+		lines.append("")
+		lines.append(notes)
 	_bag_text.text = "\n".join(lines)
 
 func _read(title: String, text: String) -> void:

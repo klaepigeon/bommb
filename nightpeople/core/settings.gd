@@ -28,6 +28,7 @@ func _ready() -> void:
 	_bind("inventory", [KEY_TAB, KEY_I], [JOY_BUTTON_Y])
 	_bind("pause", [KEY_ESCAPE, KEY_P], [JOY_BUTTON_START])
 	_bind("wait", [KEY_T], [JOY_BUTTON_BACK])
+	_bind("more", [KEY_R], [JOY_BUTTON_RIGHT_SHOULDER])
 
 func _bind(action: String, keys: Array, buttons: Array = [], axes: Array = [], mouse: Array = []) -> void:
 	if not InputMap.has_action(action):

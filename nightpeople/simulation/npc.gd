@@ -42,6 +42,9 @@ var _alarm_t := 0.0
 var _alarm_at := Vector3.ZERO
 var _greet_i := 0
 var _stride := 0.0
+var gone := false                  ## vanished from the world for good (World.gone)
+var carrying := ""                 ## item id held while walking (Walk_Carry)
+var _on_arrive: Callable
 
 func npc_id() -> String:
 	return id
@@ -93,8 +96,10 @@ func start() -> void:
 # ------------------------------------------------------------------ the loop
 
 func _physics_process(delta: float) -> void:
+	if gone:
+		return
 	_bark_t -= delta
-	if Clock.total_minutes >= float(activity.get("until", 0.0)) or _block_changed():
+	if Clock.total_minutes >= float(activity.get("until", 0.0)) or (not activity.get("pinned", false) and _block_changed()):
 		_finish()
 	if _alarm_t > 0.0:
 		_alarm_t -= delta
@@ -115,6 +120,47 @@ func _physics_process(delta: float) -> void:
 func _block_changed() -> bool:
 	var b := mind.block()
 	return activity.has("block_from") and b.from != activity.block_from
+
+## Send them somewhere now, overriding their schedule until `until` (game minutes) or until
+## release(); `on_arrive` runs when they get there. Story events use this; the walk, the doors,
+## who sees them on the way, all stay the ordinary simulation.
+func command(act: Dictionary, on_arrive := Callable(), until := INF) -> void:
+	if activity.get("place", "") != "":
+		World.release(activity.place, id)
+	act.pinned = true
+	act.until = until
+	if not act.has("place"):
+		act.place = ""
+	_on_arrive = on_arrive
+	_alarm_t = 0.0
+	_begin(act)
+
+func release() -> void:
+	_on_arrive = Callable()
+	activity.pinned = false
+	_finish()
+
+## Carry an item visibly (or nothing, with ""): it rides in the arms, and the walk changes.
+func carry(item_id: String, prop := "cardboardBoxClosed") -> void:
+	carrying = item_id
+	var old := puppet.get_node_or_null("Carried")
+	if old:
+		old.queue_free()
+	if item_id != "":
+		var box := Assets.prop(prop)
+		box.name = "Carried"
+		box.scale = Vector3.ONE * 0.6
+		box.position = Vector3(0, 0.85, 0.32)
+		puppet.add_child(box)
+
+## Gone for good: off the street, out of every system that looks for people.
+func vanish_forever() -> void:
+	gone = true
+	World.gone[id] = true
+	if activity.get("place", "") != "":
+		World.release(activity.place, id)
+	activity = {"do": "missing", "place": "", "until": INF}
+	_vanish()
 
 func _finish() -> void:
 	mind.finish(activity, self)
@@ -174,7 +220,7 @@ func _walk_physical(delta: float) -> void:
 	velocity.y = -4.0 if not is_on_floor() else 0.0
 	move_and_slide()
 	_face(global_position + dir, delta)
-	puppet.locomote(SPEED)
+	puppet.locomote(SPEED, carrying != "")
 	_stride += SPEED * delta
 	if _stride > 0.62:
 		_stride = 0.0
@@ -191,9 +237,9 @@ func _walk_kinematic(minutes: float) -> void:
 	if _path.is_empty():
 		_arrive()
 		return
-	# One game minute is one real second at normal speed, so walking pace in game time is
-	# SPEED metres per game minute; fast-forwarding time makes everyone cover ground faster.
-	var step := SPEED * minutes
+	# At normal pace a game minute lasts 1 / BASE_RATE real seconds, so walking pace in game
+	# time is SPEED / BASE_RATE metres per game minute; fast-forwarding covers ground faster.
+	var step := SPEED * minutes / Clock.BASE_RATE
 	while step > 0.0 and _path_i < _path.size():
 		var to := _path[_path_i] - global_position
 		var d := to.length()
@@ -207,7 +253,7 @@ func _walk_kinematic(minutes: float) -> void:
 				puppet.rotation.y = atan2(to.x, to.z)
 			step = 0.0
 	if tier != Tier.DISTANT:
-		puppet.locomote(SPEED)
+		puppet.locomote(SPEED, carrying != "")
 	if _path_i >= _path.size():
 		_arrive()
 
@@ -232,6 +278,10 @@ func _arrive() -> void:
 		puppet.rotation.y = deg_to_rad(pl.yaw)
 		puppet.hold(pl.pose if activity.do != "sleep" else "sleep")
 		_check_belongings()
+		if _on_arrive.is_valid():
+			var cb := _on_arrive
+			_on_arrive = Callable()
+			cb.call()
 	else:
 		puppet.locomote(0.0)
 		if activity.do in ["patrol", "wander"]:
@@ -376,9 +426,14 @@ func _check_belongings() -> void:
 static func _short(item_name: String) -> String:
 	return item_name.split(" (")[0].to_lower()
 
-func say(text: String) -> void:
-	if text == "":
+## Say something out loud. If the player is in earshot and the line carries news, they learn it.
+func say(text: String, clue := "") -> void:
+	if text == "" or gone:
 		return
+	if clue != "":
+		for p in World.players:
+			if p.global_position.distance_to(global_position) < 16.0:
+				Journal.learn(clue)
 	_bark_t = BARK_COOLDOWN
 	Events.bark.emit(def.name.split(" ")[0] if not def.name.begins_with("Officer") else "Doyle", text, self)
 
@@ -423,3 +478,48 @@ func talk_to(p: Node3D) -> void:
 		pool = ["..."]
 	say(pool[(_greet_i if not first else 0) % pool.size()])
 	_greet_i += 1
+
+## Answer the player face to face: they hear it, so they learn what it carries.
+func _answer(text: String, clue := "") -> void:
+	say(text)
+	Journal.learn(clue)
+
+## A topic the player raises (data/story.json "topics"). Answers come from what this person
+## knows; a few people have their own answer (and may be lying).
+func ask(topic: String, p: Node3D) -> void:
+	_alarm(p.global_position, 2.5)
+	var own: Dictionary = Journal.story.answers.get(id, {})
+	match topic:
+		"abe":
+			if own.has("abe") and World.gone.has("abe"):
+				_answer(own.abe[0], own.abe[1])
+				return
+			var seen := memory.about("abe", "saw_vesper")
+			if not seen.is_empty():
+				_answer("I saw him go into the Vesper after he closed up. Didn't see him come out." if seen[0].source == Memory.Source.WITNESSED else "Word is he went into the Vesper and never came out.", "witness_vesper")
+			elif memory.knows("missing", "abe"):
+				_answer("He's gone. Shop's dark when it should be open. Nobody knows where he went.", "abe_gone_heard")
+			elif World.gone.has("abe"):
+				say("Abe? Haven't seen him tonight. Why?")
+			elif id == "abe":
+				say("What about me? I'm busy.")
+			else:
+				say("Abe? Behind his counter till half twelve, then Lucky's. Like a clock. Why?")
+		"warn":
+			if id != "abe":
+				return
+			if memory.disposition("player") < -0.2:
+				say("You? You've got some nerve. Mind your own business.")
+				return
+			say("You've been reading my mail? ...No. No, you're right. I'm not going anywhere tonight.")
+			Journal.learn("abe_warned")
+			Events.world_event.emit({"kind": "warned", "actor": p, "who": id, "position": global_position, "loudness": 0.0})
+		"show":
+			if id == "doyle":
+				_answer("These are Kessler's. Where'd you get- the Vesper? ...Alright. I'm gonna sit on that place.", "told_doyle")
+				Events.world_event.emit({"kind": "reported", "actor": p, "who": id, "position": global_position, "loudness": 0.0})
+			elif id in ["claudette", "ray"]:
+				say("Never seen them before in my life.")
+			else:
+				memory.remember("evidence", "abe", Memory.Source.TOLD, {}, "club_back", "player")
+				say("Those are Abe's! Where did you find those? ...The Vesper? Jesus, Mary and Joseph.")

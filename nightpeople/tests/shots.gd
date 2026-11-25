@@ -12,6 +12,7 @@ const VIEWS := {
 	"apartment": [Vector3(-32, 1.6, -12), Vector3(-34, 0.8, -20)],
 	"yard": [Vector3(-12, 1.7, -14), Vector3(-12, 1.2, -28)],
 	"facade_close": [Vector3(-36, 4.5, -2.5), Vector3(-38, 5.5, -9)],
+	"vesper_back": [Vector3(19.4, 1.8, 20.3), Vector3(21, 0.2, 21.4)],
 	"club": [Vector3(13, 1.6, 10.5), Vector3(20, 1.0, 17)],
 }
 

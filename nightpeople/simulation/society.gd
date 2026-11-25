@@ -8,6 +8,9 @@ const DATA := "res://data/npcs.json"
 const NEARBY := 55.0
 const GOSSIP_RANGE := 3.5
 
+## What overhearing a piece of news teaches the player.
+const CLUES := {"missing": "abe_gone_heard", "saw_vesper": "witness_vesper"}
+
 var npcs: Array[NPC] = []
 var _tier_t := 0.0
 
@@ -34,7 +37,7 @@ func _process(delta: float) -> void:
 ## animated, moved kinematically. DISTANT: hidden, moved kinematically. Fast-forwarded time makes
 ## everyone kinematic so routines keep pace with the clock.
 func retier() -> void:
-	var fast := Clock.minutes_per_second > 1.5
+	var fast := Clock.minutes_per_second > Clock.BASE_RATE * 1.5
 	for n in npcs:
 		var d := INF
 		for p in World.players:
@@ -70,5 +73,13 @@ func _gossip() -> void:
 				if news.has(k):
 					detail[k] = news[k]
 			if b.memory.remember(news.kind, news.culprit, Memory.Source.TOLD, detail, news.place, a.id):
-				var what: String = "took %s" % NPC._short(news.item) if news.has("item") else "was in %s" % World.rooms.get(news.place, {"name": "somewhere"}).name
-				a.say("You hear? Somebody %s." % what if news.culprit == "unknown" else "That stranger %s. I'm telling you." % what)
+				a.say(news_line(news), CLUES.get(news.kind, ""))
+
+## How someone passes on a memory, from the templates in data/story.json "news".
+static func news_line(e: Dictionary) -> String:
+	var t: String = Journal.story.news.get(e.kind, "You hear about {place}?")
+	var place: String = World.rooms.get(e.get("place", ""), {"name": "a place around here"}).name
+	t = t.replace("{item}", NPC._short(e.get("item", "something"))).replace("{place}", place)
+	if e.get("culprit", "") == "player":
+		t = t.replace("Somebody", "That stranger").replace("There was a stranger", "That stranger was")
+	return "You hear? " + t

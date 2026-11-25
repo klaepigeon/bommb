@@ -17,6 +17,8 @@ func perform(actor: Node, verb: String) -> void:
 	if verb != "Take" or not actor.has_method("give_item"):
 		return
 	actor.give_item(data)
+	if actor is Player:
+		Journal.learn(data.get("clue", ""))
 	Sfx.play_at("coin" if data.get("cash", false) else "take", global_position)
 	var place := World.room_at(global_position)
 	if data.get("owner", "") != "" and data.owner != "player":

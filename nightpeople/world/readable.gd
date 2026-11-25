@@ -4,6 +4,7 @@ extends Interactable
 
 var title := ""
 var text := ""
+var clue := ""            ## what reading this teaches (Journal flag)
 
 func verbs(_actor: Node) -> Array[String]:
 	return ["Read"]
@@ -11,6 +12,7 @@ func verbs(_actor: Node) -> Array[String]:
 func perform(_actor: Node, _verb: String) -> void:
 	Sfx.play_at("paper", global_position)
 	Events.read.emit(title, text)
+	Journal.learn(clue)
 
 func focus_point() -> Vector3:
 	return global_position + Vector3.UP * 0.1

@@ -8,6 +8,8 @@ extends RefCounted
 enum Source { WITNESSED, HEARD, FOUND, TOLD, RUMOUR }
 const SOURCE_NAMES := ["witnessed", "heard", "found", "told", "rumour"]
 const FADE_PER_HOUR := [0.01, 0.03, 0.02, 0.04, 0.06]
+## How worth passing on each kind of memory is (gossip tells the most newsworthy).
+const NEWS := {"missing": 1.0, "saw_vesper": 0.95, "evidence": 0.9, "theft": 0.8, "break_in": 0.7, "trespass": 0.4, "lockpick": 0.3}
 ## How much each kind of memory sours someone on its culprit.
 const WEIGHT := {"trespass": -0.35, "theft": -0.6, "break_in": -0.5, "lockpick": -0.3, "seen": 0.0, "met": 0.05, "assault": -0.9}
 
@@ -61,9 +63,12 @@ func disposition(who: String) -> float:
 ## The most notable thing worth passing on (crimes), or {} if nothing.
 func gossip() -> Dictionary:
 	var best := {}
+	var best_score := 0.0
 	for e in entries:
-		if WEIGHT.get(e.kind, 0.0) < -0.2 and e.strength > 0.3 and (best.is_empty() or e.strength > best.strength):
+		var score: float = NEWS.get(e.kind, 0.0) * e.strength
+		if score > 0.25 and score > best_score:
 			best = e
+			best_score = score
 	return best
 
 func describe(e: Dictionary) -> String:

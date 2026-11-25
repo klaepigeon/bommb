@@ -25,6 +25,7 @@ var autopilot := false            ## tests: move toward `autopilot_target`
 var autopilot_target := Vector3.ZERO
 
 var _focus_t := 0.0
+var alt_offset := 0                 ## which of several second actions is offered (cycled with »)
 var _stride := 0.0
 
 func _ready() -> void:
@@ -123,13 +124,31 @@ func _update_focus() -> void:
 			best = it
 	if best != focus:
 		focus = best
+		alt_offset = 0
 		focus_changed.emit(focus)
 
-## Do the focused thing's verb number `index` (0 = primary).
+## The focused thing's verbs as offered: the primary first, then the others rotated by `alt_offset`.
+func offered_verbs() -> Array[String]:
+	if focus == null or not is_instance_valid(focus):
+		return []
+	var v := focus.verbs(self)
+	if v.size() <= 2:
+		return v
+	var rest := v.slice(1)
+	var k := alt_offset % rest.size()
+	var out: Array[String] = [v[0]]
+	out.append_array(rest.slice(k) + rest.slice(0, k))
+	return out
+
+func cycle_alt() -> void:
+	alt_offset += 1
+	focus_changed.emit(focus)
+
+## Do the offered verb number `index` (0 = primary, 1 = the second action shown).
 func act(index := 0) -> void:
 	if focus == null or not is_instance_valid(focus):
 		return
-	var v := focus.verbs(self)
+	var v := offered_verbs()
 	if index < v.size():
 		if v[index] in ["Take", "Pick lock"]:
 			puppet.gesture("PickUp")

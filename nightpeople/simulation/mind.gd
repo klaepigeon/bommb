@@ -11,7 +11,7 @@ const GROWTH := {"eat": 0.10, "drink": 0.08, "social": 0.12, "shop": 0.04, "wand
 const PLACE_TAGS := {"eat": ["eat"], "drink": ["drink"], "social": ["hangout"], "shop": ["shop"]}
 const PRICE := {"eat": 3, "drink": 2, "shop": 5}
 const DOING := {"work": "working", "sleep": "asleep", "home": "at home", "eat": "eating", "drink": "drinking",
-	"social": "passing time", "shop": "shopping", "wander": "walking", "patrol": "on patrol", "away": "away"}
+	"social": "passing time", "shop": "shopping", "wander": "walking", "patrol": "on patrol", "away": "away", "errand": "on an errand", "watch": "watching", "missing": "missing"}
 
 var who: String
 var schedule: Array = []
