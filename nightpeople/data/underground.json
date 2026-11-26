@@ -1,0 +1,1159 @@
+{
+ "areas": [
+  {
+   "id": "station",
+   "name": "Ellery Street station (closed 1948)",
+   "pos": [
+    -30,
+    10
+   ],
+   "y": -8.0,
+   "rot": 0,
+   "size": [
+    80,
+    20
+   ],
+   "floors": 1,
+   "facade": "concrete_stain",
+   "underground": true,
+   "rooms": [
+    {
+     "id": "chapel",
+     "name": "The chapel (old token hall)",
+     "rect": [
+      0,
+      0,
+      12,
+      6
+     ],
+     "floor": "tile_dark",
+     "wall": "tile_white",
+     "ceiling": "plaster_stained",
+     "light": [
+      1.0,
+      0.15,
+      0.1
+     ],
+     "energy": 0.9,
+     "owners": [],
+     "public": false,
+     "power": false
+    },
+    {
+     "id": "platform",
+     "name": "Ellery Street platform",
+     "rect": [
+      12,
+      0,
+      64,
+      6
+     ],
+     "floor": "tile_dark",
+     "wall": "tile_white",
+     "ceiling": "plaster_stained",
+     "light": [
+      0.75,
+      0.9,
+      0.7
+     ],
+     "energy": 0.9,
+     "owners": [],
+     "public": false,
+     "power": true
+    },
+    {
+     "id": "hall",
+     "name": "Old entrance hall",
+     "rect": [
+      64,
+      0,
+      80,
+      6
+     ],
+     "floor": "concrete_dirty",
+     "wall": "tile_white",
+     "ceiling": "plaster_stained",
+     "light": [
+      0.75,
+      0.9,
+      0.7
+     ],
+     "energy": 0.7,
+     "owners": [],
+     "public": false,
+     "power": true
+    },
+    {
+     "id": "trackbed",
+     "name": "The tracks",
+     "rect": [
+      0,
+      6,
+      80,
+      11
+     ],
+     "floor": "concrete_stain",
+     "wall": "concrete_stain",
+     "ceiling": "concrete_dirty",
+     "light": [
+      0.7,
+      0.8,
+      0.7
+     ],
+     "energy": 0.6,
+     "owners": [],
+     "public": false,
+     "power": true,
+     "level": -1.0
+    },
+    {
+     "id": "larder",
+     "name": "The larder",
+     "rect": [
+      0,
+      11,
+      16,
+      16
+     ],
+     "floor": "concrete_dirty",
+     "wall": "rust",
+     "ceiling": "concrete_dirty",
+     "light": [
+      1.0,
+      0.6,
+      0.3
+     ],
+     "energy": 0.35,
+     "owners": [],
+     "public": false,
+     "power": false
+    },
+    {
+     "id": "larder_cell",
+     "name": "The cage",
+     "rect": [
+      0,
+      16,
+      16,
+      20
+     ],
+     "floor": "concrete_dirty",
+     "wall": "rust",
+     "ceiling": "concrete_dirty",
+     "light": [
+      1.0,
+      0.5,
+      0.25
+     ],
+     "energy": 0.25,
+     "owners": [],
+     "public": false,
+     "power": false
+    },
+    {
+     "id": "nest",
+     "name": "Service tunnel (the nest)",
+     "rect": [
+      16,
+      11,
+      42,
+      20
+     ],
+     "floor": "concrete_stain",
+     "wall": "concrete_stain",
+     "ceiling": "concrete_dirty",
+     "light": [
+      0.5,
+      0.7,
+      0.5
+     ],
+     "energy": 0.12,
+     "owners": [],
+     "public": false,
+     "power": false
+    },
+    {
+     "id": "service",
+     "name": "Service room",
+     "rect": [
+      42,
+      11,
+      58,
+      20
+     ],
+     "floor": "concrete_dirty",
+     "wall": "metal_worn",
+     "ceiling": "concrete_dirty",
+     "light": [
+      1.0,
+      0.85,
+      0.55
+     ],
+     "energy": 0.6,
+     "owners": [],
+     "public": false,
+     "power": false
+    },
+    {
+     "id": "pump",
+     "name": "Pump room",
+     "rect": [
+      58,
+      11,
+      80,
+      20
+     ],
+     "floor": "diamond_plate",
+     "wall": "metal_worn",
+     "ceiling": "concrete_dirty",
+     "light": [
+      0.7,
+      0.85,
+      0.9
+     ],
+     "energy": 0.7,
+     "owners": [],
+     "public": false,
+     "power": true
+    }
+   ],
+   "partitions": [
+    [
+     [
+      12,
+      0
+     ],
+     [
+      12,
+      6
+     ]
+    ],
+    [
+     [
+      64,
+      0
+     ],
+     [
+      64,
+      6
+     ]
+    ],
+    [
+     [
+      0,
+      6
+     ],
+     [
+      12,
+      6
+     ]
+    ],
+    [
+     [
+      64,
+      6
+     ],
+     [
+      80,
+      6
+     ]
+    ],
+    [
+     [
+      0,
+      11
+     ],
+     [
+      80,
+      11
+     ]
+    ],
+    [
+     [
+      16,
+      11
+     ],
+     [
+      16,
+      20
+     ]
+    ],
+    [
+     [
+      42,
+      11
+     ],
+     [
+      42,
+      20
+     ]
+    ],
+    [
+     [
+      58,
+      11
+     ],
+     [
+      58,
+      20
+     ]
+    ],
+    [
+     [
+      0,
+      16
+     ],
+     [
+      16,
+      16
+     ]
+    ]
+   ],
+   "gaps": [
+    {
+     "at": [
+      12,
+      3
+     ],
+     "width": 2.0
+    },
+    {
+     "at": [
+      64,
+      3
+     ],
+     "width": 2.0
+    },
+    {
+     "at": [
+      72,
+      6
+     ],
+     "width": 1.8
+    },
+    {
+     "at": [
+      8,
+      11
+     ],
+     "width": 1.8
+    },
+    {
+     "at": [
+      50,
+      11
+     ],
+     "width": 1.8
+    },
+    {
+     "at": [
+      70,
+      11
+     ],
+     "width": 1.8
+    },
+    {
+     "at": [
+      16,
+      13.5
+     ],
+     "width": 1.4
+    },
+    {
+     "at": [
+      42,
+      15.5
+     ],
+     "width": 1.6
+    },
+    {
+     "at": [
+      58,
+      15.5
+     ],
+     "width": 1.6
+    }
+   ],
+   "doors": [
+    {
+     "id": "cage",
+     "at": [
+      8,
+      16
+     ],
+     "room": "larder_cell",
+     "leaf": "door-type-b",
+     "key": "key_larder",
+     "locked_both": true
+    }
+   ],
+   "stairs": [
+    {
+     "from": [
+      14,
+      6.1
+     ],
+     "to": [
+      14,
+      7.6
+     ],
+     "from_y": 0.15,
+     "to_y": -0.85,
+     "width": 1.6
+    },
+    {
+     "from": [
+      72,
+      6.1
+     ],
+     "to": [
+      72,
+      7.6
+     ],
+     "from_y": 0.15,
+     "to_y": -0.85,
+     "width": 1.6
+    },
+    {
+     "from": [
+      8,
+      9.8
+     ],
+     "to": [
+      8,
+      10.95
+     ],
+     "from_y": -0.85,
+     "to_y": 0.15,
+     "width": 1.6
+    },
+    {
+     "from": [
+      50,
+      9.8
+     ],
+     "to": [
+      50,
+      10.95
+     ],
+     "from_y": -0.85,
+     "to_y": 0.15,
+     "width": 1.6
+    },
+    {
+     "from": [
+      70,
+      9.8
+     ],
+     "to": [
+      70,
+      10.95
+     ],
+     "from_y": -0.85,
+     "to_y": 0.15,
+     "width": 1.6
+    }
+   ],
+   "props": [
+    {
+     "id": "railroad-rail-straight",
+     "at": [
+      4,
+      8.0
+     ],
+     "yaw": 90,
+     "y": -1.0,
+     "repeat": 10,
+     "step": [
+      8,
+      0
+     ]
+    },
+    {
+     "id": "train-electric-subway-a",
+     "at": [
+      30,
+      8.0
+     ],
+     "yaw": 90,
+     "y": -1.0
+    },
+    {
+     "id": "debris",
+     "at": [
+      1.5,
+      8.5
+     ],
+     "yaw": 20,
+     "y": -1.0
+    },
+    {
+     "id": "debris",
+     "at": [
+      78.5,
+      8
+     ],
+     "yaw": 70,
+     "y": -1.0
+    },
+    {
+     "id": "debris",
+     "at": [
+      2,
+      10
+     ],
+     "yaw": 0,
+     "y": -1.0
+    },
+    {
+     "id": "altar-stone",
+     "at": [
+      4,
+      3
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "candle-multiple",
+     "at": [
+      3.6,
+      2.4
+     ],
+     "yaw": 0,
+     "y": 0.88
+    },
+    {
+     "id": "candle-multiple",
+     "at": [
+      3.6,
+      3.7
+     ],
+     "yaw": 0,
+     "y": 0.88
+    },
+    {
+     "id": "candle",
+     "at": [
+      6,
+      1
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "candle",
+     "at": [
+      6,
+      5
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "candle",
+     "at": [
+      9,
+      1
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "candle",
+     "at": [
+      9,
+      5
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "coffin-old",
+     "at": [
+      9.5,
+      3
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "urn-round",
+     "at": [
+      1,
+      0.8
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "urn-round",
+     "at": [
+      1,
+      5.2
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "detail-chalice",
+     "at": [
+      4.4,
+      3
+     ],
+     "yaw": 0,
+     "y": 0.88
+    },
+    {
+     "id": "detail-bench",
+     "at": [
+      24,
+      1.0
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "detail-bench",
+     "at": [
+      40,
+      1.0
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "detail-bench",
+     "at": [
+      56,
+      1.0
+     ],
+     "yaw": 180
+    },
+    {
+     "id": "barrel",
+     "at": [
+      62,
+      1
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "box-large",
+     "at": [
+      66,
+      1
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "box-large",
+     "at": [
+      66,
+      2.3
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "debris",
+     "at": [
+      76,
+      3
+     ],
+     "yaw": 40
+    },
+    {
+     "id": "bedroll",
+     "at": [
+      22,
+      18
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "bedroll",
+     "at": [
+      26,
+      18.5
+     ],
+     "yaw": 80
+    },
+    {
+     "id": "bedroll",
+     "at": [
+      30,
+      18
+     ],
+     "yaw": 100
+    },
+    {
+     "id": "bottle",
+     "at": [
+      23,
+      17
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "bottle",
+     "at": [
+      23.5,
+      16.8
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "debris",
+     "at": [
+      34,
+      14
+     ],
+     "yaw": 10
+    },
+    {
+     "id": "barrel",
+     "at": [
+      40,
+      19
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "bottle",
+     "at": [
+      1,
+      12
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "bottle",
+     "at": [
+      1.3,
+      12.2
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "barrel",
+     "at": [
+      14.5,
+      12
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "box-large",
+     "at": [
+      14,
+      14.5
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "iron-fence-bar",
+     "at": [
+      2,
+      16
+     ],
+     "yaw": 0,
+     "repeat": 6,
+     "step": [
+      1,
+      0
+     ]
+    },
+    {
+     "id": "iron-fence-bar",
+     "at": [
+      10,
+      16
+     ],
+     "yaw": 0,
+     "repeat": 6,
+     "step": [
+      1,
+      0
+     ]
+    },
+    {
+     "id": "machine",
+     "at": [
+      55,
+      13
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "pipe-large-long",
+     "at": [
+      46,
+      19.2
+     ],
+     "yaw": 0,
+     "y": 2.6,
+     "repeat": 3,
+     "step": [
+      2,
+      0
+     ]
+    },
+    {
+     "id": "lever-single",
+     "at": [
+      57.2,
+      18.5
+     ],
+     "yaw": 270,
+     "y": 1.1
+    },
+    {
+     "id": "box-large",
+     "at": [
+      44,
+      19
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "barrel",
+     "at": [
+      43,
+      12
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "machine",
+     "at": [
+      62,
+      18
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "machine",
+     "at": [
+      66,
+      18
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "pipe-large-long",
+     "at": [
+      60,
+      12.5
+     ],
+     "yaw": 0,
+     "y": 2.6,
+     "repeat": 9,
+     "step": [
+      2,
+      0
+     ]
+    },
+    {
+     "id": "chest",
+     "at": [
+      78,
+      18.5
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "barrel",
+     "at": [
+      76,
+      12
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "barrel",
+     "at": [
+      77,
+      12.6
+     ],
+     "yaw": 0
+    }
+   ],
+   "places": [
+    {
+     "id": "larder.cell",
+     "at": [
+      4,
+      18
+     ],
+     "yaw": 0,
+     "pose": "sit",
+     "tags": [
+      "captive"
+     ]
+    },
+    {
+     "id": "chapel.altar",
+     "at": [
+      4,
+      3
+     ],
+     "yaw": 0,
+     "pose": "stand",
+     "tags": [
+      "altar"
+     ]
+    },
+    {
+     "id": "service.ladder",
+     "at": [
+      52,
+      11.8
+     ],
+     "yaw": 0,
+     "pose": "stand",
+     "tags": [
+      "ladder"
+     ]
+    }
+   ],
+   "items": [
+    {
+     "id": "key_larder",
+     "name": "Iron key on a meat hook",
+     "value": 0,
+     "owner": "court",
+     "at": [
+      44,
+      19.4
+     ],
+     "y": 1.4,
+     "prop": "books",
+     "clue": "larder_key"
+    },
+    {
+     "id": "lead_pipe",
+     "name": "Length of lead pipe",
+     "value": 2,
+     "owner": "",
+     "at": [
+      77.4,
+      18.4
+     ],
+     "y": 0.6,
+     "prop": "pipe-large-long",
+     "weapon": 25
+    },
+    {
+     "id": "court_cash",
+     "name": "Roll of old bills ($80)",
+     "value": 80,
+     "owner": "court",
+     "at": [
+      78,
+      18.6
+     ],
+     "y": 0.9,
+     "prop": "books",
+     "cash": true
+    },
+    {
+     "id": "court_ring",
+     "name": "Signet ring, a crescent and a key",
+     "value": 120,
+     "owner": "court",
+     "at": [
+      4.4,
+      2.6
+     ],
+     "y": 0.9,
+     "prop": "books"
+    },
+    {
+     "id": "childs_shoe",
+     "name": "A child's shoe, 1970s, left foot",
+     "value": 0,
+     "owner": "",
+     "at": [
+      24,
+      17
+     ],
+     "y": 0.02,
+     "prop": "books",
+     "clue": "childs_shoe"
+    }
+   ],
+   "readables": [
+    {
+     "at": [
+      5,
+      3
+     ],
+     "y": 0.92,
+     "title": "The Court's ledger",
+     "clue": "court_ledger",
+     "text": "GUESTS BELOW\nJune 2 - R. Okafor (from the Bowery). Kept.\nJune 19 - the Delgado girl. Kept.\nJuly 1 - H. Marsh, nightwatchman. Fed.\nJuly 7 - A. KESSLER, with the box. To be kept until Miss M. has opened it.\n\nThe box will not open for us. It opens for the one who carries it.\nKeep him alive."
+    },
+    {
+     "at": [
+      3,
+      13
+     ],
+     "y": 0.8,
+     "title": "Scratched into the larder door",
+     "text": "R.O. 6/2\nI COUNT 3 OF THEM\nTHEY DONT LIKE THE LIGHTS\nTHE BIG ONE HAS THE KEY"
+    }
+   ],
+   "secrets": [
+    {
+     "at": [
+      0.35,
+      1.6
+     ],
+     "y": 1.2,
+     "label": "Loose tiles in the wall",
+     "reveal": {
+      "title": "Diary, wrapped in oilcloth",
+      "clue": "diary_1948",
+      "text": "Transit Authority, Ellery St. Maintenance\nMarch 1948\nThey're closing the station. Officially, water in the tunnels. The men say it's the voices from the old token hall after the last train.\nKessler from upstairs paid me to keep a box down here, out of the way, 'for family reasons.' Heavy. Something shifts inside when nobody's touching it.\nApril. The box is gone. Kessler's boy came for it, with a lady I didn't like the look of. I'm putting in for a transfer."
+     }
+    }
+   ],
+   "power_lever": {
+    "at": [
+     57.2,
+     18.5
+    ],
+    "y": 1.1
+   },
+   "third_rail": {
+    "z": 9.4,
+    "x": [
+     0.5,
+     79.5
+    ],
+    "crossings": [
+     [
+      48.8,
+      51.2
+     ],
+     [
+      68.8,
+      71.2
+     ]
+    ]
+   },
+   "tripwires": [
+    {
+     "at": [
+      41.2,
+      15.5
+     ],
+     "width": 1.6,
+     "yaw": 90
+    }
+   ]
+  }
+ ],
+ "ladders": [
+  {
+   "id": "hatch",
+   "label": "The hatch",
+   "top": [
+    22,
+    0.15,
+    21.6
+   ],
+   "bottom": [
+    22,
+    -7.85,
+    22.4
+   ],
+   "bolted": true,
+   "bolt_side": "bottom"
+  },
+  {
+   "id": "boiler",
+   "label": "Iron ladder",
+   "top": [
+    44,
+    0.15,
+    12.6
+   ],
+   "bottom": [
+    44,
+    -7.85,
+    13.2
+   ],
+   "bolted": false
+  }
+ ],
+ "feeders": [
+  {
+   "id": "feeder_sleeper",
+   "name": "Something asleep",
+   "model": "Zombie_Male",
+   "at": [
+    6,
+    27.5
+   ],
+   "sleeping": true,
+   "patrol": [
+    [
+     8,
+     26
+    ],
+    [
+     -6,
+     26
+    ]
+   ]
+  },
+  {
+   "id": "feeder_keeper",
+   "name": "The big one",
+   "model": "Zombie_Male",
+   "height": 2.05,
+   "at": [
+    -24,
+    23.5
+   ],
+   "patrol": [
+    [
+     -26,
+     23.5
+    ],
+    [
+     -17,
+     23.5
+    ],
+    [
+     -10,
+     23.5
+    ],
+    [
+     -3,
+     24.5
+    ]
+   ],
+   "carries": null,
+   "health": 90
+  },
+  {
+   "id": "feeder_walker",
+   "name": "Something pale",
+   "model": "Zombie_Female",
+   "at": [
+    10,
+    13
+   ],
+   "patrol": [
+    [
+     -12,
+     13
+    ],
+    [
+     10,
+     13
+    ],
+    [
+     30,
+     13
+    ],
+    [
+     -24,
+     13
+    ]
+   ]
+  }
+ ]
+}

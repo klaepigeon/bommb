@@ -8,6 +8,7 @@ extends NavigationRegion3D
 ## and placed with pos + rot, so one description works on either side of the street.
 
 const DATA := "res://data/neighbourhood.json"
+const UNDERGROUND := "res://data/underground.json"
 const FLOOR_Y := 0.15          ## sidewalk and ground-floor level
 const STOREY := 3.2
 const WALL_T := 0.3
@@ -23,14 +24,27 @@ var data: Dictionary
 var street: Dictionary
 var lamps: Array[OmniLight3D] = []
 var room_lights: Dictionary = {}      ## room id → OmniLight3D
+var under: Dictionary = {}            ## data/underground.json
+var ladders: Dictionary = {}          ## id → Ladder
+var _base := 0.0                      ## lowest wall level of the building being built (underground: below the trackbed)
 
 func build() -> void:
+	World.hood = self
 	data = JSON.parse_string(FileAccess.get_file_as_string(DATA))
 	street = data.street
 	World.clear()
 	_street()
 	for b in data.buildings:
 		_building(b)
+	under = JSON.parse_string(FileAccess.get_file_as_string(UNDERGROUND))
+	for b in under.areas:
+		_building(b)
+	for l in under.get("ladders", []):
+		var ladder := Ladder.new()
+		ladder.name = "Ladder_" + l.id
+		add_child(ladder)
+		ladder.setup(l)
+		ladders[l.id] = ladder
 	_bake()
 
 # ------------------------------------------------------------------ street
@@ -102,7 +116,9 @@ func _street() -> void:
 func _building(b: Dictionary) -> void:
 	var node := Node3D.new()
 	node.name = b.id
-	node.position = Vector3(b.pos[0], 0, b.pos[1])
+	node.position = Vector3(b.pos[0], b.get("y", 0.0), b.pos[1])
+	var underground: bool = b.get("underground", false)
+	_base = -1.2 if underground else 0.0
 	node.rotation_degrees.y = b.rot
 	add_child(node)
 	var xf := node.transform
@@ -133,13 +149,19 @@ func _building(b: Dictionary) -> void:
 		for o in openings:
 			if o.has("door"):
 				_door(o.door, node, o)
-			else:
+			elif o.has("window"):
 				_glass(o, node, kit)
-	# cornice and roof
-	kit.box(Vector3(W * 0.5, H + 0.2, -0.3), Vector3(W + 0.4, 0.4, 0.6), trim, false)
-	kit.box(Vector3(W * 0.5, H + 0.02, D * 0.5), Vector3(W, 0.04, D), [null, null, Assets.surface("tar_roof", 3.0), null, null, null], false)
+	for st in b.get("stairs", []):
+		_stairs(kit, st)
+	if not underground:
+		# cornice and roof
+		kit.box(Vector3(W * 0.5, H + 0.2, -0.3), Vector3(W + 0.4, 0.4, 0.6), trim, false)
+		kit.box(Vector3(W * 0.5, H + 0.02, D * 0.5), Vector3(W, 0.04, D), [null, null, Assets.surface("tar_roof", 3.0), null, null, null], false)
 	_add_kit(kit, node, "Geometry")
-	_facade_dressing(b, node, W, H)
+	if not underground:
+		_facade_dressing(b, node, W, H)
+	else:
+		_underground_fixtures(b, node, xf)
 	for p in b.get("props", []):
 		_prop(p, node, Vector3(0, FLOOR_Y, 0))
 	for p in b.get("places", []):
@@ -174,10 +196,14 @@ func _room(r: Dictionary, b: Dictionary, xf: Transform3D, kit: MeshKit) -> void:
 	var z1: float = r.rect[3]
 	var c := Vector3((x0 + x1) * 0.5, 0, (z0 + z1) * 0.5)
 	var size := Vector3(x1 - x0, 0, z1 - z0)
-	kit.box(c + Vector3(0, FLOOR_Y * 0.5, 0), size + Vector3(0, FLOOR_Y, 0), [null, null, Assets.surface(r.floor, 2.0), null, null, null])
+	var level: float = r.get("level", 0.0)
+	var top := FLOOR_Y + level
+	var bottom := _base if _base < 0.0 else 0.0
+	var side := Assets.surface("concrete_dirty", 1.5) if _base < 0.0 else null
+	kit.box(c + Vector3(0, (top + bottom) * 0.5, 0), size + Vector3(0, top - bottom, 0), [side, side, Assets.surface(r.floor, 2.0), null, side, side])
 	kit.box(c + Vector3(0, FLOOR_Y + STOREY + 0.075, 0), size + Vector3(0, 0.15, 0), [null, null, null, Assets.surface(r.ceiling, 2.5, Color(0.8, 0.78, 0.7)), null, null], false)
 	# world-space bounds for World.room_at()
-	var a := xf * Vector3(x0, 0, z0)
+	var a := xf * Vector3(x0, minf(0.0, level) - 0.2, z0)
 	var bb := xf * Vector3(x1, WALL_H, z1)
 	var aabb := AABB(a.min(bb), (bb - a).abs())
 	var open: Array = []
@@ -192,12 +218,18 @@ func _room(r: Dictionary, b: Dictionary, xf: Transform3D, kit: MeshKit) -> void:
 	var light := _light(xf * (c + Vector3(0, FLOOR_Y + 2.4, 0)), Color(r.light[0], r.light[1], r.light[2]), maxf(size.x, size.z) * 0.75 + 1.5, r.energy)
 	add_child(light)
 	room_lights[r.id] = light
+	if r.get("power", false):
+		World.power_lights.append(light)
+		light.set_meta("energy", r.energy)
+		light.visible = World.power
 
 ## Door and window openings of a building, in its local plan coordinates.
 func _openings(b: Dictionary) -> Array:
 	var out := []
 	for d in b.get("doors", []):
-		out.append({"at": Vector2(d.at[0], d.at[1]), "w": DOOR_W, "y0": 0.0, "y1": FLOOR_Y + DOOR_H, "door": d})
+		out.append({"at": Vector2(d.at[0], d.at[1]), "w": DOOR_W, "y0": _base, "y1": FLOOR_Y + DOOR_H, "door": d})
+	for g in b.get("gaps", []):
+		out.append({"at": Vector2(g.at[0], g.at[1]), "w": float(g.get("width", 1.6)), "y0": _base, "y1": FLOOR_Y + float(g.get("height", DOOR_H)), "gap": true})
 	for w in b.get("windows", []):
 		out.append({"at": Vector2(w.at[0], w.at[1]), "w": float(w.width), "y0": FLOOR_Y + float(w.sill), "y1": FLOOR_Y + float(w.top), "window": w})
 	return out
@@ -220,13 +252,56 @@ func _wall(kit: MeshKit, b: Dictionary, a: Vector2, c: Vector2, openings: Array,
 	var cursor := -extend
 	for h in holes:
 		if h[0] > cursor:
-			_wall_piece(kit, b, a, dir, normal, cursor, h[0], 0.0, WALL_H, facade)
-		if h[2] > 0.0:
-			_wall_piece(kit, b, a, dir, normal, h[0], h[1], 0.0, h[2], facade)
+			_wall_piece(kit, b, a, dir, normal, cursor, h[0], _base, WALL_H, facade)
+		if h[2] > _base:
+			_wall_piece(kit, b, a, dir, normal, h[0], h[1], _base, h[2], facade)
 		_wall_piece(kit, b, a, dir, normal, h[0], h[1], h[3], WALL_H, facade)
 		cursor = h[1]
 	if cursor < length + extend:
-		_wall_piece(kit, b, a, dir, normal, cursor, length + extend, 0.0, WALL_H, facade)
+		_wall_piece(kit, b, a, dir, normal, cursor, length + extend, _base, WALL_H, facade)
+
+## The station's working parts: the power lever, the third rail, tripwires, hidden things.
+func _underground_fixtures(b: Dictionary, node: Node3D, xf: Transform3D) -> void:
+	if b.has("power_lever"):
+		var lever: Interactable = preload("res://world/power_lever.gd").new()
+		lever.label = "Power lever"
+		node.add_child(lever)
+		lever.position = Vector3(b.power_lever.at[0], FLOOR_Y + float(b.power_lever.get("y", 1.0)) - 1.0, b.power_lever.at[1])
+	if b.has("third_rail"):
+		var rail: Node3D = preload("res://world/third_rail.gd").new()
+		rail.name = "ThirdRail"
+		add_child(rail)
+		rail.setup(b.third_rail, xf, FLOOR_Y - 1.0)
+	for t in b.get("tripwires", []):
+		var trip: Interactable = preload("res://world/tripwire.gd").new()
+		node.add_child(trip)
+		trip.position = Vector3(t.at[0], FLOOR_Y, t.at[1])
+		trip.rotation_degrees.y = t.get("yaw", 0.0)
+		trip.setup(t)
+	for s in b.get("secrets", []):
+		var sec: Interactable = preload("res://world/secret.gd").new()
+		sec.label = s.label
+		sec.reveal = s.reveal
+		node.add_child(sec)
+		sec.position = Vector3(s.at[0], FLOOR_Y + float(s.get("y", 1.0)) - 1.0, s.at[1])
+
+## Steps between two floor levels: {from: [x, z], to: [x, z], from_y, to_y, width}. Each step is
+## a solid block no taller than the navmesh's climb, so people (and the navmesh) use them.
+func _stairs(kit: MeshKit, st: Dictionary) -> void:
+	var a := Vector3(st.from[0], 0, st.from[1])
+	var b := Vector3(st.to[0], 0, st.to[1])
+	var y0: float = st.from_y
+	var y1: float = st.to_y
+	var n := maxi(2, ceili(absf(y1 - y0) / 0.2))
+	var run := b - a
+	var w: float = st.get("width", 1.6)
+	var mat := Assets.surface("concrete_dirty", 1.0)
+	for i in n:
+		var top := y0 + (y1 - y0) * (float(i) + 0.5) / n
+		var c := a + run * (float(i) + 0.5) / n
+		var len := run.length() / n
+		var size := Vector3(len, top - _base, w) if absf(run.x) > absf(run.z) else Vector3(w, top - _base, len)
+		kit.box(Vector3(c.x, (top + _base) * 0.5, c.z), size, mat)
 
 func _wall_piece(kit: MeshKit, b: Dictionary, a: Vector2, dir: Vector2, normal: Vector2, t0: float, t1: float, y0: float, y1: float, facade: Material) -> void:
 	if t1 - t0 < 0.01 or y1 - y0 < 0.01:
@@ -416,6 +491,6 @@ func _bake() -> void:
 	nm.agent_max_climb = 0.25
 	nm.cell_size = 0.25
 	nm.cell_height = 0.25
-	nm.filter_baking_aabb = AABB(Vector3(-50, -1, -32), Vector3(100, 6, 64))
+	nm.filter_baking_aabb = AABB(Vector3(-50, -11, -32), Vector3(100, 17, 64))
 	navigation_mesh = nm
 	bake_navigation_mesh(false)

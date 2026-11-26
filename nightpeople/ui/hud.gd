@@ -21,6 +21,7 @@ var _bag_text: Label
 var _pause: PanelContainer
 var _pause_text: Label
 var _waiting := false
+var _health: ProgressBar
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -36,8 +37,18 @@ func _ready() -> void:
 	_prompt.position = Vector2(-400, -116)
 	_who.size.x = 800
 	_prompt.size.x = 800
+	_health = ProgressBar.new()
+	_health.position = Vector2(24, 52)
+	_health.size = Vector2(220, 14)
+	_health.max_value = 100.0
+	_health.show_percentage = false
+	_health.visible = false
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = Color(0.7, 0.1, 0.1)
+	_health.add_theme_stylebox_override("fill", fill)
+	add_child(_health)
 	_notices = VBoxContainer.new()
-	_notices.position = Vector2(24, 60)
+	_notices.position = Vector2(24, 74)
 	add_child(_notices)
 	_subs = VBoxContainer.new()
 	_subs.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
@@ -60,6 +71,7 @@ func bind(p: Player, c: Controls) -> void:
 	controls = c
 	p.focus_changed.connect(_on_focus)
 	p.inventory_changed.connect(_refresh_bag)
+	p.health_changed.connect(_on_health)
 	c.use_pressed.connect(_on_use)
 	c.button.connect(_on_button)
 
@@ -128,6 +140,8 @@ func _on_button(n: String) -> void:
 	match n:
 		"more":
 			player.cycle_alt()
+		"attack":
+			player.attack()
 		"bag":
 			Sfx.ui("ui")
 			if _bag.visible:
@@ -209,3 +223,7 @@ func _bark(speaker: String, text: String, from: Node3D) -> void:
 	t.tween_interval(4.5)
 	t.tween_property(l, "modulate:a", 0.0, 0.8)
 	t.tween_callback(l.queue_free)
+
+func _on_health(h: float) -> void:
+	_health.visible = h < 100.0
+	_health.value = h

@@ -7,7 +7,6 @@ extends Node
 ## The player can get in the way: take what the errand needs, or talk someone out of it.
 
 const ItemScript := preload("res://world/item.gd")
-const HATCH := preload("res://simulation/hatch.gd")
 
 var hood: Neighbourhood
 var story: Dictionary
@@ -15,17 +14,21 @@ var done: Dictionary = {}           ## summons id → "went" | "cancelled" | "no
 var _errand := {}                   ## the summons in progress (phase 2: walking to the Vesper)
 var _watch_t := 0.0
 var _investigated := {}
+var feeders: Array[Feeder] = []
+var captive: NPC                    ## who is in the cage, if anyone
+const STATION_ROOMS := ["chapel", "platform", "hall", "trackbed", "larder", "larder_cell", "nest", "service", "pump"]
 
 func setup(h: Neighbourhood) -> void:
 	hood = h
 	story = Journal.story
 	Clock.minute_passed.connect(_on_minute)
 	Events.world_event.connect(_on_event)
-	for s in story.summons:
-		var hatch: Interactable = HATCH.new()
-		hatch.label = s.hatch.label
-		hood.add_child(hatch)
-		hatch.global_position = World.places[s.hatch.place].pos + Vector3(0.0, 0.0, 0.3)
+	var floor_y: float = float(hood.under.areas[0].y) + Neighbourhood.FLOOR_Y
+	for f in hood.under.get("feeders", []):
+		var feeder := Feeder.new()
+		hood.add_child(feeder)
+		feeder.setup(f, floor_y)
+		feeders.append(feeder)
 
 func _on_minute(m: int) -> void:
 	for s in story.summons:
@@ -84,19 +87,29 @@ func _arrived(s: Dictionary, npc: NPC) -> void:
 		if World.room_at(p.global_position + Vector3.UP * 0.5) == s.guest_room:
 			Events.notice.emit("He lifts the hatch, climbs down into the dark, and the bolt slides shut beneath him.")
 			Journal.learn("witness_vesper")
-	var ev: Dictionary = s.evidence.duplicate()
+	_drop_item(s.evidence.duplicate())
+	if npc.carrying != "":
+		var box := {"id": npc.carrying, "name": "Locked tin box, very heavy, marked 'NOT FOR SALE'", "value": 0, "owner": s.who, "prop": "cardboardBoxClosed", "clue": "box_taken", "at": s.box_to, "offset": [0.3, 0.0], "y": 0.86}
+		_drop_item(box)
+	World.guests.erase(s.guest_room)
+	npc.carry("")
+	# Down the hatch: off the street (World.gone keeps his shop shut and his absence noticed),
+	# into the cage below.
+	World.gone[s.who] = true
+	npc.global_position = World.places[s.captive_at].pos
+	npc.command({"do": "captive", "place": s.captive_at})
+	captive = npc
+	done[s.id] = "went"
+	_errand = {}
+
+func _drop_item(ev: Dictionary) -> void:
 	var item: Item = ItemScript.new()
 	item.setup(ev)
 	var vis := Assets.prop(ev.get("prop", "books"))
 	vis.scale = Vector3.ONE * 0.4
 	item.add_child(vis)
 	hood.add_child(item)
-	item.global_position = World.places[ev.at].pos + Vector3(ev.offset[0], 0.02, ev.offset[1])
-	World.guests.erase(s.guest_room)
-	npc.carry("")
-	npc.vanish_forever()
-	done[s.id] = "went"
-	_errand = {}
+	item.global_position = World.places[ev.at].pos + Vector3(ev.offset[0], 0.02 + float(ev.get("y", 0.0)), ev.offset[1])
 
 ## Too frightened to go, or with nothing to bring: home, door locked, until tomorrow evening.
 func _shelter(npc: NPC) -> void:
@@ -106,6 +119,7 @@ func _shelter(npc: NPC) -> void:
 	npc.command({"do": "home", "place": seat}, Callable(), Clock.total_minutes + Mind.minutes_until(Clock.parse("17:00")))
 
 func _physics_process(delta: float) -> void:
+	_station_checks()
 	if _errand.is_empty():
 		return
 	_watch_t -= delta
@@ -170,3 +184,37 @@ func _item(id: String) -> Item:
 		if n is Item and n.data.get("id", "") == id and not n.is_queued_for_deletion():
 			return n
 	return null
+
+# ------------------------------------------------------------------ under the street
+
+var _station_t := 0.0
+
+func _station_checks() -> void:
+	_station_t -= get_physics_process_delta_time()
+	if _station_t > 0.0 or World.players.is_empty():
+		return
+	_station_t = 0.25
+	var p: Player = World.players[0]
+	var room := World.room_at(p.global_position + Vector3.UP * 0.5)
+	if room in STATION_ROOMS:
+		Journal.learn("found_station")
+	if captive and is_instance_valid(captive):
+		if room == "larder_cell" or (room == "larder" and p.global_position.distance_to(captive.global_position) < 6.0):
+			Journal.learn("abe_found")
+		var cage: Door = hood.find_child("Door_cage", true, false)
+		if cage and cage.is_open and p.global_position.distance_to(captive.global_position) < 6.0:
+			_free(captive)
+
+## Out of the cage: he goes home on his own, the long way (ladders and all), and his life resumes.
+func _free(npc: NPC) -> void:
+	captive = null
+	Journal.learn("abe_freed")
+	World.gone.erase(npc.id)
+	npc.say("You came. You actually came. I'm going home. God help me, I'm going home.")
+	var seat := npc.mind._home_place(["seat"], npc.global_position)
+	npc.command({"do": "errand", "place": seat}, _home_again.bind(npc))
+
+func _home_again(npc: NPC) -> void:
+	if World.players[0].global_position.distance_to(npc.global_position) < 20.0:
+		Journal.learn("abe_home")
+	npc.release()

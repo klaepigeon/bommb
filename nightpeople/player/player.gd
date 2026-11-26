@@ -6,6 +6,7 @@ extends CharacterBody3D
 
 signal focus_changed(target: Interactable)
 signal inventory_changed
+signal health_changed(health: float)
 
 const WALK := 1.6
 const RUN := 4.2
@@ -25,6 +26,9 @@ var autopilot := false            ## tests: move toward `autopilot_target`
 var autopilot_target := Vector3.ZERO
 
 var _focus_t := 0.0
+var health := 100.0
+var weapon_damage := 10.0          ## fists; a weapon item raises it
+var _attack_cd := 0.0
 var alt_offset := 0                 ## which of several second actions is offered (cycled with »)
 var _stride := 0.0
 
@@ -94,6 +98,7 @@ func _physics_process(delta: float) -> void:
 	if _stride > (0.85 if flat.length() > 3.0 else 0.62) and is_on_floor():
 		_stride = 0.0
 		Sfx.play_at("step_" + Sfx.surface_at(global_position), global_position, 2.0 if flat.length() > 3.0 else 0.0)
+	_attack_cd -= delta
 	_focus_t -= delta
 	if _focus_t <= 0.0:
 		_focus_t = 0.1
@@ -157,6 +162,8 @@ func act(index := 0) -> void:
 
 func give_item(item: Dictionary) -> void:
 	var name: String = item.get("name", "")
+	if item.has("weapon"):
+		weapon_damage = maxf(weapon_damage, float(item.weapon))
 	if item.get("cash", false):
 		cash += int(item.get("value", 0))
 	inventory.append(item)
@@ -168,3 +175,42 @@ func has_item(id: String) -> bool:
 		if i.id == id:
 			return true
 	return false
+
+# ------------------------------------------------------------------ fighting
+
+## Swing at whatever is in front: anything in group "hostile" within reach takes the hit.
+func attack() -> void:
+	if _attack_cd > 0.0 or health <= 0.0:
+		return
+	_attack_cd = 0.65
+	puppet.gesture("Punch")
+	var fwd := Vector3(sin(puppet.rotation.y), 0, cos(puppet.rotation.y))
+	var hit := false
+	for h in get_tree().get_nodes_in_group("hostile"):
+		var to: Vector3 = h.global_position - global_position
+		to.y = 0
+		if to.length() < 1.9 and fwd.dot(to.normalized()) > 0.35:
+			h.hurt(weapon_damage, "player", global_position)
+			hit = true
+	Sfx.play_at("knock" if hit else "take", global_position + Vector3.UP, 2.0 if hit else -6.0)
+	Events.world_event.emit({"kind": "noise", "actor": self, "position": global_position, "place": "", "loudness": 7.0 if hit else 3.0})
+
+func hurt(amount: float, source: String, _from: Vector3) -> void:
+	if health <= 0.0:
+		return
+	health = maxf(0.0, health - amount)
+	health_changed.emit(health)
+	puppet.gesture("RecieveHit")
+	if health <= 0.0:
+		_knocked_out(source)
+
+## Not death: they take you, and later you wake up somewhere else, poorer in time.
+func _knocked_out(source: String) -> void:
+	Events.notice.emit("Everything goes dark (%s)." % source)
+	Journal.learn("knocked_out")
+	await get_tree().create_timer(1.0).timeout
+	Clock.advance(90.0)
+	global_position = World.places["alley.lean"].pos + Vector3(0.6, 0.05, 0)
+	health = 45.0
+	health_changed.emit(health)
+	Events.notice.emit("You come to in the yard behind the Nite Owl, %s. Somebody carried you up." % Clock.text())

@@ -234,8 +234,9 @@ func _window(at: Vector2) -> Vector2:
 ## Nobody interferes: Abe takes the box to the Vesper after closing and is gone. The world notices.
 func _story_went() -> void:
 	var abe := npc("abe")
-	check(World.gone.has("abe") and abe.gone, "left alone, Abe went to the Vesper and is gone")
-	check(_item("pawn_box") == null, "he took the tin box with him")
+	check(World.gone.has("abe") and abe.activity.get("do", "") == "captive" and World.room_at(abe.global_position + Vector3.UP * 0.5) == "larder_cell", "left alone, Abe went to the Vesper and down the hatch: he's in the cage below")
+	var box := _item("pawn_box")
+	check(box != null and World.room_at(box.global_position + Vector3.UP * 0.2) == "chapel", "the tin box is on the Court's altar")
 	var spectacles := _item("abe_spectacles")
 	check(spectacles != null and World.room_at(spectacles.global_position + Vector3.UP * 0.3) == "club_back", "his spectacles lie in the Vesper's back room")
 	check(not World.may_enter("player", "pawn_shop"), "the pawn shop can't open with Abe gone")
@@ -301,3 +302,88 @@ func _route_warn() -> void:
 	await fast_forward_to("02:10")
 	check(not World.gone.has("abe") and _item("pawn_box") != null, "Abe didn't go; the box is still in his office")
 	check(Journal.knows("abe_safe"), "the journal closes: Abe is alive")
+
+## Under the street: down the ladder, the power and the rail, a tripwire, a Feeder, the key, the
+## cage, and Abe walking himself home.
+func _route_rescue() -> void:
+	await fast_forward_to("01:45")
+	var abe := npc("abe")
+	check(abe.activity.get("do", "") == "captive", "Abe is in the cage at %s" % Clock.text())
+	var hood: Neighbourhood = main.hood
+	var boiler: Ladder = hood.ladders["boiler"]
+	var hatch: Ladder = hood.ladders["hatch"]
+	check(hatch.bolted and not hatch.link.enabled, "the hatch is bolted from below")
+	# in through the laundromat: its door is locked to the player, the boiler ladder goes down
+	var laundro: Door = hood.find_child("Door_laundro_front", true, false)
+	check(laundro.verbs(player)[0] == "Pick lock", "the Suds-O-Mat is locked")
+	player.global_position = boiler.top + Vector3(0, 0.05, 0.6)
+	await frames(10)
+	boiler.climb(player, false)
+	await frames(10)
+	check(World.room_at(player.global_position + Vector3.UP * 0.5) == "hall" and Journal.knows("found_station"), "down the iron ladder into the old entrance hall")
+	# the power: lights on, rail live; the rail hurts
+	World.set_power(true)
+	var hp := player.health
+	player.global_position = Vector3(10, -8.6, 19.4)      # on the third rail, between crossings
+	await frames(20)
+	check(player.health < hp, "the live rail hurts (%d -> %d)" % [hp, player.health])
+	World.set_power(false)
+	player.health = 100.0
+	# a tripwire: bottles smash, the sleeper in the nest wakes
+	var sleeper: Feeder = main.fates.feeders.filter(func(f): return f.id == "feeder_sleeper")[0]
+	var trip: Interactable = null
+	for n in get_tree().get_nodes_in_group("interactable"):
+		if n.get_script() == preload("res://world/tripwire.gd"):
+			trip = n
+	player.global_position = trip.global_position + Vector3(0, 0.1, 1.5)
+	await frames(5)
+	player.global_position = trip.global_position + Vector3(0, 0.1, 0)
+	await frames(10)
+	check(not trip.armed, "walked into the tripwire")
+	await frames(20)
+	check(sleeper.state != Feeder.State.SLEEP, "the bottles woke the thing asleep in the nest (state %d)" % sleeper.state)
+	player.global_position = Vector3(30, -7.7, 13)      # back off to the platform before it arrives
+	await frames(30)
+	# the key on the hook in the service room
+	var key := _item("key_larder")
+	player.global_position = key.global_position + Vector3(0, -1.3, -0.8)
+	await frames(5)
+	key.perform(player, "Take")
+	check(player.has_item("key_larder"), "took the larder key off its hook")
+	# a Feeder sees the player in the lit larder, hunts, and hurts
+	World.set_power(true)
+	var keeper: Feeder = main.fates.feeders.filter(func(f): return f.id == "feeder_keeper")[0]
+	player.global_position = keeper.global_position + Vector3(0, 0.05, 0) + Vector3(sin(keeper.puppet.rotation.y), 0, cos(keeper.puppet.rotation.y)) * 3.0
+	await frames(90)
+	check(keeper.state in [Feeder.State.HUNT, Feeder.State.ATTACK], "the big one sees the player and comes for them (state %d)" % keeper.state)
+	await frames(150)
+	check(player.health < 100.0, "it hurts (health %d)" % player.health)
+	# the lead pipe, and a fight
+	var pipe := _item("lead_pipe")
+	pipe.perform(player, "Take")
+	check(player.weapon_damage >= 25.0, "the lead pipe is a weapon")
+	player.health = 100.0
+	var swings := 0
+	while keeper.state != Feeder.State.DEAD and swings < 20 and player.health > 0.0:
+		var d := keeper.global_position - player.global_position
+		player.puppet.rotation.y = atan2(d.x, d.z)
+		player.attack()
+		swings += 1
+		await frames(45)
+	check(keeper.state == Feeder.State.DEAD, "the big one goes down (%d swings)" % swings)
+	# the cage: the key opens it, Abe walks out and home
+	var cage: Door = hood.find_child("Door_cage", true, false)
+	player.global_position = cage.global_position + Vector3(0, 0.05, -1.0)
+	await frames(10)
+	check(cage.verbs(player)[0] == "Open", "the key opens the cage")
+	cage.perform(player, "Open")
+	await frames(30)
+	check(Journal.knows("abe_freed") and not World.gone.has("abe"), "Abe is free")
+	player.global_position = Vector3(30, 0.2, 7)
+	await fast_forward_to("03:30")
+	check(World.room_at(abe.global_position + Vector3.UP * 0.5) == "t209_2b", "Abe walked himself home: up the ladder, through the laundromat, across the street (now in %s)" % World.room_at(abe.global_position + Vector3.UP * 0.5))
+	# knocked out: the yard
+	player.hurt(500.0, "a test", player.global_position)
+	await get_tree().create_timer(1.5).timeout
+	check(World.in_yard(player.global_position) and player.health > 0.0, "knocked out, the player wakes in the yard")
+	print("AUTOTEST info  journal:\n" + Journal.quest_text())

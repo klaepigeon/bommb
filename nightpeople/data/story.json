@@ -33,15 +33,13 @@
      0.4
     ]
    },
-   "hatch": {
-    "place": "club.back",
-    "label": "A hatch in the floor, bolted from below"
-   },
    "lines": {
     "fetch_ok": "Alright. Alright. Let's get this over with.",
     "fetch_missing": "It's gone. The box is gone. God help me.",
     "arrive": "Miss Moreau. I brought it. Let's- where are we going?"
-   }
+   },
+   "captive_at": "larder.cell",
+   "box_to": "chapel.altar"
   }
  ],
  "notice_absence": {
@@ -109,6 +107,12 @@
     "Abe owes me four hundred bucks. You think I'd make him disappear before he pays? Use your head.",
     "marv_alibi"
    ]
+  },
+  "frank": {
+   "abe": [
+    "Kessler? Shop's dark, I heard. You know what's under this street? The old Ellery Street station. Closed in '48. They bricked it up under what's the Suds-O-Mat now. Bricks don't keep everything in.",
+    "station_heard"
+   ]
   }
  },
  "quest": {
@@ -154,6 +158,42 @@
    [
     "told_doyle",
     "You showed Officer Doyle the spectacles. He's watching the Vesper now."
+   ],
+   [
+    "station_heard",
+    "A flyer in the Suds-O-Mat: 'the drains go DOWN. all the way down. listen at the grate in the back after midnight.'"
+   ],
+   [
+    "found_station",
+    "Under the street: the old Ellery Street station, closed in 1948, and not empty."
+   ],
+   [
+    "diary_1948",
+    "A 1948 maintenance diary behind the chapel tiles: a Kessler paid to hide a heavy box down here. Then his boy took it back, 'with a lady'."
+   ],
+   [
+    "court_ledger",
+    "The Court's ledger. 'Guests below': Okafor, the Delgado girl, a nightwatchman, and A. KESSLER, to be kept alive until Miss M. has opened the box. 'It opens for the one who carries it.'"
+   ],
+   [
+    "childs_shoe",
+    "A child's shoe in the nest. The Delgado girl."
+   ],
+   [
+    "larder_key",
+    "An iron key on a meat hook in the service room."
+   ],
+   [
+    "abe_found",
+    "Abe is alive, in a cage in the larder under the tracks."
+   ],
+   [
+    "abe_freed",
+    "You opened the cage. Abe is going home, the long way."
+   ],
+   [
+    "knocked_out",
+    "Something under the street knocked you out. You woke up in the yard."
    ]
   ],
   "contradictions": [
@@ -164,6 +204,10 @@
    ]
   ],
   "endings": [
+   [
+    "abe_freed",
+    "Abe is out from under the street and on his way home. The Court has lost its guest, and its key to the box. They will want both back."
+   ],
    [
     "abe_safe",
     "Abe never went to the Vesper. He's alive, at home, with the door locked. Someone will come asking about that box."

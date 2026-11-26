@@ -11,6 +11,7 @@ const OPEN_ANGLE := 95.0
 var id := ""
 var room := ""            ## the private side's room id
 var key := ""             ## item id that unlocks it ("" = no key)
+var locked_both := false  ## a cage: no thumb-turn on the inside
 var width := 1.3
 var picked := false       ## lock picked: open to anyone until next closed by an owner
 var is_open := false
@@ -24,6 +25,7 @@ func setup(def: Dictionary, leaf_prop: String) -> void:
 	id = def.id
 	room = def.room
 	key = def.get("key", "")
+	locked_both = def.get("locked_both", false)
 	label = World.rooms[room].name if World.rooms.has(room) else "Door"
 	_hinge = Node3D.new()
 	_hinge.position.x = -width * 0.5
@@ -74,7 +76,7 @@ func _on_npc(body: Node) -> void:
 
 ## May `who` open it from where they stand?
 func allows(who: String, from: Vector3) -> bool:
-	if World.room_at(from) == room:
+	if World.room_at(from) == room and not locked_both:
 		return true
 	return picked or World.may_enter(who, room)
 

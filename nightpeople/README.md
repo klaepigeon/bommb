@@ -20,6 +20,7 @@ Install `../dist/NightPeople.apk` (arm64, signed with the repo's debug key). Or 
 | Next second action (when there are several) | >> | R | RB |
 | Bag and notes (the journal) | BAG | Tab / I | Y |
 | Fast-forward time (watch routines) | WAIT | T | Back |
+| Hit (fists, or a weapon you've picked up) | HIT | X / left mouse (when captured) | RT |
 | Pause, settings, credits | II | Esc | Start |
 
 ## What's in the first night
@@ -68,9 +69,44 @@ Nothing after that is scripted:
 | Investigate | Ask people about Abe (the topic opens once you know something), read the ledger and the book, see him go in yourself, break into the Vesper's back room (it's locked, and staffed until 04:30) | The spectacles and the hatch. The trail goes down. |
 | Report | Show Doyle the spectacles | The police watch the Vesper from then on. |
 
+**Rescue** (Location B, below): go under the street, get past what lives there, open the cage.
+Abe walks himself home, up the ladder and out through the laundromat.
+
 Your **notes** (BAG) are written only from what you've actually learned: read, been told,
 overheard, seen, or picked up. They note contradictions (Claudette's story against the people who
-saw him go in). The hatch is the way to Location B (next).
+saw him go in).
+
+## Location B: under the street
+
+The old **Ellery Street station**, closed in 1948, 8 m under the south side of the street, in the
+same world as the block (no loading screen; the simulation keeps running overhead). Built from
+`data/underground.json` by the same builder as the street.
+
+- **Ways in:** the Vesper's hatch (bolted from below until someone down there slides the bolt), and
+  the Suds-O-Mat, whose boiler room hides an iron ladder (the laundromat is locked: pick it). Frank,
+  if you ask him about Abe, and a flyer on the laundromat floor point the way.
+- **The station:** the platform, a dead subway car on the tracks, the token hall turned into the
+  Court's chapel (an altar, the tin box if Abe brought it, a coffin, the Court's ledger of "guests"),
+  the old entrance hall, and across the tracks the larder and its cage, the nest, the service room
+  (the power lever, the larder key on a hook), the pump room (a chest: money and a lead pipe).
+- **Routes:** along the platform past the pale walker; through the nest past the sleeper; down onto
+  the tracks and along them; across the tracks at the boarded crossings, or anywhere if the power is
+  off.
+- **Power:** the lever lights the platform, tracks, hall and pump room, and makes the **third rail**
+  live. Feeders see 13 m in the light and 4 m in the dark, so light helps them as much as you. The
+  rail burns anything that steps on it, Feeders included.
+- **Feeders** (`simulation/feeder.gd`): patrol, sleep, go to noises (the lever, smashed bottles, a
+  fight), hunt what they see, grab. They stagger when hit and die. Not people: no schedule, no memory.
+- **Combat** (`player/player.gd`): health, a swing (10 with fists, 25 with the pipe), getting hurt.
+  At zero you're knocked out and wake in the yard behind the Nite Owl 90 minutes later.
+- **Traps:** the third rail; bottles strung across the nest's doorway (walk into them and the sleeper
+  wakes; cut the wire if you see it).
+- **Secrets and storytelling:** loose tiles in the chapel hide a 1948 maintenance diary (a Kessler
+  hid the box down here once before); the ledger names the East Side disappearances from the
+  newspaper; a child's shoe in the nest; scratches on the larder door ("THEY DONT LIKE THE LIGHTS").
+- **The objective:** Abe is alive in the cage. The key is on the big one's watch, or on a hook in the
+  service room (or pick it). Open the cage and he goes home on his own (NPCs climb ladders through
+  navigation links), and his life on the street resumes.
 
 ## Systems (and where they live)
 
@@ -90,6 +126,8 @@ saw him go in). The hatch is the way to Location B (next).
 | Sound | Pooled 3D one-shots; loops that belong to a room and are muffled (low-pass, quieter) from anywhere else, so the Vesper's disco thumps through the wall and the street goes dull indoors; music only while its business is open; crowd murmur as loud as the room is full; footsteps per surface (concrete, tile, wood, metal, gravel) for the player and nearby people. | `core/sfx.gd` |
 | Story events (fates) | Things that happen whether or not the player watches, started from `data/story.json` and then left to the ordinary simulation (walking, doors, witnesses, noticing absences, gossip, police). `NPC.command()` sends someone on an errand; `vanish_forever()` takes them out of the world. | `simulation/fates.gd` |
 | Knowledge and the journal | The player's knowledge (flags) comes only from reading, taking, hearing, being told, seeing. Dialogue topics and the quest log are derived from it. | `core/journal.gd`, `simulation/npc.gd` (`ask`) |
+| Location B | Underground areas in the same builder (height offset, floor levels, open passages, walkable stairs, powered lights); ladders with navigation links and bolts; the power lever, third rail, tripwires, secrets. | `world/neighbourhood.gd`, `world/ladder.gd`, `world/third_rail.gd`, `world/tripwire.gd`, `world/secret.gd`, `world/power_lever.gd` |
+| Enemies and combat | Feeders (patrol, sleep, investigate, hunt, attack, stagger, die; sight depends on light); player health, attacks, weapons, knock-out. | `simulation/feeder.gd`, `player/player.gd` |
 | Asset pipeline | Every external asset is in `data/asset_registry.json` (licence, source, creator, date, path, scale, collision); the game loads props only through it (`core/assets.gd`), which scales, recentres and converts every material to the PS1 shader. | `core/assets.gd`, `data/asset_registry.json` |
 
 ## Build and test
@@ -101,6 +139,9 @@ tools/test.sh                 # headless, three routes through the night (exit 0
                               #    routines 21:00-06:15, gossip, the ledger, and the Missing Merchant
                               #    left alone (he goes, people notice, you investigate, Doyle)
                               #  prevent: steal the box;  warn: read the letter, warn him
+                              #  rescue: under the street (ladder, power and rail, tripwire,
+                              #    a Feeder hunts and hurts, the pipe, the key, the cage, Abe
+                              #    walks home, knock-out)
 tools/test.sh warn            # one route
 tools/test.sh shots DIR       # render fixed views and third-person views to DIR (xvfb)
 tools/build_apk.sh            # → ../dist/NightPeople.apk, signed, or it fails
@@ -136,7 +177,8 @@ Everything in the Systems table runs and is exercised by `tools/test.sh` (three 
 | Kenney Car Kit (6 models) | sedans, taxi, police car, van, delivery and garbage trucks |
 | Audio (CC0): traffic (ignasd), crowd (starninjas), doors/keys/knocks/dishes/glass/hum/kitchen (rubberduck), coin/cloth/UI (artisticdude), static (bretbernhoft), music: blues (pro-sensory), disco (fupi), funk (Spring Spring) | ambience, radios, the Vesper, interaction sounds |
 | Footsteps on different surfaces, **CC-BY 3.0** (congusbongus, from Freesound recordings by swuing, ceberation, Eelke; gravel CC0 by Ali_6868) | footsteps; **attribution required and given** |
-| Quaternius Ultimate Animated Character Pack (14 characters) | everyone, including the player; one shared rig with Idle, Walk, SitDown, StandUp, PickUp, Punch, RecieveHit, Defeat, Shoot_OneHanded, Walk_Carry, Victory |
+| Kenney Survival, Graveyard, Train and Factory kits (CC0, 19 models) | the station: chests, barrels, bedrolls, bottles, the altar, candles, coffin, urns, chalice, cage bars, rails, the subway car, the power lever, the generator, pipes |
+| Quaternius Ultimate Animated Character Pack (16 characters) | everyone, including the player; one shared rig with Idle, Walk, SitDown, StandUp, PickUp, Punch, RecieveHit, Defeat, Shoot_OneHanded, Walk_Carry, Victory |
 
 Custom content: the architecture (generated boxes, textured with the sourced materials), the
 signs (Label3D), all writing and data. No models were made by hand.
@@ -146,8 +188,8 @@ signs (Label3D), all writing and data. No models were made by hand.
 - **Not yet run on a phone.** The APK builds and is signed; performance and the touch layout
   need a real device. Watch: 15 skinned characters (~6.5k triangles each), ~30 omni lights.
 - **No save/load**, no settings screen beyond the pause panel (settings are in `Settings` and saved).
-- **Not built yet:** RPG layer (attributes, skills, origins, conditions), combat, factions as
-  systems, and multiplayer (the code is written to be host-authoritative, with world state in
+- **Not built yet:** RPG layer (attributes, skills, origins, conditions), factions as
+  systems, ranged combat, blocking and dodging, and multiplayer (the code is written to be host-authoritative, with world state in
   `World`, actions through `Interactable.perform`, input through `Controls`, but there is no networking).
 - **Simplifications:** perception ignores darkness and disguise; no NPC-NPC avoidance; doors don't
   carve the navmesh (people with access open them, nobody is routed through doors they can't use);
@@ -194,12 +236,12 @@ ambience and footsteps (audio is the biggest gap), payphone / hydrant / newsstan
 
 ### 8. Prioritized roadmap
 
-Done since the first build: **sound**, and **The Missing Merchant as a world event** (above).
+Done since the first build: **sound**, **The Missing Merchant as a world event**, and
+**Location B** with a first combat layer (above).
 
 1. **On a phone:** install, measure frame time, tune render height / light count / NPC tiers.
-2. **Location B, under the Vesper:** the hatch opens onto a dead subway platform and service
-   tunnels (multiple routes, traps, loot, the box, what's left of Abe). Needs a modular tunnel kit
-   (OpenGameArt / Kenney) and the dark ambiences already found (ogrebane, CC0).
+2. **Consequences of the rescue:** the Court notices its guest gone and its thrall dead; Claudette
+   comes looking for the box and whoever took Abe; Doyle and the street react to Abe's return.
 3. **Save/load** (the world is in `World`, `Journal`, NPC memories and purses: all plain data).
 4. **RPG foundation:** attributes, skills that improve through use (lock-picking first: picking
    becomes a skill check with time and noise), inventory weight, equipment.

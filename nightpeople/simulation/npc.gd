@@ -71,6 +71,7 @@ func setup(d: Dictionary) -> void:
 	agent.path_desired_distance = 0.6
 	agent.target_desired_distance = 0.35
 	agent.radius = 0.3
+	agent.navigation_layers = 1 | 2      # people can climb ladders (navigation links)
 	agent.height = 1.7
 	add_child(agent)
 	talk = preload("res://simulation/npc_talk.gd").new()
@@ -201,7 +202,7 @@ func _target_pos():
 
 func _set_destination(p: Vector3) -> void:
 	agent.target_position = p
-	_path = NavigationServer3D.map_get_path(get_world_3d().navigation_map, global_position, p, true)
+	_path = NavigationServer3D.map_get_path(get_world_3d().navigation_map, global_position, p, true, 1 | 2)
 	_path_i = 0
 	_stuck_t = 0.0
 
@@ -210,6 +211,9 @@ func _walk_physical(delta: float) -> void:
 		_arrive()
 		return
 	var next := agent.get_next_path_position()
+	if absf(next.y - global_position.y) > 1.5 and Vector2(next.x - global_position.x, next.z - global_position.z).length() < 1.5:
+		global_position = next          # a ladder: climb it
+		return
 	var dir := next - global_position
 	dir.y = 0.0
 	if dir.length() < 0.01:
@@ -242,6 +246,10 @@ func _walk_kinematic(minutes: float) -> void:
 	var step := SPEED * minutes / Clock.BASE_RATE
 	while step > 0.0 and _path_i < _path.size():
 		var to := _path[_path_i] - global_position
+		if absf(to.y) > 1.5:
+			global_position = _path[_path_i]   # a ladder
+			_path_i += 1
+			continue
 		var d := to.length()
 		if d <= step:
 			global_position = _path[_path_i]
@@ -448,6 +456,10 @@ func activity_text() -> String:
 ## The player speaks to them. What they say depends on what they know.
 func talk_to(p: Node3D) -> void:
 	var lines: Dictionary = def.lines
+	if activity.get("do", "") == "captive":
+		say("You're not one of them. Please. The big one has the key, or there's one on a hook in the room with the machine. Please.")
+		Journal.learn("abe_found")
+		return
 	if asleep():
 		var room := World.room_at(global_position + Vector3.UP * 0.5)
 		memory.remember("trespass", "player", Memory.Source.WITNESSED, {}, room)

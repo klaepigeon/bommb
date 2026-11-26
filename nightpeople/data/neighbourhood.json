@@ -3598,8 +3598,6 @@
    ],
    "floors": 3,
    "facade": "brick_red",
-   "solid": true,
-   "shuttered": true,
    "sign": {
     "text": "SUDS-O-MAT",
     "color": [
@@ -3614,7 +3612,225 @@
     "size": 0.7,
     "dead": true
    },
-   "props": []
+   "props": [
+    {
+     "id": "washer",
+     "at": [
+      1,
+      3.0
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "washer",
+     "at": [
+      1,
+      4.2
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "washer",
+     "at": [
+      1,
+      5.4
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "washer",
+     "at": [
+      1,
+      6.6
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "washer",
+     "at": [
+      1,
+      7.8
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "washer",
+     "at": [
+      1,
+      9.0
+     ],
+     "yaw": 90
+    },
+    {
+     "id": "dryer",
+     "at": [
+      13,
+      3.0
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "dryer",
+     "at": [
+      13,
+      4.2
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "dryer",
+     "at": [
+      13,
+      5.4
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "dryer",
+     "at": [
+      13,
+      6.6
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "dryer",
+     "at": [
+      13,
+      7.8
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "dryer",
+     "at": [
+      13,
+      9.0
+     ],
+     "yaw": 270
+    },
+    {
+     "id": "cardboardBoxOpen",
+     "at": [
+      16,
+      1
+     ]
+    },
+    {
+     "id": "machine",
+     "at": [
+      20,
+      10
+     ],
+     "yaw": 0
+    },
+    {
+     "id": "debris",
+     "at": [
+      7,
+      9
+     ]
+    }
+   ],
+   "rooms": [
+    {
+     "id": "laundro_shop",
+     "name": "Suds-O-Mat (closed)",
+     "rect": [
+      0,
+      0,
+      14,
+      14
+     ],
+     "floor": "tile_white",
+     "wall": "plaster_stained",
+     "ceiling": "plaster",
+     "light": [
+      0.7,
+      0.8,
+      0.9
+     ],
+     "energy": 0.25,
+     "owners": [],
+     "public": false
+    },
+    {
+     "id": "laundro_boiler",
+     "name": "Suds-O-Mat boiler room",
+     "rect": [
+      14,
+      0,
+      22,
+      14
+     ],
+     "floor": "concrete_dirty",
+     "wall": "concrete_dirty",
+     "ceiling": "plaster",
+     "light": [
+      1.0,
+      0.6,
+      0.3
+     ],
+     "energy": 0.3,
+     "owners": [],
+     "public": false
+    }
+   ],
+   "partitions": [
+    [
+     [
+      14,
+      0
+     ],
+     [
+      14,
+      14
+     ]
+    ]
+   ],
+   "doors": [
+    {
+     "id": "laundro_front",
+     "at": [
+      5,
+      0
+     ],
+     "room": "laundro_shop",
+     "leaf": "door-type-a"
+    },
+    {
+     "id": "laundro_boiler",
+     "at": [
+      14,
+      10
+     ],
+     "room": "laundro_boiler",
+     "leaf": "door-type-b"
+    }
+   ],
+   "windows": [
+    {
+     "at": [
+      10,
+      0
+     ],
+     "width": 4,
+     "sill": 0.9,
+     "top": 2.4
+    }
+   ],
+   "readables": [
+    {
+     "at": [
+      7,
+      1
+     ],
+     "y": 0.02,
+     "title": "Flyer on the floor",
+     "clue": "station_heard",
+     "text": "SUDS-O-MAT - CLOSED FOR REPAIRS\n(handwritten underneath:) the drains go DOWN. all the way down. listen at the grate in the back after midnight"
+    }
+   ]
   },
   {
    "id": "west_end",

@@ -27,6 +27,11 @@ var ledger: Array = []
 var gone: Dictionary = {}
 ## room id → Array of people invited in (on top of the owners).
 var guests: Dictionary = {}
+## Station power under the street (one lever): lights the platform, and makes the third rail live.
+var power := false
+var hood: Node                         ## the Neighbourhood (rooms' lights live there)
+var power_lights: Array = []
+signal power_changed(on: bool)
 var purses: Dictionary = {}           ## id → dollars (NPCs and businesses' owners)
 
 func clear() -> void:
@@ -37,6 +42,8 @@ func clear() -> void:
 	missing.clear()
 	ledger.clear()
 	gone.clear()
+	power = false
+	power_lights.clear()
 	guests.clear()
 	purses.clear()
 
@@ -121,3 +128,21 @@ func nearest_edge(from: Vector3) -> Vector3:
 		if e.distance_squared_to(from) < best.distance_squared_to(from):
 			best = e
 	return best
+
+func set_power(on: bool) -> void:
+	power = on
+	for l in power_lights:
+		if is_instance_valid(l):
+			l.visible = on
+	power_changed.emit(on)
+
+## How lit a point is (0 dark .. 1 bright): the room's light, if it's on. The street counts as lit.
+func light_at(pos: Vector3) -> float:
+	var room := room_at(pos + Vector3.UP * 0.5)
+	if room == "":
+		return 1.0
+	var l = hood
+	if l and l.room_lights.has(room):
+		var light: OmniLight3D = l.room_lights[room]
+		return clampf(light.light_energy, 0.0, 1.0) if light.visible else 0.05
+	return 0.3

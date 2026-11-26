@@ -13,6 +13,13 @@ const VIEWS := {
 	"yard": [Vector3(-12, 1.7, -14), Vector3(-12, 1.2, -28)],
 	"facade_close": [Vector3(-36, 4.5, -2.5), Vector3(-38, 5.5, -9)],
 	"vesper_back": [Vector3(19.4, 1.8, 20.3), Vector3(21, 0.2, 21.4)],
+	"ug_platform": [Vector3(-10, -6.2, 11), Vector3(20, -7.2, 15)],
+	"ug_tracks": [Vector3(-20, -7.0, 17.0), Vector3(10, -8.6, 18.5)],
+	"ug_chapel": [Vector3(-19.5, -6.3, 13), Vector3(-27, -7.4, 13)],
+	"ug_larder": [Vector3(-15.5, -6.3, 22), Vector3(-26, -7.5, 28)],
+	"ug_service": [Vector3(13, -6.3, 22), Vector3(26, -7.4, 27)],
+	"ug_nest": [Vector3(-13, -6.3, 22), Vector3(0, -7.5, 27)],
+	"laundromat": [Vector3(28, 1.7, 11), Vector3(40, 0.5, 20)],
 	"club": [Vector3(13, 1.6, 10.5), Vector3(20, 1.0, 17)],
 }
 
@@ -27,6 +34,8 @@ const PLAY := {
 
 func run(main: Node, dir: String) -> void:
 	DirAccess.make_dir_recursive_absolute(dir)
+	if main.args.has("power"):
+		World.set_power(true)
 	var only_play: String = main.args.get("view", "")
 	if main.player:
 		for name in PLAY:

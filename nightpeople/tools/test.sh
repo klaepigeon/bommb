@@ -15,9 +15,9 @@ for f in $(find . -name "*.gd" -not -path "./.godot/*"); do
 	fi
 done
 # Routes: night (the whole night, nobody interferes with the story), prevent (steal the box),
-# warn (talk Abe out of it). `tools/test.sh warn` runs one.
+# warn (talk Abe out of it), rescue (under the street). `tools/test.sh warn` runs one.
 CODE=0
-for ROUTE in ${1:-night prevent warn}; do
+for ROUTE in ${1:-night prevent warn rescue}; do
 	LOG=$(mktemp)
 	timeout 900 "$GODOT" --headless --fixed-fps 60 --path . -- --autotest --route=$ROUTE >"$LOG" 2>&1 || CODE=1
 	echo "--- route: $ROUTE"

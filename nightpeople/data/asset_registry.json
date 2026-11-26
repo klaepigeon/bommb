@@ -167,6 +167,54 @@
    "acquired": "2026-11-25",
    "path": "res://assets/audio/footsteps",
    "notes": "ATTRIBUTION REQUIRED: credit swuing, ceberation, Eelke and congusbongus. Per-folder licence files kept beside the sounds. 5 variants per surface."
+  },
+  "kenney_survival": {
+   "name": "Survival Kit",
+   "creator": "Kenney (www.kenney.nl)",
+   "source": "https://opengameart.org/content/survival-kit",
+   "license": "CC0 1.0",
+   "attribution_required": false,
+   "modification": true,
+   "commercial": true,
+   "acquired": "2026-11-26",
+   "path": "res://assets/models/kenney_survival",
+   "notes": "License.txt kept. Curated subset, only models placed in the game (Location B)."
+  },
+  "kenney_graveyard": {
+   "name": "Graveyard Kit 5.0",
+   "creator": "Kenney (www.kenney.nl)",
+   "source": "https://opengameart.org/content/graveyard-kit",
+   "license": "CC0 1.0",
+   "attribution_required": false,
+   "modification": true,
+   "commercial": true,
+   "acquired": "2026-11-26",
+   "path": "res://assets/models/kenney_graveyard",
+   "notes": "License.txt kept. Curated subset, only models placed in the game (Location B)."
+  },
+  "kenney_train": {
+   "name": "Train Kit",
+   "creator": "Kenney (www.kenney.nl)",
+   "source": "https://opengameart.org/content/train-kit",
+   "license": "CC0 1.0",
+   "attribution_required": false,
+   "modification": true,
+   "commercial": true,
+   "acquired": "2026-11-26",
+   "path": "res://assets/models/kenney_train",
+   "notes": "License.txt kept. Curated subset, only models placed in the game (Location B)."
+  },
+  "kenney_factory": {
+   "name": "Factory Kit 3.0",
+   "creator": "Kenney (www.kenney.nl)",
+   "source": "https://opengameart.org/content/factory-kit",
+   "license": "CC0 1.0",
+   "attribution_required": false,
+   "modification": true,
+   "commercial": true,
+   "acquired": "2026-11-26",
+   "path": "res://assets/models/kenney_factory",
+   "notes": "License.txt kept. Curated subset, only models placed in the game (Location B)."
   }
  },
  "props": {
@@ -603,6 +651,153 @@
    "scale": 1.45,
    "collision": "box",
    "category": "vehicle"
+  },
+  "chest": {
+   "pack": "kenney_survival",
+   "path": "res://assets/models/kenney_survival/chest.glb",
+   "scale": 2.2,
+   "collision": "box",
+   "category": "underground"
+  },
+  "barrel": {
+   "pack": "kenney_survival",
+   "path": "res://assets/models/kenney_survival/barrel.glb",
+   "scale": 2.6,
+   "collision": "box",
+   "category": "underground"
+  },
+  "bedroll": {
+   "pack": "kenney_survival",
+   "path": "res://assets/models/kenney_survival/bedroll.glb",
+   "scale": 3.0,
+   "collision": "none",
+   "category": "underground"
+  },
+  "bottle": {
+   "pack": "kenney_survival",
+   "path": "res://assets/models/kenney_survival/bottle.glb",
+   "scale": 2.0,
+   "collision": "none",
+   "category": "underground"
+  },
+  "box-large": {
+   "pack": "kenney_survival",
+   "path": "res://assets/models/kenney_survival/box-large.glb",
+   "scale": 2.4,
+   "collision": "box",
+   "category": "underground"
+  },
+  "altar-stone": {
+   "pack": "kenney_graveyard",
+   "path": "res://assets/models/kenney_graveyard/altar-stone.glb",
+   "scale": 1.8,
+   "collision": "box",
+   "category": "underground"
+  },
+  "candle": {
+   "pack": "kenney_graveyard",
+   "path": "res://assets/models/kenney_graveyard/candle.glb",
+   "scale": 1.5,
+   "collision": "none",
+   "category": "underground"
+  },
+  "candle-multiple": {
+   "pack": "kenney_graveyard",
+   "path": "res://assets/models/kenney_graveyard/candle-multiple.glb",
+   "scale": 1.5,
+   "collision": "none",
+   "category": "underground"
+  },
+  "coffin-old": {
+   "pack": "kenney_graveyard",
+   "path": "res://assets/models/kenney_graveyard/coffin-old.glb",
+   "scale": 2.4,
+   "collision": "box",
+   "category": "underground"
+  },
+  "lantern-candle": {
+   "pack": "kenney_graveyard",
+   "path": "res://assets/models/kenney_graveyard/lantern-candle.glb",
+   "scale": 1.2,
+   "collision": "none",
+   "category": "underground"
+  },
+  "urn-round": {
+   "pack": "kenney_graveyard",
+   "path": "res://assets/models/kenney_graveyard/urn-round.glb",
+   "scale": 1.5,
+   "collision": "none",
+   "category": "underground"
+  },
+  "detail-chalice": {
+   "pack": "kenney_graveyard",
+   "path": "res://assets/models/kenney_graveyard/detail-chalice.glb",
+   "scale": 1.0,
+   "collision": "none",
+   "category": "underground"
+  },
+  "iron-fence-bar": {
+   "pack": "kenney_graveyard",
+   "path": "res://assets/models/kenney_graveyard/iron-fence-bar.glb",
+   "scale": 3.3,
+   "collision": "none",
+   "category": "underground"
+  },
+  "debris": {
+   "pack": "kenney_graveyard",
+   "path": "res://assets/models/kenney_graveyard/debris.glb",
+   "scale": 3.0,
+   "collision": "none",
+   "category": "underground"
+  },
+  "railroad-rail-straight": {
+   "pack": "kenney_train",
+   "path": "res://assets/models/kenney_train/railroad-rail-straight.glb",
+   "scale": 2.0,
+   "collision": "none",
+   "category": "underground"
+  },
+  "train-electric-subway-a": {
+   "pack": "kenney_train",
+   "path": "res://assets/models/kenney_train/train-electric-subway-a.glb",
+   "scale": 2.0,
+   "collision": "box",
+   "category": "underground"
+  },
+  "lever-single": {
+   "pack": "kenney_factory",
+   "path": "res://assets/models/kenney_factory/lever-single.glb",
+   "scale": 2.0,
+   "collision": "none",
+   "category": "underground"
+  },
+  "machine": {
+   "pack": "kenney_factory",
+   "path": "res://assets/models/kenney_factory/machine.glb",
+   "scale": 1.5,
+   "collision": "box",
+   "category": "underground"
+  },
+  "pipe-large-long": {
+   "pack": "kenney_factory",
+   "path": "res://assets/models/kenney_factory/pipe-large-long.glb",
+   "scale": 0.6,
+   "collision": "none",
+   "category": "underground"
+  },
+  "washer": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/washer.fbx",
+   "scale": 0.2,
+   "collision": "box",
+   "category": "furniture"
+  },
+  "dryer": {
+   "pack": "kenney_furniture",
+   "path": "res://assets/models/kenney_furniture/dryer.fbx",
+   "scale": 0.2,
+   "collision": "box",
+   "category": "furniture"
   }
  },
  "characters": {
@@ -661,6 +856,14 @@
   "Worker_Male": {
    "pack": "quaternius_characters",
    "path": "res://assets/characters/quaternius/Worker_Male.fbx"
+  },
+  "Zombie_Male": {
+   "pack": "quaternius_characters",
+   "path": "res://assets/characters/quaternius/Zombie_Male.fbx"
+  },
+  "Zombie_Female": {
+   "pack": "quaternius_characters",
+   "path": "res://assets/characters/quaternius/Zombie_Female.fbx"
   }
  },
  "sounds": {

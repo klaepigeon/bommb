@@ -23,7 +23,7 @@ func _ready() -> void:
 	_bind("move_right", [KEY_D, KEY_RIGHT])
 	_bind("sprint", [KEY_SHIFT], [JOY_BUTTON_LEFT_STICK])
 	_bind("interact", [KEY_E, KEY_F], [JOY_BUTTON_A])
-	_bind("attack", [], [], [JOY_AXIS_TRIGGER_RIGHT], [MOUSE_BUTTON_LEFT])
+	_bind("attack", [KEY_X], [], [JOY_AXIS_TRIGGER_RIGHT], [MOUSE_BUTTON_LEFT])
 	_bind("secondary", [KEY_Q], [], [JOY_AXIS_TRIGGER_LEFT], [MOUSE_BUTTON_RIGHT])
 	_bind("inventory", [KEY_TAB, KEY_I], [JOY_BUTTON_Y])
 	_bind("pause", [KEY_ESCAPE, KEY_P], [JOY_BUTTON_START])

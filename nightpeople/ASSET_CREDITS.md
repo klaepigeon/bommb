@@ -51,7 +51,7 @@ Most assets are **CC0 1.0** (no attribution legally required; credited anyway). 
 | Acquired | 2026-11-25 |
 | Location | `res://assets/models/kenney_furniture` |
 | Notes | License.txt kept. Curated subset (32 models, only those placed in the game). |
-| Used | bedDouble, bedSingle, benchCushion, bookcaseOpen, books, cardboardBoxClosed, cardboardBoxOpen, chair, coatRackStanding, desk, kitchenBar, kitchenBarEnd, kitchenCabinet, kitchenFridge, kitchenSink, kitchenStove, lampRoundTable, loungeChair, loungeSofa, pottedPlant, radio, rugRectangle, sideTable, sideTableDrawers, speaker, stoolBar, table, tableCloth, tableRound, televisionVintage, toilet, trashcan |
+| Used | bedDouble, bedSingle, benchCushion, bookcaseOpen, books, cardboardBoxClosed, cardboardBoxOpen, chair, coatRackStanding, desk, dryer, kitchenBar, kitchenBarEnd, kitchenCabinet, kitchenFridge, kitchenSink, kitchenStove, lampRoundTable, loungeChair, loungeSofa, pottedPlant, radio, rugRectangle, sideTable, sideTableDrawers, speaker, stoolBar, table, tableCloth, tableRound, televisionVintage, toilet, trashcan, washer |
 
 ## Car Kit 3.1
 
@@ -81,7 +81,7 @@ Most assets are **CC0 1.0** (no attribution legally required; credited anyway). 
 | Acquired | 2026-11-25 |
 | Location | `res://assets/characters/quaternius` |
 | Notes | OpenGameArt page and quaternius.com/license.html state CC0; the zip itself carries no license file. 14 of 50 characters. Shared 32-bone rig, 11 animations each. |
-| Used | Casual2_Female, Casual2_Male, Casual3_Female, Casual3_Male, Casual_Bald, Casual_Female, Casual_Male, Chef_Female, Doctor_Male_Old, OldClassy_Female, OldClassy_Male, Suit_Female, Suit_Male, Worker_Male |
+| Used | Casual2_Female, Casual2_Male, Casual3_Female, Casual3_Male, Casual_Bald, Casual_Female, Casual_Male, Chef_Female, Doctor_Male_Old, OldClassy_Female, OldClassy_Male, Suit_Female, Suit_Male, Worker_Male, Zombie_Female, Zombie_Male |
 
 ## High traffic road sounds
 
@@ -217,6 +217,66 @@ Most assets are **CC0 1.0** (no attribution legally required; credited anyway). 
 | Location | `res://assets/audio/footsteps` |
 | Notes | ATTRIBUTION REQUIRED: credit swuing, ceberation, Eelke and congusbongus. Per-folder licence files kept beside the sounds. 5 variants per surface. |
 | Used | step_boots, step_gravel, step_metal, step_tile, step_wood |
+
+## Survival Kit
+
+| | |
+|---|---|
+| Creator | Kenney (www.kenney.nl) |
+| Source | https://opengameart.org/content/survival-kit |
+| Licence | CC0 1.0 |
+| Attribution required | no (given voluntarily) |
+| Modification permitted | yes |
+| Commercial use permitted | yes |
+| Acquired | 2026-11-26 |
+| Location | `res://assets/models/kenney_survival` |
+| Notes | License.txt kept. Curated subset, only models placed in the game (Location B). |
+| Used | barrel, bedroll, bottle, box-large, chest |
+
+## Graveyard Kit 5.0
+
+| | |
+|---|---|
+| Creator | Kenney (www.kenney.nl) |
+| Source | https://opengameart.org/content/graveyard-kit |
+| Licence | CC0 1.0 |
+| Attribution required | no (given voluntarily) |
+| Modification permitted | yes |
+| Commercial use permitted | yes |
+| Acquired | 2026-11-26 |
+| Location | `res://assets/models/kenney_graveyard` |
+| Notes | License.txt kept. Curated subset, only models placed in the game (Location B). |
+| Used | altar-stone, candle, candle-multiple, coffin-old, debris, detail-chalice, iron-fence-bar, lantern-candle, urn-round |
+
+## Train Kit
+
+| | |
+|---|---|
+| Creator | Kenney (www.kenney.nl) |
+| Source | https://opengameart.org/content/train-kit |
+| Licence | CC0 1.0 |
+| Attribution required | no (given voluntarily) |
+| Modification permitted | yes |
+| Commercial use permitted | yes |
+| Acquired | 2026-11-26 |
+| Location | `res://assets/models/kenney_train` |
+| Notes | License.txt kept. Curated subset, only models placed in the game (Location B). |
+| Used | railroad-rail-straight, train-electric-subway-a |
+
+## Factory Kit 3.0
+
+| | |
+|---|---|
+| Creator | Kenney (www.kenney.nl) |
+| Source | https://opengameart.org/content/factory-kit |
+| Licence | CC0 1.0 |
+| Attribution required | no (given voluntarily) |
+| Modification permitted | yes |
+| Commercial use permitted | yes |
+| Acquired | 2026-11-26 |
+| Location | `res://assets/models/kenney_factory` |
+| Notes | License.txt kept. Curated subset, only models placed in the game (Location B). |
+| Used | lever-single, machine, pipe-large-long |
 
 ## Original work
 

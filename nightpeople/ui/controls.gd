@@ -48,6 +48,7 @@ func _rects() -> Dictionary:
 	var s := _screen()
 	var r := {"pause": Rect2(s.x - 100, 16, 84, 84), "bag": Rect2(s.x - 200, 16, 84, 84),
 		"wait": Rect2(s.x - 300, 16, 84, 84)}
+	r["attack"] = Rect2(s.x - 180, s.y - 400, 120, 120)
 	if verbs.size() > 0:
 		r["use0"] = Rect2(s.x - 230, s.y - 230, 180, 180)
 	if verbs.size() > 1:
@@ -109,6 +110,8 @@ func _input(event: InputEvent) -> void:
 		use_pressed.emit(0)
 	elif event.is_action_pressed("secondary"):
 		use_pressed.emit(1)
+	elif event.is_action_pressed("attack") and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or (event.is_action_pressed("attack") and not event is InputEventMouseButton):
+		button.emit("attack")
 	elif event.is_action_pressed("more"):
 		button.emit("more")
 	elif event.is_action_pressed("inventory"):
@@ -138,7 +141,7 @@ func _draw() -> void:
 	var r := _rects()
 	for k in r:
 		var rect: Rect2 = r[k]
-		var label: String = {"pause": "II", "bag": "BAG", "wait": "WAIT", "more": ">>"}.get(k, "")
+		var label: String = {"pause": "II", "bag": "BAG", "wait": "WAIT", "more": ">>", "attack": "HIT"}.get(k, "")
 		if k == "use0":
 			label = verbs[0].to_upper()
 		elif k == "use1":
